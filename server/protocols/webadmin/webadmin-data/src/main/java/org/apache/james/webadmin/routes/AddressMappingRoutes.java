@@ -24,6 +24,7 @@ import static spark.Spark.halt;
 import java.util.List;
 
 import javax.inject.Inject;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -56,7 +57,7 @@ import spark.Service;
 public class AddressMappingRoutes implements Routes {
 
     static final String BASE_PATH = "/mappings/address/";
-    static final String ADD_ADDRESS_MAPPING_PATH = "/mappings/address/:mappingSource/targets/:destinationAddress";
+    static final String ADDRESS_MAPPING_PATH = "/mappings/address/:mappingSource/targets/:destinationAddress";
 
     private final RecipientRewriteTable recipientRewriteTable;
 
@@ -72,11 +73,12 @@ public class AddressMappingRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(ADD_ADDRESS_MAPPING_PATH, this::addAddressMapping);
+        service.post(ADDRESS_MAPPING_PATH, this::addAddressMapping);
+        service.delete(ADDRESS_MAPPING_PATH, this::removeAddressMapping);
     }
 
     @POST
-    @Path(ADD_ADDRESS_MAPPING_PATH)
+    @Path(ADDRESS_MAPPING_PATH)
     @ApiOperation(value = "Getting all user mappings in RecipientRewriteTable")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No body on created", response = List.class),
@@ -103,6 +105,26 @@ public class AddressMappingRoutes implements Routes {
                 .message(e.getMessage())
                 .haltError();
         }
+    }
+
+    @DELETE
+    @Path(ADDRESS_MAPPING_PATH)
+    @ApiOperation(value = "Remove a mapping from a mapping source in RecipientRewriteTable")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "No body on deleted", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid parameter values.")
+    })
+    public HaltException removeAddressMapping(Request request, Response response) throws RecipientRewriteTableException {
+        MailAddress source = MailAddressParser.parseMailAddress(
+            request.params("mappingSource"),"address");
+        MailAddress destinationAddress = MailAddressParser.parseMailAddress(
+            request.params("destinationAddress"), "address");
+        removeAddressMapping(MappingSource.fromMailAddress(source), destinationAddress);
+        return halt(HttpStatus.NO_CONTENT_204);
+    }
+
+    private void removeAddressMapping(MappingSource source, MailAddress destination) throws RecipientRewriteTableException {
+        recipientRewriteTable.removeAddressMapping(source, destination.asString());
     }
 
 }

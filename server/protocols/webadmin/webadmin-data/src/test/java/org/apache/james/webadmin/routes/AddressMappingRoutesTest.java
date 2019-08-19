@@ -43,6 +43,9 @@ import io.restassured.RestAssured;
 import io.restassured.filter.log.LogDetail;
 
 class AddressMappingRoutesTest {
+    private static String MAPPING_SOURCE = "source@domain.tld";
+    private static String ALICE_ADDRESS = "alice@domain.tld";
+    private static String BOB_ADDRESS = "bob@domain.tld";
 
     private WebAdminServer webAdminServer;
     private MemoryRecipientRewriteTable recipientRewriteTable;
@@ -74,16 +77,16 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldAddMappingOnRecipientRewriteTable() {
         when()
-            .post("source@domain.tld/targets/user@domain.tld");
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
 
-        assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse("source@domain.tld")))
-            .containsAnyOf(Mapping.of("user@domain.tld"));
+        assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse(MAPPING_SOURCE)))
+            .containsAnyOf(Mapping.of(ALICE_ADDRESS));
     }
 
     @Test
     void addAddressMappingShouldReturnNotFoundWhenOneParameterIsEmpty() {
         when()
-            .post("source@domain.tld/targets/" )
+            .post(MAPPING_SOURCE + "/targets/" )
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
@@ -91,7 +94,7 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldReturnNoContentWhenValidParameter() {
         when()
-            .post("source@domain.tld/targets/alice@domain.tld")
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -99,7 +102,7 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldReturnBadRequestWhenInvalidMappingSource() {
         when()
-            .post("source/targets/alice@domain.tld")
+            .post("source@domain@domain/targets/" + ALICE_ADDRESS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
@@ -107,20 +110,20 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldReturnBadRequestWhenInvalidDestinationAddress() {
         when()
-            .post("source@domain.tld/targets/alice")
+            .post(MAPPING_SOURCE + "/targets/alice")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test
     void addAddressMappingShouldReturnNoContentWithDuplicatedAddress() throws Exception {
-        MappingSource mappingSource =  MappingSource.fromMailAddress(new MailAddress("source@domain.tld"));
+        MappingSource mappingSource =  MappingSource.fromMailAddress(new MailAddress(MAPPING_SOURCE));
 
-        recipientRewriteTable.addAddressMapping(mappingSource, "alice@domain.tld");
-        recipientRewriteTable.addAddressMapping(mappingSource, "bob@domain.tld");
+        recipientRewriteTable.addAddressMapping(mappingSource, ALICE_ADDRESS);
+        recipientRewriteTable.addAddressMapping(mappingSource, BOB_ADDRESS);
 
         when()
-            .post("source@domain.tld/targets/alice@domain.tld")
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -128,16 +131,81 @@ class AddressMappingRoutesTest {
     @Test
     void addAddressMappingShouldReturnBadRequestWhenSourceAndDestinationIsTheSame() {
         when()
-            .post("source@domain.tld/targets/source@domain.tld")
+            .post(MAPPING_SOURCE + "/targets/" + MAPPING_SOURCE)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test
-    void addressMappingSHouldReturnBadRequestWhenSourceDomainNotInDomainList() {
+    void addAddressMappingShouldReturnBadRequestWhenSourceDomainNotInDomainList() {
         when()
-            .post("source@dexample/targets/alice@domain.tld")
+            .post("source@example/targets/" + ALICE_ADDRESS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
+
+    @Test
+    void removeAddressMappingShouldRemoveDestinationAddress() {
+        when()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        when()
+            .delete(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        assertThat(recipientRewriteTable.getStoredMappings(MappingSource.parse(MAPPING_SOURCE)))
+            .doesNotContain(Mapping.of(ALICE_ADDRESS));
+    }
+
+    @Test
+    void removeAddressMappingShouldReturnNoContentWhenValidParameter() {
+        when()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        when()
+            .delete(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void removeAddressMappingShouldReturnNoContentWhenDestinationAddressIsNotFound() {
+        when()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        when()
+            .delete(MAPPING_SOURCE + "/targets/" + BOB_ADDRESS)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void removeAddressMappingShouldBeIdempotent() {
+        when()
+            .post(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        when()
+            .delete(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS);
+
+        when()
+            .delete(MAPPING_SOURCE + "/targets/" + ALICE_ADDRESS)
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void removeAddressMappingShouldReturnBadRequestWhenMappingSourceIsInvalid() {
+        when()
+            .delete( "random@domain@domain/targets/" + ALICE_ADDRESS)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400);
+    }
+
+    @Test
+    void removeAddressMappingShouldReturnNotFoundWhenOneParameterIsEmpty() {
+        when()
+            .delete( MAPPING_SOURCE + "/targets/")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
 }
