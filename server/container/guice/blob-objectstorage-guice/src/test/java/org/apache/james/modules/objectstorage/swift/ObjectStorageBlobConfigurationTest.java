@@ -25,7 +25,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.apache.james.blob.objectstorage.swift.DomainName;

@@ -33,8 +33,8 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
@@ -81,7 +81,7 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration config) throws org.apache.commons.configuration.ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration config) throws org.apache.commons.configuration2.ex.ConfigurationException {
         super.doConfigure(config);
         destination = config.getString("[@destinationURL]");
         LOGGER.debug("FileMailRepository.destinationURL: {}", destination);
@@ -94,7 +94,7 @@ public class FileMailRepository extends AbstractMailRepository {
     @PostConstruct
     public void init() throws Exception {
         try {
-            DefaultConfigurationBuilder reposConfiguration = new DefaultConfigurationBuilder();
+            BaseHierarchicalConfiguration reposConfiguration = new BaseHierarchicalConfiguration();
 
             reposConfiguration.addProperty("[@destinationURL]", destination);
             objectRepository = new FilePersistentObjectRepository();

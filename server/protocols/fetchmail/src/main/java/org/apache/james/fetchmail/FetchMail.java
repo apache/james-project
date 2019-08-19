@@ -31,10 +31,10 @@ import java.util.Properties;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.tree.ConfigurationNode;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -410,14 +410,14 @@ public class FetchMail implements Runnable, Configurable {
         setParsedConfiguration(parsedConfiguration);
 
         // Setup the Accounts
-        List<HierarchicalConfiguration> allAccounts = configuration.configurationsAt("accounts");
+        List<HierarchicalConfiguration<ImmutableNode>> allAccounts = configuration.configurationsAt("accounts");
         if (allAccounts.size() < 1) {
             throw new ConfigurationException("Missing <accounts> section.");
         }
         if (allAccounts.size() > 1) {
             throw new ConfigurationException("Too many <accounts> sections, there must be exactly one");
         }
-        HierarchicalConfiguration accounts = allAccounts.get(0);
+        HierarchicalConfiguration<ImmutableNode> accounts = allAccounts.get(0);
 
         if (!accounts.getKeys().hasNext()) {
             throw new ConfigurationException("Missing <account> section.");
@@ -425,11 +425,11 @@ public class FetchMail implements Runnable, Configurable {
 
         int i = 0;
         // Create an Account for every configured account
-        for (ConfigurationNode accountsChild : accounts.getRoot().getChildren()) {
+        for (ImmutableNode accountsChild : accounts.getNodeModel().getNodeHandler().getRootNode().getChildren()) {
 
-            String accountsChildName = accountsChild.getName();
+            String accountsChildName = accountsChild.getNodeName();
 
-            List<HierarchicalConfiguration> accountsChildConfig = accounts.configurationsAt(accountsChildName);
+            List<HierarchicalConfiguration<ImmutableNode>> accountsChildConfig = accounts.configurationsAt(accountsChildName);
             HierarchicalConfiguration conf = accountsChildConfig.get(i);
 
             if ("alllocal".equals(accountsChildName)) {

@@ -23,7 +23,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.util.UnicodeSetUtils;
 
 import com.google.common.base.MoreObjects;

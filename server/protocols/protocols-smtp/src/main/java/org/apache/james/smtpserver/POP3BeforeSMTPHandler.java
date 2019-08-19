@@ -21,9 +21,9 @@ package org.apache.james.smtpserver;
 
 import java.time.Duration;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;

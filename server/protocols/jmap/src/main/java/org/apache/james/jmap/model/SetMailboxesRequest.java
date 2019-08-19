@@ -22,7 +22,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
@@ -65,11 +65,11 @@ public class SetMailboxesRequest implements JmapRequest {
         }
         
         public Builder accountId(String accountId) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
         
         public Builder ifInState(String state) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
         
         public Builder update(MailboxId mailboxId, MailboxUpdateRequest mailboxUpdateRequest) {

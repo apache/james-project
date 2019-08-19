@@ -22,7 +22,7 @@ package org.apache.james.backends.cassandra.init.configuration;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 import com.datastax.driver.core.PerHostPercentileTracker;
 import com.datastax.driver.core.QueryLogger;

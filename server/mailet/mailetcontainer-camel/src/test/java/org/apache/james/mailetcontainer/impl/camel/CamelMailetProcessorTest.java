@@ -22,7 +22,7 @@ package org.apache.james.mailetcontainer.impl.camel;
 import static org.mockito.Mockito.mock;
 
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;

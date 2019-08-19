@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.AbstractMap;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;

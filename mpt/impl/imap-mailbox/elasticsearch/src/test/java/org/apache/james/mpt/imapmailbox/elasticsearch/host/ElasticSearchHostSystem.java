@@ -22,7 +22,7 @@ package org.apache.james.mpt.imapmailbox.elasticsearch.host;
 import java.io.IOException;
 import java.time.ZoneId;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.es.DockerElasticSearch;
 import org.apache.james.backends.es.DockerElasticSearchSingleton;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
@@ -132,7 +132,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

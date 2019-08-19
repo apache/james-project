@@ -21,8 +21,8 @@ package org.apache.james.modules;
 
 import java.io.FileNotFoundException;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.export.file.LocalFileBlobExportMechanism;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.utils.PropertiesProvider;

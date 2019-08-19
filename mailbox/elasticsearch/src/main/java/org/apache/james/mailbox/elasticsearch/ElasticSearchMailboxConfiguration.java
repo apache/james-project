@@ -22,7 +22,7 @@ package org.apache.james.mailbox.elasticsearch;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;

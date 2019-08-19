@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.user.ldap.DockerLdapSingleton;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.junit.runner.Description;

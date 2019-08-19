@@ -26,7 +26,8 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
@@ -79,7 +80,7 @@ public class QuotaMailingListenerConfiguration {
             .map(string -> DurationParser.parse(string, ChronoUnit.DAYS));
     }
 
-    private static ImmutableMap<QuotaThreshold, RenderingInformation> readThresholds(HierarchicalConfiguration config) {
+    private static ImmutableMap<QuotaThreshold, RenderingInformation> readThresholds(HierarchicalConfiguration<ImmutableNode> config) {
         return config.configurationsAt(XmlKeys.THRESHOLDS)
             .stream()
             .map(node -> Pair.of(

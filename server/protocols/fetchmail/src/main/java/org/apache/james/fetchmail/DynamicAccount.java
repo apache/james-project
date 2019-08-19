@@ -21,7 +21,7 @@ package org.apache.james.fetchmail;
 
 import javax.mail.Session;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 public class DynamicAccount extends Account {
 

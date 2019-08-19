@@ -32,8 +32,8 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.handler.ProtocolHandler;

@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;

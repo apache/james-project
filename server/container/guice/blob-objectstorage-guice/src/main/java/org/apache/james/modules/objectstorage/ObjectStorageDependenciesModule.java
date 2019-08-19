@@ -27,8 +27,8 @@ import java.util.concurrent.TimeoutException;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.BlobPutter;

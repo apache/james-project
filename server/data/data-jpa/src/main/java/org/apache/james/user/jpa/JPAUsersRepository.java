@@ -31,8 +31,8 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jpa.model.JPAUser;

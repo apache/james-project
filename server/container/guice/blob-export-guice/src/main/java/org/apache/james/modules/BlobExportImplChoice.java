@@ -22,7 +22,7 @@ package org.apache.james.modules;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;

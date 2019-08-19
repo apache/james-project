@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.lib.handler;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 /**

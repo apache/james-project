@@ -20,7 +20,7 @@ package org.apache.james.modules.data;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.jpa.JPARecipientRewriteTable;

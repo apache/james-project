@@ -21,14 +21,14 @@ package org.apache.james.modules.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.junit.jupiter.api.Test;
 
 class ListenerConfigurationTest {
 
     @Test
     void fromShouldThrowWhenClassIsNotInTheConfiguration() {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
 
         assertThatThrownBy(() -> ListenerConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class);
@@ -36,7 +36,7 @@ class ListenerConfigurationTest {
 
     @Test
     void fromShouldThrowWhenClassIsEmpty() {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("class", "");
 
         assertThatThrownBy(() -> ListenerConfiguration.from(configuration))
@@ -45,7 +45,7 @@ class ListenerConfigurationTest {
 
     @Test
     void getClazzShouldReturnTheClassNameFromTheConfiguration() {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         String expectedClazz = "MyClassName";
         configuration.addProperty("class", expectedClazz);
 
@@ -56,7 +56,7 @@ class ListenerConfigurationTest {
 
     @Test
     void isAsyncShouldReturnConfiguredValue() {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("class", "MyClassName");
         configuration.addProperty("async", "false");
 
@@ -67,7 +67,7 @@ class ListenerConfigurationTest {
 
     @Test
     void getGroupShouldBeEmptyByDefault() {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("class", "MyClassName");
 
         ListenerConfiguration listenerConfiguration = ListenerConfiguration.from(configuration);
@@ -78,7 +78,7 @@ class ListenerConfigurationTest {
     @Test
     void getGroupShouldContainsConfiguredValue() {
         String groupName = "Avengers";
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
         configuration.addProperty("class", "MyClassName");
         configuration.addProperty("group", groupName);
 

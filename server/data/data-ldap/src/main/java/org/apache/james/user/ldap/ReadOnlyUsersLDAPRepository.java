@@ -41,9 +41,9 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;

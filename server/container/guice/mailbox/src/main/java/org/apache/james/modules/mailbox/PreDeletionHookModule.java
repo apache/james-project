@@ -23,7 +23,7 @@ import java.util.Set;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 

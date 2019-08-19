@@ -34,7 +34,7 @@ import java.util.function.Consumer;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.configuration.plist.PropertyListConfiguration;
+import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;

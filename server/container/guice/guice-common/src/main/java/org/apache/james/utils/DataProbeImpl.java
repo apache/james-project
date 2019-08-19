@@ -24,7 +24,7 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
@@ -65,7 +65,7 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void setPassword(String userName, String password) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -112,7 +112,7 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public Mappings listUserDomainMappings(String user, String domain) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

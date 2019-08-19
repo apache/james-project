@@ -19,8 +19,8 @@
 
 package org.apache.james.lifecycle.api;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 /**
  * Classes which needs to access the configuration should implement this

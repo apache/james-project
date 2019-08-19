@@ -21,7 +21,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -71,15 +71,15 @@ public class SetMessagesResponse implements Method.Response {
         }
 
         public Builder accountId(String accountId) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder oldState(String oldState) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder newState(String newState) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder created(CreationMessageId creationMessageId, Message message) {

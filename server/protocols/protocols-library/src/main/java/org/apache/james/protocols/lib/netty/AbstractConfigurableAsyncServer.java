@@ -36,9 +36,9 @@ import javax.management.ObjectName;
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Encryption;

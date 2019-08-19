@@ -23,8 +23,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.objectstorage.PayloadCodec;
 import org.apache.james.blob.objectstorage.SpecificAuthConfiguration;

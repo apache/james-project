@@ -19,9 +19,9 @@
 
 package org.apache.james.mpt.host;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.plist.PropertyListConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.imap.api.ImapConfiguration;

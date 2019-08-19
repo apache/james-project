@@ -37,8 +37,8 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.sql.DataSource;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;

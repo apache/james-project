@@ -25,8 +25,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;

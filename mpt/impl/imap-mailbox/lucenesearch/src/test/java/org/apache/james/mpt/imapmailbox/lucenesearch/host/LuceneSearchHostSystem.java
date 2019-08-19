@@ -19,7 +19,7 @@
 
 package org.apache.james.mpt.imapmailbox.lucenesearch.host;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -103,7 +103,7 @@ public class LuceneSearchHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

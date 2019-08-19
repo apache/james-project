@@ -21,7 +21,8 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -136,7 +137,7 @@ public class FileConfigurationProviderTest {
         assertThat(configurationProvider.getConfiguration(FAKE_CONFIG_KEY)).isEqualTo(FileConfigurationProvider.EMPTY_CONFIGURATION);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test(expected = ConfigurationRuntimeException.class)
     public void getConfigurationShouldThrowOnNonExistingXMLFilePart() throws Exception {
         configurationProvider.getConfiguration(String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, FAKE_CONFIG_KEY));
     }

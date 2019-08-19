@@ -22,7 +22,7 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.MoreObjects;

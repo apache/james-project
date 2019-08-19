@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -178,22 +178,22 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
 
     @Override
     public void copyMailbox(String srcBean, String dstBean) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void deleteUserMailboxesNames(String user) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void reIndexMailbox(String namespace, String user, String name) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void reIndexAll() throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

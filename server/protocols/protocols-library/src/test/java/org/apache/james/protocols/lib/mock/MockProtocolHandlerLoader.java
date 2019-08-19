@@ -13,7 +13,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.handler.ProtocolHandler;

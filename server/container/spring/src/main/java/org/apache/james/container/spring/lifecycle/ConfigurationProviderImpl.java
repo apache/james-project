@@ -22,9 +22,13 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
@@ -143,17 +147,15 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
      * @throws IOException
      */
     private XMLConfiguration getConfig(Resource r) throws ConfigurationException, IOException {
-        XMLConfiguration config = new XMLConfiguration();
-        config.setDelimiterParsingDisabled(true);
-        
-        // Don't split attributes which can have bad side-effects with matcher-conditions.
-        // See JAMES-1233
-        config.setAttributeSplittingDisabled(true);
-        
-        // Use InputStream so we are not bound to File implementations of the
-        // config
-        config.load(r.getInputStream());
-        return config;
+        FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+            .configure(new Parameters()
+                .xml()
+                .setListDelimiterHandler(new DisabledListDelimiterHandler()));
+        XMLConfiguration xmlConfiguration = builder.getConfiguration();
+        FileHandler fileHandler = new FileHandler(xmlConfiguration);
+        fileHandler.load(r.getInputStream());
+
+        return xmlConfiguration;
     }
 
     /**

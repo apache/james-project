@@ -21,7 +21,7 @@ package org.apache.james.mpt.imapmailbox.maildir.host;
 import java.io.File;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -133,7 +133,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override

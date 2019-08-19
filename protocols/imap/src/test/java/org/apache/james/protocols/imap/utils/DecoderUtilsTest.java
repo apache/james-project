@@ -29,7 +29,7 @@ import java.util.TimeZone;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang.time.FastDateFormat;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
 

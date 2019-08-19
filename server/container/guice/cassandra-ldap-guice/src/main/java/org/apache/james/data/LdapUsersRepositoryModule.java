@@ -20,7 +20,7 @@ package org.apache.james.data;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;

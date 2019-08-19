@@ -20,8 +20,8 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Objects;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 
 import com.google.common.base.Preconditions;

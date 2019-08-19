@@ -23,7 +23,7 @@ import java.io.FileNotFoundException;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.vault.RetentionConfiguration;
 import org.slf4j.Logger;
@@ -43,7 +43,7 @@ public class DeletedMessageVaultRetentionModule extends AbstractModule {
 
     @Provides
     @Singleton
-    RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration.ConfigurationException {
+    RetentionConfiguration providesRetentionConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException, org.apache.commons.configuration2.ex.ConfigurationException {
         try {
             Configuration configuration = propertiesProvider.getConfiguration("deletedMessageVault");
             return RetentionConfiguration.from(configuration);

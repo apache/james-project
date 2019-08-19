@@ -21,7 +21,7 @@ package org.apache.james.backends.cassandra.init;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.QueryLoggerConfiguration;
 import org.junit.Test;
 

@@ -21,7 +21,7 @@ package org.apache.james.mailbox.quota.mailing.listeners;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;

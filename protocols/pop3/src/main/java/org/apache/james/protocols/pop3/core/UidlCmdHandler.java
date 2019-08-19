@@ -25,8 +25,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;

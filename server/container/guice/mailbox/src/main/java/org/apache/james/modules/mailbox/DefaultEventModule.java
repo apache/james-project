@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.EventDeadLetters;

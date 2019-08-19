@@ -21,8 +21,8 @@ package org.apache.james.modules.mailbox;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -33,11 +33,12 @@ public class PreDeletionHooksConfiguration {
     static final String CONFIGURATION_ENTRY_NAME = "preDeletionHook";
 
     public static PreDeletionHooksConfiguration from(HierarchicalConfiguration configuration) throws ConfigurationException {
-        return new PreDeletionHooksConfiguration(
-                configuration.configurationsAt(CONFIGURATION_ENTRY_NAME)
-                    .stream()
-                    .map(Throwing.function(PreDeletionHookConfiguration::from).sneakyThrow())
-                    .collect(Guavate.toImmutableList()));
+        List<HierarchicalConfiguration> entries = configuration.configurationsAt(CONFIGURATION_ENTRY_NAME);
+
+        return new PreDeletionHooksConfiguration(entries
+            .stream()
+            .map(Throwing.function(PreDeletionHookConfiguration::from).sneakyThrow())
+            .collect(Guavate.toImmutableList()));
     }
 
     public static PreDeletionHooksConfiguration forHooks(PreDeletionHookConfiguration... hooks) {

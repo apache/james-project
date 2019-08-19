@@ -20,7 +20,7 @@ package org.apache.james.modules.data;
 
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.JPADomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;

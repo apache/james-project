@@ -24,7 +24,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -49,22 +49,22 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public void add(MailboxSession session, Mailbox mailbox, MailboxMessage message) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public void update(MailboxSession session, Mailbox mailbox, List<UpdatedFlags> updatedFlagsList) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -74,21 +74,21 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
 
     @Override
     public Stream<MessageUid> search(MailboxSession session, Mailbox mailbox, SearchQuery searchQuery) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public List<MessageId> search(MailboxSession session, Collection<MailboxId> mailboxIds, SearchQuery searchQuery, long limit) throws MailboxException {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public EnumSet<MailboxManager.SearchCapabilities> getSupportedCapabilities(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities) {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 
     @Override
     public ExecutionMode getExecutionMode() {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 }

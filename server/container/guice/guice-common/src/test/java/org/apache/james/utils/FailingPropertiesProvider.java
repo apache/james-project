@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.server.core.configuration.Configuration;
 

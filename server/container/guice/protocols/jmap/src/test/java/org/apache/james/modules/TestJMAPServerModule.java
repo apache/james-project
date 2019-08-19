@@ -24,7 +24,7 @@ import java.util.Optional;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.jmap.JMAPConfiguration;
 import org.apache.james.jmap.methods.GetMessageListMethod;
 

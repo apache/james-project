@@ -22,11 +22,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.apache.commons.configuration.CombinedConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.ConfigurationUtils;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.CombinedConfiguration;
+import org.apache.commons.configuration2.ConfigurationUtils;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
@@ -52,7 +52,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     }
 
     public void init() throws Exception {
-        List<org.apache.commons.configuration.HierarchicalConfiguration> children = handlerchainConfig.configurationsAt("handler");
+        List<org.apache.commons.configuration2.HierarchicalConfiguration> children = handlerchainConfig.configurationsAt("handler");
 
         // check if the coreHandlersPackage was specified in the config, if
         // not add the default
@@ -72,7 +72,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
         registerHandlersPackage(handlersPackage, null, children);
 
         if (handlerchainConfig.getBoolean("[@enableJmx]", true)) {
-            DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
+            HierarchicalConfiguration builder = new BaseHierarchicalConfiguration();
             builder.addProperty("jmxName", jmxName);
             HandlersPackage jmxPackage = (HandlersPackage) loader.load(jmxHandlersPackage, addHandler(jmxHandlersPackage));
 
@@ -132,7 +132,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
      * @throws ConfigurationException
      */
     private HierarchicalConfiguration addHandler(String className) throws ConfigurationException {
-        HierarchicalConfiguration hConf = new DefaultConfigurationBuilder();
+        HierarchicalConfiguration hConf = new BaseHierarchicalConfiguration();
         hConf.addProperty("[@class]", className);
         return hConf;
     }

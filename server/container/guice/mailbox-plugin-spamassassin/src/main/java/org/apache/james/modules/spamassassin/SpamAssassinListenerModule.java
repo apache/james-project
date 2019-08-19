@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;

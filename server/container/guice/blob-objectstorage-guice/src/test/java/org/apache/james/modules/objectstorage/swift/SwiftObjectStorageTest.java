@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.modules.objectstorage.ObjectStorageBlobConfiguration;
 import org.apache.james.modules.objectstorage.ObjectStorageProvider;

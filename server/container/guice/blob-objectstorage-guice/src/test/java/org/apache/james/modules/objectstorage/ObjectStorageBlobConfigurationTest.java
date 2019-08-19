@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.Map;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.MapConfiguration;
+import org.apache.commons.configuration2.MapConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;

@@ -31,7 +31,7 @@ import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.ldap.LdapContext;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 
 /**
  * <p>
@@ -67,7 +67,7 @@ public class ReadOnlyLDAPGroupRestriction {
      *
      * @param configuration The avalon configuration instance that encapsulates the
      *                      contents of the <code>&lt;restriction&gt;<code> XML element.
-     * @throws org.apache.commons.configuration.ConfigurationException
+     * @throws org.apache.commons.configuration2.ex.ConfigurationException
      *          If an error occurs extracting values from the configuration
      *          element.
      */

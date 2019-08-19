@@ -23,7 +23,7 @@ import java.io.FileNotFoundException;
 import java.util.Arrays;
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.OptionalUtils;

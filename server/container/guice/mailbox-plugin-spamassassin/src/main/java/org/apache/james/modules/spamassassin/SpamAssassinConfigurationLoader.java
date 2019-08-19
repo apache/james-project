@@ -21,7 +21,7 @@ package org.apache.james.modules.spamassassin;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
 import org.apache.james.util.Host;
 

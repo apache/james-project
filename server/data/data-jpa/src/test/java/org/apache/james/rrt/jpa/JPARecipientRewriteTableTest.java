@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.jpa;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -46,7 +46,7 @@ public class JPARecipientRewriteTableTest extends AbstractRecipientRewriteTableT
     protected AbstractRecipientRewriteTable getRecipientRewriteTable() throws Exception {
         JPARecipientRewriteTable localVirtualUserTable = new JPARecipientRewriteTable();
         localVirtualUserTable.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        DefaultConfigurationBuilder defaultConfiguration = new DefaultConfigurationBuilder();
+        BaseHierarchicalConfiguration defaultConfiguration = new BaseHierarchicalConfiguration();
         localVirtualUserTable.configure(defaultConfiguration);
         return localVirtualUserTable;
     }

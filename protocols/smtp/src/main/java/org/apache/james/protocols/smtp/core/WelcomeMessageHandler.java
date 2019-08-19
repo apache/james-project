@@ -20,8 +20,8 @@
 
 package org.apache.james.protocols.smtp.core;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.smtp.SMTPResponse;

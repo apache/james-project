@@ -22,8 +22,8 @@ package org.apache.james.modules;
 import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.linshare.LinshareConfiguration;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.modules.mailbox.ConfigurationComponent;

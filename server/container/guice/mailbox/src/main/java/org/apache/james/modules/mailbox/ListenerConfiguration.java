@@ -20,7 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Optional;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

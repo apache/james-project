@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.http.jetty.Configuration.Builder;
 
 public class JettyHttpServerFactory {
@@ -51,12 +51,14 @@ public class JettyHttpServerFactory {
         if (port != null) {
             builder.port(port);
         }
-        for (HierarchicalConfiguration mapping: serverConfig.configurationsAt("mappings.mapping")) {
+        List<HierarchicalConfiguration> mappings = serverConfig.configurationsAt("mappings.mapping");
+        for (HierarchicalConfiguration mapping: mappings) {
             String classname = mapping.getString("servlet");
             Class<? extends Servlet> servletClass = findServlet(classname);
             builder.serve(mapping.getString("path")).with(servletClass);
         }
-        for (HierarchicalConfiguration mapping: serverConfig.configurationsAt("filters.mapping")) {
+        List<HierarchicalConfiguration> filters = serverConfig.configurationsAt("filters.mapping");
+        for (HierarchicalConfiguration mapping: filters) {
             String classname = mapping.getString("filter");
             Class<? extends Filter> filterClass = findFilter(classname);
             builder.filter(mapping.getString("path")).with(filterClass);

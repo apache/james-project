@@ -23,7 +23,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

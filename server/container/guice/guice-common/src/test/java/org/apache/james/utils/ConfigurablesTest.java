@@ -21,8 +21,8 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.junit.Before;
 import org.junit.Test;

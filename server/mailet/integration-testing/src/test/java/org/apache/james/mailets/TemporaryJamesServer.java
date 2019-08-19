@@ -33,7 +33,7 @@ import java.util.Optional;
 
 import org.apache.activemq.store.PersistenceAdapter;
 import org.apache.activemq.store.memory.MemoryPersistenceAdapter;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJamesServerMain;

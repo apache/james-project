@@ -33,7 +33,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaTransition;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -47,6 +47,7 @@ import org.junit.rules.ExpectedException;
 
 import com.datastax.driver.core.Session;
 import com.google.common.collect.ImmutableMap;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraMigrationServiceTest {

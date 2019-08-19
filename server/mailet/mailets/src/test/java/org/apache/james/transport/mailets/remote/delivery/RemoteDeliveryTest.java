@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;

@@ -25,9 +25,9 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -88,7 +88,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         try {
             // TODO Check how to remove this!
             // prepare Configurations for object and stream repositories
-            final DefaultConfigurationBuilder objectConfiguration = new DefaultConfigurationBuilder();
+            HierarchicalConfiguration objectConfiguration = new BaseHierarchicalConfiguration();
 
             objectConfiguration.addProperty("[@destinationURL]", destination);
 

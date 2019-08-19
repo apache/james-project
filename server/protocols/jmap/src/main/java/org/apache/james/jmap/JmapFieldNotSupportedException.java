@@ -19,14 +19,14 @@
 
 package org.apache.james.jmap;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 
 public class JmapFieldNotSupportedException extends NotImplementedException {
     private final String issuer;
     private final String field;
 
     public JmapFieldNotSupportedException(String issuer, String field) {
-        super();
+        super("not implemented");
         this.issuer = issuer;
         this.field = field;
     }

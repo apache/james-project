@@ -22,8 +22,8 @@ import java.util.Locale;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.library.netmatcher.NetMatcher;
 import org.apache.james.protocols.api.ProtocolSession;

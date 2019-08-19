@@ -20,7 +20,7 @@ package org.apache.james.jmap.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.model.mailbox.MailboxCreateRequest;
 import org.apache.james.jmap.model.mailbox.MailboxUpdateRequest;
 import org.apache.james.mailbox.exception.MailboxException;

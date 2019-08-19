@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;

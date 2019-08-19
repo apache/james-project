@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.util.StreamUtils;
 

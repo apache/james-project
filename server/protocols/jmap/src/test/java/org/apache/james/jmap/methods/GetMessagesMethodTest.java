@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.User;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;

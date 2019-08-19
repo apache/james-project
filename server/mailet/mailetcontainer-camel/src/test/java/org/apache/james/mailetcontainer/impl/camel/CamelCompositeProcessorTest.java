@@ -19,7 +19,7 @@
 package org.apache.james.mailetcontainer.impl.camel;
 
 import org.apache.camel.impl.DefaultCamelContext;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;

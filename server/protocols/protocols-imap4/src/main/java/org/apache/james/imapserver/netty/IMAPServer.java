@@ -24,8 +24,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.SSLEngine;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;

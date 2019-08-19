@@ -29,10 +29,9 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration.CombinedConfiguration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.CombinedConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -129,9 +128,7 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
         Optional.ofNullable(perProtocolMailRepositoryDefaultConfiguration.get(mailRepositoryUrl.getProtocol()))
             .ifPresent(config::addConfiguration);
 
-        DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-        builder.addProperty("[@destinationURL]", mailRepositoryUrl.asString());
-        config.addConfiguration(builder);
+        config.setProperty("[@destinationURL]", mailRepositoryUrl.asString());
         return config;
     }
 

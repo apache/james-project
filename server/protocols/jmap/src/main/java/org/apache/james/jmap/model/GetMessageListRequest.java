@@ -22,7 +22,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.methods.JmapRequest;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -59,7 +59,7 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder accountId(String accountId) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder filter(Filter filter) {
@@ -85,11 +85,11 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder anchor(String anchor) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder anchorOffset(int anchorOffset) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder limit(long limit) {
@@ -99,7 +99,7 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder fetchThreads(boolean fetchThreads) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder fetchMessages(boolean fetchMessages) {
@@ -113,7 +113,7 @@ public class GetMessageListRequest implements JmapRequest {
         }
 
         public Builder fetchSearchSnippets(boolean fetchSearchSnippets) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public GetMessageListRequest build() {

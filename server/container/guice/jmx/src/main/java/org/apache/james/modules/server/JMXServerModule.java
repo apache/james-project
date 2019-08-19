@@ -22,7 +22,7 @@ package org.apache.james.modules.server;
 import java.io.FileNotFoundException;
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagement;
 import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagement;

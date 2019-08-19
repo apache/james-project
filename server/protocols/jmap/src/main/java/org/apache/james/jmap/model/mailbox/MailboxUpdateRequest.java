@@ -22,7 +22,7 @@ package org.apache.james.jmap.model.mailbox;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
@@ -75,12 +75,12 @@ public class MailboxUpdateRequest {
 
         public Builder role(Role role) {
             Preconditions.checkNotNull(role);
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder sortOrder(SortOrder sortOrder) {
             Preconditions.checkNotNull(sortOrder);
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder sharedWith(Rights rights) {

@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;

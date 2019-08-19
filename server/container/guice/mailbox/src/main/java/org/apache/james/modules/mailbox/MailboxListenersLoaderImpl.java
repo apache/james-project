@@ -20,7 +20,7 @@ package org.apache.james.modules.mailbox;
 
 import java.util.Set;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.events.EventBus;

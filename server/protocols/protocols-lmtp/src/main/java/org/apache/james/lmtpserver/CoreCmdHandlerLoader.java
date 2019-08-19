@@ -23,8 +23,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lmtpserver.hook.MailboxDeliverToRecipientHandler;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;

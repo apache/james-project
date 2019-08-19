@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.base.MoreObjects;

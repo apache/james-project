@@ -22,7 +22,7 @@ package org.apache.james.modules.objectstorage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.junit.jupiter.api.Test;
 
 class ObjectStorageProviderTest {

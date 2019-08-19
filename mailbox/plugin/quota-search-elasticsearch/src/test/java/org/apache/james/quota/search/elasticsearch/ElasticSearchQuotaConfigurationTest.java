@@ -21,7 +21,7 @@ package org.apache.james.quota.search.elasticsearch;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;

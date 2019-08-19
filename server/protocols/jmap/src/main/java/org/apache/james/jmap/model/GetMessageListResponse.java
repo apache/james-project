@@ -22,7 +22,7 @@ package org.apache.james.jmap.model;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -57,7 +57,7 @@ public class GetMessageListResponse implements Method.Response {
         }
 
         public Builder accountId(String accountId) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder filter(Filter filter) {
@@ -71,27 +71,27 @@ public class GetMessageListResponse implements Method.Response {
         }
 
         public Builder collapseThreads(boolean collapseThreads) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder state(String state) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder canCalculateUpdates(boolean canCalculateUpdates) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder position(int position) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder total(int total) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder threadIds(List<String> threadIds) {
-            throw new NotImplementedException();
+            throw new NotImplementedException("not implemented");
         }
 
         public Builder messageId(MessageId messageId) {

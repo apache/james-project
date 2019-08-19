@@ -19,8 +19,8 @@
 
 package org.apache.james.container.spring.bean.factorypostprocessor;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;

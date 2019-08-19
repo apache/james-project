@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -85,7 +85,7 @@ public class JamesMailetContextTest {
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);
         DNSService dnsService = null;
         testee = new JamesMailetContext(dnsService, usersRepository, domainList, mailQueueFactory);
-        testee.configure(new HierarchicalConfiguration());
+        testee.configure(new BaseHierarchicalConfiguration());
         mailAddress = new MailAddress(USERMAIL);
     }
 

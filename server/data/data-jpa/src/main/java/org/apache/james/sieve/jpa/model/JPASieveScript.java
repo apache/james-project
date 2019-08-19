@@ -30,7 +30,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;

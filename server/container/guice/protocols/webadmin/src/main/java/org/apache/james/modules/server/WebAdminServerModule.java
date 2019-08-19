@@ -25,7 +25,7 @@ import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration2.Configuration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ConfigurationPerformer;

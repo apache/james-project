@@ -21,7 +21,7 @@ package org.apache.james.container.spring.osgi;
 import java.net.URL;
 import java.util.Enumeration;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;

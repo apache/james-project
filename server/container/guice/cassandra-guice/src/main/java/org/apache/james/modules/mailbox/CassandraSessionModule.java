@@ -21,8 +21,8 @@ package org.apache.james.modules.mailbox;
 import java.io.FileNotFoundException;
 import java.util.Set;
 
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;

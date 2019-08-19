@@ -21,7 +21,7 @@ package org.apache.james.mpt.imapmailbox.cyrus.host;
 import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -135,6 +135,6 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
 
     @Override
     public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
-        throw new NotImplementedException();
+        throw new NotImplementedException("not implemented");
     }
 }
