@@ -195,7 +195,7 @@ class AddressMappingRoutesTest {
     @Test
     void removeAddressMappingShouldReturnBadRequestWhenMappingSourceIsInvalid() {
         when()
-            .delete( "random@domain@domain/targets/" + ALICE_ADDRESS)
+            .delete("random@domain@domain/targets/" + ALICE_ADDRESS)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
@@ -203,9 +203,8 @@ class AddressMappingRoutesTest {
     @Test
     void removeAddressMappingShouldReturnNotFoundWhenOneParameterIsEmpty() {
         when()
-            .delete( MAPPING_SOURCE + "/targets/")
+            .delete(MAPPING_SOURCE + "/targets/")
         .then()
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
-
 }
