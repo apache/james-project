@@ -25,9 +25,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -43,7 +45,7 @@ class PreDeletionHooksConfigurationTest {
 
     @Test
     void fromShouldReturnNoneWhenEmpty() throws Exception {
-        HierarchicalConfiguration configuration = new HierarchicalConfiguration();
+        HierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
 
         assertThat(PreDeletionHooksConfiguration.from(configuration))
             .isEqualTo(PreDeletionHooksConfiguration.none());
@@ -51,8 +53,7 @@ class PreDeletionHooksConfigurationTest {
 
     @Test
     void fromShouldThrowWhenInvalidHookConfiguration() throws Exception {
-        XMLConfiguration configuration = new XMLConfiguration();
-        configuration.load(new ByteArrayInputStream((
+        XMLConfiguration configuration = FileConfigurationProvider.getConfig(new ByteArrayInputStream((
             "<preDeletionHooks>" +
                 "  <preDeletionHook>" +
                 "    <class></class>" +
@@ -60,7 +61,7 @@ class PreDeletionHooksConfigurationTest {
                 "</preDeletionHooks>")
             .getBytes(StandardCharsets.UTF_8)));
 
-        HierarchicalConfiguration invalidConfigurationEntry = new HierarchicalConfiguration();
+        HierarchicalConfiguration invalidConfigurationEntry = new BaseHierarchicalConfiguration();
         configuration.addProperty(PreDeletionHooksConfiguration.CONFIGURATION_ENTRY_NAME, ImmutableList.of(invalidConfigurationEntry));
 
         assertThatThrownBy(() -> PreDeletionHooksConfiguration.from(configuration))
@@ -69,8 +70,7 @@ class PreDeletionHooksConfigurationTest {
 
     @Test
     void fromShouldReturnConfiguredEntry() throws Exception {
-        XMLConfiguration configuration = new XMLConfiguration();
-        configuration.load(new ByteArrayInputStream((
+        XMLConfiguration configuration = FileConfigurationProvider.getConfig(new ByteArrayInputStream((
             "<preDeletionHooks>" +
             "  <preDeletionHook>" +
             "    <class>a.class</class>" +
@@ -85,8 +85,7 @@ class PreDeletionHooksConfigurationTest {
 
     @Test
     void fromShouldReturnAllConfiguredEntries() throws Exception {
-        XMLConfiguration configuration = new XMLConfiguration();
-        configuration.load(new ByteArrayInputStream((
+        XMLConfiguration configuration = FileConfigurationProvider.getConfig(new ByteArrayInputStream((
             "<preDeletionHooks>" +
             "  <preDeletionHook>" +
             "    <class>a.class</class>" +

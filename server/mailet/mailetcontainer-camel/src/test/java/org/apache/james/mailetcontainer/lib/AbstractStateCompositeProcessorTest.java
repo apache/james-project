@@ -22,17 +22,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailProcessor;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.mailet.Mail;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public abstract class AbstractStateCompositeProcessorTest {
 
                     @Override
                     public void service(Mail mail) throws MessagingException {
-                        // check if the right processor was selected depending on the state
+                        // check if the right processor wasAbstractStateMailetProcessorTest selected depending on the state
                         assertThat(mail.getState()).isEqualTo(state);
                         super.service(mail);
                     }
@@ -132,20 +133,18 @@ public abstract class AbstractStateCompositeProcessorTest {
     }
     }
 
-    private HierarchicalConfiguration createConfig(List<String> states) throws ConfigurationException {
+    private HierarchicalConfiguration createConfig(List<String> states) throws ConfigurationException, IOException {
 
-    StringBuilder sb = new StringBuilder();
-    sb.append("<?xml version=\"1.0\"?>");
-    sb.append("<processors>");
-        for (String state : states) {
-            sb.append("<processor state=\"");
-            sb.append(state);
-            sb.append("\"/>");
-        }
-    sb.append("</processors>");
+        StringBuilder sb = new StringBuilder();
+        sb.append("<?xml version=\"1.0\"?>");
+        sb.append("<processors>");
+            for (String state : states) {
+                sb.append("<processor state=\"");
+                sb.append(state);
+                sb.append("\"/>");
+            }
+        sb.append("</processors>");
 
-    DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-    builder.load(new ByteArrayInputStream(sb.toString().getBytes()));
-    return builder;
+        return FileConfigurationProvider.getConfig(new ByteArrayInputStream(sb.toString().getBytes()));
     }
 }

@@ -19,11 +19,11 @@
 package org.apache.james.container.spring.lifecycle.osgi;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
+import java.io.IOException;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 
 public class OSGIConfigurationProvider implements org.apache.james.container.spring.lifecycle.ConfigurationProvider {
 
@@ -34,20 +34,11 @@ public class OSGIConfigurationProvider implements org.apache.james.container.spr
 
     @Override
     public HierarchicalConfiguration getConfiguration(String beanName) throws ConfigurationException {
-        XMLConfiguration config = new XMLConfiguration();
         FileInputStream fis = null;
-        config.setDelimiterParsingDisabled(true);
-        
-        // Don't split attributes which can have bad side-effects with matcher-conditions.
-        // See JAMES-1233
-        config.setAttributeSplittingDisabled(true);
-        
-        // Use InputStream so we are not bound to File implementations of the
-        // config
         try {
             fis = new FileInputStream("/tmp/" + beanName + ".xml");
-            config.load(fis);
-        } catch (FileNotFoundException e) {
+            return FileConfigurationProvider.getConfig(fis);
+        } catch (IOException e) {
             throw new ConfigurationException("Bean " + beanName);
         } finally {
             if (fis != null) {
@@ -58,8 +49,6 @@ public class OSGIConfigurationProvider implements org.apache.james.container.spr
                 }
             }
         }
-        
-        return config;
     }
 
 }

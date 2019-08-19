@@ -26,10 +26,11 @@ import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.events.GenericGroup;
@@ -38,6 +39,7 @@ import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,8 +103,8 @@ class MailboxListenersLoaderImplTest {
     }
 
     @Test
-    void configureShouldAddMailboxListenersWhenConfigurationIsGood() throws ConfigurationException {
-        DefaultConfigurationBuilder configuration = toConfigutation("<listeners>" +
+    void configureShouldAddMailboxListenersWhenConfigurationIsGood() throws Exception {
+        XMLConfiguration configuration = toConfigutation("<listeners>" +
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
                     "</listener>" +
@@ -114,8 +116,8 @@ class MailboxListenersLoaderImplTest {
     }
 
     @Test
-    void customGroupCanBePassed() throws ConfigurationException {
-        DefaultConfigurationBuilder configuration = toConfigutation("<listeners>" +
+    void customGroupCanBePassed() throws Exception {
+        XMLConfiguration configuration = toConfigutation("<listeners>" +
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
                         "<group>Avengers</group>" +
@@ -128,8 +130,8 @@ class MailboxListenersLoaderImplTest {
     }
 
     @Test
-    void aListenerCanBeRegisteredOnSeveralGroups() throws ConfigurationException {
-        DefaultConfigurationBuilder configuration = toConfigutation("<listeners>" +
+    void aListenerCanBeRegisteredOnSeveralGroups() throws Exception {
+        XMLConfiguration configuration = toConfigutation("<listeners>" +
                     "<listener>" +
                         "<class>org.apache.james.modules.mailbox.NoopMailboxListener</class>" +
                         "<group>Avengers</group>" +
@@ -145,9 +147,8 @@ class MailboxListenersLoaderImplTest {
         assertThat(eventBus.registeredGroups()).containsExactlyInAnyOrder(new GenericGroup("Avengers"), new GenericGroup("Fantastic 4"));
     }
 
-    private DefaultConfigurationBuilder toConfigutation(String configurationString) throws ConfigurationException {
-        DefaultConfigurationBuilder configuration = new DefaultConfigurationBuilder();
-        configuration.load(new ByteArrayInputStream(configurationString.getBytes(StandardCharsets.UTF_8)));
-        return configuration;
+    private XMLConfiguration toConfigutation(String configurationString) throws ConfigurationException, IOException {
+        return FileConfigurationProvider
+            .getConfig(new ByteArrayInputStream(configurationString.getBytes(StandardCharsets.UTF_8)));
     }
 }

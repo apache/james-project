@@ -25,27 +25,38 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
 import org.junit.Before;
 import org.junit.Test;
 
 public class MailetConfigImplTest {
 
-    private DefaultConfigurationBuilder builder;
+    private XMLConfiguration xmlConfiguration;
+    private FileHandler fileHandler;
     private MailetConfigImpl config;
 
     @Before
     public void setUp() throws Exception {
-        builder = new DefaultConfigurationBuilder();
+        FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+            .configure(new Parameters()
+                .xml()
+                .setListDelimiterHandler(new DisabledListDelimiterHandler()));
+        xmlConfiguration = builder.getConfiguration();
+        fileHandler = new FileHandler(xmlConfiguration);
+
         config = new MailetConfigImpl();
     }
 
     @Test
-    public void testDotParamsFromXML() throws ConfigurationException {
-        builder.load(new ByteArrayInputStream("<mailet><mail.debug>true</mail.debug></mailet>".getBytes()));
+    public void testDotParamsFromXML() throws Exception {
+        fileHandler.load(new ByteArrayInputStream("<mailet><mail.debug>true</mail.debug></mailet>".getBytes()));
 
-        config.setConfiguration(builder);
+        config.setConfiguration(xmlConfiguration);
 
         String param = config.getInitParameterNames().next();
         assertThat(param).isEqualTo("mail.debug");
@@ -54,9 +65,9 @@ public class MailetConfigImplTest {
 
     @Test
     public void testDotParamsFromConfig() throws ConfigurationException {
-        builder.addProperty("mail.debug", "true");
+        xmlConfiguration.addProperty("mail.debug", "true");
 
-        config.setConfiguration(builder);
+        config.setConfiguration(xmlConfiguration);
 
         String param = config.getInitParameterNames().next();
         assertThat(param).isEqualTo("mail.debug");
@@ -65,10 +76,10 @@ public class MailetConfigImplTest {
 
     // See JAMES-1232
     @Test
-    public void testParamWithComma() throws ConfigurationException {
-        builder.load(new ByteArrayInputStream("<mailet><whatever>value1,value2</whatever></mailet>".getBytes()));
+    public void testParamWithComma() throws Exception {
+        fileHandler.load(new ByteArrayInputStream("<mailet><whatever>value1,value2</whatever></mailet>".getBytes()));
 
-        config.setConfiguration(builder);
+        config.setConfiguration(xmlConfiguration);
 
         String param = config.getInitParameterNames().next();
         assertThat(param).isEqualTo("whatever");
@@ -76,12 +87,11 @@ public class MailetConfigImplTest {
     }
 
     @Test
-    public void testParamWithXmlSpace() throws ConfigurationException {
-        builder.setDelimiterParsingDisabled(true);
-        builder.load(new ByteArrayInputStream(
+    public void testParamWithXmlSpace() throws Exception {
+        fileHandler.load(new ByteArrayInputStream(
                 "<mailet><whatever xml:space=\"preserve\"> some text </whatever></mailet>".getBytes()));
 
-        config.setConfiguration(builder);
+        config.setConfiguration(xmlConfiguration);
 
         String param = config.getInitParameterNames().next();
         assertThat(param).isEqualTo("whatever");

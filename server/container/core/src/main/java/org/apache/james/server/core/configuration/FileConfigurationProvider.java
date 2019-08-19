@@ -24,10 +24,13 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.LoggingLevel;
 import org.slf4j.Logger;
@@ -42,17 +45,19 @@ public class FileConfigurationProvider implements ConfigurationProvider {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileConfigurationProvider.class);
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
-    private static final char SEMICOLON = ';';
 
-    public static final HierarchicalConfiguration EMPTY_CONFIGURATION = new HierarchicalConfiguration();
+    public static final HierarchicalConfiguration EMPTY_CONFIGURATION = new XMLConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
-        PropertiesConfiguration.setDefaultListDelimiter(SEMICOLON);
-        XMLConfiguration config = new XMLConfiguration();
-        config.setDelimiterParsingDisabled(true);
-        config.setAttributeSplittingDisabled(true);
-        config.load(configStream);
-        return config;
+        FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
+            .configure(new Parameters()
+                .xml()
+                .setListDelimiterHandler(new DisabledListDelimiterHandler()));
+        XMLConfiguration xmlConfiguration = builder.getConfiguration();
+        FileHandler fileHandler = new FileHandler(xmlConfiguration);
+        fileHandler.load(configStream);
+
+        return xmlConfiguration;
     }
     
     private final FileSystem fileSystem;

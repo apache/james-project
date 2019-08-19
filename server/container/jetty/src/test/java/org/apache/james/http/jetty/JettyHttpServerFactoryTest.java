@@ -21,28 +21,19 @@ package org.apache.james.http.jetty;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.configuration.HierarchicalConfiguration;
-import org.apache.commons.configuration.XMLConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
 public class JettyHttpServerFactoryTest {
 
-    private HierarchicalConfiguration loadConfiguration(InputStream configuration) throws org.apache.commons.configuration.ConfigurationException {
-        XMLConfiguration config = new XMLConfiguration();
-        config.setDelimiterParsingDisabled(true);
-        config.setAttributeSplittingDisabled(true);
-        config.load(configuration);
-        return config;
-    }
-    
     @Test
     public void shouldCreateServersAsDescribedInXmlConfiguration() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("httpserver.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("httpserver.xml"));
         List<JettyHttpServer> servers = new JettyHttpServerFactory().createServers(configuration);
         assertThat(servers).extracting(JettyHttpServer::getConfiguration)
             .containsOnly(Configuration.builder()
@@ -63,26 +54,26 @@ public class JettyHttpServerFactoryTest {
 
     @Test
     public void shouldThrowOnEmptyServletName() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("emptyservletname.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("emptyservletname.xml"));
         assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
     }
 
     @Test
     public void shouldThrowOnUnavailableServletName() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("unavailableservletname.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("unavailableservletname.xml"));
         assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
     }
     
     @Test
     public void shouldThrowOnConflictingPortConfiguration() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("conflictingport.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("conflictingport.xml"));
         assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
     }
     
     @SuppressWarnings("unchecked")
     @Test
     public void shouldBeAbleToLoadEmptyMappingConfiguration() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("emptymappingconfiguration.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("emptymappingconfiguration.xml"));
         assertThat(new JettyHttpServerFactory().createServers(configuration))
             .extracting(server -> server.getConfiguration().getMappings())
             .containsOnly(ImmutableMap.of());
@@ -90,13 +81,13 @@ public class JettyHttpServerFactoryTest {
 
     @Test
     public void shouldThrowOnEmptyFilterName() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("emptyfiltername.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("emptyfiltername.xml"));
         assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
     }
 
     @Test
     public void shouldThrowOnUnavailableFilterName() throws Exception {
-        HierarchicalConfiguration configuration = loadConfiguration(ClassLoader.getSystemResourceAsStream("unavailablefiltername.xml"));
+        HierarchicalConfiguration configuration = FileConfigurationProvider.getConfig(ClassLoader.getSystemResourceAsStream("unavailablefiltername.xml"));
         assertThatThrownBy(() -> new JettyHttpServerFactory().createServers(configuration)).isInstanceOf(ConfigurationException.class);
     }
     

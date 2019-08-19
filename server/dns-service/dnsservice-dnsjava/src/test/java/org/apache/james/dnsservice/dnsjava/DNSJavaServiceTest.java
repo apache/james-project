@@ -31,8 +31,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
 import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -65,11 +65,8 @@ public class DNSJavaServiceTest {
     @Before
     public void setUp() throws Exception {
         dnsServer = new TestableDNSServer();
-        DefaultConfigurationBuilder db = new DefaultConfigurationBuilder();
 
-        db.load(new ByteArrayInputStream(DNS_SERVER_CONFIG));
-
-        dnsServer.configure(db);
+        dnsServer.configure(FileConfigurationProvider.getConfig(new ByteArrayInputStream(DNS_SERVER_CONFIG)));
         dnsServer.init();
 
         defaultCache = Lookup.getDefaultCache(DClass.IN);

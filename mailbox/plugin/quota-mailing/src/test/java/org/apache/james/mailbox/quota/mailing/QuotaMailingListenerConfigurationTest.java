@@ -28,9 +28,10 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration.RenderingInformation;
 import org.apache.james.mailbox.quota.model.QuotaThreshold;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -52,8 +53,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldReadXMLConfiguration() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration>\n" +
                 "  <thresholds>\n" +
                 "    <threshold>" +
@@ -90,8 +90,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldReadXMLConfigurationWhenRenderingInformationPartiallyOmited() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration>\n" +
                 "  <thresholds>\n" +
                 "    <threshold>" +
@@ -127,8 +126,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldAcceptEmptyThreshold() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration>\n" +
                 "  <thresholds></thresholds>\n" +
                 "  <gracePeriod>3 days</gracePeriod>\n" +
@@ -144,8 +142,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldReturnDefaultWhenEmptyConfiguration() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration></configuration>"));
 
         QuotaMailingListenerConfiguration result = QuotaMailingListenerConfiguration.from(xmlConfiguration);
@@ -164,8 +161,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnNonParsableGracePeriod() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration><gracePeriod>nonParsable</gracePeriod></configuration>"));
 
         assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
@@ -174,8 +170,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnNegativeGracePeriod() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration><gracePeriod>-12 ms</gracePeriod></configuration>"));
 
         assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
@@ -184,8 +179,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldLoadGracePeriodInMs() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration><gracePeriod>12 ms</gracePeriod></configuration>"));
 
         assertThat(QuotaMailingListenerConfiguration.from(xmlConfiguration).getGracePeriod())
@@ -194,8 +188,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void defaultUnitShouldBeMilliseconds() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();
-        xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration><gracePeriod>12</gracePeriod></configuration>"));
 
         assertThat(QuotaMailingListenerConfiguration.from(xmlConfiguration).getGracePeriod())
@@ -204,7 +197,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnEmptySubjectTemplate() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration>\n" +
                 "  <thresholds>\n" +
                 "    <threshold>" +
@@ -223,7 +216,7 @@ public class QuotaMailingListenerConfigurationTest {
 
     @Test
     public void fromShouldThrowOnEmptyBodyTemplate() throws Exception {
-        DefaultConfigurationBuilder xmlConfiguration = new DefaultConfigurationBuilder();xmlConfiguration.load(toStream(
+        XMLConfiguration xmlConfiguration = FileConfigurationProvider.getConfig(toStream(
             "<configuration>\n" +
                 "  <thresholds>\n" +
                 "    <threshold>" +
@@ -242,5 +235,4 @@ public class QuotaMailingListenerConfigurationTest {
     private InputStream toStream(String string) {
         return new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8));
     }
-
 }

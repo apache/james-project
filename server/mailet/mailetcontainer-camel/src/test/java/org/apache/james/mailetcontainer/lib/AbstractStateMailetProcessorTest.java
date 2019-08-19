@@ -27,9 +27,8 @@ import java.util.concurrent.CountDownLatch;
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.DefaultConfigurationBuilder;
-import org.apache.commons.configuration.HierarchicalConfiguration;
+import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMailet;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMatcher;
@@ -37,6 +36,7 @@ import org.apache.james.mailetcontainer.api.mock.MockMailet;
 import org.apache.james.mailetcontainer.api.mock.MockMatcher;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor.MailetProcessorListener;
 import org.apache.james.server.core.MailImpl;
+import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.Matcher;
@@ -59,9 +59,7 @@ public abstract class AbstractStateMailetProcessorTest {
 
         sb.append("</processor>");
 
-        DefaultConfigurationBuilder builder = new DefaultConfigurationBuilder();
-        builder.load(new ByteArrayInputStream(sb.toString().getBytes()));
-        return builder;
+        return FileConfigurationProvider.getConfig(new ByteArrayInputStream(sb.toString().getBytes()));
     }
 
     @Test
