@@ -23,8 +23,8 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;

@@ -24,8 +24,8 @@ import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.OioSMTPServerFactory;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
-import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;

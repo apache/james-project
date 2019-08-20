@@ -28,9 +28,9 @@ import org.apache.james.modules.IsStartedProbeModule;
 import org.apache.james.modules.MailetProcessingModule;
 import org.apache.james.onami.lifecycle.Stager;
 import org.apache.james.server.core.configuration.Configuration;
-import org.apache.james.utils.InitializationOperations;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.GuiceProbeProvider;
+import org.apache.james.utils.InitializationOperations;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Guice;

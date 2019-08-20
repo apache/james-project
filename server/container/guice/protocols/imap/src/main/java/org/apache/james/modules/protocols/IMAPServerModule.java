@@ -34,8 +34,8 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.InitialisationOperation;
 import org.apache.james.utils.GuiceProbe;
+import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
