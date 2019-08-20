@@ -203,7 +203,6 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return deletedMessageDAO.retrieveDeletedMessage(mailboxId, messageRange)
-            .limitRate(cassandraConfiguration.getExpungeChunkSize())
             .collect(Guavate.toImmutableList())
             .block();
     }
@@ -213,8 +212,7 @@ public class CassandraMessageMapper implements MessageMapper {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
 
         return Flux.fromStream(uids.stream())
-            .limitRate(cassandraConfiguration.getExpungeChunkSize())
-            .flatMap(messageUid -> expungeOne(mailboxId, messageUid))
+            .flatMap(messageUid -> expungeOne(mailboxId, messageUid), cassandraConfiguration.getExpungeChunkSize())
             .collect(Guavate.<SimpleMailboxMessage, MessageUid, MessageMetaData>toImmutableMap(MailboxMessage::getUid, MailboxMessage::metaData))
             .block();
     }

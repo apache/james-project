@@ -34,6 +34,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class PreDeletionHooks {
+    private static final int CONCURRENCY = 1;
     public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of(), new NoopMetricFactory());
 
     static final String PRE_DELETION_HOOK_METRIC_NAME = "preDeletionHook";
@@ -50,9 +51,8 @@ public class PreDeletionHooks {
     public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
         return Flux.fromIterable(hooks)
             .publishOn(Schedulers.elastic())
-            .limitRate(1)
             .flatMap(hook -> metricFactory.runPublishingTimerMetric(PRE_DELETION_HOOK_METRIC_NAME,
-                Mono.from(hook.notifyDelete(deleteOperation))))
+                Mono.from(hook.notifyDelete(deleteOperation))), CONCURRENCY)
             .then();
     }
 }

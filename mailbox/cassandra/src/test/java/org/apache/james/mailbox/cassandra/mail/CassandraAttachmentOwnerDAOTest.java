@@ -76,11 +76,11 @@ class CassandraAttachmentOwnerDAOTest {
 
     @Test
     void retrieveOwnersShouldNotThrowWhenMoreReferencesThanPaging() {
+        int concurrency = 128;
         int referenceCountExceedingPaging = 5050;
 
         Flux.range(0, referenceCountExceedingPaging)
-            .limitRate(128)
-            .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)))
+            .flatMap(i -> testee.addOwner(ATTACHMENT_ID, Username.fromRawValue("owner" + i)), concurrency)
             .blockLast();
 
         assertThat(testee.retrieveOwners(ATTACHMENT_ID).toIterable())

@@ -92,8 +92,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public List<MailboxMessage> find(Collection<MessageId> messageIds, FetchType fetchType) {
         return Flux.fromStream(messageIds.stream())
             .publishOn(Schedulers.elastic())
-            .limitRate(cassandraConfiguration.getMessageReadChunkSize())
-            .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()))
+            .flatMap(messageId -> imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.empty()), cassandraConfiguration.getMessageReadChunkSize())
             .collectList()
             .flatMapMany(composedMessageIds -> messageDAO.retrieveMessages(composedMessageIds, fetchType, Limit.unlimited()))
             .filter(CassandraMessageDAO.MessageResult::isFound)
@@ -178,9 +177,8 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     public void delete(Multimap<MessageId, MailboxId> ids) {
         Flux.fromIterable(ids.asMap()
             .entrySet())
-            .limitRate(cassandraConfiguration.getExpungeChunkSize())
             .publishOn(Schedulers.elastic())
-            .flatMap(entry -> deleteAsMono(entry.getKey(), entry.getValue()))
+            .flatMap(entry -> deleteAsMono(entry.getKey(), entry.getValue()), cassandraConfiguration.getExpungeChunkSize())
             .then()
             .block();
     }
