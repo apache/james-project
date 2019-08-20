@@ -123,7 +123,7 @@ public class CassandraDefaultBucketDAO {
             .map(row -> row.getInt(NUMBER_OF_CHUNK));
     }
 
-    Mono<byte[]> readPart(BlobId blobId, int position) {
+    Mono<ByteBuffer> readPart(BlobId blobId, int position) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectPart.bind()
                 .setString(DefaultBucketBlobParts.ID, blobId.asString())
@@ -143,10 +143,7 @@ public class CassandraDefaultBucketDAO {
                 .setString(DefaultBucketBlobParts.ID, blobId.asString()));
     }
 
-    private byte[] rowToData(Row row) {
-        ByteBuffer byteBuffer = row.getBytes(DefaultBucketBlobParts.DATA);
-        byte[] data = new byte[byteBuffer.remaining()];
-        byteBuffer.get(data);
-        return data;
+    private ByteBuffer rowToData(Row row) {
+        return row.getBytes(DefaultBucketBlobParts.DATA);
     }
 }

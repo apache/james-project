@@ -22,6 +22,7 @@ package org.apache.james.blob.cassandra;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Comparator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -42,7 +43,6 @@ import org.apache.james.util.ReactorUtils;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.primitives.Bytes;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -114,7 +114,7 @@ public class CassandraBlobStore implements BlobStore {
     public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
         return readBlobParts(bucketName, blobId)
             .collectList()
-            .map(parts -> Bytes.concat(parts.toArray(new byte[0][])));
+            .map(this::byteBuffersToBytesArray);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class CassandraBlobStore implements BlobStore {
         return BucketName.DEFAULT;
     }
 
-    private Flux<byte[]> readBlobParts(BucketName bucketName, BlobId blobId) {
+    private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
         Integer rowCount = selectRowCount(bucketName, blobId)
             .publishOn(Schedulers.elastic())
             .single()
@@ -173,7 +173,7 @@ public class CassandraBlobStore implements BlobStore {
         }
     }
 
-    private Mono<byte[]> readPart(BucketName bucketName, BlobId blobId, Integer partIndex) {
+    private Mono<ByteBuffer> readPart(BucketName bucketName, BlobId blobId, Integer partIndex) {
         if (isDefaultBucket(bucketName)) {
             return defaultBucketDAO.readPart(blobId, partIndex);
         } else {
@@ -207,5 +207,17 @@ public class CassandraBlobStore implements BlobStore {
 
     private boolean isDefaultBucket(BucketName bucketName) {
         return bucketName.equals(getDefaultBucketName());
+    }
+
+    private byte[] byteBuffersToBytesArray(List<ByteBuffer> byteBuffers) {
+        int targetSize = byteBuffers
+            .stream()
+            .mapToInt(ByteBuffer::remaining)
+            .sum();
+
+        return byteBuffers
+            .stream()
+            .reduce(ByteBuffer.allocate(targetSize), (accumulator, element) -> accumulator.put(element))
+            .array();
     }
 }

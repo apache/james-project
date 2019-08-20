@@ -18,9 +18,9 @@
  ****************************************************************/
 package org.apache.james.util;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.stream.Stream;
@@ -33,18 +33,18 @@ public class ReactorUtils {
         return Mono.fromRunnable(runnable).then(Mono.empty());
     }
 
-    public static InputStream toInputStream(Flux<byte[]> byteArrays) {
+    public static InputStream toInputStream(Flux<ByteBuffer> byteArrays) {
         return new StreamInputStream(byteArrays.toStream(1));
     }
 
     private static  class StreamInputStream extends InputStream {
         private static final int NO_MORE_DATA = -1;
 
-        private final Stream<byte[]> source;
-        private final Spliterator<byte[]> spliterator;
-        private Optional<ByteArrayInputStream> currentItemByteStream;
+        private final Stream<ByteBuffer> source;
+        private final Spliterator<ByteBuffer> spliterator;
+        private Optional<ByteBuffer> currentItemByteStream;
 
-        StreamInputStream(Stream<byte[]> source) {
+        StreamInputStream(Stream<ByteBuffer> source) {
             this.source = source;
             this.spliterator = source.spliterator();
             this.currentItemByteStream = Optional.empty();
@@ -62,8 +62,9 @@ public class ReactorUtils {
                     return NO_MORE_DATA;
                 }
 
-                return currentItemByteStream.map(ByteArrayInputStream::read)
-                    .filter(readResult -> readResult != NO_MORE_DATA)
+                return currentItemByteStream
+                    .filter(ByteBuffer::hasRemaining)
+                    .map(buffer -> buffer.get() & 0xFF)
                     .orElseGet(this::readNextChunk);
             } catch (Throwable t) {
                 source.close();
@@ -77,7 +78,7 @@ public class ReactorUtils {
 
         private void switchToNextChunk() {
             spliterator.tryAdvance(bytes ->
-                currentItemByteStream = Optional.of(new ByteArrayInputStream(bytes)));
+                currentItemByteStream = Optional.of(bytes));
         }
 
         private Integer readNextChunk() {

@@ -55,7 +55,7 @@ class CassandraBucketDAOTest {
 
     @Test
     void readPartShouldReturnEmptyWhenNone() {
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).isEmpty();
     }
@@ -88,7 +88,7 @@ class CassandraBucketDAOTest {
 
         testee.deleteParts(BUCKET_NAME, BLOB_ID).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
         assertThat(maybeBytes).isEmpty();
     }
 
@@ -99,8 +99,8 @@ class CassandraBucketDAOTest {
 
         testee.deleteParts(BUCKET_NAME, BLOB_ID).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
-        Optional<byte[]> maybeBytes2 = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION_2).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes2 = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION_2).blockOptional();
         assertThat(maybeBytes).isEmpty();
         assertThat(maybeBytes2).isEmpty();
     }
@@ -109,16 +109,16 @@ class CassandraBucketDAOTest {
     void readPartShouldReturnPreviouslySavedData() {
         testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
-        assertThat(maybeBytes).contains(DATA);
+        assertThat(maybeBytes).contains(ByteBuffer.wrap(DATA));
     }
 
     @Test
     void readPartShouldNotReturnContentOfOtherParts() {
         testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION_2).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION_2).blockOptional();
 
         assertThat(maybeBytes).isEmpty();
     }
@@ -127,7 +127,7 @@ class CassandraBucketDAOTest {
     void readPartShouldNotReturnContentOfOtherBuckets() {
         testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME_2, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME_2, BLOB_ID, POSITION).blockOptional();
 
         assertThat(maybeBytes).isEmpty();
     }
@@ -137,9 +137,9 @@ class CassandraBucketDAOTest {
         testee.writePart(ByteBuffer.wrap(DATA), BUCKET_NAME, BLOB_ID, POSITION).block();
         testee.writePart(ByteBuffer.wrap(DATA_2), BUCKET_NAME, BLOB_ID, POSITION).block();
 
-        Optional<byte[]> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
+        Optional<ByteBuffer> maybeBytes = testee.readPart(BUCKET_NAME, BLOB_ID, POSITION).blockOptional();
 
-        assertThat(maybeBytes).contains(DATA_2);
+        assertThat(maybeBytes).contains(ByteBuffer.wrap(DATA_2));
     }
 
     @Test
