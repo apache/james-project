@@ -40,6 +40,7 @@ import org.apache.james.task.eventsourcing.Cancelled;
 import org.apache.james.task.eventsourcing.CancelRequested;
 import org.apache.james.task.eventsourcing.Completed;
 import org.apache.james.task.eventsourcing.Failed;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.task.eventsourcing.Started;
 import org.apache.james.task.eventsourcing.TaskAggregateId;
 import org.apache.james.task.eventsourcing.TaskEvent;
@@ -54,6 +55,7 @@ class TaskEventsSerializationTest {
     private static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
     private static final EventId EVENT_ID = EventId.fromSerialized(42);
     private static final Task TASK = new CompletedTask();
+    private static final Hostname HOSTNAME = new Hostname("foo");
 
     @ParameterizedTest
     @MethodSource
@@ -77,7 +79,7 @@ class TaskEventsSerializationTest {
 
     private static Stream<Arguments> validTasks() throws Exception {
         return Stream.of(
-            Arguments.of(new Created(AGGREGATE_ID, EVENT_ID, TASK), "{\"task\":\"{\\\"type\\\":\\\"completed-task\\\"}\",\"type\":\"task-manager-created\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42}\n"),
+            Arguments.of(new Created(AGGREGATE_ID, EVENT_ID, TASK, HOSTNAME), "{\"task\":\"{\\\"type\\\":\\\"completed-task\\\"}\",\"type\":\"task-manager-created\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"hostname\":\"foo\"}\n"),
             Arguments.of(new Started(AGGREGATE_ID, EVENT_ID), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-started\"}"),
             Arguments.of(new CancelRequested(AGGREGATE_ID, EVENT_ID), "{\"type\":\"task-manager-cancel-requested\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42}\n"),
             Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\"}"),

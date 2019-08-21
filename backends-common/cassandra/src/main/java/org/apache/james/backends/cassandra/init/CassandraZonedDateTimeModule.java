@@ -42,19 +42,25 @@ public interface CassandraZonedDateTimeModule {
             .addColumn(TIME_ZONE, text()))
         .build();
 
+    static UDTValue toUDT(UserType zonedDateTimeUserType, ZonedDateTime zonedDateTime) {
+        ZonedDateTimeRepresentation representation = ZonedDateTimeRepresentation.fromZonedDateTime(zonedDateTime);
+        return zonedDateTimeUserType.newValue()
+            .setTimestamp(CassandraZonedDateTimeModule.DATE, representation.getDate())
+            .setString(CassandraZonedDateTimeModule.TIME_ZONE, representation.getSerializedZoneId());
+    }
+
     static Optional<UDTValue> toUDT(UserType zonedDateTimeUserType, Optional<ZonedDateTime> zonedDateTimeOptional) {
-        return zonedDateTimeOptional.map(ZonedDateTimeRepresentation::fromZonedDateTime)
-            .map(representation -> zonedDateTimeUserType.newValue()
-                .setTimestamp(CassandraZonedDateTimeModule.DATE, representation.getDate())
-                .setString(CassandraZonedDateTimeModule.TIME_ZONE, representation.getSerializedZoneId()));
+        return zonedDateTimeOptional.map(zonedDateTime -> toUDT(zonedDateTimeUserType, zonedDateTime));
     }
 
-    static Optional<ZonedDateTime> fromUDT(UDTValue value) {
-        return Optional.ofNullable(value)
-            .map(udtValue -> ZonedDateTimeRepresentation.fromDate(
-                    udtValue.getTimestamp(CassandraZonedDateTimeModule.DATE),
-                    udtValue.getString(CassandraZonedDateTimeModule.TIME_ZONE))
-                .getZonedDateTime());
+    static Optional<ZonedDateTime> fromUDTOptional(UDTValue value) {
+        return Optional.ofNullable(value).map(CassandraZonedDateTimeModule::fromUDT);
     }
 
+    static ZonedDateTime fromUDT(UDTValue udtValue) {
+        return ZonedDateTimeRepresentation.fromDate(
+                udtValue.getTimestamp(CassandraZonedDateTimeModule.DATE),
+                udtValue.getString(CassandraZonedDateTimeModule.TIME_ZONE))
+            .getZonedDateTime();
+    }
 }

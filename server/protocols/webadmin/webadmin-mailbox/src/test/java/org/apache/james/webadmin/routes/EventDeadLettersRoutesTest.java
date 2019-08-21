@@ -51,6 +51,7 @@ import org.apache.james.mailbox.store.quota.DefaultUserQuotaRootResolver;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
@@ -121,7 +122,7 @@ class EventDeadLettersRoutesTest {
         EventDeadLettersRedeliverService redeliverService = new EventDeadLettersRedeliverService(eventBus, deadLetters);
         EventDeadLettersService service = new EventDeadLettersService(redeliverService, deadLetters);
 
-        taskManager = new MemoryTaskManager();
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new EventDeadLettersRoutes(service, eventSerializer, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))

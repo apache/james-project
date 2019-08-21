@@ -37,9 +37,9 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     .status
 
 
-  def create(task: Task): util.List[Event] = {
+  def create(task: Task, hostname: Hostname): util.List[Event] = {
     if (currentStatus.isEmpty) {
-      createEventWithId(Created(aggregateId, _, task))
+      createEventWithId(Created(aggregateId, _, task, hostname))
     } else Nil.asJava
   }
 

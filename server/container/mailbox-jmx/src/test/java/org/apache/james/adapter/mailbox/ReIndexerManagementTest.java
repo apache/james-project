@@ -31,6 +31,8 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +43,7 @@ public class ReIndexerManagementTest {
 
     @BeforeEach
     void setUp() {
-        taskManager = new MemoryTaskManager();
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         reIndexer = mock(ReIndexer.class);
         testee = new ReIndexerManagement(taskManager, reIndexer);
     }

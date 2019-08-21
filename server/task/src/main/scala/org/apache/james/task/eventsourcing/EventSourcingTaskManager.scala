@@ -33,12 +33,13 @@ import scala.annotation.tailrec
 class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](
                                                                                   workQueueSupplier: WorkQueueSupplier,
                                                                                   val eventStore: EventStore,
-                                                                                  val executionDetailsProjection: TaskExecutionDetailsProjection) extends TaskManager with Closeable {
+                                                                                  val executionDetailsProjection: TaskExecutionDetailsProjection,
+                                                                                  val hostname: Hostname) extends TaskManager with Closeable {
 
   private val delayBetweenPollingInMs = 500
 
   private def workDispatcher: Subscriber = {
-    case Created(aggregateId, _, task) =>
+    case Created(aggregateId, _, task, _) =>
       val taskWithId = new TaskWithId(aggregateId.taskId, task)
       workQueue.submit(taskWithId)
     case CancelRequested(aggregateId, _) =>
@@ -51,7 +52,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
   private val loadHistory: AggregateId => History = eventStore.getEventsOfAggregate _
   private val eventSourcingSystem = ScalaEventSourcingSystem(
     handlers = Set(
-      new CreateCommandHandler(loadHistory),
+      new CreateCommandHandler(loadHistory, hostname),
       new StartCommandHandler(loadHistory),
       new RequestCancelCommandHandler(loadHistory),
       new CompleteCommandHandler(loadHistory),

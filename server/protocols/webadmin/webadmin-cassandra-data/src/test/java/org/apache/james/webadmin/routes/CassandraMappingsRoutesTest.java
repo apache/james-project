@@ -37,6 +37,7 @@ import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.CassandraMappingsService;
@@ -76,7 +77,7 @@ class CassandraMappingsRoutesTest {
         CassandraMappingsService cassandraMappingsService = new CassandraMappingsService(mappingsSourcesMigration, cassandraMappingsSourcesDAO);
 
         JsonTransformer jsonTransformer = new JsonTransformer();
-        taskManager = new MemoryTaskManager();
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new CassandraMappingsRoutes(cassandraMappingsService, taskManager, jsonTransformer),
                 new TasksRoutes(taskManager, jsonTransformer))

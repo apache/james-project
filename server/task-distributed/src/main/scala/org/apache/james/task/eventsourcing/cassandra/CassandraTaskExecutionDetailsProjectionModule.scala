@@ -31,6 +31,7 @@ object CassandraTaskExecutionDetailsProjectionTable {
   val TYPE: String = "type"
   val STATUS: String = "status"
   val SUBMITTED_DATE: String = "submittedDate"
+  val SUBMITTED_NODE: String = "submittedNode"
   val STARTED_DATE: String = "startedDate"
   val COMPLETED_DATE: String = "completedDate"
   val CANCELED_DATE: String = "canceledDate"
@@ -51,6 +52,7 @@ object CassandraTaskExecutionDetailsProjectionModule {
       .addColumn(CassandraTaskExecutionDetailsProjectionTable.TYPE, text)
       .addColumn(CassandraTaskExecutionDetailsProjectionTable.STATUS, text)
       .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
+      .addColumn(CassandraTaskExecutionDetailsProjectionTable.SUBMITTED_NODE, text)
       .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.STARTED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
       .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.COMPLETED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))
       .addUDTColumn(CassandraTaskExecutionDetailsProjectionTable.CANCELED_DATE, SchemaBuilder.frozen(CassandraZonedDateTimeModule.ZONED_DATE_TIME))

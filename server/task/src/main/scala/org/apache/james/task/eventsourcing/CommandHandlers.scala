@@ -33,11 +33,11 @@ sealed abstract class TaskCommandHandler[T <: TaskCommand] extends CommandHandle
   }
 }
 
-class CreateCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[Create] {
+class CreateCommandHandler(private val loadHistory: TaskAggregateId => History, hostname: Hostname) extends TaskCommandHandler[Create] {
   override def handledClass: Class[Create] = classOf[Create]
 
   override def handle(command: Create): util.List[_ <: Event] = {
-    loadAggregate(loadHistory, command.id).create(command.task)
+    loadAggregate(loadHistory, command.id).create(command.task, hostname)
   }
 }
 

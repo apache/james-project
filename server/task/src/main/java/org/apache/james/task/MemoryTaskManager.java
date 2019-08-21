@@ -28,6 +28,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+
+import org.apache.james.task.eventsourcing.Hostname;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
@@ -78,22 +81,25 @@ public class MemoryTaskManager implements TaskManager {
         }
     }
 
-    public static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
+    private static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
     public static final Duration NOW = Duration.ZERO;
+
+    private final Hostname hostname;
     private final WorkQueue workQueue;
     private final TaskManagerWorker worker;
     private final ConcurrentHashMap<TaskId, TaskExecutionDetails> idToExecutionDetails;
 
-    public MemoryTaskManager() {
-
-        idToExecutionDetails = new ConcurrentHashMap<>();
-        worker = new SerialTaskManagerWorker(updater());
+    @Inject
+    public MemoryTaskManager(Hostname hostname) {
+        this.hostname = hostname;
+        this.idToExecutionDetails = new ConcurrentHashMap<>();
+        this.worker = new SerialTaskManagerWorker(updater());
         workQueue = new MemoryWorkQueue(worker);
     }
 
     public TaskId submit(Task task) {
         TaskId taskId = TaskId.generateTaskId();
-        TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId);
+        TaskExecutionDetails executionDetails = TaskExecutionDetails.from(task, taskId, hostname);
         idToExecutionDetails.put(taskId, executionDetails);
         workQueue.submit(new TaskWithId(taskId, task));
         return taskId;

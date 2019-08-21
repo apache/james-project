@@ -34,14 +34,15 @@ sealed abstract class TaskEventDTO(val getType: String, val getAggregate: String
 case class CreatedDTO(@JsonProperty("type") typeName: String,
                       @JsonProperty("aggregate") aggregateId: String,
                       @JsonProperty("event") eventId: Int,
-                      @JsonProperty("task") getTask: String)
+                      @JsonProperty("task") getTask: String,
+                      @JsonProperty("hostname") getHostname: String)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
-  def toDomainObject(serializer: JsonTaskSerializer): Created = Created(domainAggregateId, domainEventId, serializer.deserialize(getTask))
+  def toDomainObject(serializer: JsonTaskSerializer): Created = Created(domainAggregateId, domainEventId, serializer.deserialize(getTask), Hostname(getHostname))
 }
 
 object CreatedDTO {
   def fromDomainObject(event: Created, typeName: String, serializer: JsonTaskSerializer): CreatedDTO =
-    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), serializer.serialize(event.task))
+    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), serializer.serialize(event.task), event.hostname.asString)
 }
 
 case class StartedDTO(@JsonProperty("type") typeName: String,

@@ -43,6 +43,7 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.WorkerStatusListener;
@@ -82,8 +83,8 @@ class DistributedTaskManagerTest {
             TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
             return new MemoryWorkQueue(worker);
         };
-        TaskManager taskManager1 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection);
-        TaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection);
+        TaskManager taskManager1 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, new Hostname("foo"));
+        TaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, new Hostname("bar"));
 
         TaskId taskId = taskManager1.submit(new CompletedTask());
         Awaitility.await()

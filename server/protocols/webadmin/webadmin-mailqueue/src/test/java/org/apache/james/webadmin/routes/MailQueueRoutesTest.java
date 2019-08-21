@@ -45,6 +45,7 @@ import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory.MemoryMailQueue;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
@@ -85,7 +86,7 @@ class MailQueueRoutesTest {
 
 
     WebAdminServer createServer(MemoryMailQueueFactory mailQueueFactory) {
-        TaskManager taskManager = new MemoryTaskManager();
+        TaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         JsonTransformer jsonTransformer = new JsonTransformer();
 
         return WebAdminUtils.createWebAdminServer(

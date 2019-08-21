@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
@@ -79,7 +80,7 @@ class ReindexingRoutesTest {
     @BeforeEach
     void beforeEach() {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        MemoryTaskManager taskManager = new MemoryTaskManager();
+        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);
         ReIndexer reIndexer = new ReIndexerImpl(

@@ -27,7 +27,7 @@ import collection.JavaConverters._
 trait TaskExecutionDetailsProjection {
   val asSubscriber: Subscriber = {
     case created: Created =>
-      update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId))
+      update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
     case cancelRequested: CancelRequested =>
       update(cancelRequested.aggregateId.taskId)(_.cancelRequested)
     case started: Started =>

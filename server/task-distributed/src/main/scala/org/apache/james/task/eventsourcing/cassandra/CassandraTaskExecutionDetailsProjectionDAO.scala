@@ -27,6 +27,7 @@ import javax.inject.Inject
 import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeModule}
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionTable._
+import org.apache.james.task.eventsourcing.Hostname
 import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManager}
 import reactor.core.publisher.{Flux, Mono}
 
@@ -41,6 +42,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     .value(TYPE, bindMarker(TYPE))
     .value(STATUS, bindMarker(STATUS))
     .value(SUBMITTED_DATE, bindMarker(SUBMITTED_DATE))
+    .value(SUBMITTED_NODE, bindMarker(SUBMITTED_NODE))
     .value(STARTED_DATE, bindMarker(STARTED_DATE))
     .value(COMPLETED_DATE, bindMarker(COMPLETED_DATE))
     .value(CANCELED_DATE, bindMarker(CANCELED_DATE))
@@ -56,7 +58,8 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
       .setUUID(TASK_ID, details.getTaskId.getValue)
       .setString(TYPE, details.getType)
       .setString(STATUS, details.getStatus.getValue)
-      .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmitDate).orElse(null))
+      .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmitDate))
+      .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
       .setUDTValue(STARTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate).orElse(null))
       .setUDTValue(COMPLETED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCompletedDate).orElse(null))
       .setUDTValue(CANCELED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCanceledDate).orElse(null))
@@ -74,10 +77,11 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     taskId = TaskId.fromUUID(row.getUUID(TASK_ID)),
     `type` = row.getString(TYPE),
     status = TaskManager.Status.fromString(row.getString(STATUS)),
-    submitDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(SUBMITTED_DATE)),
-    startedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(STARTED_DATE)),
-    completedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(COMPLETED_DATE)),
-    canceledDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(CANCELED_DATE)),
-    failedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(FAILED_DATE)),
+    submittedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(SUBMITTED_DATE)),
+    submittedNode = Hostname(row.getString(SUBMITTED_NODE)),
+    startedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(STARTED_DATE)),
+    completedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(COMPLETED_DATE)),
+    canceledDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(CANCELED_DATE)),
+    failedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(FAILED_DATE)),
     additionalInformation = Optional.empty)
 }

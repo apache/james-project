@@ -64,6 +64,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.WebAdminServer;
@@ -111,7 +112,7 @@ public class MailRepositoriesRoutesTest {
     public void setUp() throws Exception {
         createMailRepositoryStore();
 
-        MemoryTaskManager taskManager = new MemoryTaskManager();
+        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         JsonTransformer jsonTransformer = new JsonTransformer();
         MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         spoolQueue = queueFactory.createQueue(MailQueueFactory.SPOOL);

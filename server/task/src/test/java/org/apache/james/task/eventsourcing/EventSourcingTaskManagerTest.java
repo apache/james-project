@@ -19,33 +19,41 @@
 
 package org.apache.james.task.eventsourcing;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.task.CountDownLatchExtension;
 import org.apache.james.task.MemoryWorkQueue;
 import org.apache.james.task.SerialTaskManagerWorker;
+import org.apache.james.task.Task;
+import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.TaskManagerWorker;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(CountDownLatchExtension.class)
 class EventSourcingTaskManagerTest implements TaskManagerContract {
 
+    private static final Hostname HOSTNAME = new Hostname("foo");
     private EventSourcingTaskManager taskManager;
+    private EventStore eventStore;
 
     @BeforeEach
     void setUp() {
-        EventStore eventStore = new InMemoryEventStore();
+        eventStore = new InMemoryEventStore();
         TaskExecutionDetailsProjection executionDetailsProjection = new MemoryTaskExecutionDetailsProjection();
         WorkQueueSupplier workQueueSupplier = eventSourcingSystem -> {
             WorkerStatusListener listener = new WorkerStatusListener(eventSourcingSystem);
             TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
             return new MemoryWorkQueue(worker);
         };
-        taskManager = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection);
+        taskManager = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME);
     }
 
     @AfterEach
@@ -57,4 +65,15 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
     public TaskManager taskManager() {
         return taskManager;
     }
+
+    @Test
+    void createdTaskShouldKeepOriginHostname() {
+        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskAggregateId aggregateId = new TaskAggregateId(taskId);
+        assertThat(eventStore.getEventsOfAggregate(aggregateId).getEvents())
+                .filteredOn(event -> event instanceof Created)
+                .extracting("hostname")
+                .containsOnly(HOSTNAME);
+    }
+
 }

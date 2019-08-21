@@ -35,6 +35,7 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -53,7 +54,7 @@ class TasksRoutesTest {
 
     @BeforeEach
     void setUp() {
-        taskManager = new MemoryTaskManager();
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
 
         webAdminServer = WebAdminUtils.createWebAdminServer(new TasksRoutes(taskManager, new JsonTransformer()))
             .start();

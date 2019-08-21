@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.MemoryTaskManager;
+import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,7 +37,7 @@ public class MailQueueRoutesUnitTest {
 
     @Before
     public void setup() {
-        MemoryTaskManager taskManager = new MemoryTaskManager();
+        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = null;
         testee = new MailQueueRoutes(mailQueueFactory, new JsonTransformer(), taskManager);
     }

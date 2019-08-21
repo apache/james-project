@@ -98,7 +98,7 @@ public class CassandraVacationDAO {
     }
 
     private Optional<ZonedDateTime> retrieveDate(Row row, String dateField) {
-        return CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(dateField));
+        return CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(dateField));
     }
 
     private Insert createSpecificUpdate(VacationPatch vacationPatch, Insert baseInsert) {

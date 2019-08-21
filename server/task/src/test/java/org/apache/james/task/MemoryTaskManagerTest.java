@@ -19,6 +19,8 @@
 
 package org.apache.james.task;
 
+import org.apache.james.task.eventsourcing.Hostname;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,7 +32,7 @@ class MemoryTaskManagerTest implements TaskManagerContract {
 
     @BeforeEach
     void setUp() {
-        memoryTaskManager = new MemoryTaskManager();
+        memoryTaskManager = new MemoryTaskManager(new Hostname("foo"));
     }
 
     @AfterEach
