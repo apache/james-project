@@ -77,6 +77,7 @@
         <module>mailet/mailetcontainer-api</module>
         <module>mailet/mailetcontainer-camel</module>
         <module>mailet/mailets</module>
+        <module>mailet/mock-smtp-server</module>
 
         <module>mailrepository/mailrepository-api</module>
         <module>mailrepository/mailrepository-cassandra</module>
