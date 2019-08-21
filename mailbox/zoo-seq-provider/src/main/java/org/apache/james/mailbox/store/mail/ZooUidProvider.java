@@ -37,7 +37,12 @@ import com.google.common.base.Preconditions;
 
 /**
  * ZooKeeper based implementation of a distributed sequential UID generator.
+ *
+ * This component is deprecated since 3.4. It way initially implemented for HBase backend that is now gone.
+ * As Others backends have their own solutions to generate sequential ids, we decided to deprecate then remove
+ * this implementation.
  */
+@Deprecated
 public class ZooUidProvider implements UidProvider {
     // TODO: use ZK paths to store uid and modSeq, etc.
 

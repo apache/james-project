@@ -30,7 +30,7 @@
     <artifactId>zookeeper-sequence-provider</artifactId>
     <packaging>jar</packaging>
     <name>Apache James :: Mailbox :: Zookeeper Sequence Provider</name>
-    <description>High performance distribuited sequence provider based on ZooKeepr</description>
+    <description>Deprecated sequence provider based on ZooKeeper</description>
 
     <properties>
         <curator.version>4.0.1</curator.version>
