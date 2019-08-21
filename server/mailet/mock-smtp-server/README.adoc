@@ -1,0 +1,25 @@
+James Mock SMTP server
+====================
+
+This is our custom made Mock SMTP server that we use for some of our tests in James.
+
+== Dockerized Mock SMTP server
+
+Start by compiling the module:
+
+    $ mvn clean install
+
+*Note* : You can add the option '-DskipTests' if you want to skip tests
+
+Then build the docker image:
+
+    $ docker build -t james/mock-smtp-server .
+
+And run it:
+
+    $ docker run --rm -p 25:25 -p 8000:8000 james/mock-smtp-server
+
+Where ports:
+
+* 25 : SMTP
+* 8000 : HTTP interface for setting mock SMTP server behavior
