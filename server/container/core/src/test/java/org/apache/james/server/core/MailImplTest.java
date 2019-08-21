@@ -95,7 +95,10 @@ public class MailImplTest extends ContractMailTest {
             .build();
 
         MailImpl expected = newMail();
-        assertThat(mail).isEqualToIgnoringGivenFields(expected, "sender", "name", "recipients", "lastUpdated");
+        assertThat(mail)
+            .usingRecursiveComparison()
+            .ignoringFields("sender", "name", "recipients", "lastUpdated")
+            .isEqualTo(expected);
         assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
     }
 
@@ -129,7 +132,10 @@ public class MailImplTest extends ContractMailTest {
             .mimeMessage(emptyMessage)
             .build();
 
-        assertThat(mail).isEqualToIgnoringGivenFields(expected, "message", "lastUpdated");
+        assertThat(mail)
+            .usingRecursiveComparison()
+            .ignoringFields("message", "lastUpdated")
+            .isEqualTo(expected);
         assertThat(mail.getLastUpdated()).isCloseTo(new Date(), TimeUnit.SECONDS.toMillis(1));
     }
 
@@ -155,7 +161,11 @@ public class MailImplTest extends ContractMailTest {
 
         MailImpl duplicate = MailImpl.duplicate(mail);
 
-        assertThat(duplicate).isNotSameAs(mail).isEqualToIgnoringGivenFields(mail, "message", "name");
+        assertThat(duplicate)
+            .isNotSameAs(mail)
+            .usingRecursiveComparison()
+            .ignoringFields("message", "name")
+            .isEqualTo(mail);
         assertThat(duplicate.getName()).isNotEqualTo(name);
         assertThat(duplicate.getMessage().getInputStream()).hasSameContentAs(mail.getMessage().getInputStream());
     }
@@ -318,7 +328,8 @@ public class MailImplTest extends ContractMailTest {
 
         assertThat(unserialized)
             .isInstanceOf(MailImpl.class)
-            .isEqualToComparingFieldByField(mail);
+            .usingRecursiveComparison()
+            .isEqualTo(mail);
     }
 
     @Test
@@ -339,7 +350,8 @@ public class MailImplTest extends ContractMailTest {
 
         assertThat(unserialized)
             .isInstanceOf(MailImpl.class)
-            .isEqualToComparingFieldByField(mail);
+            .usingRecursiveComparison()
+            .isEqualTo(mail);
     }
 
     @Test
@@ -360,6 +372,7 @@ public class MailImplTest extends ContractMailTest {
 
         assertThat(unserialized)
             .isInstanceOf(MailImpl.class)
-            .isEqualToComparingFieldByField(mail);
+            .usingRecursiveComparison()
+            .isEqualTo(mail);
     }
 }

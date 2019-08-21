@@ -108,7 +108,10 @@ class StripAttachmentTest {
 
         mailet.service(mail);
 
-        assertThat(mail).isEqualToIgnoringGivenFields(expectedMail, "msg");
+        assertThat(mail)
+            .usingRecursiveComparison()
+            .ignoringFields("msg")
+            .isEqualTo(expectedMail);
         assertThat(mail.getMessage().getContent()).isEqualTo("simple text");
     }
     
