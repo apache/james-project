@@ -230,13 +230,6 @@ public interface Mail extends Serializable, Cloneable {
     void setState(String state);
 
     /**
-     * Returns the attributes of this message.
-     *
-     * @return the attributes of this message
-     */
-    Map<AttributeName, Attribute> getAttributes();
-
-    /**
      * Get the stream of all attributes
      */
     Stream<Attribute> attributes();
