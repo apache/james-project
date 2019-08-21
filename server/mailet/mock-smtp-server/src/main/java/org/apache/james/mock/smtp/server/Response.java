@@ -19,6 +19,8 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 class Response {
@@ -37,6 +39,21 @@ class Response {
 
         public int getCode() {
             return code;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SMTPStatusCode) {
+                SMTPStatusCode that = (SMTPStatusCode) o;
+
+                return Objects.equals(this.code, that.code);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(code);
         }
     }
 
@@ -67,5 +84,22 @@ class Response {
 
     boolean isServerRejected() {
         return serverRejected;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Response) {
+            Response response = (Response) o;
+
+            return Objects.equals(this.serverRejected, response.serverRejected)
+                && Objects.equals(this.code, response.code)
+                && Objects.equals(this.message, response.message);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(code, message, serverRejected);
     }
 }

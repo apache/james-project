@@ -24,7 +24,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class ConditionTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Condition.class)
+            .verify();
+    }
+
     @Test
     void constructorShouldThrowWhenNullOperator() {
         assertThatThrownBy(() -> new Condition(null, "matchingValue"))

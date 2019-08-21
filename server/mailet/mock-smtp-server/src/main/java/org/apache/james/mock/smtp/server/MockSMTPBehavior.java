@@ -19,6 +19,7 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.base.Preconditions;
@@ -43,6 +44,21 @@ public class MockSMTPBehavior {
 
         public Optional<Integer> getNumberOfAnswers() {
             return numberOfAnswers;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof NumberOfAnswersPolicy) {
+                NumberOfAnswersPolicy that = (NumberOfAnswersPolicy) o;
+
+                return Objects.equals(this.numberOfAnswers, that.numberOfAnswers);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(numberOfAnswers);
         }
     }
 
@@ -77,5 +93,23 @@ public class MockSMTPBehavior {
 
     public NumberOfAnswersPolicy getNumberOfAnswers() {
         return numberOfAnswers;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MockSMTPBehavior) {
+            MockSMTPBehavior that = (MockSMTPBehavior) o;
+
+            return Objects.equals(this.smtpCommand, that.smtpCommand)
+                && Objects.equals(this.condition, that.condition)
+                && Objects.equals(this.response, that.response)
+                && Objects.equals(this.numberOfAnswers, that.numberOfAnswers);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(smtpCommand, condition, response, numberOfAnswers);
     }
 }

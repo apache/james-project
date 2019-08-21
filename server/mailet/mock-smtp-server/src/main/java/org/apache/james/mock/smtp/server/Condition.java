@@ -19,6 +19,8 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 class Condition {
@@ -35,5 +37,21 @@ class Condition {
 
     boolean matches(String line) {
         return operator.matches(line, matchingValue);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Condition) {
+            Condition condition = (Condition) o;
+
+            return Objects.equals(this.operator, condition.operator)
+                && Objects.equals(this.matchingValue, condition.matchingValue);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(operator, matchingValue);
     }
 }

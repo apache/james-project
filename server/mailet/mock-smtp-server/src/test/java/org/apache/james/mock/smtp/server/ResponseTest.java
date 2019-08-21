@@ -25,12 +25,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class ResponseTest {
     static final int OK_250_CODE = 250;
     static final Response.SMTPStatusCode OK_250 = Response.SMTPStatusCode.of(OK_250_CODE);
 
     @Nested
     class SMTPStatusCodeTest {
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(Response.SMTPStatusCode.class)
+                .verify();
+        }
+
         @Test
         void constructorShouldThrowWhenStatusCodeIsNegative() {
             assertThatThrownBy(() -> Response.SMTPStatusCode.of(-1))
@@ -60,6 +68,12 @@ class ResponseTest {
             assertThat(OK_250.getCode())
                 .isEqualTo(OK_250_CODE);
         }
+    }
+
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Response.class)
+            .verify();
     }
 
     @Test

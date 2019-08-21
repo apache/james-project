@@ -27,11 +27,19 @@ import java.util.Optional;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class MockSMTPBehaviorTest {
     private static final Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
 
     @Nested
     class NumberOfAnswersPolicyTest {
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(MockSMTPBehavior.NumberOfAnswersPolicy.class)
+                .verify();
+        }
+
         @Test
         void timesShouldThrowWhenNegativeValue() {
             assertThatThrownBy(() -> MockSMTPBehavior.NumberOfAnswersPolicy.times(-1))
@@ -55,6 +63,12 @@ class MockSMTPBehaviorTest {
             assertThat(MockSMTPBehavior.NumberOfAnswersPolicy.times(5).getNumberOfAnswers())
                 .contains(5);
         }
+    }
+
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MockSMTPBehavior.class)
+            .verify();
     }
 
     @Test
