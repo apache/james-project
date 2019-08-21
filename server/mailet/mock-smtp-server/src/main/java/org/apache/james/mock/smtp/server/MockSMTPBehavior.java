@@ -22,8 +22,13 @@ package org.apache.james.mock.smtp.server;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 
+@JsonDeserialize(builder = MockSMTPBehavior.Builder.class)
 public class MockSMTPBehavior {
     public static final class NumberOfAnswersPolicy {
 
@@ -31,6 +36,7 @@ public class MockSMTPBehavior {
             return new NumberOfAnswersPolicy(Optional.empty());
         }
 
+        @JsonCreator
         public static NumberOfAnswersPolicy times(int times) {
             Preconditions.checkArgument(times > 0, "times should be positive");
             return new NumberOfAnswersPolicy(Optional.of(times));
@@ -42,6 +48,7 @@ public class MockSMTPBehavior {
             this.numberOfAnswers = numberOfAnswers;
         }
 
+        @JsonValue
         public Optional<Integer> getNumberOfAnswers() {
             return numberOfAnswers;
         }
@@ -62,6 +69,50 @@ public class MockSMTPBehavior {
         }
     }
 
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class Builder {
+        private SMTPCommand smtpCommand;
+        private Optional<Condition> condition;
+        private Response response;
+        private Optional<NumberOfAnswersPolicy> numberOfAnswers;
+
+        public Builder() {
+            condition = Optional.empty();
+            numberOfAnswers = Optional.empty();
+        }
+
+        public Builder command(SMTPCommand command) {
+            this.smtpCommand = command;
+            return this;
+        }
+
+        public Builder response(Response response) {
+            this.response = response;
+            return this;
+        }
+
+        public Builder condition(Condition condition) {
+            this.condition = Optional.of(condition);
+            return this;
+        }
+
+        public Builder numberOfAnswer(Optional<NumberOfAnswersPolicy> numberOfAnswers) {
+            this.numberOfAnswers = numberOfAnswers;
+            return this;
+        }
+
+        public MockSMTPBehavior build() {
+            Preconditions.checkState(smtpCommand != null, "You need to specify an smtpCommand");
+            Preconditions.checkState(response != null, "You need to specify a response");
+
+            return new MockSMTPBehavior(
+                smtpCommand,
+                condition,
+                response,
+                numberOfAnswers.orElse(NumberOfAnswersPolicy.anytime()));
+        }
+    }
+
     private final SMTPCommand smtpCommand;
     private final Optional<Condition> condition;
     private final Response response;
@@ -79,7 +130,7 @@ public class MockSMTPBehavior {
         this.numberOfAnswers = numberOfAnswers;
     }
 
-    public SMTPCommand getSmtpCommand() {
+    public SMTPCommand getCommand() {
         return smtpCommand;
     }
 
@@ -91,7 +142,7 @@ public class MockSMTPBehavior {
         return response;
     }
 
-    public NumberOfAnswersPolicy getNumberOfAnswers() {
+    public NumberOfAnswersPolicy getNumberOfAnswer() {
         return numberOfAnswers;
     }
 
