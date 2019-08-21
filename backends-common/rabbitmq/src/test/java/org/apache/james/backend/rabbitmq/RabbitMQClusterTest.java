@@ -278,7 +278,7 @@ class RabbitMQClusterTest {
 
             AtomicInteger counter = new AtomicInteger(0);
             InMemoryConsumer consumer = new InMemoryConsumer(resilientChannel,
-                () -> stopWhenHalfProcessed(cluster, nbMessages, counter));
+                (envelope, body) -> stopWhenHalfProcessed(cluster, nbMessages, counter));
             resilientChannel.basicConsume(QUEUE, consumer);
 
             awaitAtMostOneMinute.until(() -> consumer.getConsumedMessages().size() == nbMessages);

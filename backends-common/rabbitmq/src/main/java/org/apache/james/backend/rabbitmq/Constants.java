@@ -26,6 +26,7 @@ public interface Constants {
     boolean DURABLE = true;
     boolean AUTO_DELETE = true;
     boolean EXCLUSIVE = true;
+    boolean NO_LOCAL = true;
 
     boolean AUTO_ACK = true;
     boolean MULTIPLE = true;

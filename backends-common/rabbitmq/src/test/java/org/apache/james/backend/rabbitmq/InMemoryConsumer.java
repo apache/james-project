@@ -32,14 +32,14 @@ public class InMemoryConsumer extends DefaultConsumer {
 
     @FunctionalInterface
     interface Operation {
-        void perform();
+        void perform(Envelope envelope, byte[] body) throws IOException;
     }
 
     private final ConcurrentLinkedQueue<Integer> messages;
     private final Operation operation;
 
     public InMemoryConsumer(Channel channel) {
-        this(channel, () -> { });
+        this(channel, (envelope, body) -> { });
     }
 
     public InMemoryConsumer(Channel channel, Operation operation) {
@@ -50,7 +50,7 @@ public class InMemoryConsumer extends DefaultConsumer {
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        operation.perform();
+        operation.perform(envelope, body);
         Integer payload = Integer.valueOf(new String(body, StandardCharsets.UTF_8));
         messages.add(payload);
     }

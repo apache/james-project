@@ -23,17 +23,23 @@ import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
 import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
 import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
 import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backend.rabbitmq.Constants.MULTIPLE;
+import static org.apache.james.backend.rabbitmq.Constants.NO_LOCAL;
 import static org.apache.james.backend.rabbitmq.Constants.NO_PROPERTIES;
+import static org.apache.james.backend.rabbitmq.Constants.REQUEUE;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.ROUTING_KEY;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.WORK_QUEUE;
 import static org.apache.james.backend.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.IntStream;
 
@@ -48,9 +54,11 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterables;
+import com.rabbitmq.client.CancelCallback;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
 
 class RabbitMQTest {
 
@@ -246,6 +254,77 @@ class RabbitMQTest {
                         consumer3.getConsumedMessages(),
                         consumer4.getConsumedMessages()))
                     .containsOnlyElementsOf(expectedResult);
+            }
+
+            @Test
+            void rabbitMQShouldRejectSecondConsumerInExclusiveWorkQueueCase() throws Exception {
+                channel1.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
+                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of());
+                channel1.queueBind(WORK_QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+
+                IntStream.range(0, 10)
+                        .mapToObj(String::valueOf)
+                        .map(RabbitMQTest.this::asBytes)
+                        .forEach(Throwing.consumer(
+                                bytes -> channel1.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
+
+                ConcurrentLinkedQueue<Integer> receivedMessages = new ConcurrentLinkedQueue<>();
+                String dyingConsumerTag = "dyingConsumer";
+                ImmutableMap<String, Object> arguments = ImmutableMap.of();
+                channel2.basicConsume(WORK_QUEUE, AUTO_ACK, dyingConsumerTag, !NO_LOCAL, EXCLUSIVE, arguments,
+                        (consumerTag, message) -> {
+                            try {
+                                TimeUnit.SECONDS.sleep(1);
+                            } catch (InterruptedException e) {
+                                //do nothing
+                            }
+                        },
+                        (consumerTag -> { }));
+                assertThatThrownBy(() ->
+                        channel3.basicConsume(WORK_QUEUE, AUTO_ACK, "fallbackConsumer", !NO_LOCAL, EXCLUSIVE, arguments,
+                                (consumerTag, message) -> { },
+                                consumerTag -> { }))
+                    .isInstanceOf(IOException.class)
+                    .hasStackTraceContaining("ACCESS_REFUSED");
+            }
+
+            @Test
+            void rabbitMQShouldSupportTheExclusiveWorkQueueCase() throws Exception {
+                channel1.exchangeDeclare(EXCHANGE_NAME, "direct", DURABLE);
+                channel1.queueDeclare(WORK_QUEUE, DURABLE, !EXCLUSIVE, !AUTO_DELETE, ImmutableMap.of());
+                channel1.queueBind(WORK_QUEUE, EXCHANGE_NAME, ROUTING_KEY);
+
+                IntStream.range(0, 10)
+                        .mapToObj(String::valueOf)
+                        .map(RabbitMQTest.this::asBytes)
+                        .forEach(Throwing.consumer(
+                                bytes -> channel1.basicPublish(EXCHANGE_NAME, ROUTING_KEY, NO_PROPERTIES, bytes)));
+
+                String dyingConsumerTag = "dyingConsumer";
+                ImmutableMap<String, Object> arguments = ImmutableMap.of();
+                ConcurrentLinkedQueue<Integer> receivedMessages = new ConcurrentLinkedQueue<>();
+                CancelCallback doNothingOnCancel = consumerTag -> { };
+                DeliverCallback ackFirstMessageOnly = (consumerTag, message) -> {
+                    if (receivedMessages.size() == 0) {
+                        receivedMessages.add(Integer.valueOf(new String(message.getBody(), StandardCharsets.UTF_8)));
+                        channel2.basicAck(message.getEnvelope().getDeliveryTag(), !MULTIPLE);
+                    } else {
+                        channel2.basicNack(message.getEnvelope().getDeliveryTag(), !MULTIPLE, REQUEUE);
+                    }
+                };
+                channel2.basicConsume(WORK_QUEUE, !AUTO_ACK, dyingConsumerTag, !NO_LOCAL, EXCLUSIVE, arguments, ackFirstMessageOnly, doNothingOnCancel);
+
+                awaitAtMostOneMinute.until(() -> receivedMessages.size() == 1);
+
+                channel2.basicCancel(dyingConsumerTag);
+
+                InMemoryConsumer fallbackConsumer = new InMemoryConsumer(channel3);
+                channel3.basicConsume(WORK_QUEUE, AUTO_ACK, "fallbackConsumer", !NO_LOCAL, EXCLUSIVE, arguments, fallbackConsumer);
+
+                awaitAtMostOneMinute.until(() -> countReceivedMessages(fallbackConsumer) >= 1);
+
+                assertThat(receivedMessages).containsExactly(0);
+                assertThat(fallbackConsumer.getConsumedMessages()).contains(1, 2).doesNotContain(0);
             }
 
         }
