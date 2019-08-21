@@ -38,6 +38,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
         </dependency>
