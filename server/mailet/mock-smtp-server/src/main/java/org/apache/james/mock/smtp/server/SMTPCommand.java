@@ -19,6 +19,11 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Arrays;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+
 enum SMTPCommand {
     RCPT_TO("RCPT TO"),
     EHLO("EHLO"),
@@ -29,9 +34,22 @@ enum SMTPCommand {
     NOOP("NOOP"),
     QUIT("QUIT");
 
+    @JsonCreator
+    public static SMTPCommand parse(String value) {
+        return Arrays.stream(SMTPCommand.values())
+            .filter(command -> command.commandName.equals(value))
+            .findFirst()
+            .orElseThrow(() -> new IllegalArgumentException("No command name associated with supplied value: " + value));
+    }
+
     private final String commandName;
 
     SMTPCommand(String commandName) {
         this.commandName = commandName;
+    }
+
+    @JsonValue
+    public String getCommandName() {
+        return commandName;
     }
 }
