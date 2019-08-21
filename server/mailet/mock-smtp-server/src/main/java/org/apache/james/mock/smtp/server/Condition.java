@@ -20,43 +20,106 @@
 package org.apache.james.mock.smtp.server;
 
 import java.util.Objects;
+import java.util.Optional;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 
-class Condition {
+@JsonDeserialize(builder = Condition.Builder.class)
+interface Condition {
+    @JsonPOJOBuilder(withPrefix = "")
+    class Builder {
+        private Operator.OperatorName operator;
+        private Optional<String> matchingValue;
 
-    static final Condition MATCH_ALL = new Condition(Operator.MATCH_ALL, "any");
-
-    private final Operator operator;
-    private final String matchingValue;
-
-    Condition(Operator operator, String matchingValue) {
-        Preconditions.checkNotNull(operator);
-        Preconditions.checkNotNull(matchingValue);
-
-        this.operator = operator;
-        this.matchingValue = matchingValue;
-    }
-
-    boolean matches(String line) {
-        return operator.actual(line)
-            .expected(matchingValue)
-            .matches();
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof Condition) {
-            Condition condition = (Condition) o;
-
-            return Objects.equals(this.operator, condition.operator)
-                && Objects.equals(this.matchingValue, condition.matchingValue);
+        public Builder() {
+            this.matchingValue = Optional.empty();
         }
-        return false;
+
+        public Builder operator(Operator.OperatorName operator) {
+            this.operator = operator;
+            return this;
+        }
+
+        public Builder matchingValue(String matchingValue) {
+            this.matchingValue = Optional.of(matchingValue);
+            return this;
+        }
+
+        public Condition build() {
+            Preconditions.checkState(operator != null, "You need to specify an operator");
+
+            return operator.getConditionFactory().apply(matchingValue);
+        }
     }
 
-    @Override
-    public final int hashCode() {
-        return Objects.hash(operator, matchingValue);
+    class MatchAllCondition implements Condition {
+        public Operator.OperatorName getOperator() {
+            return Operator.OperatorName.MATCH_ALL;
+        }
+
+        @Override
+        public boolean matches(String line) {
+            return true;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            return o instanceof MatchAllCondition;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(MatchAllCondition.class);
+        }
     }
+
+    class OperatorCondition implements Condition {
+        private final Operator operator;
+        private final String matchingValue;
+
+        OperatorCondition(Operator operator, String matchingValue) {
+            Preconditions.checkNotNull(operator);
+            Preconditions.checkNotNull(matchingValue);
+
+            this.operator = operator;
+            this.matchingValue = matchingValue;
+        }
+
+        public Operator.OperatorName getOperator() {
+            return operator.getOperatorName();
+        }
+
+        public String getMatchingValue() {
+            return matchingValue;
+        }
+
+        @Override
+        public boolean matches(String line) {
+            return operator.actual(line)
+                .expected(matchingValue)
+                .matches();
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof OperatorCondition) {
+                OperatorCondition condition = (OperatorCondition) o;
+
+                return Objects.equals(this.operator, condition.operator)
+                    && Objects.equals(this.matchingValue, condition.matchingValue);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(operator, matchingValue);
+        }
+    }
+
+    Condition MATCH_ALL = new MatchAllCondition();
+
+    boolean matches(String line);
 }

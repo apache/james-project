@@ -19,7 +19,52 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Arrays;
+import java.util.Optional;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Function;
+import com.google.common.base.Preconditions;
+
 public interface Operator {
+    enum OperatorName {
+        CONTAINS("contains", maybeMatchingValue -> {
+            Preconditions.checkState(maybeMatchingValue.isPresent(), "You need to specify a matchingValue with the contains operator");
+
+            return new Condition.OperatorCondition(Operator.CONTAINS, maybeMatchingValue.get());
+        }),
+        MATCH_ALL("matchAll", maybeMatchingValue -> {
+            Preconditions.checkState(!maybeMatchingValue.isPresent(), "You should not specify a matchingValue with the matchAll operator");
+
+            return new Condition.MatchAllCondition();
+        });
+
+        private final String name;
+        private final Function<Optional<String>, Condition> conditionFactory;
+
+        @JsonCreator
+        public static OperatorName from(String name) {
+            return Arrays.stream(values())
+                .filter(value -> value.name.equals(name))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Unsuported " + name + " operator"));
+        }
+
+        OperatorName(String name, Function<Optional<String>, Condition> conditionFactory) {
+            this.name = name;
+            this.conditionFactory = conditionFactory;
+        }
+
+        @JsonValue
+        public String getName() {
+            return name;
+        }
+
+        public Function<Optional<String>, Condition> getConditionFactory() {
+            return conditionFactory;
+        }
+    }
 
     @FunctionalInterface
     interface Expected {
@@ -31,8 +76,19 @@ public interface Operator {
         boolean matches();
     }
 
-    Operator CONTAINS = actual -> expected -> () -> actual.contains(expected);
-    Operator MATCH_ALL = actual -> expected -> () -> true;
+    Operator CONTAINS = new Operator() {
+        @Override
+        public Expected actual(String actual) {
+            return expected -> () -> actual.contains(expected);
+        }
+
+        @Override
+        public OperatorName getOperatorName() {
+            return OperatorName.CONTAINS;
+        }
+    };
 
     Expected actual(String actual);
+
+    OperatorName getOperatorName();
 }
