@@ -41,7 +41,7 @@ class MockSmtpBehaviorsTest {
     private static final String JSON = "[" + MockSMTPBehaviorTest.JSON_ALL_FIELDS + ", "
         + MockSMTPBehaviorTest.JSON_COMPULSORY_FIELDS + "]";
 
-    private static final MockSmtpBehaviors POJO = new MockSmtpBehaviors(ImmutableList.of(
+    static final MockSmtpBehaviors POJO = new MockSmtpBehaviors(ImmutableList.of(
         MockSMTPBehaviorTest.POJO_ALL_FIELDS,
         MockSMTPBehaviorTest.POJO_COMPULSORY_FIELDS));
 
