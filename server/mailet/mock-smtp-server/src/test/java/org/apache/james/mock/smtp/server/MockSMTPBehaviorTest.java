@@ -40,25 +40,25 @@ class MockSMTPBehaviorTest {
     private static final Response RESPONSE = Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message");
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new Jdk8Module());
 
-    private static final String JSON_COMPULSORY_FIELDS = "{" +
+    static final String JSON_COMPULSORY_FIELDS = "{" +
         "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
         "  \"command\": \"EHLO\"" +
         "}";
 
-    private static final MockSMTPBehavior POJO_COMPULSORY_FIELDS = new MockSMTPBehavior(
+    static final MockSMTPBehavior POJO_COMPULSORY_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
         Optional.empty(),
         Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
 
-    private static final String JSON_ALL_FIELDS = "{" +
+    static final String JSON_ALL_FIELDS = "{" +
         "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
         "  \"condition\": {\"operator\":\"contains\", \"matchingValue\":\"matchme\"}," +
         "  \"command\": \"EHLO\"," +
         "  \"numberOfAnswer\": 7" +
         "}";
 
-    private static final MockSMTPBehavior POJO_ALL_FIELDS = new MockSMTPBehavior(
+    static final MockSMTPBehavior POJO_ALL_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
         Optional.of(new Condition.OperatorCondition(Operator.CONTAINS, "matchme")),
         Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
