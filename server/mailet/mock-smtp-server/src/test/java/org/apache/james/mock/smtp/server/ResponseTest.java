@@ -19,15 +19,61 @@
 
 package org.apache.james.mock.smtp.server;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mock.smtp.server.Response.SMTPStatusCode;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class ResponseTest {
+    static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    static final int OK_250_CODE = 250;
+    static final Response.SMTPStatusCode OK_250 = Response.SMTPStatusCode.of(OK_250_CODE);
+
+    @Nested
+    class SMTPStatusCodeTest {
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(Response.SMTPStatusCode.class)
+                .verify();
+        }
+
+        @Test
+        void constructorShouldThrowWhenStatusCodeIsNegative() {
+            assertThatThrownBy(() -> Response.SMTPStatusCode.of(-1))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void constructorShouldThrowWhenStatusCodeIsZero() {
+            assertThatThrownBy(() -> Response.SMTPStatusCode.of(0))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void constructorShouldThrowWhenStatusCodeIsTooBig() {
+            assertThatThrownBy(() -> Response.SMTPStatusCode.of(600))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void constructorShouldThrowWhenStatusCodeIsTooLittle() {
+            assertThatThrownBy(() -> Response.SMTPStatusCode.of(99))
+                .isInstanceOf(IllegalArgumentException.class);
+        }
+
+        @Test
+        void getCodeShouldReturnInternalValue() {
+            assertThat(OK_250.getCode())
+                .isEqualTo(OK_250_CODE);
+        }
+    }
 
     @Test
     void shouldMatchBeanContract() {
@@ -69,5 +115,24 @@ class ResponseTest {
     void isServerRejectedShouldReturnFalseWhenServerAccept() {
         assertThat(Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message").isServerRejected())
             .isFalse();
+    }
+
+    @Nested
+    class JSONTest {
+        @Test
+        void jacksonShouldDeserializeResponse() throws Exception {
+            Response response = OBJECT_MAPPER.readValue(
+                "{\"code\":250, \"message\":\"OK\", \"rejected\":false}",
+                Response.class);
+
+            assertThat(response).isEqualTo(Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"));
+        }
+
+        @Test
+        void jacksonShouldSerializeResponse() throws Exception {
+            String json = OBJECT_MAPPER.writeValueAsString(Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"));
+
+            assertThatJson(json).isEqualTo("{\"code\":250, \"message\":\"OK\", \"rejected\":false}");
+        }
     }
 }

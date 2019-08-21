@@ -19,8 +19,12 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Arrays;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 
 class Response {
@@ -53,10 +57,19 @@ class Response {
 
         private final int code;
 
-        private SMTPStatusCode(int code) {
+        @JsonCreator
+        public static SMTPStatusCode of(int code) {
+            return Arrays.stream(values())
+                .filter(value -> value.code == code)
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(code + " is not a supported SMTP code"));
+        }
+
+        SMTPStatusCode(int code) {
             this.code = code;
         }
 
+        @JsonValue
         public int getCode() {
             return code;
         }
@@ -74,7 +87,10 @@ class Response {
     private final String message;
     private final boolean serverRejected;
 
-    private Response(SMTPStatusCode code, String message, boolean serverRejected) {
+    @JsonCreator
+    private Response(@JsonProperty("code") SMTPStatusCode code,
+                     @JsonProperty("message") String message,
+                     @JsonProperty("rejected") boolean serverRejected) {
         Preconditions.checkNotNull(message);
         Preconditions.checkNotNull(code);
 
@@ -87,8 +103,17 @@ class Response {
         return code.getCode() + " " + message;
     }
 
+    @JsonProperty("rejected")
     boolean isServerRejected() {
         return serverRejected;
+    }
+
+    public SMTPStatusCode getCode() {
+        return code;
+    }
+
+    public String getMessage() {
+        return message;
     }
 
     @Override
