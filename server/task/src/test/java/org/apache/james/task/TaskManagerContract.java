@@ -52,7 +52,7 @@ public interface TaskManagerContract {
 
     @Test
     default void submitShouldReturnATaskId() {
-        TaskId taskId = taskManager().submit(() -> Task.Result.COMPLETED);
+        TaskId taskId = taskManager().submit(new CompletedTask());
         assertThat(taskId).isNotNull();
     }
 
@@ -71,7 +71,7 @@ public interface TaskManagerContract {
             return Task.Result.COMPLETED;
         });
 
-        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskId taskId = taskManager.submit(new CompletedTask());
 
         assertThat(taskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.WAITING);
@@ -101,7 +101,7 @@ public interface TaskManagerContract {
     @Test
     default void completedTaskShouldNotBeCancelled() {
         TaskManager taskManager = taskManager();
-        TaskId id = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskId id = taskManager.submit(new CompletedTask());
 
         awaitUntilTaskHasStatus(id, TaskManager.Status.COMPLETED, taskManager);
         taskManager.cancel(id);
@@ -117,7 +117,7 @@ public interface TaskManagerContract {
     @Test
     default void failedTaskShouldNotBeCancelled() {
         TaskManager taskManager = taskManager();
-        TaskId id = taskManager.submit(() -> Task.Result.PARTIAL);
+        TaskId id = taskManager.submit(new FailedTask());
 
         awaitUntilTaskHasStatus(id, TaskManager.Status.FAILED, taskManager);
         taskManager.cancel(id);
@@ -160,7 +160,7 @@ public interface TaskManagerContract {
             return Task.Result.COMPLETED;
         });
 
-        TaskId idTaskToCancel = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskId idTaskToCancel = taskManager.submit(new CompletedTask());
 
         taskManager.cancel(idTaskToCancel);
 
@@ -205,7 +205,7 @@ public interface TaskManagerContract {
     default void getStatusShouldReturnCompletedWhenRunSuccessfully() {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
 
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.COMPLETED, taskManager);
         assertThat(taskManager.getExecutionDetails(taskId).getStatus())
@@ -216,7 +216,7 @@ public interface TaskManagerContract {
     default void getStatusShouldReturnFailedWhenRunPartially() {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
 
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
 
@@ -232,9 +232,9 @@ public interface TaskManagerContract {
         CountDownLatch latch1 = new CountDownLatch(1);
 
         TaskId failedId = taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
         TaskId successfulId = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         TaskId inProgressId = taskManager.submit(
             () -> {
                 latch1.countDown();
@@ -242,7 +242,7 @@ public interface TaskManagerContract {
                 return Task.Result.COMPLETED;
             });
         TaskId waitingId = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
 
         latch1.await();
 
@@ -273,9 +273,9 @@ public interface TaskManagerContract {
         CountDownLatch latch2 = new CountDownLatch(1);
 
         taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
         taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         taskManager.submit(
             () -> {
                 latch1.await();
@@ -305,9 +305,9 @@ public interface TaskManagerContract {
         CountDownLatch latch2 = new CountDownLatch(1);
 
         taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
         TaskId successfulId = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         taskManager.submit(
             () -> {
                 latch1.await();
@@ -337,9 +337,9 @@ public interface TaskManagerContract {
         CountDownLatch latch2 = new CountDownLatch(1);
 
         TaskId failedId = taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
         taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         taskManager.submit(
             () -> {
                 latch1.await();
@@ -369,9 +369,9 @@ public interface TaskManagerContract {
         CountDownLatch latch2 = new CountDownLatch(1);
 
         taskManager.submit(
-            () -> Task.Result.PARTIAL);
+            new FailedTask());
         taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         TaskId inProgressId = taskManager.submit(
             () -> {
                 latch1.await();
@@ -413,7 +413,7 @@ public interface TaskManagerContract {
     default void awaitShouldNotThrowWhenCompletedTask() {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
         taskManager.await(taskId);
         taskManager.await(taskId);
     }
@@ -429,7 +429,7 @@ public interface TaskManagerContract {
             });
         latch.countDown();
         TaskId task2 = taskManager.submit(
-            () -> Task.Result.COMPLETED);
+            new CompletedTask());
 
         assertThat(taskManager.await(task2).getStatus()).isEqualTo(TaskManager.Status.COMPLETED);
     }
@@ -467,9 +467,7 @@ public interface TaskManagerContract {
     @Test
     default void awaitShouldReturnFailedWhenExceptionThrown() {
         TaskManager taskManager = taskManager();
-        TaskId taskId = taskManager.submit(() -> {
-            throw new RuntimeException();
-        });
+        TaskId taskId = taskManager.submit(new ThrowingTask());
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
         assertThat(taskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.FAILED);
@@ -478,9 +476,7 @@ public interface TaskManagerContract {
     @Test
     default void getStatusShouldReturnFailedWhenExceptionThrown() {
         TaskManager taskManager = taskManager();
-        TaskId taskId = taskManager.submit(() -> {
-            throw new RuntimeException();
-        });
+        TaskId taskId = taskManager.submit(new ThrowingTask());
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
         assertThat(taskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.FAILED);
