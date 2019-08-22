@@ -19,56 +19,63 @@ package org.apache.james.server.task.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.COMPLETED_TASK_MODULE;
-import static org.apache.james.server.task.json.dto.TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.FAILED_TASK_MODULE;
+import static org.apache.james.server.task.json.dto.TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.THROWING_TASK_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.stream.Stream;
 
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.FailedTask;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.ThrowingTask;
-import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class TaskSerializationTest {
 
-    private static final String SERIALIZED_FAILED_TASK = "{\"type\": \"failed-task\"}";
     private static final String SERIALIZED_COMPLETED_TASK = "{\"type\": \"completed-task\"}";
+    private static final String SERIALIZED_FAILED_TASK = "{\"type\": \"failed-task\"}";
     private static final String SERIALIZED_MEMORY_REFERENCE_TASK = "{\"type\": \"memory-reference-task\", \"reference\": 0}";
     private static final String SERIALIZED_THROWING_TASK = "{\"type\": \"throwing-task\"}";
 
-    @Test
-    void failedTaskShouldSerialize() throws JsonProcessingException {
-        FailedTask failedTask = new FailedTask();
-
-        String actual = new JsonTaskSerializer(FAILED_TASK_MODULE).serialize(failedTask);
-        assertThatJson(actual).isEqualTo(SERIALIZED_FAILED_TASK);
+    @ParameterizedTest
+    @MethodSource
+    void taskShouldBeSerializable(Task task, TaskDTOModule<?, ?> module, String expectedJson) throws Exception {
+        String actual = new JsonTaskSerializer(module).serialize(task);
+        assertThatJson(actual).isEqualTo(expectedJson);
     }
 
-    @Test
-    void failedTaskShouldDeserialize() throws IOException {
-        Task task = new JsonTaskSerializer(FAILED_TASK_MODULE).deserialize(SERIALIZED_FAILED_TASK);
-        assertThat(task).isInstanceOf(FailedTask.class);
+    private static Stream<Arguments> taskShouldBeSerializable() throws Exception {
+        return validTasks();
     }
 
-    @Test
-    void completedTaskShouldSerialize() throws JsonProcessingException {
-        CompletedTask completedTask = new CompletedTask();
-
-        String actual = new JsonTaskSerializer(COMPLETED_TASK_MODULE).serialize(completedTask);
-        assertThatJson(actual).isEqualTo(SERIALIZED_COMPLETED_TASK);
+    @ParameterizedTest
+    @MethodSource
+    void taskShouldBeDeserializable(Task task, TaskDTOModule<?, ?> module, String serializedJson) throws Exception {
+        assertThat(new JsonTaskSerializer(module).deserialize(serializedJson))
+            .isInstanceOf(task.getClass());
     }
 
-    @Test
-    void completedTaskShouldDeserialize() throws IOException {
-        Task task = new JsonTaskSerializer(COMPLETED_TASK_MODULE).deserialize(SERIALIZED_COMPLETED_TASK);
-        assertThat(task).isInstanceOf(CompletedTask.class);
+    private static Stream<Arguments> taskShouldBeDeserializable() throws Exception {
+        return validTasks();
+    }
+
+    private static Stream<Arguments> validTasks() throws Exception {
+        return Stream.of(
+                Arguments.of(new CompletedTask(), COMPLETED_TASK_MODULE, SERIALIZED_COMPLETED_TASK),
+                Arguments.of(new FailedTask(), FAILED_TASK_MODULE, SERIALIZED_FAILED_TASK),
+                Arguments.of(new ThrowingTask(), THROWING_TASK_MODULE, SERIALIZED_THROWING_TASK)
+        );
     }
 
     @Test
@@ -82,22 +89,10 @@ class TaskSerializationTest {
     @Test
     void memoryReferenceTaskShouldDeserialize() throws IOException {
         MemoryReferenceTaskStore memoryReferenceTaskStore = new MemoryReferenceTaskStore();
-        memoryReferenceTaskStore.add(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        MemoryReferenceTask memoryReferenceTask = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
+        memoryReferenceTaskStore.add(memoryReferenceTask);
+
         Task task = new JsonTaskSerializer(MEMORY_REFERENCE_TASK_MODULE.apply(memoryReferenceTaskStore)).deserialize(SERIALIZED_MEMORY_REFERENCE_TASK);
         assertThat(task).isInstanceOf(MemoryReferenceTask.class);
-    }
-
-    @Test
-    void throwingTaskShouldSerialize() throws JsonProcessingException {
-        ThrowingTask throwingTask = new ThrowingTask();
-
-        String actual = new JsonTaskSerializer(THROWING_TASK_MODULE).serialize(throwingTask);
-        assertThatJson(actual).isEqualTo(SERIALIZED_THROWING_TASK);
-    }
-
-    @Test
-    void throwingTaskShouldDeserialize() throws IOException {
-        Task task = new JsonTaskSerializer(THROWING_TASK_MODULE).deserialize(SERIALIZED_THROWING_TASK);
-        assertThat(task).isInstanceOf(ThrowingTask.class);
     }
 }
