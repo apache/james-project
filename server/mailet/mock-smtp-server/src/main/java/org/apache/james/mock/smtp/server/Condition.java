@@ -24,6 +24,9 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 
 class Condition {
+
+    static final Condition MATCH_ALL = new Condition(Operator.MATCH_ALL, "any");
+
     private final Operator operator;
     private final String matchingValue;
 

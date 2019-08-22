@@ -68,4 +68,25 @@ class ConditionTest {
         assertThatThrownBy(() -> condition.matches(null))
             .isInstanceOf(NullPointerException.class);
     }
+
+    @Test
+    void matchAllShouldReturnTrue() {
+        assertThat(Condition.MATCH_ALL
+                .matches("this contains another string"))
+            .isTrue();
+    }
+
+    @Test
+    void matchAllShouldReturnTrueEvenWhenLineIsNull() {
+        assertThat(Condition.MATCH_ALL
+                .matches(null))
+            .isTrue();
+    }
+
+    @Test
+    void matchAllShouldReturnTrueEvenWhenLineIsEmpty() {
+        assertThat(Condition.MATCH_ALL
+                .matches(""))
+            .isTrue();
+    }
 }

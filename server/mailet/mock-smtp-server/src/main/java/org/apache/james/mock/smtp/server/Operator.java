@@ -32,6 +32,7 @@ public interface Operator {
     }
 
     Operator CONTAINS = actual -> expected -> () -> actual.contains(expected);
+    Operator MATCH_ALL = actual -> expected -> () -> true;
 
     Expected actual(String actual);
 }
