@@ -119,7 +119,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
         doSetSender(from);
         mail.getRecipients().stream()
             .map(MailAddress::asString)
-            .forEach(Throwing.consumer(this::doAddRcpt));
+            .forEach(Throwing.consumer(this::doAddRcpt).sneakyThrow());
         doData(asString(mail.getMessage()));
         return this;
     }

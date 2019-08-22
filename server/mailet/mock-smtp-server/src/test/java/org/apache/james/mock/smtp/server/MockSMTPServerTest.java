@@ -23,6 +23,10 @@ import static org.apache.james.mock.smtp.server.Fixture.ALICE;
 import static org.apache.james.mock.smtp.server.Fixture.BOB;
 import static org.apache.james.mock.smtp.server.Fixture.DOMAIN;
 import static org.apache.james.mock.smtp.server.Fixture.JACK;
+import static org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421;
+import static org.apache.james.mock.smtp.server.model.SMTPCommand.DATA;
+import static org.apache.james.mock.smtp.server.model.SMTPCommand.MAIL_FROM;
+import static org.apache.james.mock.smtp.server.model.SMTPCommand.RCPT_TO;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,9 +36,12 @@ import java.util.List;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.commons.net.smtp.SMTPConnectionClosedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.mock.smtp.server.model.Condition;
 import org.apache.james.mock.smtp.server.model.Mail;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
@@ -51,8 +58,6 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import com.github.fge.lambdas.Throwing;
 
 class MockSMTPServerTest {
-
-    private static final Response.SMTPStatusCode SERVICE_NOT_AVAILABLE_421 = Response.SMTPStatusCode.of(421);
 
     @Nested
     class NormalBehaviorTests {
@@ -75,9 +80,9 @@ class MockSMTPServerTest {
                 .connect("localhost", mockServer.getPort());
 
             MimeMessage message = MimeMessageBuilder.mimeMessageBuilder()
-            .setSubject("test")
-            .setText("any text")
-            .build();
+                .setSubject("test")
+                .setText("any text")
+                .build();
 
             FakeMail mail = FakeMail.builder()
                 .name("name")
@@ -101,6 +106,78 @@ class MockSMTPServerTest {
                             assertThat(assertedMail.getMessage()).contains(MimeMessageUtil.asString(message));
                         }));
                 });
+        }
+    }
+
+    @Nested
+    class MailMockBehaviorTest {
+        private MockSMTPServer mockServer;
+        private FakeMail mail1;
+        private MimeMessage mimeMessage1;
+        private SMTPMessageSender smtpClient;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            mockServer = new MockSMTPServer();
+
+            mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
+                .setSubject("test")
+                .setText("any text")
+                .build();
+            mail1 = FakeMail.builder()
+                .name("name")
+                .sender(BOB)
+                .recipients(ALICE, JACK)
+                .mimeMessage(mimeMessage1)
+                .build();
+
+            mockServer.start();
+            smtpClient = new SMTPMessageSender(DOMAIN)
+                .connect("localhost", mockServer.getPort());
+        }
+
+        @AfterEach
+        void tearDown() {
+            mockServer.stop();
+        }
+
+        @Test
+        void serverShouldReceiveMessageFromClient() throws Exception {
+            mockServer.setBehaviors(new MockSMTPBehavior(
+                MAIL_FROM,
+                Condition.MATCH_ALL,
+                Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),
+                MockSMTPBehavior.NumberOfAnswersPolicy.anytime()));
+
+            assertThatThrownBy(() -> smtpClient.sendMessage(mail1))
+                .isInstanceOf(SMTPConnectionClosedException.class)
+                .hasMessageContaining("421");
+        }
+
+        @Test
+        void serverShouldReceiveMessageRecipientClient() throws Exception {
+            mockServer.setBehaviors(new MockSMTPBehavior(
+                RCPT_TO,
+                Condition.MATCH_ALL,
+                Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),
+                MockSMTPBehavior.NumberOfAnswersPolicy.anytime()));
+
+            assertThatThrownBy(() -> smtpClient.sendMessage(mail1))
+                .isInstanceOf(SMTPConnectionClosedException.class)
+                .hasMessageContaining("421");
+        }
+
+        @Test
+        void serverShouldReceiveMessageDataClient() throws Exception {
+            mockServer.setBehaviors(new MockSMTPBehavior(
+                DATA,
+                Condition.MATCH_ALL,
+                Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),
+                MockSMTPBehavior.NumberOfAnswersPolicy.anytime()));
+
+            assertThatThrownBy(() -> smtpClient.sendMessage(mail1))
+                .isInstanceOf(SMTPConnectionClosedException.class)
+                .hasMessageContaining("421");
         }
     }
 
