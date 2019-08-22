@@ -36,7 +36,9 @@ class Condition {
     }
 
     boolean matches(String line) {
-        return operator.matches(line, matchingValue);
+        return operator.actual(line)
+            .expected(matchingValue)
+            .matches();
     }
 
     @Override

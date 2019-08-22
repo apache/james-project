@@ -20,7 +20,18 @@
 package org.apache.james.mock.smtp.server;
 
 public interface Operator {
-    Operator CONTAINS = String::contains;
 
-    boolean matches(String testedValue, String referenceValue);
+    @FunctionalInterface
+    interface Expected {
+        Matcher expected(String expected);
+    }
+
+    @FunctionalInterface
+    interface Matcher {
+        boolean matches();
+    }
+
+    Operator CONTAINS = actual -> expected -> () -> actual.contains(expected);
+
+    Expected actual(String actual);
 }

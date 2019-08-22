@@ -30,62 +30,91 @@ class OperatorTest {
     @Nested
     class ContainsTest {
         @Test
-        void containsShouldReturnTrueWhenTestedValueContainsReferenceValue() {
-            assertThat(Operator.CONTAINS.matches("this contains matchme string", "matchme"))
+        void containsShouldReturnTrueWhenActualContainsExpected() {
+            assertThat(Operator.CONTAINS
+                    .actual("this contains matchme string")
+                    .expected("matchme")
+                    .matches())
                 .isTrue();
         }
 
         @Test
         void containsShouldReturnTrueWhenBothValuesAreEqual() {
-            assertThat(Operator.CONTAINS.matches("matchme", "matchme"))
+            assertThat(Operator.CONTAINS
+                    .actual("matchme")
+                    .expected("matchme")
+                    .matches())
                 .isTrue();
         }
 
         @Test
-        void containsShouldReturnFalseWhenTestedValueDoesNotContainReferenceValue() {
-            assertThat(Operator.CONTAINS.matches("this contains an other string", "matchme"))
+        void containsShouldReturnFalseWhenActualDoesNotContainExpected() {
+            assertThat(Operator.CONTAINS
+                    .actual("this contains an other string")
+                    .expected("matchme")
+                    .matches())
                 .isFalse();
         }
 
         @Test
-        void containsShouldReturnFalseWhenReferenceValueContainsTestedValue() {
-            assertThat(Operator.CONTAINS.matches("matchme", "this contains matchme"))
+        void containsShouldReturnFalseWhenExpectedContainsActual() {
+            assertThat(Operator.CONTAINS
+                    .actual("matchme")
+                    .expected("this contains matchme")
+                    .matches())
                 .isFalse();
         }
 
         @Test
         void containsShouldBeCaseSensitive() {
-            assertThat(Operator.CONTAINS.matches("this contains matchme string", "Matchme"))
+            assertThat(Operator.CONTAINS.actual("this contains matchme string")
+                    .expected("Matchme")
+                    .matches())
                 .isFalse();
         }
 
         @Test
-        void containsShouldThrowOnNullTestedValue() {
-            assertThatThrownBy(() -> Operator.CONTAINS.matches(null, "matchme"))
+        void containsShouldThrowOnNullActual() {
+            assertThatThrownBy(() -> Operator.CONTAINS
+                    .actual(null)
+                    .expected("matchme")
+                    .matches())
                 .isInstanceOf(NullPointerException.class);
         }
 
         @Test
-        void containsShouldThrowOnNullReferenceValue() {
-            assertThatThrownBy(() -> Operator.CONTAINS.matches("this contains matchme string", null))
+        void containsShouldThrowOnNullExpected() {
+            assertThatThrownBy(() -> Operator.CONTAINS
+                    .actual("this contains matchme string")
+                    .expected(null)
+                    .matches())
                 .isInstanceOf(NullPointerException.class);
         }
 
         @Test
-        void containsShouldReturnTrueWhenReferenceValueIsEmpty() {
-            assertThat(Operator.CONTAINS.matches("this contains matchme string", ""))
+        void containsShouldReturnTrueWhenExpectedIsEmpty() {
+            assertThat(Operator.CONTAINS
+                    .actual("this contains matchme string")
+                    .expected("")
+                    .matches())
                 .isTrue();
         }
 
         @Test
-        void containsShouldReturnFalseWhenTestedValueIsEmpty() {
-            assertThat(Operator.CONTAINS.matches("", "matchme"))
+        void containsShouldReturnFalseWhenActualIsEmpty() {
+            assertThat(Operator.CONTAINS
+                    .actual("")
+                    .expected("matchme")
+                    .matches())
                 .isFalse();
         }
 
         @Test
         void containsShouldReturnTrueWhenBothValuesAreEmpty() {
-            assertThat(Operator.CONTAINS.matches("", ""))
+            assertThat(Operator.CONTAINS
+                    .actual("")
+                    .expected("")
+                    .matches())
                 .isTrue();
         }
     }
