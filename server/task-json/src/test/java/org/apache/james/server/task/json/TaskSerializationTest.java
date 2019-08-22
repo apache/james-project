@@ -19,14 +19,17 @@ package org.apache.james.server.task.json;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.COMPLETED_TASK_MODULE;
+import static org.apache.james.server.task.json.dto.TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.FAILED_TASK_MODULE;
 import static org.apache.james.server.task.json.dto.TestTaskDTOModules.THROWING_TASK_MODULE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 
+import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.FailedTask;
+import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.ThrowingTask;
 import org.junit.jupiter.api.Test;
@@ -37,6 +40,7 @@ class TaskSerializationTest {
 
     private static final String SERIALIZED_FAILED_TASK = "{\"type\": \"failed-task\"}";
     private static final String SERIALIZED_COMPLETED_TASK = "{\"type\": \"completed-task\"}";
+    private static final String SERIALIZED_MEMORY_REFERENCE_TASK = "{\"type\": \"memory-reference-task\", \"reference\": 0}";
     private static final String SERIALIZED_THROWING_TASK = "{\"type\": \"throwing-task\"}";
 
     @Test
@@ -65,6 +69,22 @@ class TaskSerializationTest {
     void completedTaskShouldDeserialize() throws IOException {
         Task task = new JsonTaskSerializer(COMPLETED_TASK_MODULE).deserialize(SERIALIZED_COMPLETED_TASK);
         assertThat(task).isInstanceOf(CompletedTask.class);
+    }
+
+    @Test
+    void memoryReferenceTaskShouldSerialize() throws JsonProcessingException {
+        MemoryReferenceTask memoryReferenceTask = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
+
+        String actual = new JsonTaskSerializer(MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore())).serialize(memoryReferenceTask);
+        assertThatJson(actual).isEqualTo(SERIALIZED_MEMORY_REFERENCE_TASK);
+    }
+
+    @Test
+    void memoryReferenceTaskShouldDeserialize() throws IOException {
+        MemoryReferenceTaskStore memoryReferenceTaskStore = new MemoryReferenceTaskStore();
+        memoryReferenceTaskStore.add(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
+        Task task = new JsonTaskSerializer(MEMORY_REFERENCE_TASK_MODULE.apply(memoryReferenceTaskStore)).deserialize(SERIALIZED_MEMORY_REFERENCE_TASK);
+        assertThat(task).isInstanceOf(MemoryReferenceTask.class);
     }
 
     @Test

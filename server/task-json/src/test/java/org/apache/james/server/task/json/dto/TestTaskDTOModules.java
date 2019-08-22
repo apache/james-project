@@ -19,10 +19,13 @@
 
 package org.apache.james.server.task.json.dto;
 
+import java.util.function.Function;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.TestTask;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.FailedTask;
+import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.ThrowingTask;
 
 public interface TestTaskDTOModules {
@@ -59,5 +62,14 @@ public interface TestTaskDTOModules {
         .toDomainObjectConverter(dto -> new ThrowingTask())
         .toDTOConverter((task, typeName) -> new ThrowingTaskDTO(typeName))
         .typeName("throwing-task")
+        .withFactory(TaskDTOModule::new);
+
+
+    Function<MemoryReferenceTaskStore, TaskDTOModule<MemoryReferenceTask, MemoryReferenceTaskDTO>> MEMORY_REFERENCE_TASK_MODULE = store -> DTOModule
+        .forDomainObject(MemoryReferenceTask.class)
+        .convertToDTO(MemoryReferenceTaskDTO.class)
+        .toDomainObjectConverter(dto -> store.get(dto.getReference()))
+        .toDTOConverter((task, typeName) -> new MemoryReferenceTaskDTO(typeName, store.add(task)))
+        .typeName("memory-reference-task")
         .withFactory(TaskDTOModule::new);
 }
