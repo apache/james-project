@@ -81,6 +81,6 @@ class PropertiesProviderTest {
     @Test
     void getConfigurationShouldLoadListValues() throws Exception {
         assertThat(testee.getConfiguration("a").getList(String.class, "keyByList"))
-            .containsExactly("value1", "value2");
+            .containsExactly("value1", "value2", "value3", "value4", "value5");
     }
 }
