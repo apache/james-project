@@ -31,6 +31,11 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 
 public interface Fixture {
+    String DOMAIN = "james.org";
+    String BOB = "bob@" + DOMAIN;
+    String ALICE = "alice@" + DOMAIN;
+    String JACK = "jack@" + DOMAIN;
+
     ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
         .registerModule(new GuavaModule());

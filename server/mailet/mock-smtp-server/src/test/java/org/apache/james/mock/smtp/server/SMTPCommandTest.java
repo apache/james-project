@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.IOException;
 
+import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.junit.jupiter.api.Test;
 
 class SMTPCommandTest {
