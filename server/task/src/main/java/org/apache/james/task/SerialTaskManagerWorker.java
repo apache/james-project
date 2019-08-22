@@ -60,11 +60,11 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
-            return Mono
-                .using(
-                    acquireSemaphore(taskWithId, listener),
-                    executeWithSemaphore(taskWithId, listener),
-                    Semaphore::release);
+        return Mono
+            .using(
+                acquireSemaphore(taskWithId, listener),
+                executeWithSemaphore(taskWithId, listener),
+                Semaphore::release);
 
     }
 
@@ -137,6 +137,11 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         Optional.ofNullable(runningTask.get())
             .filter(task -> task.getT1().equals(taskId))
             .ifPresent(task -> task.getT2().cancel(true));
+    }
+
+    @Override
+    public void fail(TaskId taskId, Throwable reason) {
+        listener.failed(taskId, reason);
     }
 
     @Override
