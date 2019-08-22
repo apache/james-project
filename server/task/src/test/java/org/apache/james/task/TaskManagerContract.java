@@ -66,10 +66,10 @@ public interface TaskManagerContract {
     @Test
     default void getStatusShouldReturnWaitingWhenNotYetProcessed(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
-        taskManager.submit(() -> {
+        taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
             return Task.Result.COMPLETED;
-        });
+        }));
 
         TaskId taskId = taskManager.submit(new CompletedTask());
 
@@ -83,14 +83,14 @@ public interface TaskManagerContract {
         CountDownLatch waitForTaskToBeLaunched = new CountDownLatch(1);
         AtomicInteger count = new AtomicInteger(0);
 
-        TaskId id = taskManager.submit(() -> {
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             waitForTaskToBeLaunched.countDown();
             waitingForResultLatch.await();
             //We sleep to handover the CPU to the scheduler
             Thread.sleep(1);
             count.incrementAndGet();
             return Task.Result.COMPLETED;
-        });
+        }));
 
         waitForTaskToBeLaunched.await();
         taskManager.cancel(id);
@@ -133,10 +133,10 @@ public interface TaskManagerContract {
     @Test
     default void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) {
         TaskManager taskManager = taskManager();
-        TaskId id = taskManager.submit(() -> {
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             countDownLatch.await();
             return Task.Result.COMPLETED;
-        });
+        }));
 
         awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
         taskManager.cancel(id);
@@ -155,10 +155,10 @@ public interface TaskManagerContract {
     @Test
     default void aWaitingTaskShouldBeCancelled(CountDownLatch countDownLatch) {
         TaskManager taskManager = taskManager();
-        TaskId id = taskManager.submit(() -> {
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             countDownLatch.await();
             return Task.Result.COMPLETED;
-        });
+        }));
 
         TaskId idTaskToCancel = taskManager.submit(new CompletedTask());
 
@@ -179,10 +179,10 @@ public interface TaskManagerContract {
     @Test
     default void cancelShouldBeIdempotent(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
-        TaskId id = taskManager.submit(() -> {
+        TaskId id = taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
             return Task.Result.COMPLETED;
-        });
+        }));
         awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
         taskManager.cancel(id);
         assertThatCode(() -> taskManager.cancel(id))
@@ -192,10 +192,10 @@ public interface TaskManagerContract {
     @Test
     default void getStatusShouldReturnInProgressWhenProcessingIsInProgress(CountDownLatch waitingForResultLatch) {
         TaskManager taskManager = taskManager();
-        TaskId taskId = taskManager.submit(() -> {
+        TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
             waitingForResultLatch.await();
             return Task.Result.COMPLETED;
-        });
+        }));
         awaitUntilTaskHasStatus(taskId, TaskManager.Status.IN_PROGRESS, taskManager);
         assertThat(taskManager.getExecutionDetails(taskId).getStatus())
             .isEqualTo(TaskManager.Status.IN_PROGRESS);
@@ -235,12 +235,12 @@ public interface TaskManagerContract {
             new FailedTask());
         TaskId successfulId = taskManager.submit(
             new CompletedTask());
-        TaskId inProgressId = taskManager.submit(
+        TaskId inProgressId = taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch1.countDown();
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
-            });
+            }));
         TaskId waitingId = taskManager.submit(
             new CompletedTask());
 
@@ -276,19 +276,19 @@ public interface TaskManagerContract {
             new FailedTask());
         taskManager.submit(
             new CompletedTask());
-        taskManager.submit(
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch1.await();
                 latch2.countDown();
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
-            });
-        TaskId waitingId = taskManager.submit(
+            }));
+        TaskId waitingId = taskManager.submit(new MemoryReferenceTask(
             () -> {
                 waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
-            });
+            }));
 
         latch1.countDown();
         latch2.await();
@@ -308,19 +308,19 @@ public interface TaskManagerContract {
             new FailedTask());
         TaskId successfulId = taskManager.submit(
             new CompletedTask());
-        taskManager.submit(
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch1.await();
                 latch2.countDown();
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
-            });
-        taskManager.submit(
+            }));
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
-            });
+            }));
 
         latch1.countDown();
         latch2.await();
@@ -340,19 +340,19 @@ public interface TaskManagerContract {
             new FailedTask());
         taskManager.submit(
             new CompletedTask());
-        taskManager.submit(
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch1.await();
                 latch2.countDown();
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
-            });
-        taskManager.submit(
+            }));
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
-            });
+            }));
 
         latch1.countDown();
         latch2.await();
@@ -372,19 +372,19 @@ public interface TaskManagerContract {
             new FailedTask());
         taskManager.submit(
             new CompletedTask());
-        TaskId inProgressId = taskManager.submit(
+        TaskId inProgressId = taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch1.await();
                 latch2.countDown();
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
-            });
-        taskManager.submit(
+            }));
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 waitingForResultLatch.await();
                 latch2.countDown();
                 return Task.Result.COMPLETED;
-            });
+            }));
 
         latch1.countDown();
         latch2.await();
@@ -422,11 +422,11 @@ public interface TaskManagerContract {
     default void awaitShouldAwaitWaitingTask() {
         TaskManager taskManager = taskManager();
         CountDownLatch latch = new CountDownLatch(1);
-        taskManager.submit(
+        taskManager.submit(new MemoryReferenceTask(
             () -> {
                 latch.await();
                 return Task.Result.COMPLETED;
-            });
+            }));
         latch.countDown();
         TaskId task2 = taskManager.submit(
             new CompletedTask());
@@ -439,24 +439,24 @@ public interface TaskManagerContract {
         TaskManager taskManager = taskManager();
         ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>();
 
-        taskManager.submit(() -> {
+        taskManager.submit(new MemoryReferenceTask(() -> {
             queue.add(1);
             Thread.sleep(50);
             queue.add(2);
             return Task.Result.COMPLETED;
-        });
-        taskManager.submit(() -> {
+        }));
+        taskManager.submit(new MemoryReferenceTask(() -> {
             queue.add(3);
             Thread.sleep(50);
             queue.add(4);
             return Task.Result.COMPLETED;
-        });
-        taskManager.submit(() -> {
+        }));
+        taskManager.submit(new MemoryReferenceTask(() -> {
             queue.add(5);
             Thread.sleep(50);
             queue.add(6);
             return Task.Result.COMPLETED;
-        });
+        }));
 
         awaitAtMostFiveSeconds.until(() -> queue.contains(6));
 
