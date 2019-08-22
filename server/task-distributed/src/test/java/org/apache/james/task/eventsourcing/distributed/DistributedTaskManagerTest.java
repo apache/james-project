@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
@@ -36,7 +37,6 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
-import org.apache.james.task.MemoryWorkQueue;
 import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
@@ -70,6 +70,9 @@ class DistributedTaskManagerTest {
             CassandraTaskExecutionDetailsProjectionModule.MODULE()));
 
     @RegisterExtension
+    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+
+    @RegisterExtension
     static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(cassandraCluster, MODULES);
 
     @Test
@@ -81,7 +84,10 @@ class DistributedTaskManagerTest {
         WorkQueueSupplier workQueueSupplier = eventSourcingSystem -> {
             WorkerStatusListener listener = new WorkerStatusListener(eventSourcingSystem);
             TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
-            return new MemoryWorkQueue(worker);
+            RabbitMQWorkQueue rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, rabbitMQExtension.getRabbitConnectionPool(), TASK_SERIALIZER);
+            rabbitMQWorkQueue.start();
+            return rabbitMQWorkQueue;
+
         };
         TaskManager taskManager1 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, new Hostname("foo"));
         TaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, new Hostname("bar"));
