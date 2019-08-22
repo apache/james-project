@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;

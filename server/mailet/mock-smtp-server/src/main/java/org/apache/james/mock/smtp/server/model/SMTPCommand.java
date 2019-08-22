@@ -17,14 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import java.util.Arrays;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
-enum SMTPCommand {
+public enum SMTPCommand {
     RCPT_TO("RCPT TO"),
     EHLO("EHLO"),
     MAIL_FROM("MAIL FROM"),

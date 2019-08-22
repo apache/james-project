@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -27,7 +27,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 
 @JsonDeserialize(builder = Condition.Builder.class)
-interface Condition {
+public interface Condition {
     @JsonPOJOBuilder(withPrefix = "")
     class Builder {
         private Operator.OperatorName operator;
@@ -79,7 +79,7 @@ interface Condition {
         private final Operator operator;
         private final String matchingValue;
 
-        OperatorCondition(Operator operator, String matchingValue) {
+        public OperatorCondition(Operator operator, String matchingValue) {
             Preconditions.checkNotNull(operator);
             Preconditions.checkNotNull(matchingValue);
 
@@ -121,5 +121,5 @@ interface Condition {
 
     Condition MATCH_ALL = new MatchAllCondition();
 
-    boolean matches(String line);
+    public boolean matches(String line);
 }

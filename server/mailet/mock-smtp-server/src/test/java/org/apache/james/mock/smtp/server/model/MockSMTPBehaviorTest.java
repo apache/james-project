@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_ALL_FIELDS;
@@ -29,6 +29,9 @@ import static org.apache.james.mock.smtp.server.Fixture.RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.Optional;
+
+import org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 

@@ -17,21 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import java.util.List;
 import java.util.Objects;
 
 import org.apache.james.core.MailAddress;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
-class Mail {
-    static class Envelope {
+public class Mail {
+    public static class Envelope {
+
+        public static class Builder {
+            private MailAddress from;
+            private ImmutableList.Builder<MailAddress> recipients;
+
+            public Builder() {
+                recipients = new ImmutableList.Builder<>();
+            }
+
+            public Builder from(MailAddress from) {
+                this.from = from;
+                return this;
+            }
+
+            public Builder addRecipient(MailAddress recipient) {
+                recipients.add(recipient);
+                return this;
+            }
+
+            public Envelope build() {
+                return new Envelope(from, recipients.build());
+            }
+        }
+
         private final MailAddress from;
         private final List<MailAddress> recipients;
 
-        Envelope(MailAddress from, List<MailAddress> recipients) {
+        public Envelope(MailAddress from, List<MailAddress> recipients) {
             Preconditions.checkNotNull(from);
             Preconditions.checkNotNull(recipients);
             Preconditions.checkArgument(!recipients.isEmpty(), "'recipients' field should not be empty");
@@ -63,12 +89,39 @@ class Mail {
         public final int hashCode() {
             return Objects.hash(from, recipients);
         }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("from", from)
+                .add("recipients", recipients)
+                .toString();
+        }
+    }
+
+    public static class Builder {
+        private Envelope envelope;
+        private String message;
+
+        public Builder message(String message) {
+            this.message = message;
+            return this;
+        }
+
+        public Builder envelope(Envelope envelope) {
+            this.envelope = envelope;
+            return this;
+        }
+
+        public Mail build() {
+            return new Mail(envelope, message);
+        }
     }
 
     private final Envelope envelope;
     private final String message;
 
-    Mail(Envelope envelope, String message) {
+    public Mail(Envelope envelope, String message) {
         Preconditions.checkNotNull(envelope);
         Preconditions.checkNotNull(message);
 
@@ -98,5 +151,13 @@ class Mail {
     @Override
     public final int hashCode() {
         return Objects.hash(envelope, message);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("envelope", envelope)
+            .add("message", message)
+            .toString();
     }
 }

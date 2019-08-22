@@ -19,6 +19,12 @@
 
 package org.apache.james.mock.smtp.server;
 
+import org.apache.james.mock.smtp.server.model.Condition;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
+import org.apache.james.mock.smtp.server.model.Operator;
+import org.apache.james.mock.smtp.server.model.Response;
+import org.apache.james.mock.smtp.server.model.SMTPCommand;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;

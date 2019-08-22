@@ -17,14 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.mock.smtp.server.Response.SMTPStatusCode;
+import org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -68,7 +68,7 @@ class ResponseTest {
 
         @Test
         void getCodeShouldReturnInternalValue() {
-            assertThat(OK_250.getCode())
+            assertThat(OK_250.getRawCode())
                 .isEqualTo(OK_250_CODE);
         }
     }

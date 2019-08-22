@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -27,8 +27,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 
-class Response {
-    enum SMTPStatusCode {
+public class Response {
+    public enum SMTPStatusCode {
         OK_200(200),
         SYSTEM_STATUS_211(211),
         HELP_214(214),
@@ -70,7 +70,7 @@ class Response {
         }
 
         @JsonValue
-        public int getCode() {
+        public int getRawCode() {
             return code;
         }
     }
@@ -99,12 +99,12 @@ class Response {
         this.serverRejected = serverRejected;
     }
 
-    String asReplyString() {
-        return code.getCode() + " " + message;
+    public String asReplyString() {
+        return code.getRawCode() + " " + message;
     }
 
     @JsonProperty("rejected")
-    boolean isServerRejected() {
+    public boolean isServerRejected() {
         return serverRejected;
     }
 
