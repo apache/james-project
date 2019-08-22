@@ -40,6 +40,8 @@ import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.CountDownLatchExtension;
+import org.apache.james.task.MemoryReferenceTask;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
@@ -91,11 +93,12 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     private final CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider());
     private final TaskExecutionDetailsProjection executionDetailsProjection = new CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO);
 
-    WorkQueueSupplier workQueueSupplier = new RabbitMQWorkQueueSupplier(rabbitMQExtension.getRabbitConnectionPool(), TASK_SERIALIZER);
+    private WorkQueueSupplier workQueueSupplier;
     private EventStore eventStore;
 
     @BeforeEach
     void setUp(EventStore eventStore) {
+        workQueueSupplier = new RabbitMQWorkQueueSupplier(rabbitMQExtension.getRabbitConnectionPool(), TASK_SERIALIZER);
         this.eventStore = eventStore;
     }
 
@@ -127,5 +130,43 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     @Test
     @Disabled("Cancelling is not supported yet")
     public void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) {
+    }
+
+    @Test
+    void givenTwoTaskManagersAndTwoTasksOnlyOneTaskShouldRunAtTheSameTime() throws InterruptedException {
+        CountDownLatch waitingForFirstTaskLatch = new CountDownLatch(1);
+
+        TaskManager taskManager1 = taskManager();
+        TaskManager taskManager2 = taskManager();
+
+        taskManager1.submit(new MemoryReferenceTask(() -> {
+            waitingForFirstTaskLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+        TaskId waitingTaskId = taskManager1.submit(new CompletedTask());
+
+        awaitUntilTaskHasStatus(waitingTaskId, TaskManager.Status.WAITING, taskManager2);
+        waitingForFirstTaskLatch.countDown();
+
+        Awaitility.await()
+            .atMost(Duration.ONE_SECOND)
+            .pollInterval(100L, TimeUnit.MILLISECONDS)
+            .until(() -> taskManager1.await(waitingTaskId).getStatus() == TaskManager.Status.COMPLETED);
+    }
+
+    @Test
+        // FIXME it's currently dependent of the implementation of the sequential TaskManager with the exclusive RabbitMQ consumer
+        // once we store the node where the event have been created/started/completed we should rewrite it with this information.
+    void givenTwoTaskManagerATaskSubmittedOnOneCouldBeRunOnTheOther() throws InterruptedException {
+        TaskManager taskManager1 = taskManager();
+        Thread.sleep(100); // FIXME used to ensure that taskManager1 is the worker consuming from rabbit
+        TaskManager taskManager2 = taskManager();
+
+        TaskId taskId = taskManager2.submit(new CompletedTask());
+
+        Awaitility.await()
+            .atMost(Duration.ONE_SECOND)
+            .pollInterval(100L, TimeUnit.MILLISECONDS)
+            .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
     }
 }
