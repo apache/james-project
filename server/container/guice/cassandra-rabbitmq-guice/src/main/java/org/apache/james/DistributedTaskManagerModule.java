@@ -21,25 +21,17 @@
 package org.apache.james;
 
 import org.apache.james.modules.server.HostnameModule;
-import org.apache.james.task.MemoryWorkQueue;
-import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.TaskManager;
-import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
-import org.apache.james.task.eventsourcing.WorkerStatusListener;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
+import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueSupplier;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 public class DistributedTaskManagerModule extends AbstractModule {
-    public static final WorkQueueSupplier workQueueSupplier = eventSourcingSystem -> {
-        WorkerStatusListener listener = new WorkerStatusListener(eventSourcingSystem);
-        TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
-        return new MemoryWorkQueue(worker);
-    };
 
     @Override
     protected void configure() {
@@ -49,6 +41,6 @@ public class DistributedTaskManagerModule extends AbstractModule {
         bind(WorkQueueSupplier.class).in(Scopes.SINGLETON);
         bind(TaskExecutionDetailsProjection.class).to(CassandraTaskExecutionDetailsProjection.class);
         bind(TaskManager.class).to(EventSourcingTaskManager.class);
-        bind(WorkQueueSupplier.class).toInstance(workQueueSupplier);
+        bind(WorkQueueSupplier.class).to(RabbitMQWorkQueueSupplier.class);
     }
 }
