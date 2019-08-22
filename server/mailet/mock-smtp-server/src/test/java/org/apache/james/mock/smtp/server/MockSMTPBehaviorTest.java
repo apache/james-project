@@ -24,13 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
+import org.apache.james.mock.smtp.server.Response.SMTPStatusCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MockSMTPBehaviorTest {
-    private static final Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
+    private static final Response RESPONSE = Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message");
 
     @Nested
     class NumberOfAnswersPolicyTest {

@@ -22,53 +22,12 @@ package org.apache.james.mock.smtp.server;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.jupiter.api.Nested;
+import org.apache.james.mock.smtp.server.Response.SMTPStatusCode;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class ResponseTest {
-    static final int OK_250_CODE = 250;
-    static final Response.SMTPStatusCode OK_250 = Response.SMTPStatusCode.of(OK_250_CODE);
-
-    @Nested
-    class SMTPStatusCodeTest {
-        @Test
-        void shouldMatchBeanContract() {
-            EqualsVerifier.forClass(Response.SMTPStatusCode.class)
-                .verify();
-        }
-
-        @Test
-        void constructorShouldThrowWhenStatusCodeIsNegative() {
-            assertThatThrownBy(() -> Response.SMTPStatusCode.of(-1))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void constructorShouldThrowWhenStatusCodeIsZero() {
-            assertThatThrownBy(() -> Response.SMTPStatusCode.of(0))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void constructorShouldThrowWhenStatusCodeIsTooBig() {
-            assertThatThrownBy(() -> Response.SMTPStatusCode.of(600))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void constructorShouldThrowWhenStatusCodeIsTooLittle() {
-            assertThatThrownBy(() -> Response.SMTPStatusCode.of(99))
-                .isInstanceOf(IllegalArgumentException.class);
-        }
-
-        @Test
-        void getCodeShouldReturnInternalValue() {
-            assertThat(OK_250.getCode())
-                .isEqualTo(OK_250_CODE);
-        }
-    }
 
     @Test
     void shouldMatchBeanContract() {
@@ -78,7 +37,7 @@ class ResponseTest {
 
     @Test
     void constructorShouldThrowWhenMessageIsNull() {
-        assertThatThrownBy(() -> Response.serverReject(OK_250, null))
+        assertThatThrownBy(() -> Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, null))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -90,25 +49,25 @@ class ResponseTest {
 
     @Test
     void asReplyStringShouldReturnASMTPResponseLine() {
-        assertThat(Response.serverReject(OK_250, "message").asReplyString())
+        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "message").asReplyString())
             .isEqualTo("250 message");
     }
 
     @Test
     void asReplyStringShouldReturnASMTPResponseLineWhenEmptyMessage() {
-        assertThat(Response.serverReject(OK_250, "").asReplyString())
+        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "").asReplyString())
             .isEqualTo("250 ");
     }
 
     @Test
     void isServerRejectedShouldReturnTrueWhenServerReject() {
-        assertThat(Response.serverReject(OK_250, "message").isServerRejected())
+        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "message").isServerRejected())
             .isTrue();
     }
 
     @Test
     void isServerRejectedShouldReturnFalseWhenServerAccept() {
-        assertThat(Response.serverAccept(OK_250, "message").isServerRejected())
+        assertThat(Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message").isServerRejected())
             .isFalse();
     }
 }
