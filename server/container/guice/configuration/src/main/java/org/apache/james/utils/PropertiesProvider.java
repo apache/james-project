@@ -79,7 +79,7 @@ public class PropertiesProvider {
                 .setListDelimiterHandler(new DefaultListDelimiterHandler(COMMA))
                 .setFile(propertiesFile));
 
-        return builder.getConfiguration();
+        return new PropertiesWrapperConfiguration(builder.getConfiguration());
     }
 
     private Optional<File> getConfigurationFile(String fileName) {
