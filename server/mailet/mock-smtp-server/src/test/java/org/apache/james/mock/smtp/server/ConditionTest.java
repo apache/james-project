@@ -20,20 +20,18 @@
 package org.apache.james.mock.smtp.server;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.exc.InvalidDefinitionException;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class ConditionTest {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
     @Test
     void operatorConditionShouldMatchBeanContract() {
         EqualsVerifier.forClass(Condition.OperatorCondition.class)

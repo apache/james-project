@@ -19,6 +19,8 @@
 
 package org.apache.james.mock.smtp.server;
 
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIORS;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_COMPULSORY_FIELDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -42,16 +44,16 @@ class SMTPBehaviorRepositoryTest {
 
     @Test
     void getBehaviorsShouldReturnPreviouslyStoredValue() {
-        testee.setBehaviors(MockSmtpBehaviorsTest.POJO);
+        testee.setBehaviors(BEHAVIORS);
 
-        assertThat(testee.getBehaviors()).contains(MockSmtpBehaviorsTest.POJO);
+        assertThat(testee.getBehaviors()).contains(BEHAVIORS);
     }
 
     @Test
     void getBehaviorsShouldReturnLatestStoredValue() {
-        MockSmtpBehaviors newPojo = new MockSmtpBehaviors(ImmutableList.of(MockSMTPBehaviorTest.POJO_COMPULSORY_FIELDS));
+        MockSmtpBehaviors newPojo = new MockSmtpBehaviors(ImmutableList.of(BEHAVIOR_COMPULSORY_FIELDS));
 
-        testee.setBehaviors(MockSmtpBehaviorsTest.POJO);
+        testee.setBehaviors(BEHAVIORS);
         testee.setBehaviors(newPojo);
 
         assertThat(testee.getBehaviors()).contains(newPojo);
@@ -59,7 +61,7 @@ class SMTPBehaviorRepositoryTest {
 
     @Test
     void getBehaviorsShouldReturnEmptyWhenCleared() {
-        testee.setBehaviors(MockSmtpBehaviorsTest.POJO);
+        testee.setBehaviors(BEHAVIORS);
 
         testee.clearBehaviors();
 

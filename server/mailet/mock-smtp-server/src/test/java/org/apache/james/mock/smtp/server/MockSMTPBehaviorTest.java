@@ -20,50 +20,25 @@
 package org.apache.james.mock.smtp.server;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_ALL_FIELDS;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_COMPULSORY_FIELDS;
+import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIOR_ALL_FIELDS;
+import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIOR_COMPULSORY_FIELDS;
+import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;
+import static org.apache.james.mock.smtp.server.Fixture.RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.apache.james.mock.smtp.server.Response.SMTPStatusCode;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import net.javacrumbs.jsonunit.core.Option;
 import net.javacrumbs.jsonunit.core.internal.Options;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MockSMTPBehaviorTest {
-    private static final Response RESPONSE = Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message");
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper().registerModule(new Jdk8Module());
-
-    static final String JSON_COMPULSORY_FIELDS = "{" +
-        "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
-        "  \"command\": \"EHLO\"" +
-        "}";
-
-    static final MockSMTPBehavior POJO_COMPULSORY_FIELDS = new MockSMTPBehavior(
-        SMTPCommand.EHLO,
-        Optional.empty(),
-        Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
-        MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
-
-    static final String JSON_ALL_FIELDS = "{" +
-        "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
-        "  \"condition\": {\"operator\":\"contains\", \"matchingValue\":\"matchme\"}," +
-        "  \"command\": \"EHLO\"," +
-        "  \"numberOfAnswer\": 7" +
-        "}";
-
-    static final MockSMTPBehavior POJO_ALL_FIELDS = new MockSMTPBehavior(
-        SMTPCommand.EHLO,
-        Optional.of(new Condition.OperatorCondition(Operator.CONTAINS, "matchme")),
-        Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
-        MockSMTPBehavior.NumberOfAnswersPolicy.times(7));
-
     @Nested
     class NumberOfAnswersPolicyTest {
         @Test
@@ -131,36 +106,36 @@ class MockSMTPBehaviorTest {
     class JSONTest {
         @Test
         void jacksonShouldDeserializeMockSMTPBehaviorWithAllField() throws Exception {
-            MockSMTPBehavior behavior = OBJECT_MAPPER.readValue(JSON_ALL_FIELDS, MockSMTPBehavior.class);
+            MockSMTPBehavior behavior = OBJECT_MAPPER.readValue(JSON_BEHAVIOR_ALL_FIELDS, MockSMTPBehavior.class);
 
             assertThat(behavior)
-                .isEqualTo(POJO_ALL_FIELDS);
+                .isEqualTo(BEHAVIOR_ALL_FIELDS);
         }
 
         @Test
         void jacksonShouldSerializeMockSMTPBehaviorWithAllField() throws Exception {
-            String json = OBJECT_MAPPER.writeValueAsString(POJO_ALL_FIELDS);
+            String json = OBJECT_MAPPER.writeValueAsString(BEHAVIOR_ALL_FIELDS);
 
             assertThatJson(json)
                 .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT))
-                .isEqualTo(JSON_ALL_FIELDS);
+                .isEqualTo(JSON_BEHAVIOR_ALL_FIELDS);
         }
 
         @Test
         void jacksonShouldDeserializeMockSMTPBehaviorWithCompulsoryField() throws Exception {
-            MockSMTPBehavior behavior = OBJECT_MAPPER.readValue(JSON_COMPULSORY_FIELDS, MockSMTPBehavior.class);
+            MockSMTPBehavior behavior = OBJECT_MAPPER.readValue(JSON_BEHAVIOR_COMPULSORY_FIELDS, MockSMTPBehavior.class);
 
             assertThat(behavior)
-                .isEqualTo(POJO_COMPULSORY_FIELDS);
+                .isEqualTo(BEHAVIOR_COMPULSORY_FIELDS);
         }
 
         @Test
         void jacksonShouldSerializeMockSMTPBehaviorWithCompulsoryField() throws Exception {
-            String json = OBJECT_MAPPER.writeValueAsString(POJO_COMPULSORY_FIELDS);
+            String json = OBJECT_MAPPER.writeValueAsString(BEHAVIOR_COMPULSORY_FIELDS);
 
             assertThatJson(json)
                 .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT))
-                .isEqualTo(JSON_COMPULSORY_FIELDS);
+                .isEqualTo(JSON_BEHAVIOR_COMPULSORY_FIELDS);
         }
     }
 }
