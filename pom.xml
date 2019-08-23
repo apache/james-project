@@ -2904,30 +2904,18 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.0</version>
+                    <version>2.22.2</version>
                     <configuration>
                         <argLine>-Xms512m -Xmx1024m</argLine>
                         <reuseForks>false</reuseForks>
                         <!-- Fail tests longer than 2 hours, prevent form random locking tests -->
                         <forkedProcessTimeoutInSeconds>7200</forkedProcessTimeoutInSeconds>
                     </configuration>
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.junit.jupiter</groupId>
-                            <artifactId>junit-jupiter-engine</artifactId>
-                            <version>${junit.jupiter.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.junit.vintage</groupId>
-                            <artifactId>junit-vintage-engine</artifactId>
-                            <version>${junit.vintage.version}</version>
-                         </dependency>
-                    </dependencies>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>2.22.0</version>
+                    <version>2.22.2</version>
                     <configuration>
                         <aggregate>true</aggregate>
                     </configuration>
