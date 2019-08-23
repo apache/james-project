@@ -47,14 +47,16 @@ public class MemoryTaskManager implements TaskManager {
     private static class DetailsUpdater implements TaskManagerWorker.Listener {
 
         private final TaskExecutionDetailsUpdaterFactory updaterFactory;
+        private final Hostname hostname;
 
-        DetailsUpdater(TaskExecutionDetailsUpdaterFactory updaterFactory) {
+        DetailsUpdater(TaskExecutionDetailsUpdaterFactory updaterFactory, Hostname hostname) {
             this.updaterFactory = updaterFactory;
+            this.hostname = hostname;
         }
 
         @Override
         public void started(TaskId taskId) {
-            updaterFactory.apply(taskId).accept(TaskExecutionDetails::started);
+            updaterFactory.apply(taskId).accept(details -> details.started(hostname));
         }
 
         @Override
@@ -162,7 +164,7 @@ public class MemoryTaskManager implements TaskManager {
     }
 
     private DetailsUpdater updater() {
-        return new DetailsUpdater(this::updateDetails);
+        return new DetailsUpdater(this::updateDetails, hostname);
     }
 
     private Consumer<TaskExecutionDetailsUpdater> updateDetails(TaskId taskId) {

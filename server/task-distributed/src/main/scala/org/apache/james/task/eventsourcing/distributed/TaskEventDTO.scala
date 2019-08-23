@@ -47,14 +47,15 @@ object CreatedDTO {
 
 case class StartedDTO(@JsonProperty("type") typeName: String,
                       @JsonProperty("aggregate") aggregateId: String,
-                      @JsonProperty("event") eventId: Int)
+                      @JsonProperty("event") eventId: Int,
+                      @JsonProperty("hostname") getHostname: String)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
-  def toDomainObject: Started = Started(domainAggregateId, domainEventId)
+  def toDomainObject: Started = Started(domainAggregateId, domainEventId, Hostname(getHostname))
 }
 
 object StartedDTO {
   def fromDomainObject(event: Started, typeName: String): StartedDTO =
-    StartedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize())
+    StartedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), event.hostname.asString)
 }
 
 case class CancelRequestedDTO(@JsonProperty("type") typeName: String,

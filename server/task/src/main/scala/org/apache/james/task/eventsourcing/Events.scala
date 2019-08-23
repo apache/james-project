@@ -32,7 +32,7 @@ case class Hostname(private val value: String) {
 
 case class Created(aggregateId: TaskAggregateId, override val eventId: EventId, task: Task, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
-case class Started(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+case class Started(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
 case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
 

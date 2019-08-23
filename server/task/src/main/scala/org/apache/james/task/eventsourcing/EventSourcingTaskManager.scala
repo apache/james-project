@@ -53,13 +53,13 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
   private val eventSourcingSystem = ScalaEventSourcingSystem(
     handlers = Set(
       new CreateCommandHandler(loadHistory, hostname),
-      new StartCommandHandler(loadHistory),
+      new StartCommandHandler(loadHistory, hostname),
       new RequestCancelCommandHandler(loadHistory),
       new CompleteCommandHandler(loadHistory),
       new CancelCommandHandler(loadHistory),
       new FailCommandHandler(loadHistory)),
     subscribers = Set(
-      executionDetailsProjection.asSubscriber,
+      executionDetailsProjection.asSubscriber(hostname),
       workDispatcher),
     eventStore = eventStore)
 

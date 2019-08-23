@@ -25,13 +25,13 @@ import org.apache.james.task.{TaskExecutionDetails, TaskId}
 import collection.JavaConverters._
 
 trait TaskExecutionDetailsProjection {
-  val asSubscriber: Subscriber = {
+  def asSubscriber(hostname: Hostname): Subscriber = {
     case created: Created =>
       update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
     case cancelRequested: CancelRequested =>
       update(cancelRequested.aggregateId.taskId)(_.cancelRequested)
     case started: Started =>
-      update(started.aggregateId.taskId)(_.started)
+      update(started.aggregateId.taskId)(_.started(hostname))
     case completed: Completed =>
       update(completed.aggregateId.taskId)(_.completed)
     case failed: Failed =>

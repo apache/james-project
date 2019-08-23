@@ -28,6 +28,7 @@ import com.google.inject.Scopes;
 public class TaskManagerModule extends AbstractModule {
     @Override
     protected void configure() {
+        install(new HostnameModule());
         bind(MemoryTaskManager.class).in(Scopes.SINGLETON);
         bind(TaskManager.class).to(MemoryTaskManager.class);
     }

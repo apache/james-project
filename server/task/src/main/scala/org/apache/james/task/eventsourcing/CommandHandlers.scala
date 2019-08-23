@@ -41,11 +41,12 @@ class CreateCommandHandler(private val loadHistory: TaskAggregateId => History, 
   }
 }
 
-class StartCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[Start] {
+class StartCommandHandler(private val loadHistory: TaskAggregateId => History,
+                          private val hostname: Hostname) extends TaskCommandHandler[Start] {
   override def handledClass: Class[Start] = classOf[Start]
 
   override def handle(command: Start): util.List[_ <: Event] = {
-    loadAggregate(loadHistory, command.id).start()
+    loadAggregate(loadHistory, command.id).start(hostname)
   }
 }
 

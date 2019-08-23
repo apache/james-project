@@ -43,9 +43,9 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     } else Nil.asJava
   }
 
-  private[eventsourcing] def start(): util.List[Event] = {
+  private[eventsourcing] def start(hostname: Hostname): util.List[Event] = {
     currentStatus match {
-      case Some(Status.WAITING) => createEventWithId(Started(aggregateId, _))
+      case Some(Status.WAITING) => createEventWithId(Started(aggregateId, _, hostname))
       case _ => Nil.asJava
     }
   }

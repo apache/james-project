@@ -44,6 +44,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     .value(SUBMITTED_DATE, bindMarker(SUBMITTED_DATE))
     .value(SUBMITTED_NODE, bindMarker(SUBMITTED_NODE))
     .value(STARTED_DATE, bindMarker(STARTED_DATE))
+    .value(RAN_NODE, bindMarker(RAN_NODE))
     .value(COMPLETED_DATE, bindMarker(COMPLETED_DATE))
     .value(CANCELED_DATE, bindMarker(CANCELED_DATE))
     .value(FAILED_DATE, bindMarker(FAILED_DATE)))
@@ -61,6 +62,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
       .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmitDate))
       .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
       .setUDTValue(STARTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate).orElse(null))
+      .setString(RAN_NODE, details.getRanNode.map[String](_.asString).orElse(null))
       .setUDTValue(COMPLETED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCompletedDate).orElse(null))
       .setUDTValue(CANCELED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCanceledDate).orElse(null))
       .setUDTValue(FAILED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate).orElse(null)))
@@ -80,6 +82,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     submittedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(SUBMITTED_DATE)),
     submittedNode = Hostname(row.getString(SUBMITTED_NODE)),
     startedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(STARTED_DATE)),
+    ranNode = Optional.ofNullable(row.getString(RAN_NODE)).map(Hostname(_)),
     completedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(COMPLETED_DATE)),
     canceledDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(CANCELED_DATE)),
     failedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(FAILED_DATE)),
