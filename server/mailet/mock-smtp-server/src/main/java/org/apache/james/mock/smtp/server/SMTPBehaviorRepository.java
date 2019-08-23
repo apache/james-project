@@ -19,9 +19,13 @@
 
 package org.apache.james.mock.smtp.server;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Stream;
 
+import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 
 public class SMTPBehaviorRepository {
@@ -41,5 +45,16 @@ public class SMTPBehaviorRepository {
 
     public void setBehaviors(MockSmtpBehaviors behaviors) {
         this.behaviors.set(behaviors);
+    }
+
+    public void setBehaviors(MockSMTPBehavior... behaviors) {
+        setBehaviors(new MockSmtpBehaviors(Arrays.asList(behaviors)));
+    }
+
+    public Stream<MockSMTPBehavior> allBehaviors() {
+        return Optional.ofNullable(behaviors.get())
+            .map(MockSmtpBehaviors::getBehaviorList)
+            .map(List::stream)
+            .orElseGet(Stream::empty);
     }
 }

@@ -115,10 +115,12 @@ class MockSMTPServerTest {
         private FakeMail mail1;
         private MimeMessage mimeMessage1;
         private SMTPMessageSender smtpClient;
+        private SMTPBehaviorRepository behaviorRepository;
 
         @BeforeEach
         void setUp() throws Exception {
-            mockServer = new MockSMTPServer();
+            behaviorRepository = new SMTPBehaviorRepository();
+            mockServer = new MockSMTPServer(behaviorRepository);
 
             mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
                 .setSubject("test")
@@ -138,12 +140,13 @@ class MockSMTPServerTest {
 
         @AfterEach
         void tearDown() {
+            behaviorRepository.clearBehaviors();
             mockServer.stop();
         }
 
         @Test
         void serverShouldReceiveMessageFromClient() throws Exception {
-            mockServer.setBehaviors(new MockSMTPBehavior(
+            behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 MAIL_FROM,
                 Condition.MATCH_ALL,
                 Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),
@@ -156,7 +159,7 @@ class MockSMTPServerTest {
 
         @Test
         void serverShouldReceiveMessageRecipientClient() throws Exception {
-            mockServer.setBehaviors(new MockSMTPBehavior(
+            behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 RCPT_TO,
                 Condition.MATCH_ALL,
                 Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),
@@ -169,7 +172,7 @@ class MockSMTPServerTest {
 
         @Test
         void serverShouldReceiveMessageDataClient() throws Exception {
-            mockServer.setBehaviors(new MockSMTPBehavior(
+            behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 DATA,
                 Condition.MATCH_ALL,
                 Response.serverReject(SERVICE_NOT_AVAILABLE_421, "mock response"),

@@ -22,7 +22,6 @@ package org.apache.james.mock.smtp.server;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.Optional;
 
 import javax.mail.internet.AddressException;
@@ -68,11 +67,11 @@ public class MockMessageHandler implements MessageHandler {
     private final Mail.Envelope.Builder envelopeBuilder;
     private final Mail.Builder mailBuilder;
     private final ReceivedMailRepository mailRepository;
-    private final List<MockSMTPBehavior> behaviors;
+    private final SMTPBehaviorRepository behaviorRepository;
 
-    MockMessageHandler(ReceivedMailRepository mailRepository, List<MockSMTPBehavior> behaviors) {
+    MockMessageHandler(ReceivedMailRepository mailRepository, SMTPBehaviorRepository behaviorRepository) {
         this.mailRepository = mailRepository;
-        this.behaviors = behaviors;
+        this.behaviorRepository = behaviorRepository;
         this.envelopeBuilder = new Mail.Envelope.Builder();
         this.mailBuilder = new Mail.Builder();
     }
@@ -105,7 +104,7 @@ public class MockMessageHandler implements MessageHandler {
     }
 
     private Optional<MockSMTPBehavior> firstMatchedBehavior(SMTPCommand data) {
-        return behaviors.stream()
+        return behaviorRepository.allBehaviors()
             .filter(behavior -> behavior.getCommand().equals(data))
             .findFirst();
     }
