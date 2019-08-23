@@ -25,21 +25,31 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ConfigurationDecoder;
 import org.apache.commons.configuration2.ImmutableConfiguration;
+import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.commons.configuration2.interpol.ConfigurationInterpolator;
 import org.apache.commons.configuration2.interpol.Lookup;
 import org.apache.commons.configuration2.sync.LockMode;
 import org.apache.commons.configuration2.sync.Synchronizer;
+import org.apache.commons.lang3.StringUtils;
 
-public class PropertiesWrapperConfiguration implements Configuration {
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
+public class DelegatedPropertiesConfiguration implements Configuration {
+
+    private final String delimiter;
     private final Configuration configuration;
 
-    PropertiesWrapperConfiguration(Configuration configuration) {
+    DelegatedPropertiesConfiguration(String delimiter, Configuration configuration) {
+        this.delimiter = delimiter;
         this.configuration = configuration;
     }
 
@@ -265,12 +275,21 @@ public class PropertiesWrapperConfiguration implements Configuration {
 
     @Override
     public String[] getStringArray(String key) {
-        return configuration.getStringArray(key);
+        return splitAndStripDoubleQuotes(configuration.getString(key))
+            .toArray(String[]::new);
     }
 
     @Override
     public List<Object> getList(String key) {
-        return configuration.getList(key);
+        try {
+            String rawList = configuration.get(String.class, key);
+            return splitAndStripDoubleQuotes(rawList)
+                .collect(Guavate.toImmutableList());
+        } catch (ConversionException e) {
+            return configuration.getList(key);
+        } catch (NoSuchElementException e) {
+            return ImmutableList.of();
+        }
     }
 
     @Override
@@ -349,5 +368,13 @@ public class PropertiesWrapperConfiguration implements Configuration {
     @Override
     public void unlock(LockMode mode) {
         configuration.unlock(mode);
+    }
+
+    private Stream<String> splitAndStripDoubleQuotes(String value) {
+        return Optional.ofNullable(value)
+            .map(notNullValue -> Stream
+                .of(StringUtils.strip(notNullValue, "\"").split(delimiter))
+                .map(String::trim))
+            .orElseGet(Stream::empty);
     }
 }

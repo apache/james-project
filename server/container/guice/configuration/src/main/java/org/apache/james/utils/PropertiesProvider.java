@@ -43,6 +43,7 @@ import com.google.common.base.Strings;
 public class PropertiesProvider {
 
     private static final char COMMA = ',';
+    private static final String COMMA_STRING = ",";
 
     private final FileSystem fileSystem;
     private final String configurationPrefix;
@@ -79,7 +80,7 @@ public class PropertiesProvider {
                 .setListDelimiterHandler(new DefaultListDelimiterHandler(COMMA))
                 .setFile(propertiesFile));
 
-        return new PropertiesWrapperConfiguration(builder.getConfiguration());
+        return new DelegatedPropertiesConfiguration(COMMA_STRING, builder.getConfiguration());
     }
 
     private Optional<File> getConfigurationFile(String fileName) {

@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.FileNotFoundException;
 
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,5 +84,17 @@ class PropertiesProviderTest {
     void getConfigurationShouldLoadListValues() throws Exception {
         assertThat(testee.getConfiguration("a").getList(String.class, "keyByList"))
             .containsExactly("value1", "value2", "value3", "value4", "value5");
+    }
+
+    @Test
+    void getStringArrayShouldReturnEmptyArrayWhenKeyNotFound() throws Exception {
+        assertThat(testee.getConfiguration("a").getStringArray("notExistKey"))
+            .isEmpty();
+    }
+
+    @Test
+    void getListShouldReturnEmptyListWhenKeyNotFound() throws Exception {
+        assertThat(testee.getConfiguration("a").getList("notExistKey"))
+            .isEmpty();
     }
 }

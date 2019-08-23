@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -46,7 +45,6 @@ public class PropertiesProviderFromEnvVariablesTest {
         testee = new PropertiesProvider(fileSystem, configuration);
     }
 
-    @Ignore("It returns a string 'value1, value2, value3, value4, value5'")
     @Test
     public void getListShouldLoadEnvVariables() throws Exception {
         environmentVariables.set("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5");
@@ -56,7 +54,6 @@ public class PropertiesProviderFromEnvVariablesTest {
             .containsExactly("value1", "value2", "value3", "value4", "value5");
     }
 
-    @Ignore("It returns a string 'value1, value2, value3, value4, value5'")
     @Test
     public void getArrayShouldLoadEnvVariables() throws Exception {
         environmentVariables.set("PROPERTIES_PROVIDER_ENV_VARIABLES", "value1, value2, value3, value4, value5");
