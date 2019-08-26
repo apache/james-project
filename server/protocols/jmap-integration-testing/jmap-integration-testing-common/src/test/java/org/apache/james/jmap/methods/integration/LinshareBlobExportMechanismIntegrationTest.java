@@ -92,7 +92,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     private LinshareAPI user1LinshareAPI;
 
     @RegisterExtension
-    private IMAPMessageReader imapMessageReader = new IMAPMessageReader();
+    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     @BeforeEach
     void setup(GuiceJamesServer jmapServer) throws Throwable {
