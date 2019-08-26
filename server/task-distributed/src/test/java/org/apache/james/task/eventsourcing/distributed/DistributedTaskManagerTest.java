@@ -102,24 +102,28 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         this.eventStore = eventStore;
     }
 
-    public TaskManager taskManager() {
+    public EventSourcingTaskManager taskManager() {
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME);
+    }
+
+    private EventSourcingTaskManager taskManager(Hostname hostname) {
+        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname);
     }
 
     @Test
     void givenOneEventStoreTwoEventTaskManagersShareTheSameEvents() {
-        TaskManager taskManager1 = taskManager();
-        TaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2);
+        try (EventSourcingTaskManager taskManager1 = taskManager();
+             EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
+            TaskId taskId = taskManager1.submit(new CompletedTask());
+            Awaitility.await()
+                .atMost(Duration.FIVE_SECONDS)
+                .pollInterval(100L, TimeUnit.MILLISECONDS)
+                .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
 
-        TaskId taskId = taskManager1.submit(new CompletedTask());
-        Awaitility.await()
-            .atMost(Duration.FIVE_SECONDS)
-            .pollInterval(100L, TimeUnit.MILLISECONDS)
-            .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
-
-        TaskExecutionDetails detailsFromTaskManager1 = taskManager1.getExecutionDetails(taskId);
-        TaskExecutionDetails detailsFromTaskManager2 = taskManager2.getExecutionDetails(taskId);
-        assertThat(detailsFromTaskManager1).isEqualTo(detailsFromTaskManager2);
+            TaskExecutionDetails detailsFromTaskManager1 = taskManager1.getExecutionDetails(taskId);
+            TaskExecutionDetails detailsFromTaskManager2 = taskManager2.getExecutionDetails(taskId);
+            assertThat(detailsFromTaskManager1).isEqualTo(detailsFromTaskManager2);
+        }
     }
 
     @Test
@@ -133,40 +137,45 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    void givenTwoTaskManagersAndTwoTasksOnlyOneTaskShouldRunAtTheSameTime() throws InterruptedException {
+    void givenTwoTaskManagersAndTwoTasksOnlyOneTaskShouldRunAtTheSameTime() {
         CountDownLatch waitingForFirstTaskLatch = new CountDownLatch(1);
 
-        TaskManager taskManager1 = taskManager();
-        TaskManager taskManager2 = taskManager();
+        try (EventSourcingTaskManager taskManager1 = taskManager();
+             EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
 
-        taskManager1.submit(new MemoryReferenceTask(() -> {
-            waitingForFirstTaskLatch.await();
-            return Task.Result.COMPLETED;
-        }));
-        TaskId waitingTaskId = taskManager1.submit(new CompletedTask());
+            taskManager1.submit(new MemoryReferenceTask(() -> {
+                waitingForFirstTaskLatch.await();
+                return Task.Result.COMPLETED;
+            }));
+            TaskId waitingTaskId = taskManager1.submit(new CompletedTask());
 
-        awaitUntilTaskHasStatus(waitingTaskId, TaskManager.Status.WAITING, taskManager2);
-        waitingForFirstTaskLatch.countDown();
+            awaitUntilTaskHasStatus(waitingTaskId, TaskManager.Status.WAITING, taskManager2);
+            waitingForFirstTaskLatch.countDown();
 
-        Awaitility.await()
-            .atMost(Duration.ONE_SECOND)
-            .pollInterval(100L, TimeUnit.MILLISECONDS)
-            .until(() -> taskManager1.await(waitingTaskId).getStatus() == TaskManager.Status.COMPLETED);
+            Awaitility.await()
+                .atMost(Duration.ONE_SECOND)
+                .pollInterval(100L, TimeUnit.MILLISECONDS)
+                .until(() -> taskManager1.await(waitingTaskId).getStatus() == TaskManager.Status.COMPLETED);
+        }
     }
 
     @Test
-        // FIXME it's currently dependent of the implementation of the sequential TaskManager with the exclusive RabbitMQ consumer
-        // once we store the node where the event have been created/started/completed we should rewrite it with this information.
     void givenTwoTaskManagerATaskSubmittedOnOneCouldBeRunOnTheOther() throws InterruptedException {
-        TaskManager taskManager1 = taskManager();
-        Thread.sleep(100); // FIXME used to ensure that taskManager1 is the worker consuming from rabbit
-        TaskManager taskManager2 = taskManager();
+        try (EventSourcingTaskManager taskManager1 = taskManager()) {
+            Thread.sleep(100);
+            try (EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
 
-        TaskId taskId = taskManager2.submit(new CompletedTask());
+                TaskId taskId = taskManager2.submit(new CompletedTask());
 
-        Awaitility.await()
-            .atMost(Duration.ONE_SECOND)
-            .pollInterval(100L, TimeUnit.MILLISECONDS)
-            .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
+                Awaitility.await()
+                    .atMost(Duration.ONE_SECOND)
+                    .pollInterval(100L, TimeUnit.MILLISECONDS)
+                    .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
+
+                TaskExecutionDetails executionDetails = taskManager2.getExecutionDetails(taskId);
+                assertThat(executionDetails.getSubmittedNode()).isEqualTo(HOSTNAME_2);
+                assertThat(executionDetails.getRanNode()).contains(HOSTNAME);
+            }
+        }
     }
 }
