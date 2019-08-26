@@ -123,42 +123,52 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-dependency-plugin</artifactId>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>1.5.0</version>
+                <configuration>
+                    <from>
+                        <image>openjdk:8u222-jre</image>
+                    </from>
+                    <to>
+                        <image>linagora/mock-smtp-server</image>
+                        <tags>
+                            <tag>latest</tag>
+                        </tags>
+                    </to>
+                    <container>
+                        <mainClass>org.apache.james.mock.smtp.server.MockSMTPServerMain</mainClass>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
+                        <ports>
+                            <port>25</port>
+                            <port>8000</port>
+                        </ports>
+                    </container>
+                </configuration>
                 <executions>
                     <execution>
-                        <id>copy-dependencies</id>
-                        <goals>
-                            <goal>copy-dependencies</goal>
-                        </goals>
+                        <id>docker packaging</id>
                         <phase>package</phase>
-                        <configuration>
-                            <includeScope>compile</includeScope>
-                            <includeScope>runtime</includeScope>
-                            <outputDirectory>${project.build.directory}/${project.artifactId}.lib</outputDirectory>
-                        </configuration>
+                        <goals>
+                            <goal>buildTar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
+                <groupId>com.coderplus.maven.plugins</groupId>
+                <artifactId>copy-rename-maven-plugin</artifactId>
+                <version>1.0</version>
                 <executions>
                     <execution>
-                        <id>default-jar</id>
+                        <id>copy-file</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>rename</goal>
                         </goals>
                         <configuration>
-                            <finalName>${project.artifactId}</finalName>
-                            <archive>
-                                <manifest>
-                                    <addClasspath>true</addClasspath>
-                                    <classpathPrefix>${project.artifactId}.lib/</classpathPrefix>
-                                    <mainClass>org.apache.james.mock.smtp.server.MockSMTPServerMain</mainClass>
-                                    <useUniqueVersions>false</useUniqueVersions>
-                                </manifest>
-                            </archive>
+                            <sourceFile>${basedir}/target/jib-image.tar</sourceFile>
+                            <destinationFile>${basedir}/target/jib-mock-smtp-server.tar</destinationFile>
                         </configuration>
                     </execution>
                 </executions>
