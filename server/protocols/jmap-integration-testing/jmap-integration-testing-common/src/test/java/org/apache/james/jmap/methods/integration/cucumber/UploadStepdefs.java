@@ -38,6 +38,7 @@ import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Executor;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.util.CountDownConsumeInputStream;
@@ -109,14 +110,24 @@ public class UploadStepdefs {
             .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
 
         request.addHeader("Authorization", accessToken.serialize());
-        response = Executor.newInstance(HttpClientBuilder.create().disableAutomaticRetries().build()).execute(request).returnResponse();
+        response = Executor.newInstance(newClient())
+            .execute(request)
+            .returnResponse();
     }
 
     @When("^someone upload a content without authentification$")
     public void userUploadContentWithoutAuthentification() throws Throwable {
         Request request = Request.Post(uploadUri)
             .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
-        response = Executor.newInstance(HttpClientBuilder.create().disableAutomaticRetries().build()).execute(request).returnResponse();
+        response = Executor.newInstance(newClient())
+            .execute(request)
+            .returnResponse();
+    }
+
+    private CloseableHttpClient newClient() {
+        return HttpClientBuilder.create()
+            .disableAutomaticRetries()
+            .build();
     }
 
     @When("^\"([^\"]*)\" upload a content without content type$")
