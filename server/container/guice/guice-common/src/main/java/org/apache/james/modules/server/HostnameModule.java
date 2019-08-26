@@ -20,32 +20,13 @@
 
 package org.apache.james.modules.server;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import org.apache.james.task.eventsourcing.Hostname;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
 
 public class HostnameModule extends AbstractModule {
-    private static class UnconfigurableHostnameException extends RuntimeException {
-        UnconfigurableHostnameException(String message, Exception originException) {
-            super(message, originException);
-        }
-    }
-
     @Override
     protected void configure() {
-        bind(Hostname.class).in(Scopes.SINGLETON);
-        bind(Hostname.class).toInstance(getHostname());
-    }
-
-    private Hostname getHostname() {
-        try {
-            return new Hostname(InetAddress.getLocalHost().getHostName());
-        } catch (UnknownHostException e) {
-            throw new UnconfigurableHostnameException("Hostname can not be retrieved, unable to initialize the distributed task manager", e);
-        }
+        bind(Hostname.class).toInstance(Hostname.fromLocalHostname());
     }
 }

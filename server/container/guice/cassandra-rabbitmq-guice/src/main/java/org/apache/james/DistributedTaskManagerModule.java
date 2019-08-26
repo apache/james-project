@@ -20,6 +20,7 @@
 
 package org.apache.james;
 
+import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.task.MemoryWorkQueue;
 import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.TaskManager;
@@ -34,7 +35,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 
 public class DistributedTaskManagerModule extends AbstractModule {
-
     public static final WorkQueueSupplier workQueueSupplier = eventSourcingSystem -> {
         WorkerStatusListener listener = new WorkerStatusListener(eventSourcingSystem);
         TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
@@ -43,6 +43,7 @@ public class DistributedTaskManagerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new HostnameModule());
         bind(TaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
         bind(TaskManager.class).in(Scopes.SINGLETON);
         bind(WorkQueueSupplier.class).in(Scopes.SINGLETON);

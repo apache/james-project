@@ -285,7 +285,10 @@
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
 
 
-    <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager"/>
+    <bean id="hostname" class="org.apache.james.task.eventsourcing.Hostname" factory-method="fromLocalHostname" />
+    <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager">
+        <constructor-arg index="0" ref="hostname"/>
+    </bean>
     <!--
         <bean id="james23importermanagement" class="org.apache.james.container.spring.tool.James23ImporterManagement" />
     -->
