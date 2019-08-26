@@ -55,6 +55,7 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 
 @ScenarioScoped
 public class UploadStepdefs {
+    private static final int _24K = 24 * 1024;
     private static final int _1M = 1024 * 1024;
     private static final int _10M = 10 * _1M;
 
@@ -118,7 +119,7 @@ public class UploadStepdefs {
     @When("^someone upload a content without authentification$")
     public void userUploadContentWithoutAuthentification() throws Throwable {
         Request request = Request.Post(uploadUri)
-            .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
+            .bodyStream(new BufferedInputStream(new ZeroedInputStream(_24K), _24K), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         response = Executor.newInstance(newClient())
             .execute(request)
             .returnResponse();
