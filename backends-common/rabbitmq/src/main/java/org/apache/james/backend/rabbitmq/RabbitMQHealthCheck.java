@@ -49,12 +49,13 @@ public class RabbitMQHealthCheck implements HealthCheck {
             if (rabbitChannelPoolImpl.tryConnection()) {
                 return Result.healthy(COMPONENT_NAME);
             } else {
-                LOGGER.error("The created connection was not opened");
-                return Result.unhealthy(COMPONENT_NAME);
+                String message = "The created connection was not opened";
+                LOGGER.error(message);
+                return Result.unhealthy(COMPONENT_NAME, message);
             }
         } catch (Exception e) {
             LOGGER.error("Unhealthy RabbitMQ instances: could not establish a connection", e);
-            return Result.unhealthy(COMPONENT_NAME);
+            return Result.unhealthy(COMPONENT_NAME, e.getMessage());
         }
     }
 }

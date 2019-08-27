@@ -46,7 +46,7 @@ import io.restassured.RestAssured;
 import net.javacrumbs.jsonunit.core.Option;
 
 public class HealthCheckRoutesTest {
-    
+
     private static final String NAME_1 = "component-1";
     private static final String NAME_2 = "component-2";
     private static final String NAME_3 = "component 3";
@@ -55,6 +55,7 @@ public class HealthCheckRoutesTest {
     private static final ComponentName COMPONENT_NAME_1 = new ComponentName(NAME_1);
     private static final ComponentName COMPONENT_NAME_2 = new ComponentName(NAME_2);
     private static final ComponentName COMPONENT_NAME_3 = new ComponentName(NAME_3); // mind the space
+    private static final String SAMPLE_CAUSE = "sample cause";
 
     private static HealthCheck healthCheck(Result result) {
         return new HealthCheck() {
@@ -173,7 +174,7 @@ public class HealthCheckRoutesTest {
     @Test
     public void validateHealthChecksShouldReturnInternalErrorWhenAllHealthChecksAreUnhealthy() {
         healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, "cause")));
-        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2)));
+        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_2, SAMPLE_CAUSE)));
         String healthCheckBody =
             "{\"status\": \"unhealthy\"," +
             " \"checks\": [" +
@@ -187,7 +188,7 @@ public class HealthCheckRoutesTest {
             "    \"componentName\": \"component-2\"," +
             "    \"escapedComponentName\": \"component-2\"," +
             "    \"status\": \"unhealthy\"," +
-            "    \"cause\": null" +
+            "    \"cause\": \"sample cause\"" +
             "}]}";
 
         String retrieveBody = when()
@@ -346,7 +347,7 @@ public class HealthCheckRoutesTest {
     
     @Test
     public void performHealthCheckShouldReturnInternalErrorWhenHealthCheckIsUnhealthy() {
-        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1)));
+        healthChecks.add(healthCheck(Result.unhealthy(COMPONENT_NAME_1, SAMPLE_CAUSE)));
         
         given()
             .pathParam("componentName", COMPONENT_NAME_1.getName())
@@ -357,7 +358,7 @@ public class HealthCheckRoutesTest {
             .body("componentName", equalTo(NAME_1))
             .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.UNHEALTHY.getValue()))
-            .body("cause", is(nullValue()));
+            .body("cause", is(SAMPLE_CAUSE));
     }
     
     @Test

@@ -30,16 +30,8 @@ public class Result {
         return new Result(componentName, ResultStatus.UNHEALTHY, Optional.of(cause));
     }
 
-    public static Result unhealthy(ComponentName componentName) {
-        return new Result(componentName, ResultStatus.UNHEALTHY, Optional.empty());
-    }
-
     public static Result degraded(ComponentName componentName, String cause) {
         return new Result(componentName, ResultStatus.DEGRADED, Optional.of(cause));
-    }
-
-    public static Result degraded(ComponentName componentName) {
-        return new Result(componentName, ResultStatus.DEGRADED, Optional.empty());
     }
 
     private final ComponentName componentName;

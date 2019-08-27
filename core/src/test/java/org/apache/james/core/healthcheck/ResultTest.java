@@ -23,88 +23,81 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-public class ResultTest {
+class ResultTest {
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("component");
 
     @Test
-    public void componentNameShouldBeKeptWhenHealthy() {
+    void componentNameShouldBeKeptWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.getComponentName()).isEqualTo(COMPONENT_NAME);
     }
 
     @Test
-    public void componentNameShouldBeKeptWhenUnhealthy() {
-        Result result = Result.unhealthy(COMPONENT_NAME);
+    void componentNameShouldBeKeptWhenUnhealthy() {
+        Result result = Result.unhealthy(COMPONENT_NAME, "cause");
 
         assertThat(result.getComponentName()).isEqualTo(COMPONENT_NAME);
     }
 
     @Test
-    public void componentNameShouldBeKeptWhenDegraded() {
-        Result result = Result.degraded(COMPONENT_NAME);
+    void componentNameShouldBeKeptWhenDegraded() {
+        Result result = Result.degraded(COMPONENT_NAME, "cause");
 
         assertThat(result.getComponentName()).isEqualTo(COMPONENT_NAME);
     }
 
     @Test
-    public void statusShouldBeHealthyWhenHealthy() {
+    void statusShouldBeHealthyWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.getStatus()).isEqualTo(ResultStatus.HEALTHY);
     }
 
     @Test
-    public void causeShouldBeEmptyWhenHealthy() {
+    void causeShouldBeEmptyWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.getCause()).isEmpty();
     }
 
     @Test
-    public void isHealthyShouldBeTrueWhenHealthy() {
+    void isHealthyShouldBeTrueWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.isHealthy()).isTrue();
     }
 
     @Test
-    public void isDegradedShouldBeFalseWhenHealthy() {
+    void isDegradedShouldBeFalseWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.isDegraded()).isFalse();
     }
 
     @Test
-    public void isUnhealthyShouldBeFalseWhenHealthy() {
+    void isUnhealthyShouldBeFalseWhenHealthy() {
         Result result = Result.healthy(COMPONENT_NAME);
 
         assertThat(result.isUnHealthy()).isFalse();
     }
 
     @Test
-    public void statusShouldBeDegradedWhenDegraded() {
+    void statusShouldBeDegradedWhenDegraded() {
         Result result = Result.degraded(COMPONENT_NAME, "cause");
 
         assertThat(result.getStatus()).isEqualTo(ResultStatus.DEGRADED);
     }
 
     @Test
-    public void causeMayBeEmptyWhenDegraded() {
-        Result result = Result.degraded(COMPONENT_NAME);
-
-        assertThat(result.getCause()).isEmpty();
-    }
-
-    @Test
-    public void degradedShouldThrowWhenNullCause() {
+    void degradedShouldThrowWhenNullCause() {
         assertThatThrownBy(() -> Result.degraded(COMPONENT_NAME, null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void causeShouldBeKeptWhenNotDegraded() {
+    void causeShouldBeKeptWhenNotDegraded() {
         String cause = "cause";
         Result result = Result.degraded(COMPONENT_NAME, cause);
 
@@ -112,42 +105,35 @@ public class ResultTest {
     }
 
     @Test
-    public void isHealthyShouldBeFalseWhenDegraded() {
-        Result result = Result.degraded(COMPONENT_NAME);
+    void isHealthyShouldBeFalseWhenDegraded() {
+        Result result = Result.degraded(COMPONENT_NAME, "cause");
 
         assertThat(result.isHealthy()).isFalse();
     }
 
     @Test
-    public void isDegradedShouldBeFalseWhenDegraded() {
-        Result result = Result.degraded(COMPONENT_NAME);
+    void isDegradedShouldBeFalseWhenDegraded() {
+        Result result = Result.degraded(COMPONENT_NAME, "cause");
 
         assertThat(result.isDegraded()).isTrue();
     }
 
     @Test
-    public void isUnhealthyShouldBeTrueWhenDegraded() {
-        Result result = Result.degraded(COMPONENT_NAME);
+    void isUnhealthyShouldBeTrueWhenDegraded() {
+        Result result = Result.degraded(COMPONENT_NAME, "cause");
 
         assertThat(result.isUnHealthy()).isFalse();
     }
 
     @Test
-    public void statusShouldBeUnhealthyWhenUnhealthy() {
+    void statusShouldBeUnhealthyWhenUnhealthy() {
         Result result = Result.unhealthy(COMPONENT_NAME, "cause");
 
         assertThat(result.getStatus()).isEqualTo(ResultStatus.UNHEALTHY);
     }
 
     @Test
-    public void causeMayBeEmptyWhenUnhealthy() {
-        Result result = Result.unhealthy(COMPONENT_NAME);
-
-        assertThat(result.getCause()).isEmpty();
-    }
-
-    @Test
-    public void causeShouldBeKeptWhenNotEmpty() {
+    void causeShouldBeKeptWhenNotEmpty() {
         String cause = "cause";
         Result result = Result.unhealthy(COMPONENT_NAME, cause);
 
@@ -155,28 +141,28 @@ public class ResultTest {
     }
 
     @Test
-    public void isHealthyShouldBeFalseWhenUnhealthy() {
-        Result result = Result.unhealthy(COMPONENT_NAME);
+    void isHealthyShouldBeFalseWhenUnhealthy() {
+        Result result = Result.unhealthy(COMPONENT_NAME, "cause");
 
         assertThat(result.isHealthy()).isFalse();
     }
 
     @Test
-    public void isDegradedShouldBeFalseWhenUnhealthy() {
-        Result result = Result.unhealthy(COMPONENT_NAME);
+    void isDegradedShouldBeFalseWhenUnhealthy() {
+        Result result = Result.unhealthy(COMPONENT_NAME, "cause");
 
         assertThat(result.isDegraded()).isFalse();
     }
 
     @Test
-    public void isUnhealthyShouldBeTrueWhenUnhealthy() {
-        Result result = Result.unhealthy(COMPONENT_NAME);
+    void isUnhealthyShouldBeTrueWhenUnhealthy() {
+        Result result = Result.unhealthy(COMPONENT_NAME, "cause");
 
         assertThat(result.isUnHealthy()).isTrue();
     }
 
     @Test
-    public void unhealthyShouldThrowWhenNullCause() {
+    void unhealthyShouldThrowWhenNullCause() {
         assertThatThrownBy(() -> Result.unhealthy(COMPONENT_NAME, null))
             .isInstanceOf(NullPointerException.class);
     }

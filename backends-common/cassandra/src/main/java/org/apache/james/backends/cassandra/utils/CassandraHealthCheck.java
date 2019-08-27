@@ -60,7 +60,7 @@ public class CassandraHealthCheck implements HealthCheck {
             return Result.healthy(COMPONENT_NAME);
         } catch (Exception e) {
             LOGGER.error("Error checking cassandra backend", e);
-            return Result.unhealthy(COMPONENT_NAME);
+            return Result.unhealthy(COMPONENT_NAME, e.getMessage());
         }
     }
 }
