@@ -19,8 +19,6 @@
 
 package org.apache.james.mock.smtp.server;
 
-import java.util.Optional;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
@@ -34,13 +32,14 @@ public interface Fixture {
     Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
 
     String JSON_BEHAVIOR_COMPULSORY_FIELDS = "{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
         "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
         "  \"command\": \"EHLO\"" +
         "}";
 
     MockSMTPBehavior BEHAVIOR_COMPULSORY_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
-        Optional.empty(),
+        Condition.MATCH_ALL,
         Response.serverAccept(Response.SMTPStatusCode.ACTION_COMPLETE_250, "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
 
@@ -53,7 +52,7 @@ public interface Fixture {
 
     MockSMTPBehavior BEHAVIOR_ALL_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
-        Optional.of(new Condition.OperatorCondition(Operator.CONTAINS, "matchme")),
+        new Condition.OperatorCondition(Operator.CONTAINS, "matchme"),
         Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.times(7));
 

@@ -29,8 +29,6 @@ import static org.apache.james.mock.smtp.server.Fixture.RESPONSE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.util.Optional;
-
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -80,7 +78,7 @@ class MockSMTPBehaviorTest {
 
     @Test
     void constructorShouldThrowWhenCommandIsNull() {
-        assertThatThrownBy(() -> new MockSMTPBehavior(null, Optional.empty(), RESPONSE, MockSMTPBehavior.NumberOfAnswersPolicy.anytime()))
+        assertThatThrownBy(() -> new MockSMTPBehavior(null, Condition.MATCH_ALL, RESPONSE, MockSMTPBehavior.NumberOfAnswersPolicy.anytime()))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -92,13 +90,13 @@ class MockSMTPBehaviorTest {
 
     @Test
     void constructorShouldThrowWhenResponseIsNull() {
-        assertThatThrownBy(() -> new MockSMTPBehavior(SMTPCommand.NOOP, Optional.empty(), null, MockSMTPBehavior.NumberOfAnswersPolicy.anytime()))
+        assertThatThrownBy(() -> new MockSMTPBehavior(SMTPCommand.NOOP, Condition.MATCH_ALL, null, MockSMTPBehavior.NumberOfAnswersPolicy.anytime()))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void constructorShouldThrowWhenNumberOfAnswersIsNull() {
-        assertThatThrownBy(() -> new MockSMTPBehavior(SMTPCommand.NOOP, Optional.empty(), RESPONSE, null))
+        assertThatThrownBy(() -> new MockSMTPBehavior(SMTPCommand.NOOP, Condition.MATCH_ALL, RESPONSE, null))
             .isInstanceOf(NullPointerException.class);
     }
 

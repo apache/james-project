@@ -72,12 +72,11 @@ public class MockSMTPBehavior {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
         private SMTPCommand smtpCommand;
-        private Optional<Condition> condition;
+        private Condition condition;
         private Response response;
         private Optional<NumberOfAnswersPolicy> numberOfAnswers;
 
         public Builder() {
-            condition = Optional.empty();
             numberOfAnswers = Optional.empty();
         }
 
@@ -92,7 +91,7 @@ public class MockSMTPBehavior {
         }
 
         public Builder condition(Condition condition) {
-            this.condition = Optional.of(condition);
+            this.condition = condition;
             return this;
         }
 
@@ -114,11 +113,11 @@ public class MockSMTPBehavior {
     }
 
     private final SMTPCommand smtpCommand;
-    private final Optional<Condition> condition;
+    private final Condition condition;
     private final Response response;
     private final NumberOfAnswersPolicy numberOfAnswers;
 
-    public MockSMTPBehavior(SMTPCommand smtpCommand, Optional<Condition> condition, Response response, NumberOfAnswersPolicy numberOfAnswers) {
+    public MockSMTPBehavior(SMTPCommand smtpCommand, Condition condition, Response response, NumberOfAnswersPolicy numberOfAnswers) {
         Preconditions.checkNotNull(smtpCommand);
         Preconditions.checkNotNull(condition);
         Preconditions.checkNotNull(response);
@@ -134,7 +133,7 @@ public class MockSMTPBehavior {
         return smtpCommand;
     }
 
-    public Optional<Condition> getCondition() {
+    public Condition getCondition() {
         return condition;
     }
 
@@ -162,5 +161,15 @@ public class MockSMTPBehavior {
     @Override
     public final int hashCode() {
         return Objects.hash(smtpCommand, condition, response, numberOfAnswers);
+    }
+
+    @Override
+    public String toString() {
+        return "MockSMTPBehavior{" +
+            "smtpCommand=" + smtpCommand +
+            ", condition=" + condition +
+            ", response=" + response +
+            ", numberOfAnswers=" + numberOfAnswers +
+            '}';
     }
 }
