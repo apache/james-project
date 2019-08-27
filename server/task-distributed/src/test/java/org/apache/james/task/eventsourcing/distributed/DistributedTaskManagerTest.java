@@ -34,6 +34,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
@@ -48,7 +49,6 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.Hostname;
-import org.apache.james.task.eventsourcing.MemoryTerminationSubscriber;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
@@ -76,6 +76,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     private static final Hostname HOSTNAME = new Hostname("foo");
     private static final Hostname HOSTNAME_2 = new Hostname("bar");
     private static final Set<EventDTOModule> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+    private static final JsonEventSerializer EVENT_SERIALIZER = new JsonEventSerializer(MODULES);
 
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
         CassandraModule.aggregateModules(
@@ -104,17 +105,19 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     public EventSourcingTaskManager taskManager() {
-        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME);
+        return taskManager(HOSTNAME);
     }
 
     private EventSourcingTaskManager taskManager(Hostname hostname) {
-        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, new MemoryTerminationSubscriber());
+        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getRabbitConnectionPool(), EVENT_SERIALIZER);
+        terminationSubscriber.start();
+        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
     }
 
     @Test
     void givenOneEventStoreTwoEventTaskManagersShareTheSameEvents() {
         try (EventSourcingTaskManager taskManager1 = taskManager();
-             EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
+             EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
             TaskId taskId = taskManager1.submit(new CompletedTask());
             Awaitility.await()
                 .atMost(Duration.FIVE_SECONDS)
@@ -142,7 +145,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         CountDownLatch waitingForFirstTaskLatch = new CountDownLatch(1);
 
         try (EventSourcingTaskManager taskManager1 = taskManager();
-             EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
+             EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
 
             taskManager1.submit(new MemoryReferenceTask(() -> {
                 waitingForFirstTaskLatch.await();
@@ -164,7 +167,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     void givenTwoTaskManagerATaskSubmittedOnOneCouldBeRunOnTheOther() throws InterruptedException {
         try (EventSourcingTaskManager taskManager1 = taskManager()) {
             Thread.sleep(100);
-            try (EventSourcingTaskManager taskManager2 = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME_2)) {
+            try (EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
 
                 TaskId taskId = taskManager2.submit(new CompletedTask());
 
