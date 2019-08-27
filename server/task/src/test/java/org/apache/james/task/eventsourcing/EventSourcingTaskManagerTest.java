@@ -61,7 +61,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
             TaskManagerWorker worker = new SerialTaskManagerWorker(listener);
             return new MemoryWorkQueue(worker);
         };
-        taskManager = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME);
+        taskManager = new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, HOSTNAME, new MemoryTerminationSubscriber());
     }
 
     @AfterEach

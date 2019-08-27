@@ -48,6 +48,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
 import org.apache.james.task.eventsourcing.Hostname;
+import org.apache.james.task.eventsourcing.MemoryTerminationSubscriber;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
@@ -107,7 +108,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     private EventSourcingTaskManager taskManager(Hostname hostname) {
-        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname);
+        return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, new MemoryTerminationSubscriber());
     }
 
     @Test

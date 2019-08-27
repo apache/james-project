@@ -34,7 +34,8 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
                                                                                   workQueueSupplier: WorkQueueSupplier,
                                                                                   val eventStore: EventStore,
                                                                                   val executionDetailsProjection: TaskExecutionDetailsProjection,
-                                                                                  val hostname: Hostname) extends TaskManager with Closeable {
+                                                                                  val hostname: Hostname,
+                                                                                  val terminationSubscriber: TerminationSubscriber) extends TaskManager with Closeable {
 
   private val delayBetweenPollingInMs = 500
 
@@ -60,7 +61,8 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
       new FailCommandHandler(loadHistory)),
     subscribers = Set(
       executionDetailsProjection.asSubscriber(hostname),
-      workDispatcher),
+      workDispatcher,
+      terminationSubscriber),
     eventStore = eventStore)
 
   private val workQueue: WorkQueue = workQueueSupplier(eventSourcingSystem)

@@ -28,6 +28,8 @@ sealed abstract class TaskEvent(aggregateId: TaskAggregateId, val eventId: Event
   override def getAggregateId: TaskAggregateId = aggregateId
 }
 
+sealed abstract class TerminalTaskEvent(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+
 case class Hostname(private val value: String) {
   def asString: String = value
 }
@@ -50,8 +52,8 @@ case class Started(aggregateId: TaskAggregateId, override val eventId: EventId, 
 
 case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
-case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result) extends TaskEvent(aggregateId, eventId)
+case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result) extends TerminalTaskEvent(aggregateId, eventId)
 
-case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId) extends TerminalTaskEvent(aggregateId, eventId)
 
-case class Cancelled(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+case class Cancelled(aggregateId: TaskAggregateId, override val eventId: EventId) extends TerminalTaskEvent(aggregateId, eventId)
