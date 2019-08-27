@@ -22,6 +22,8 @@ package org.apache.james.mock.smtp.server;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
+
 public class SMTPBehaviorRepository {
     private final AtomicReference<MockSmtpBehaviors> behaviors;
 

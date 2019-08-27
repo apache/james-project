@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.util.Port;
 
 import com.fasterxml.jackson.databind.ObjectMapper;

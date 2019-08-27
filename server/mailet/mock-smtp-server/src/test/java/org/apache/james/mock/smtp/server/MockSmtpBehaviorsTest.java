@@ -25,6 +25,7 @@ import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
 import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.junit.jupiter.api.Test;
 
 import net.javacrumbs.jsonunit.core.Option;

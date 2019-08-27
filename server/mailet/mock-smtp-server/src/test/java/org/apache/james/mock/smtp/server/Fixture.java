@@ -21,6 +21,7 @@ package org.apache.james.mock.smtp.server;
 
 import org.apache.james.mock.smtp.server.model.Condition;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
+import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.mock.smtp.server.model.Operator;
 import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;

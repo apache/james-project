@@ -23,6 +23,7 @@ import static org.apache.james.mock.smtp.server.Fixture.BEHAVIORS;
 import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_COMPULSORY_FIELDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
