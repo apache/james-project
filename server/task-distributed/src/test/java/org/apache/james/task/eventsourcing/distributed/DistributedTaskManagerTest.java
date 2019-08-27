@@ -21,6 +21,7 @@ package org.apache.james.task.eventsourcing.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -55,14 +56,14 @@ import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
-
-import com.github.steveash.guavate.Guavate;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.steveash.guavate.Guavate;
 
 @ExtendWith(CountDownLatchExtension.class)
 class DistributedTaskManagerTest implements TaskManagerContract {
@@ -202,11 +203,37 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             .contains(remoteTaskManager.getKey());
     }
 
-    private Pair<Hostname, TaskManager> getOtherTaskManager(Hostname node, Pair<Hostname, TaskManager> taskManager1, Pair<Hostname, TaskManager>  taskManager2) {
+    private Pair<Hostname, TaskManager> getOtherTaskManager(Hostname node, Pair<Hostname, TaskManager> taskManager1, Pair<Hostname, TaskManager> taskManager2) {
         if (node.equals(taskManager1.getKey())) {
             return taskManager2;
         } else {
             return taskManager1;
         }
     }
+
+    @Test
+    void givenTwoTaskManagerAndATaskRanPerTaskManagerListingThemOnEachShouldShowBothTasks() {
+        try (EventSourcingTaskManager taskManager1 = taskManager();
+             EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
+
+            TaskId taskId1 = taskManager1.submit(new CompletedTask());
+            TaskId taskId2 = taskManager2.submit(new CompletedTask());
+
+            Awaitility.await()
+                .atMost(Duration.ONE_SECOND)
+                .pollInterval(100L, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    List<TaskExecutionDetails> listOnTaskManager1 = taskManager1.list();
+                    List<TaskExecutionDetails> listOnTaskManager2 = taskManager2.list();
+
+                    assertThat(listOnTaskManager1)
+                        .hasSize(2)
+                        .isEqualTo(listOnTaskManager2)
+                        .allSatisfy(taskExecutionDetails -> assertThat(taskExecutionDetails.getStatus()).isEqualTo(TaskManager.Status.COMPLETED))
+                        .extracting(TaskExecutionDetails::getTaskId)
+                        .containsExactlyInAnyOrder(taskId1, taskId2);
+                });
+        }
+    }
+
 }
