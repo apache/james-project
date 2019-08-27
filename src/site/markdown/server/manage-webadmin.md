@@ -68,6 +68,33 @@ The user has to check in the logs in order to have more information about failin
 curl -XGET http://ip:port/healthcheck
 ```
 
+Will return a list of healthChecks execution result, with an aggregated result:
+
+```
+{
+  "status": "healthy",
+  "checks": [
+    {
+      "componentName": "Cassandra backend",
+      "escapedComponentName": "Cassandra%20backend",
+      "status": "healthy"
+      "cause": null
+    }
+  ]
+}
+```
+
+**status** field can be:
+ - **healthy** : Component works normally
+ - **degraded** : Component works in degraded mode. Some non-critical services may not be working, or latencies are high, for example. Cause contains explanations.
+ - **unhealthy** : The component is currently not working. Cause contains explanations.
+
+Supported health checks include:
+ - **Cassandra backend**: Cassandra storage. Included in Cassandra Guice based products.
+ - **JPA Backend**: JPA storage. Included in JPA Guice based products.
+ - **RabbitMQ backend**: RabbitMQ messaging. Included in Distributed Guice based products.
+ - **Guice application lifecycle**: included in all Guice products.
+
 Response codes:
 
  - 200: All checks have answered with a Healthy status
@@ -78,16 +105,16 @@ Response codes:
 Performs a health check for the given component. The component is referenced by its URL encoded name.
 
 ```
-curl -XGET http://ip:port/healthcheck/checks/Cassandra%20Backend
+curl -XGET http://ip:port/healthcheck/checks/Cassandra%20backend
 ```
 
 Will return the component's name, the component's escaped name, the health status and a cause.
 
 ```
 {
-  "componentName": "Cassandra Backend",
-  "escapedComponentName": "Cassandra%20Backend",
-  "status": "HEALTHY"
+  "componentName": "Cassandra backend",
+  "escapedComponentName": "Cassandra%20backend",
+  "status": "healthy"
   "cause": null
 }
 ```
@@ -111,8 +138,8 @@ Will return the list of all available health checks.
 ```
 [
     {
-        "componentName": "Cassandra Backend",
-        "escapedComponentName": "Cassandra%20Backend"
+        "componentName": "Cassandra backend",
+        "escapedComponentName": "Cassandra%20backend"
     }
 ]
 ```
