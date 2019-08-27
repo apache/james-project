@@ -208,6 +208,30 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
+    public void getDomainsShouldNotReturnDuplicates() throws Exception {
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(true)
+            .autoDetectIp(true));
+
+        String added = "added.tld";
+        String detected = "detected.tld";
+        String ip = "148.25.32.1";
+
+        when(dnsService.getLocalHost()).thenReturn(InetAddress.getByName("127.0.0.1"));
+        when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
+        InetAddress address = mock(InetAddress.class);
+        when(address.getHostAddress()).thenReturn(ip);
+        when(dnsService.getAllByName(any())).thenReturn(ImmutableList.of(address));
+
+        domainList.addDomain(Domain.of(added));
+        domainList.addDomain(Domain.of(ip));
+
+        assertThat(domainList.getDomains())
+            .extracting(Domain::name)
+            .containsOnlyOnce(added, detected, ip);
+    }
+
+    @Test
     public void getDomainsShouldListAddedDomain() throws Exception {
         Domain defaultDomain = Domain.of("default.tld");
         Domain domain = Domain.of("added.tld");
