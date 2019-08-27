@@ -271,7 +271,8 @@ public class DomainsRoutes implements Routes {
     }
 
     private void addDomain(Domain domain) throws DomainListException {
-        Preconditions.checkArgument(domain.name().length() < MAXIMUM_DOMAIN_SIZE);
+        Preconditions.checkArgument(domain.name().length() < MAXIMUM_DOMAIN_SIZE,
+            "Domain name length should not exceed " + (MAXIMUM_DOMAIN_SIZE - 1) + " characters");
         domainList.addDomain(domain);
     }
 

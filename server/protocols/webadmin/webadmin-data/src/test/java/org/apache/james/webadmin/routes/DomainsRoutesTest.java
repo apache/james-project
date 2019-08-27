@@ -180,10 +180,11 @@ class DomainsRoutesTest {
 
         @Test
         void putShouldReturnUserErrorWhenNameIsTooLong() {
+            String longDomainName = DOMAIN + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
+                "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
+                "0123456789.0123456789.0123456789.";
             Map<String, Object> errors = when()
-                .put(DOMAIN + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
-                    "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
-                    "0123456789.0123456789.0123456789.")
+                .put(longDomainName)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
@@ -194,7 +195,9 @@ class DomainsRoutesTest {
 
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument");
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Invalid request for domain creation " + longDomainName)
+                .containsEntry("details", "Domain name length should not exceed 255 characters");
         }
 
         @Test
