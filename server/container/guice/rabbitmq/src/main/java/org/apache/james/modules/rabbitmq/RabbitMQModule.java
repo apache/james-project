@@ -27,8 +27,10 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backend.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backend.rabbitmq.RabbitMQHealthCheck;
 import org.apache.james.backend.rabbitmq.SimpleChannelPool;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueueFactory;
@@ -78,6 +80,8 @@ public class RabbitMQModule extends AbstractModule {
         @SuppressWarnings("rawtypes")
         Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
+
+        Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
     }
 
     @Provides
