@@ -3079,7 +3079,7 @@
                 <plugin>
                     <groupId>pl.project13.maven</groupId>
                     <artifactId>git-commit-id-plugin</artifactId>
-                    <version>3.0.0</version>
+                    <version>3.0.1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -3217,7 +3217,7 @@
                         <includeOnlyProperty>git.dirty</includeOnlyProperty>
                     </includeOnlyProperties>
                     <skip>false</skip>
-		    <useNativeGit>true</useNativeGit>
+                    <useNativeGit>true</useNativeGit>
                     <gitDescribe>
                         <skip>false</skip>
                         <always>false</always>
