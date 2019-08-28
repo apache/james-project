@@ -31,7 +31,9 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.Response;
+import org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.subethamail.smtp.MessageHandler;
 import org.subethamail.smtp.RejectException;
@@ -62,7 +64,25 @@ public class MockMessageHandler implements MessageHandler {
         }
     }
 
-    private static final int ARGUMENT_SYNTAX_ERROR_501 = 501;
+    class SMTPBehaviorRepositoryUpdater<T> implements Behavior<T> {
+
+        private final SMTPBehaviorRepository behaviorRepository;
+        private final MockBehavior<T> actualBehavior;
+
+        SMTPBehaviorRepositoryUpdater(SMTPBehaviorRepository behaviorRepository, MockSMTPBehavior behavior) {
+            this.behaviorRepository = behaviorRepository;
+            this.actualBehavior = new MockBehavior<>(behavior);
+        }
+
+        @Override
+        public void behave(T input) throws RejectException {
+            try {
+                actualBehavior.behave(input);
+            } finally {
+                behaviorRepository.decreaseRemainingAnswers(actualBehavior.behavior);
+            }
+        }
+    }
 
     private final Mail.Envelope.Builder envelopeBuilder;
     private final Mail.Builder mailBuilder;
@@ -78,35 +98,37 @@ public class MockMessageHandler implements MessageHandler {
 
     @Override
     public void from(String from) throws RejectException {
-        Behavior<MailAddress> fromBehavior = firstMatchedBehavior(SMTPCommand.MAIL_FROM)
-            .<Behavior<MailAddress>>map(MockBehavior::new)
-            .orElseGet(() -> envelopeBuilder::from);
+        Optional<Behavior<MailAddress>> fromBehavior = firstMatchedBehavior(SMTPCommand.MAIL_FROM);
 
-        fromBehavior.behave(parse(from));
+        fromBehavior
+            .orElseGet(() -> envelopeBuilder::from)
+            .behave(parse(from));
     }
 
     @Override
     public void recipient(String recipient) throws RejectException {
-        Behavior<MailAddress> recipientBehavior = firstMatchedBehavior(SMTPCommand.RCPT_TO)
-            .<Behavior<MailAddress>>map(MockBehavior::new)
-            .orElseGet(() -> envelopeBuilder::addRecipient);
+        Optional<Behavior<MailAddress>> recipientBehavior = firstMatchedBehavior(SMTPCommand.RCPT_TO);
 
-        recipientBehavior.behave(parse(recipient));
+        recipientBehavior
+            .orElseGet(() -> envelopeBuilder::addRecipient)
+            .behave(parse(recipient));
     }
 
     @Override
     public void data(InputStream data) throws RejectException, TooMuchDataException, IOException {
-        Behavior<InputStream> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA)
-            .<Behavior<InputStream>>map(MockBehavior::new)
-            .orElseGet(() -> content -> mailBuilder.message(readData(content)));
+        Optional<Behavior<InputStream>> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA);
 
-        dataBehavior.behave(data);
+        dataBehavior
+            .orElseGet(() -> content -> mailBuilder.message(readData(content)))
+            .behave(data);
     }
 
-    private Optional<MockSMTPBehavior> firstMatchedBehavior(SMTPCommand data) {
-        return behaviorRepository.allBehaviors()
+    private <T> Optional<Behavior<T>> firstMatchedBehavior(SMTPCommand data) {
+        return behaviorRepository.remainingBehaviors()
+            .map(MockSMTPBehaviorInformation::getBehavior)
             .filter(behavior -> behavior.getCommand().equals(data))
-            .findFirst();
+            .findFirst()
+            .map(mockBehavior -> new SMTPBehaviorRepositoryUpdater<>(behaviorRepository, mockBehavior));
     }
 
     @Override
@@ -120,7 +142,7 @@ public class MockMessageHandler implements MessageHandler {
         try {
             return IOUtils.toString(data, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RejectException(ARGUMENT_SYNTAX_ERROR_501, "invalid data supplied");
+            throw new RejectException(SMTPStatusCode.SYNTAX_ERROR_IN_PARAMETERS_OR_ARGUMENTS_501.getRawCode(), "invalid data supplied");
         }
     }
 
@@ -128,7 +150,7 @@ public class MockMessageHandler implements MessageHandler {
         try {
             return new MailAddress(mailAddress);
         } catch (AddressException e) {
-            throw new RejectException(ARGUMENT_SYNTAX_ERROR_501, "invalid email address supplied");
+            throw new RejectException(SMTPStatusCode.SYNTAX_ERROR_IN_PARAMETERS_OR_ARGUMENTS_501.getRawCode(), "invalid email address supplied");
         }
     }
 }
