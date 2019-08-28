@@ -29,9 +29,11 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -39,6 +41,9 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.SignalType;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.ChannelPool;
+import reactor.rabbitmq.RabbitFlux;
+import reactor.rabbitmq.Sender;
+import reactor.rabbitmq.SenderOptions;
 
 public class ReactorRabbitMQChannelPool implements ChannelPool {
 
@@ -87,10 +92,12 @@ public class ReactorRabbitMQChannelPool implements ChannelPool {
 
     private static final long MAXIMUM_BORROW_TIMEOUT_IN_MS = Duration.ofSeconds(5).toMillis();
 
+    private final Mono<Connection> connectionMono;
     private final GenericObjectPool<Channel> pool;
     private final ConcurrentSkipListSet<Channel> borrowedChannels;
 
     public ReactorRabbitMQChannelPool(Mono<Connection> connectionMono, int poolSize) {
+        this.connectionMono = connectionMono;
         ChannelFactory channelFactory = new ChannelFactory(connectionMono);
 
         GenericObjectPoolConfig<Channel> config = new GenericObjectPoolConfig<>();
@@ -118,6 +125,14 @@ public class ReactorRabbitMQChannelPool implements ChannelPool {
             }
             pool.returnObject(channel);
         };
+    }
+
+    public Sender createSender() {
+       return RabbitFlux.createSender(new SenderOptions()
+           .connectionMono(connectionMono)
+           .channelPool(this)
+           .resourceManagementChannelMono(
+               connectionMono.map(Throwing.function(Connection::createChannel)).cache()));
     }
 
     private void invalidateObject(Channel channel) {

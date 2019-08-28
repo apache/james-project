@@ -30,16 +30,10 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 
-import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Preconditions;
-import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-
 import reactor.core.publisher.Mono;
-import reactor.rabbitmq.ChannelPool;
-import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
-import reactor.rabbitmq.SenderOptions;
 
 public class RabbitMQEventBus implements EventBus, Startable {
     private static final int MAX_CHANNELS_NUMBER = 5;
@@ -58,7 +52,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
-    private ChannelPool channelPool;
+    private ReactorRabbitMQChannelPool channelPool;
     private GroupRegistrationHandler groupRegistrationHandler;
     private KeyRegistrationHandler keyRegistrationHandler;
     EventDispatcher eventDispatcher;
@@ -84,8 +78,7 @@ public class RabbitMQEventBus implements EventBus, Startable {
         if (!isRunning && !isStopping) {
             this.channelPool = new ReactorRabbitMQChannelPool(connectionMono, MAX_CHANNELS_NUMBER);
 
-            sender = RabbitFlux.createSender(new SenderOptions().connectionMono(connectionMono).channelPool(channelPool)
-                .resourceManagementChannelMono(connectionMono.map(Throwing.<Connection, Channel>function(Connection::createChannel).sneakyThrow()).cache()));
+            sender = channelPool.createSender();
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
             keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
             groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters, mailboxListenerExecutor);

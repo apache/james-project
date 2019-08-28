@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.fge.lambdas.Throwing;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Delivery;
@@ -56,7 +55,6 @@ import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
-import reactor.rabbitmq.SenderOptions;
 
 public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Startable, Closeable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQTerminationSubscriber.class);
@@ -83,11 +81,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     }
 
     public void start() {
-        Sender sender = RabbitFlux.createSender(new SenderOptions()
-            .connectionMono(connectionMono)
-            .channelPool(channelPool)
-            .resourceManagementChannelMono(
-                connectionMono.map(Throwing.function(Connection::createChannel)).cache()));
+        Sender sender = channelPool.createSender();
 
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         sender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();

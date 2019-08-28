@@ -39,7 +39,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
@@ -51,10 +50,8 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
-import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
-import reactor.rabbitmq.SenderOptions;
 
 public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueue.class);
@@ -80,11 +77,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     public void start() {
-        sender = RabbitFlux.createSender(new SenderOptions()
-            .connectionMono(connectionMono)
-            .channelPool(channelPool)
-            .resourceManagementChannelMono(
-                connectionMono.map(Throwing.function(Connection::createChannel)).cache()));
+        sender = channelPool.createSender();
 
         receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(connectionMono));
 
