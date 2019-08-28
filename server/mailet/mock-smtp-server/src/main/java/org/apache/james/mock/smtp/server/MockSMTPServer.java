@@ -19,29 +19,15 @@
 
 package org.apache.james.mock.smtp.server;
 
-import java.util.List;
-
-import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.util.Port;
 import org.subethamail.smtp.server.SMTPServer;
 
 class MockSMTPServer {
-
     private final SMTPServer server;
-    private final ReceivedMailRepository mailRepository;
 
-    MockSMTPServer() {
-        this(new SMTPBehaviorRepository());
-    }
-
-    MockSMTPServer(SMTPBehaviorRepository behaviorRepository) {
-        this.mailRepository = new ReceivedMailRepository();
+    MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository) {
         this.server = new SMTPServer(ctx -> new MockMessageHandler(mailRepository, behaviorRepository));
         this.server.setPort(0);
-    }
-
-    List<Mail> listReceivedMails() {
-        return mailRepository.list();
     }
 
     void start() {

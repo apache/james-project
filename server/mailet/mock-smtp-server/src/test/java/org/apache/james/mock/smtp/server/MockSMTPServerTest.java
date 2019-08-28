@@ -63,17 +63,18 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 class MockSMTPServerTest {
-
     private MockSMTPServer mockServer;
     private FakeMail mail1;
     private MimeMessage mimeMessage1;
     private SMTPMessageSender smtpClient;
     private SMTPBehaviorRepository behaviorRepository;
+    private ReceivedMailRepository mailRepository;
 
     @BeforeEach
     void setUp() throws Exception {
         behaviorRepository = new SMTPBehaviorRepository();
-        mockServer = new MockSMTPServer(behaviorRepository);
+        mailRepository = new ReceivedMailRepository();
+        mockServer = new MockSMTPServer(behaviorRepository, mailRepository);
 
         mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -120,7 +121,7 @@ class MockSMTPServerTest {
 
             Awaitility.await().atMost(Duration.TEN_SECONDS)
                 .untilAsserted(() -> {
-                    List<Mail> mails = mockServer.listReceivedMails();
+                    List<Mail> mails = mailRepository.list();
                     Mail.Envelope expectedEnvelope = new Mail.Envelope(
                         new MailAddress(BOB),
                         ImmutableList.of(new MailAddress(ALICE), new MailAddress(JACK)));
@@ -228,7 +229,7 @@ class MockSMTPServerTest {
 
             sendMessageIgnoreError(mail1);
             Awaitility.await().atMost(Duration.TEN_SECONDS)
-                .untilAsserted(() -> assertThat(mockServer.listReceivedMails()).hasSize(1));
+                .untilAsserted(() -> assertThat(mailRepository.list()).hasSize(1));
         }
 
         @Test
@@ -422,7 +423,7 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldOpenASmtpPort() {
-        MockSMTPServer mockServer = new MockSMTPServer();
+        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
 
         assertThatCode(() -> new SMTPMessageSender(DOMAIN)
@@ -432,7 +433,7 @@ class MockSMTPServerTest {
 
     @Test
     void serverShouldBeAbleToStop() {
-        MockSMTPServer mockServer = new MockSMTPServer();
+        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
         Port port = mockServer.getPort();
 
@@ -445,10 +446,10 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldBeIdempotent() {
-        MockSMTPServer mockServer = new MockSMTPServer();
+        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
 
-        assertThatCode(() -> mockServer.start())
+        assertThatCode(mockServer::start)
             .doesNotThrowAnyException();
     }
 
