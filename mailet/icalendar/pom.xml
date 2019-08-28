@@ -124,4 +124,12 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>mailetdocs-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 </project>
