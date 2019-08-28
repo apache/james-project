@@ -42,7 +42,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     case Created(aggregateId, _, task, _) =>
       val taskWithId = new TaskWithId(aggregateId.taskId, task)
       workQueue.submit(taskWithId)
-    case CancelRequested(aggregateId, _) =>
+    case CancelRequested(aggregateId, _, _) =>
       workQueue.cancel(aggregateId.taskId)
     case _ =>
   }
@@ -54,7 +54,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     handlers = Set(
       new CreateCommandHandler(loadHistory, hostname),
       new StartCommandHandler(loadHistory, hostname),
-      new RequestCancelCommandHandler(loadHistory),
+      new RequestCancelCommandHandler(loadHistory, hostname),
       new CompleteCommandHandler(loadHistory),
       new CancelCommandHandler(loadHistory),
       new FailCommandHandler(loadHistory)),

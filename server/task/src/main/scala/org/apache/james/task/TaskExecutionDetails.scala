@@ -44,6 +44,7 @@ class TaskExecutionDetails(val taskId: TaskId,
                            private val ranNode: Optional[Hostname] = Optional.empty(),
                            private val completedDate: Optional[ZonedDateTime] = Optional.empty(),
                            private val canceledDate: Optional[ZonedDateTime] = Optional.empty(),
+                           private val cancelRequestedNode: Optional[Hostname] = Optional.empty(),
                            private val failedDate: Optional[ZonedDateTime] = Optional.empty()) {
   def getTaskId: TaskId = taskId
 
@@ -64,6 +65,8 @@ class TaskExecutionDetails(val taskId: TaskId,
   def getCompletedDate: Optional[ZonedDateTime] = completedDate
 
   def getCanceledDate: Optional[ZonedDateTime] = canceledDate
+
+  def getCancelRequestedNode: Optional[Hostname] = cancelRequestedNode
 
   def getFailedDate: Optional[ZonedDateTime] = failedDate
 
@@ -86,8 +89,8 @@ class TaskExecutionDetails(val taskId: TaskId,
   }
 
   def cancelRequested(hostname: Hostname): TaskExecutionDetails = status match {
-    case IN_PROGRESS => requestCancel
-    case WAITING => requestCancel
+    case IN_PROGRESS => requestCancel(hostname)
+    case WAITING => requestCancel(hostname)
     case _ => this
   }
 
@@ -113,12 +116,13 @@ class TaskExecutionDetails(val taskId: TaskId,
         Objects.equals(ranNode, that.ranNode) &&
         Objects.equals(completedDate, that.completedDate) &&
         Objects.equals(canceledDate, that.canceledDate) &&
+        Objects.equals(cancelRequestedNode, that.cancelRequestedNode) &&
         Objects.equals(failedDate, that.failedDate)
     case _ => false
   }
 
   override def hashCode(): Int =
-    Objects.hash(taskId, `type`, additionalInformation(), status, submittedDate, submittedNode, startedDate, ranNode, completedDate, canceledDate, failedDate)
+    Objects.hash(taskId, `type`, additionalInformation(), status, submittedDate, submittedNode, startedDate, ranNode, completedDate, canceledDate, cancelRequestedNode, failedDate)
 
   override def toString: String =
     MoreObjects.toStringHelper(this)
@@ -132,6 +136,7 @@ class TaskExecutionDetails(val taskId: TaskId,
       .add("ranNode", ranNode)
       .add("completedDate", completedDate)
       .add("canceledDate", canceledDate)
+      .add("cancelRequestedNode", cancelRequestedNode)
       .add("failedDate", failedDate)
       .toString
 
@@ -147,6 +152,7 @@ class TaskExecutionDetails(val taskId: TaskId,
     additionalInformation = additionalInformation,
     startedDate = startedDate,
     ranNode = ranNode,
+    cancelRequestedNode = cancelRequestedNode,
     completedDate = Optional.of(ZonedDateTime.now))
   private def fail = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.FAILED,
     submittedDate = submittedDate,
@@ -154,13 +160,15 @@ class TaskExecutionDetails(val taskId: TaskId,
     additionalInformation = additionalInformation,
     startedDate = startedDate,
     ranNode = ranNode,
+    cancelRequestedNode = cancelRequestedNode,
     failedDate = Optional.of(ZonedDateTime.now))
-  private def requestCancel = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.CANCEL_REQUESTED,
+  private def requestCancel(hostname: Hostname) = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.CANCEL_REQUESTED,
     submittedDate = submittedDate,
     submittedNode = submittedNode,
     additionalInformation = additionalInformation,
     startedDate = startedDate,
     ranNode = ranNode,
+    cancelRequestedNode = Optional.of(hostname),
     canceledDate = Optional.of(ZonedDateTime.now))
   private def cancel = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.CANCELLED,
     submittedDate = submittedDate,
@@ -168,5 +176,6 @@ class TaskExecutionDetails(val taskId: TaskId,
     additionalInformation = additionalInformation,
     startedDate = startedDate,
     ranNode = ranNode,
+    cancelRequestedNode = cancelRequestedNode,
     canceledDate = Optional.of(ZonedDateTime.now))
 }

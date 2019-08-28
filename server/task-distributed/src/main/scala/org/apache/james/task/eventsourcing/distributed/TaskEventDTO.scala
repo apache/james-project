@@ -60,14 +60,15 @@ object StartedDTO {
 
 case class CancelRequestedDTO(@JsonProperty("type") typeName: String,
                               @JsonProperty("aggregate") aggregateId: String,
-                              @JsonProperty("event") eventId: Int)
+                              @JsonProperty("event") eventId: Int,
+                              @JsonProperty("hostname") getHostname: String)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
-  def toDomainObject: CancelRequested = CancelRequested(domainAggregateId, domainEventId)
+  def toDomainObject: CancelRequested = CancelRequested(domainAggregateId, domainEventId, Hostname(getHostname))
 }
 
 object CancelRequestedDTO {
   def fromDomainObject(event: CancelRequested, typeName: String): CancelRequestedDTO =
-    CancelRequestedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize())
+    CancelRequestedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), event.hostname.asString)
 }
 
 case class CompletedDTO(@JsonProperty("type") typeName: String,

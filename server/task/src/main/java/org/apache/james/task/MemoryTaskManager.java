@@ -133,7 +133,7 @@ public class MemoryTaskManager implements TaskManager {
     @Override
     public void cancel(TaskId id) {
         Optional.ofNullable(idToExecutionDetails.get(id)).ifPresent(details -> {
-                updateDetails(id).accept(TaskExecutionDetails::cancelRequested);
+                updateDetails(id).accept(taskExecutionDetails -> taskExecutionDetails.cancelRequested(hostname));
                 workQueue.cancel(id);
             }
         );

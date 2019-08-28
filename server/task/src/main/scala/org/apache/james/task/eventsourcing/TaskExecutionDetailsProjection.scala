@@ -29,7 +29,7 @@ trait TaskExecutionDetailsProjection {
     case created: Created =>
       update(TaskExecutionDetails.from(created.task, created.aggregateId.taskId, created.hostname))
     case cancelRequested: CancelRequested =>
-      update(cancelRequested.aggregateId.taskId)(_.cancelRequested)
+      update(cancelRequested.aggregateId.taskId)(_.cancelRequested(hostname))
     case started: Started =>
       update(started.aggregateId.taskId)(_.started(hostname))
     case completed: Completed =>

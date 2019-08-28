@@ -47,6 +47,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     .value(RAN_NODE, bindMarker(RAN_NODE))
     .value(COMPLETED_DATE, bindMarker(COMPLETED_DATE))
     .value(CANCELED_DATE, bindMarker(CANCELED_DATE))
+    .value(CANCEL_REQUESTED_NODE, bindMarker(CANCEL_REQUESTED_NODE))
     .value(FAILED_DATE, bindMarker(FAILED_DATE)))
 
   private val selectStatement = session.prepare(select().from(TABLE_NAME)
@@ -65,6 +66,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
       .setString(RAN_NODE, details.getRanNode.map[String](_.asString).orElse(null))
       .setUDTValue(COMPLETED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCompletedDate).orElse(null))
       .setUDTValue(CANCELED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getCanceledDate).orElse(null))
+      .setString(CANCEL_REQUESTED_NODE, details.getCancelRequestedNode.map[String](_.asString).orElse(null))
       .setUDTValue(FAILED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate).orElse(null)))
 
   def readDetails(taskId: TaskId): Mono[TaskExecutionDetails] = cassandraAsyncExecutor
@@ -85,6 +87,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
     ranNode = Optional.ofNullable(row.getString(RAN_NODE)).map(Hostname(_)),
     completedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(COMPLETED_DATE)),
     canceledDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(CANCELED_DATE)),
+    cancelRequestedNode = Optional.ofNullable(row.getString(CANCEL_REQUESTED_NODE)).map(Hostname(_)),
     failedDate = CassandraZonedDateTimeModule.fromUDTOptional(row.getUDTValue(FAILED_DATE)),
     additionalInformation = Optional.empty)
 }

@@ -50,9 +50,9 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     }
   }
 
-  def requestCancel(): util.List[Event] = {
+  def requestCancel(hostname: Hostname): util.List[Event] = {
     currentStatus match {
-      case Some(status) if !status.isFinished => createEventWithId(CancelRequested(aggregateId, _))
+      case Some(status) if !status.isFinished => createEventWithId(CancelRequested(aggregateId, _, hostname))
       case _ => Nil.asJava
     }
   }

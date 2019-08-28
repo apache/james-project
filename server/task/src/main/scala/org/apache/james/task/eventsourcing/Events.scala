@@ -34,7 +34,7 @@ case class Created(aggregateId: TaskAggregateId, override val eventId: EventId, 
 
 case class Started(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
-case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
 case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result) extends TaskEvent(aggregateId, eventId)
 

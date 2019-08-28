@@ -95,4 +95,20 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
                 .extracting("hostname")
                 .containsOnly(HOSTNAME));
     }
+
+    @Test
+    void cancelRequestedTaskShouldKeepOriginHostname() {
+        TaskId taskId = taskManager.submit(() -> {
+            Thread.sleep(100);
+            return Task.Result.COMPLETED;
+        });
+        taskManager.cancel(taskId);
+
+        TaskAggregateId aggregateId = new TaskAggregateId(taskId);
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(eventStore.getEventsOfAggregate(aggregateId).getEvents())
+                .filteredOn(event -> event instanceof CancelRequested)
+                .extracting("hostname")
+                .containsOnly(HOSTNAME));
+    }
 }
