@@ -27,7 +27,9 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 
 public class EventCollector implements MailboxListener.GroupMailboxListener {
-    public static class EventCollectorGroup extends Group {}
+    public static class EventCollectorGroup extends Group {
+
+    }
 
     private static final Group GROUP = new EventCollectorGroup();
 

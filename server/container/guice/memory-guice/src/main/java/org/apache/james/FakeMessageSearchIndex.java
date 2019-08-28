@@ -39,7 +39,9 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 
 public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
-    private static class FakeMessageSearchIndexGroup extends Group {}
+    private static class FakeMessageSearchIndexGroup extends Group {
+
+    }
 
     private static final FakeMessageSearchIndexGroup GROUP = new FakeMessageSearchIndexGroup();
 

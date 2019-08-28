@@ -57,7 +57,9 @@ import com.google.common.base.Preconditions;
  *
  */
 public class LazyMessageSearchIndex extends ListeningMessageSearchIndex {
-    public static class LazyMessageSearchIndexGroup extends Group {}
+    public static class LazyMessageSearchIndexGroup extends Group {
+
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LazyMessageSearchIndex.class);
     private static final Group GROUP = new LazyMessageSearchIndexGroup();

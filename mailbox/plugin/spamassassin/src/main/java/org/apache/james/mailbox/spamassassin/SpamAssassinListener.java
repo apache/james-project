@@ -50,7 +50,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 public class SpamAssassinListener implements SpamEventListener {
-    public static class SpamAssassinListenerGroup extends Group {}
+    public static class SpamAssassinListenerGroup extends Group {
+
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SpamAssassinListener.class);
     private static final int LIMIT = 1;

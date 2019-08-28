@@ -132,7 +132,9 @@ import com.google.common.collect.ImmutableList;
  * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
-    private static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {}
+    public static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {
+
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;

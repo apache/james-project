@@ -39,7 +39,9 @@ public class AccessTokenRequest {
         private String method;
         private String password;
 
-        private Builder() {}
+        private Builder() {
+
+        }
 
         public Builder token(String token) throws MalformedContinuationTokenException {
             this.token = ContinuationToken.fromString(token);

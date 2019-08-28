@@ -32,6 +32,7 @@ import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearc
 
 public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupMailboxListener {
     public static class ElasticSearchQuotaMailboxListenerGroup extends Group {
+
     }
 
     private static final Group GROUP = new ElasticSearchQuotaMailboxListenerGroup();

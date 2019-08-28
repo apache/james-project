@@ -80,11 +80,17 @@ public interface EventBusTestFixture {
         }
     }
 
-    class GroupA extends Group {}
+    class GroupA extends Group {
 
-    class GroupB extends Group {}
+    }
 
-    class GroupC extends Group {}
+    class GroupB extends Group {
+
+    }
+
+    class GroupC extends Group {
+
+    }
 
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     User USER = User.fromUsername("user");

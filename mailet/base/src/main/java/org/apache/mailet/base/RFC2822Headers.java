@@ -175,6 +175,8 @@ public class RFC2822Headers  {
     /**
      * Private constructor to prevent instantiation
      */
-    private RFC2822Headers() {}
+    private RFC2822Headers() {
+
+    }
 
 }

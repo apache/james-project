@@ -218,7 +218,9 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
 
             return new MailQueueIterator() {
                 @Override
-                public void close() {}
+                public void close() {
+
+                }
 
                 @Override
                 public boolean hasNext() {

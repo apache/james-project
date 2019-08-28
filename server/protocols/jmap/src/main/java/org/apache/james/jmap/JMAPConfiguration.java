@@ -37,7 +37,9 @@ public class JMAPConfiguration {
         private Optional<String> jwtPublicKeyPem = Optional.empty();
         private Optional<Integer> port = Optional.empty();
 
-        private Builder() {}
+        private Builder() {
+
+        }
 
         public Builder keystore(String keystore) {
             this.keystore = keystore;

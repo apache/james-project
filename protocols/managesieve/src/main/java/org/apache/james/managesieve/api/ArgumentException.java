@@ -24,7 +24,9 @@ public class ArgumentException extends ManageSieveException {
 
     private static final long serialVersionUID = -7407426714052613820L;
 
-    public ArgumentException() {}
+    public ArgumentException() {
+
+    }
 
     public ArgumentException(String message, Throwable cause) {
         super(message, cause);

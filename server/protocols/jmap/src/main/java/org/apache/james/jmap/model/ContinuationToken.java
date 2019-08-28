@@ -47,7 +47,9 @@ public class ContinuationToken implements SignedExpiringToken {
         private ZonedDateTime expirationDate;
         private String signature;
 
-        private Builder() {}
+        private Builder() {
+
+        }
         
         public Builder username(String username) {
             this.username = username;

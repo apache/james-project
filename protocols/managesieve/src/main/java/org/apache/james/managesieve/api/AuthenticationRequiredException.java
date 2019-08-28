@@ -20,4 +20,6 @@
 
 package org.apache.james.managesieve.api;
 
-public class AuthenticationRequiredException extends ManageSieveException {}
+public class AuthenticationRequiredException extends ManageSieveException {
+
+}

@@ -59,7 +59,9 @@ public class AttachmentAccessToken implements SignedExpiringToken {
         private ZonedDateTime expirationDate;
         private String signature;
 
-        private Builder() {}
+        private Builder() {
+
+        }
         
         public Builder blobId(String blobId) {
             this.blobId = blobId;

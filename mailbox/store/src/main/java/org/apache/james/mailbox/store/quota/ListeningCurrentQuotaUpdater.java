@@ -36,7 +36,9 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import com.google.common.collect.ImmutableSet;
 
 public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailboxListener, QuotaUpdater {
-    public static class ListeningCurrentQuotaUpdaterGroup extends Group {}
+    public static class ListeningCurrentQuotaUpdaterGroup extends Group {
+
+    }
 
     public static final Group GROUP = new ListeningCurrentQuotaUpdaterGroup();
     private static final ImmutableSet<RegistrationKey> NO_REGISTRATION_KEYS = ImmutableSet.of();

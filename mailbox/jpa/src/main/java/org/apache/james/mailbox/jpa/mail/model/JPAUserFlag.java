@@ -46,7 +46,9 @@ public class JPAUserFlag {
      * @deprecated enhancement only
      */
     @Deprecated 
-    public JPAUserFlag() {}
+    public JPAUserFlag() {
+
+    }
     
     /**
      * Constructs a User Flag.

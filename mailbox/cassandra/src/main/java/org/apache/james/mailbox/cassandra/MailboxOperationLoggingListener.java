@@ -33,7 +33,9 @@ import org.apache.james.mailbox.events.MailboxListener;
  * This class logs mailboxes writes in order to give context to analyse ghost mailbox bug.
  */
 public class MailboxOperationLoggingListener implements MailboxListener.GroupMailboxListener {
-    public static class MailboxOperationLoggingListenerGroup extends Group {}
+    public static class MailboxOperationLoggingListenerGroup extends Group {
+
+    }
 
     public static final String ADDED = "Added";
     public static final String REMOVED = "Removed";

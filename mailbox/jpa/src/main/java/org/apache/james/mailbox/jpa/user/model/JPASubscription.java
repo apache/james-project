@@ -72,7 +72,9 @@ public class JPASubscription implements Subscription {
      * Used by JPA
      */
     @Deprecated
-    public JPASubscription() {}
+    public JPASubscription() {
+
+    }
     
     /**
      * Constructs a user subscription.

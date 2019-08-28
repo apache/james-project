@@ -27,11 +27,17 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class GroupTest {
-    static class GroupA extends Group {}
+    static class GroupA extends Group {
 
-    static class GroupB extends Group {}
+    }
 
-    static class GroupC extends GroupA {}
+    static class GroupB extends Group {
+
+    }
+
+    static class GroupC extends GroupA {
+
+    }
 
     @Test
     void shouldMatchBeanContract() {

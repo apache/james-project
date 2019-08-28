@@ -33,7 +33,9 @@ public class AccessTokenResponse {
         private String upload;
         private String download;
 
-        private Builder() {}
+        private Builder() {
+
+        }
 
         public Builder accessToken(AccessToken accessToken) {
             this.accessToken = accessToken;

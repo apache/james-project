@@ -39,7 +39,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class PropagateLookupRightListener implements MailboxListener.GroupMailboxListener {
-    public static class PropagateLookupRightListenerGroup extends Group {}
+    public static class PropagateLookupRightListenerGroup extends Group {
+
+    }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PropagateLookupRightListener.class);
     private static final Group GROUP = new PropagateLookupRightListenerGroup();

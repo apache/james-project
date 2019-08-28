@@ -101,7 +101,9 @@ public class MDCBuilder {
     private final ImmutableMap.Builder<String, String> contextMap = ImmutableMap.builder();
     private final ImmutableList.Builder<MDCBuilder> nestedBuilder = ImmutableList.builder();
 
-    private MDCBuilder() {}
+    private MDCBuilder() {
+
+    }
 
     public MDCBuilder addContext(MDCBuilder nested) {
         this.nestedBuilder.add(nested);

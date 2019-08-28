@@ -41,7 +41,9 @@ import org.apache.mailet.MailetContext;
 import com.google.common.collect.ImmutableSet;
 
 public class QuotaThresholdCrossingListener implements MailboxListener.GroupMailboxListener {
-    public static class QuotaThresholdCrossingListenerGroup extends Group {}
+    public static class QuotaThresholdCrossingListenerGroup extends Group {
+
+    }
 
     private static final Group GROUP = new QuotaThresholdCrossingListenerGroup();
 

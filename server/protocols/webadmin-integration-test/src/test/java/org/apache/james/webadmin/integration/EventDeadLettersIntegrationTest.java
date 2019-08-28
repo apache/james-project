@@ -65,7 +65,9 @@ import io.restassured.http.ContentType;
 
 public class EventDeadLettersIntegrationTest {
 
-    public static class RetryEventsListenerGroup extends Group {}
+    public static class RetryEventsListenerGroup extends Group {
+
+    }
 
     public static class RetryEventsListener implements MailboxListener.GroupMailboxListener {
         static final Group GROUP = new RetryEventsListenerGroup();

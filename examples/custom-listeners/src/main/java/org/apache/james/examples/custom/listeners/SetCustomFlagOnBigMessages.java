@@ -43,8 +43,8 @@ import org.slf4j.LoggerFactory;
  *
  */
 class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener {
-
     public static class PositionCustomFlagOnBigMessagesGroup extends Group {
+
     }
 
     private static final PositionCustomFlagOnBigMessagesGroup GROUP = new PositionCustomFlagOnBigMessagesGroup();

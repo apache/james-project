@@ -47,25 +47,45 @@ import com.google.common.collect.Multimaps;
 
 interface EventDeadLettersContract {
 
-    class Group0 extends Group{}
+    class Group0 extends Group {
 
-    class Group1 extends Group{}
+    }
 
-    class Group2 extends Group{}
+    class Group1 extends Group {
 
-    class Group3 extends Group{}
+    }
 
-    class Group4 extends Group{}
+    class Group2 extends Group {
 
-    class Group5 extends Group{}
+    }
 
-    class Group6 extends Group{}
+    class Group3 extends Group {
 
-    class Group7 extends Group{}
+    }
 
-    class Group8 extends Group{}
+    class Group4 extends Group {
 
-    class Group9 extends Group{}
+    }
+
+    class Group5 extends Group {
+
+    }
+
+    class Group6 extends Group {
+
+    }
+
+    class Group7 extends Group {
+
+    }
+
+    class Group8 extends Group {
+
+    }
+
+    class Group9 extends Group {
+
+    }
 
     static ImmutableMap<Integer, Group> concurrentGroups() {
         return IntStream.range(0, CONCURRENT_GROUPS.size()).boxed()

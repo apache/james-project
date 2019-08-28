@@ -419,5 +419,7 @@ public class SieveMailAdapter implements MailAdapter, EnvelopeAccessors, ActionC
     }
 
     @Override
-    public void setContext(SieveContext context) {}
+    public void setContext(SieveContext context) {
+
+    }
 }

@@ -38,7 +38,9 @@ public class ContinuationTokenRequest {
         private String clientVersion;
         private String deviceName;
 
-        private Builder() {}
+        private Builder() {
+
+        }
 
         public Builder username(String username) {
             this.username = username;

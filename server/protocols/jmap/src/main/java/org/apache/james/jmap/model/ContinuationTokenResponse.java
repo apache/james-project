@@ -51,7 +51,9 @@ public class ContinuationTokenResponse {
         private ImmutableList<AuthenticationMethod> methods;
         private String prompt;
 
-        private Builder() {}
+        private Builder() {
+
+        }
 
         public Builder continuationToken(ContinuationToken continuationToken) {
             this.continuationToken = continuationToken.serialize();
