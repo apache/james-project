@@ -21,10 +21,11 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
+import java.util.UUID;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backend.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
 import org.apache.james.lifecycle.api.Startable;
@@ -42,7 +43,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.Delivery;
+
+import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.UnicastProcessor;
 import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.BindingSpecification;
@@ -50,16 +55,22 @@ import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
+import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 
 public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(RabbitMQWorkQueue.class);
 
-    static final Integer MAX_CHANNELS_NUMBER = 1;
+    // Need at least one by receivers plus a shared one for senders
+    static final Integer MAX_CHANNELS_NUMBER = 5;
     static final String EXCHANGE_NAME = "taskManagerWorkQueueExchange";
     static final String QUEUE_NAME = "taskManagerWorkQueue";
     static final String ROUTING_KEY = "taskManagerWorkQueueRoutingKey";
+
+    static final String CANCEL_REQUESTS_EXCHANGE_NAME = "taskManagerCancelRequestsExchange";
+    static final String CANCEL_REQUESTS_ROUTING_KEY = "taskManagerCancelRequestsRoutingKey";
+    private static final String CANCEL_REQUESTS_QUEUE_NAME_PREFIX = "taskManagerCancelRequestsQueue";
     public static final String TASK_ID = "taskId";
 
     private final TaskManagerWorker worker;
@@ -68,6 +79,8 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private final JsonTaskSerializer taskSerializer;
     private Sender sender;
     private RabbitMQExclusiveConsumer receiver;
+    private UnicastProcessor<TaskId> sendCancelRequestsQueue;
+    private Disposable sendCancelRequestsQueueHandle;
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, SimpleConnectionPool simpleConnectionPool, JsonTaskSerializer taskSerializer) {
         this.worker = worker;
@@ -77,10 +90,12 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     public void start() {
+        startWorkqueue();
+        listenToCancelRequests();
+    }
+
+    private void startWorkqueue() {
         sender = channelPool.createSender();
-
-        receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(connectionMono));
-
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         sender.declare(QueueSpecification.queue(QUEUE_NAME).durable(true)).block();
         sender.bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME)).block();
@@ -89,6 +104,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     private void consumeWorkqueue() {
+        receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(connectionMono));
         receiver.consumeExclusiveManualAck(QUEUE_NAME, new ConsumeOptions())
             .subscribeOn(Schedulers.elastic())
             .flatMap(this::executeTask)
@@ -112,6 +128,43 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
         }
     }
 
+    void listenToCancelRequests() {
+        Sender cancelRequestSender = channelPool.createSender();
+        String queueName = CANCEL_REQUESTS_QUEUE_NAME_PREFIX + UUID.randomUUID().toString();
+
+        cancelRequestSender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
+        cancelRequestSender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();
+        cancelRequestSender.bind(BindingSpecification.binding(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, queueName)).block();
+        registerCancelRequestsListener(queueName);
+
+        sendCancelRequestsQueue = UnicastProcessor.create();
+        sendCancelRequestsQueueHandle = cancelRequestSender
+            .send(sendCancelRequestsQueue.map(this::makeCancelRequestMessage))
+            .subscribeOn(Schedulers.elastic())
+            .subscribe();
+    }
+
+    private void registerCancelRequestsListener(String queueName) {
+        RabbitFlux
+            .createReceiver(new ReceiverOptions().connectionMono(connectionMono))
+            .consumeAutoAck(queueName)
+            .subscribeOn(Schedulers.elastic())
+            .map(this::readCancelRequestMessage)
+            .doOnNext(worker::cancelTask)
+            .subscribe();
+    }
+
+    private TaskId readCancelRequestMessage(Delivery delivery) {
+        String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
+        return TaskId.fromString(message);
+    }
+
+    private OutboundMessage makeCancelRequestMessage(TaskId taskId) {
+        byte[] payload = taskId.asString().getBytes(StandardCharsets.UTF_8);
+        AMQP.BasicProperties basicProperties = new AMQP.BasicProperties.Builder().build();
+        return new OutboundMessage(CANCEL_REQUESTS_EXCHANGE_NAME, CANCEL_REQUESTS_ROUTING_KEY, basicProperties, payload);
+    }
+
     @Override
     public void submit(TaskWithId taskWithId) {
         try {
@@ -128,12 +181,13 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
 
     @Override
     public void cancel(TaskId taskId) {
-         throw new NotImplementedException("Cancel not done yet");
+        sendCancelRequestsQueue.onNext(taskId);
     }
 
     @Override
     @PreDestroy
     public void close() {
+        Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         channelPool.close();
     }
 }

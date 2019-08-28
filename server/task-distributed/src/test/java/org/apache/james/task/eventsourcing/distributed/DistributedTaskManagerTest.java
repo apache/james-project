@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backend.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
@@ -54,15 +55,14 @@ import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
+
+import com.github.steveash.guavate.Guavate;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import com.github.steveash.guavate.Guavate;
 
 @ExtendWith(CountDownLatchExtension.class)
 class DistributedTaskManagerTest implements TaskManagerContract {
@@ -131,17 +131,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     @Test
-    @Disabled("Cancelling is not supported yet")
-    public void aWaitingTaskShouldBeCancelled(CountDownLatch countDownLatch) {
-    }
-
-    @Test
-    @Disabled("Cancelling is not supported yet")
-    public void getStatusShouldBeCancelledWhenCancelled(CountDownLatch countDownLatch) {
-    }
-
-    @Test
-    void givenTwoTaskManagersAndTwoTasksOnlyOneTaskShouldRunAtTheSameTime() {
+    void givenTwoTaskManagersAndTwoTaskOnlyOneTaskShouldRunAtTheSameTime() throws InterruptedException {
         CountDownLatch waitingForFirstTaskLatch = new CountDownLatch(1);
 
         try (EventSourcingTaskManager taskManager1 = taskManager();
@@ -180,6 +170,43 @@ class DistributedTaskManagerTest implements TaskManagerContract {
                 assertThat(executionDetails.getSubmittedNode()).isEqualTo(HOSTNAME_2);
                 assertThat(executionDetails.getRanNode()).contains(HOSTNAME);
             }
+        }
+    }
+
+    @Test
+    void givenTwoTaskManagerATaskRunningOnOneShouldBeCancellableFromTheOtherOne(CountDownLatch countDownLatch) {
+        TaskManager taskManager1 = taskManager(HOSTNAME);
+        TaskManager taskManager2 = taskManager(HOSTNAME_2);
+        TaskId id = taskManager1.submit(new MemoryReferenceTask(() -> {
+            countDownLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager1);
+        Hostname runningNode = taskManager1.getExecutionDetails(id).getRanNode().get();
+
+        Pair<Hostname, TaskManager> remoteTaskManager = getOtherTaskManager(runningNode, Pair.of(HOSTNAME, taskManager1), Pair.of(HOSTNAME_2, taskManager2));
+        remoteTaskManager.getValue().cancel(id);
+
+        awaitAtMostFiveSeconds.untilAsserted(() ->
+            assertThat(taskManager1.getExecutionDetails(id).getStatus())
+                .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
+
+        countDownLatch.countDown();
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED, taskManager1);
+        assertThat(taskManager1.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+
+        assertThat(taskManager1.getExecutionDetails(id).getCancelRequestedNode())
+            .contains(remoteTaskManager.getKey());
+    }
+
+    private Pair<Hostname, TaskManager> getOtherTaskManager(Hostname node, Pair<Hostname, TaskManager> taskManager1, Pair<Hostname, TaskManager>  taskManager2) {
+        if (node.equals(taskManager1.getKey())) {
+            return taskManager2;
+        } else {
+            return taskManager1;
         }
     }
 }

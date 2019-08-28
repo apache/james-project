@@ -141,15 +141,15 @@ public interface TaskManagerContract {
         awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
         taskManager.cancel(id);
 
-        assertThat(taskManager.getExecutionDetails(id).getStatus())
-            .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED);
+        awaitAtMostFiveSeconds.untilAsserted(() ->
+            assertThat(taskManager.getExecutionDetails(id).getStatus())
+                .isIn(TaskManager.Status.CANCELLED, TaskManager.Status.CANCEL_REQUESTED));
 
         countDownLatch.countDown();
 
         awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED, taskManager);
         assertThat(taskManager.getExecutionDetails(id).getStatus())
             .isEqualTo(TaskManager.Status.CANCELLED);
-
     }
 
     @Test
