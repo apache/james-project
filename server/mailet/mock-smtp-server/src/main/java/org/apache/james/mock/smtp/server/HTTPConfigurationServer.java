@@ -31,13 +31,14 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.util.Port;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import com.google.common.collect.ImmutableList;
+import com.github.steveash.guavate.Guavate;
 
 public class HTTPConfigurationServer {
     static class HTTPConfigurationServlet extends HttpServlet {
@@ -64,7 +65,10 @@ public class HTTPConfigurationServer {
 
         @Override
         protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-            MockSmtpBehaviors mockSmtpBehaviors = smtpBehaviorRepository.getBehaviors().orElse(new MockSmtpBehaviors(ImmutableList.of()));
+            MockSmtpBehaviors mockSmtpBehaviors = new MockSmtpBehaviors(smtpBehaviorRepository.remainingBehaviors()
+                .map(MockSMTPBehaviorInformation::getBehavior)
+                .collect(Guavate.toImmutableList()));
+
             resp.setStatus(SC_OK);
             resp.setContentType("application/json");
             objectMapper.writeValue(resp.getOutputStream(), mockSmtpBehaviors);

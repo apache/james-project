@@ -20,41 +20,65 @@
 package org.apache.james.mock.smtp.server;
 
 import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Stream;
 
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 
-public class SMTPBehaviorRepository {
-    private final AtomicReference<MockSmtpBehaviors> behaviors;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
-    public SMTPBehaviorRepository() {
-        this.behaviors = new AtomicReference<>();
+class SMTPBehaviorRepository {
+
+    private final ConcurrentLinkedQueue<MockSMTPBehaviorInformation> behaviorsInformation;
+
+    SMTPBehaviorRepository() {
+        this.behaviorsInformation = new ConcurrentLinkedQueue<>();
     }
 
-    public Optional<MockSmtpBehaviors> getBehaviors() {
-        return Optional.ofNullable(this.behaviors.get());
+    void clearBehaviors() {
+        synchronized (behaviorsInformation) {
+            this.behaviorsInformation.clear();
+        }
     }
 
-    public void clearBehaviors() {
-        this.behaviors.set(null);
+    void setBehaviors(MockSmtpBehaviors behaviors) {
+        synchronized (behaviorsInformation) {
+            clearBehaviors();
+
+            behaviorsInformation.addAll(behaviors
+                .getBehaviorList()
+                .stream()
+                .map(MockSMTPBehaviorInformation::from)
+                .collect(Guavate.toImmutableList()));
+        }
     }
 
-    public void setBehaviors(MockSmtpBehaviors behaviors) {
-        this.behaviors.set(behaviors);
-    }
-
-    public void setBehaviors(MockSMTPBehavior... behaviors) {
+    void setBehaviors(MockSMTPBehavior... behaviors) {
         setBehaviors(new MockSmtpBehaviors(Arrays.asList(behaviors)));
     }
 
-    public Stream<MockSMTPBehavior> allBehaviors() {
-        return Optional.ofNullable(behaviors.get())
-            .map(MockSmtpBehaviors::getBehaviorList)
-            .map(List::stream)
-            .orElseGet(Stream::empty);
+    Stream<MockSMTPBehaviorInformation> remainingBehaviors() {
+        synchronized (behaviorsInformation) {
+            return behaviorsInformation.stream()
+                .filter(MockSMTPBehaviorInformation::hasRemainingAnswers);
+        }
+    }
+
+    void decreaseRemainingAnswers(MockSMTPBehavior behavior) {
+        getBehaviorInformation(behavior)
+            .decreaseRemainingAnswers();
+    }
+
+    @VisibleForTesting
+    MockSMTPBehaviorInformation getBehaviorInformation(MockSMTPBehavior behavior) {
+        synchronized (behaviorsInformation) {
+            return behaviorsInformation.stream()
+                .filter(behaviorInformation -> behaviorInformation.getBehavior().equals(behavior))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("behavior " + behavior + " not found"));
+        }
     }
 }

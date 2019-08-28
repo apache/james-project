@@ -19,15 +19,16 @@
 
 package org.apache.james.mock.smtp.server;
 
-import static org.apache.james.mock.smtp.server.Fixture.BEHAVIORS;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_ALL_FIELDS;
 import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_COMPULSORY_FIELDS;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_MATCHING_2_TIMES;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_MATCHING_3_TIMES;
+import static org.apache.james.mock.smtp.server.Fixture.BEHAVIOR_MATCHING_EVERYTIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
+import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import com.google.common.collect.ImmutableList;
 
 class SMTPBehaviorRepositoryTest {
     private SMTPBehaviorRepository testee;
@@ -38,34 +39,74 @@ class SMTPBehaviorRepositoryTest {
     }
 
     @Test
-    void getBehaviorsShouldReturnEmptyWhenNoValueStored() {
-        assertThat(testee.getBehaviors())
+    void remainingBehaviorsShouldReturnEmptyWhenNoValueStored() {
+        assertThat(testee.remainingBehaviors())
             .isEmpty();
     }
 
     @Test
-    void getBehaviorsShouldReturnPreviouslyStoredValue() {
-        testee.setBehaviors(BEHAVIORS);
+    void remainingBehaviorsShouldReturnPreviouslyStoredValue() {
+        testee.setBehaviors(BEHAVIOR_ALL_FIELDS, BEHAVIOR_COMPULSORY_FIELDS);
 
-        assertThat(testee.getBehaviors()).contains(BEHAVIORS);
+        assertThat(testee.remainingBehaviors())
+            .containsExactly(
+                MockSMTPBehaviorInformation.from(BEHAVIOR_ALL_FIELDS),
+                MockSMTPBehaviorInformation.from(BEHAVIOR_COMPULSORY_FIELDS));
     }
 
     @Test
-    void getBehaviorsShouldReturnLatestStoredValue() {
-        MockSmtpBehaviors newPojo = new MockSmtpBehaviors(ImmutableList.of(BEHAVIOR_COMPULSORY_FIELDS));
+    void remainingBehaviorsShouldReturnLatestStoredValue() {
+        testee.setBehaviors(BEHAVIOR_ALL_FIELDS, BEHAVIOR_COMPULSORY_FIELDS);
+        testee.setBehaviors(BEHAVIOR_COMPULSORY_FIELDS);
 
-        testee.setBehaviors(BEHAVIORS);
-        testee.setBehaviors(newPojo);
-
-        assertThat(testee.getBehaviors()).contains(newPojo);
+        assertThat(testee.remainingBehaviors())
+            .containsExactly(
+                MockSMTPBehaviorInformation.from(BEHAVIOR_COMPULSORY_FIELDS));
     }
 
     @Test
-    void getBehaviorsShouldReturnEmptyWhenCleared() {
-        testee.setBehaviors(BEHAVIORS);
+    void remainingBehaviorsShouldReturnEmptyWhenCleared() {
+        testee.setBehaviors(BEHAVIOR_ALL_FIELDS, BEHAVIOR_COMPULSORY_FIELDS);
 
         testee.clearBehaviors();
 
-        assertThat(testee.getBehaviors()).isEmpty();
+        assertThat(testee.remainingBehaviors()).isEmpty();
+    }
+
+    @Test
+    void getBehaviorInformationShouldReturnEmptyOptionalOfAnswerCountWhenUnlimitedAnswers() {
+        testee.setBehaviors(BEHAVIOR_MATCHING_EVERYTIME);
+
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_EVERYTIME);
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_EVERYTIME);
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_EVERYTIME);
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_EVERYTIME);
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_EVERYTIME);
+
+        assertThat(testee.getBehaviorInformation(BEHAVIOR_MATCHING_EVERYTIME)
+                .remainingAnswersCounter())
+            .isEmpty();
+    }
+
+    @Test
+    void decreaseRemainingAnswersShouldDecreaseLimitedAnswer() {
+        testee.setBehaviors(BEHAVIOR_MATCHING_2_TIMES);
+
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_2_TIMES);
+
+        assertThat(testee.getBehaviorInformation(BEHAVIOR_MATCHING_2_TIMES)
+                .remainingAnswersCounter())
+            .contains(1);
+    }
+
+    @Test
+    void decreaseRemainingAnswersShouldNotDecreaseOtherBehavior() {
+        testee.setBehaviors(BEHAVIOR_MATCHING_2_TIMES, BEHAVIOR_MATCHING_3_TIMES);
+
+        testee.decreaseRemainingAnswers(BEHAVIOR_MATCHING_2_TIMES);
+
+        assertThat(testee.getBehaviorInformation(BEHAVIOR_MATCHING_3_TIMES)
+                .remainingAnswersCounter())
+            .contains(3);
     }
 }

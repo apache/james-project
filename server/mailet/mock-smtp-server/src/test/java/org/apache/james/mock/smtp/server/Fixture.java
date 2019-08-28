@@ -68,6 +68,22 @@ public interface Fixture {
         Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.times(7));
 
+    MockSMTPBehavior BEHAVIOR_MATCHING_EVERYTIME = new MockSMTPBehavior(
+        SMTPCommand.MAIL_FROM,
+        Condition.MATCH_ALL,
+        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
+    MockSMTPBehavior BEHAVIOR_MATCHING_2_TIMES = new MockSMTPBehavior(
+        SMTPCommand.MAIL_FROM,
+        Condition.MATCH_ALL,
+        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        MockSMTPBehavior.NumberOfAnswersPolicy.times(2));
+    MockSMTPBehavior BEHAVIOR_MATCHING_3_TIMES = new MockSMTPBehavior(
+        SMTPCommand.MAIL_FROM,
+        Condition.MATCH_ALL,
+        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        MockSMTPBehavior.NumberOfAnswersPolicy.times(3));
+
     String JSON_BEHAVIORS = "[" + JSON_BEHAVIOR_ALL_FIELDS + ", "
         + JSON_BEHAVIOR_COMPULSORY_FIELDS + "]";
 
