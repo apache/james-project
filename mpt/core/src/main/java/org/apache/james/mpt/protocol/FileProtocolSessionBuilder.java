@@ -30,7 +30,7 @@ import org.apache.james.mpt.protocol.ProtocolSession.TimerCommand;
 /**
  * A builder which generates a ProtocolSession from a test file.
  * 
- * @author Darrell DeBoer <darrell@apache.org>
+ * @author Darrell DeBoer &lt;darrell@apache.org&gt;
  * 
  * @version $Revision$
  */

@@ -116,8 +116,6 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
     /**
      * Reads test elements from the protocol session file and adds them to the
      * {@link #testElements} ProtocolSession. Then calls {@link #runSessions}.
-     * @param locale
-     *            execute the test using this locale
      */
     public void run(String fileName) throws Exception {
         prepare();

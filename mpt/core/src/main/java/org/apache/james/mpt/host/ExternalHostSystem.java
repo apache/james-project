@@ -39,7 +39,7 @@ import org.apache.james.util.Port;
  * <p>
  * This is typically used for functional integration testing of a complete
  * server system (including sockets). Apache James MPT AntLib provides an <a
- * href='http://ant.apache.org' rel='tag'>Ant</a> task suitable for this use
+ * href='http://ant.apache.org'>Ant</a> task suitable for this use
  * case.
  * </p>
  */

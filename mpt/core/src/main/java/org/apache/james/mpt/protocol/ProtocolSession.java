@@ -41,7 +41,7 @@ import com.google.common.base.Stopwatch;
  * itself be a permissible ProtocolElement, so that we can nest and reuse
  * sessions.
  * 
- * @author Darrell DeBoer <darrell@apache.org>
+ * @author Darrell DeBoer &lt;darrell@apache.org&gt;
  */
 public class ProtocolSession implements ProtocolInteractor {
 
@@ -95,11 +95,6 @@ public class ProtocolSession implements ProtocolInteractor {
      * order that they appear in the test elements. The index of a reader/writer
      * in the array corresponds to the number of the session. If an exception
      * occurs, no more test elements are executed.
-     * 
-     * @param out
-     *            The client requests are written to here.
-     * @param in
-     *            The server responses are read from here.
      */
     public void runSessions(Session[] sessions) throws Exception {
         this.sessions = sessions;
@@ -334,11 +329,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * expected regular expression. If the sessionNumber == -1, then all
          * readers are tested, otherwise, only the reader for this session is
          * tested.
-         * 
-         * @param out
-         *            Is ignored.
-         * @param in
-         *            The server response is read from here.
+         *
          * @throws InvalidServerResponseException
          *             If the actual server response didn't match the regular
          *             expression expected.
@@ -444,9 +435,7 @@ public class ProtocolSession implements ProtocolInteractor {
          * Reads lines from the server response and matches them against the
          * list of expected regular expressions. Each regular expression in the
          * expected list must be matched by only one server response line.
-         * 
-         * @param reader
-         *            Server responses are read from here.
+         *
          * @throws InvalidServerResponseException
          *             If a line is encountered which doesn't match one of the
          *             expected lines.
