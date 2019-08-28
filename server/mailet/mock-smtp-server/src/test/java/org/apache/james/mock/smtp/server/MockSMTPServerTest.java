@@ -74,7 +74,7 @@ class MockSMTPServerTest {
     void setUp() throws Exception {
         behaviorRepository = new SMTPBehaviorRepository();
         mailRepository = new ReceivedMailRepository();
-        mockServer = new MockSMTPServer(behaviorRepository, mailRepository);
+        mockServer = MockSMTPServer.onRandomPort(behaviorRepository, mailRepository);
 
         mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("test")
@@ -423,7 +423,7 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldOpenASmtpPort() {
-        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
+        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
 
         assertThatCode(() -> new SMTPMessageSender(DOMAIN)
@@ -433,7 +433,7 @@ class MockSMTPServerTest {
 
     @Test
     void serverShouldBeAbleToStop() {
-        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
+        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
         Port port = mockServer.getPort();
 
@@ -446,7 +446,7 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldBeIdempotent() {
-        MockSMTPServer mockServer = new MockSMTPServer(new SMTPBehaviorRepository(), new ReceivedMailRepository());
+        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
         mockServer.start();
 
         assertThatCode(mockServer::start)

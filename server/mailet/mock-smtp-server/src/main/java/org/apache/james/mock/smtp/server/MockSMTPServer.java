@@ -23,11 +23,21 @@ import org.apache.james.util.Port;
 import org.subethamail.smtp.server.SMTPServer;
 
 class MockSMTPServer {
+    private static final int RANDOM_PORT = 0;
+
+    public static MockSMTPServer onRandomPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository) {
+        return new MockSMTPServer(behaviorRepository, mailRepository, RANDOM_PORT);
+    }
+
+    public static MockSMTPServer onPort(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, Port port) {
+        return new MockSMTPServer(behaviorRepository, mailRepository, port.getValue());
+    }
+
     private final SMTPServer server;
 
-    MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository) {
+    private MockSMTPServer(SMTPBehaviorRepository behaviorRepository, ReceivedMailRepository mailRepository, int port) {
         this.server = new SMTPServer(ctx -> new MockMessageHandler(mailRepository, behaviorRepository));
-        this.server.setPort(0);
+        this.server.setPort(port);
     }
 
     void start() {
