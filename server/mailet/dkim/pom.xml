@@ -133,4 +133,15 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>mailetdocs-maven-plugin</artifactId>
+                <configuration>
+                    <outputDirectory>target/mailetdocs</outputDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
