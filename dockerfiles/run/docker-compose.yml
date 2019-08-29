@@ -9,7 +9,7 @@ services:
       - tika
       - rabbitmq
       - swift
-    entrypoint: bash -c "java -Dworking.directory=/root/ -jar james-server.jar"
+    entrypoint: bash -c "java -Dworking.directory=/root/ -Dlogback.configurationFile=/root/conf/logback.xml -jar james-server.jar"
     image: linagora/james-rabbitmq-project:latest
     container_name: james
     hostname: james.local
