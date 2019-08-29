@@ -650,6 +650,8 @@
 
         <scala.base>2.12</scala.base>
         <scala.version>${scala.base}.8</scala.version>
+
+        <doclint>none</doclint>
     </properties>
 
     <dependencyManagement>
