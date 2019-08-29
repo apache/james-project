@@ -58,26 +58,46 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 class MockSMTPServerTest {
 
+    private MockSMTPServer mockServer;
+    private FakeMail mail1;
+    private MimeMessage mimeMessage1;
+    private SMTPMessageSender smtpClient;
+    private SMTPBehaviorRepository behaviorRepository;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        behaviorRepository = new SMTPBehaviorRepository();
+        mockServer = new MockSMTPServer(behaviorRepository);
+
+        mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
+            .setSubject("test")
+            .setText("any text")
+            .build();
+        mail1 = FakeMail.builder()
+            .name("name")
+            .sender(BOB)
+            .recipients(ALICE, JACK)
+            .mimeMessage(mimeMessage1)
+            .build();
+
+        mockServer.start();
+        smtpClient = new SMTPMessageSender(DOMAIN)
+            .connect("localhost", mockServer.getPort());
+    }
+
+    @AfterEach
+    void tearDown() {
+        mockServer.stop();
+    }
+
     @Nested
     class NormalBehaviorTests {
-        private MockSMTPServer mockServer;
-
-        @BeforeEach
-        void setUp() {
-            mockServer = new MockSMTPServer();
-            mockServer.start();
-        }
-
-        @AfterEach
-        void tearDown() {
-            mockServer.stop();
-        }
 
         @Test
         void serverShouldReceiveMessageFromClient() throws Exception {
@@ -116,39 +136,6 @@ class MockSMTPServerTest {
 
     @Nested
     class MailMockBehaviorTest {
-        private MockSMTPServer mockServer;
-        private FakeMail mail1;
-        private MimeMessage mimeMessage1;
-        private SMTPMessageSender smtpClient;
-        private SMTPBehaviorRepository behaviorRepository;
-
-        @BeforeEach
-        void setUp() throws Exception {
-            behaviorRepository = new SMTPBehaviorRepository();
-            mockServer = new MockSMTPServer(behaviorRepository);
-
-            mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
-                .setSubject("test")
-                .setText("any text")
-                .build();
-            mail1 = FakeMail.builder()
-                .name("name")
-                .sender(BOB)
-                .recipients(ALICE, JACK)
-                .mimeMessage(mimeMessage1)
-                .build();
-
-            mockServer.start();
-            smtpClient = new SMTPMessageSender(DOMAIN)
-                .connect("localhost", mockServer.getPort());
-        }
-
-        @AfterEach
-        void tearDown() {
-            behaviorRepository.clearBehaviors();
-            mockServer.stop();
-        }
-
         @Test
         void serverShouldReceiveMessageFromClient() throws Exception {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
@@ -191,38 +178,6 @@ class MockSMTPServerTest {
 
     @Nested
     class NumberOfAnswersTest {
-        private MockSMTPServer mockServer;
-        private FakeMail mail1;
-        private MimeMessage mimeMessage1;
-        private SMTPMessageSender smtpClient;
-        private SMTPBehaviorRepository behaviorRepository;
-
-        @BeforeEach
-        void setUp() throws Exception {
-            behaviorRepository = new SMTPBehaviorRepository();
-            mockServer = new MockSMTPServer(behaviorRepository);
-
-            mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
-                .setSubject("test")
-                .setText("any text")
-                .build();
-            mail1 = FakeMail.builder()
-                .name("name")
-                .sender(BOB)
-                .recipients(ALICE, JACK)
-                .mimeMessage(mimeMessage1)
-                .build();
-
-            mockServer.start();
-            smtpClient = new SMTPMessageSender(DOMAIN)
-                .connect("localhost", mockServer.getPort());
-        }
-
-        @AfterEach
-        void tearDown() {
-            mockServer.stop();
-        }
-
         @Test
         void serverShouldKeepReceivingErrorResponseWhenAnytime() throws Exception {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
@@ -323,56 +278,10 @@ class MockSMTPServerTest {
             assertThat(remainedAnswersOf(matchesAnyFrom) + remainedAnswersOf(matchesAnyRecipient))
                 .isEqualTo(4);
         }
-
-        private void sendMessageIgnoreError(FakeMail mail) {
-            try {
-                smtpClient.sendMessage(mail);
-            } catch (MessagingException | IOException e) {
-                // ignore error
-            }
-        }
-
-        private Integer remainedAnswersOf(MockSMTPBehavior nonMatched) {
-            return behaviorRepository
-                .getBehaviorInformation(nonMatched)
-                .remainingAnswersCounter()
-                .get();
-        }
     }
 
     @Nested
     class ConditionFilteringTest {
-        private MockSMTPServer mockServer;
-        private FakeMail mail1;
-        private MimeMessage mimeMessage1;
-        private SMTPMessageSender smtpClient;
-        private SMTPBehaviorRepository behaviorRepository;
-
-        @BeforeEach
-        void setUp() throws Exception {
-            behaviorRepository = new SMTPBehaviorRepository();
-            mockServer = new MockSMTPServer(behaviorRepository);
-
-            mimeMessage1 = MimeMessageBuilder.mimeMessageBuilder()
-                .setSubject("test")
-                .setText("any text")
-                .build();
-            mail1 = FakeMail.builder()
-                .name("name")
-                .sender(BOB)
-                .recipients(ALICE, JACK)
-                .mimeMessage(mimeMessage1)
-                .build();
-
-            mockServer.start();
-            smtpClient = new SMTPMessageSender(DOMAIN)
-                .connect("localhost", mockServer.getPort());
-        }
-
-        @AfterEach
-        void tearDown() {
-            mockServer.stop();
-        }
 
         @Test
         void serverShouldBehaveOnMatchedFromBehavior() throws Exception {
@@ -509,21 +418,6 @@ class MockSMTPServerTest {
             assertThat(remainedAnswersOf(matched) + remainedAnswersOf(qualifiedButNotMatched))
                 .isEqualTo(matchedOriginalCount + qualifiedButNotMatchedOriginalCount - 1);
         }
-
-        private void sendMessageIgnoreError(FakeMail mail) {
-            try {
-                smtpClient.sendMessage(mail);
-            } catch (MessagingException | IOException e) {
-                // ignore error
-            }
-        }
-
-        private Integer remainedAnswersOf(MockSMTPBehavior nonMatched) {
-            return behaviorRepository
-                .getBehaviorInformation(nonMatched)
-                .remainingAnswersCounter()
-                .get();
-        }
     }
 
     @Test
@@ -556,5 +450,20 @@ class MockSMTPServerTest {
 
         assertThatCode(() -> mockServer.start())
             .doesNotThrowAnyException();
+    }
+
+    private void sendMessageIgnoreError(FakeMail mail) {
+        try {
+            smtpClient.sendMessage(mail);
+        } catch (MessagingException | IOException e) {
+            // ignore error
+        }
+    }
+
+    private Integer remainedAnswersOf(MockSMTPBehavior nonMatched) {
+        return behaviorRepository
+            .getBehaviorInformation(nonMatched)
+            .remainingAnswersCounter()
+            .get();
     }
 }
