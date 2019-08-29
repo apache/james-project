@@ -98,7 +98,7 @@ public class MockMessageHandler implements MessageHandler {
 
     @Override
     public void from(String from) throws RejectException {
-        Optional<Behavior<MailAddress>> fromBehavior = firstMatchedBehavior(SMTPCommand.MAIL_FROM);
+        Optional<Behavior<MailAddress>> fromBehavior = firstMatchedBehavior(SMTPCommand.MAIL_FROM, from);
 
         fromBehavior
             .orElseGet(() -> envelopeBuilder::from)
@@ -107,7 +107,7 @@ public class MockMessageHandler implements MessageHandler {
 
     @Override
     public void recipient(String recipient) throws RejectException {
-        Optional<Behavior<MailAddress>> recipientBehavior = firstMatchedBehavior(SMTPCommand.RCPT_TO);
+        Optional<Behavior<MailAddress>> recipientBehavior = firstMatchedBehavior(SMTPCommand.RCPT_TO, recipient);
 
         recipientBehavior
             .orElseGet(() -> envelopeBuilder::addRecipient)
@@ -116,17 +116,19 @@ public class MockMessageHandler implements MessageHandler {
 
     @Override
     public void data(InputStream data) throws RejectException, TooMuchDataException, IOException {
-        Optional<Behavior<InputStream>> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA);
+        String dataString = readData(data);
+        Optional<Behavior<String>> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA, dataString);
 
         dataBehavior
-            .orElseGet(() -> content -> mailBuilder.message(readData(content)))
-            .behave(data);
+            .orElseGet(() -> mailBuilder::message)
+            .behave(dataString);
     }
 
-    private <T> Optional<Behavior<T>> firstMatchedBehavior(SMTPCommand data) {
+    private <T> Optional<Behavior<T>> firstMatchedBehavior(SMTPCommand data, String dataLine) {
         return behaviorRepository.remainingBehaviors()
             .map(MockSMTPBehaviorInformation::getBehavior)
             .filter(behavior -> behavior.getCommand().equals(data))
+            .filter(behavior -> behavior.getCondition().matches(dataLine))
             .findFirst()
             .map(mockBehavior -> new SMTPBehaviorRepositoryUpdater<>(behaviorRepository, mockBehavior));
     }
