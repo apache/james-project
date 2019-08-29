@@ -1,0 +1,55 @@
+/****************************************************************
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ ****************************************************************/
+
+package org.apache.james.mock.smtp.server.jackson;
+
+import static org.apache.james.mock.smtp.server.Fixture.BOB;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.apache.james.core.MailAddress;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+class MailAddressModuleTest {
+    private static final String BOB_JSON = "\"bob@james.org\"";
+
+    private ObjectMapper mapper;
+
+    @BeforeEach
+    void setup() {
+        mapper = new ObjectMapper()
+            .registerModule(new MailAddressModule().asJacksonModule());
+    }
+
+    @Test
+    void mailAddressShouldBeSerializable() throws Exception {
+        MailAddress address = new MailAddress(BOB);
+        String actualJson = mapper.writeValueAsString(address);
+        assertThat(actualJson).isEqualTo(BOB_JSON);
+    }
+
+    @Test
+    void mailAddressShouldBeDeserializable() throws Exception {
+        MailAddress expectedAddress = new MailAddress(BOB);
+        MailAddress actualAddress = mapper.readValue(BOB_JSON, MailAddress.class);
+        assertThat(actualAddress).isEqualToComparingFieldByField(expectedAddress);
+    }
+}
