@@ -29,6 +29,9 @@ import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 import java.nio.charset.StandardCharsets;
 
@@ -54,8 +57,10 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import io.restassured.builder.RequestSpecBuilder;
+import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
+import io.restassured.specification.ResponseSpecification;
 
 public class RemoteDeliveryErrorTest {
     private static final String ANOTHER_DOMAIN = "other.com";
@@ -76,6 +81,24 @@ public class RemoteDeliveryErrorTest {
         "  \"condition\": {\"operator\":\"matchAll\"}," +
         "  \"response\": {\"code\":421, \"message\":\"mock response\", \"rejected\":true}," +
         "  \"command\": \"DATA\"" +
+        "}]";
+    private static final String TWICE_421_RCPT_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":421, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"RCPT TO\"," +
+        "  \"numberOfAnswer\": 2" +
+        "}]";
+    private static final String TWICE_421_FROM_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":421, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"MAIL FROM\"," +
+        "  \"numberOfAnswer\": 2" +
+        "}]";
+    private static final String TWICE_421_DATA_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":421, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"DATA\"," +
+        "  \"numberOfAnswer\": 2" +
         "}]";
     private static final String SINGLE_500_RCPT_BEHAVIOR = "[{" +
         "  \"condition\": {\"operator\":\"matchAll\"}," +
@@ -100,6 +123,7 @@ public class RemoteDeliveryErrorTest {
         "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
         "I include the list of recipients and the reason why I was unable to deliver\n" +
         "your message.";
+    private static final ResponseSpecification RESPONSE_SPECIFICATION = new ResponseSpecBuilder().build();
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -235,6 +259,63 @@ public class RemoteDeliveryErrorTest {
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
         assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+    }
+
+    @Test
+    public void remoteDeliveryShouldRetryWhenRCPT421() throws Exception {
+        given(requestSpecification())
+            .body(TWICE_421_RCPT_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        awaitAtMostOneMinute.untilAsserted(() -> given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/smtpMails")
+        .then()
+            .body("", hasSize(1))
+            .body("[0].from", is(FROM))
+            .body("[0].recipients", hasSize(1))
+            .body("[0].recipients[0]", is(RECIPIENT))
+            .body("[0].message", containsString("subject: test")));
+    }
+
+    @Test
+    public void remoteDeliveryShouldRetryWhenFROM421() throws Exception {
+        given(requestSpecification())
+            .body(TWICE_421_FROM_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        awaitAtMostOneMinute.untilAsserted(() -> given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/smtpMails")
+        .then()
+            .body("", hasSize(1))
+            .body("[0].from", is(FROM))
+            .body("[0].recipients", hasSize(1))
+            .body("[0].recipients[0]", is(RECIPIENT))
+            .body("[0].message", containsString("subject: test")));
+    }
+
+    @Test
+    public void remoteDeliveryShouldRetryWhenDATA421() throws Exception {
+        given(requestSpecification())
+            .body(TWICE_421_DATA_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        awaitAtMostOneMinute.untilAsserted(() -> given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/smtpMails")
+        .then()
+            .body("", hasSize(1))
+            .body("[0].from", is(FROM))
+            .body("[0].recipients", hasSize(1))
+            .body("[0].recipients[0]", is(RECIPIENT))
+            .body("[0].message", containsString("subject: test")));
     }
 
     private ProcessorConfiguration.Builder directResolutionTransport() {
