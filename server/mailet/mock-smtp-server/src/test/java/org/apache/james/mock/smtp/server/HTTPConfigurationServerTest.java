@@ -25,15 +25,25 @@ import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.mock.smtp.server.Fixture.ALICE;
+import static org.apache.james.mock.smtp.server.Fixture.BOB;
+import static org.apache.james.mock.smtp.server.Fixture.JACK;
 import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
+import static org.apache.james.mock.smtp.server.Fixture.JSON_MAIL;
+import static org.apache.james.mock.smtp.server.Fixture.JSON_MAILS_LIST;
 import static org.hamcrest.Matchers.hasSize;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.MailAddress;
+import org.apache.james.mock.smtp.server.model.Mail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -44,87 +54,188 @@ import net.javacrumbs.jsonunit.core.internal.Options;
 class HTTPConfigurationServerTest {
     private HTTPConfigurationServer server;
 
-    @BeforeEach
-    void setUp() throws Exception {
-        server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository());
-        server.start();
+    @Nested
+    class SMTPBehaviorsTest {
+        @BeforeEach
+        void setUp() throws Exception {
+            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
+            server.start();
 
-        RestAssured.requestSpecification = new RequestSpecBuilder()
-            .setContentType(ContentType.JSON)
-            .setAccept(ContentType.JSON)
-            .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(server.getPort().getValue())
-            .setBasePath("/")
-            .setBasePath("/smtpBehaviors")
-            .build();
-    }
+            RestAssured.requestSpecification = new RequestSpecBuilder()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+                .setPort(server.getPort().getValue())
+                .setBasePath("/smtpBehaviors")
+                .build();
+        }
 
-    @AfterEach
-    void tearDown() throws Exception {
-        server.stop();
-    }
+        @AfterEach
+        void tearDown() throws Exception {
+            server.stop();
+        }
 
-    @Test
-    void getShouldReturnEmptyByDefault() {
-        when()
-            .get()
-        .then()
-            .body(".", hasSize(0));
-    }
-
-    @Test
-    void getShouldReturnPreviouslyStoredData() {
-        with().body(JSON_BEHAVIORS).put();
-
-        String response = when()
-            .get()
+        @Test
+        void getShouldReturnEmptyByDefault() {
+            when()
+                .get()
             .then()
-            .extract().asString();
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
 
-        assertThatJson(response)
-            .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
-            .isEqualTo(JSON_BEHAVIORS);
+        @Test
+        void getShouldReturnPreviouslyStoredData() {
+            with().body(JSON_BEHAVIORS).put();
+
+            String response = when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .asString();
+
+            assertThatJson(response)
+                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .isEqualTo(JSON_BEHAVIORS);
+        }
+
+        @Test
+        void getShouldReturnEmptyAfterDelete() {
+            with().body(JSON_BEHAVIORS).put();
+
+            with().delete();
+
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
+
+        @Test
+        void putShouldReturnNoContent() {
+            given()
+                .body(JSON_BEHAVIORS)
+            .when()
+                .put()
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void putShouldBeIdempotent() {
+            with().body(JSON_BEHAVIORS).put();
+
+            given()
+                .body(JSON_BEHAVIORS)
+            .when()
+                .put()
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void deleteShouldReturnNoContent() {
+            when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
     }
 
-    @Test
-    void getShouldReturnEmptyAfterDelete() {
-        with().body(JSON_BEHAVIORS).put();
+    @Nested
+    class SMTPMailsTest {
+        private ReceivedMailRepository mailRepository;
+        private Mail mail1;
+        private Mail mail2;
 
-        with().delete();
+        @BeforeEach
+        void setUp() throws Exception {
+            mailRepository = new ReceivedMailRepository();
 
-        when()
-            .get()
-        .then()
-            .body(".", hasSize(0));
-    }
+            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), mailRepository);
+            server.start();
 
-    @Test
-    void putShouldReturnNoContent() {
-        given()
-            .body(JSON_BEHAVIORS)
-        .when()
-            .put()
-        .then()
-            .statusCode(HttpStatus.NO_CONTENT_204);
-    }
+            RestAssured.requestSpecification = new RequestSpecBuilder()
+                .setContentType(ContentType.JSON)
+                .setAccept(ContentType.JSON)
+                .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
+                .setPort(server.getPort().getValue())
+                .setBasePath("/smtpMails")
+                .build();
 
-    @Test
-    void putShouldBeIdempotent() {
-        with().body(JSON_BEHAVIORS).put();
+            mail1 = new Mail(
+                new Mail.Envelope(
+                    new MailAddress(BOB),
+                    ImmutableList.of(new MailAddress(ALICE), new MailAddress(JACK))),
+                "bob to alice and jack");
 
-        given()
-            .body(JSON_BEHAVIORS)
-        .when()
-            .put()
-        .then()
-            .statusCode(HttpStatus.NO_CONTENT_204);
-    }
+            mail2 = new Mail(
+                new Mail.Envelope(
+                    new MailAddress(ALICE),
+                    ImmutableList.of(new MailAddress(BOB))),
+                "alice to bob");
+        }
 
-    @Test
-    void deleteShouldReturnNoContent() {
-        when()
-            .delete()
-        .then()
-            .statusCode(HttpStatus.NO_CONTENT_204);
+        @AfterEach
+        void tearDown() throws Exception {
+            server.stop();
+        }
+
+        @Test
+        void getShouldReturnEmptyByDefault() {
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
+
+        @Test
+        void getShouldReturnPreviouslyStoredData() throws Exception {
+            mailRepository.store(mail1);
+
+            String response = when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .asString();
+
+            assertThatJson(response)
+                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .isEqualTo(JSON_MAIL);
+        }
+
+        @Test
+        void getShouldReturnMultipleEmails() throws Exception {
+            mailRepository.store(mail1);
+            mailRepository.store(mail2);
+
+            String response = when()
+                    .get()
+                .then()
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .asString();
+
+            assertThatJson(response)
+                .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
+                .isEqualTo(JSON_MAILS_LIST);
+        }
+
+        @Test
+        void getShouldReturnEmptyAfterClear() {
+            mailRepository.store(mail1);
+
+            mailRepository.clear();
+
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
+        }
     }
 }

@@ -21,20 +21,10 @@ package org.apache.james.mock.smtp.server.jackson;
 
 import org.apache.james.core.MailAddress;
 
-import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 
-public class MailAddressModule implements JsonSimpleModule {
-    private final SimpleModule simpleModule;
-
-    public MailAddressModule() {
-        this.simpleModule = new SimpleModule()
-            .addSerializer(MailAddress.class, new MailAddressSerializer())
-            .addDeserializer(MailAddress.class, new MailAddressDeserializer());
-    }
-
-    @Override
-    public Module asJacksonModule() {
-        return simpleModule;
-    }
+public interface MailAddressModule {
+    SimpleModule MODULE = new SimpleModule()
+        .addSerializer(MailAddress.class, new MailAddressSerializer())
+        .addDeserializer(MailAddress.class, new MailAddressDeserializer());
 }

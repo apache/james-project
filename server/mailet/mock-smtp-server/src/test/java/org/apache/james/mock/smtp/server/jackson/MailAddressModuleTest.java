@@ -36,7 +36,7 @@ class MailAddressModuleTest {
     @BeforeEach
     void setup() {
         mapper = new ObjectMapper()
-            .registerModule(new MailAddressModule().asJacksonModule());
+            .registerModule(MailAddressModule.MODULE);
     }
 
     @Test

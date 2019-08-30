@@ -31,6 +31,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
+import org.apache.james.mock.smtp.server.jackson.MailAddressModule;
+import org.apache.james.mock.smtp.server.model.Mails;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.util.Port;
@@ -41,21 +43,17 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.github.steveash.guavate.Guavate;
 
 public class HTTPConfigurationServer {
-    static class HTTPConfigurationServlet extends HttpServlet {
-        private final ObjectMapper objectMapper;
+    static class SMTPBehaviorsServlet extends HttpServlet {
         private final SMTPBehaviorRepository smtpBehaviorRepository;
 
-        HTTPConfigurationServlet(SMTPBehaviorRepository smtpBehaviorRepository) {
-            this.objectMapper = new ObjectMapper()
-                .registerModule(new Jdk8Module())
-                .registerModule(new GuavaModule());
+        SMTPBehaviorsServlet(SMTPBehaviorRepository smtpBehaviorRepository) {
             this.smtpBehaviorRepository = smtpBehaviorRepository;
         }
 
         @Override
         protected void doPut(HttpServletRequest req, HttpServletResponse resp) {
             try {
-                MockSmtpBehaviors behaviors = objectMapper.readValue(req.getInputStream(), MockSmtpBehaviors.class);
+                MockSmtpBehaviors behaviors = OBJECT_MAPPER.readValue(req.getInputStream(), MockSmtpBehaviors.class);
                 smtpBehaviorRepository.setBehaviors(behaviors);
                 resp.setStatus(SC_NO_CONTENT);
             } catch (IOException e) {
@@ -71,7 +69,7 @@ public class HTTPConfigurationServer {
 
             resp.setStatus(SC_OK);
             resp.setContentType("application/json");
-            objectMapper.writeValue(resp.getOutputStream(), mockSmtpBehaviors);
+            OBJECT_MAPPER.writeValue(resp.getOutputStream(), mockSmtpBehaviors);
         }
 
         @Override
@@ -81,23 +79,49 @@ public class HTTPConfigurationServer {
         }
     }
 
-    private static final String SMTP_BEHAVIORS = "/smtpBehaviors";
+    static class SMTPMailsServlet extends HttpServlet {
+        private final ReceivedMailRepository receivedMailRepository;
 
-    public static HTTPConfigurationServer onRandomPort(SMTPBehaviorRepository smtpBehaviorRepository) {
+        SMTPMailsServlet(ReceivedMailRepository receivedMailRepository) {
+            this.receivedMailRepository = receivedMailRepository;
+        }
+
+        @Override
+        protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+            Mails mails = new Mails(receivedMailRepository.list());
+            resp.setStatus(SC_OK);
+            resp.setContentType("application/json");
+            OBJECT_MAPPER.writeValue(resp.getOutputStream(), mails);
+        }
+    }
+
+    private static final String SMTP_BEHAVIORS = "/smtpBehaviors";
+    private static final String SMTP_MAILS = "/smtpMails";
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+        .registerModule(new Jdk8Module())
+        .registerModule(new GuavaModule())
+        .registerModule(MailAddressModule.MODULE);
+
+    public static HTTPConfigurationServer onRandomPort(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository) {
         return new HTTPConfigurationServer(smtpBehaviorRepository,
+            receivedMailRepository,
             Configuration.builder().randomPort());
     }
 
-    public static HTTPConfigurationServer onPort(SMTPBehaviorRepository smtpBehaviorRepository, Port port) {
+    public static HTTPConfigurationServer onPort(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository, Port port) {
         return new HTTPConfigurationServer(smtpBehaviorRepository,
+            receivedMailRepository,
             Configuration.builder().port(port.getValue()));
     }
 
     private final JettyHttpServer jettyHttpServer;
 
-    private HTTPConfigurationServer(SMTPBehaviorRepository smtpBehaviorRepository, Configuration.Builder configurationBuilder) {
+    private HTTPConfigurationServer(SMTPBehaviorRepository smtpBehaviorRepository, ReceivedMailRepository receivedMailRepository, Configuration.Builder configurationBuilder) {
         jettyHttpServer = JettyHttpServer.create(configurationBuilder.serve(SMTP_BEHAVIORS)
-            .with(new HTTPConfigurationServlet(smtpBehaviorRepository))
+            .with(new SMTPBehaviorsServlet(smtpBehaviorRepository))
+            .serve(SMTP_MAILS)
+            .with(new SMTPMailsServlet(receivedMailRepository))
             .build());
     }
 

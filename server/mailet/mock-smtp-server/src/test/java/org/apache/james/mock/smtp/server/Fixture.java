@@ -41,7 +41,7 @@ public interface Fixture {
     ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
         .registerModule(new GuavaModule())
-        .registerModule(new MailAddressModule().asJacksonModule());
+        .registerModule(MailAddressModule.MODULE);
 
     Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
 
@@ -97,4 +97,6 @@ public interface Fixture {
         "  {\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}," +
         "  {\"from\":\"alice@james.org\",\"recipients\":[\"bob@james.org\"],\"message\":\"alice to bob\"}" +
         "]";
+
+    String JSON_MAIL = "[{\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}]";
 }
