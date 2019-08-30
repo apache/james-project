@@ -42,12 +42,11 @@ import org.subethamail.smtp.TooMuchDataException;
 public class MockMessageHandler implements MessageHandler {
 
     @FunctionalInterface
-    interface Behavior<T> {
+    private interface Behavior<T> {
         void behave(T input) throws RejectException;
     }
 
-    class MockBehavior<T> implements Behavior<T> {
-
+    private static class MockBehavior<T> implements Behavior<T> {
         private final MockSMTPBehavior behavior;
 
         MockBehavior(MockSMTPBehavior behavior) {
@@ -64,22 +63,37 @@ public class MockMessageHandler implements MessageHandler {
         }
     }
 
-    class SMTPBehaviorRepositoryUpdater<T> implements Behavior<T> {
+    private static class ComposedBehavior<T> implements Behavior<T> {
+        private static class Builder<U> {
+            private final Behavior<U> behavior1;
 
-        private final SMTPBehaviorRepository behaviorRepository;
-        private final MockBehavior<T> actualBehavior;
+            private Builder(Behavior<U> behavior1) {
+                this.behavior1 = behavior1;
+            }
 
-        SMTPBehaviorRepositoryUpdater(SMTPBehaviorRepository behaviorRepository, MockSMTPBehavior behavior) {
-            this.behaviorRepository = behaviorRepository;
-            this.actualBehavior = new MockBehavior<>(behavior);
+            ComposedBehavior<U> andThen(Behavior<U> behavior2) {
+                return new ComposedBehavior<>(behavior1, behavior2);
+            }
+        }
+
+        private static <V> Builder<V> startWith(Behavior<V> behavior1) {
+            return new Builder<>(behavior1);
+        }
+
+        private final Behavior<T> behavior1;
+        private final Behavior<T> behavior2;
+
+        private ComposedBehavior(Behavior<T> behavior1, Behavior<T> behavior2) {
+            this.behavior1 = behavior1;
+            this.behavior2 = behavior2;
         }
 
         @Override
         public void behave(T input) throws RejectException {
             try {
-                actualBehavior.behave(input);
+                behavior1.behave(input);
             } finally {
-                behaviorRepository.decreaseRemainingAnswers(actualBehavior.behavior);
+                behavior2.behave(input);
             }
         }
     }
@@ -130,7 +144,8 @@ public class MockMessageHandler implements MessageHandler {
             .filter(behavior -> behavior.getCommand().equals(data))
             .filter(behavior -> behavior.getCondition().matches(dataLine))
             .findFirst()
-            .map(mockBehavior -> new SMTPBehaviorRepositoryUpdater<>(behaviorRepository, mockBehavior));
+            .map(behavior -> ComposedBehavior.<T>startWith(new MockBehavior<>(behavior))
+                .andThen(any -> behaviorRepository.decreaseRemainingAnswers(behavior)));
     }
 
     @Override
