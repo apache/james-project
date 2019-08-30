@@ -34,12 +34,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 class MigrationTaskSerializationTest {
 
     private static final int SCHEMA_VERSION = 12;
-    private static final String SERIALIZED_TASK = "{\"type\": \"cassandra-migration-task\", \"targetVersion\": 12}";
+    private static final String SERIALIZED_TASK = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
 
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
     private final CassandraSchemaTransitions transitions = mock(CassandraSchemaTransitions.class);
     private final MigrationTask.Factory factory = target -> new MigrationTask(cassandraSchemaVersionDAO, transitions, target);
-    private final JsonTaskSerializer taskSerializer = new JsonTaskSerializer(MigrationTask.SERIALIZATION_MODULE.apply(factory));
+    private final JsonTaskSerializer taskSerializer = new JsonTaskSerializer(MigrationTaskDTO.SERIALIZATION_MODULE.apply(factory));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
