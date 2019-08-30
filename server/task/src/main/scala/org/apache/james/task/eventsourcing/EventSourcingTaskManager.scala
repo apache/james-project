@@ -23,12 +23,13 @@ import java.util
 
 import com.google.common.annotations.VisibleForTesting
 import javax.inject.Inject
+
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Subscriber}
 import org.apache.james.task._
 import org.apache.james.task.eventsourcing.TaskCommand._
 
-import scala.annotation.tailrec
+import reactor.core.publisher.Flux
 
 class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing](
                                                                                   workQueueSupplier: WorkQueueSupplier,
@@ -36,8 +37,6 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
                                                                                   val executionDetailsProjection: TaskExecutionDetailsProjection,
                                                                                   val hostname: Hostname,
                                                                                   val terminationSubscriber: TerminationSubscriber) extends TaskManager with Closeable {
-
-  private val delayBetweenPollingInMs = 500
 
   private def workDispatcher: Subscriber = {
     case Created(aggregateId, _, task, _) =>
@@ -92,14 +91,19 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     eventSourcingSystem.dispatch(command)
   }
 
-  @tailrec
   override final def await(id: TaskId): TaskExecutionDetails = {
     val details = getExecutionDetails(id)
     if (details.getStatus.isFinished) {
       details
     } else {
-      Thread.sleep(delayBetweenPollingInMs)
-      await(id)
+      Flux.from(terminationSubscriber.listenEvents)
+          .filter{
+            case event: TaskEvent => event.getAggregateId.taskId == id
+            case _ => false
+          }
+          .blockFirst()
+
+      getExecutionDetails(id)
     }
   }
 
