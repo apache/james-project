@@ -53,7 +53,7 @@ public class ExecutionDetailsDto {
     }
 
     public String getType() {
-        return executionDetails.getType();
+        return executionDetails.getType().asString();
     }
 
     public String getStatus() {

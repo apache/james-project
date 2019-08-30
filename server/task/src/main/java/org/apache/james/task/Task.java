@@ -93,7 +93,7 @@ public interface Task {
     Result run() throws InterruptedException;
 
 
-    default String type() {
+    default TaskType type() {
         return UNKNOWN;
     }
 
@@ -105,5 +105,5 @@ public interface Task {
     String TASK_TYPE = "taskType";
     String TASK_DETAILS = "taskDetails";
 
-    String UNKNOWN = "unknown";
+    TaskType UNKNOWN = TaskType.of("unknown");
 }

@@ -31,12 +31,13 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserReindexingTask implements Task {
 
-    public static final String USER_RE_INDEXING = "userReIndexing";
+    public static final TaskType USER_RE_INDEXING = TaskType.of("userReIndexing");
 
     public static final Function<UserReindexingTask.Factory, TaskDTOModule<UserReindexingTask, UserReindexingTask.UserReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -44,7 +45,7 @@ public class UserReindexingTask implements Task {
             .convertToDTO(UserReindexingTask.UserReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(UserReindexingTask.UserReindexingTaskDTO::of)
-            .typeName(USER_RE_INDEXING)
+            .typeName(USER_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class UserReindexingTaskDTO implements TaskDTO {
@@ -123,7 +124,7 @@ public class UserReindexingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return USER_RE_INDEXING;
     }
 

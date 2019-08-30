@@ -35,13 +35,14 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Multimap;
 
 public class ErrorRecoveryIndexationTask implements Task {
-    private static final String PREVIOUS_FAILURES_INDEXING = "ErrorRecoveryIndexation";
+    private static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("ErrorRecoveryIndexation");
 
     public static final Function<ErrorRecoveryIndexationTask.Factory, TaskDTOModule<ErrorRecoveryIndexationTask, ErrorRecoveryIndexationTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -49,7 +50,7 @@ public class ErrorRecoveryIndexationTask implements Task {
             .convertToDTO(ErrorRecoveryIndexationTask.ErrorRecoveryIndexationTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(ErrorRecoveryIndexationTask.ErrorRecoveryIndexationTaskDTO::of)
-            .typeName(PREVIOUS_FAILURES_INDEXING)
+            .typeName(PREVIOUS_FAILURES_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
@@ -156,7 +157,7 @@ public class ErrorRecoveryIndexationTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return PREVIOUS_FAILURES_INDEXING;
     }
 

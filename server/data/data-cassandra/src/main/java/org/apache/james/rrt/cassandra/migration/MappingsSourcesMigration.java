@@ -33,6 +33,7 @@ import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import reactor.core.publisher.Mono;
 
 public class MappingsSourcesMigration implements Migration {
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingsSourcesMigration.class);
-    private static final String TYPE = "mappingsSourcesMigration";
+    private static final TaskType TYPE = TaskType.of("mappingsSourcesMigration");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long successfulMappingsCount;
@@ -93,7 +94,7 @@ public class MappingsSourcesMigration implements Migration {
             .then()
             .onErrorResume(t -> {
                 LOGGER.error("Error while performing migration of mapping source: {} with mapping: {}",
-                        mappingEntry.getLeft().asString(), mappingEntry.getRight().asString(), t);
+                    mappingEntry.getLeft().asString(), mappingEntry.getRight().asString(), t);
                 errorMappingsCount.incrementAndGet();
                 return Mono.empty();
             });
@@ -109,7 +110,7 @@ public class MappingsSourcesMigration implements Migration {
             }
 
             @Override
-            public String type() {
+            public TaskType type() {
                 return TYPE;
             }
 
@@ -119,8 +120,6 @@ public class MappingsSourcesMigration implements Migration {
             }
         };
     }
-
-
 
     AdditionalInformation createAdditionalInformation() {
         return new AdditionalInformation(

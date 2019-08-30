@@ -35,7 +35,7 @@ object TaskExecutionDetails {
 }
 
 class TaskExecutionDetails(val taskId: TaskId,
-                           private val `type`: String,
+                           private val `type`: TaskType,
                            private val status: TaskManager.Status,
                            private val submittedDate: ZonedDateTime,
                            private val submittedNode: Hostname,
@@ -48,7 +48,7 @@ class TaskExecutionDetails(val taskId: TaskId,
                            private val failedDate: Optional[ZonedDateTime] = Optional.empty()) {
   def getTaskId: TaskId = taskId
 
-  def getType: String = `type`
+  def getType: TaskType = `type`
 
   def getStatus: TaskManager.Status = status
 

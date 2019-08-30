@@ -30,6 +30,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathDAOImpl;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxPathV2DAO;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,8 +97,8 @@ public class MailboxPathV2Migration implements Migration {
             }
 
             @Override
-            public String type() {
-                return "Cassandra_mailboxPathV2Migration";
+            public TaskType type() {
+                return TaskType.of("Cassandra_mailboxPathV2Migration");
             }
 
             @Override

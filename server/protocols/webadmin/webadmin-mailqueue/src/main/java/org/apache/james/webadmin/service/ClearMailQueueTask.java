@@ -32,6 +32,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -98,14 +99,14 @@ public class ClearMailQueueTask implements Task {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearMailQueueTask.class);
-    public static final String TYPE = "clear-mail-queue";
+    public static final TaskType TYPE = TaskType.of("clear-mail-queue");
     public static final Function<MailQueueFactory<ManageableMailQueue>, TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO>> MODULE = (mailQueueFactory) ->
         DTOModule
             .forDomainObject(ClearMailQueueTask.class)
             .convertToDTO(ClearMailQueueTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
             .toDTOConverter(ClearMailQueueTaskDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final ManageableMailQueue queue;
@@ -129,7 +130,7 @@ public class ClearMailQueueTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

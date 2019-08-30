@@ -26,6 +26,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskNotFoundException;
+import org.apache.james.task.TaskType;
 
 public class PreviousReIndexingService {
     public static class TaskNotYetFinishedException extends RuntimeException {
@@ -35,8 +36,8 @@ public class PreviousReIndexingService {
     }
 
     public static class NotAnIndexingRetriableTask extends RuntimeException {
-        NotAnIndexingRetriableTask(String type) {
-            super("'" + type + "' is not a valid type of task for retrying a failed indexing");
+        NotAnIndexingRetriableTask(TaskType type) {
+            super("'" + type.asString() + "' is not a valid type of task for retrying a failed indexing");
         }
     }
 

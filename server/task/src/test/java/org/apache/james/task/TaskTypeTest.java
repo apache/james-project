@@ -6,46 +6,40 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
-package org.apache.james.server.task.json;
+ ****************************************************************/
 
-import java.util.Optional;
+package org.apache.james.task;
 
-import org.apache.james.task.Task;
-import org.apache.james.task.TaskExecutionDetails;
-import org.apache.james.task.TaskType;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-public class TestTask implements Task {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    private final long parameter;
+public class TaskTypeTest {
 
-    public TestTask(long parameter) {
-        this.parameter = parameter;
+    @Test
+    public void taskTypeShouldMatchBeanContract() {
+        EqualsVerifier.forClass(TaskType.class)
+            .verify();
     }
 
-    @Override
-    public Result run() {
-        return null;
+    @Test
+    public void serializingATaskTypeToAValueShouldReturnTheInitialValue() {
+        Assertions.assertThat(TaskType.of("foo").asString()).isEqualTo("foo");
     }
 
-    public long getParameter() {
-        return parameter;
+    @Test
+    public void creatingATaskTypeFromNullShouldThrow() {
+        Assertions.assertThatThrownBy(() -> TaskType.of(null)).isInstanceOf(IllegalArgumentException.class);
     }
 
-    @Override
-    public TaskType type() {
-        return TaskType.of("testTask");
-    }
-
-    @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
-    }
 }

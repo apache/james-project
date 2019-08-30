@@ -34,6 +34,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.apache.james.vault.dto.query.QueryDTO;
 import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
@@ -45,7 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 class DeletedMessagesVaultRestoreTask implements Task {
 
-    static final String TYPE = "deletedMessages/restore";
+    static final TaskType TYPE = TaskType.of("deletedMessages/restore");
 
     public static final Function<DeletedMessagesVaultRestoreTask.Factory, TaskDTOModule<DeletedMessagesVaultRestoreTask, DeletedMessagesVaultRestoreTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -53,7 +54,7 @@ class DeletedMessagesVaultRestoreTask implements Task {
             .convertToDTO(DeletedMessagesVaultRestoreTask.DeletedMessagesVaultRestoreTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(factory::createDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class DeletedMessagesVaultRestoreTaskDTO implements TaskDTO {
@@ -186,7 +187,7 @@ class DeletedMessagesVaultRestoreTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

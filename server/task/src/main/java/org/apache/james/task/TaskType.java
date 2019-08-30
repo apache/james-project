@@ -18,28 +18,48 @@
  ****************************************************************/
 package org.apache.james.task;
 
-import java.util.Optional;
+import java.util.Objects;
 
-public class MemoryReferenceTask implements Task {
-    public static final TaskType TYPE = TaskType.of("memory-reference-task");
-    private final Task task;
+import com.google.common.base.MoreObjects;
 
-    public MemoryReferenceTask(Task task) {
-        this.task = task;
+public class TaskType {
+    private final String typeName;
+
+    public static TaskType of(String typeName) {
+        if (typeName == null || typeName.isEmpty()) {
+            throw new IllegalArgumentException("Task type should be defined");
+        }
+        return new TaskType(typeName);
+    }
+
+    private TaskType(String typeName) {
+        this.typeName = typeName;
+    }
+
+    public String asString() {
+        return typeName;
     }
 
     @Override
-    public Result run() throws InterruptedException {
-        return task.run();
+    public final boolean equals(Object o) {
+        if (o instanceof TaskType) {
+            TaskType taskId = (TaskType) o;
+
+            return Objects.equals(this.typeName, taskId.typeName);
+        }
+        return false;
     }
 
     @Override
-    public TaskType type() {
-        return TYPE;
+    public final int hashCode() {
+        return Objects.hash(typeName);
     }
 
     @Override
-    public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.empty();
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("typeName", typeName)
+            .toString();
     }
+
 }

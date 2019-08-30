@@ -26,9 +26,9 @@ import com.datastax.driver.core.{Row, Session}
 import javax.inject.Inject
 import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeModule}
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
-import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionTable._
 import org.apache.james.task.eventsourcing.Hostname
-import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManager}
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionTable._
+import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManager, TaskType}
 import reactor.core.publisher.{Flux, Mono}
 
 @Inject
@@ -58,7 +58,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
   def saveDetails(details : TaskExecutionDetails): Mono[Void] = cassandraAsyncExecutor.executeVoid(
     insertStatement.bind
       .setUUID(TASK_ID, details.getTaskId.getValue)
-      .setString(TYPE, details.getType)
+      .setString(TYPE, details.getType.asString())
       .setString(STATUS, details.getStatus.getValue)
       .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmittedDate))
       .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
@@ -79,7 +79,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
 
   private def readRow(row: Row): TaskExecutionDetails = new TaskExecutionDetails(
     taskId = TaskId.fromUUID(row.getUUID(TASK_ID)),
-    `type` = row.getString(TYPE),
+    `type` = TaskType.of(row.getString(TYPE)),
     status = TaskManager.Status.fromString(row.getString(STATUS)),
     submittedDate = CassandraZonedDateTimeModule.fromUDT(row.getUDTValue(SUBMITTED_DATE)),
     submittedNode = Hostname(row.getString(SUBMITTED_NODE)),

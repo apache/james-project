@@ -35,6 +35,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +45,7 @@ public class MessageIdReIndexerImpl implements MessageIdReIndexer {
     public static class MessageIdReIndexingTask implements Task {
         private static final Logger LOGGER = LoggerFactory.getLogger(MessageIdReIndexingTask.class);
 
-        public static final String TYPE = "MessageIdReIndexingTask";
+        public static final TaskType TYPE = new TaskType("MessageIdReIndexingTask");
 
         public final class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
             private final MessageId messageId;
@@ -102,7 +103,7 @@ public class MessageIdReIndexerImpl implements MessageIdReIndexer {
         }
 
         @Override
-        public String type() {
+        public TaskType type() {
             return TYPE;
         }
 

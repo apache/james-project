@@ -34,6 +34,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.apache.james.vault.dto.query.QueryDTO;
 import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
@@ -45,7 +46,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 class DeletedMessagesVaultExportTask implements Task {
 
-    static final String TYPE = "deletedMessages/export";
+    static final TaskType TYPE = TaskType.of("deletedMessages/export");
 
     public static final Function<DeletedMessagesVaultExportTask.Factory, TaskDTOModule<DeletedMessagesVaultExportTask, DeletedMessagesVaultExportTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -59,7 +60,7 @@ class DeletedMessagesVaultExportTask implements Task {
                 }
             })
             .toDTOConverter(factory::createDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class DeletedMessagesVaultExportTaskDTO implements TaskDTO {
@@ -175,7 +176,7 @@ class DeletedMessagesVaultExportTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

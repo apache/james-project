@@ -29,11 +29,12 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MailboxMergingTask implements Task {
-    public static final String MAILBOX_MERGING = "mailboxMerging";
+    public static final TaskType MAILBOX_MERGING = TaskType.of("mailboxMerging");
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final CassandraId oldMailboxId;
@@ -165,7 +166,7 @@ public class MailboxMergingTask implements Task {
             .convertToDTO(MailboxMergingTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.toDTO(taskRunner))
             .toDTOConverter(MailboxMergingTaskDTO::fromDTO)
-            .typeName(MAILBOX_MERGING)
+            .typeName(MAILBOX_MERGING.asString())
             .withFactory(TaskDTOModule::new);
 
     private final MailboxMergingTaskRunner taskRunner;
@@ -186,7 +187,7 @@ public class MailboxMergingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return MAILBOX_MERGING;
     }
 

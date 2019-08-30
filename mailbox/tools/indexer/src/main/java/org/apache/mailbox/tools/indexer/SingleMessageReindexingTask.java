@@ -32,6 +32,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,7 +41,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class SingleMessageReindexingTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(SingleMessageReindexingTask.class);
 
-    public static final String MESSAGE_RE_INDEXING = "messageReIndexing";
+    public static final TaskType MESSAGE_RE_INDEXING = TaskType.of("messageReIndexing");
 
     public static final Function<SingleMessageReindexingTask.Factory, TaskDTOModule<SingleMessageReindexingTask, SingleMessageReindexingTask.SingleMessageReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -48,7 +49,7 @@ public class SingleMessageReindexingTask implements Task {
             .convertToDTO(SingleMessageReindexingTask.SingleMessageReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(SingleMessageReindexingTask.SingleMessageReindexingTaskDTO::of)
-            .typeName(MESSAGE_RE_INDEXING)
+            .typeName(MESSAGE_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
 
 
@@ -142,7 +143,7 @@ public class SingleMessageReindexingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return MESSAGE_RE_INDEXING;
     }
 

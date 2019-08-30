@@ -21,7 +21,7 @@ package org.apache.james.task;
 import java.util.Optional;
 
 public class ThrowingTask implements Task {
-    public static final String TYPE = "throwing";
+    public static final TaskType TYPE = TaskType.of("throwing");
 
     @Override
     public Result run() throws InterruptedException {
@@ -29,7 +29,7 @@ public class ThrowingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

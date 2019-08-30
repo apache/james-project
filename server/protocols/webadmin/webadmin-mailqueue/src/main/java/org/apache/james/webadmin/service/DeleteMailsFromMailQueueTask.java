@@ -32,6 +32,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
@@ -153,14 +154,14 @@ public class DeleteMailsFromMailQueueTask implements Task {
         }
     }
 
-    public static final String TYPE = "delete-mails-from-mail-queue";
+    public static final TaskType TYPE = TaskType.of("delete-mails-from-mail-queue");
     public static final Function<MailQueueFactory<ManageableMailQueue>, TaskDTOModule<DeleteMailsFromMailQueueTask,DeleteMailsFromMailQueueTaskDTO>> MODULE = (mailQueueFactory) ->
         DTOModule
             .forDomainObject(DeleteMailsFromMailQueueTask.class)
             .convertToDTO(DeleteMailsFromMailQueueTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
             .toDTOConverter(DeleteMailsFromMailQueueTaskDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final ManageableMailQueue queue;
@@ -197,7 +198,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

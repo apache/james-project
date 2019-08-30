@@ -31,12 +31,13 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import reactor.core.publisher.Mono;
 
 public class CassandraMappingsSolveInconsistenciesTask implements Task {
-    public static final String TYPE = "cassandraMappingsSolveInconsistencies";
+    public static final TaskType TYPE = TaskType.of("cassandraMappingsSolveInconsistencies");
 
     private static class CassandraMappingsSolveInconsistenciesTaskDTO implements TaskDTO {
 
@@ -58,7 +59,7 @@ public class CassandraMappingsSolveInconsistenciesTask implements Task {
             .convertToDTO(CassandraMappingsSolveInconsistenciesTaskDTO.class)
             .toDomainObjectConverter(dto -> new CassandraMappingsSolveInconsistenciesTask(mappingsSourcesMigration, cassandraMappingsSourcesDAO))
             .toDTOConverter((domainObject, typeName) -> new CassandraMappingsSolveInconsistenciesTaskDTO(typeName))
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final Task mappingsSourcesMigration;
@@ -81,7 +82,7 @@ public class CassandraMappingsSolveInconsistenciesTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

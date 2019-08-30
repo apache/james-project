@@ -30,12 +30,13 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FullReindexingTask implements Task {
 
-    public static final String FULL_RE_INDEXING = "FullReIndexing";
+    public static final TaskType FULL_RE_INDEXING = TaskType.of("FullReIndexing");
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContextInformation additionalInformation;
@@ -47,7 +48,7 @@ public class FullReindexingTask implements Task {
             .convertToDTO(FullReindexingTask.FullReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter((task, type) -> new FullReindexingTaskDTO(type))
-            .typeName(FULL_RE_INDEXING)
+            .typeName(FULL_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class FullReindexingTaskDTO implements TaskDTO {
@@ -96,7 +97,7 @@ public class FullReindexingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return FULL_RE_INDEXING;
     }
 

@@ -33,13 +33,14 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingAllMailsTask implements Task {
 
-    public static final String TYPE = "reprocessingAllTask";
+    public static final TaskType TYPE = TaskType.of("reprocessingAllTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
@@ -172,7 +173,7 @@ public class ReprocessingAllMailsTask implements Task {
             .convertToDTO(ReprocessingAllMailsTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
             .toDTOConverter(ReprocessingAllMailsTaskDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final ReprocessingService reprocessingService;
@@ -203,7 +204,7 @@ public class ReprocessingAllMailsTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

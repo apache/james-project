@@ -109,7 +109,7 @@ class WebadminApiQuerySerializationContractTest {
     void respectAPIContract(String jsonFilePath, QueryDTO expectedDeserializedValue) throws Exception {
         String jsonContent = ClassLoaderUtils.getSystemResourceAsString("query/" + jsonFilePath);
         QueryDTO extractedQueryDTO = factory.createDTO((DeletedMessagesVaultRestoreTask) taskSerializer.deserialize(jsonContent),
-            DeletedMessagesVaultRestoreTask.TYPE).getQuery();
+            DeletedMessagesVaultRestoreTask.TYPE.asString()).getQuery();
         Assertions.assertThat(extractedQueryDTO).isEqualTo(expectedDeserializedValue);
     }
 

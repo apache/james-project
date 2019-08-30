@@ -31,6 +31,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.apache.james.vault.DeletedMessageVault;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -38,7 +39,7 @@ import reactor.core.publisher.Mono;
 
 public class DeletedMessagesVaultDeleteTask implements Task {
 
-    static final String TYPE = "deletedMessages/delete";
+    static final TaskType TYPE = TaskType.of("deletedMessages/delete");
 
     public static final Function<DeletedMessagesVaultDeleteTask.Factory, TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -46,7 +47,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
             .convertToDTO(DeletedMessagesVaultDeleteTask.DeletedMessagesVaultDeleteTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(DeletedMessagesVaultDeleteTask.DeletedMessagesVaultDeleteTaskDTO::of)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class DeletedMessagesVaultDeleteTaskDTO implements TaskDTO {
@@ -135,7 +136,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

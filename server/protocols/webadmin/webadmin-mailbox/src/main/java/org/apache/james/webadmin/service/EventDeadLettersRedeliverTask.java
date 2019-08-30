@@ -30,12 +30,13 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EventDeadLettersRedeliverTask implements Task {
-    public static final String TYPE = "eventDeadLettersRedeliverTask";
+    public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long successfulRedeliveriesCount;
@@ -90,7 +91,7 @@ public class EventDeadLettersRedeliverTask implements Task {
             .convertToDTO(EventDeadLettersRedeliverTaskDTO.class)
             .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverTask(service, eventRetriever))
             .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverTaskDTO(typeName))
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final EventDeadLettersRedeliverService service;
@@ -128,7 +129,7 @@ public class EventDeadLettersRedeliverTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

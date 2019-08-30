@@ -28,6 +28,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -57,7 +58,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
         }
     }
 
-    public static final String TYPE = "deletedMessages/blobStoreBasedGarbageCollection";
+    private static final TaskType TYPE = TaskType.of("deletedMessages/blobStoreBasedGarbageCollection");
 
     private final Flux<BucketName> retentionOperation;
     private final ZonedDateTime beginningOfRetentionPeriod;
@@ -81,7 +82,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

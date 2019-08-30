@@ -31,12 +31,13 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingOneMailTask implements Task {
 
-    public static final String TYPE = "reprocessingOneTask";
+    public static final TaskType TYPE = TaskType.of("reprocessingOneTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
@@ -162,7 +163,7 @@ public class ReprocessingOneMailTask implements Task {
             .convertToDTO(ReprocessingOneMailTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
             .toDTOConverter(ReprocessingOneMailTaskDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final ReprocessingService reprocessingService;
@@ -194,7 +195,7 @@ public class ReprocessingOneMailTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

@@ -33,13 +33,14 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.fge.lambdas.Throwing;
 
 public class ClearMailRepositoryTask implements Task {
 
-    public static final String TYPE = "clearMailRepository";
+    public static final TaskType TYPE = TaskType.of("clearMailRepository");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
@@ -121,7 +122,7 @@ public class ClearMailRepositoryTask implements Task {
             .convertToDTO(ClearMailRepositoryTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailRepositories))
             .toDTOConverter(ClearMailRepositoryTaskDTO::toDTO)
-            .typeName(TYPE)
+            .typeName(TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
     private final List<MailRepository> mailRepositories;
@@ -148,7 +149,7 @@ public class ClearMailRepositoryTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return TYPE;
     }
 

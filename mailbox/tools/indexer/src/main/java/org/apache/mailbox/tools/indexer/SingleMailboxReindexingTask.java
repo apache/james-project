@@ -30,6 +30,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -60,7 +61,7 @@ public class SingleMailboxReindexingTask implements Task {
 
     }
 
-    public static final String MAILBOX_RE_INDEXING = "mailboxReIndexing";
+    public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailboxReIndexing");
 
     public static final Function<Factory, TaskDTOModule<SingleMailboxReindexingTask, SingleMailboxReindexingTaskDTO>> MODULE = (factory) ->
         DTOModule
@@ -68,7 +69,7 @@ public class SingleMailboxReindexingTask implements Task {
             .convertToDTO(SingleMailboxReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(SingleMailboxReindexingTaskDTO::of)
-            .typeName(MAILBOX_RE_INDEXING)
+            .typeName(MAILBOX_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
@@ -124,7 +125,7 @@ public class SingleMailboxReindexingTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return MAILBOX_RE_INDEXING;
     }
 

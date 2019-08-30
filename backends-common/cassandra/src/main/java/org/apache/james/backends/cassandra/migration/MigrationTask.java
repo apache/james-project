@@ -34,6 +34,7 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -96,7 +97,7 @@ public class MigrationTask implements Task {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTask.class);
 
-    public static final String CASSANDRA_MIGRATION = "CassandraMigration";
+    public static final TaskType CASSANDRA_MIGRATION = TaskType.of("CassandraMigration");
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final SchemaVersion toVersion;
@@ -170,7 +171,7 @@ public class MigrationTask implements Task {
     }
 
     @Override
-    public String type() {
+    public TaskType type() {
         return CASSANDRA_MIGRATION;
     }
 
