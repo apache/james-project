@@ -60,56 +60,56 @@ class DurationParserTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2", "2 ms", "2 msec", "2 msecs", "2 Ms"})
+    @ValueSource(strings = {"2ms", "2", "2 ms", "2 msec", "2 msecs", "2 Ms"})
     void parseShouldHandleMilliseconds(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(Duration.ofMillis(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 s", "2 sec", "2 Sec", "2 second", "2 seconds"})
+    @ValueSource(strings = {"2s", "2 s", "2 sec", "2 Sec", "2 second", "2 seconds"})
     void parseShouldHandleSeconds(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(Duration.ofSeconds(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 m", "2 min", "2 mins", "2 minute", "2 Minute", "2 minutes"})
+    @ValueSource(strings = {"2m", "2 m", "2 min", "2 mins", "2 minute", "2 Minute", "2 minutes"})
     void parseShouldHandleMinutes(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(Duration.ofMinutes(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 h", "2 hour", "2 Hour", "2 hours"})
+    @ValueSource(strings = {"2h", "2 h", "2 hour", "2 Hour", "2 hours"})
     void parseShouldHandleHours(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(Duration.ofHours(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 d", "2 day", "2 Day", "2 days"})
+    @ValueSource(strings = {"2d", "2 d", "2 day", "2 Day", "2 days"})
     void parseShouldHandleDays(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(Duration.ofDays(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 w", "2 week", "2 Week", "2 weeks"})
+    @ValueSource(strings = {"2w", "2 w", "2 week", "2 Week", "2 weeks"})
     void parseShouldHandleWeeks(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(ChronoUnit.WEEKS.getDuration().multipliedBy(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 months", "2 month", "2 Month"})
+    @ValueSource(strings = {"2months", "2 months", "2 month", "2 Month"})
     void parseShouldHandleMonths(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(ChronoUnit.MONTHS.getDuration().multipliedBy(2));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"2 y", "2 year", "2 Year", "2 years"})
+    @ValueSource(strings = {"2y", "2 y", "2 year", "2 Year", "2 years"})
     void parseShouldHandleYears(String input) {
         assertThat(DurationParser.parse(input))
             .isEqualTo(ChronoUnit.YEARS.getDuration().multipliedBy(2));

@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -33,13 +35,16 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskNotFoundException;
+import org.apache.james.util.DurationParser;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ExecutionDetailsDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
+
 import org.eclipse.jetty.http.HttpStatus;
 
+import com.google.common.base.Preconditions;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -54,9 +59,10 @@ import spark.Service;
 @Path(":task")
 @Produces("application/json")
 public class TasksRoutes implements Routes {
-    public static final String BASE = "/tasks";
+    private static final Duration MAXIMUM_AWAIT_TIMEOUT = Duration.ofDays(365);
     private final TaskManager taskManager;
     private final JsonTransformer jsonTransformer;
+    public static final String BASE = "/tasks";
 
     @Inject
     public TasksRoutes(TaskManager taskManager, JsonTransformer jsonTransformer) {
@@ -133,13 +139,15 @@ public class TasksRoutes implements Routes {
     @ApiOperation(value = "Await, then get a task execution details")
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.OK_200, message = "A specific class execution details", response = ExecutionDetailsDto.class),
-        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The taskId is invalid"),
-        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The taskId is not found")
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The taskId is invalid or invalid timeout"),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The taskId is not found"),
+        @ApiResponse(code = HttpStatus.REQUEST_TIMEOUT_408, message = "Waiting the the task completion has reached the timeout")
     })
     public Object await(Request req, Response response) {
         TaskId taskId = getTaskId(req);
+        Duration timeout = getTimeout(req);
         return respondStatus(taskId,
-            () -> taskManager.await(getTaskId(req)));
+            () -> awaitTask(taskId, timeout));
     }
 
     private Object respondStatus(TaskId taskId, Supplier<TaskExecutionDetails> executionDetailsSupplier) {
@@ -178,6 +186,48 @@ public class TasksRoutes implements Routes {
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .message("Invalid task id")
+                .haltError();
+        }
+    }
+
+    private Duration getTimeout(Request req) {
+        try {
+            Optional<String> requestTimeout = Optional.ofNullable(req.queryParams("timeout"))
+                .filter(parameter -> !parameter.isEmpty());
+
+            requestTimeout.ifPresent(timeout ->
+                Preconditions.checkState(!timeout.replaceAll(" ", "").startsWith("-"), "Timeout should be positive"));
+
+            Duration timeout = requestTimeout
+                .map(rawString -> DurationParser.parse(rawString, ChronoUnit.SECONDS))
+                .orElse(MAXIMUM_AWAIT_TIMEOUT);
+
+            Preconditions.checkState(timeout.compareTo(MAXIMUM_AWAIT_TIMEOUT) <= 0, "Timeout should not exceed one year");
+            return timeout;
+        } catch (Exception e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .cause(e)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("Invalid timeout " + e.getMessage())
+                .haltError();
+        }
+    }
+
+    private TaskExecutionDetails awaitTask(TaskId taskId, Duration timeout) {
+        try {
+            return taskManager.await(taskId, timeout);
+        } catch (TaskManager.ReachedTimeoutException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.REQUEST_TIMEOUT_408)
+                .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                .message("The timeout has been reached")
+                .haltError();
+        } catch (TaskNotFoundException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorResponder.ErrorType.SERVER_ERROR)
+                .message("The taskId is not found")
                 .haltError();
         }
     }

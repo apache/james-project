@@ -22,6 +22,8 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static org.hamcrest.Matchers.allOf;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -196,6 +198,82 @@ class TasksRoutesTest {
         .then()
             .statusCode(HttpStatus.OK_200)
             .body("status", is("completed"));
+    }
+
+    @Test
+    void getAwaitWithTimeoutShouldAwaitTaskCompletion() {
+        TaskId taskId = taskManager.submit(() -> {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return Task.Result.COMPLETED;
+        });
+
+        given()
+            .queryParam("timeout", "2s")
+        .when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.OK_200)
+            .body("status", is("completed"));
+    }
+
+    @Test
+    void getAwaitWithInvalidTimeoutShouldReturnAnError() {
+        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+
+        given()
+            .queryParam("timeout", "-5")
+        .when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("message", allOf(containsString("Invalid timeout"), containsString("Timeout should be positive")));
+    }
+
+    @Test
+    void getAwaitWithATooBigTimeoutShouldReturnAnError() {
+        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+
+        given()
+            .queryParam("timeout", "5y")
+        .when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("message", allOf(containsString("Invalid timeout"), containsString("Timeout should not exceed one year")));
+    }
+
+    @Test
+    void getAwaitWithAShorterTimeoutShouldReturnTimeout() {
+        TaskId taskId = taskManager.submit(() -> {
+            try {
+                Thread.sleep(10000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            return Task.Result.COMPLETED;
+        });
+
+        given()
+            .queryParam("timeout", "1")
+        .when()
+            .get("/" + taskId.getValue() + "/await")
+        .then()
+            .statusCode(HttpStatus.REQUEST_TIMEOUT_408)
+            .body("message", is("The timeout has been reached"));
+    }
+
+    @Test
+    void getAwaitWithANonExistingTaskShouldReturnNotFound() {
+        String unknownTaskId = TaskId.generateTaskId().asString();
+        when()
+            .get("/" + unknownTaskId + "/await")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404)
+            .body("message", is("The taskId is not found"));
     }
 
     @Test

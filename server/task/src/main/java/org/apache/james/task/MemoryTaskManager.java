@@ -123,7 +123,7 @@ public class MemoryTaskManager implements TaskManager {
         return ImmutableList.copyOf(tasksFiltered(status).values());
     }
 
-    public Map<TaskId, TaskExecutionDetails> tasksFiltered(Status status) {
+    private Map<TaskId, TaskExecutionDetails> tasksFiltered(Status status) {
         return idToExecutionDetails.entrySet()
             .stream()
             .filter(details -> details.getValue().getStatus().equals(status))
@@ -140,17 +140,14 @@ public class MemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public TaskExecutionDetails await(TaskId id) {
-        if (Optional.ofNullable(idToExecutionDetails.get(id)).isPresent()) {
+    public TaskExecutionDetails await(TaskId id, Duration timeout) throws TaskNotFoundException, ReachedTimeoutException {
+        try {
             return Flux.interval(NOW, AWAIT_POLLING_DURATION, Schedulers.elastic())
                 .map(ignored -> getExecutionDetails(id))
-                .filter(details -> details.getStatus() == Status.COMPLETED
-                    || details.getStatus() == Status.FAILED
-                    || details.getStatus() == Status.CANCELLED)
-                .take(1)
-                .blockFirst();
-        } else {
-            return null;
+                .filter(details -> details.getStatus().isFinished())
+                .blockFirst(timeout);
+        } catch (IllegalStateException e) {
+            throw new ReachedTimeoutException();
         }
     }
 

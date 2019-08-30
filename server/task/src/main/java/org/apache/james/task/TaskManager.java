@@ -19,6 +19,7 @@
 
 package org.apache.james.task;
 
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -58,6 +59,9 @@ public interface TaskManager {
         }
     }
 
+    class ReachedTimeoutException extends Exception {
+    }
+
     TaskId submit(Task task);
 
     TaskExecutionDetails getExecutionDetails(TaskId id);
@@ -68,5 +72,5 @@ public interface TaskManager {
 
     void cancel(TaskId id);
 
-    TaskExecutionDetails await(TaskId id);
+    TaskExecutionDetails await(TaskId id, Duration timeout) throws TaskNotFoundException, ReachedTimeoutException;
 }

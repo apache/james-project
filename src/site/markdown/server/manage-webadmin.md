@@ -3249,16 +3249,29 @@ One can await the end of a task, then receive it's final execution report.
 That feature is especially usefull for testing purpose but still can serve real-life scenari.
 
 ```
-curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await
+curl -XGET http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2/await?timeout=duration
 ```
 
 An Execution Report will be returned.
 
+`timeout` is optional.
+By default it is set to 365 days (the maximum value).
+The expected value is expressed in the following format: `Nunit`.
+`N` should be strictly positive.
+`unit` could be either in the short form (`s`, `m`, `h`, etc.), or in the long form (`day`, `week`, `month`, etc.).
+
+Examples:
+ - `30s`
+ - `5m`
+ - `7d`
+ - `1y`
+
 Response codes:
 
  - 200: The specific task was found and the execution report exposed above is returned
- - 400: Invalid task ID
+ - 400: Invalid task ID or invalid timeout
  - 404: Task ID was not found
+ - 408: The timeout has been reached
 
 ### Cancelling a task
 

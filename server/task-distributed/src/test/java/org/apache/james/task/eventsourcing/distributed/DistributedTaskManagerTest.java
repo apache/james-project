@@ -123,7 +123,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             Awaitility.await()
                 .atMost(Duration.FIVE_SECONDS)
                 .pollInterval(100L, TimeUnit.MILLISECONDS)
-                .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
+                .until(() -> taskManager1.await(taskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
 
             TaskExecutionDetails detailsFromTaskManager1 = taskManager1.getExecutionDetails(taskId);
             TaskExecutionDetails detailsFromTaskManager2 = taskManager2.getExecutionDetails(taskId);
@@ -150,7 +150,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             Awaitility.await()
                 .atMost(Duration.ONE_SECOND)
                 .pollInterval(100L, TimeUnit.MILLISECONDS)
-                .until(() -> taskManager1.await(waitingTaskId).getStatus() == TaskManager.Status.COMPLETED);
+                .until(() -> taskManager1.await(waitingTaskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
         }
     }
 
@@ -165,7 +165,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
                 Awaitility.await()
                     .atMost(Duration.ONE_SECOND)
                     .pollInterval(100L, TimeUnit.MILLISECONDS)
-                    .until(() -> taskManager1.await(taskId).getStatus() == TaskManager.Status.COMPLETED);
+                    .until(() -> taskManager1.await(taskId, TIMEOUT).getStatus() == TaskManager.Status.COMPLETED);
 
                 TaskExecutionDetails executionDetails = taskManager2.getExecutionDetails(taskId);
                 assertThat(executionDetails.getSubmittedNode()).isEqualTo(HOSTNAME_2);
@@ -201,6 +201,25 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         assertThat(taskManager1.getExecutionDetails(id).getCancelRequestedNode())
             .contains(remoteTaskManager.getKey());
+    }
+
+    @Test
+    void givenTwoTaskManagersATaskRunningOnOneShouldBeWaitableFromTheOtherOne() throws TaskManager.ReachedTimeoutException {
+        TaskManager taskManager1 = taskManager(HOSTNAME);
+        TaskManager taskManager2 = taskManager(HOSTNAME_2);
+        TaskId id = taskManager1.submit(new MemoryReferenceTask(() -> {
+            Thread.sleep(250);
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager1);
+        Hostname runningNode = taskManager1.getExecutionDetails(id).getRanNode().get();
+
+        TaskManager remoteTaskManager = getOtherTaskManager(runningNode, Pair.of(HOSTNAME, taskManager1), Pair.of(HOSTNAME_2, taskManager2)).getValue();
+
+        remoteTaskManager.await(id, TIMEOUT);
+        assertThat(taskManager1.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.COMPLETED);
     }
 
     private Pair<Hostname, TaskManager> getOtherTaskManager(Hostname node, Pair<Hostname, TaskManager> taskManager1, Pair<Hostname, TaskManager> taskManager2) {
