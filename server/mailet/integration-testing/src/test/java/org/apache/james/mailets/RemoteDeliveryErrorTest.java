@@ -77,6 +77,24 @@ public class RemoteDeliveryErrorTest {
         "  \"response\": {\"code\":421, \"message\":\"mock response\", \"rejected\":true}," +
         "  \"command\": \"DATA\"" +
         "}]";
+    private static final String SINGLE_500_RCPT_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":521, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"RCPT TO\"," +
+        "  \"numberOfAnswer\": 1" +
+        "}]";
+    private static final String SINGLE_500_FROM_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":521, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"MAIL FROM\"," +
+        "  \"numberOfAnswer\": 1" +
+        "}]";
+    private static final String SINGLE_500_DATA_BEHAVIOR = "[{" +
+        "  \"condition\": {\"operator\":\"matchAll\"}," +
+        "  \"response\": {\"code\":521, \"message\":\"mock response\", \"rejected\":true}," +
+        "  \"command\": \"DATA\"," +
+        "  \"numberOfAnswer\": 1" +
+        "}]";
     private static final String BOUNCE_MESSAGE = "Hi. This is the James mail server at localhost.\n" +
         "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
         "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
@@ -159,6 +177,54 @@ public class RemoteDeliveryErrorTest {
     public void remoteDeliveryShouldBounceWhenAlwaysDATA421() throws Exception {
         given(requestSpecification())
             .body(ALWAYS_421_DATA_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+    }
+
+    @Test
+    public void remoteDeliveryShouldNotRetryWHenRCPT500() throws Exception {
+        given(requestSpecification())
+            .body(SINGLE_500_RCPT_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+    }
+
+    @Test
+    public void remoteDeliveryShouldNotRetryWHenFROM500() throws Exception {
+        given(requestSpecification())
+            .body(SINGLE_500_FROM_BEHAVIOR)
+            .put("/smtpBehaviors");
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+    }
+
+    @Test
+    public void remoteDeliveryShouldNotRetryWHenDATA500() throws Exception {
+        given(requestSpecification())
+            .body(SINGLE_500_DATA_BEHAVIOR)
             .put("/smtpBehaviors");
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
