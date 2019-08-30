@@ -125,7 +125,6 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>1.5.0</version>
                 <configuration>
                     <from>
                         <image>openjdk:8u222-jre</image>
@@ -138,7 +137,6 @@
                     </to>
                     <container>
                         <mainClass>org.apache.james.mock.smtp.server.MockSMTPServerMain</mainClass>
-                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <ports>
                             <port>25</port>
                             <port>8000</port>
@@ -158,7 +156,6 @@
             <plugin>
                 <groupId>com.coderplus.maven.plugins</groupId>
                 <artifactId>copy-rename-maven-plugin</artifactId>
-                <version>1.0</version>
                 <executions>
                     <execution>
                         <id>copy-file</id>
