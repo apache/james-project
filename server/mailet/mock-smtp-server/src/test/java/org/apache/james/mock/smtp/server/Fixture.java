@@ -19,6 +19,7 @@
 
 package org.apache.james.mock.smtp.server;
 
+import org.apache.james.mock.smtp.server.jackson.MailAddressModule;
 import org.apache.james.mock.smtp.server.model.Condition;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
@@ -39,7 +40,8 @@ public interface Fixture {
 
     ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())
-        .registerModule(new GuavaModule());
+        .registerModule(new GuavaModule())
+        .registerModule(new MailAddressModule().asJacksonModule());
 
     Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
 
@@ -90,4 +92,9 @@ public interface Fixture {
     MockSmtpBehaviors BEHAVIORS = new MockSmtpBehaviors(ImmutableList.of(
         BEHAVIOR_ALL_FIELDS,
         BEHAVIOR_COMPULSORY_FIELDS));
+
+    String JSON_MAILS_LIST = "[" +
+        "  {\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}," +
+        "  {\"from\":\"alice@james.org\",\"recipients\":[\"bob@james.org\"],\"message\":\"alice to bob\"}" +
+        "]";
 }

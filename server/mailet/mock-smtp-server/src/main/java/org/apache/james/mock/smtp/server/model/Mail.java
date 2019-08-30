@@ -24,13 +24,20 @@ import java.util.Objects;
 
 import org.apache.james.core.MailAddress;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
+@JsonDeserialize(builder = Mail.Builder.class)
 public class Mail {
+
+    @JsonDeserialize(builder = Mail.Envelope.Builder.class)
     public static class Envelope {
 
+        @JsonPOJOBuilder(withPrefix = "")
         public static class Builder {
             private MailAddress from;
             private ImmutableList.Builder<MailAddress> recipients;
@@ -45,7 +52,12 @@ public class Mail {
             }
 
             public Builder addRecipient(MailAddress recipient) {
-                recipients.add(recipient);
+                this.recipients.add(recipient);
+                return this;
+            }
+
+            public Builder recipients(List<MailAddress> recipients) {
+                this.recipients.addAll(recipients);
                 return this;
             }
 
@@ -99,7 +111,9 @@ public class Mail {
         }
     }
 
+    @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
+        @JsonUnwrapped
         private Envelope envelope;
         private String message;
 
@@ -118,6 +132,7 @@ public class Mail {
         }
     }
 
+    @JsonUnwrapped
     private final Envelope envelope;
     private final String message;
 

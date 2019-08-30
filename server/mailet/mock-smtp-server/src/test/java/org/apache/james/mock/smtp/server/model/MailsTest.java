@@ -17,42 +17,66 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mock.smtp.server;
+package org.apache.james.mock.smtp.server.model;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.apache.james.mock.smtp.server.Fixture.BEHAVIORS;
-import static org.apache.james.mock.smtp.server.Fixture.JSON_BEHAVIORS;
+import static org.apache.james.mock.smtp.server.Fixture.ALICE;
+import static org.apache.james.mock.smtp.server.Fixture.BOB;
+import static org.apache.james.mock.smtp.server.Fixture.JACK;
+import static org.apache.james.mock.smtp.server.Fixture.JSON_MAILS_LIST;
 import static org.apache.james.mock.smtp.server.Fixture.OBJECT_MAPPER;
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
-import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
+import org.apache.james.core.MailAddress;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
 
 import net.javacrumbs.jsonunit.core.Option;
 import net.javacrumbs.jsonunit.core.internal.Options;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class MockSmtpBehaviorsTest {
+class MailsTest {
+    private Mails mails;
+
+    @BeforeEach
+    void setup() throws Exception {
+        Mail mail1 = new Mail(
+            new Mail.Envelope(
+                new MailAddress(BOB),
+                ImmutableList.of(new MailAddress(ALICE), new MailAddress(JACK))),
+            "bob to alice and jack");
+
+        Mail mail2 = new Mail(
+            new Mail.Envelope(
+                new MailAddress(ALICE),
+                ImmutableList.of(new MailAddress(BOB))),
+            "alice to bob");
+
+        mails = new Mails(ImmutableList.of(mail1, mail2));
+    }
+
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(MockSmtpBehaviors.class)
+        EqualsVerifier.forClass(Mails.class)
             .verify();
     }
 
     @Test
-    void jacksonShouldDeserializeBehaviors() throws Exception {
-        MockSmtpBehaviors behaviors = OBJECT_MAPPER.readValue(JSON_BEHAVIORS, MockSmtpBehaviors.class);
+    void jacksonShouldDeserializeMails() throws Exception {
+        Mails actualMails = OBJECT_MAPPER.readValue(JSON_MAILS_LIST, Mails.class);
 
-        assertThat(behaviors)
-            .isEqualTo(BEHAVIORS);
+        assertThat(actualMails)
+            .isEqualTo(mails);
     }
 
     @Test
-    void jacksonShouldSerializeBehaviors() throws Exception {
-        String json = OBJECT_MAPPER.writeValueAsString(BEHAVIORS);
+    void jacksonShouldSerializeMails() throws Exception {
+        String json = OBJECT_MAPPER.writeValueAsString(mails);
 
         assertThatJson(json)
             .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
-            .isEqualTo(JSON_BEHAVIORS);
+            .isEqualTo(JSON_MAILS_LIST);
     }
 }
