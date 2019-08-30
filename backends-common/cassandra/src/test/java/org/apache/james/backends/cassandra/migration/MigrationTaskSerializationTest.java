@@ -26,6 +26,7 @@ import java.io.IOException;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 
@@ -35,11 +36,13 @@ class MigrationTaskSerializationTest {
 
     private static final int SCHEMA_VERSION = 12;
     private static final String SERIALIZED_TASK = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"targetVersion\": 12}";
 
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
     private final CassandraSchemaTransitions transitions = mock(CassandraSchemaTransitions.class);
     private final MigrationTask.Factory factory = target -> new MigrationTask(cassandraSchemaVersionDAO, transitions, target);
     private final JsonTaskSerializer taskSerializer = new JsonTaskSerializer(MigrationTaskDTO.SERIALIZATION_MODULE.apply(factory));
+    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(MigrationTaskAdditionalInformationsDTO.SERIALIZATION_MODULE);
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -54,4 +57,16 @@ class MigrationTaskSerializationTest {
             .isEqualToComparingFieldByField(task);
     }
 
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION));
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION));
+        assertThat(jsonAdditionalInformationSerializer.deserialize("CassandraMigration", SERIALIZED_ADDITIONAL_INFORMATION))
+            .isEqualToComparingFieldByField(details);
+    }
 }
