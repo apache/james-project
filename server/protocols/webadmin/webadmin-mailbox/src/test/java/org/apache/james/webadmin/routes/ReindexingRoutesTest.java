@@ -55,6 +55,7 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
+import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
@@ -860,7 +861,7 @@ class ReindexingRoutesTest {
                 .then()
                     .body("status", is("completed"))
                     .body("taskId", is(notNullValue()))
-                    .body("type", is(MessageIdReIndexerImpl.MessageIdReIndexingTask.TYPE))
+                    .body("type", is(MessageIdReIndexingTask.TYPE))
                     .body("additionalInformation.messageId", is("1"))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
@@ -888,7 +889,7 @@ class ReindexingRoutesTest {
                 .then()
                     .body("status", is("completed"))
                     .body("taskId", is(notNullValue()))
-                    .body("type", is(MessageIdReIndexerImpl.MessageIdReIndexingTask.TYPE))
+                    .body("type", is(MessageIdReIndexingTask.TYPE))
                     .body("additionalInformation.messageId", is(composedMessageId.getMessageId().serialize()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
