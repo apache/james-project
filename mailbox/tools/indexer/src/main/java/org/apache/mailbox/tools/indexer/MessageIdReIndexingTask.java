@@ -20,27 +20,34 @@ package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.Mailbox;
+import javax.inject.Inject;
+
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.apache.james.mailbox.store.mail.MessageMapper;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.collect.ImmutableList;
-
 public class MessageIdReIndexingTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageIdReIndexingTask.class);
 
     public static final TaskType TYPE = TaskType.of("MessageIdReIndexingTask");
+
+    public static class Factory {
+        private ReIndexerPerformer reIndexerPerformer;
+        private final MessageId.Factory messageIdFactory;
+
+        @Inject
+        public Factory(ReIndexerPerformer reIndexerPerformer, MessageId.Factory messageIdFactory) {
+            this.messageIdFactory = messageIdFactory;
+        }
+
+        public MessageIdReIndexingTask create(MessageIdReindexingTaskDTO dto) {
+            MessageId messageId = messageIdFactory.fromString(dto.getMessageId());
+            return new MessageIdReIndexingTask(reIndexerPerformer, messageId);
+        }
+    }
 
     public final class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MessageId messageId;
@@ -54,52 +61,29 @@ public class MessageIdReIndexingTask implements Task {
         }
     }
 
-    private final MailboxManager mailboxManager;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final ListeningMessageSearchIndex index;
+
+    private ReIndexerPerformer reIndexerPerformer;
     private final MessageId messageId;
     private final AdditionalInformation additionalInformation;
 
-    MessageIdReIndexingTask(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory, ListeningMessageSearchIndex index, MessageId messageId) {
-        this.mailboxManager = mailboxManager;
-        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
-        this.index = index;
+    MessageIdReIndexingTask(ReIndexerPerformer reIndexerPerformer, MessageId messageId) {
+        this.reIndexerPerformer = reIndexerPerformer;
         this.messageId = messageId;
         this.additionalInformation = new AdditionalInformation(messageId);
     }
 
     @Override
     public Result run() {
-        try {
-            MailboxSession session = mailboxManager.createSystemSession("MessageIdReIndexerImpl");
-
-            return mailboxSessionMapperFactory.getMessageIdMapper(session)
-                .find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
-                .stream()
-                .map(mailboxMessage -> reIndex(mailboxMessage, session))
-                .reduce(Task::combine)
-                .orElse(Result.COMPLETED);
-        } catch (Exception e) {
-            LOGGER.warn("Failed to re-index {}", messageId, e);
-            return Result.PARTIAL;
-        }
-    }
-
-    public Result reIndex(MailboxMessage mailboxMessage, MailboxSession session) {
-        try {
-            MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-            Mailbox mailbox = mailboxMapper.findMailboxById(mailboxMessage.getMailboxId());
-            index.add(session, mailbox, mailboxMessage);
-            return Result.COMPLETED;
-        } catch (Exception e) {
-            LOGGER.warn("Failed to re-index {} in {}", messageId, mailboxMessage.getMailboxId(), e);
-            return Result.PARTIAL;
-        }
+        return reIndexerPerformer.handleMessageIdReindexing(messageId);
     }
 
     @Override
     public TaskType type() {
         return TYPE;
+    }
+
+    MessageId getMessageId() {
+        return messageId;
     }
 
     @Override

@@ -84,11 +84,12 @@ class ReindexingRoutesTest {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);
+        ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
+            mailboxManager,
+            searchIndex,
+            mailboxManager.getMapperFactory());
         ReIndexer reIndexer = new ReIndexerImpl(
-            new ReIndexerPerformer(
-                mailboxManager,
-                searchIndex,
-                mailboxManager.getMapperFactory()),
+            reIndexerPerformer,
             mailboxManager,
             mailboxManager.getMapperFactory());
         JsonTransformer jsonTransformer = new JsonTransformer();
@@ -103,7 +104,7 @@ class ReindexingRoutesTest {
                     jsonTransformer),
                 new MessageIdReindexingRoutes(taskManager,
                     new InMemoryMessageId.Factory(),
-                    new MessageIdReIndexerImpl(mailboxManager, mailboxManager.getMapperFactory(), searchIndex),
+                    new MessageIdReIndexerImpl(reIndexerPerformer),
                     jsonTransformer))
             .start();
 

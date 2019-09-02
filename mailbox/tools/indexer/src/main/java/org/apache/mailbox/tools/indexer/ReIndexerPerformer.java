@@ -33,9 +33,11 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
@@ -45,6 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
 public class ReIndexerPerformer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ReIndexerPerformer.class);
@@ -138,6 +141,34 @@ public class ReIndexerPerformer {
 
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
         return handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext);
+    }
+
+    Task.Result handleMessageIdReindexing(MessageId messageId) {
+        try {
+            MailboxSession session = mailboxManager.createSystemSession("MessageIdReIndexerImpl");
+
+            return mailboxSessionMapperFactory.getMessageIdMapper(session)
+                .find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)
+                .stream()
+                .map(mailboxMessage -> reIndex(mailboxMessage, session))
+                .reduce(Task::combine)
+                .orElse(Task.Result.COMPLETED);
+        } catch (Exception e) {
+            LOGGER.warn("Failed to re-index {}", messageId, e);
+            return Task.Result.PARTIAL;
+        }
+    }
+
+    private Task.Result reIndex(MailboxMessage mailboxMessage, MailboxSession session) {
+        try {
+            MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+            Mailbox mailbox = mailboxMapper.findMailboxById(mailboxMessage.getMailboxId());
+            messageSearchIndex.add(session, mailbox, mailboxMessage);
+            return Task.Result.COMPLETED;
+        } catch (Exception e) {
+            LOGGER.warn("Failed to re-index {} in {}", mailboxMessage.getUid(), mailboxMessage.getMailboxId(), e);
+            return Task.Result.PARTIAL;
+        }
     }
 
     private Task.Result reIndex(Stream<MailboxId> mailboxIds, ReprocessingContext reprocessingContext) {

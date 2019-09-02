@@ -48,13 +48,15 @@ public class MessageIdReIndexerImplTest {
     private ListeningMessageSearchIndex messageSearchIndex;
 
     private MessageIdReIndexerImpl reIndexer;
+    private ReIndexerPerformer reindexerPerformer;
 
     @BeforeEach
     void setUp() {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         MailboxSessionMapperFactory mailboxSessionMapperFactory = mailboxManager.getMapperFactory();
         messageSearchIndex = mock(ListeningMessageSearchIndex.class);
-        reIndexer = new MessageIdReIndexerImpl(mailboxManager, mailboxSessionMapperFactory, messageSearchIndex);
+        reindexerPerformer = new ReIndexerPerformer(mailboxManager, messageSearchIndex, mailboxSessionMapperFactory);
+        reIndexer = new MessageIdReIndexerImpl(reindexerPerformer);
     }
 
     @Test

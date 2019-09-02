@@ -21,28 +21,21 @@ package org.apache.mailbox.tools.indexer;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Task;
 
 public class MessageIdReIndexerImpl implements MessageIdReIndexer {
 
-    private final MailboxManager mailboxManager;
-    private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
-    private final ListeningMessageSearchIndex index;
+    private final ReIndexerPerformer reIndexerPerformer;
 
     @Inject
-    public MessageIdReIndexerImpl(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory, ListeningMessageSearchIndex index) {
-        this.mailboxManager = mailboxManager;
-        this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
-        this.index = index;
+    public MessageIdReIndexerImpl(ReIndexerPerformer reIndexerPerformer) {
+        this.reIndexerPerformer = reIndexerPerformer;
     }
 
     @Override
     public Task reIndex(MessageId messageId) {
-        return new MessageIdReIndexingTask(mailboxManager, mailboxSessionMapperFactory, index, messageId);
+        return new MessageIdReIndexingTask(reIndexerPerformer, messageId);
     }
 }
