@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 - Blob export to LinShare
 - Native DKIM support for outgoing mails. The mailets from james-jdkim have been included in main James project.
 
+### Deprecated
+- Zookeeper component. This will be removed after 3.4 release. If you have development skills, and are willing to maintain this component, please reach us.
+
+### Removed
+- Karaf OSGi implementation. It was not compiled nor tested for a year. We didn't get any feedback about that and we don't have the resources nor the skills to maintain it any more.
+
 ## [3.3.0] - 2019-03-26
 ### Added
 - Metrics for BlobStore
