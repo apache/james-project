@@ -20,20 +20,15 @@
 package org.apache.james.webadmin.service;
 
 import java.util.Optional;
-import java.util.function.Function;
+
 import javax.mail.MessagingException;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.server.task.json.dto.TaskDTO;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingOneMailTask implements Task {
 
@@ -83,89 +78,6 @@ public class ReprocessingOneMailTask implements Task {
         }
     }
 
-    private static class ReprocessingOneMailTaskDTO implements TaskDTO {
-
-        public static ReprocessingOneMailTaskDTO toDTO(ReprocessingOneMailTask domainObject, String typeName) {
-            try {
-                return new ReprocessingOneMailTaskDTO(
-                    typeName,
-                    domainObject.repositoryPath.urlEncoded(),
-                    domainObject.targetQueue,
-                    domainObject.mailKey.asString(),
-                    domainObject.targetProcessor
-                );
-            } catch (Exception e) {
-                throw new UrlEncodingFailureSerializationException(domainObject.repositoryPath);
-            }
-        }
-
-        private final String type;
-        private final String repositoryPath;
-        private final String targetQueue;
-        private final String mailKey;
-        private final Optional<String> targetProcessor;
-
-        public ReprocessingOneMailTaskDTO(@JsonProperty("type") String type,
-                                          @JsonProperty("repositoryPath") String repositoryPath,
-                                          @JsonProperty("targetQueue") String targetQueue,
-                                          @JsonProperty("mailKey") String mailKey,
-                                          @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
-            this.type = type;
-            this.repositoryPath = repositoryPath;
-            this.mailKey = mailKey;
-            this.targetQueue = targetQueue;
-            this.targetProcessor = targetProcessor;
-        }
-
-        public ReprocessingOneMailTask fromDTO(ReprocessingService reprocessingService) {
-            return new ReprocessingOneMailTask(
-                reprocessingService,
-                getMailRepositoryPath(),
-                targetQueue,
-                new MailKey(mailKey),
-                targetProcessor
-            );
-        }
-
-        private MailRepositoryPath getMailRepositoryPath() {
-            try {
-                return MailRepositoryPath.fromEncoded(repositoryPath);
-            } catch (Exception e) {
-                throw new InvalidMailRepositoryPathDeserializationException(repositoryPath);
-            }
-        }
-
-        @Override
-        public String getType() {
-            return type;
-        }
-
-        public String getRepositoryPath() {
-            return repositoryPath;
-        }
-
-        public String getMailKey() {
-            return mailKey;
-        }
-
-        public String getTargetQueue() {
-            return targetQueue;
-        }
-
-        public Optional<String> getTargetProcessor() {
-            return targetProcessor;
-        }
-    }
-
-    public static final Function<ReprocessingService, TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO>> MODULE = (reprocessingService) ->
-        DTOModule
-            .forDomainObject(ReprocessingOneMailTask.class)
-            .convertToDTO(ReprocessingOneMailTaskDTO.class)
-            .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
-            .toDTOConverter(ReprocessingOneMailTaskDTO::toDTO)
-            .typeName(TYPE.asString())
-            .withFactory(TaskDTOModule::new);
-
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
     private final String targetQueue;
@@ -197,6 +109,22 @@ public class ReprocessingOneMailTask implements Task {
     @Override
     public TaskType type() {
         return TYPE;
+    }
+
+    MailRepositoryPath getRepositoryPath() {
+        return repositoryPath;
+    }
+
+    String getTargetQueue() {
+        return targetQueue;
+    }
+
+    MailKey getMailKey() {
+        return mailKey;
+    }
+
+    Optional<String> getTargetProcessor() {
+        return targetProcessor;
     }
 
     @Override
