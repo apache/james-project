@@ -37,9 +37,6 @@ import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-/**
- * @author Peter Palaga
- */
 public class MailboxACLTest {
 
     private static final String USER_1 = "user1";

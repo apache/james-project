@@ -56,8 +56,6 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * DeleteACLProcessor Test.
- * 
- * @author Peter Palaga
  */
 public class DeleteACLProcessorTest {
 

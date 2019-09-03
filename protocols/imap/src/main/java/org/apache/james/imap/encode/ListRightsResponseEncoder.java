@@ -30,8 +30,6 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * ACL Response Encoder.
- * 
- * @author Peter Palaga
  */
 public class ListRightsResponseEncoder extends AbstractChainedImapEncoder {
 

@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * MYRIGHTS Request.
- * 
- * @author Peter Palaga
  */
 public class MyRightsRequest extends AbstractImapRequest {
     private final String mailboxName;

@@ -25,8 +25,6 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * {@link org.apache.onami.lifecycle.core.Stager} that disposes resources.
- *
- * @author Mikhail Mazursky
  */
 public interface DisposingStager<A extends Annotation> extends Stager<A> {
 

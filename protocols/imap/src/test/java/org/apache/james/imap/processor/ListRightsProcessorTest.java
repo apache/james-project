@@ -57,8 +57,6 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * ListRightsProcessor Test.
- * 
- * @author Peter Palaga
  */
 public class ListRightsProcessorTest {
 

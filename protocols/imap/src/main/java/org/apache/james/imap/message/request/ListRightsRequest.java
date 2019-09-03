@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * LISTRIGHTS Request.
- * 
- * @author Peter Palaga
  */
 public class ListRightsRequest extends AbstractImapRequest {
     private final String identifier;

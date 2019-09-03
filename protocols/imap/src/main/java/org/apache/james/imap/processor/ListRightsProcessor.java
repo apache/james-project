@@ -49,8 +49,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * LISTRIGHTS Processor.
- * 
- * @author Peter Palaga
  */
 public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListRightsProcessor.class);

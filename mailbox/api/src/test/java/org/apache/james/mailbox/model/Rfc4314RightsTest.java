@@ -39,9 +39,6 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author Peter Palaga
- */
 public class Rfc4314RightsTest {
     
     private Rfc4314Rights aeik;

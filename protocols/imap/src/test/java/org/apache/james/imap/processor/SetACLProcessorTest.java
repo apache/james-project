@@ -58,8 +58,6 @@ import org.mockito.ArgumentCaptor;
 
 /**
  * SetACLProcessor Test.
- * 
- * @author Peter Palaga
  */
 public class SetACLProcessorTest {
 

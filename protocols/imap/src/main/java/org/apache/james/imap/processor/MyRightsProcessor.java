@@ -47,8 +47,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * MYRIGHTS Processor.
- * 
- * @author Peter Palaga
  */
 public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(MyRightsProcessor.class);

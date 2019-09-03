@@ -40,8 +40,6 @@ import com.google.common.base.Stopwatch;
  * the server response against the expected values. TODO make ProtocolSession
  * itself be a permissible ProtocolElement, so that we can nest and reuse
  * sessions.
- * 
- * @author Darrell DeBoer &lt;darrell@apache.org&gt;
  */
 public class ProtocolSession implements ProtocolInteractor {
 

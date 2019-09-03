@@ -21,8 +21,6 @@ package org.apache.james.onami.lifecycle;
 
 /**
  * Base implementation for stageables.
- *
- * @author Mikhail Mazursky
  */
 public abstract class AbstractBasicStageable<S> implements Stageable {
 

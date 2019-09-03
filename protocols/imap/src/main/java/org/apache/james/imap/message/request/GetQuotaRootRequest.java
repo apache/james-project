@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * GETQUOTAROOT Request
- *
- * @author Tellier Benoit
  */
 public class GetQuotaRootRequest extends AbstractImapRequest {
     private final String mailboxName;

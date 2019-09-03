@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * SETACL Request.
- * 
- * @author Peter Palaga
  */
 public class SetACLRequest extends AbstractImapRequest {
     private final String identifier;

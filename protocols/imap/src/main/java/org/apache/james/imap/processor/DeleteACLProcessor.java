@@ -48,8 +48,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * DELETEACL Processor.
- * 
- * @author Peter Palaga
  */
 public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeleteACLProcessor.class);

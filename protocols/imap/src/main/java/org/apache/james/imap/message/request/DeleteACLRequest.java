@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * DELETEACL Request.
- * 
- * @author Peter Palaga
  */
 public class DeleteACLRequest extends AbstractImapRequest {
     private final String identifier;

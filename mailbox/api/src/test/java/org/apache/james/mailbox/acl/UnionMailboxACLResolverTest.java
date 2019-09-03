@@ -31,9 +31,6 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.junit.Before;
 import org.junit.Test;
 
-/**
- * @author Peter Palaga
- */
 public class UnionMailboxACLResolverTest {
 
     private static final String GROUP_1 = "group1";

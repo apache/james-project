@@ -30,8 +30,6 @@ import org.apache.james.protocols.imap.DecodingException;
 
 /**
  * DELETEACL Parser
- * 
- * @author Peter Palaga
  */
 public class DeleteACLCommandParser extends AbstractImapCommandParser {
 

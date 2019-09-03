@@ -27,8 +27,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 
 /**
  * LISTRIGHTS Response.
- * 
- * @author Peter Palaga
  */
 public final class ListRightsResponse implements ImapResponseMessage {
 

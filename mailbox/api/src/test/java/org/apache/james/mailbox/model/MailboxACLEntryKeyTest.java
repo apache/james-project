@@ -28,9 +28,6 @@ import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.SpecialName;
 import org.junit.Test;
 
-/**
- * @author Peter Palaga
- */
 public class MailboxACLEntryKeyTest {
     private static final String GROUP_1 = "group1";
     private static final String USER_1 = "user1";

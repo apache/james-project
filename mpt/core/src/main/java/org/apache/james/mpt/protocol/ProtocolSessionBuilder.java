@@ -33,8 +33,6 @@ import org.apache.james.mpt.api.ProtocolInteractor;
 /**
  * A builder which generates scripts from textual input.
  * 
- * @author Darrell DeBoer &lt;darrell@apache.org&gt;
- * 
  * @version $Revision$
  */
 public class ProtocolSessionBuilder {

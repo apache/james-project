@@ -30,8 +30,6 @@ import org.apache.james.protocols.imap.DecodingException;
 
 /**
  * SETACL Parser
- * 
- * @author Peter Palaga
  */
 public class SetACLCommandParser extends AbstractImapCommandParser {
 

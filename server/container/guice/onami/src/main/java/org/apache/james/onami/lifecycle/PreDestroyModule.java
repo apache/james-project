@@ -27,8 +27,6 @@ import com.google.inject.TypeLiteral;
  * Guice module to register methods to be invoked when {@link org.apache.onami.lifecycle.core.Stager#stage()} is invoked.
  * <p/>
  * Module instance have state so it must not be used to construct more than one {@link com.google.inject.Injector}.
- *
- * @author Mikhail Mazursky
  */
 public class PreDestroyModule extends LifeCycleStageModule {
 

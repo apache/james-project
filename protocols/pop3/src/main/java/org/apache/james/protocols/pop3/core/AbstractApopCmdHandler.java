@@ -32,9 +32,6 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * Handles the APOP command
- * 
- * @author Maurer
- *
  */
 public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 

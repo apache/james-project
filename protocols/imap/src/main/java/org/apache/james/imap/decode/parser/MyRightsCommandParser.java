@@ -30,8 +30,6 @@ import org.apache.james.protocols.imap.DecodingException;
 
 /**
  * MYRIGHTS Parser
- * 
- * @author Peter Palaga
  */
 public class MyRightsCommandParser extends AbstractImapCommandParser {
 

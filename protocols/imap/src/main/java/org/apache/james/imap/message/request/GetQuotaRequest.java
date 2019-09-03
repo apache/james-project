@@ -23,8 +23,6 @@ import org.apache.james.imap.api.ImapCommand;
 
 /**
  * GETQUOTA Request
- *
- * @author Tellier Benoit
  */
 public class GetQuotaRequest extends AbstractImapRequest {
     private final String quotaRoot;
