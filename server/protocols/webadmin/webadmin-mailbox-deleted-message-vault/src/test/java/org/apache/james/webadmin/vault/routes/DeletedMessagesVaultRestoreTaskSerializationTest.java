@@ -23,9 +23,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.james.vault.dto.query.QueryTranslator;
@@ -44,14 +46,18 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     private JsonTaskSerializer taskSerializer;
 
-    private static final String username = "james";
-    private static final User userToRestore = User.fromUsername(username);
-    private static final Query query = Query.of(CriterionFactory.hasAttachment(true));
+    private static final String USERNAME = "james";
+    private static final User USER_TO_RESTORE = User.fromUsername(USERNAME);
+    private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
+    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE, new AtomicLong(42), new AtomicLong(10));
 
-    private static final String serializedDeleteMessagesVaultRestoreTask = "{\"type\":\"deletedMessages/restore\"," +
+    private static final String SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK = "{\"type\":\"deletedMessages/restore\"," +
         "\"userToRestore\":\"james\"," +
         "\"query\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}" +
         "}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10}";
+
+    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE);
 
     @BeforeEach
     void setUp() {
@@ -62,22 +68,32 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultRestoreTaskShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, userToRestore, query);
+        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USER_TO_RESTORE, QUERY);
 
         assertThatJson(taskSerializer.serialize(task))
-            .isEqualTo(serializedDeleteMessagesVaultRestoreTask);
+            .isEqualTo(SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK);
     }
 
     @Test
     void deleteMessagesVaultRestoreTaskShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, userToRestore, query);
+        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USER_TO_RESTORE, QUERY);
 
-        Task deserializedTask = taskSerializer.deserialize(serializedDeleteMessagesVaultRestoreTask);
+        Task deserializedTask = taskSerializer.deserialize(SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK);
         assertThat(deserializedTask)
             .isEqualToComparingOnlyGivenFields(task, "userToRestore");
 
         DeletedMessagesVaultRestoreTask deserializedRestoreTask = (DeletedMessagesVaultRestoreTask) deserializedTask;
-        assertThat(queryTranslator.toDTO(deserializedRestoreTask.query)).isEqualTo(queryTranslator.toDTO(query));
+        assertThat(queryTranslator.toDTO(deserializedRestoreTask.query)).isEqualTo(queryTranslator.toDTO(QUERY));
     }
 
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        assertThatJson(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.serialize(DETAILS)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION_TASK);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/restore", SERIALIZED_ADDITIONAL_INFORMATION_TASK))
+            .isEqualToComparingFieldByField(DETAILS);
+    }
 }

@@ -50,6 +50,12 @@ class DeletedMessagesVaultRestoreTask implements Task {
             this.errorRestoreCount = new AtomicLong();
         }
 
+        AdditionalInformation(User user, AtomicLong successfulRestoreCount, AtomicLong errorRestoreCount) {
+            this.user = user;
+            this.successfulRestoreCount = successfulRestoreCount;
+            this.errorRestoreCount = errorRestoreCount;
+        }
+
         public long getSuccessfulRestoreCount() {
             return successfulRestoreCount.get();
         }
