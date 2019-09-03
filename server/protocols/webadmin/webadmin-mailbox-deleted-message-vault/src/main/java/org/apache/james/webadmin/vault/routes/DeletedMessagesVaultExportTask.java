@@ -39,7 +39,7 @@ class DeletedMessagesVaultExportTask implements Task {
 
     static final TaskType TYPE = TaskType.of("deletedMessages/export");
 
-    public class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
         private final User userExportFrom;
         private final MailAddress exportTo;

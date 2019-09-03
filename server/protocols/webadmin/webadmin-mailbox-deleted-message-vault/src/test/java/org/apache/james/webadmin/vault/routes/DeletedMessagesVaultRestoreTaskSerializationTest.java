@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.TestId;
@@ -49,7 +48,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
     private static final String USERNAME = "james";
     private static final User USER_TO_RESTORE = User.fromUsername(USERNAME);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
-    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE, new AtomicLong(42), new AtomicLong(10));
+    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE,42, 10);
 
     private static final String SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK = "{\"type\":\"deletedMessages/restore\"," +
         "\"userToRestore\":\"james\"," +

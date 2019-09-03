@@ -20,6 +20,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.james.vault.dto.query.QueryTranslator;
@@ -49,18 +51,23 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
 
     private static final String username = "james";
-    private static final User userExportFrom = User.fromUsername(username);
-    private static final Query query = Query.of(CriterionFactory.hasAttachment(true));
+    private static final User USER_EXPORT_FROM = User.fromUsername(username);
+    private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
     private static MailAddress exportTo;
+    private static DeletedMessagesVaultExportTask.AdditionalInformation details;
 
     private static final String serializedDeleteMessagesVaultExportTask = "{\"type\":\"deletedMessages/export\"," +
         "\"userExportFrom\":\"james\"," +
         "\"exportQuery\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}," +
         "\"exportTo\":\"james@apache.org\"}\n";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";
+
+    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
 
     @BeforeAll
     static void init() throws AddressException {
         exportTo = new MailAddress("james@apache.org");
+        details = new DeletedMessagesVaultExportTask.AdditionalInformation(USER_EXPORT_FROM, exportTo, 42);
     }
 
     @BeforeEach
@@ -72,7 +79,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultExportTaskShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, userExportFrom, query, exportTo);
+        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USER_EXPORT_FROM, QUERY, exportTo);
 
         assertThatJson(taskSerializer.serialize(task))
             .isEqualTo(serializedDeleteMessagesVaultExportTask);
@@ -80,14 +87,31 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultExportTaskShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, userExportFrom, query, exportTo);
+        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USER_EXPORT_FROM, QUERY, exportTo);
 
         Task deserializedTask = taskSerializer.deserialize(serializedDeleteMessagesVaultExportTask);
         assertThat(deserializedTask)
             .isEqualToComparingOnlyGivenFields(task, "userExportFrom", "exportTo");
 
         DeletedMessagesVaultExportTask deserializedExportTask = (DeletedMessagesVaultExportTask) deserializedTask;
-        assertThat(queryTranslator.toDTO(deserializedExportTask.exportQuery)).isEqualTo(queryTranslator.toDTO(query));
+        assertThat(queryTranslator.toDTO(deserializedExportTask.exportQuery)).isEqualTo(queryTranslator.toDTO(QUERY));
     }
 
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        assertThatJson(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION_TASK);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/export", SERIALIZED_ADDITIONAL_INFORMATION_TASK))
+            .isEqualToComparingFieldByField(details);
+    }
+
+    @Test
+    void additonalInformationWithInvalidMailAddressShouldThrow() throws IOException {
+        String invalidSerializedAdditionalInformationTask = "{\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
+        assertThatCode(() -> JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/export", invalidSerializedAdditionalInformationTask))
+            .hasCauseInstanceOf(AddressException.class);
+    }
 }

@@ -20,8 +20,6 @@
 
 package org.apache.james.webadmin.vault.routes;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 import org.apache.james.core.User;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -75,8 +73,8 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
     DeletedMessagesVaultRestoreTask.AdditionalInformation toDomainObject() {
         return new DeletedMessagesVaultRestoreTask.AdditionalInformation(
             User.fromUsername(user),
-            new AtomicLong(successfulRestoreCount),
-            new AtomicLong(errorRestoreCount)
+            successfulRestoreCount,
+            errorRestoreCount
         );
     }
 }

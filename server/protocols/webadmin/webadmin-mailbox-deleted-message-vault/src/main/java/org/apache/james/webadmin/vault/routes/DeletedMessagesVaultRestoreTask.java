@@ -41,39 +41,25 @@ class DeletedMessagesVaultRestoreTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final User user;
-        private final AtomicLong successfulRestoreCount;
-        private final AtomicLong errorRestoreCount;
+        private final long successfulRestoreCount;
+        private final long errorRestoreCount;
 
-        AdditionalInformation(User user) {
-            this.user = user;
-            this.successfulRestoreCount = new AtomicLong();
-            this.errorRestoreCount = new AtomicLong();
-        }
-
-        AdditionalInformation(User user, AtomicLong successfulRestoreCount, AtomicLong errorRestoreCount) {
+        AdditionalInformation(User user, long successfulRestoreCount, long errorRestoreCount) {
             this.user = user;
             this.successfulRestoreCount = successfulRestoreCount;
             this.errorRestoreCount = errorRestoreCount;
         }
 
         public long getSuccessfulRestoreCount() {
-            return successfulRestoreCount.get();
+            return successfulRestoreCount;
         }
 
         public long getErrorRestoreCount() {
-            return errorRestoreCount.get();
+            return errorRestoreCount;
         }
 
         public String getUser() {
             return user.asString();
-        }
-
-        void incrementSuccessfulRestoreCount() {
-            successfulRestoreCount.incrementAndGet();
-        }
-
-        void incrementErrorRestoreCount() {
-            errorRestoreCount.incrementAndGet();
         }
     }
 
@@ -81,7 +67,8 @@ class DeletedMessagesVaultRestoreTask implements Task {
 
     private final User userToRestore;
     private final RestoreService vaultRestore;
-    private final AdditionalInformation additionalInformation;
+    private final AtomicLong successfulRestoreCount;
+    private final AtomicLong errorRestoreCount;
     @VisibleForTesting
     final Query query;
 
@@ -89,7 +76,8 @@ class DeletedMessagesVaultRestoreTask implements Task {
         this.query = query;
         this.userToRestore = userToRestore;
         this.vaultRestore = vaultRestore;
-        this.additionalInformation = new AdditionalInformation(userToRestore);
+        this.successfulRestoreCount = new AtomicLong();
+        this.errorRestoreCount = new AtomicLong();
     }
 
     @Override
@@ -116,12 +104,20 @@ class DeletedMessagesVaultRestoreTask implements Task {
     private void updateInformation(RestoreService.RestoreResult restoreResult) {
         switch (restoreResult) {
             case RESTORE_FAILED:
-                additionalInformation.incrementErrorRestoreCount();
+                incrementErrorRestoreCount();
                 break;
             case RESTORE_SUCCEED:
-                additionalInformation.incrementSuccessfulRestoreCount();
+                incrementSuccessfulRestoreCount();
                 break;
         }
+    }
+
+    private void incrementSuccessfulRestoreCount() {
+        successfulRestoreCount.incrementAndGet();
+    }
+
+    private void incrementErrorRestoreCount() {
+        errorRestoreCount.incrementAndGet();
     }
 
     @Override
@@ -131,7 +127,7 @@ class DeletedMessagesVaultRestoreTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(userToRestore, successfulRestoreCount.get(), errorRestoreCount.get()));
     }
 
     User getUserToRestore() {
