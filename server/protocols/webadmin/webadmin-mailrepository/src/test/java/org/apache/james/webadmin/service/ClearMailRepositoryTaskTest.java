@@ -22,16 +22,16 @@ package org.apache.james.webadmin.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import java.io.IOException;
+
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-
-import com.google.common.collect.ImmutableList;
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ClearMailRepositoryTaskTest {
     private static final String SERIALIZED = "{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"a\"}";
@@ -40,14 +40,14 @@ class ClearMailRepositoryTaskTest {
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTask.MODULE.apply(MAIL_REPOSITORIES));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTaskDTO.MODULE.apply(MAIL_REPOSITORIES));
         JsonAssertions.assertThatJson(testee.serialize(TASK))
             .isEqualTo(SERIALIZED);
     }
 
     @Test
     void taskShouldBeDeserializable() throws IOException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTask.MODULE.apply(MAIL_REPOSITORIES));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTaskDTO.MODULE.apply(MAIL_REPOSITORIES));
 
         assertThat(testee.deserialize(SERIALIZED))
             .isEqualToComparingFieldByFieldRecursively(TASK);
@@ -55,7 +55,7 @@ class ClearMailRepositoryTaskTest {
 
     @Test
     void taskShouldThrowOnDeserializationUrlDecodingError() {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTask.MODULE.apply(MAIL_REPOSITORIES));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTaskDTO.MODULE.apply(MAIL_REPOSITORIES));
 
         assertThatThrownBy(() -> testee.deserialize("{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"%\"}"))
             .isInstanceOf(ClearMailRepositoryTask.InvalidMailRepositoryPathDeserializationException.class);
