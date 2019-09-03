@@ -56,6 +56,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
@@ -157,6 +158,9 @@ public class RemoteDeliveryErrorTest {
             .fluent()
             .addDomain(DEFAULT_DOMAIN)
             .addUser(FROM, PASSWORD);
+
+        RestAssured.requestSpecification = requestSpecification();
+        RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
     @After
@@ -167,7 +171,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysRCPT421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(ALWAYS_421_RCPT_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -183,7 +187,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysFROM421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(ALWAYS_421_FROM_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -199,7 +203,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysDATA421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(ALWAYS_421_DATA_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -215,7 +219,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWHenRCPT500() throws Exception {
-        given(requestSpecification())
+        with()
             .body(SINGLE_500_RCPT_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -231,7 +235,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWHenFROM500() throws Exception {
-        given(requestSpecification())
+        with()
             .body(SINGLE_500_FROM_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -247,7 +251,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWHenDATA500() throws Exception {
-        given(requestSpecification())
+        with()
             .body(SINGLE_500_DATA_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -263,7 +267,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenRCPT421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(TWICE_421_RCPT_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -282,7 +286,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenFROM421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(TWICE_421_FROM_BEHAVIOR)
             .put("/smtpBehaviors");
 
@@ -301,7 +305,7 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenDATA421() throws Exception {
-        given(requestSpecification())
+        with()
             .body(TWICE_421_DATA_BEHAVIOR)
             .put("/smtpBehaviors");
 
