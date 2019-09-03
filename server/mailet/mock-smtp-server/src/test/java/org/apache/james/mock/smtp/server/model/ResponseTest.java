@@ -81,38 +81,26 @@ class ResponseTest {
 
     @Test
     void constructorShouldThrowWhenMessageIsNull() {
-        assertThatThrownBy(() -> Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, null))
+        assertThatThrownBy(() -> new Response(SMTPStatusCode.ACTION_COMPLETE_250, null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void constructorShouldThrowWhenCodeIsNull() {
-        assertThatThrownBy(() -> Response.serverReject(null, "message"))
+        assertThatThrownBy(() -> new Response(null, "message"))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     void asReplyStringShouldReturnASMTPResponseLine() {
-        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "message").asReplyString())
+        assertThat(new Response(SMTPStatusCode.ACTION_COMPLETE_250, "message").asReplyString())
             .isEqualTo("250 message");
     }
 
     @Test
     void asReplyStringShouldReturnASMTPResponseLineWhenEmptyMessage() {
-        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "").asReplyString())
+        assertThat(new Response(SMTPStatusCode.ACTION_COMPLETE_250, "").asReplyString())
             .isEqualTo("250 ");
-    }
-
-    @Test
-    void isServerRejectedShouldReturnTrueWhenServerReject() {
-        assertThat(Response.serverReject(SMTPStatusCode.ACTION_COMPLETE_250, "message").isServerRejected())
-            .isTrue();
-    }
-
-    @Test
-    void isServerRejectedShouldReturnFalseWhenServerAccept() {
-        assertThat(Response.serverAccept(SMTPStatusCode.ACTION_COMPLETE_250, "message").isServerRejected())
-            .isFalse();
     }
 
     @Nested
@@ -120,17 +108,17 @@ class ResponseTest {
         @Test
         void jacksonShouldDeserializeResponse() throws Exception {
             Response response = OBJECT_MAPPER.readValue(
-                "{\"code\":250, \"message\":\"OK\", \"rejected\":false}",
+                "{\"code\":250, \"message\":\"OK\"}",
                 Response.class);
 
-            assertThat(response).isEqualTo(Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"));
+            assertThat(response).isEqualTo(new Response(Response.SMTPStatusCode.of(250), "OK"));
         }
 
         @Test
         void jacksonShouldSerializeResponse() throws Exception {
-            String json = OBJECT_MAPPER.writeValueAsString(Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"));
+            String json = OBJECT_MAPPER.writeValueAsString(new Response(Response.SMTPStatusCode.of(250), "OK"));
 
-            assertThatJson(json).isEqualTo("{\"code\":250, \"message\":\"OK\", \"rejected\":false}");
+            assertThatJson(json).isEqualTo("{\"code\":250, \"message\":\"OK\"}");
         }
     }
 }

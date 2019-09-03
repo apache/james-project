@@ -27,7 +27,6 @@ import java.util.Optional;
 import javax.mail.internet.AddressException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
@@ -56,10 +55,7 @@ public class MockMessageHandler implements MessageHandler {
         @Override
         public void behave(T input) throws RejectException {
             Response response = behavior.getResponse();
-            if (response.isServerRejected()) {
-                throw new RejectException(response.getCode().getRawCode(), response.getMessage());
-            }
-            throw new NotImplementedException("Not rejecting commands in mock behaviours is not supported yet");
+            throw new RejectException(response.getCode().getRawCode(), response.getMessage());
         }
     }
 
