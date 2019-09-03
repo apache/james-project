@@ -49,7 +49,7 @@ public class MessageIdReIndexingTask implements Task {
         }
     }
 
-    public final class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static final class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MessageId messageId;
 
         AdditionalInformation(MessageId messageId) {
