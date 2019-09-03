@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.service;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueue;
@@ -37,19 +36,19 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final String mailQueueName;
-        private final Supplier<Long> countSupplier;
+        private final long remainingCount;
         private final long initialCount;
 
         private final Optional<String> sender;
         private final Optional<String> name;
         private final Optional<String> recipient;
 
-        public AdditionalInformation(String mailQueueName, Supplier<Long> countSupplier,
+        public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount,
                                      Optional<MailAddress> maybeSender, Optional<String> maybeName,
                                      Optional<MailAddress> maybeRecipient) {
             this.mailQueueName = mailQueueName;
-            this.initialCount = countSupplier.get();
-            this.countSupplier = countSupplier;
+            this.initialCount = initialCount;
+            this.remainingCount = remainingCount;
 
             sender = maybeSender.map(MailAddress::asString);
             name = maybeName;
@@ -61,7 +60,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         }
 
         public long getRemainingCount() {
-            return countSupplier.get();
+            return remainingCount;
         }
 
         public long getInitialCount() {
@@ -93,7 +92,8 @@ public class DeleteMailsFromMailQueueTask implements Task {
     private final Optional<MailAddress> maybeSender;
     private final Optional<String> maybeName;
     private final Optional<MailAddress> maybeRecipient;
-    private final AdditionalInformation additionalInformation;
+
+    private final long initialCount;
 
     public DeleteMailsFromMailQueueTask(ManageableMailQueue queue, Optional<MailAddress> maybeSender,
                                         Optional<String> maybeName, Optional<MailAddress> maybeRecipient) {
@@ -105,9 +105,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         this.maybeSender = maybeSender;
         this.maybeName = maybeName;
         this.maybeRecipient = maybeRecipient;
-
-        additionalInformation = new AdditionalInformation(queue.getName(), this::getRemainingSize, maybeSender,
-            maybeName, maybeRecipient);
+        this.initialCount = getRemainingSize();
     }
 
     @Override
@@ -145,7 +143,10 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(queue.getName(),
+            initialCount,
+            getRemainingSize(), maybeSender,
+            maybeName, maybeRecipient));
     }
 
     public long getRemainingSize() {
