@@ -66,8 +66,8 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     @BeforeEach
     void setUp() {
         exportService = mock(ExportService.class);
-        DeletedMessagesVaultExportTask.Factory factory = new DeletedMessagesVaultExportTask.Factory(exportService, queryTranslator);
-        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultExportTask.MODULE.apply(factory));
+        DeletedMessagesVaultExportTaskDTO.Factory factory = new DeletedMessagesVaultExportTaskDTO.Factory(exportService, queryTranslator);
+        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultExportTaskDTO.MODULE.apply(factory));
     }
 
     @Test
