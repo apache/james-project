@@ -19,6 +19,7 @@
 
 package org.apache.james.mock.smtp.server.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -32,6 +33,10 @@ public class MockSmtpBehaviors {
     @JsonCreator
     public MockSmtpBehaviors(List<MockSMTPBehavior> behaviorList) {
         this.behaviorList = ImmutableList.copyOf(behaviorList);
+    }
+
+    public MockSmtpBehaviors(MockSMTPBehavior... behaviorList) {
+        this(Arrays.asList(behaviorList));
     }
 
     @JsonValue
