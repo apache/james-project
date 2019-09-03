@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.MemoryJamesServerMain.SMTP_AND_IMAP_MODULE;
 import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
@@ -35,6 +36,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -46,8 +48,10 @@ import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.server.core.MailImpl;
 import org.apache.james.transport.mailets.RemoteDelivery;
 import org.apache.james.transport.matchers.All;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -58,6 +62,8 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -65,12 +71,21 @@ import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import io.restassured.specification.ResponseSpecification;
+import net.javacrumbs.jsonunit.core.Option;
 
 public class RemoteDeliveryErrorTest {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryErrorTest.class);
     private static final String ANOTHER_DOMAIN = "other.com";
 
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
+    private static final String MIME_MESSAGE = "FROM: " + FROM + "\r\n" +
+        "subject: test\r\n" +
+        "\r\n" +
+        "content\r\n" +
+        ".\r\n";
     private static final String RECIPIENT = "touser@" + ANOTHER_DOMAIN;
+    private static final String RECIPIENT1 = "touser1@" + ANOTHER_DOMAIN;
+    private static final String RECIPIENT2 = "touser2@" + ANOTHER_DOMAIN;
 
     private static final MockSmtpBehaviors ALWAYS_421_RCPT_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
@@ -135,6 +150,13 @@ public class RemoteDeliveryErrorTest {
         .forAnyInput()
         .onlySomeAnswers(1)
         .build();
+    private static final MockSmtpBehaviors SINGLE_PARTIAL_RCPT_421_BEHAVIOR = MockSmtpBehaviors.builder()
+        .addNewBehavior()
+        .onCommand(SMTPCommand.RCPT_TO)
+        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
+        .forInputContaining(RECIPIENT1)
+        .onlySomeAnswers(1)
+        .build();
     private static final String BOUNCE_MESSAGE = "Hi. This is the James mail server at localhost.\n" +
         "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +
         "This is a permanent error; I've given up. Sorry it didn't work out. Below\n" +
@@ -150,7 +172,7 @@ public class RemoteDeliveryErrorTest {
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @ClassRule
     public static DockerContainer mockSmtp = DockerContainer.fromName("linagora/mock-smtp-server")
-        .withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()));
+        .withLogConsumer(outputFrame -> LOGGER.debug(outputFrame.getUtf8String()));
 
     private TemporaryJamesServer jamesServer;
 
@@ -342,6 +364,48 @@ public class RemoteDeliveryErrorTest {
             .body("[0].recipients", hasSize(1))
             .body("[0].recipients[0]", is(RECIPIENT))
             .body("[0].message", containsString("subject: test")));
+    }
+
+    @Test
+    public void remoteDeliveryShouldNotDuplicateContentWhenSendPartial() throws Exception {
+        with()
+            .body(SINGLE_PARTIAL_RCPT_421_BEHAVIOR)
+            .put("/smtpBehaviors").prettyPeek();
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(MailImpl.builder()
+                .name("name")
+                .sender(new MailAddress(FROM))
+                .addRecipient(RECIPIENT1)
+                .addRecipient(RECIPIENT2)
+                .mimeMessage(MimeMessageUtil.mimeMessageFromString(MIME_MESSAGE))
+                .build());
+
+        awaitAtMostOneMinute.untilAsserted(() -> given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/smtpMails")
+        .then()
+            .body("", hasSize(2)));
+
+        String mailsAsJson = given(requestSpecification(), RESPONSE_SPECIFICATION)
+            .get("/smtpMails")
+        .then()
+            .extract()
+            .body()
+            .asString();
+
+        assertThatJson(mailsAsJson)
+            .when(Option.IGNORING_ARRAY_ORDER)
+            .whenIgnoringPaths("[*].message")
+            .isEqualTo("[" +
+                "  {" +
+                "    \"from\": \"" + FROM + "\", " +
+                "    \"recipients\":[\"" + RECIPIENT1 + "\"]" +
+                "  }," +
+                "  {" +
+                "    \"from\": \"" + FROM + "\", " +
+                "    \"recipients\":[\"" + RECIPIENT2 + "\"]" +
+                "  }" +
+                "]");
     }
 
     private ProcessorConfiguration.Builder directResolutionTransport() {
