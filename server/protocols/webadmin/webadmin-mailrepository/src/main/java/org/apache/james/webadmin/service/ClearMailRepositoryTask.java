@@ -21,15 +21,11 @@ package org.apache.james.webadmin.service;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -42,13 +38,13 @@ public class ClearMailRepositoryTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
-        private final Supplier<Long> countSupplier;
         private final long initialCount;
+        private final long remainingCount;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, Supplier<Long> countSupplier) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, long initialCount, long remainingCount) {
             this.repositoryPath = repositoryPath;
-            this.initialCount = countSupplier.get();
-            this.countSupplier = countSupplier;
+            this.initialCount = initialCount;
+            this.remainingCount = remainingCount;
         }
 
         public String getRepositoryPath() {
@@ -56,7 +52,7 @@ public class ClearMailRepositoryTask implements Task {
         }
 
         public long getRemainingCount() {
-            return countSupplier.get();
+            return remainingCount;
         }
 
         public long getInitialCount() {
@@ -80,12 +76,12 @@ public class ClearMailRepositoryTask implements Task {
 
     private final List<MailRepository> mailRepositories;
     private final MailRepositoryPath mailRepositoryPath;
-    private final AdditionalInformation additionalInformation;
+    private final long initialCount;
 
     public ClearMailRepositoryTask(List<MailRepository> mailRepositories, MailRepositoryPath path) {
         this.mailRepositories = mailRepositories;
         this.mailRepositoryPath = path;
-        this.additionalInformation = new AdditionalInformation(path, this::getRemainingSize);
+        this.initialCount = getRemainingSize();
     }
 
     @Override
@@ -114,14 +110,14 @@ public class ClearMailRepositoryTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(mailRepositoryPath, initialCount, getRemainingSize()));
     }
 
     public long getRemainingSize() {
         return mailRepositories
-                .stream()
-                .map(Throwing.function(MailRepository::size).sneakyThrow())
-                .mapToLong(Long::valueOf)
-                .sum();
+            .stream()
+            .map(Throwing.function(MailRepository::size).sneakyThrow())
+            .mapToLong(Long::valueOf)
+            .sum();
     }
 }
