@@ -58,7 +58,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
         }
     }
 
-    private static final TaskType TYPE = TaskType.of("deletedMessages/blobStoreBasedGarbageCollection");
+    static final TaskType TYPE = TaskType.of("deletedMessages/blobStoreBasedGarbageCollection");
 
     private final Flux<BucketName> retentionOperation;
     private final ZonedDateTime beginningOfRetentionPeriod;
@@ -89,5 +89,13 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, deletedBuckets));
+    }
+
+    ZonedDateTime getBeginningOfRetentionPeriod() {
+        return beginningOfRetentionPeriod;
+    }
+
+    Flux<BucketName> getRetentionOperation() {
+        return retentionOperation;
     }
 }
