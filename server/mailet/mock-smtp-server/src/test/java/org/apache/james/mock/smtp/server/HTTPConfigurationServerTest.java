@@ -24,6 +24,7 @@ import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.apache.james.mock.smtp.server.Fixture.ALICE;
 import static org.apache.james.mock.smtp.server.Fixture.BOB;
@@ -193,7 +194,7 @@ class HTTPConfigurationServerTest {
         }
 
         @Test
-        void getShouldReturnPreviouslyStoredData() throws Exception {
+        void getShouldReturnPreviouslyStoredData() {
             mailRepository.store(mail1);
 
             String response = when()
@@ -209,7 +210,7 @@ class HTTPConfigurationServerTest {
         }
 
         @Test
-        void getShouldReturnMultipleEmails() throws Exception {
+        void getShouldReturnMultipleEmails() {
             mailRepository.store(mail1);
             mailRepository.store(mail2);
 
@@ -223,6 +224,28 @@ class HTTPConfigurationServerTest {
             assertThatJson(response)
                 .withOptions(new Options(Option.TREATING_NULL_AS_ABSENT, Option.IGNORING_ARRAY_ORDER))
                 .isEqualTo(JSON_MAILS_LIST);
+        }
+
+        @Test
+        void getShouldNotReturnClearedEmails() {
+            mailRepository.store(mail1);
+            mailRepository.store(mail2);
+
+            with()
+                .delete();
+
+            when()
+                .get()
+            .then()
+                .body(".", hasSize(0));
+        }
+
+        @Test
+        void deleteShouldReturnNoContent() {
+            when()
+                .delete()
+            .then()
+                .statusCode(SC_NO_CONTENT);
         }
 
         @Test

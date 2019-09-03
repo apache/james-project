@@ -93,6 +93,12 @@ public class HTTPConfigurationServer {
             resp.setContentType("application/json");
             OBJECT_MAPPER.writeValue(resp.getOutputStream(), mails);
         }
+
+        @Override
+        protected void doDelete(HttpServletRequest req, HttpServletResponse resp) {
+            receivedMailRepository.clear();
+            resp.setStatus(SC_NO_CONTENT);
+        }
     }
 
     private static final String SMTP_BEHAVIORS = "/smtpBehaviors";
