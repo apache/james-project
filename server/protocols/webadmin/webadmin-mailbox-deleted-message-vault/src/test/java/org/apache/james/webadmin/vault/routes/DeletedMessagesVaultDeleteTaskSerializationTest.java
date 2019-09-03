@@ -27,6 +27,7 @@ import java.io.IOException;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.vault.DeletedMessageVault;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,12 +46,16 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     private final MessageId messageId = messageIdFactory.generate();
 
     private final String serializedDeleteMessagesVaultDeleteTask = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
+    private final String serializedAdditionalInformation = "{\"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
+
+    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
 
     @BeforeEach
     void setUp() {
         deletedMessageVault = mock(DeletedMessageVault.class);
         DeletedMessagesVaultDeleteTask.Factory factory = new DeletedMessagesVaultDeleteTask.Factory(deletedMessageVault, messageIdFactory);
         taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultDeleteTaskDTO.MODULE.apply(factory));
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.SERIALIZATION_MODULE.apply(messageIdFactory));
     }
 
     @Test
@@ -69,4 +74,17 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
             .isEqualToComparingOnlyGivenFields(task, "user", "messageId");
     }
 
+
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(user, messageId);
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(serializedAdditionalInformation);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(user, messageId);
+        assertThat(jsonAdditionalInformationSerializer.deserialize("deletedMessages/delete", serializedAdditionalInformation))
+            .isEqualToComparingFieldByField(details);
+    }
 }

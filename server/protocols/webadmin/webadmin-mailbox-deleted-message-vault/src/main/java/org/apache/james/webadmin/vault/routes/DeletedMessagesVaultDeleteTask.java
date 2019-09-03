@@ -54,7 +54,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
         }
     }
 
-    public class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
         private final User user;
         private final MessageId deleteMessageId;
