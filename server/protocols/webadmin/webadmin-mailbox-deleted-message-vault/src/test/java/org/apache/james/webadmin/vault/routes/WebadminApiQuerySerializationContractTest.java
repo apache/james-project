@@ -93,8 +93,8 @@ class WebadminApiQuerySerializationContractTest {
     private final static TestId.Factory mailboxIdFactory = new TestId.Factory();
     private final static QueryTranslator queryTranslator = new QueryTranslator(mailboxIdFactory);
     private final static RestoreService restoreService = Mockito.mock(RestoreService.class);
-    private final static DeletedMessagesVaultRestoreTask.Factory factory = new DeletedMessagesVaultRestoreTask.Factory(restoreService, queryTranslator);
-    private final static JsonTaskSerializer taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultRestoreTask.MODULE.apply(factory));
+    private final static DeletedMessagesVaultRestoreTaskDTO.Factory factory = new DeletedMessagesVaultRestoreTaskDTO.Factory(restoreService, queryTranslator);
+    private final static JsonTaskSerializer taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultRestoreTaskDTO.MODULE.apply(factory));
 
     /**
      * Enforce that the format of the query serialized in json in the body of the request to the webadmin is stable.
