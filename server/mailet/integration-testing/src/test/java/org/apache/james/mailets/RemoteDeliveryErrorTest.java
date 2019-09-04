@@ -118,7 +118,7 @@ public class RemoteDeliveryErrorTest {
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @ClassRule
-    public static DockerContainer mockSmtp = DockerContainer.fromName("chibenwa/mock-smtp-server")
+    public static DockerContainer mockSmtp = DockerContainer.fromName("linagora/mock-smtp-server")
         .withLogConsumer(outputFrame -> System.out.println(outputFrame.getUtf8String()));
 
     private TemporaryJamesServer jamesServer;
