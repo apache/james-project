@@ -25,13 +25,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import javax.inject.Inject;
+
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.steveash.guavate.Guavate;
-
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
@@ -64,9 +65,22 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     private final ZonedDateTime beginningOfRetentionPeriod;
     private final Collection<BucketName> deletedBuckets;
 
-    BlobStoreVaultGarbageCollectionTask(ZonedDateTime beginningOfRetentionPeriod, Flux<BucketName> retentionOperation) {
-        this.retentionOperation = retentionOperation;
-        this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
+    public static class Factory {
+        private final BlobStoreDeletedMessageVault deletedMessageVault;
+
+        @Inject
+        public Factory(BlobStoreDeletedMessageVault deletedMessageVault) {
+            this.deletedMessageVault = deletedMessageVault;
+        }
+
+        public BlobStoreVaultGarbageCollectionTask create() {
+            return new BlobStoreVaultGarbageCollectionTask(deletedMessageVault);
+        }
+    }
+
+    private BlobStoreVaultGarbageCollectionTask(BlobStoreDeletedMessageVault deletedMessageVault) {
+        this.beginningOfRetentionPeriod = deletedMessageVault.getBeginningOfRetentionPeriod();
+        this.retentionOperation = deletedMessageVault.deleteExpiredMessages(beginningOfRetentionPeriod);
         this.deletedBuckets = new ConcurrentLinkedQueue<>();
     }
 

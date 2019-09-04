@@ -7,9 +7,9 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- *                                                              *
+ * *
  * http://www.apache.org/licenses/LICENSE-2.0                   *
- *                                                              *
+ * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
@@ -20,57 +20,37 @@
 
 package org.apache.james.vault.blob;
 
-import java.time.ZonedDateTime;
-import java.util.Collection;
+import java.util.function.Function;
 
-import org.apache.james.blob.api.BucketName;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github.steveash.guavate.Guavate;
-import reactor.core.publisher.Flux;
 
 public class BlobStoreVaultGarbageCollectionTaskDTO implements TaskDTO {
     static BlobStoreVaultGarbageCollectionTaskDTO fromDomainObject(BlobStoreVaultGarbageCollectionTask task, String type) {
-        return new BlobStoreVaultGarbageCollectionTaskDTO(
-            type,
-            task.getBeginningOfRetentionPeriod().toString(),
-            task.getRetentionOperation()
-                .map(BucketName::asString)
-                .collect(Guavate.toImmutableList())
-                .block()
-        );
+        return new BlobStoreVaultGarbageCollectionTaskDTO(type);
     }
 
-    public static final TaskDTOModule<BlobStoreVaultGarbageCollectionTask, BlobStoreVaultGarbageCollectionTaskDTO> MODULE =
+    public static final Function<BlobStoreVaultGarbageCollectionTask.Factory, TaskDTOModule<BlobStoreVaultGarbageCollectionTask, BlobStoreVaultGarbageCollectionTaskDTO>> MODULE = factory ->
         DTOModule
             .forDomainObject(BlobStoreVaultGarbageCollectionTask.class)
             .convertToDTO(BlobStoreVaultGarbageCollectionTaskDTO.class)
-            .toDomainObjectConverter(BlobStoreVaultGarbageCollectionTaskDTO::toDomainObject)
+            .toDomainObjectConverter(dto -> BlobStoreVaultGarbageCollectionTaskDTO.toDomainObject(factory))
             .toDTOConverter(BlobStoreVaultGarbageCollectionTaskDTO::fromDomainObject)
             .typeName(BlobStoreVaultGarbageCollectionTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
 
 
     private final String type;
-    private final String beginningOfRetentionPeriod;
-    private final Collection<String> retentionOperation;
 
-    BlobStoreVaultGarbageCollectionTaskDTO(@JsonProperty("type") String type,
-                                           @JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod,
-                                           @JsonProperty("retentionOperation") Collection<String> retentionOperation) {
+    BlobStoreVaultGarbageCollectionTaskDTO(@JsonProperty("type") String type) {
         this.type = type;
-        this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
-        this.retentionOperation = retentionOperation;
     }
 
-    BlobStoreVaultGarbageCollectionTask toDomainObject() {
-        return new BlobStoreVaultGarbageCollectionTask(
-            ZonedDateTime.parse(beginningOfRetentionPeriod),
-            Flux.fromIterable(retentionOperation)
-                .map(BucketName::of));
+    private static BlobStoreVaultGarbageCollectionTask toDomainObject(BlobStoreVaultGarbageCollectionTask.Factory factory) {
+        return factory.create();
     }
 
     @Override
@@ -78,11 +58,4 @@ public class BlobStoreVaultGarbageCollectionTaskDTO implements TaskDTO {
         return type;
     }
 
-    public String getBeginningOfRetentionPeriod() {
-        return beginningOfRetentionPeriod;
-    }
-
-    public Collection<String> getRetentionOperation() {
-        return retentionOperation;
-    }
 }

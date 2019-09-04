@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -68,18 +67,20 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     private final BucketNameGenerator nameGenerator;
     private final Clock clock;
     private final RetentionConfiguration retentionConfiguration;
+    private final BlobStoreVaultGarbageCollectionTask.Factory taskFactory;
 
     @Inject
     public BlobStoreDeletedMessageVault(MetricFactory metricFactory, DeletedMessageMetadataVault messageMetadataVault,
-                                 BlobStore blobStore, BucketNameGenerator nameGenerator,
-                                 Clock clock,
-                                 RetentionConfiguration retentionConfiguration) {
+                                        BlobStore blobStore, BucketNameGenerator nameGenerator,
+                                        Clock clock,
+                                        RetentionConfiguration retentionConfiguration) {
         this.metricFactory = metricFactory;
         this.messageMetadataVault = messageMetadataVault;
         this.blobStore = blobStore;
         this.nameGenerator = nameGenerator;
         this.clock = clock;
         this.retentionConfiguration = retentionConfiguration;
+        this.taskFactory = new BlobStoreVaultGarbageCollectionTask.Factory(this);
     }
 
     @Override
@@ -158,15 +159,21 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
     @Override
     public Task deleteExpiredMessagesTask() {
-        ZonedDateTime now = ZonedDateTime.now(clock);
-        ZonedDateTime beginningOfRetentionPeriod = now.minus(retentionConfiguration.getRetentionPeriod());
+        return taskFactory.create();
+    }
 
-        Flux<BucketName> metricAbleDeleteOperation = metricFactory.runPublishingTimerMetric(
+
+    Flux<BucketName> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
+        return metricFactory.runPublishingTimerMetric(
             DELETE_EXPIRED_MESSAGES_METRIC_NAME,
             retentionQualifiedBuckets(beginningOfRetentionPeriod)
                 .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName))));
 
-        return new BlobStoreVaultGarbageCollectionTask(beginningOfRetentionPeriod, metricAbleDeleteOperation);
+    }
+
+    ZonedDateTime getBeginningOfRetentionPeriod() {
+        ZonedDateTime now = ZonedDateTime.now(clock);
+        return now.minus(retentionConfiguration.getRetentionPeriod());
     }
 
     @VisibleForTesting

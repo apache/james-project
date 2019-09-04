@@ -22,6 +22,7 @@ package org.apache.james.vault.blob;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.io.IOException;
 import java.time.ZonedDateTime;
@@ -33,22 +34,36 @@ import org.apache.james.task.Task;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
+
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
 import reactor.core.publisher.Flux;
 
 class BlobStoreVaultGarbageCollectionTaskSerializationTest {
+   private static final BlobStoreDeletedMessageVault DELETED_MESSAGE_VAULT = Mockito.mock(BlobStoreDeletedMessageVault.class);
+   private static final BlobStoreVaultGarbageCollectionTask.Factory TASK_FACTORY = new BlobStoreVaultGarbageCollectionTask.Factory(DELETED_MESSAGE_VAULT);
 
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(BlobStoreVaultGarbageCollectionTaskDTO.MODULE);
+    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(BlobStoreVaultGarbageCollectionTaskDTO.MODULE.apply(TASK_FACTORY));
     private static final ZonedDateTime BEGINNING_OF_RETENTION_PERIOD = ZonedDateTime.parse("2019-09-03T15:26:13.356+02:00[Europe/Paris]");
     private static final ImmutableList<BucketName> BUCKET_IDS = ImmutableList.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
     private static final Flux<BucketName> RETENTION_OPERATION = Flux.fromIterable(BUCKET_IDS);
     private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS);
-    private static final BlobStoreVaultGarbageCollectionTask TASK = new BlobStoreVaultGarbageCollectionTask(BEGINNING_OF_RETENTION_PERIOD, RETENTION_OPERATION);
+    private static final BlobStoreVaultGarbageCollectionTask TASK = TASK_FACTORY.create();
 
-    private static final String SERIALIZED_TASK = "{\"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"retentionOperation\":[\"1\", \"2\", \"3\"],\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\"}";
+    private static final String SERIALIZED_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\"}";
     private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"]}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE);
+
+    @BeforeAll
+    static void setUp() {
+        Mockito.when(DELETED_MESSAGE_VAULT.getBeginningOfRetentionPeriod())
+            .thenReturn(BEGINNING_OF_RETENTION_PERIOD);
+        Mockito.when(DELETED_MESSAGE_VAULT.deleteExpiredMessages(any()))
+            .thenReturn(RETENTION_OPERATION);
+    }
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -61,17 +76,6 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
         Task deserialized = TASK_SERIALIZER.deserialize(SERIALIZED_TASK);
 
         assertThat(deserialized).isInstanceOf(BlobStoreVaultGarbageCollectionTask.class);
-        BlobStoreVaultGarbageCollectionTask blobStoreVaultGarbageCollectionTask = (BlobStoreVaultGarbageCollectionTask) deserialized;
-        assertThat(blobStoreVaultGarbageCollectionTask.getBeginningOfRetentionPeriod())
-            .isEqualTo(TASK.getBeginningOfRetentionPeriod());
-        assertThat(blobStoreVaultGarbageCollectionTask
-            .getRetentionOperation()
-            .collectList()
-            .block())
-            .isEqualTo(TASK
-                .getRetentionOperation()
-                .collectList()
-                .block());
     }
 
     @Test
