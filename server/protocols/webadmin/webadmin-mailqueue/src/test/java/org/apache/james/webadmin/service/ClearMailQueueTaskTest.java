@@ -28,9 +28,9 @@ import java.util.Optional;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.junit.jupiter.api.Test;
 
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
-import org.junit.jupiter.api.Test;
 
 class ClearMailQueueTaskTest {
 
@@ -43,7 +43,7 @@ class ClearMailQueueTaskTest {
         String queueName = "anyQueue";
         when(mockedQueue.getName()).thenReturn(queueName);
         when(mailQueueFactory.getQueue(anyString())).thenAnswer(arg -> Optional.of(mockedQueue));
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTask.MODULE.apply(mailQueueFactory));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTaskDTO.MODULE.apply(mailQueueFactory));
 
         ManageableMailQueue queue = mailQueueFactory.getQueue(queueName).get();
         ClearMailQueueTask task = new ClearMailQueueTask(queue);
@@ -57,7 +57,7 @@ class ClearMailQueueTaskTest {
         String queueName = "anyQueue";
         when(mockedQueue.getName()).thenReturn(queueName);
         when(mailQueueFactory.getQueue(anyString())).thenAnswer(arg -> Optional.of(mockedQueue));
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTask.MODULE.apply(mailQueueFactory));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTaskDTO.MODULE.apply(mailQueueFactory));
 
         ManageableMailQueue queue = mailQueueFactory.getQueue(queueName).get();
         ClearMailQueueTask task = new ClearMailQueueTask(queue);
@@ -68,7 +68,7 @@ class ClearMailQueueTaskTest {
     void taskShouldThrowWhenDeserializeAnUnknownQueue() throws Exception {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         when(mailQueueFactory.getQueue(anyString())).thenReturn(Optional.empty());
-        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTask.MODULE.apply(mailQueueFactory));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailQueueTaskDTO.MODULE.apply(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"clear-mail-queue\", \"queue\": \"anyQueue\"}";
         assertThatThrownBy(() -> testee.deserialize(serializedJson))

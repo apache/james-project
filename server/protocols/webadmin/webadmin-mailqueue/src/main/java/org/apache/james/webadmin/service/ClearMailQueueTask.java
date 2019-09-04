@@ -20,21 +20,14 @@
 package org.apache.james.webadmin.service;
 
 import java.util.Optional;
-import java.util.function.Function;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.queue.api.MailQueue;
-import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.server.task.json.dto.TaskDTO;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClearMailQueueTask implements Task {
 
@@ -68,44 +61,8 @@ public class ClearMailQueueTask implements Task {
         }
     }
 
-    private static class ClearMailQueueTaskDTO implements TaskDTO {
-
-        public static ClearMailQueueTaskDTO toDTO(ClearMailQueueTask domainObject, String typeName) {
-            return new ClearMailQueueTaskDTO(typeName, domainObject.queue.getName());
-        }
-
-        private final String type;
-        private final String queue;
-
-        public ClearMailQueueTaskDTO(@JsonProperty("type") String type, @JsonProperty("queue") String queue) {
-            this.type = type;
-            this.queue = queue;
-        }
-
-        public ClearMailQueueTask fromDTO(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
-            return new ClearMailQueueTask(mailQueueFactory.getQueue(queue).orElseThrow(() -> new UnknownSerializedQueue(queue)));
-        }
-
-        @Override
-        public String getType() {
-            return type;
-        }
-
-        public String getQueue() {
-            return queue;
-        }
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ClearMailQueueTask.class);
     public static final TaskType TYPE = TaskType.of("clear-mail-queue");
-    public static final Function<MailQueueFactory<ManageableMailQueue>, TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO>> MODULE = (mailQueueFactory) ->
-        DTOModule
-            .forDomainObject(ClearMailQueueTask.class)
-            .convertToDTO(ClearMailQueueTaskDTO.class)
-            .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
-            .toDTOConverter(ClearMailQueueTaskDTO::toDTO)
-            .typeName(TYPE.asString())
-            .withFactory(TaskDTOModule::new);
 
     private final ManageableMailQueue queue;
     private final long initialCount;
@@ -135,6 +92,10 @@ public class ClearMailQueueTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new AdditionalInformation(queue.getName(), initialCount, getRemainingSize()));
+    }
+
+    ManageableMailQueue getQueue() {
+        return queue;
     }
 
     private long getRemainingSize() {
