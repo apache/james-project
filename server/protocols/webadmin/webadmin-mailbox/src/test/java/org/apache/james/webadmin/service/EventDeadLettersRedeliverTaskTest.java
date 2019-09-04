@@ -24,18 +24,18 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class EventDeadLettersRedeliverTaskTest {
     private static final String SERIALIZED = "{\"type\":\"eventDeadLettersRedeliverTask\"}";
     private static final EventDeadLettersRedeliverService SERVICE = mock(EventDeadLettersRedeliverService.class);
     private static final EventRetriever EVENT_RETRIEVER = mock(EventRetriever.class);
     private static final EventDeadLettersRedeliverTask TASK = new EventDeadLettersRedeliverTask(SERVICE, EVENT_RETRIEVER);
-    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(EventDeadLettersRedeliverTask.MODULE.apply(SERVICE, EVENT_RETRIEVER));
+    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(EventDeadLettersRedeliverTaskDTO.MODULE.apply(SERVICE, EVENT_RETRIEVER));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
