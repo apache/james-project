@@ -20,8 +20,13 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -37,8 +42,10 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 
 @SuppressWarnings("deprecation")
@@ -118,14 +125,18 @@ public class MailDelivrer {
         return rcpt.getDomain();
     }
 
-    private ExecutionResult doDeliver(Mail mail, InternetAddress[] addr, Iterator<HostAddress> targetServers) throws MessagingException {
+    private ExecutionResult doDeliver(Mail mail, Set<InternetAddress> addr, Iterator<HostAddress> targetServers) throws MessagingException {
         MessagingException lastError = null;
+
+        Set<InternetAddress> targetAddresses = new HashSet<>(addr);
 
         while (targetServers.hasNext()) {
             try {
-                return mailDelivrerToHost.tryDeliveryToHost(mail, addr, targetServers.next());
+                return mailDelivrerToHost.tryDeliveryToHost(mail, targetAddresses, targetServers.next());
             } catch (SendFailedException sfe) {
                 lastError = handleSendFailExceptionOnMxIteration(mail, sfe);
+
+                targetAddresses.removeAll(listDeliveredAddresses(sfe));
             } catch (MessagingException me) {
                 lastError = handleMessagingException(mail, me);
                 if (configuration.isDebug()) {
@@ -145,6 +156,15 @@ public class MailDelivrer {
             throw lastError;
         }
         return ExecutionResult.temporaryFailure();
+    }
+
+    private Collection<InternetAddress> listDeliveredAddresses(SendFailedException sfe) {
+        return Optional.ofNullable(sfe.getValidSentAddresses())
+            .map(addresses ->
+                Arrays.stream(addresses)
+                    .map(InternetAddress.class::cast)
+                    .collect(Guavate.toImmutableList()))
+            .orElse(ImmutableList.of());
     }
 
     private MessagingException handleMessagingException(Mail mail, MessagingException me) throws MessagingException {

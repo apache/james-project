@@ -20,20 +20,20 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import java.util.Collection;
+
 import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-
+import com.google.common.collect.ImmutableSet;
 
 public class InternetAddressConverter {
-
-    public static InternetAddress[] convert(Collection<MailAddress> recipients) {
+    public static ImmutableSet<InternetAddress> convert(Collection<MailAddress> recipients) {
         Preconditions.checkNotNull(recipients);
         return recipients.stream()
             .map(MailAddress::toInternetAddress)
-            .toArray(InternetAddress[]::new);
+            .collect(Guavate.toImmutableSet());
     }
-
 }

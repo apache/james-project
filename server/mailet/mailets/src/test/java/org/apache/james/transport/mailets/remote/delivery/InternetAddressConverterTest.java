@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.InternetAddress;
 
-import org.apache.james.core.MailAddress;
-import org.apache.james.transport.mailets.remote.delivery.InternetAddressConverter;
 import org.apache.mailet.base.MailAddressFixture;
 import org.junit.Rule;
 import org.junit.Test;
@@ -39,7 +37,7 @@ public class InternetAddressConverterTest {
 
     @Test
     public void convertShouldWorkWithEmptyAddressList() {
-        assertThat(InternetAddressConverter.convert(ImmutableList.<MailAddress>of())).isEmpty();
+        assertThat(InternetAddressConverter.convert(ImmutableList.of())).isEmpty();
     }
 
     @Test

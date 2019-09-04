@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.util.Collection;
 
 import javax.mail.Address;
 import javax.mail.MessagingException;
@@ -302,11 +303,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenReturn(ExecutionResult.success());
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.SUCCESS);
     }
 
@@ -318,11 +319,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new MessagingException("500 : Horrible way to manage Server Return code"));
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
@@ -334,11 +335,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new MessagingException("400 : Horrible way to manage Server Return code"));
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
@@ -350,13 +351,13 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), eq(HOST_ADDRESS_1)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_1)))
             .thenThrow(new MessagingException("400 : Horrible way to manage Server Return code", new IOException()));
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), eq(HOST_ADDRESS_2)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_2)))
             .thenReturn(ExecutionResult.success());
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.SUCCESS);
     }
 
@@ -368,11 +369,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new SMTPSenderFailedException(new InternetAddress(MailAddressFixture.ANY_AT_JAMES.toString()), "command", 505, "Big failure"));
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.PERMANENT_FAILURE);
     }
 
@@ -384,11 +385,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(new SendFailedException());
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(1)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
@@ -408,11 +409,11 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class)))
             .thenThrow(sfe);
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.TEMPORARY_FAILURE);
     }
 
@@ -432,13 +433,13 @@ public class MailDelivrerTest {
             HOST_ADDRESS_1,
             HOST_ADDRESS_2).iterator();
         when(dnsHelper.retrieveHostAddressIterator(MailAddressFixture.JAMES_APACHE_ORG)).thenReturn(dnsEntries);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), eq(HOST_ADDRESS_1)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_1)))
             .thenThrow(sfe);
-        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), eq(HOST_ADDRESS_2)))
+        when(mailDelivrerToHost.tryDeliveryToHost(any(Mail.class), any(Collection.class), eq(HOST_ADDRESS_2)))
             .thenReturn(ExecutionResult.success());
         ExecutionResult executionResult = testee.deliver(mail);
 
-        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(InternetAddress[].class), any(HostAddress.class));
+        verify(mailDelivrerToHost, times(2)).tryDeliveryToHost(any(Mail.class), any(Collection.class), any(HostAddress.class));
         assertThat(executionResult.getExecutionState()).isEqualTo(ExecutionResult.ExecutionState.SUCCESS);
     }
 

@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Properties;
 
 import javax.mail.MessagingException;
@@ -50,7 +51,7 @@ public class MailDelivrerToHost {
         this.session = Session.getInstance(configuration.createFinalJavaxProperties());
     }
 
-    public ExecutionResult tryDeliveryToHost(Mail mail, InternetAddress[] addr, HostAddress outgoingMailServer) throws MessagingException {
+    public ExecutionResult tryDeliveryToHost(Mail mail, Collection<InternetAddress> addr, HostAddress outgoingMailServer) throws MessagingException {
         Properties props = getPropertiesForMail(mail);
         LOGGER.debug("Attempting delivery of {} to host {} at {} from {}",
             mail.getName(), outgoingMailServer.getHostName(), outgoingMailServer.getHost(), props.get("mail.smtp.from"));
@@ -66,13 +67,19 @@ public class MailDelivrerToHost {
             transport = (SMTPTransport) session.getTransport(outgoingMailServer);
             transport.setLocalHost(props.getProperty("mail.smtp.localhost", configuration.getHeloNameProvider().getHeloName()));
             connect(outgoingMailServer, transport);
-            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), addr);
+            transport.sendMessage(adaptToTransport(mail.getMessage(), transport), toArray(addr));
             LOGGER.debug("Mail ({})  sent successfully to {} at {} from {} for {}", mail.getName(), outgoingMailServer.getHostName(),
                 outgoingMailServer.getHost(), props.get("mail.smtp.from"), mail.getRecipients());
         } finally {
             closeTransport(mail, outgoingMailServer, transport);
         }
         return ExecutionResult.success();
+    }
+
+    private InternetAddress[] toArray(Collection<InternetAddress> addr) {
+        InternetAddress[] addresses = new InternetAddress[addr.size()];
+        addr.toArray(addresses);
+        return addresses;
     }
 
     private Properties getPropertiesForMail(Mail mail) {
