@@ -38,6 +38,29 @@ import reactor.core.publisher.Mono;
 
 public class MailboxPathV2Migration implements Migration {
 
+    static class MailboxPathV2MigrationTask implements Task {
+        private final MailboxPathV2Migration migration;
+
+        MailboxPathV2MigrationTask(MailboxPathV2Migration migration) {
+            this.migration = migration;
+        }
+
+        @Override
+        public Result run() throws InterruptedException {
+            return migration.runTask();
+        }
+
+        @Override
+        public TaskType type() {
+            return TYPE;
+        }
+
+        @Override
+        public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+            return Optional.of(migration.getAdditionalInformation());
+        }
+    }
+
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final Supplier<Long> countSupplier;
         private final long initialCount;
@@ -57,6 +80,7 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MailboxPathV2Migration.class);
+    public static final TaskType TYPE = TaskType.of("Cassandra_mailboxPathV2Migration");
     private final CassandraMailboxPathDAOImpl daoV1;
     private final CassandraMailboxPathV2DAO daoV2;
     private final AdditionalInformation additionalInformation;
@@ -90,22 +114,10 @@ public class MailboxPathV2Migration implements Migration {
 
     @Override
     public Task asTask() {
-        return new Task() {
-            @Override
-            public Result run() throws InterruptedException {
-                return runTask();
-            }
-
-            @Override
-            public TaskType type() {
-                return TaskType.of("Cassandra_mailboxPathV2Migration");
-            }
-
-            @Override
-            public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-                return Optional.of(additionalInformation);
-            }
-        };
+        return new MailboxPathV2MigrationTask(this);
     }
 
+    AdditionalInformation getAdditionalInformation() {
+        return additionalInformation;
+    }
 }
