@@ -23,19 +23,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ReprocessingAllMailsTaskTest {
     private static final ReprocessingService REPROCESSING_SERVICE = mock(ReprocessingService.class);
@@ -47,7 +47,7 @@ class ReprocessingAllMailsTaskTest {
                                   String targetQueue,
                                   Optional<String> targetProcessor,
                                   String serialized) throws JsonProcessingException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTask.MODULE.apply(REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTaskDTO.MODULE.apply(REPROCESSING_SERVICE));
         ReprocessingAllMailsTask task = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, repositorySize, repositoryPath, targetQueue, targetProcessor);
         JsonAssertions.assertThatJson(testee.serialize(task))
             .isEqualTo(serialized);
@@ -64,7 +64,7 @@ class ReprocessingAllMailsTaskTest {
                                     String targetQueue,
                                     Optional<String> targetProcessor,
                                     String serialized) throws IOException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTask.MODULE.apply(REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTaskDTO.MODULE.apply(REPROCESSING_SERVICE));
         ReprocessingAllMailsTask task = new ReprocessingAllMailsTask(REPROCESSING_SERVICE, repositorySize, repositoryPath, targetQueue, targetProcessor);
 
         assertThat(testee.deserialize(serialized))
@@ -85,7 +85,7 @@ class ReprocessingAllMailsTaskTest {
     @ParameterizedTest
     @ValueSource(strings = {"{\"type\":\"reprocessingAllTask\",\"repositorySize\":5,\"repositoryPath\":\"%\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\"}", "{\"type\":\"reprocessingAllTask\",\"repositorySize\":5,\"repositoryPath\":\"%\",\"targetQueue\":\"queue\"}"})
     void taskShouldThrowOnDeserializationUrlDecodingError(String serialized) {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTask.MODULE.apply(REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingAllMailsTaskDTO.MODULE.apply(REPROCESSING_SERVICE));
 
         assertThatThrownBy(() -> testee.deserialize(serialized))
                 .isInstanceOf(ReprocessingAllMailsTask.InvalidMailRepositoryPathDeserializationException.class);

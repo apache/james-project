@@ -21,21 +21,15 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Function;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.server.task.json.dto.TaskDTO;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingAllMailsTask implements Task {
 
@@ -92,85 +86,6 @@ public class ReprocessingAllMailsTask implements Task {
         }
     }
 
-    private static class ReprocessingAllMailsTaskDTO implements TaskDTO {
-
-        public static ReprocessingAllMailsTaskDTO toDTO(ReprocessingAllMailsTask domainObject, String typeName) {
-            try {
-                return new ReprocessingAllMailsTaskDTO(
-                    typeName,
-                    domainObject.repositorySize,
-                    domainObject.repositoryPath.urlEncoded(),
-                    domainObject.targetQueue,
-                    domainObject.targetProcessor
-                );
-            } catch (Exception e) {
-                throw new UrlEncodingFailureSerializationException(domainObject.repositoryPath);
-            }
-        }
-
-        private final String type;
-        private final long repositorySize;
-        private final String repositoryPath;
-        private final String targetQueue;
-        private final Optional<String> targetProcessor;
-
-        public ReprocessingAllMailsTaskDTO(@JsonProperty("type") String type,
-                                           @JsonProperty("repositorySize") long repositorySize,
-                                           @JsonProperty("repositoryPath") String repositoryPath,
-                                           @JsonProperty("targetQueue") String targetQueue,
-                                           @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
-            this.type = type;
-            this.repositorySize = repositorySize;
-            this.repositoryPath = repositoryPath;
-            this.targetQueue = targetQueue;
-            this.targetProcessor = targetProcessor;
-        }
-
-        public ReprocessingAllMailsTask fromDTO(ReprocessingService reprocessingService) {
-            try {
-                return new ReprocessingAllMailsTask(
-                    reprocessingService,
-                    repositorySize,
-                    MailRepositoryPath.fromEncoded(repositoryPath),
-                    targetQueue,
-                    targetProcessor
-                );
-            } catch (Exception e) {
-                throw new InvalidMailRepositoryPathDeserializationException(repositoryPath);
-            }
-        }
-
-        @Override
-        public String getType() {
-            return type;
-        }
-
-        public long getRepositorySize() {
-            return repositorySize;
-        }
-
-        public String getRepositoryPath() {
-            return repositoryPath;
-        }
-
-        public String getTargetQueue() {
-            return targetQueue;
-        }
-
-        public Optional<String> getTargetProcessor() {
-            return targetProcessor;
-        }
-    }
-
-    public static final Function<ReprocessingService, TaskDTOModule<ReprocessingAllMailsTask, ReprocessingAllMailsTaskDTO>> MODULE = (reprocessingService) ->
-        DTOModule
-            .forDomainObject(ReprocessingAllMailsTask.class)
-            .convertToDTO(ReprocessingAllMailsTaskDTO.class)
-            .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
-            .toDTOConverter(ReprocessingAllMailsTaskDTO::toDTO)
-            .typeName(TYPE.asString())
-            .withFactory(TaskDTOModule::new);
-
     private final ReprocessingService reprocessingService;
     private final MailRepositoryPath repositoryPath;
     private final String targetQueue;
@@ -201,6 +116,22 @@ public class ReprocessingAllMailsTask implements Task {
             LOGGER.error("Encountered error while reprocessing repository", e);
             return Result.PARTIAL;
         }
+    }
+
+    MailRepositoryPath getRepositoryPath() {
+        return repositoryPath;
+    }
+
+    long getRepositorySize() {
+        return repositorySize;
+    }
+
+    Optional<String> getTargetProcessor() {
+        return targetProcessor;
+    }
+
+    String getTargetQueue() {
+        return targetQueue;
     }
 
     @Override
