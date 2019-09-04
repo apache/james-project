@@ -41,7 +41,7 @@ import reactor.core.publisher.Mono;
 
 public class MappingsSourcesMigration implements Migration {
 
-    private static class MappingsSourcesMigrationTask implements Task {
+    public static class MappingsSourcesMigrationTask implements Task {
 
         private final MappingsSourcesMigration migration;
 
@@ -66,7 +66,7 @@ public class MappingsSourcesMigration implements Migration {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingsSourcesMigration.class);
-    private static final TaskType TYPE = TaskType.of("mappingsSourcesMigration");
+    public static final TaskType TYPE = TaskType.of("mappingsSourcesMigration");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long successfulMappingsCount;
