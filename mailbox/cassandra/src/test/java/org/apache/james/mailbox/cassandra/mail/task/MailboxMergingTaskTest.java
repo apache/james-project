@@ -36,7 +36,7 @@ class MailboxMergingTaskTest {
     private static final String SERIALIZED = "{\"type\":\"mailboxMerging\",\"totalMessageCount\":0,\"oldMailboxId\":\"3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c\",\"newMailboxId\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\"}";
     private static final MailboxMergingTaskRunner TASK_RUNNER = mock(MailboxMergingTaskRunner.class);
     private static final MailboxMergingTask TASK = new MailboxMergingTask(TASK_RUNNER, 0L, CASSANDRA_ID_FACTORY.fromString("3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c"), CASSANDRA_ID_FACTORY.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
-    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(MailboxMergingTask.MODULE.apply(TASK_RUNNER));
+    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(MailboxMergingTaskDTO.MODULE.apply(TASK_RUNNER));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
