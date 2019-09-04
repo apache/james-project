@@ -25,9 +25,108 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MockSmtpBehaviors {
+    public static class Builder {
+        public static class CommandStep {
+            private final Builder backReference;
+
+            CommandStep(Builder backReference) {
+                this.backReference = backReference;
+            }
+
+            public ResponseStep onCommand(SMTPCommand command) {
+                Preconditions.checkNotNull(command, "'command' should not be null");
+                return new ResponseStep(backReference, command);
+            }
+        }
+
+        public static class ResponseStep {
+            private final Builder backReference;
+            private final SMTPCommand command;
+
+            ResponseStep(Builder backReference, SMTPCommand command) {
+                this.backReference = backReference;
+                this.command = command;
+            }
+
+            public ConditionStep respond(Response.SMTPStatusCode statusCode, String message) {
+                return new ConditionStep(backReference, command, new Response(statusCode, message));
+            }
+        }
+
+        public static class ConditionStep {
+            private final Builder backReference;
+            private final SMTPCommand command;
+            private final Response response;
+
+            ConditionStep(Builder backReference, SMTPCommand command, Response response) {
+                this.backReference = backReference;
+                this.command = command;
+                this.response = response;
+            }
+
+            public NumberOfAnswerStep forAnyInput() {
+                return new NumberOfAnswerStep(backReference, command, response, Condition.MATCH_ALL);
+            }
+
+            public NumberOfAnswerStep forInputContaining(String value) {
+                return new NumberOfAnswerStep(backReference, command, response, new Condition.OperatorCondition(Operator.CONTAINS, value));
+            }
+        }
+
+        public static class NumberOfAnswerStep {
+            private final Builder backReference;
+            private final SMTPCommand command;
+            private final Response response;
+            private final Condition condition;
+
+            NumberOfAnswerStep(Builder backReference, SMTPCommand command, Response response, Condition condition) {
+                this.backReference = backReference;
+                this.command = command;
+                this.response = response;
+                this.condition = condition;
+            }
+
+            public Builder unlimitedNumberOfAnswer() {
+                return backReference.add(toBehavior(MockSMTPBehavior.NumberOfAnswersPolicy.anytime()));
+            }
+
+            public Builder onlySomeAnswers(int count) {
+                return backReference.add(toBehavior(MockSMTPBehavior.NumberOfAnswersPolicy.times(count)));
+            }
+
+            MockSMTPBehavior toBehavior(MockSMTPBehavior.NumberOfAnswersPolicy numberOfAnswersPolicy) {
+                return new MockSMTPBehavior(command, condition, response, numberOfAnswersPolicy);
+            }
+        }
+
+        private final ImmutableList.Builder<MockSMTPBehavior> behaviors;
+
+        public Builder() {
+            this.behaviors = ImmutableList.builder();
+        }
+
+        public CommandStep addNewBehavior() {
+            return new CommandStep(this);
+        }
+
+        Builder add(MockSMTPBehavior behavior) {
+            this.behaviors.add(behavior);
+            return this;
+        }
+
+        public MockSmtpBehaviors build() {
+            return new MockSmtpBehaviors(behaviors.build());
+        }
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
     private final List<MockSMTPBehavior> behaviorList;
 
     @JsonCreator
