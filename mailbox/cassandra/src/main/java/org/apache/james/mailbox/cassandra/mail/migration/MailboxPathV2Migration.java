@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.cassandra.mail.migration;
 
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import javax.inject.Inject;
 
@@ -62,16 +61,16 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final Supplier<Long> countSupplier;
+        private final long remainingCount;
         private final long initialCount;
 
-        public AdditionalInformation(Supplier<Long> countSupplier) {
-            this.countSupplier = countSupplier;
-            this.initialCount = countSupplier.get();
+        public AdditionalInformation(long remainingCount, long initialCount) {
+            this.remainingCount = remainingCount;
+            this.initialCount = initialCount;
         }
 
         public long getRemainingCount() {
-            return countSupplier.get();
+            return remainingCount;
         }
 
         public long getInitialCount() {
@@ -83,13 +82,13 @@ public class MailboxPathV2Migration implements Migration {
     public static final TaskType TYPE = TaskType.of("Cassandra_mailboxPathV2Migration");
     private final CassandraMailboxPathDAOImpl daoV1;
     private final CassandraMailboxPathV2DAO daoV2;
-    private final AdditionalInformation additionalInformation;
+    private final long initialCount;
 
     @Inject
     public MailboxPathV2Migration(CassandraMailboxPathDAOImpl daoV1, CassandraMailboxPathV2DAO daoV2) {
         this.daoV1 = daoV1;
         this.daoV2 = daoV2;
-        this.additionalInformation = new AdditionalInformation(() -> daoV1.countAll().block());
+        this.initialCount = getCurrentCount();
     }
 
     @Override
@@ -118,6 +117,10 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     AdditionalInformation getAdditionalInformation() {
-        return additionalInformation;
+        return new AdditionalInformation(getCurrentCount(), initialCount);
+    }
+
+    private Long getCurrentCount() {
+        return daoV1.countAll().block();
     }
 }
