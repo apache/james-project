@@ -234,7 +234,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWHenRCPT500() throws Exception {
+    public void remoteDeliveryShouldNotRetryWhenRCPT500() throws Exception {
         with()
             .body(SINGLE_500_RCPT_BEHAVIOR)
             .put("/smtpBehaviors");
@@ -250,7 +250,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWHenFROM500() throws Exception {
+    public void remoteDeliveryShouldNotRetryWhenFROM500() throws Exception {
         with()
             .body(SINGLE_500_FROM_BEHAVIOR)
             .put("/smtpBehaviors");
@@ -266,7 +266,7 @@ public class RemoteDeliveryErrorTest {
     }
 
     @Test
-    public void remoteDeliveryShouldNotRetryWHenDATA500() throws Exception {
+    public void remoteDeliveryShouldNotRetryWhenDATA500() throws Exception {
         with()
             .body(SINGLE_500_DATA_BEHAVIOR)
             .put("/smtpBehaviors");
