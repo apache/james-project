@@ -26,7 +26,9 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
@@ -35,8 +37,11 @@ class MappingsSourcesMigrationTaskSerializationTest {
     private static final MappingsSourcesMigration MIGRATION = mock(MappingsSourcesMigration.class);
     private static final MappingsSourcesMigration.MappingsSourcesMigrationTask TASK = new MappingsSourcesMigration.MappingsSourcesMigrationTask(MIGRATION);
     private static final String SERIALIZED_TASK = "{\"type\": \"mappingsSourcesMigration\"}";
+    private static final MappingsSourcesMigration.AdditionalInformation DETAILS = new MappingsSourcesMigration.AdditionalInformation(42L, 10);
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfulMappingsCount\":42,\"errorMappinsCount\":10}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MappingsSourcesMigrationTaskDTO.MODULE.apply(MIGRATION));
+    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MappingsSourcesMigrationTaskAdditionalInformationDTO.MODULE);
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -48,5 +53,16 @@ class MappingsSourcesMigrationTaskSerializationTest {
     void taskShouldBeDeserializable() throws IOException {
         assertThat(TASK_SERIALIZER.deserialize(SERIALIZED_TASK))
             .isEqualToComparingFieldByField(TASK);
+    }
+
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        assertThatJson(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.serialize(DETAILS)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("mappingsSourcesMigration", SERIALIZED_ADDITIONAL_INFORMATION))
+            .isEqualToComparingFieldByField(DETAILS);
     }
 }
