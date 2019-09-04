@@ -21,7 +21,6 @@ package org.apache.james.webadmin.service;
 
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.queue.api.MailQueue;
@@ -31,7 +30,6 @@ import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
-
 import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +41,12 @@ public class ClearMailQueueTask implements Task {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final String mailQueueName;
         private final long initialCount;
-        private final Supplier<Long> countSupplier;
+        private final long remainingCount;
 
-        public AdditionalInformation(String mailQueueName, Supplier<Long> countSupplier) {
+        public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount) {
             this.mailQueueName = mailQueueName;
-            this.countSupplier = countSupplier;
-            this.initialCount = countSupplier.get();
+            this.initialCount = initialCount;
+            this.remainingCount = remainingCount;
         }
 
         public String getMailQueueName() {
@@ -60,7 +58,7 @@ public class ClearMailQueueTask implements Task {
         }
 
         public long getRemainingCount() {
-            return countSupplier.get();
+            return remainingCount;
         }
     }
 
@@ -110,11 +108,11 @@ public class ClearMailQueueTask implements Task {
             .withFactory(TaskDTOModule::new);
 
     private final ManageableMailQueue queue;
-    private final AdditionalInformation additionalInformation;
+    private final long initialCount;
 
     public ClearMailQueueTask(ManageableMailQueue queue) {
         this.queue = queue;
-        additionalInformation = new AdditionalInformation(queue.getName(), this::getRemainingSize);
+        initialCount = getRemainingSize();
     }
 
     @Override
@@ -136,7 +134,7 @@ public class ClearMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(queue.getName(), initialCount, getRemainingSize()));
     }
 
     private long getRemainingSize() {
