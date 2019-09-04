@@ -40,6 +40,31 @@ import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
 
 public class MappingsSourcesMigration implements Migration {
+
+    private static class MappingsSourcesMigrationTask implements Task {
+
+        private final MappingsSourcesMigration migration;
+
+        public MappingsSourcesMigrationTask(MappingsSourcesMigration migration) {
+            this.migration = migration;
+        }
+
+        @Override
+        public Result run() throws InterruptedException {
+            return migration.runTask();
+        }
+
+        @Override
+        public TaskType type() {
+            return TYPE;
+        }
+
+        @Override
+        public Optional<TaskExecutionDetails.AdditionalInformation> details() {
+            return Optional.of(migration.createAdditionalInformation());
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingsSourcesMigration.class);
     private static final TaskType TYPE = TaskType.of("mappingsSourcesMigration");
 
@@ -102,23 +127,7 @@ public class MappingsSourcesMigration implements Migration {
 
     @Override
     public Task asTask() {
-        return new Task() {
-
-            @Override
-            public Result run() throws InterruptedException {
-                return runTask();
-            }
-
-            @Override
-            public TaskType type() {
-                return TYPE;
-            }
-
-            @Override
-            public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-                return Optional.of(createAdditionalInformation());
-            }
-        };
+        return new MappingsSourcesMigrationTask(this);
     }
 
     AdditionalInformation createAdditionalInformation() {
