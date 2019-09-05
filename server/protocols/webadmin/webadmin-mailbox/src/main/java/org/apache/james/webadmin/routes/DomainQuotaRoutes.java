@@ -126,7 +126,6 @@ public class DomainQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer or not unlimited value (-1)."),
             @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
             @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.CONFLICT_409, message = "The requested restriction can't be enforced right now."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuota() {
@@ -184,7 +183,6 @@ public class DomainQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
             @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
             @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.CONFLICT_409, message = "The requested restriction can't be enforced right now."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuotaSize() {
@@ -245,7 +243,6 @@ public class DomainQuotaRoutes implements Routes {
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "The body is not a positive integer."),
             @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "The requested domain can not be found."),
             @ApiResponse(code = HttpStatus.METHOD_NOT_ALLOWED_405, message = "Domain Quota configuration not supported when virtual hosting is desactivated."),
-            @ApiResponse(code = HttpStatus.CONFLICT_409, message = "The requested restriction can't be enforced right now."),
             @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdateQuotaCount() {

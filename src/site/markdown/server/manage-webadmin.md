@@ -523,7 +523,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota count for a user
 
@@ -564,7 +563,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota count for a user
 
@@ -579,7 +577,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota size for a user
 
@@ -620,7 +617,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota size for a user
 
@@ -635,7 +631,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Searching user by quota ratio
 
@@ -784,7 +779,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota count for a domain
 
@@ -828,7 +822,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota count for a domain
 
@@ -844,7 +837,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota size for a domain
@@ -888,7 +880,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota size for a domain
@@ -904,7 +895,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
- - 409: The requested restriction can’t be enforced right now.
  - 500: Internal server error - Something went bad on the server side.
 
 ## Administrating global quotas
@@ -1018,7 +1008,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the global quota size
 
@@ -1054,7 +1043,6 @@ Response codes:
 
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the global quota size
 
@@ -1066,7 +1054,6 @@ Response codes:
 
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
- - 409: The requested restriction can’t be enforced right now.
 
 ## Cassandra Schema upgrades
 
