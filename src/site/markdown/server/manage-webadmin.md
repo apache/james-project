@@ -574,7 +574,6 @@ Resource name usernameToBeUsed should be an existing user
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
 
 ### Getting the quota size for a user
@@ -628,7 +627,6 @@ Resource name usernameToBeUsed should be an existing user
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
 
 ### Searching user by quota ratio
@@ -832,7 +830,6 @@ Resource name domainToBeUsed should be an existing domain.
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
 
@@ -889,7 +886,6 @@ Resource name domainToBeUsed should be an existing domain.
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
 
 ## Administrating global quotas
@@ -1001,7 +997,6 @@ curl -XDELETE http://ip:port/quota/count
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
 
 ### Getting the global quota size
@@ -1048,7 +1043,6 @@ curl -XDELETE http://ip:port/quota/size
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
 
 ## Cassandra Schema upgrades
 
