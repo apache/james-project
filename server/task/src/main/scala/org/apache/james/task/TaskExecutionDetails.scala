@@ -54,7 +54,7 @@ class TaskExecutionDetails(val taskId: TaskId,
 
   def getAdditionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = additionalInformation()
 
-  def getSubmitDate: ZonedDateTime = submittedDate
+  def getSubmittedDate: ZonedDateTime = submittedDate
 
   def getSubmittedNode: Hostname = submittedNode
 

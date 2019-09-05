@@ -60,7 +60,7 @@ class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider
       .setUUID(TASK_ID, details.getTaskId.getValue)
       .setString(TYPE, details.getType)
       .setString(STATUS, details.getStatus.getValue)
-      .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmitDate))
+      .setUDTValue(SUBMITTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getSubmittedDate))
       .setString(SUBMITTED_NODE, details.getSubmittedNode.asString)
       .setUDTValue(STARTED_DATE, CassandraZonedDateTimeModule.toUDT(dateType, details.getStartedDate).orElse(null))
       .setString(RAN_NODE, details.getRanNode.map[String](_.asString).orElse(null))
