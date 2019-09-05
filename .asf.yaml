@@ -1,0 +1,9 @@
+github:
+  description: "Emails at the heart of your business logic!"
+  homepage: https://james.apache.org/
+  labels:
+    - mail
+    - server
+    - IMAP
+    - SMTP
+    - JMAP
