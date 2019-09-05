@@ -206,7 +206,7 @@ curl -XGET http://ip:port/domains
 Possible response:
 
 ```
-{"domains":["domain1", "domain2"]}
+["domain1", "domain2"]
 ```
 
 Response codes:
