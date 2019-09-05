@@ -108,7 +108,7 @@ public class AddressExtractor {
             }
             return new MailAddress(address);
         } catch (Exception e) {
-            throw new MessagingException("Exception thrown parsing: " + address.getAddress());
+            throw new MessagingException("Exception thrown parsing: " + address.getAddress(), e);
         }
     }
 

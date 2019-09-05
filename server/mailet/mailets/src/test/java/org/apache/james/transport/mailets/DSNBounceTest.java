@@ -67,12 +67,15 @@ public class DSNBounceTest {
 
     private DSNBounce dsnBounce;
     private FakeMailContext fakeMailContext;
+    private MailAddress postmaster;
 
     @Before
     public void setUp() throws Exception {
+        postmaster = new MailAddress("postmaster@domain.com");
+        
         DNSService dnsService = mock(DNSService.class);
         dsnBounce = new DSNBounce(dnsService, DateFormats.getRFC822FormatForTimeZone(TimeZone.getTimeZone("UTC")));
-        fakeMailContext = FakeMailContext.defaultContext();
+        fakeMailContext = FakeMailContext.builder().postmaster(postmaster).build();
 
         InetAddress localHost = InetAddress.getLocalHost();
         when(dnsService.getLocalHost())
@@ -524,6 +527,118 @@ public class DSNBounceTest {
 
         dsnBounce.service(mail);
 
-        assertThat(mail.getMessage().getSubject()).isEqualTo("pre My subject");
+        assertThat(fakeMailContext.getSentMails()).hasSize(1).allSatisfy(
+                sentMail -> assertThat(sentMail.getSubject()).contains("pre My subject"));
+    }
+
+    @Test
+    public void dsnBounceShouldAllowSenderSpecialPostmaster() throws Exception {
+        
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("sender", "postmaster")
+                .build();
+        dsnBounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                    .setSubject("My subject"))
+                .build();
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+
+        assertThat(sentMail.getMsg().getFrom())
+                .containsOnly(fakeMailContext.getPostmaster().toInternetAddress());
+        assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
+    }
+
+    @Test
+    public void dsnBounceShouldAllowSenderSpecialSender() throws Exception {
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("sender", "sender")
+                .setProperty("prefix", "pre")
+                .build();
+        dsnBounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setSubject("My subject"))
+                .build();
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+
+        assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress());
+        assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
+    }
+
+    @Test
+    public void dsnBounceShouldAllowSenderSpecialUnaltered() throws Exception {
+
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("sender", "unaltered")
+                .build();
+        dsnBounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setSubject("My subject"))
+                .build();
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+
+        assertThat(sentMail.getMsg().getFrom()).containsOnly(mail.getSender().toInternetAddress());
+        assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
+    }
+
+    @Test
+    public void dsnBounceShouldAllowSenderSpecialAddress() throws Exception {
+
+        MailAddress bounceSender = new MailAddress("bounces@domain.com");
+        FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
+                .mailetName(MAILET_NAME)
+                .mailetContext(fakeMailContext)
+                .setProperty("sender", bounceSender.asPrettyString())
+                .build();
+        dsnBounce.init(mailetConfig);
+
+        FakeMail mail = FakeMail.builder()
+                .name(MAILET_NAME)
+                .sender(MailAddressFixture.ANY_AT_JAMES)
+                .mimeMessage(MimeMessageBuilder.mimeMessageBuilder()
+                        .setSubject("My subject"))
+                .build();
+
+        dsnBounce.service(mail);
+
+        List<SentMail> sentMails = fakeMailContext.getSentMails();
+        assertThat(sentMails).hasSize(1);
+        SentMail sentMail = sentMails.get(0);
+
+        assertThat(sentMail.getMsg().getFrom()).containsOnly(bounceSender.toInternetAddress());
+        assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
     }
 }
