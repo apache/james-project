@@ -1085,7 +1085,7 @@ Response codes:
 ### Retrieving latest available Cassandra schema version
 
 ```
-curl -XGET http://ip:port/cassandra/version
+curl -XGET http://ip:port/cassandra/version/latest
 ```
 
 Will return:
