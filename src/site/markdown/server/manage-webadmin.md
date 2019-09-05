@@ -1073,7 +1073,7 @@ curl -XGET http://ip:port/cassandra/version
 Will return:
 
 ```
-2
+{"version": 2}
 ```
 
 Where the number corresponds to the current schema version of the database you are using.
@@ -1091,7 +1091,7 @@ curl -XGET http://ip:port/cassandra/version/latest
 Will return:
 
 ```
-3
+{"version": 3}
 ```
 
 Where the number corresponds to the latest available schema version of the database you are using. This means you can be
