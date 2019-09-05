@@ -198,7 +198,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
@@ -214,7 +215,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
@@ -230,7 +232,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
@@ -246,7 +249,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
@@ -262,7 +266,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
@@ -278,7 +283,8 @@ public class RemoteDeliveryErrorTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
-        assertThat(imapMessageReader.readFirstMessage()).contains(BOUNCE_MESSAGE);
+        assertThat(imapMessageReader.readFirstMessage())
+            .contains(BOUNCE_MESSAGE);
     }
 
     @Test
