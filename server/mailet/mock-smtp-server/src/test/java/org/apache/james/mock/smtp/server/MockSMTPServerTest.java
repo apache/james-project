@@ -138,7 +138,7 @@ class MockSMTPServerTest {
     @Nested
     class MailMockBehaviorTest {
         @Test
-        void serverShouldReceiveMessageFromClient() throws Exception {
+        void serverShouldReceiveMessageFromClient() {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 MAIL_FROM,
                 Condition.MATCH_ALL,
@@ -151,7 +151,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldReceiveMessageRecipientClient() throws Exception {
+        void serverShouldReceiveMessageRecipientClient() {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 RCPT_TO,
                 Condition.MATCH_ALL,
@@ -164,7 +164,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldReceiveMessageDataClient() throws Exception {
+        void serverShouldReceiveMessageDataClient() {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 DATA,
                 Condition.MATCH_ALL,
@@ -180,7 +180,7 @@ class MockSMTPServerTest {
     @Nested
     class NumberOfAnswersTest {
         @Test
-        void serverShouldKeepReceivingErrorResponseWhenAnytime() throws Exception {
+        void serverShouldKeepReceivingErrorResponseWhenAnytime() {
             behaviorRepository.setBehaviors(new MockSMTPBehavior(
                 MAIL_FROM,
                 Condition.MATCH_ALL,
@@ -195,7 +195,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldDecreaseNumberOfAnswerAfterMatched() throws Exception {
+        void serverShouldDecreaseNumberOfAnswerAfterMatched() {
             int numberOfAnswer = 5;
             MockSMTPBehavior behavior = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -212,7 +212,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldActLikeDefaultAfterGettingEnoughMatches() throws Exception {
+        void serverShouldActLikeDefaultAfterGettingEnoughMatches() {
             int numberOfAnswer = 4;
             MockSMTPBehavior behavior = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -233,7 +233,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldNotDecreaseNonMatchedBehavior() throws Exception {
+        void serverShouldNotDecreaseNonMatchedBehavior() {
             int matchedBehaviorAnswers = 2;
             MockSMTPBehavior matched = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -257,7 +257,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldDecreaseRemainingAnswersOnlyOncePerMessage() throws Exception {
+        void serverShouldDecreaseRemainingAnswersOnlyOncePerMessage() {
             int firstBehaviorAnswers = 2;
             MockSMTPBehavior matchesAnyFrom = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -285,7 +285,7 @@ class MockSMTPServerTest {
     class ConditionFilteringTest {
 
         @Test
-        void serverShouldBehaveOnMatchedFromBehavior() throws Exception {
+        void serverShouldBehaveOnMatchedFromBehavior() {
             MockSMTPBehavior matched = new MockSMTPBehavior(
                 MAIL_FROM,
                 new Condition.OperatorCondition(Operator.CONTAINS, BOB),
@@ -306,7 +306,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldBehaveOnMatchedRecipientBehavior() throws Exception {
+        void serverShouldBehaveOnMatchedRecipientBehavior() {
             MockSMTPBehavior nonMatched = new MockSMTPBehavior(
                 RCPT_TO,
                 new Condition.OperatorCondition(Operator.CONTAINS, BOB),
@@ -327,7 +327,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldBehaveOnMatchedDataBehavior() throws Exception {
+        void serverShouldBehaveOnMatchedDataBehavior() {
             MockSMTPBehavior nonMatched = new MockSMTPBehavior(
                 DATA,
                 new Condition.OperatorCondition(Operator.CONTAINS, "nonRelatedString"),
@@ -348,7 +348,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldDecreaseAnswerCountOnMatchedBehavior() throws Exception {
+        void serverShouldDecreaseAnswerCountOnMatchedBehavior() {
             int matchedAnswerOriginalCount = 10;
             MockSMTPBehavior matched = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -373,7 +373,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void serverShouldNotDecreaseAnswerCountOnMonMatchedBehavior() throws Exception {
+        void serverShouldNotDecreaseAnswerCountOnMonMatchedBehavior() {
             int matchedAnswerOriginalCount = 10;
             MockSMTPBehavior matched = new MockSMTPBehavior(
                 MAIL_FROM,
@@ -397,7 +397,7 @@ class MockSMTPServerTest {
         }
 
         @Test
-        void multipleQualifiedBehaviorsShouldNotOnlyBeingDecreasedOnlyOncePerMessage() throws Exception {
+        void multipleQualifiedBehaviorsShouldNotOnlyBeingDecreasedOnlyOncePerMessage() {
             int matchedOriginalCount = 10;
             MockSMTPBehavior matched = new MockSMTPBehavior(
                 RCPT_TO,
@@ -423,9 +423,6 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldOpenASmtpPort() {
-        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
-        mockServer.start();
-
         assertThatCode(() -> new SMTPMessageSender(DOMAIN)
                 .connect("localhost", mockServer.getPort()))
             .doesNotThrowAnyException();
@@ -433,8 +430,6 @@ class MockSMTPServerTest {
 
     @Test
     void serverShouldBeAbleToStop() {
-        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
-        mockServer.start();
         Port port = mockServer.getPort();
 
         mockServer.stop();
@@ -446,9 +441,6 @@ class MockSMTPServerTest {
 
     @Test
     void serverStartShouldBeIdempotent() {
-        MockSMTPServer mockServer = MockSMTPServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
-        mockServer.start();
-
         assertThatCode(mockServer::start)
             .doesNotThrowAnyException();
     }
