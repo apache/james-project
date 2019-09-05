@@ -1,0 +1,35 @@
+---
+layout: post
+title:  "Apache James Server 3.4.0"
+date:   2019-09-05  15:16:30 +0200
+categories: james update
+---
+
+The Apache James developers are pleased to announce James server 3.4.0 release.
+
+Here are some points we worked on:
+
+### Added
+- Add in-memory docker image
+- Support of AWS S3 as blobstore
+- WebAdmin routes for mapping management (`AddAddressMapping`, `AddRegexMapping`, `ListMappings`), previously only manageable by CLI
+- Metrics for Deleted Message Vault
+- More metrics for BlobStore (new delete & deleteBucket configuration)
+
+### Changed
+- (experimental) New implementation of the deleted message vault on top of an object store, not relying anymore on a 
+repository. This avoids exposing messages via webAdmin. Messages previously stored in the vault will be lost.
+- Migration to ElasticSearch 6.3
+- Blob export to LinShare
+- Native DKIM support for outgoing mails. The mailets from james-jdkim have been included in main James project.
+
+### Deprecated
+- Zookeeper component. This will be removed after 3.4 release. If you have development skills, and are willing to maintain this component, please reach us.
+
+### Removed
+- Karaf OSGi implementation. It was not compiled nor tested for a year. We didn't get any feedback about that and we don't have the resources nor the skills to maintain it any more.
+
+Early adopters can [download it][download], any issue can be reported on our issue [tracker][tracker].
+
+[tracker]: https://issues.apache.org/jira/browse/JAMES
+[download]: http://james.apache.org/download.cgi#Apache_James_Server
