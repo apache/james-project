@@ -1349,8 +1349,8 @@ Will return the destination addresses of this forward as a list of JSON Strings 
 
 ```
 [
-  {"mailAddres":"destination1@domain.com"},
-  {"mailAddres":"destination2@domain.com"}
+  {"mailAddress":"destination1@domain.com"},
+  {"mailAddress":"destination2@domain.com"}
 ]
 ```
 
