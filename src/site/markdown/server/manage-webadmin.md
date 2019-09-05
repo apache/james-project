@@ -301,7 +301,7 @@ Response codes:
  - 400: The user name or the payload is invalid
  - 409: Conflict: A concurrent modification make that query to fail
 
-Note: if the user is already, its password will be updated.
+Note: if the user exists already, its password will be updated.
 
 ### Updating a user password
 
