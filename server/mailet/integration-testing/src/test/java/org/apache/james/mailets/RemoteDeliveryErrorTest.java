@@ -497,7 +497,7 @@ public class RemoteDeliveryErrorTest {
                 .mailet(RemoteDelivery.class)
                 .matcher(All.class)
                 .addProperty("outgoingQueue", "outgoing")
-                .addProperty("delayTime", "10, 10, 10")
+                .addProperty("delayTime", "3 * 10 ms")
                 .addProperty("maxRetries", "3")
                 .addProperty("maxDnsProblemRetries", "0")
                 .addProperty("deliveryThreads", "2")
