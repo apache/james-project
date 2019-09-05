@@ -41,7 +41,7 @@ public class SenderUtils {
     public Optional<MailAddress> getSender(Mail originalMail) throws MessagingException {
         if (sender.isPresent()) {
             if (isUnalteredOrSender(sender.get())) {
-                return Optional.empty();
+                return originalMail.getMaybeSender().asOptional();
             }
         }
         return sender;
