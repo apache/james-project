@@ -1536,7 +1536,6 @@ Response codes:
 
  - 200: OK
  - 400: The `fromDomain` resource name is invalid
- - 400: The `fromDomain` is not managed by the DomainList
  - 404: The `fromDomain` resource name is not found
 
 ### Adding a domain mapping
