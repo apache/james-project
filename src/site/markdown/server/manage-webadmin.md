@@ -468,12 +468,12 @@ The answer is the details of the quota of that user.
     "size":42
   },
   "occupation": {
-    "size":1000,
-    "count":10000,
+    "size":13,
+    "count":21,
     "ratio": {
-      "size":0.8,
-      "count":0.6,
-      "max":0.8
+      "size":0.25,
+      "count":0.5,
+      "max":0.5
     }
   }
 }
