@@ -357,7 +357,6 @@ Response codes:
  - 204: The mailbox now exists on the server
  - 400: Invalid mailbox name
  - 404: The user name does not exist
- - 500: Internal error
 
  To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is:
 
@@ -800,7 +799,6 @@ Response codes:
  - 204: No quota count limit is defined at the domain level for this domain
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal error while accessing the domain's quota
 
 ### Updating the quota count for a domain
 
@@ -837,7 +835,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota size for a domain
 
@@ -880,7 +877,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota size for a domain
 
@@ -895,7 +891,6 @@ Response codes:
  - 204: The quota has been updated to unlimited value.
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
- - 500: Internal server error - Something went bad on the server side.
 
 ## Administrating global quotas
 
