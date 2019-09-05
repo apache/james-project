@@ -1805,7 +1805,7 @@ Response codes:
 ### Getting additional information for a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/
+curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
