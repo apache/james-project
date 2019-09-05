@@ -997,7 +997,6 @@ curl -XDELETE http://ip:port/quota/count
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 404: The user does not exist
 
 ### Getting the global quota size
 
