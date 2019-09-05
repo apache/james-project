@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
+
+## [3.4.0] - 2019-09-05
 ### Added
 - Add in-memory docker image
 - Support of AWS S3 as blobstore
