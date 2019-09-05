@@ -410,7 +410,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(nullValue()))
                 .body("additionalInformation.insertionId", is(nullValue()))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE))
+                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -597,7 +597,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
                 .body("additionalInformation.insertionId", is(nullValue()))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE))
+                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -817,7 +817,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
                 .body("additionalInformation.insertionId", is(INSERTION_UUID_1))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE))
+                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));

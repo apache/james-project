@@ -284,7 +284,7 @@ public class FixingGhostMailboxTest {
             .body("additionalInformation.totalMessageCount", is(1))
             .body("additionalInformation.messageMovedCount", is(1))
             .body("additionalInformation.messageFailedCount", is(0))
-            .body("type", is(MailboxMergingTask.MAILBOX_MERGING))
+            .body("type", is(MailboxMergingTask.MAILBOX_MERGING.asString()))
             .body("submitDate", is(not(nullValue())))
             .body("startedDate", is(not(nullValue())))
             .body("completedDate", is(not(nullValue())));

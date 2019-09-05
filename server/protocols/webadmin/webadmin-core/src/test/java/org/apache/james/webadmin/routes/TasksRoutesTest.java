@@ -139,7 +139,7 @@ class TasksRoutesTest {
             .body("", hasSize(1))
             .body("[0].status", is(TaskManager.Status.IN_PROGRESS.getValue()))
             .body("[0].taskId", is(taskId.asString()))
-            .body("[0].type", is(Task.UNKNOWN));
+            .body("[0].type", is(Task.UNKNOWN.asString()));
     }
 
     @Test

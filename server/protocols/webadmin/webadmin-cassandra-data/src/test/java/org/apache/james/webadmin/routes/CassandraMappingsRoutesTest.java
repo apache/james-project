@@ -123,7 +123,7 @@ class CassandraMappingsRoutesTest {
             .body("taskId", is(taskId))
             .body("additionalInformation.successfulMappingsCount", is(0))
             .body("additionalInformation.errorMappingsCount", is(0))
-            .body("type", is(CassandraMappingsSolveInconsistenciesTask.TYPE))
+            .body("type", is(CassandraMappingsSolveInconsistenciesTask.TYPE.asString()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
             .body("completedDate", is(notNullValue()));

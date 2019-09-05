@@ -56,6 +56,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableMap;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import reactor.core.publisher.Mono;
@@ -277,7 +278,7 @@ public class CassandraMigrationRoutesTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is(MigrationTask.CASSANDRA_MIGRATION))
+            .body("type", is(MigrationTask.CASSANDRA_MIGRATION.asString()))
             .body("additionalInformation.toVersion", is(LATEST_VERSION.getValue()))
             .body("startedDate", is(notNullValue()))
             .body("submitDate", is(notNullValue()))
