@@ -368,11 +368,11 @@ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/INBOX.work
 ### Deleting a mailbox and its children
 
 ```
-curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeDeleted
 ```
 
 Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeCreated should not be empty
+Resource name mailboxNameToBeDeleted should not be empty
 
 Response codes:
 
