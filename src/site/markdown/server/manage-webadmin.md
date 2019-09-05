@@ -271,7 +271,7 @@ the domain part will be rewritten into destination.domain.tld (so into benwa@des
 
 Response codes:
 
- - 204: The redirection now exists
+ - 204: The redirection now no longer exist
  - 400: source.domain.tld or destination.domain.tld have an invalid syntax
  - 400: source domain and destination domain are the same
  - 404: source.domain.tld are not part of handled domains.
