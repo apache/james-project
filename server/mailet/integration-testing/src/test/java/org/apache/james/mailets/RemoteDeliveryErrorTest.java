@@ -29,6 +29,10 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ConditionStep.anyInput;
+import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ConditionStep.inputContaining;
+import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ResponseStep.doesNotAcceptAnyMail;
+import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ResponseStep.serviceNotAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
@@ -46,7 +50,6 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
-import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -93,80 +96,80 @@ public class RemoteDeliveryErrorTest {
 
     private static final MockSmtpBehaviors ALWAYS_421_RCPT_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.RCPT_TO)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .unlimitedNumberOfAnswer()
+        .expect(SMTPCommand.RCPT_TO)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .anyTimes()
         .build();
     private static final MockSmtpBehaviors ALWAYS_421_FROM_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.MAIL_FROM)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .unlimitedNumberOfAnswer()
+        .expect(SMTPCommand.MAIL_FROM)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .anyTimes()
         .build();
     private static final MockSmtpBehaviors ALWAYS_421_DATA_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.DATA)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .unlimitedNumberOfAnswer()
+        .expect(SMTPCommand.DATA)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .anyTimes()
         .build();
     private static final MockSmtpBehaviors TWICE_421_RCPT_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.RCPT_TO)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(2)
+        .expect(SMTPCommand.RCPT_TO)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .onlySomeTimes(2)
         .build();
     private static final MockSmtpBehaviors TWICE_421_FROM_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.MAIL_FROM)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(2)
+        .expect(SMTPCommand.MAIL_FROM)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .onlySomeTimes(2)
         .build();
     private static final MockSmtpBehaviors TWICE_421_DATA_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.DATA)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(2)
+        .expect(SMTPCommand.DATA)
+        .matching(anyInput())
+        .thenRespond(serviceNotAvailable("mock response"))
+        .onlySomeTimes(2)
         .build();
     private static final MockSmtpBehaviors SINGLE_500_RCPT_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.RCPT_TO)
-        .respond(Response.SMTPStatusCode.DOES_NOT_ACCEPT_MAIL_521, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(1)
+        .expect(SMTPCommand.RCPT_TO)
+        .matching(anyInput())
+        .thenRespond(doesNotAcceptAnyMail("mock message"))
+        .onlySomeTimes(1)
         .build();
     private static final MockSmtpBehaviors SINGLE_500_FROM_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.MAIL_FROM)
-        .respond(Response.SMTPStatusCode.DOES_NOT_ACCEPT_MAIL_521, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(1)
+        .expect(SMTPCommand.MAIL_FROM)
+        .matching(anyInput())
+        .thenRespond(doesNotAcceptAnyMail("mock message"))
+        .onlySomeTimes(1)
         .build();
     private static final MockSmtpBehaviors SINGLE_500_DATA_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.DATA)
-        .respond(Response.SMTPStatusCode.DOES_NOT_ACCEPT_MAIL_521, "mock response")
-        .forAnyInput()
-        .onlySomeAnswers(1)
+        .expect(SMTPCommand.DATA)
+        .matching(anyInput())
+        .thenRespond(doesNotAcceptAnyMail("mock message"))
+        .onlySomeTimes(1)
         .build();
     private static final MockSmtpBehaviors SINGLE_PARTIAL_RCPT_421_BEHAVIOR = MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.RCPT_TO)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forInputContaining(RECIPIENT1)
-        .onlySomeAnswers(1)
+        .expect(SMTPCommand.RCPT_TO)
+        .matching(inputContaining(RECIPIENT1))
+        .thenRespond(serviceNotAvailable("mock response"))
+        .onlySomeTimes(1)
         .build();
     private static final MockSmtpBehaviors ALWAYS_PARTIAL_RCPT_421_BEHAVIOR =  MockSmtpBehaviors.builder()
         .addNewBehavior()
-        .onCommand(SMTPCommand.RCPT_TO)
-        .respond(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, "mock response")
-        .forInputContaining(RECIPIENT2)
-        .unlimitedNumberOfAnswer()
+        .expect(SMTPCommand.RCPT_TO)
+        .matching(inputContaining(RECIPIENT2))
+        .thenRespond(serviceNotAvailable("mock response"))
+        .anyTimes()
         .build();
     private static final String BOUNCE_MESSAGE = "Hi. This is the James mail server at localhost.\n" +
         "I'm afraid I wasn't able to deliver your message to the following addresses.\n" +

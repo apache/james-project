@@ -37,43 +37,55 @@ public class MockSmtpBehaviors {
                 this.backReference = backReference;
             }
 
-            public ResponseStep onCommand(SMTPCommand command) {
+            public ConditionStep expect(SMTPCommand command) {
                 Preconditions.checkNotNull(command, "'command' should not be null");
-                return new ResponseStep(backReference, command);
-            }
-        }
-
-        public static class ResponseStep {
-            private final Builder backReference;
-            private final SMTPCommand command;
-
-            ResponseStep(Builder backReference, SMTPCommand command) {
-                this.backReference = backReference;
-                this.command = command;
-            }
-
-            public ConditionStep respond(Response.SMTPStatusCode statusCode, String message) {
-                return new ConditionStep(backReference, command, new Response(statusCode, message));
+                return new ConditionStep(backReference, command);
             }
         }
 
         public static class ConditionStep {
+            public static Condition anyInput() {
+                return Condition.MATCH_ALL;
+            }
+
+            public static Condition inputContaining(String value) {
+                return new Condition.OperatorCondition(Operator.CONTAINS, value);
+            }
+
             private final Builder backReference;
             private final SMTPCommand command;
-            private final Response response;
 
-            ConditionStep(Builder backReference, SMTPCommand command, Response response) {
+            ConditionStep(Builder backReference, SMTPCommand command) {
                 this.backReference = backReference;
                 this.command = command;
-                this.response = response;
             }
 
-            public NumberOfAnswerStep forAnyInput() {
-                return new NumberOfAnswerStep(backReference, command, response, Condition.MATCH_ALL);
+            public ResponseStep matching(Condition condition) {
+                return new ResponseStep(backReference, command, condition);
+            }
+        }
+
+        public static class ResponseStep {
+            public static Response serviceNotAvailable(String message) {
+                return new Response(Response.SMTPStatusCode.SERVICE_NOT_AVAILABLE_421, message);
             }
 
-            public NumberOfAnswerStep forInputContaining(String value) {
-                return new NumberOfAnswerStep(backReference, command, response, new Condition.OperatorCondition(Operator.CONTAINS, value));
+            public static Response doesNotAcceptAnyMail(String message) {
+                return new Response(Response.SMTPStatusCode.DOES_NOT_ACCEPT_MAIL_521, message);
+            }
+
+            private final Builder backReference;
+            private final SMTPCommand command;
+            private final Condition condition;
+
+            ResponseStep(Builder backReference, SMTPCommand command, Condition condition) {
+                this.backReference = backReference;
+                this.command = command;
+                this.condition = condition;
+            }
+
+            public NumberOfAnswerStep thenRespond(Response response) {
+                return new NumberOfAnswerStep(backReference, command, response, condition);
             }
         }
 
@@ -90,11 +102,11 @@ public class MockSmtpBehaviors {
                 this.condition = condition;
             }
 
-            public Builder unlimitedNumberOfAnswer() {
+            public Builder anyTimes() {
                 return backReference.add(toBehavior(MockSMTPBehavior.NumberOfAnswersPolicy.anytime()));
             }
 
-            public Builder onlySomeAnswers(int count) {
+            public Builder onlySomeTimes(int count) {
                 return backReference.add(toBehavior(MockSMTPBehavior.NumberOfAnswersPolicy.times(count)));
             }
 
