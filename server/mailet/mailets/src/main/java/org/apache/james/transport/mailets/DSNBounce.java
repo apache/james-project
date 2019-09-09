@@ -220,7 +220,9 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
 
     @Override
     public Optional<MailAddress> getSender() throws MessagingException {
-        return SpecialAddressesUtils.from(this).getFirstSpecialAddressIfMatchingOrGivenAddress(Optional.of(getInitParameters().getSender().orElse("postmaster")), RedirectNotify.SENDER_ALLOWED_SPECIALS);
+        return SpecialAddressesUtils.from(this).getFirstSpecialAddressIfMatchingOrGivenAddress(
+                Optional.of(getInitParameters().getSender().orElse("postmaster")),
+                RedirectNotify.SENDER_ALLOWED_SPECIALS);
     }
 
     @Override

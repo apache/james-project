@@ -527,11 +527,9 @@ public class DSNBounceTest {
 
         dsnBounce.service(mail);
         
-
-        List<SentMail> sentMails = fakeMailContext.getSentMails();
-        assertThat(sentMails).hasSize(1);
-        SentMail sentMail = sentMails.get(0);
-        assertThat(sentMail.getSubject().orElse(null)).isEqualTo("pre My subject");
+        assertThat(fakeMailContext.getSentMails())
+        .hasSize(1)
+        .allSatisfy(sentMail -> assertThat(sentMail.getSubject()).contains("pre My subject"));
     }
 
     @Test
