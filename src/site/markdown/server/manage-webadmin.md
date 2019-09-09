@@ -206,7 +206,7 @@ curl -XGET http://ip:port/domains
 Possible response:
 
 ```
-{"domains":["domain1", "domain2"]}
+["domain1", "domain2"]
 ```
 
 Response codes:
@@ -271,7 +271,7 @@ the domain part will be rewritten into destination.domain.tld (so into benwa@des
 
 Response codes:
 
- - 204: The redirection now exists
+ - 204: The redirection now no longer exists
  - 400: source.domain.tld or destination.domain.tld have an invalid syntax
  - 400: source domain and destination domain are the same
  - 404: source.domain.tld are not part of handled domains.
@@ -301,7 +301,7 @@ Response codes:
  - 400: The user name or the payload is invalid
  - 409: Conflict: A concurrent modification make that query to fail
 
-Note: if the user is already, its password will be updated.
+Note: if the user exists already, its password will be updated.
 
 ### Updating a user password
 
@@ -357,7 +357,6 @@ Response codes:
  - 204: The mailbox now exists on the server
  - 400: Invalid mailbox name
  - 404: The user name does not exist
- - 500: Internal error
 
  To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is:
 
@@ -368,11 +367,11 @@ curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/INBOX.work
 ### Deleting a mailbox and its children
 
 ```
-curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeDeleted
 ```
 
 Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeCreated should not be empty
+Resource name mailboxNameToBeDeleted should not be empty
 
 Response codes:
 
@@ -468,12 +467,12 @@ The answer is the details of the quota of that user.
     "size":42
   },
   "occupation": {
-    "size":1000,
-    "count":10000,
+    "size":13,
+    "count":21,
     "ratio": {
-      "size":0.8,
-      "count":0.6,
-      "max":0.8
+      "size":0.25,
+      "count":0.5,
+      "max":0.5
     }
   }
 }
@@ -523,7 +522,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota count for a user
 
@@ -542,6 +540,7 @@ The answer looks like:
 Response codes:
 
  - 200: The user's quota was successfully retrieved
+ - 204: No quota count limit is defined at the user level for this user
  - 404: The user does not exist
 
 ### Updating the quota count for a user
@@ -563,7 +562,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota count for a user
 
@@ -576,9 +574,7 @@ Resource name usernameToBeUsed should be an existing user
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota size for a user
 
@@ -597,6 +593,7 @@ The answer looks like:
 Response codes:
 
  - 200: The user's quota was successfully retrieved
+ - 204: No quota size limit is defined at the user level for this user
  - 404: The user does not exist
 
 ### Updating the quota size for a user
@@ -618,7 +615,6 @@ Response codes:
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota size for a user
 
@@ -631,9 +627,7 @@ Resource name usernameToBeUsed should be an existing user
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Searching user by quota ratio
 
@@ -782,7 +776,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the quota count for a domain
 
@@ -801,9 +794,9 @@ The answer looks like:
 Response codes:
 
  - 200: The domain's quota was successfully retrieved
+ - 204: No quota count limit is defined at the domain level for this domain
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 500: Internal error while accessing the domain's quota
 
 ### Updating the quota count for a domain
 
@@ -825,7 +818,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the quota count for a domain
 
@@ -838,11 +830,8 @@ Resource name domainToBeUsed should be an existing domain.
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Getting the quota size for a domain
 
@@ -861,6 +850,7 @@ The answer looks like:
 Response codes:
 
  - 200: The domain's quota was successfully retrieved
+ - 204: No quota size limit is defined at the domain level for this domain
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
 
@@ -884,8 +874,6 @@ Response codes:
  - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
  - 405: Domain Quota configuration not supported when virtual hosting is desactivated.
- - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ### Deleting the quota size for a domain
 
@@ -898,10 +886,7 @@ Resource name domainToBeUsed should be an existing domain.
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
  - 404: The domain does not exist
- - 409: The requested restriction can’t be enforced right now.
- - 500: Internal server error - Something went bad on the server side.
 
 ## Administrating global quotas
 
@@ -983,6 +968,7 @@ The answer looks like:
 Response codes:
 
  - 200: The quota was successfully retrieved
+ - 204: No quota count limit is defined at the global level
 
 ### Updating the global quota count
 
@@ -1011,9 +997,6 @@ curl -XDELETE http://ip:port/quota/count
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
- - 404: The user does not exist
- - 409: The requested restriction can’t be enforced right now.
 
 ### Getting the global quota size
 
@@ -1031,6 +1014,7 @@ The answer looks like:
 Response codes:
 
  - 200: The quota was successfully retrieved
+ - 204: No quota size limit is defined at the global level
 
 ### Updating the global quota size
 
@@ -1048,7 +1032,6 @@ Response codes:
 
  - 204: The quota has been updated
  - 400: The body is not a positive integer neither an unlimited value (-1).
- - 409: The requested restriction can’t be enforced right now.
 
 ### Deleting the global quota size
 
@@ -1059,8 +1042,6 @@ curl -XDELETE http://ip:port/quota/size
 Response codes:
 
  - 204: The quota has been updated to unlimited value.
- - 400: The body is not a positive integer neither an unlimited value (-1).
- - 409: The requested restriction can’t be enforced right now.
 
 ## Cassandra Schema upgrades
 
@@ -1092,7 +1073,7 @@ curl -XGET http://ip:port/cassandra/version
 Will return:
 
 ```
-2
+{"version": 2}
 ```
 
 Where the number corresponds to the current schema version of the database you are using.
@@ -1104,13 +1085,13 @@ Response codes:
 ### Retrieving latest available Cassandra schema version
 
 ```
-curl -XGET http://ip:port/cassandra/version
+curl -XGET http://ip:port/cassandra/version/latest
 ```
 
 Will return:
 
 ```
-3
+{"version": 3}
 ```
 
 Where the number corresponds to the latest available schema version of the database you are using. This means you can be
@@ -1361,8 +1342,8 @@ Will return the destination addresses of this forward as a list of JSON Strings 
 
 ```
 [
-  {"mailAddres":"destination1@domain.com"},
-  {"mailAddres":"destination2@domain.com"}
+  {"mailAddress":"destination1@domain.com"},
+  {"mailAddress":"destination2@domain.com"}
 ]
 ```
 
@@ -1536,7 +1517,6 @@ Response codes:
 
  - 200: OK
  - 400: The `fromDomain` resource name is invalid
- - 400: The `fromDomain` is not managed by the DomainList
  - 404: The `fromDomain` resource name is not found
 
 ### Adding a domain mapping
@@ -1825,7 +1805,7 @@ Response codes:
 ### Getting additional information for a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/
+curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:

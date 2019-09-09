@@ -43,22 +43,22 @@ public interface Fixture {
         .registerModule(new GuavaModule())
         .registerModule(MailAddressModule.MODULE);
 
-    Response RESPONSE = Response.serverAccept(Response.SMTPStatusCode.of(250), "message");
+    Response RESPONSE = new Response(Response.SMTPStatusCode.of(250), "message");
 
     String JSON_BEHAVIOR_COMPULSORY_FIELDS = "{" +
         "  \"condition\": {\"operator\":\"matchAll\"}," +
-        "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
+        "  \"response\": {\"code\":250, \"message\":\"OK\"}," +
         "  \"command\": \"EHLO\"" +
         "}";
 
     MockSMTPBehavior BEHAVIOR_COMPULSORY_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
         Condition.MATCH_ALL,
-        Response.serverAccept(Response.SMTPStatusCode.ACTION_COMPLETE_250, "OK"),
+        new Response(Response.SMTPStatusCode.ACTION_COMPLETE_250, "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
 
     String JSON_BEHAVIOR_ALL_FIELDS = "{" +
-        "  \"response\": {\"code\":250, \"message\":\"OK\", \"rejected\":false}," +
+        "  \"response\": {\"code\":250, \"message\":\"OK\"}," +
         "  \"condition\": {\"operator\":\"contains\", \"matchingValue\":\"matchme\"}," +
         "  \"command\": \"EHLO\"," +
         "  \"numberOfAnswer\": 7" +
@@ -67,23 +67,23 @@ public interface Fixture {
     MockSMTPBehavior BEHAVIOR_ALL_FIELDS = new MockSMTPBehavior(
         SMTPCommand.EHLO,
         new Condition.OperatorCondition(Operator.CONTAINS, "matchme"),
-        Response.serverAccept(Response.SMTPStatusCode.of(250), "OK"),
+        new Response(Response.SMTPStatusCode.of(250), "OK"),
         MockSMTPBehavior.NumberOfAnswersPolicy.times(7));
 
     MockSMTPBehavior BEHAVIOR_MATCHING_EVERYTIME = new MockSMTPBehavior(
         SMTPCommand.MAIL_FROM,
         Condition.MATCH_ALL,
-        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        new Response(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
         MockSMTPBehavior.NumberOfAnswersPolicy.anytime());
     MockSMTPBehavior BEHAVIOR_MATCHING_2_TIMES = new MockSMTPBehavior(
         SMTPCommand.MAIL_FROM,
         Condition.MATCH_ALL,
-        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        new Response(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
         MockSMTPBehavior.NumberOfAnswersPolicy.times(2));
     MockSMTPBehavior BEHAVIOR_MATCHING_3_TIMES = new MockSMTPBehavior(
         SMTPCommand.MAIL_FROM,
         Condition.MATCH_ALL,
-        Response.serverReject(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
+        new Response(Response.SMTPStatusCode.COMMAND_NOT_IMPLEMENTED_502, "match all messages"),
         MockSMTPBehavior.NumberOfAnswersPolicy.times(3));
 
     String JSON_BEHAVIORS = "[" + JSON_BEHAVIOR_ALL_FIELDS + ", "

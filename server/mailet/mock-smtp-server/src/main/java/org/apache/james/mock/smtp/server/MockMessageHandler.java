@@ -27,7 +27,6 @@ import java.util.Optional;
 import javax.mail.internet.AddressException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
@@ -35,19 +34,21 @@ import org.apache.james.mock.smtp.server.model.MockSMTPBehaviorInformation;
 import org.apache.james.mock.smtp.server.model.Response;
 import org.apache.james.mock.smtp.server.model.Response.SMTPStatusCode;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.subethamail.smtp.MessageHandler;
 import org.subethamail.smtp.RejectException;
-import org.subethamail.smtp.TooMuchDataException;
 
 public class MockMessageHandler implements MessageHandler {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MockMessageHandler.class);
+
     @FunctionalInterface
-    interface Behavior<T> {
+    private interface Behavior<T> {
         void behave(T input) throws RejectException;
     }
 
-    class MockBehavior<T> implements Behavior<T> {
-
+    private static class MockBehavior<T> implements Behavior<T> {
         private final MockSMTPBehavior behavior;
 
         MockBehavior(MockSMTPBehavior behavior) {
@@ -57,29 +58,42 @@ public class MockMessageHandler implements MessageHandler {
         @Override
         public void behave(T input) throws RejectException {
             Response response = behavior.getResponse();
-            if (response.isServerRejected()) {
-                throw new RejectException(response.getCode().getRawCode(), response.getMessage());
-            }
-            throw new NotImplementedException("Not rejecting commands in mock behaviours is not supported yet");
+            LOGGER.info("Applying behavior {}", behavior);
+            throw new RejectException(response.getCode().getRawCode(), response.getMessage());
         }
     }
 
-    class SMTPBehaviorRepositoryUpdater<T> implements Behavior<T> {
+    private static class ComposedBehavior<T> implements Behavior<T> {
+        private static class Builder<U> {
+            private final Behavior<U> behavior1;
 
-        private final SMTPBehaviorRepository behaviorRepository;
-        private final MockBehavior<T> actualBehavior;
+            private Builder(Behavior<U> behavior1) {
+                this.behavior1 = behavior1;
+            }
 
-        SMTPBehaviorRepositoryUpdater(SMTPBehaviorRepository behaviorRepository, MockSMTPBehavior behavior) {
-            this.behaviorRepository = behaviorRepository;
-            this.actualBehavior = new MockBehavior<>(behavior);
+            ComposedBehavior<U> andThen(Behavior<U> behavior2) {
+                return new ComposedBehavior<>(behavior1, behavior2);
+            }
+        }
+
+        private static <V> Builder<V> startWith(Behavior<V> behavior1) {
+            return new Builder<>(behavior1);
+        }
+
+        private final Behavior<T> behavior1;
+        private final Behavior<T> behavior2;
+
+        private ComposedBehavior(Behavior<T> behavior1, Behavior<T> behavior2) {
+            this.behavior1 = behavior1;
+            this.behavior2 = behavior2;
         }
 
         @Override
         public void behave(T input) throws RejectException {
             try {
-                actualBehavior.behave(input);
+                behavior1.behave(input);
             } finally {
-                behaviorRepository.decreaseRemainingAnswers(actualBehavior.behavior);
+                behavior2.behave(input);
             }
         }
     }
@@ -115,7 +129,7 @@ public class MockMessageHandler implements MessageHandler {
     }
 
     @Override
-    public void data(InputStream data) throws RejectException, TooMuchDataException, IOException {
+    public void data(InputStream data) throws RejectException {
         String dataString = readData(data);
         Optional<Behavior<String>> dataBehavior = firstMatchedBehavior(SMTPCommand.DATA, dataString);
 
@@ -130,7 +144,8 @@ public class MockMessageHandler implements MessageHandler {
             .filter(behavior -> behavior.getCommand().equals(data))
             .filter(behavior -> behavior.getCondition().matches(dataLine))
             .findFirst()
-            .map(mockBehavior -> new SMTPBehaviorRepositoryUpdater<>(behaviorRepository, mockBehavior));
+            .map(behavior -> ComposedBehavior.<T>startWith(new MockBehavior<>(behavior))
+                .andThen(any -> behaviorRepository.decreaseRemainingAnswers(behavior)));
     }
 
     @Override
@@ -138,12 +153,14 @@ public class MockMessageHandler implements MessageHandler {
         Mail mail = mailBuilder.envelope(envelopeBuilder.build())
             .build();
         mailRepository.store(mail);
+        LOGGER.info("Storing mail with envelope {}", mail.getEnvelope());
     }
 
     private String readData(InputStream data) {
         try {
             return IOUtils.toString(data, StandardCharsets.UTF_8);
         } catch (IOException e) {
+            LOGGER.error("Error reading data", e);
             throw new RejectException(SMTPStatusCode.SYNTAX_ERROR_IN_PARAMETERS_OR_ARGUMENTS_501.getRawCode(), "invalid data supplied");
         }
     }
@@ -152,6 +169,7 @@ public class MockMessageHandler implements MessageHandler {
         try {
             return new MailAddress(mailAddress);
         } catch (AddressException e) {
+            LOGGER.error("Error parsing mail address '{}'", mailAddress, e);
             throw new RejectException(SMTPStatusCode.SYNTAX_ERROR_IN_PARAMETERS_OR_ARGUMENTS_501.getRawCode(), "invalid email address supplied");
         }
     }

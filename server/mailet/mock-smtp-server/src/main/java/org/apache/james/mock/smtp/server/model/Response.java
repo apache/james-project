@@ -75,37 +75,21 @@ public class Response {
         }
     }
 
-    public static Response serverReject(SMTPStatusCode code, String message) {
-        return new Response(code, message, true);
-    }
-
-    public static Response serverAccept(SMTPStatusCode code, String message) {
-        return new Response(code, message, false);
-    }
-
     private final SMTPStatusCode code;
     private final String message;
-    private final boolean serverRejected;
 
     @JsonCreator
-    private Response(@JsonProperty("code") SMTPStatusCode code,
-                     @JsonProperty("message") String message,
-                     @JsonProperty("rejected") boolean serverRejected) {
+    public Response(@JsonProperty("code") SMTPStatusCode code,
+                    @JsonProperty("message") String message) {
         Preconditions.checkNotNull(message);
         Preconditions.checkNotNull(code);
 
         this.code = code;
         this.message = message;
-        this.serverRejected = serverRejected;
     }
 
     public String asReplyString() {
         return code.getRawCode() + " " + message;
-    }
-
-    @JsonProperty("rejected")
-    public boolean isServerRejected() {
-        return serverRejected;
     }
 
     public SMTPStatusCode getCode() {
@@ -121,8 +105,7 @@ public class Response {
         if (o instanceof Response) {
             Response response = (Response) o;
 
-            return Objects.equals(this.serverRejected, response.serverRejected)
-                && Objects.equals(this.code, response.code)
+            return Objects.equals(this.code, response.code)
                 && Objects.equals(this.message, response.message);
         }
         return false;
@@ -130,6 +113,6 @@ public class Response {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(code, message, serverRejected);
+        return Objects.hash(code, message);
     }
 }

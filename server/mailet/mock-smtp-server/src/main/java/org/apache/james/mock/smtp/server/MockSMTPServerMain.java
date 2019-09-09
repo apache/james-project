@@ -19,8 +19,19 @@
 
 package org.apache.james.mock.smtp.server;
 
+import org.apache.james.util.Port;
+
 public class MockSMTPServerMain {
+    private static final Port HTTP_PORT = new Port(8000);
+    private static final Port SMTP_PORT = new Port(25);
+
     public static void main(String[] args) throws Exception {
-        System.out.println("Mock SMTP server started");
+        SMTPBehaviorRepository behaviorRepository = new SMTPBehaviorRepository();
+        ReceivedMailRepository receivedMailRepository = new ReceivedMailRepository();
+
+        HTTPConfigurationServer httpConfigurationServer = HTTPConfigurationServer.onPort(behaviorRepository, receivedMailRepository, HTTP_PORT);
+        MockSMTPServer mockSMTPServer = MockSMTPServer.onPort(behaviorRepository, receivedMailRepository, SMTP_PORT);
+        httpConfigurationServer.start();
+        mockSMTPServer.start();
     }
 }
