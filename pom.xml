@@ -538,6 +538,7 @@
         <module>mpt</module>
         <module>protocols</module>
         <module>server</module>
+        <module>testing/base</module>
         <module>third-party</module>
     </modules>
 
@@ -1833,14 +1834,13 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
+                <groupId>${james.groupId}</groupId>
+                <artifactId>testing-base</artifactId>
+                <version>${project.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
+                <artifactId>logback-classic</artifactId>
                 <version>${logback.version}</version>
             </dependency>
             <dependency>

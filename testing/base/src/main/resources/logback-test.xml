@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" debug="true" ?>
+<configuration>
+        <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+                <file>test-run.log</file>
+                <append>false</append>
+                <!-- set immediateFlush to false for much higher logging throughput -->
+                <immediateFlush>false</immediateFlush>
+                <!-- encoders are assigned the type
+                     ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+                <encoder>
+                        <pattern>bloop %d{HH:mm:ss.SSS} [%-5level] %logger{35} - %msg%n%rEx</pattern>
+                </encoder>
+        </appender>
+
+
+        <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                        <pattern>bloop %d{HH:mm:ss.SSS} [%-5level] %logger{15} - %msg%n%rEx</pattern>
+                </encoder>
+                <immediateFlush>false</immediateFlush>
+                <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+                        <level>ERROR</level>
+                </filter>
+        </appender>
+
+        <root level="DEBUG">
+                <appender-ref ref="CONSOLE" />
+                <appender-ref ref="FILE" />
+        </root>
+
+</configuration>

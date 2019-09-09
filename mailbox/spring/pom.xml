@@ -75,8 +75,8 @@
             <artifactId>apache-james-mailbox-tools-indexer</artifactId>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>testing-base</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
