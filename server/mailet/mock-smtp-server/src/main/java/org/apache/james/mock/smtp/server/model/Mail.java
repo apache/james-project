@@ -19,6 +19,7 @@
 
 package org.apache.james.mock.smtp.server.model;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -68,6 +69,10 @@ public class Mail {
 
         private final MailAddress from;
         private final List<MailAddress> recipients;
+
+        public Envelope(MailAddress from, MailAddress... recipients) {
+            this(from, ImmutableList.copyOf(Arrays.asList(recipients)));
+        }
 
         public Envelope(MailAddress from, List<MailAddress> recipients) {
             Preconditions.checkNotNull(from);

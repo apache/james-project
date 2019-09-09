@@ -19,8 +19,10 @@
 
 package org.apache.james.mock.smtp.server;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.mock.smtp.server.jackson.MailAddressModule;
 import org.apache.james.mock.smtp.server.model.Condition;
+import org.apache.james.mock.smtp.server.model.Mail;
 import org.apache.james.mock.smtp.server.model.MockSMTPBehavior;
 import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.mock.smtp.server.model.Operator;
@@ -33,6 +35,28 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 
 public interface Fixture {
+
+    class MailsFixutre {
+        static Mail MAIL_1;
+        static Mail MAIL_2;
+        static {
+            try {
+                MAIL_1 = new Mail(
+                new Mail.Envelope(
+                    new MailAddress(BOB), new MailAddress(ALICE), new MailAddress(JACK)),
+                "bob to alice and jack");
+
+                MAIL_2 = new Mail(
+                new Mail.Envelope(
+                    new MailAddress(ALICE), new MailAddress(BOB)),
+                "alice to bob");
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+    }
+
     String DOMAIN = "james.org";
     String BOB = "bob@" + DOMAIN;
     String ALICE = "alice@" + DOMAIN;
@@ -89,9 +113,10 @@ public interface Fixture {
     String JSON_BEHAVIORS = "[" + JSON_BEHAVIOR_ALL_FIELDS + ", "
         + JSON_BEHAVIOR_COMPULSORY_FIELDS + "]";
 
-    MockSmtpBehaviors BEHAVIORS = new MockSmtpBehaviors(ImmutableList.of(
+    ImmutableList<MockSMTPBehavior> BEHAVIOR_LIST = ImmutableList.of(
         BEHAVIOR_ALL_FIELDS,
-        BEHAVIOR_COMPULSORY_FIELDS));
+        BEHAVIOR_COMPULSORY_FIELDS);
+    MockSmtpBehaviors BEHAVIORS = new MockSmtpBehaviors(BEHAVIOR_LIST);
 
     String JSON_MAILS_LIST = "[" +
         "  {\"from\":\"bob@james.org\",\"recipients\":[\"alice@james.org\", \"jack@james.org\"],\"message\":\"bob to alice and jack\"}," +

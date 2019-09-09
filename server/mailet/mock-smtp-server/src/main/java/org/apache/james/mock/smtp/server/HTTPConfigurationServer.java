@@ -101,8 +101,8 @@ public class HTTPConfigurationServer {
         }
     }
 
-    private static final String SMTP_BEHAVIORS = "/smtpBehaviors";
-    private static final String SMTP_MAILS = "/smtpMails";
+    static final String SMTP_BEHAVIORS = "/smtpBehaviors";
+    static final String SMTP_MAILS = "/smtpMails";
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
         .registerModule(new Jdk8Module())

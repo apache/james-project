@@ -21,6 +21,8 @@ package org.apache.james.mock.smtp.server.model;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.List;
+
 import org.apache.james.core.MailAddress;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -58,7 +60,8 @@ class MailTest {
 
         @Test
         void constructorShouldThrowWhenNullRecipients() {
-            assertThatThrownBy(() -> new Mail.Envelope(bob, null))
+            List<MailAddress> nullList = null;
+            assertThatThrownBy(() -> new Mail.Envelope(bob, nullList))
                 .isInstanceOf(NullPointerException.class);
         }
 
