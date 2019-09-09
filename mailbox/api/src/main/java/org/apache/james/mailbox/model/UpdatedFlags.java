@@ -21,13 +21,13 @@ package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
 /**
@@ -240,22 +240,15 @@ public class UpdatedFlags {
 
         UpdatedFlags that = (UpdatedFlags) other;
 
-        if (!uid.equals(that.uid)) {
-            return false;
-        }
-        if (modSeq != that.modSeq) {
-            return false;
-        }
-        if (oldFlags != null ? !oldFlags.equals(that.oldFlags) : that.oldFlags != null) {
-            return false;
-        }
-        return !(newFlags != null ? !newFlags.equals(that.newFlags) : that.newFlags != null);
-
+        return Objects.equals(uid, that.uid) &&
+                Objects.equals(oldFlags, that.oldFlags) &&
+                Objects.equals(newFlags, that.newFlags) &&
+                Objects.equals(modSeq, that.modSeq);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(uid, oldFlags, newFlags, modSeq);
+        return Objects.hash(uid, oldFlags, newFlags, modSeq);
     }
     
     @Override

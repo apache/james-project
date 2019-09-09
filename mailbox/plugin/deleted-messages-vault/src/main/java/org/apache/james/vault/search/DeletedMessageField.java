@@ -65,12 +65,12 @@ public class DeletedMessageField<T> {
         ValueExtractor<String> SUBJECT_EXTRACTOR = DeletedMessage::getSubject;
     }
 
-    static final DeletedMessageField<ZonedDateTime> DELETION_DATE = new DeletedMessageField<ZonedDateTime>(FieldName.DELETION_DATE, DELETION_DATE_EXTRACTOR);
-    static final DeletedMessageField<ZonedDateTime> DELIVERY_DATE = new DeletedMessageField<ZonedDateTime>(FieldName.DELIVERY_DATE, DELIVERY_DATE_EXTRACTOR);
-    static final DeletedMessageField<Collection<MailAddress>> RECIPIENTS = new DeletedMessageField<Collection<MailAddress>>(FieldName.RECIPIENTS, RECIPIENTS_EXTRACTOR);
-    static final DeletedMessageField<MailAddress> SENDER = new DeletedMessageField<MailAddress>(FieldName.SENDER, SENDER_EXTRACTOR);
-    static final DeletedMessageField<Boolean> HAS_ATTACHMENT = new DeletedMessageField<Boolean>(FieldName.HAS_ATTACHMENT, HAS_ATTACHMENT_EXTRACTOR);
-    static final DeletedMessageField<Collection<MailboxId>> ORIGIN_MAILBOXES = new DeletedMessageField<Collection<MailboxId>>(FieldName.ORIGIN_MAILBOXES, ORIGIN_MAILBOXES_EXTRACTOR);
-    static final DeletedMessageField<String> SUBJECT = new DeletedMessageField<String>(FieldName.SUBJECT, SUBJECT_EXTRACTOR);
+    static final DeletedMessageField<ZonedDateTime> DELETION_DATE = new DeletedMessageField<>(FieldName.DELETION_DATE, DELETION_DATE_EXTRACTOR);
+    static final DeletedMessageField<ZonedDateTime> DELIVERY_DATE = new DeletedMessageField<>(FieldName.DELIVERY_DATE, DELIVERY_DATE_EXTRACTOR);
+    static final DeletedMessageField<Collection<MailAddress>> RECIPIENTS = new DeletedMessageField<>(FieldName.RECIPIENTS, RECIPIENTS_EXTRACTOR);
+    static final DeletedMessageField<MailAddress> SENDER = new DeletedMessageField<>(FieldName.SENDER, SENDER_EXTRACTOR);
+    static final DeletedMessageField<Boolean> HAS_ATTACHMENT = new DeletedMessageField<>(FieldName.HAS_ATTACHMENT, HAS_ATTACHMENT_EXTRACTOR);
+    static final DeletedMessageField<Collection<MailboxId>> ORIGIN_MAILBOXES = new DeletedMessageField<>(FieldName.ORIGIN_MAILBOXES, ORIGIN_MAILBOXES_EXTRACTOR);
+    static final DeletedMessageField<String> SUBJECT = new DeletedMessageField<>(FieldName.SUBJECT, SUBJECT_EXTRACTOR);
 
 }

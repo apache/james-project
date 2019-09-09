@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.Objects;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -40,9 +42,8 @@ public final class MyRightsResponse implements ImapResponseMessage {
     public boolean equals(Object o) {
         if (o instanceof MyRightsResponse) {
             MyRightsResponse other = (MyRightsResponse) o;
-            return (this.myRights == other.myRights || (this.myRights != null && this.myRights.equals(other.myRights)))
-                    && (this.mailboxName == other.mailboxName || (this.mailboxName != null && this.mailboxName.equals(other.mailboxName)))
-                    ;
+            return Objects.equals(this.myRights, other.myRights) &&
+                    Objects.equals(this.mailboxName, other.mailboxName);
         }
         return false;
     }
@@ -57,8 +58,7 @@ public final class MyRightsResponse implements ImapResponseMessage {
 
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        return PRIME * myRights.hashCode() + mailboxName.hashCode();
+        return Objects.hash(myRights, mailboxName);
     }
 
     @Override

@@ -92,27 +92,28 @@ public class SPFHandlerTest {
                     case DNSRequest.TXT:
                     case DNSRequest.SPF:
                         List<String> l = new ArrayList<>();
-                        if (req.getHostname().equals("spf1.james.apache.org")) {
-                            // pass
-                            l.add("v=spf1 +all");
-                            return l;
-                        } else if (req.getHostname().equals("spf2.james.apache.org")) {
-                            // fail
-                            l.add("v=spf1 -all");
-                            return l;
-                        } else if (req.getHostname().equals("spf3.james.apache.org")) {
-                            // softfail
-                            l.add("v=spf1 ~all");
-                            return l;
-                        } else if (req.getHostname().equals("spf4.james.apache.org")) {
-                            // permerror
-                            l.add("v=spf1 badcontent!");
-                            return l;
-                        } else if (req.getHostname().equals("spf5.james.apache.org")) {
-                            // temperror
-                            throw new TimeoutException("TIMEOUT");
-                        } else {
-                            return null;
+                        switch (req.getHostname()) {
+                            case "spf1.james.apache.org":
+                                // pass
+                                l.add("v=spf1 +all");
+                                return l;
+                            case "spf2.james.apache.org":
+                                // fail
+                                l.add("v=spf1 -all");
+                                return l;
+                            case "spf3.james.apache.org":
+                                // softfail
+                                l.add("v=spf1 ~all");
+                                return l;
+                            case "spf4.james.apache.org":
+                                // permerror
+                                l.add("v=spf1 badcontent!");
+                                return l;
+                            case "spf5.james.apache.org":
+                                // temperror
+                                throw new TimeoutException("TIMEOUT");
+                            default:
+                                return null;
                         }
                     default:
                         throw new UnsupportedOperationException("Unimplemented mock service");

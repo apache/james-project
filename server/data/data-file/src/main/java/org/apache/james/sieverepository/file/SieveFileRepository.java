@@ -84,15 +84,9 @@ public class SieveFileRepository implements SieveRepository {
      */
     protected static String toString(File file, String encoding) throws FileNotFoundException {
         String script = null;
-        Scanner scanner = null;
-        try {
-            scanner = new Scanner(file, encoding);
+        try (Scanner scanner = new Scanner(file, encoding)) {
             scanner.useDelimiter("\\A");
             script = scanner.next();
-        } finally {
-            if (scanner != null) {
-                scanner.close();
-            }
         }
         return script;
     }
@@ -191,16 +185,10 @@ public class SieveFileRepository implements SieveRepository {
             file = getQuotaFile();
         }
         if (file.exists()) {
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(file, UTF_8);
+            try (Scanner scanner = new Scanner(file, UTF_8)) {
                 quota = scanner.nextLong();
             } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
-            } finally {
-                if (null != scanner) {
-                    scanner.close();
-                }
             }
         }
         if ((usedSpace + size) > quota) {
@@ -397,16 +385,10 @@ public class SieveFileRepository implements SieveRepository {
         Long quota = null;
         File file = getQuotaFile();
         if (file.exists()) {
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(file, UTF_8);
+            try (Scanner scanner = new Scanner(file, UTF_8)) {
                 quota = scanner.nextLong();
             } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
-            } finally {
-                if (null != scanner) {
-                    scanner.close();
-                }
             }
         }
         if (null == quota) {
@@ -449,16 +431,10 @@ public class SieveFileRepository implements SieveRepository {
         Long quota = null;
         File file = getQuotaFile(user);
         if (file.exists()) {
-            Scanner scanner = null;
-            try {
-                scanner = new Scanner(file, UTF_8);
+            try (Scanner scanner = new Scanner(file, UTF_8)) {
                 quota = scanner.nextLong();
             } catch (FileNotFoundException | NoSuchElementException ex) {
                 // no op
-            } finally {
-                if (null != scanner) {
-                    scanner.close();
-                }
             }
         }
         if (null == quota) {

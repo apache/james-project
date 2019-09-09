@@ -36,7 +36,7 @@ import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemoryAwareThreadPoolExecutor implements JMXEnabledOrderedMemoryAwareThreadPoolExecutorMBean {
 
     private final String jmxPath;
-    private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<Runnable>());
+    private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<>());
     private final ThreadLocal<Long> startTime = new ThreadLocal<>();
     private long totalTime;
     private int totalTasks;

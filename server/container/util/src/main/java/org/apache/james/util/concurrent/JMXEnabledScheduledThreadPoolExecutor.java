@@ -35,7 +35,7 @@ import javax.management.ObjectName;
 public class JMXEnabledScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor implements JMXEnabledScheduledThreadPoolExecutorMBean {
 
     private final String jmxPath;
-    private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<Runnable>());
+    private final List<Runnable> inProgress = Collections.synchronizedList(new ArrayList<>());
     private final ThreadLocal<Long> startTime = new ThreadLocal<>();
     private long totalTime;
     private int totalTasks;

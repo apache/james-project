@@ -56,17 +56,10 @@ public class ByteImapResponseWriter implements ImapConstants, ImapResponseWriter
 
     @Override
     public void write(Literal literal) throws IOException {
-        InputStream in = null;
-        try {
-            in = literal.getInputStream();
-
+        try (InputStream in = literal.getInputStream()) {
             byte[] buffer = new byte[1024];
-            for (int len; (len = in.read(buffer)) != -1;) {
+            for (int len; (len = in.read(buffer)) != -1; ) {
                 out.write(buffer, 0, len);
-            }
-        } finally {
-            if (in != null) {
-                in.close();
             }
         }
     }

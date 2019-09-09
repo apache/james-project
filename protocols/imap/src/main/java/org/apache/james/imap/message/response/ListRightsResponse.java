@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.response;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -45,7 +46,9 @@ public final class ListRightsResponse implements ImapResponseMessage {
     public boolean equals(Object o) {
         if (o instanceof ListRightsResponse) {
             ListRightsResponse other = (ListRightsResponse) o;
-            return (this.mailboxName == other.mailboxName || (this.mailboxName != null && this.mailboxName.equals(other.mailboxName))) && (this.identifier == other.identifier || (this.identifier != null && this.identifier.equals(other.identifier))) && Arrays.equals(this.rights, other.rights);
+            return (Objects.equals(this.mailboxName, other.mailboxName)) &&
+                    (Objects.equals(this.identifier, other.identifier)) &&
+                    Arrays.equals(this.rights, other.rights);
         }
         return false;
     }
@@ -64,12 +67,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
 
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        int hashCode = (mailboxName == null ? 0 : mailboxName.hashCode());
-        hashCode = PRIME * hashCode + (identifier == null ? 0 : identifier.hashCode());
-        hashCode = PRIME * hashCode + (rights == null ? 0 : Arrays.hashCode(rights));
-
-        return hashCode;
+        return Objects.hash(mailboxName, identifier, rights);
     }
 
     @Override

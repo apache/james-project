@@ -65,16 +65,10 @@ public class MessageToCoreToMessage {
                         return (String) part.getContent();
                     }
                     InputStream is = (InputStream) part.getContent();
-                    Scanner scanner = null;
-                    try {
-                        scanner = new Scanner(is, "UTF-8");
+                    try (Scanner scanner = new Scanner(is, "UTF-8")) {
                         scanner.useDelimiter("\\A");
                         if (scanner.hasNext()) {
                             result = scanner.next();
-                        }
-                    } finally {
-                        if (scanner != null) {
-                            scanner.close();
                         }
                     }
                 }

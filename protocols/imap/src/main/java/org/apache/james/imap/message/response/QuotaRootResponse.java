@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.message.response;
 
+import java.util.Objects;
+
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
@@ -37,9 +39,8 @@ public class QuotaRootResponse implements ImapResponseMessage {
     public boolean equals(Object o) {
         if (o instanceof QuotaRootResponse) {
             QuotaRootResponse other = (QuotaRootResponse) o;
-            return (this.quotaRoot == other.quotaRoot || (this.quotaRoot != null && this.quotaRoot.equals(other.quotaRoot)))
-                    && (this.mailboxName == other.mailboxName || (this.mailboxName != null && this.mailboxName.equals(other.mailboxName)))
-                    ;
+            return Objects.equals(this.quotaRoot, other.quotaRoot) &&
+                    Objects.equals(this.mailboxName, other.mailboxName);
         }
         return false;
     }
@@ -54,8 +55,7 @@ public class QuotaRootResponse implements ImapResponseMessage {
 
     @Override
     public int hashCode() {
-        final int PRIME = 31;
-        return PRIME * quotaRoot.hashCode() + mailboxName.hashCode();
+        return Objects.hash(quotaRoot, mailboxName);
     }
 
     @Override

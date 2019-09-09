@@ -504,9 +504,8 @@ public class FetchMail implements Runnable, Configurable {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Session properties:");
             Properties properties = getSession().getProperties();
-            Enumeration<Object> e = properties.keys();
-            while (e.hasMoreElements()) {
-                String key = (String) e.nextElement();
+            for (Object o : properties.keySet()) {
+                String key = (String) o;
                 String val = (String) properties.get(key);
                 if (val.length() > 40) {
                     val = val.substring(0, 37) + "...";

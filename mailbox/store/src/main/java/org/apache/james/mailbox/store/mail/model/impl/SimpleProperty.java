@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model.impl;
 
+import java.util.Objects;
+
 import org.apache.james.mailbox.store.mail.model.Property;
 
 public final class SimpleProperty implements Property {
@@ -102,21 +104,15 @@ public final class SimpleProperty implements Property {
             return false;
         }
         SimpleProperty that = (SimpleProperty) o;
-        if (namespace != null ? !namespace.equals(that.namespace) : that.namespace != null) {
-            return false;
-        }
-        if (localName != null ? !localName.equals(that.localName) : that.localName != null) {
-            return false;
-        }
-        return !(value != null ? !value.equals(that.value) : that.value != null);
+
+        return Objects.equals(namespace, that.namespace) &&
+                Objects.equals(localName, that.localName) &&
+                Objects.equals(value, that.value);
 
     }
 
     @Override
     public int hashCode() {
-        int result = namespace != null ? namespace.hashCode() : 0;
-        result = 31 * result + (localName != null ? localName.hashCode() : 0);
-        result = 31 * result + (value != null ? value.hashCode() : 0);
-        return result;
+        return Objects.hash(namespace, localName, value);
     }
 }

@@ -74,26 +74,32 @@ public class CompareNumericHeaderValue extends GenericMatcher {
         }
         if (st.hasMoreTokens()) {
             String comparisonOperatorString = st.nextToken().trim();
-            if (comparisonOperatorString.equals("<")
-                || comparisonOperatorString.equals("LT")) {
-                comparisonOperator = LT;
-            } else if (comparisonOperatorString.equals("<=")
-                     || comparisonOperatorString.equals("=<")
-                     || comparisonOperatorString.equals("LE")) {
-                comparisonOperator = LE;
-            } else if (comparisonOperatorString.equals("==")
-                     || comparisonOperatorString.equals("=")
-                     || comparisonOperatorString.equals("EQ")) {
-                comparisonOperator = EQ;
-            } else if (comparisonOperatorString.equals(">=")
-                     || comparisonOperatorString.equals("=>")
-                     || comparisonOperatorString.equals("GE")) {
-                comparisonOperator = GE;
-            } else if (comparisonOperatorString.equals(">")
-                     || comparisonOperatorString.equals("GT")) {
-                comparisonOperator = GT;
-            } else {
-                throw new MessagingException("Bad comparisonOperator: \"" + comparisonOperatorString + "\"");
+            switch (comparisonOperatorString) {
+                case "<":
+                case "LT":
+                    comparisonOperator = LT;
+                    break;
+                case "<=":
+                case "=<":
+                case "LE":
+                    comparisonOperator = LE;
+                    break;
+                case "==":
+                case "=":
+                case "EQ":
+                    comparisonOperator = EQ;
+                    break;
+                case ">=":
+                case "=>":
+                case "GE":
+                    comparisonOperator = GE;
+                    break;
+                case ">":
+                case "GT":
+                    comparisonOperator = GT;
+                    break;
+                default:
+                    throw new MessagingException("Bad comparisonOperator: \"" + comparisonOperatorString + "\"");
             }
         } else {
             throw new MessagingException("Missing comparisonOperator");

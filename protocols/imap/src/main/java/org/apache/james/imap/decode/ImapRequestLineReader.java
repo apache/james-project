@@ -375,36 +375,23 @@ public abstract class ImapRequestLineReader {
         if (charset == null) {
             return consumeLiteral(US_ASCII);
         } else {
-            FastByteArrayOutputStream out = new FastByteArrayOutputStream();
-            InputStream in = null;
-            try {
-                in = consumeLiteral(false);
-                byte[] buf = new byte[ 0xFFFF ];
-                
+            try (FastByteArrayOutputStream out = new FastByteArrayOutputStream();
+                 InputStream in = consumeLiteral(false)) {
+                byte[] buf = new byte[0xFFFF];
+
                 for (int len; (len = in.read(buf)) != -1; ) {
                     out.write(buf, 0, len);
                 }
-                
+
                 final byte[] bytes = out.toByteArray();
                 final ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 return decode(charset, buffer);
-                
+
             } catch (IOException e) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
-            } finally {
-                if (in != null) {
-                    try {
-                        in.close();
-                    } catch (IOException e) {
-                        // ignore on close
-                    }
-                }
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
             }
+            // ignore on close
+            // ignore on close
 
         }
     }

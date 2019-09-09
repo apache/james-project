@@ -65,9 +65,7 @@ public class MaildirMessage implements Message {
         if (parsed) {
             return;
         }
-        SharedFileInputStream tmpMsgIn = null;
-        try {
-            tmpMsgIn = new SharedFileInputStream(messageName.getFile());
+        try (SharedFileInputStream tmpMsgIn = new SharedFileInputStream(messageName.getFile())) {
 
             bodyStartOctet = bodyStartOctet(tmpMsgIn);
 
@@ -138,13 +136,7 @@ public class MaildirMessage implements Message {
             // has successfully been parsen when appending, shouldn't give any
             // problems
         } finally {
-            if (tmpMsgIn != null) {
-                try {
-                    tmpMsgIn.close();
-                } catch (IOException e) {
-                    // ignore on close
-                }
-            }
+            // ignore on close
             parsed = true;
         }
     }

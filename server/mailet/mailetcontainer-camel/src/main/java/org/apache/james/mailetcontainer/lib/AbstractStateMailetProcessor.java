@@ -67,7 +67,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
     private MailetContext mailetContext;
     private MatcherLoader matcherLoader;
     private MailProcessor rootMailProcessor;
-    private final List<MailetProcessorListener> listeners = Collections.synchronizedList(new ArrayList<MailetProcessorListener>());
+    private final List<MailetProcessorListener> listeners = Collections.synchronizedList(new ArrayList<>());
     private JMXStateMailetProcessorListener jmxListener;
     private boolean enableJmx = true;
     private HierarchicalConfiguration<ImmutableNode> config;

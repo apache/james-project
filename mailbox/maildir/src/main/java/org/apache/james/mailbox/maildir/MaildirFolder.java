@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.SortedMap;
@@ -965,7 +966,7 @@ public class MaildirFolder {
     
     public void setACL(MailboxSession session, MailboxACL acl) throws MailboxException {
         MailboxACL old = this.acl;
-        if (old != acl && (old == null || !old.equals(acl))) {
+        if (!Objects.equals(old, acl)) {
             /* change only if different */
             saveACL(acl, session);
             this.acl = acl;

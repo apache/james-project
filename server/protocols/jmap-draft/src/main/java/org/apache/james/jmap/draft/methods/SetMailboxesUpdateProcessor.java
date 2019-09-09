@@ -115,7 +115,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("The mailbox name length is too long")
                 .build());
-        } catch (MailboxNameException e) {
+        } catch (MailboxNameException | IllegalArgumentException e) {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
                     .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(e.getMessage())
@@ -149,11 +149,6 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
             responseBuilder.notUpdated(mailboxId, SetError.builder()
                 .type(SetError.Type.INVALID_ARGUMENTS)
                 .description("Cannot share a mailbox to another domain")
-                .build());
-        } catch (IllegalArgumentException e) {
-            responseBuilder.notUpdated(mailboxId, SetError.builder()
-                .type(SetError.Type.INVALID_ARGUMENTS)
-                .description(e.getMessage())
                 .build());
         } catch (MailboxException e) {
             LOGGER.error("Error while updating mailbox", e);

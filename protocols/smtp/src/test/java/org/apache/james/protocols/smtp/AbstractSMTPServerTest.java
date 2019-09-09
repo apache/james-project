@@ -1124,10 +1124,7 @@ public abstract class AbstractSMTPServerTest {
             assertThat(address.toString()).isEqualTo(recipients.get(i));
         }
 
-        BufferedReader reader = null;
-
-        try {
-            reader = new BufferedReader(new InputStreamReader(env.getMessageInputStream()));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(env.getMessageInputStream()))) {
 
             String line = null;
             boolean start = false;
@@ -1146,10 +1143,6 @@ public abstract class AbstractSMTPServerTest {
             assertThat(msgQueued.length()).isEqualTo(msg.length());
             for (int i = 0; i < msg.length(); i++) {
                 assertThat(msgQueued.charAt(i)).isEqualTo(msg.charAt(i));
-            }
-        } finally {
-            if (reader != null) {
-                reader.close();
             }
         }
 

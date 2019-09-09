@@ -28,6 +28,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import org.apache.james.repository.api.StreamRepository;
 import org.apache.james.server.core.MimeMessageSource;
@@ -250,7 +251,8 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
             // of
             // the equals equation
             MimeMessageJDBCSource source = (MimeMessageJDBCSource) obj;
-            return ((source.key.equals(key)) || ((source.key != null) && source.key.equals(key))) && ((source.repository == repository) || ((source.repository != null) && source.repository.equals(repository)));
+            return Objects.equals(source.key, key) &&
+                    Objects.equals(source.repository, repository);
         }
         return false;
     }
@@ -261,14 +263,7 @@ public class MimeMessageJDBCSource extends MimeMessageSource {
      * @return the hash code
      */
     public int hashCode() {
-        int result = 17;
-        if (key != null) {
-            result = 37 * key.hashCode();
-        }
-        if (repository != null) {
-            result = 37 * repository.hashCode();
-        }
-        return result;
+        return Objects.hash(key, repository);
     }
 
 }

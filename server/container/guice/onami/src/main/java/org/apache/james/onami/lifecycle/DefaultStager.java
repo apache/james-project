@@ -60,7 +60,7 @@ public class DefaultStager<A extends Annotation> implements DisposingStager<A> {
             }
 
             case FIRST_IN_LAST_OUT: {
-                localStageables = Collections.asLifoQueue(new ArrayDeque<Stageable>());
+                localStageables = Collections.asLifoQueue(new ArrayDeque<>());
                 break;
             }
 

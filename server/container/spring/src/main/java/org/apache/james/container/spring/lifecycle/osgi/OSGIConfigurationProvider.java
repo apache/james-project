@@ -35,21 +35,12 @@ public class OSGIConfigurationProvider implements org.apache.james.container.spr
 
     @Override
     public HierarchicalConfiguration<ImmutableNode> getConfiguration(String beanName) throws ConfigurationException {
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream("/tmp/" + beanName + ".xml");
+        try (FileInputStream fis = new FileInputStream("/tmp/" + beanName + ".xml")) {
             return FileConfigurationProvider.getConfig(fis);
         } catch (IOException e) {
             throw new ConfigurationException("Bean " + beanName);
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (Exception e) {
-                    // Left empty on purpose
-                }
-            }
         }
+        // Left empty on purpose
     }
 
 }

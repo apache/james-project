@@ -109,7 +109,7 @@ public class FileMailRepository extends AbstractMailRepository {
             streamRepository.init();
 
             if (cacheKeys) {
-                keys = Collections.synchronizedSet(new HashSet<String>());
+                keys = Collections.synchronizedSet(new HashSet<>());
             }
 
             // Finds non-matching pairs and deletes the extra files

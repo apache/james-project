@@ -149,20 +149,10 @@ public class AmqpForwardAttribute extends GenericMailet {
     }
 
     private void trySendContent(Stream<byte[]> content) throws IOException, TimeoutException {
-        Connection connection = null;
-        Channel channel = null;
-        try {
-            connection = connectionFactory.newConnection();
-            channel = connection.createChannel();
+        try (Connection connection = connectionFactory.newConnection();
+             Channel channel = connection.createChannel()) {
             channel.exchangeDeclarePassive(exchange);
             sendContentOnChannel(channel, content);
-        } finally {
-            if (channel != null) {
-                channel.close();
-            }
-            if (connection != null) {
-                connection.close();
-            }
         }
     }
 
