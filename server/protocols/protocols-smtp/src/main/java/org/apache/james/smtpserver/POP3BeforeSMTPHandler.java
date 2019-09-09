@@ -24,6 +24,7 @@ import java.time.Duration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
@@ -40,7 +41,7 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
     private Duration expireTime = POP3BeforeSMTPHelper.EXPIRE_TIME;
 
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         try {
             setExpireTime(config.getString("expireTime", null));
         } catch (NumberFormatException e) {

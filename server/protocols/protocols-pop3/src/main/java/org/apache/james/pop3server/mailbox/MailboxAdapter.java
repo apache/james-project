@@ -100,7 +100,7 @@ public class MailboxAdapter implements Mailbox {
     public InputStream getMessageBody(String uid) throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.valueOf(uid)).toRange(), BODY_GROUP, session);
+            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), BODY_GROUP, session);
             if (results.hasNext()) {
                 return results.next().getBody().getInputStream();
             } else {
@@ -117,7 +117,7 @@ public class MailboxAdapter implements Mailbox {
     public InputStream getMessageHeaders(String uid) throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.valueOf(uid)).toRange(), HEADERS_GROUP,
+            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), HEADERS_GROUP,
                     session);
             if (results.hasNext()) {
                 return results.next().getHeaders().getInputStream();
@@ -135,7 +135,7 @@ public class MailboxAdapter implements Mailbox {
     public InputStream getMessage(String uid) throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.valueOf(uid)).toRange(), FULL_GROUP, session);
+            Iterator<MessageResult> results = manager.getMessages(MessageUid.of(Long.parseLong(uid)).toRange(), FULL_GROUP, session);
             if (results.hasNext()) {
                 return results.next().getFullContent().getInputStream();
             } else {
@@ -170,7 +170,7 @@ public class MailboxAdapter implements Mailbox {
     @Override
     public void remove(String... uids) throws IOException {
         List<MessageUid> uidList = Arrays.stream(uids)
-            .map(uid -> MessageUid.of(Long.valueOf(uid)))
+            .map(uid -> MessageUid.of(Long.parseLong(uid)))
             .collect(Guavate.toImmutableList());
 
         try {

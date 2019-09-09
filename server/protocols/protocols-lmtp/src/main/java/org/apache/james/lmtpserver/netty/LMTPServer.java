@@ -20,6 +20,7 @@ package org.apache.james.lmtpserver.netty;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lmtpserver.CoreCmdHandlerLoader;
 import org.apache.james.lmtpserver.jmx.JMXHandlersLoader;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
@@ -61,7 +62,7 @@ public class LMTPServer extends AbstractProtocolAsyncServer implements LMTPServe
     }
 
     @Override
-    public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         if (isEnabled()) {
 

@@ -125,12 +125,12 @@ public class SMIMECheckSignature extends GenericMailet {
 
         String stripSignatureConf = config.getInitParameter("strip");
         if (stripSignatureConf != null) {
-            stripSignature = Boolean.valueOf(stripSignatureConf);
+            stripSignature = Boolean.parseBoolean(stripSignatureConf);
         }
         
         String onlyTrustedConf = config.getInitParameter("onlyTrusted");
         if (onlyTrustedConf != null) {
-            onlyTrusted = Boolean.valueOf(onlyTrustedConf);
+            onlyTrusted = Boolean.parseBoolean(onlyTrustedConf);
         }
         
         String mailAttributeConf = config.getInitParameter("mailAttribute");

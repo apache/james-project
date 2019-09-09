@@ -113,7 +113,7 @@ public class FileProtocolSessionBuilder extends ProtocolSessionBuilder {
                     session.sl(sessionNumber, serverMsg, location, lastClientMsg);
                 } else if (next.startsWith(WAIT)) {
                     if (next.length() > 5) {
-                        session.wait(sessionNumber, Long.valueOf(next.substring(5)));
+                        session.wait(sessionNumber, Long.parseLong(next.substring(5)));
                     } else {
                         throw new Exception("Invalid line length on WAIT instruction : " + next);
                     }

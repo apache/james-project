@@ -79,7 +79,7 @@ public class FromRepository extends GenericMailet {
         processor = (getInitParameter("processor") == null) ? Mail.DEFAULT : getInitParameter("processor");
 
         try {
-            delete = (getInitParameter("delete") == null) ? false : Boolean.valueOf(getInitParameter("delete"));
+            delete = (getInitParameter("delete") == null) ? false : Boolean.parseBoolean(getInitParameter("delete"));
         } catch (Exception e) {
             // Ignore exception, default to false
         }

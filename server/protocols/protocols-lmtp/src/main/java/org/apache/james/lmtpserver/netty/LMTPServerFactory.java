@@ -24,6 +24,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
@@ -52,11 +53,11 @@ public class LMTPServerFactory extends AbstractServerFactory {
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
-        List<HierarchicalConfiguration> configs = config.configurationsAt("lmtpserver");
+        List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("lmtpserver");
         
-        for (HierarchicalConfiguration serverConfig: configs) {
+        for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             LMTPServer server = createServer();
             server.setFileSystem(fileSystem);
             server.setHashWheelTimer(hashedWheelTimer);

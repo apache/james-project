@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationRuntimeException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -90,7 +91,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFile() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getKeys())
             .toIterable()
             .containsOnly(CONFIG_KEY_1,
@@ -102,7 +103,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFilePart() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(
                 String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, CONFIG_KEY_4));
         assertThat(hierarchicalConfiguration.getKeys())
             .toIterable()
@@ -113,7 +114,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldLoadCorrespondingXMLFileWhenAPathIsProvidedPart() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(
                 String.join(CONFIG_SEPARATOR, ROOT_CONFIG_KEY, CONFIG_KEY_4, CONFIG_KEY_5));
         assertThat(hierarchicalConfiguration.getKeys())
             .toIterable()
@@ -123,7 +124,7 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void multiplesSeparatorsShouldBeTolerated() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(
                 ROOT_CONFIG_KEY + CONFIG_SEPARATOR + CONFIG_SEPARATOR + CONFIG_KEY_4);
         assertThat(hierarchicalConfiguration.getKeys())
             .toIterable()
@@ -144,19 +145,19 @@ public class FileConfigurationProviderTest {
 
     @Test
     public void getConfigurationShouldNotReplaceEnvironmentVariableWhenNotSet() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_NOT_ENV)).isEqualTo(VALUE_NOT_ENV);
     }
 
     @Test
     public void getConfigurationShouldReplaceEnvironmentVariableWhenSet() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV)).isEqualTo(ENVIRONMENT_SET_VALUE);
     }
 
     @Test
     public void getConfigurationShouldReplaceEnvironmentVariableWithoutSplittingThemWhenSet() throws Exception {
-        HierarchicalConfiguration hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
+        HierarchicalConfiguration<ImmutableNode> hierarchicalConfiguration = configurationProvider.getConfiguration(ROOT_CONFIG_KEY);
         assertThat(hierarchicalConfiguration.getString(CONFIG_KEY_ENV_WITH_COMMA)).isEqualTo(ENVIRONMENT_WITH_COMMA);
     }
 }

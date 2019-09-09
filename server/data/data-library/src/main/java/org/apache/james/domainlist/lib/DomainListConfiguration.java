@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.util.StreamUtils;
 
@@ -108,7 +109,7 @@ public class DomainListConfiguration {
         return new Builder();
     }
 
-    public static DomainListConfiguration from(HierarchicalConfiguration config) {
+    public static DomainListConfiguration from(HierarchicalConfiguration<ImmutableNode> config) {
         ImmutableList<Domain> configuredDomains = StreamUtils.ofNullable(config.getStringArray(CONFIGURE_DOMAIN_NAMES))
             .filter(s -> !s.isEmpty())
             .map(Domain::of)

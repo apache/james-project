@@ -375,7 +375,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
      * @return
      */
     private String joinMailboxPath(MailboxPath mailboxPath, char delimiter) {
-        StringBuffer sb = new StringBuffer("");
+        StringBuilder sb = new StringBuilder("");
         if (mailboxPath.getNamespace() != null && !mailboxPath.getNamespace().equals("")) {
             sb.append(mailboxPath.getNamespace());
         }

@@ -26,7 +26,7 @@ public class TestId implements MailboxId, Serializable {
         
         @Override
         public MailboxId fromString(String serialized) {
-            return TestId.of(Long.valueOf(serialized));
+            return TestId.of(Long.parseLong(serialized));
         }
     }
     

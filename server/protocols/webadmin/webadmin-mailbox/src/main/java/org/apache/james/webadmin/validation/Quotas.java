@@ -52,7 +52,7 @@ public abstract class Quotas {
 
     private static long parseToLong(String serialized) {
         try {
-            return Long.valueOf(serialized);
+            return Long.parseLong(serialized);
         } catch (IllegalArgumentException e) {
             throw generateInvalidInputError()
                 .cause(e)

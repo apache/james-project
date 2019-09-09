@@ -43,14 +43,14 @@ public abstract class AbstractTestOutputStreamImapResponseWriter {
     }
 
     protected void checkExpected(String expected) throws Exception {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         writer.flush();
         out.flush();
         byte[] output = out.toByteArray();
         for (byte aChar : output) {
-            buffer.append((char) aChar);
+            builder.append((char) aChar);
         }
-        assertThat(buffer.toString()).isEqualTo(expected);
+        assertThat(builder.toString()).isEqualTo(expected);
     }
 
 }

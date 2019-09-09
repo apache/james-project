@@ -239,7 +239,7 @@ public class BayesianAnalysis extends GenericMailet {
 
         headerName = getInitParameter("headerName", HEADER_NAME);
 
-        ignoreLocalSender = Boolean.valueOf(getInitParameter("ignoreLocalSender"));
+        ignoreLocalSender = Boolean.parseBoolean(getInitParameter("ignoreLocalSender"));
 
         if (ignoreLocalSender) {
             LOGGER.debug("Will ignore messages coming from local senders");

@@ -27,7 +27,7 @@ public class JPAMailboxIdDeserializer implements MailboxIdDeserializer {
     @Override
     public JPAId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {
         try {
-            return JPAId.of(Long.valueOf(serializedMailboxId));
+            return JPAId.of(Long.parseLong(serializedMailboxId));
         } catch (Exception e) {
             throw new MailboxIdDeserialisationException("Error deserializing " + serializedMailboxId, e);
         }

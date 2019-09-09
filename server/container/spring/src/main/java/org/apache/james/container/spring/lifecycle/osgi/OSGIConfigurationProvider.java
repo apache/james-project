@@ -23,17 +23,18 @@ import java.io.IOException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 
 public class OSGIConfigurationProvider implements org.apache.james.container.spring.lifecycle.ConfigurationProvider {
 
     @Override
-    public void registerConfiguration(String beanName, HierarchicalConfiguration conf) {
+    public void registerConfiguration(String beanName, HierarchicalConfiguration<ImmutableNode> conf) {
         
     }
 
     @Override
-    public HierarchicalConfiguration getConfiguration(String beanName) throws ConfigurationException {
+    public HierarchicalConfiguration<ImmutableNode> getConfiguration(String beanName) throws ConfigurationException {
         FileInputStream fis = null;
         try {
             fis = new FileInputStream("/tmp/" + beanName + ".xml");

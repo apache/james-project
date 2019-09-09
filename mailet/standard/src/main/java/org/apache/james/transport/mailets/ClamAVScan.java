@@ -270,7 +270,7 @@ public class ClamAVScan extends GenericMailet {
      */
     protected void initDebug() {
         String debugParam = getInitParameter("debug");
-        setDebug((debugParam == null) ? false : Boolean.valueOf(debugParam));
+        setDebug((debugParam == null) ? false : Boolean.parseBoolean(debugParam));
     }
 
     /**

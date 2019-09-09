@@ -29,6 +29,7 @@ import org.apache.camel.impl.SimpleRegistry;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
@@ -126,7 +127,7 @@ public class CamelMailetContainerModule extends AbstractModule {
             jamesMailSpooler.init();
         }
 
-        private HierarchicalConfiguration getJamesSpoolerConfiguration() {
+        private HierarchicalConfiguration<ImmutableNode> getJamesSpoolerConfiguration() {
             try {
                 return configurationProvider.getConfiguration("mailetcontainer")
                     .configurationAt("spooler");
@@ -158,7 +159,7 @@ public class CamelMailetContainerModule extends AbstractModule {
             mailetContext.configure(getMailetContextConfiguration());
         }
 
-        private HierarchicalConfiguration getMailetContextConfiguration() {
+        private HierarchicalConfiguration<ImmutableNode> getMailetContextConfiguration() {
             try {
                 return configurationProvider.getConfiguration("mailetcontainer")
                     .configurationAt("context");
@@ -206,7 +207,7 @@ public class CamelMailetContainerModule extends AbstractModule {
             camelCompositeProcessor.init();
         }
 
-        private HierarchicalConfiguration getProcessorConfiguration() {
+        private HierarchicalConfiguration<ImmutableNode> getProcessorConfiguration() {
             try {
                 return configurationProvider.getConfiguration("mailetcontainer")
                     .configurationAt("processors");
@@ -275,7 +276,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     }
 
     public interface DefaultProcessorsConfigurationSupplier {
-        HierarchicalConfiguration getDefaultConfiguration();
+        HierarchicalConfiguration<ImmutableNode> getDefaultConfiguration();
     }
 
 }

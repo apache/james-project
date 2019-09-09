@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.AbstractRecipientRewriteTable;
@@ -47,7 +48,7 @@ public class XMLRecipientRewriteTable extends AbstractRecipientRewriteTable {
     private Map<MappingSource, String> mappings;
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration arg0) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> arg0) throws ConfigurationException {
         String[] mapConf = arg0.getStringArray("mapping");
         mappings = Maps.newHashMap();
         if (mapConf != null && mapConf.length > 0) {

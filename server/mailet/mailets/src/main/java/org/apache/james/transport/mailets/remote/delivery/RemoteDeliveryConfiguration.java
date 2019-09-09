@@ -135,7 +135,7 @@ public class RemoteDeliveryConfiguration {
     private int computeDnsProblemRetry(MailetConfig mailetConfig) {
         String dnsRetry = mailetConfig.getInitParameter(MAX_DNS_PROBLEM_RETRIES);
         if (!Strings.isNullOrEmpty(dnsRetry)) {
-            return Integer.valueOf(dnsRetry);
+            return Integer.parseInt(dnsRetry);
         } else {
             return DEFAULT_DNS_RETRY_PROBLEM;
         }
@@ -143,7 +143,7 @@ public class RemoteDeliveryConfiguration {
 
     private int computeConnectionTimeout(MailetConfig mailetConfig) {
         try {
-            return Integer.valueOf(
+            return Integer.parseInt(
                 Optional.ofNullable(mailetConfig.getInitParameter(CONNECTIONTIMEOUT))
                     .orElse(String.valueOf(DEFAULT_CONNECTION_TIMEOUT)));
         } catch (Exception e) {
@@ -155,7 +155,7 @@ public class RemoteDeliveryConfiguration {
     private long computeSmtpTimeout(MailetConfig mailetConfig) {
         try {
             if (mailetConfig.getInitParameter(TIMEOUT) != null) {
-                return Integer.valueOf(mailetConfig.getInitParameter(TIMEOUT));
+                return Integer.parseInt(mailetConfig.getInitParameter(TIMEOUT));
             } else {
                 return DEFAULT_SMTP_TIMEOUT;
             }
@@ -167,7 +167,7 @@ public class RemoteDeliveryConfiguration {
 
     private DelaysAndMaxRetry computeDelaysAndMaxRetry(MailetConfig mailetConfig) {
         try {
-            int intendedMaxRetries = Integer.valueOf(
+            int intendedMaxRetries = Integer.parseInt(
                 Optional.ofNullable(mailetConfig.getInitParameter(MAX_RETRIES))
                     .orElse(String.valueOf(DEFAULT_MAX_RETRY)));
             return DelaysAndMaxRetry.from(intendedMaxRetries, mailetConfig.getInitParameter(DELAY_TIME));

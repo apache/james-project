@@ -347,20 +347,20 @@ public class DSNBounce extends GenericMailet implements RedirectNotify {
     }
 
     private MimeBodyPart createTextMsg(Mail originalMail) throws MessagingException {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
 
-        buffer.append(bounceMessage()).append(LINE_BREAK);
-        buffer.append("Failed recipient(s):").append(LINE_BREAK);
+        builder.append(bounceMessage()).append(LINE_BREAK);
+        builder.append("Failed recipient(s):").append(LINE_BREAK);
         for (MailAddress mailAddress : originalMail.getRecipients()) {
-            buffer.append(mailAddress);
+            builder.append(mailAddress);
         }
-        buffer.append(LINE_BREAK).append(LINE_BREAK);
-        buffer.append("Error message:").append(LINE_BREAK);
-        buffer.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
-        buffer.append(LINE_BREAK);
+        builder.append(LINE_BREAK).append(LINE_BREAK);
+        builder.append("Error message:").append(LINE_BREAK);
+        builder.append(AttributeUtils.getValueAndCastFromMail(originalMail, DELIVERY_ERROR, String.class).orElse("")).append(LINE_BREAK);
+        builder.append(LINE_BREAK);
 
         MimeBodyPart bodyPart = new MimeBodyPart();
-        bodyPart.setText(buffer.toString());
+        bodyPart.setText(builder.toString());
         return bodyPart;
     }
 

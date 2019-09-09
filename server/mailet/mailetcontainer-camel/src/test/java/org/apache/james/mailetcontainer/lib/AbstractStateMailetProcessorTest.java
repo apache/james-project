@@ -29,6 +29,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMailet;
 import org.apache.james.mailetcontainer.api.mock.ExceptionThrowingMatcher;
@@ -45,10 +46,10 @@ import org.junit.Test;
 
 public abstract class AbstractStateMailetProcessorTest {
 
-    protected abstract AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration configuration) throws
+    protected abstract AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws
             Exception;
 
-    private HierarchicalConfiguration createConfig(Class<?> matcherClass, Class<?> mailetClass, int count) throws
+    private HierarchicalConfiguration<ImmutableNode> createConfig(Class<?> matcherClass, Class<?> mailetClass, int count) throws
             ConfigurationException {
         StringBuilder sb = new StringBuilder();
         sb.append("<processor state=\"" + Mail.DEFAULT + "\">");

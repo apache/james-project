@@ -26,6 +26,7 @@ import javax.annotation.PreDestroy;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 
 /**
@@ -34,7 +35,7 @@ import org.apache.james.lifecycle.api.Configurable;
 public abstract class AbstractServerFactory implements Configurable {
 
     private List<AbstractConfigurableAsyncServer> servers;
-    private HierarchicalConfiguration config;
+    private HierarchicalConfiguration<ImmutableNode> config;
 
     /**
      * Create {@link AbstractConfigurableAsyncServer} servers, inject dependencies and configure them before return all fo them in a {@link List}
@@ -43,10 +44,10 @@ public abstract class AbstractServerFactory implements Configurable {
      * @return servers
      * @throws Exception
      */
-    protected abstract List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception;
+    protected abstract List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception;
     
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         this.config = config;
     }
 

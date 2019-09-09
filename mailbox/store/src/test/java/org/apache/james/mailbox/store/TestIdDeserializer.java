@@ -26,7 +26,7 @@ public class TestIdDeserializer implements MailboxIdDeserializer {
 
     @Override
     public TestId deserialize(String serializedMailboxId) {
-        return TestId.of(Long.valueOf(serializedMailboxId));
+        return TestId.of(Long.parseLong(serializedMailboxId));
     }
 
 }

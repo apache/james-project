@@ -336,9 +336,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     @Override
     public InputStream getInputStream() throws IOException {
         StringBuilder sb = new StringBuilder();
-        Iterator<MessageResult.Header> hIt = headers.iterator();
-        while (hIt.hasNext()) {
-            MessageResult.Header header = hIt.next();
+        for (MessageResult.Header header : headers) {
             sb.append(header.getName()).append(": ").append(header.getValue()).append("\r\n");
         }
         sb.append("\r\n");

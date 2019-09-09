@@ -76,7 +76,7 @@ public class SetMailboxesResponseTest {
 
     private ImmutableMap<MailboxCreationId, Mailbox> buildMailbox(MailboxCreationId mailboxId) {
         return ImmutableMap.of(mailboxId, Mailbox.builder()
-                .id(InMemoryId.of(Long.valueOf(mailboxId.getCreationId())))
+                .id(InMemoryId.of(Long.parseLong(mailboxId.getCreationId())))
                 .name(mailboxId.getCreationId())
                 .build());
     }

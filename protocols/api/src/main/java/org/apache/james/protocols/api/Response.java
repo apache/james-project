@@ -40,9 +40,8 @@ public interface Response {
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         public List<CharSequence> getLines() {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
         @Override

@@ -235,9 +235,7 @@ public class SimpleMailboxMembership implements MailboxMessage {
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         final Writer writer = new OutputStreamWriter(baos, "us-ascii");
 
-        Iterator<Entry<String, String>> hIt = headers.entrySet().iterator();
-        while (hIt.hasNext()) {
-            Entry<String, String> header = hIt.next();
+        for (Entry<String, String> header : headers.entrySet()) {
             writer.write(header.getKey());
             writer.write(": ");
             writer.write(header.getValue());

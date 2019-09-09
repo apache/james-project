@@ -87,7 +87,7 @@ public class Host {
 
     private static int getPortFromConfPart(List<String> parts, Optional<Integer> defaultPort) {
         if (parts.size() == 2) {
-            return Integer.valueOf(parts.get(1));
+            return Integer.parseInt(parts.get(1));
         }
         if (parts.size() == 1) {
             return defaultPort.orElseThrow(() -> new IllegalArgumentException("Host do not have port part but no default port provided"));

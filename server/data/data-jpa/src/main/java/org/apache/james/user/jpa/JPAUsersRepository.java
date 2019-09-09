@@ -33,6 +33,7 @@ import javax.persistence.PersistenceUnit;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jpa.model.JPAUser;
@@ -263,7 +264,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         algo = config.getString("algorithm", "MD5");
         super.doConfigure(config);
     }

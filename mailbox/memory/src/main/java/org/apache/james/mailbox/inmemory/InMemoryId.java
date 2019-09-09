@@ -28,7 +28,7 @@ public class InMemoryId implements MailboxId, Serializable {
         
         @Override
         public MailboxId fromString(String serialized) {
-            return of(Long.valueOf(serialized));
+            return of(Long.parseLong(serialized));
         }
     }
     

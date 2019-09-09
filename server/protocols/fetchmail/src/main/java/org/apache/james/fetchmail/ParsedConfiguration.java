@@ -28,6 +28,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -303,7 +304,7 @@ class ParsedConfiguration {
      * @param dnsServer
      * @throws ConfigurationException
      */
-    public ParsedConfiguration(HierarchicalConfiguration configuration, UsersRepository localUsers, DNSService dnsServer, DomainList domainList, MailQueue queue) throws ConfigurationException {
+    public ParsedConfiguration(HierarchicalConfiguration<ImmutableNode> configuration, UsersRepository localUsers, DNSService dnsServer, DomainList domainList, MailQueue queue) throws ConfigurationException {
         this();
         setLocalUsers(localUsers);
         setDNSServer(dnsServer);
@@ -312,7 +313,7 @@ class ParsedConfiguration {
         configure(configuration);
     }
 
-    protected void configure(HierarchicalConfiguration conf) throws ConfigurationException {
+    protected void configure(HierarchicalConfiguration<ImmutableNode> conf) throws ConfigurationException {
         setHost(conf.getString("host"));
 
         setFetchTaskName(conf.getString("[@name]"));
@@ -320,7 +321,7 @@ class ParsedConfiguration {
         setJavaMailFolderName(conf.getString("javaMailFolderName"));
         setRecurse(conf.getBoolean("recursesubfolders"));
 
-        HierarchicalConfiguration recipientNotFound = conf.configurationAt("recipientnotfound");
+        HierarchicalConfiguration<ImmutableNode> recipientNotFound = conf.configurationAt("recipientnotfound");
         setDeferRecipientNotFound(recipientNotFound.getBoolean("[@defer]"));
         setRejectRecipientNotFound(recipientNotFound.getBoolean("[@reject]"));
         setLeaveRecipientNotFound(recipientNotFound.getBoolean("[@leaveonserver]"));
@@ -329,32 +330,32 @@ class ParsedConfiguration {
 
         setFetchAll(conf.getBoolean("fetchall"));
 
-        HierarchicalConfiguration fetched = conf.configurationAt("fetched");
+        HierarchicalConfiguration<ImmutableNode> fetched = conf.configurationAt("fetched");
         setLeave(fetched.getBoolean("[@leaveonserver]"));
         setMarkSeen(fetched.getBoolean("[@markseen]"));
 
-        HierarchicalConfiguration remoterecipient = conf.configurationAt("remoterecipient");
+        HierarchicalConfiguration<ImmutableNode> remoterecipient = conf.configurationAt("remoterecipient");
         setRejectRemoteRecipient(remoterecipient.getBoolean("[@reject]"));
         setLeaveRemoteRecipient(remoterecipient.getBoolean("[@leaveonserver]"));
         setMarkRemoteRecipientSeen(remoterecipient.getBoolean("[@markseen]"));
 
-        HierarchicalConfiguration blacklist = conf.configurationAt("blacklist");
+        HierarchicalConfiguration<ImmutableNode> blacklist = conf.configurationAt("blacklist");
         setBlacklist(conf.getString("blacklist", ""));
         setRejectBlacklisted(blacklist.getBoolean("[@reject]"));
         setLeaveBlacklisted(blacklist.getBoolean("[@leaveonserver]"));
         setMarkBlacklistedSeen(blacklist.getBoolean("[@markseen]"));
 
-        HierarchicalConfiguration userundefined = conf.configurationAt("userundefined");
+        HierarchicalConfiguration<ImmutableNode> userundefined = conf.configurationAt("userundefined");
         setRejectUserUndefined(userundefined.getBoolean("[@reject]"));
         setLeaveUserUndefined(userundefined.getBoolean("[@leaveonserver]"));
         setMarkUserUndefinedSeen(userundefined.getBoolean("[@markseen]"));
 
-        HierarchicalConfiguration undeliverable = conf.configurationAt("undeliverable");
+        HierarchicalConfiguration<ImmutableNode> undeliverable = conf.configurationAt("undeliverable");
         setLeaveUndeliverable(undeliverable.getBoolean("[@leaveonserver]"));
         setMarkUndeliverableSeen(undeliverable.getBoolean("[@markseen]"));
 
         if (conf.getKeys("remotereceivedheader").hasNext()) {
-            HierarchicalConfiguration remotereceivedheader = conf.configurationAt("remotereceivedheader");
+            HierarchicalConfiguration<ImmutableNode> remotereceivedheader = conf.configurationAt("remotereceivedheader");
 
             setRemoteReceivedHeaderIndex(remotereceivedheader.getInt("[@index]"));
             setRejectRemoteReceivedHeaderInvalid(remotereceivedheader.getBoolean("[@reject]"));
@@ -363,7 +364,7 @@ class ParsedConfiguration {
         }
 
         if (conf.getKeys("maxmessagesize").hasNext()) {
-            HierarchicalConfiguration maxmessagesize = conf.configurationAt("maxmessagesize");
+            HierarchicalConfiguration<ImmutableNode> maxmessagesize = conf.configurationAt("maxmessagesize");
 
             setMaxMessageSizeLimit(maxmessagesize.getInt("[@limit]") * 1024);
             setRejectMaxMessageSizeExceeded(maxmessagesize.getBoolean("[@reject]"));

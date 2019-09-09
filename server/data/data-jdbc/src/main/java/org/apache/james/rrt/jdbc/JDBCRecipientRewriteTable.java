@@ -35,6 +35,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -148,7 +149,7 @@ public class JDBCRecipientRewriteTable extends AbstractRecipientRewriteTable {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration conf) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> conf) throws ConfigurationException {
 
         String destination = conf.getString("[@destinationURL]", null);
 

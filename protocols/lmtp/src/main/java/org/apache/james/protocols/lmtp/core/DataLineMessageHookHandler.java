@@ -20,7 +20,6 @@ package org.apache.james.protocols.lmtp.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.core.MailAddress;
@@ -49,12 +48,9 @@ public class DataLineMessageHookHandler extends org.apache.james.protocols.smtp.
     protected Response processExtensions(SMTPSession session, MailEnvelopeImpl mail) {
         LMTPMultiResponse mResponse = null;
 
-        Iterator<MailAddress> recipients = mail.getRecipients().iterator();
-        
-        while (recipients.hasNext()) {
-            MailAddress recipient = recipients.next();
+        for (MailAddress recipient : mail.getRecipients()) {
             Response response = null;
-            for (DeliverToRecipientHook handler: handlers) {
+            for (DeliverToRecipientHook handler : handlers) {
                 response = AbstractHookableCmdHandler.calcDefaultSMTPResponse(handler.deliver(session, recipient, mail));
                 if (response != null) {
                     break;

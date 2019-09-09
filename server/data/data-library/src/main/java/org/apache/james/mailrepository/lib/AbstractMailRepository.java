@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -57,11 +58,11 @@ public abstract class AbstractMailRepository implements MailRepository, Configur
     private final Lock lock = new Lock();
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         doConfigure(configuration);
     }
 
-    protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
 
     }
 

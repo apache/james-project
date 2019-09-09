@@ -23,6 +23,7 @@ import java.util.function.Supplier;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
@@ -63,7 +64,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
     @Provides
     @Singleton
     MailRepositoryStoreConfiguration provideConfiguration(ConfigurationProvider configurationProvider, DefaultItemSupplier defaultItemSupplier) throws ConfigurationException {
-        HierarchicalConfiguration configuration = configurationProvider.getConfiguration("mailrepositorystore");
+        HierarchicalConfiguration<ImmutableNode> configuration = configurationProvider.getConfiguration("mailrepositorystore");
         MailRepositoryStoreConfiguration userConfiguration = MailRepositoryStoreConfiguration.parse(configuration);
         if (!userConfiguration.getItems().isEmpty()) {
             return userConfiguration;

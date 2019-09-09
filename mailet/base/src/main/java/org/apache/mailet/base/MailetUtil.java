@@ -138,7 +138,7 @@ public class MailetUtil {
 
     private static int tryParseInteger(String value) throws MessagingException {
         try {
-            return Integer.valueOf(value);
+            return Integer.parseInt(value);
         } catch (NumberFormatException e) {
             throw new MessagingException("Expecting condition to be a strictly positive integer. Got " + value);
         }

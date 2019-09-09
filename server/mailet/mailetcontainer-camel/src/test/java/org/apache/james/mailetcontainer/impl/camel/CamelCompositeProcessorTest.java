@@ -20,6 +20,7 @@ package org.apache.james.mailetcontainer.impl.camel;
 
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;
@@ -30,7 +31,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessorTest {
 
     @Override
-    protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration config) throws Exception {
+    protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         CamelCompositeProcessor processor = new CamelCompositeProcessor(new NoopMetricFactory());
         try {
             processor.setCamelContext(new DefaultCamelContext());

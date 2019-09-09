@@ -549,7 +549,7 @@ public class MaildirFolder {
                             continue;
                         }
 
-                        MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
+                        MessageUid uid = MessageUid.of(Long.parseLong(line.substring(0, gap)));
                         String name = line.substring(gap + 1, line.length());
                         for (String recentFile : recentFiles) {
                             if (recentFile.equals(name)) {
@@ -623,7 +623,7 @@ public class MaildirFolder {
                         // there must be some issues in the file if no gap can be found
                         throw new MailboxException("Corrupted entry in uid-file " + uidList + " line " + lineNumber);
                     }
-                    MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
+                    MessageUid uid = MessageUid.of(Long.parseLong(line.substring(0, gap)));
                     String name = line.substring(gap + 1, line.length());
                     reverseUidMap.put(stripMetaFromName(name), uid);
                 }
@@ -674,7 +674,7 @@ public class MaildirFolder {
                         continue;
                     }
                     
-                    MessageUid uid = MessageUid.of(Long.valueOf(line.substring(0, gap)));
+                    MessageUid uid = MessageUid.of(Long.parseLong(line.substring(0, gap)));
                     if (uid.compareTo(from) >= 0) {
                         if (to != null && uid.compareTo(to) > 0) {
                             break;
@@ -728,13 +728,13 @@ public class MaildirFolder {
             throw new IOException("Corrupted header entry in uid-file");
             
         }
-        int version = Integer.valueOf(line.substring(0, gap1));
+        int version = Integer.parseInt(line.substring(0, gap1));
         if (version != 1) {
             throw new IOException("Cannot read uidlists with versions other than 1.");
         }
         int gap2 = line.indexOf(" ", gap1 + 1);
-        lastUid = Optional.of(MessageUid.of(Long.valueOf(line.substring(gap1 + 1, gap2))));
-        messageCount = Integer.valueOf(line.substring(gap2 + 1, line.length()));
+        lastUid = Optional.of(MessageUid.of(Long.parseLong(line.substring(gap1 + 1, gap2))));
+        messageCount = Integer.parseInt(line.substring(gap2 + 1, line.length()));
     }
     
     /**
@@ -849,7 +849,7 @@ public class MaildirFolder {
                 readUidListHeader(line);
                 ArrayList<String> lines = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
-                    if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
+                    if (uid.equals(MessageUid.of(Long.parseLong(line.substring(0, line.indexOf(" ")))))) {
                         line = String.valueOf(uid.asLong()) + " " + messageName;
                     }
                     lines.add(line);
@@ -897,7 +897,7 @@ public class MaildirFolder {
                         continue;
                     }
 
-                    if (uid.equals(MessageUid.of(Long.valueOf(line.substring(0, line.indexOf(" ")))))) {
+                    if (uid.equals(MessageUid.of(Long.parseLong(line.substring(0, line.indexOf(" ")))))) {
                         deletedMessage = newMaildirMessageName(MaildirFolder.this, line.substring(gap + 1, line.length()));
                         messageCount--;
                     } else {

@@ -22,6 +22,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 import org.apache.james.protocols.lib.ProtocolHandlerChainImpl;
@@ -37,7 +38,7 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
 
     private ProtocolHandlerLoader loader;
 
-    private HierarchicalConfiguration config;
+    private HierarchicalConfiguration<ImmutableNode> config;
 
     @Inject
     public void setProtocolHandlerLoader(ProtocolHandlerLoader loader) {
@@ -52,7 +53,7 @@ public abstract class AbstractProtocolAsyncServer extends AbstractConfigurableAs
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         super.doConfigure(config);
         this.config = config;
     }

@@ -267,9 +267,9 @@ public final class FetchResponseBuilder {
             if (numberOfOctets == null) {
                 numberOfOctetsAsLong = Long.MAX_VALUE;
             } else {
-                numberOfOctetsAsLong = numberOfOctets.longValue();
+                numberOfOctetsAsLong = numberOfOctets;
             }
-            final long firstOctetAsLong = firstOctet.longValue();
+            final long firstOctetAsLong = firstOctet;
 
             result = new PartialFetchBodyElement(fullResult, firstOctetAsLong, numberOfOctetsAsLong);
             

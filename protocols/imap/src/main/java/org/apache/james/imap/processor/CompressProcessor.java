@@ -67,12 +67,11 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getImplementedCapabilities(ImapSession session) {
         if (session.isCompressionSupported()) {
             return CAPA;
         }
-        return Collections.EMPTY_LIST;
+        return Collections.emptyList();
     }
 
     @Override

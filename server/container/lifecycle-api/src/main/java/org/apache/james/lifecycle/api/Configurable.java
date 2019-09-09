@@ -21,6 +21,7 @@ package org.apache.james.lifecycle.api;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 /**
  * Classes which needs to access the configuration should implement this
@@ -35,6 +36,6 @@ public interface Configurable extends Startable {
      * @param config
      * @throws ConfigurationException
      */
-    void configure(HierarchicalConfiguration config) throws ConfigurationException;
+    void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException;
 
 }

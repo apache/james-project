@@ -341,7 +341,7 @@ public abstract class ImapRequestLineReader {
     }
 
     private String consumeWord(CharacterValidator validator, boolean stripParen) throws DecodingException {
-        StringBuffer atom = new StringBuffer();
+        StringBuilder atom = new StringBuilder();
 
         char next = nextWordChar();
         while (!isWhitespace(next) && (stripParen == false || next != ')')) {
@@ -413,7 +413,7 @@ public abstract class ImapRequestLineReader {
         // The 1st character must be '{'
         consumeChar('{');
 
-        StringBuffer digits = new StringBuffer();
+        StringBuilder digits = new StringBuilder();
         char next = nextChar();
         while (next != '}' && next != '+') {
             digits.append(next);

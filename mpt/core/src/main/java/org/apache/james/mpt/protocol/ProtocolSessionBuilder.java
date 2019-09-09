@@ -243,27 +243,27 @@ public class ProtocolSessionBuilder {
      */
     private String substituteVariables(String line) {
         if (variables.size() > 0) {
-            final StringBuffer buffer = new StringBuffer(line);
+            final StringBuilder builder = new StringBuilder(line);
             int start = 0;
             int end = 0;
             while (start >= 0 && end >= 0) { 
-                start = buffer.indexOf("${", end);
+                start = builder.indexOf("${", end);
                 if (start < 0) {
                     break;
                 }
-                end = buffer.indexOf("}", start);
+                end = builder.indexOf("}", start);
                 if (end < 0) {
                     break;
                 }
-                final String name = buffer.substring(start + 2, end);
+                final String name = builder.substring(start + 2, end);
                 final String value = variables.getProperty(name);
                 if (value != null) {
-                    buffer.replace(start, end + 1, value);
+                    builder.replace(start, end + 1, value);
                     final int variableLength = (end - start + 2);
                     end = end + (value.length() - variableLength);
                 }
             }
-            line = buffer.toString();
+            line = builder.toString();
         }
         return line;
     }

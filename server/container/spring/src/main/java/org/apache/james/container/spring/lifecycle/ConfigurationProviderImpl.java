@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ResourceLoaderAware;
 import org.springframework.core.io.Resource;
@@ -43,7 +44,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
     /**
      * A map of loaded configuration per bean.
      */
-    private final Map<String, HierarchicalConfiguration> configurations = new HashMap<>();
+    private final Map<String, HierarchicalConfiguration<ImmutableNode>> configurations = new HashMap<>();
 
     /**
      * Mappings for bean names associated with their related
@@ -69,7 +70,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
     }
 
     @Override
-    public void registerConfiguration(String beanName, HierarchicalConfiguration conf) {
+    public void registerConfiguration(String beanName, HierarchicalConfiguration<ImmutableNode> conf) {
         configurations.put(beanName, conf);
     }
 
@@ -88,9 +89,9 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
     }
 
     @Override
-    public HierarchicalConfiguration getConfiguration(String name) throws ConfigurationException {
+    public HierarchicalConfiguration<ImmutableNode> getConfiguration(String name) throws ConfigurationException {
 
-        HierarchicalConfiguration conf = configurations.get(name);
+        HierarchicalConfiguration<ImmutableNode> conf = configurations.get(name);
 
         // Simply return the configuration if it is already loaded.
         if (conf != null) {
@@ -115,7 +116,7 @@ public class ConfigurationProviderImpl implements ConfigurationProvider, Resourc
 
             if (resource.exists()) {
                 try {
-                    HierarchicalConfiguration config = getConfig(resource);
+                    HierarchicalConfiguration<ImmutableNode> config = getConfig(resource);
                     if (configPart != null) {
                         return config.configurationAt(configPart);
                     } else {

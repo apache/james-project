@@ -21,16 +21,17 @@ package org.apache.james.server.core.configuration;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.util.LoggingLevel;
 
 public interface ConfigurationProvider {
 
-    default HierarchicalConfiguration getConfiguration(String component)
+    default HierarchicalConfiguration<ImmutableNode> getConfiguration(String component)
             throws ConfigurationException {
         return getConfiguration(component, LoggingLevel.WARNING);
     }
 
-    HierarchicalConfiguration getConfiguration(String component, LoggingLevel loggingLevelOnError)
+    HierarchicalConfiguration<ImmutableNode> getConfiguration(String component, LoggingLevel loggingLevelOnError)
             throws ConfigurationException;
 
 }

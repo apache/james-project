@@ -36,6 +36,7 @@ import org.apache.james.jmap.cassandra.vacation.CassandraVacationRepository;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraJmapModule extends AbstractModule {
@@ -59,8 +60,7 @@ public class CassandraJmapModule extends AbstractModule {
         cassandraDataDefinitions.addBinding().toInstance(CassandraVacationModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraNotificationRegistryModule.MODULE);
 
-        @SuppressWarnings("rawtypes")
-        Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        Multibinder<EventDTOModule<?, ?>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
     }
 }

@@ -30,6 +30,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.User;
 import org.apache.james.domainlist.api.DomainList;
@@ -64,7 +65,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         setRecursiveMapping(config.getBoolean("recursiveMapping", true));
         try {
             setMappingLimit(config.getInt("mappingLimit", 10));
@@ -77,7 +78,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     /**
      * Override to handle config
      */
-    protected void doConfigure(HierarchicalConfiguration conf) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> conf) throws ConfigurationException {
     }
 
     public void setRecursiveMapping(boolean recursive) {

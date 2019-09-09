@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,14 +56,14 @@ public class ConfigurablesTest {
     private static class MyConfigurable implements Configurable {
 
         @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         }
     }
 
     private static class MyConfigurable2 implements Configurable {
 
         @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         }
     }
 }

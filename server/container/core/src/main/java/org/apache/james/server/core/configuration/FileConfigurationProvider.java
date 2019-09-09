@@ -31,6 +31,7 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.convert.DisabledListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.util.LoggingLevel;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileConfigurationProvider.class);
     private static final String CONFIGURATION_FILE_SUFFIX = ".xml";
 
-    public static final HierarchicalConfiguration EMPTY_CONFIGURATION = new XMLConfiguration();
+    public static final HierarchicalConfiguration<ImmutableNode> EMPTY_CONFIGURATION = new XMLConfiguration();
 
     public static XMLConfiguration getConfig(InputStream configStream) throws ConfigurationException {
         FileBasedConfigurationBuilder<XMLConfiguration> builder = new FileBasedConfigurationBuilder<>(XMLConfiguration.class)
@@ -69,7 +70,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
     }
     
     @Override
-    public HierarchicalConfiguration getConfiguration(String component, LoggingLevel loggingLevelOnError) throws ConfigurationException {
+    public HierarchicalConfiguration<ImmutableNode> getConfiguration(String component, LoggingLevel loggingLevelOnError) throws ConfigurationException {
         Preconditions.checkNotNull(component);
         List<String> configPathParts = Splitter.on(".").splitToList(component);
         Preconditions.checkArgument(!configPathParts.isEmpty());
@@ -82,7 +83,7 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         return EMPTY_CONFIGURATION;
     }
 
-    private HierarchicalConfiguration selectConfigurationPart(List<String> configPathParts, HierarchicalConfiguration config) {
+    private HierarchicalConfiguration<ImmutableNode> selectConfigurationPart(List<String> configPathParts, HierarchicalConfiguration<ImmutableNode> config) {
         return selectHierarchicalConfigPart(config, Iterables.skip(configPathParts, 1));
     }
 
@@ -97,8 +98,8 @@ public class FileConfigurationProvider implements ConfigurationProvider {
         }
     }
 
-    private HierarchicalConfiguration selectHierarchicalConfigPart(HierarchicalConfiguration config, Iterable<String> configsPathParts) {
-        HierarchicalConfiguration currentConfig = config;
+    private HierarchicalConfiguration<ImmutableNode> selectHierarchicalConfigPart(HierarchicalConfiguration<ImmutableNode> config, Iterable<String> configsPathParts) {
+        HierarchicalConfiguration<ImmutableNode> currentConfig = config;
         for (String nextPathPart : configsPathParts) {
             currentConfig = currentConfig.configurationAt(nextPathPart);
         }

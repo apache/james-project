@@ -90,14 +90,13 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         // Extension defined in RFC 1870
         long maxMessageSize = session.getConfiguration().getMaxMessageSize();
         if (maxMessageSize > 0) {
             return Arrays.asList("SIZE " + maxMessageSize);
         } else {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 
@@ -139,7 +138,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         } else {
             // put the message size in the message state so it can be used
             // later to restrict messages for user quotas, etc.
-            session.setAttachment(MESG_SIZE, Integer.valueOf(size), State.Transaction);
+            session.setAttachment(MESG_SIZE, size, State.Transaction);
         }
         return null;
     }
@@ -197,7 +196,7 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
     @Override
     public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
         Boolean failed = (Boolean) session.getAttachment(MESG_FAILED, State.Transaction);
-        if (failed != null && failed.booleanValue()) {
+        if (failed != null && failed) {
             LOGGER.error("Rejected message from {} from {} exceeding system maximum message size of {}", session.getAttachment(SMTPSession.SENDER, State.Transaction), session.getRemoteAddress().getAddress().getHostAddress(), session.getConfiguration().getMaxMessageSize());
             return QUOTA_EXCEEDED;
         } else {

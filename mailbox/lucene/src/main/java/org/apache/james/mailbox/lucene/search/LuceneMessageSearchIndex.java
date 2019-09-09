@@ -30,7 +30,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -510,7 +509,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
                 Document doc = searcher.doc(sDoc.doc);
-                MessageUid uid = MessageUid.of(Long.valueOf(doc.get(UID_FIELD)));
+                MessageUid uid = MessageUid.of(Long.parseLong(doc.get(UID_FIELD)));
                 MailboxId mailboxId = mailboxIdFactory.fromString(doc.get(MAILBOX_ID_FIELD));
                 Optional<MessageId> messageId = toMessageId(Optional.ofNullable(doc.get(MESSAGE_ID_FIELD)));
                 results.add(new SearchResult(messageId, mailboxId, uid));
@@ -585,16 +584,14 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                 String firstCcMailbox = "";
                 String firstFromDisplay = "";
                 String firstToDisplay = "";
-                
-                Iterator<org.apache.james.mime4j.stream.Field> fields = header.iterator();
-                while (fields.hasNext()) {
-                    org.apache.james.mime4j.stream.Field f = fields.next();
+
+                for (org.apache.james.mime4j.stream.Field f : header) {
                     String headerName = f.getName().toUpperCase(Locale.US);
                     String headerValue = f.getBody().toUpperCase(Locale.US);
-                    String fullValue =  f.toString().toUpperCase(Locale.US);
+                    String fullValue = f.toString().toUpperCase(Locale.US);
                     doc.add(new Field(HEADERS_FIELD, fullValue, Store.NO, Index.ANALYZED));
                     doc.add(new Field(PREFIX_HEADER_FIELD + headerName, headerValue, Store.NO, Index.ANALYZED));
-                    
+
                     if (f instanceof DateTimeField) {
                         // We need to make sure we convert it to GMT
                         try (StringReader reader = new StringReader(f.getBody())) {
@@ -612,78 +609,78 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
                             sentDate = membership.getInternalDate();
                         }
 
-                    } 
-                        String field = null;
-                        if ("To".equalsIgnoreCase(headerName)) {
-                            field = TO_FIELD;
-                        } else if ("From".equalsIgnoreCase(headerName)) {
-                            field = FROM_FIELD;
-                        } else if ("Cc".equalsIgnoreCase(headerName)) {
-                            field = CC_FIELD;
-                        } else if ("Bcc".equalsIgnoreCase(headerName)) {
-                            field = BCC_FIELD;
-                        }
-                        
+                    }
+                    String field = null;
+                    if ("To".equalsIgnoreCase(headerName)) {
+                        field = TO_FIELD;
+                    } else if ("From".equalsIgnoreCase(headerName)) {
+                        field = FROM_FIELD;
+                    } else if ("Cc".equalsIgnoreCase(headerName)) {
+                        field = CC_FIELD;
+                    } else if ("Bcc".equalsIgnoreCase(headerName)) {
+                        field = BCC_FIELD;
+                    }
 
-                        // Check if we can index the the address in the right manner
-                        if (field != null) {
-                                // not sure if we really should reparse it. It maybe be better to check just for the right type.
-                                // But this impl was easier in the first place
-                                AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(f.getBody()));
-                                for (int i = 0; i < aList.size(); i++) {
-                                    Address address = aList.get(i);
-                                    if (address instanceof org.apache.james.mime4j.dom.address.Mailbox) {
-                                        org.apache.james.mime4j.dom.address.Mailbox mailbox = (org.apache.james.mime4j.dom.address.Mailbox) address;
-                                        String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
-                                        doc.add(new Field(field, value, Store.NO, Index.ANALYZED));
-                                        if (i == 0) {
-                                            String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
-                                            String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
 
-                                            if ("To".equalsIgnoreCase(headerName)) {
-                                                firstToMailbox = mailboxAddress;
-                                                firstToDisplay = mailboxDisplay;
-                                            } else if ("From".equalsIgnoreCase(headerName)) {
-                                                firstFromMailbox = mailboxAddress;
-                                                firstFromDisplay = mailboxDisplay;
-                                                
-                                            } else if ("Cc".equalsIgnoreCase(headerName)) {
-                                                firstCcMailbox = mailboxAddress;
-                                            }
-                                            
-                                        }
-                                    } else if (address instanceof Group) {
-                                        MailboxList mList = ((Group) address).getMailboxes();
-                                        for (int a = 0; a < mList.size(); a++) {
-                                            org.apache.james.mime4j.dom.address.Mailbox mailbox = mList.get(a);
-                                            String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
-                                            doc.add(new Field(field, value, Store.NO, Index.ANALYZED));
+                    // Check if we can index the the address in the right manner
+                    if (field != null) {
+                        // not sure if we really should reparse it. It maybe be better to check just for the right type.
+                        // But this impl was easier in the first place
+                        AddressList aList = LenientAddressParser.DEFAULT.parseAddressList(MimeUtil.unfold(f.getBody()));
+                        for (int i = 0; i < aList.size(); i++) {
+                            Address address = aList.get(i);
+                            if (address instanceof org.apache.james.mime4j.dom.address.Mailbox) {
+                                org.apache.james.mime4j.dom.address.Mailbox mailbox = (org.apache.james.mime4j.dom.address.Mailbox) address;
+                                String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
+                                doc.add(new Field(field, value, Store.NO, Index.ANALYZED));
+                                if (i == 0) {
+                                    String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
+                                    String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
 
-                                            if (i == 0 && a == 0) {
-                                                String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
-                                                String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
+                                    if ("To".equalsIgnoreCase(headerName)) {
+                                        firstToMailbox = mailboxAddress;
+                                        firstToDisplay = mailboxDisplay;
+                                    } else if ("From".equalsIgnoreCase(headerName)) {
+                                        firstFromMailbox = mailboxAddress;
+                                        firstFromDisplay = mailboxDisplay;
 
-                                                if ("To".equalsIgnoreCase(headerName)) {
-                                                    firstToMailbox = mailboxAddress;
-                                                    firstToDisplay = mailboxDisplay;
-                                                } else if ("From".equalsIgnoreCase(headerName)) {
-                                                    firstFromMailbox = mailboxAddress;
-                                                    firstFromDisplay = mailboxDisplay;
+                                    } else if ("Cc".equalsIgnoreCase(headerName)) {
+                                        firstCcMailbox = mailboxAddress;
+                                    }
 
-                                                } else if ("Cc".equalsIgnoreCase(headerName)) {
-                                                    firstCcMailbox = mailboxAddress;
-                                                }
-                                            }
+                                }
+                            } else if (address instanceof Group) {
+                                MailboxList mList = ((Group) address).getMailboxes();
+                                for (int a = 0; a < mList.size(); a++) {
+                                    org.apache.james.mime4j.dom.address.Mailbox mailbox = mList.get(a);
+                                    String value = AddressFormatter.DEFAULT.encode(mailbox).toUpperCase(Locale.US);
+                                    doc.add(new Field(field, value, Store.NO, Index.ANALYZED));
+
+                                    if (i == 0 && a == 0) {
+                                        String mailboxAddress = SearchUtil.getMailboxAddress(mailbox);
+                                        String mailboxDisplay = SearchUtil.getDisplayAddress(mailbox);
+
+                                        if ("To".equalsIgnoreCase(headerName)) {
+                                            firstToMailbox = mailboxAddress;
+                                            firstToDisplay = mailboxDisplay;
+                                        } else if ("From".equalsIgnoreCase(headerName)) {
+                                            firstFromMailbox = mailboxAddress;
+                                            firstFromDisplay = mailboxDisplay;
+
+                                        } else if ("Cc".equalsIgnoreCase(headerName)) {
+                                            firstCcMailbox = mailboxAddress;
                                         }
                                     }
                                 }
+                            }
+                        }
 
-                            
-                            doc.add(new Field(field, headerValue, Store.NO, Index.ANALYZED));
+
+                        doc.add(new Field(field, headerValue, Store.NO, Index.ANALYZED));
 
                     } else if (headerName.equalsIgnoreCase("Subject")) {
                         doc.add(new Field(BASE_SUBJECT_FIELD, SearchUtil.getBaseSubject(headerValue), Store.YES, Index.NOT_ANALYZED));
-                    } 
+                    }
                 }
                 if (sentDate == null) {
                     sentDate = membership.getInternalDate();
@@ -984,7 +981,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
             TopDocs docs = searcher.search(query, null, maxQueryResults, new Sort(UID_SORT));
             ScoreDoc[] sDocs = docs.scoreDocs;
             for (ScoreDoc sDoc : sDocs) {
-                MessageUid uid = MessageUid.of(Long.valueOf(searcher.doc(sDoc.doc).get(UID_FIELD)));
+                MessageUid uid = MessageUid.of(Long.parseLong(searcher.doc(sDoc.doc).get(UID_FIELD)));
                 uids.add(uid);
             }
             

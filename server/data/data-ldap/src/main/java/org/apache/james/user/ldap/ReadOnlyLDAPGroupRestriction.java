@@ -32,6 +32,7 @@ import javax.naming.directory.Attributes;
 import javax.naming.ldap.LdapContext;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 /**
  * <p>
@@ -71,7 +72,7 @@ public class ReadOnlyLDAPGroupRestriction {
      *          If an error occurs extracting values from the configuration
      *          element.
      */
-    public ReadOnlyLDAPGroupRestriction(HierarchicalConfiguration configuration) {
+    public ReadOnlyLDAPGroupRestriction(HierarchicalConfiguration<ImmutableNode> configuration) {
         groupDNs = new ArrayList<>();
 
         if (configuration != null) {

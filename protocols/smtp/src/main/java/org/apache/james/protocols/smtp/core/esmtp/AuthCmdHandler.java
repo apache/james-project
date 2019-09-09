@@ -517,12 +517,11 @@ public class AuthCmdHandler
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         if (session.isAuthSupported()) {
             return ESMTP_FEATURES;
         } else {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
     }
 

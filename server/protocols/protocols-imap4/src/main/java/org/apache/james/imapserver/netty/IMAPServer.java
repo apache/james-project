@@ -26,6 +26,7 @@ import javax.net.ssl.SSLEngine;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -90,7 +91,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
     }
 
     @Override
-    public void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         
         super.doConfigure(configuration);
         
@@ -113,7 +114,7 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
         processor.configure(getImapConfiguration(configuration));
     }
 
-    @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration configuration) {
+    @VisibleForTesting static ImapConfiguration getImapConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
         ImmutableSet<String> disabledCaps = ImmutableSet.copyOf(Splitter.on(CAPABILITY_SEPARATOR).split(configuration.getString("disabledCaps", "")));
 
         return ImapConfiguration.builder()

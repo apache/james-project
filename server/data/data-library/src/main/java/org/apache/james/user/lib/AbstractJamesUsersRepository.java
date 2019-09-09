@@ -25,6 +25,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -71,7 +72,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
     protected boolean enableForwarding;
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         setIgnoreCase(configuration.getBoolean("ignoreCase", false));
         setEnableAliases(configuration.getBoolean("enableAliases", false));
         setEnableForwarding(configuration.getBoolean("enableForwarding", false));

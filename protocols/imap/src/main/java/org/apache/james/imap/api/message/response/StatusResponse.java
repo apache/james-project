@@ -339,12 +339,12 @@ public interface StatusResponse extends ImapResponseMessage {
          * @return <code>ResponseCode</code>, not null
          */
         public static ResponseCode createExtension(String name) {
-            StringBuffer buffer = new StringBuffer(name.length() + 2);
+            StringBuilder builder = new StringBuilder(name.length() + 2);
             if (!name.startsWith("X")) {
-                buffer.append('X');
+                builder.append('X');
             }
-            buffer.append(name);
-            return new ResponseCode(buffer.toString());
+            builder.append(name);
+            return new ResponseCode(builder.toString());
         }
 
         public static final int NO_NUMBER = -1;
@@ -357,14 +357,12 @@ public interface StatusResponse extends ImapResponseMessage {
 
         private final boolean useParens;
 
-        @SuppressWarnings("unchecked")
         private ResponseCode(String code) {
-            this(code, Collections.EMPTY_LIST, NO_NUMBER, true);
+            this(code, Collections.<String>emptyList(), NO_NUMBER, true);
         }
 
-        @SuppressWarnings("unchecked")
         private ResponseCode(String code, long number) {
-            this(code, Collections.EMPTY_LIST, number, true);
+            this(code, Collections.<String>emptyList(), number, true);
         }
 
         private ResponseCode(String code, Collection<String> parameters) {

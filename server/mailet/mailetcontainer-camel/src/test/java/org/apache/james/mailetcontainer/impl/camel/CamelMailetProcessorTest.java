@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.camel.impl.DefaultCamelContext;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
@@ -34,7 +35,7 @@ import org.apache.mailet.base.test.FakeMailContext;
 public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
 
     @Override
-    protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration configuration) throws Exception {
+    protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
         CamelMailetProcessor processor = null;
         try {
             processor = new CamelMailetProcessor(new NoopMetricFactory());

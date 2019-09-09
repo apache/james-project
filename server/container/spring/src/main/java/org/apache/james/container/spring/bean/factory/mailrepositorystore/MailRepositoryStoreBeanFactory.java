@@ -31,6 +31,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.container.spring.bean.factory.AbstractBeanFactory;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -62,15 +63,15 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
     /**
      * Map of [protocol(destinationURL) + type ]->default config for repository.
      */
-    private Map<Protocol, HierarchicalConfiguration> defaultConfigs;
+    private Map<Protocol, HierarchicalConfiguration<ImmutableNode>> defaultConfigs;
 
     /**
      * The configuration used by the instance
      */
-    private HierarchicalConfiguration configuration;
+    private HierarchicalConfiguration<ImmutableNode> configuration;
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) {
         this.configuration = configuration;
     }
 
@@ -83,8 +84,8 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
         repositories = new ReferenceMap();
         classes = new HashMap<>();
         defaultConfigs = new HashMap<>();
-        List<HierarchicalConfiguration> registeredClasses = configuration.configurationsAt("mailrepositories.mailrepository");
-        for (HierarchicalConfiguration registeredClass : registeredClasses) {
+        List<HierarchicalConfiguration<ImmutableNode>> registeredClasses = configuration.configurationsAt("mailrepositories.mailrepository");
+        for (HierarchicalConfiguration<ImmutableNode> registeredClass : registeredClasses) {
             registerRepository(registeredClass);
         }
 
@@ -119,12 +120,12 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
      * @param repConf the Configuration object used to register the repository
      * @throws ConfigurationException if an error occurs accessing the Configuration object
      */
-    public synchronized void registerRepository(HierarchicalConfiguration repConf) throws ConfigurationException {
+    public synchronized void registerRepository(HierarchicalConfiguration<ImmutableNode> repConf) throws ConfigurationException {
 
         String className = repConf.getString("[@class]");
 
         for (String protocol : repConf.getStringArray("protocols.protocol")) {
-            HierarchicalConfiguration defConf = null;
+            HierarchicalConfiguration<ImmutableNode> defConf = null;
 
             if (repConf.getKeys("config").hasNext()) {
                 // Get the default configuration for these protocol/type
@@ -180,11 +181,11 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
             // and the values in the selector.
             // If no default values, just use the selector.
             final CombinedConfiguration config = new CombinedConfiguration();
-            HierarchicalConfiguration defConf = defaultConfigs.get(destination.getProtocol());
+            HierarchicalConfiguration<ImmutableNode> defConf = defaultConfigs.get(destination.getProtocol());
             if (defConf != null) {
                 config.addConfiguration(defConf);
             }
-            HierarchicalConfiguration builder = new BaseHierarchicalConfiguration();
+            HierarchicalConfiguration<ImmutableNode> builder = new BaseHierarchicalConfiguration();
             builder.addProperty("[@destinationURL]", destination.asString());
             config.addConfiguration(builder);
 

@@ -98,7 +98,7 @@ public class SpamTrapHandler implements RcptHook {
         Long rawTime = blockedIps.get(ip);
     
         if (rawTime != null) {
-            long blockTime = rawTime.longValue();
+            long blockTime = rawTime;
            
             if (blockTime > System.currentTimeMillis()) {
                 LOGGER.debug("BlockList contain Ip {}", ip);
@@ -126,7 +126,7 @@ public class SpamTrapHandler implements RcptHook {
         LOGGER.debug("Add ip {} for {} to blockList", ip, bTime);
     
         synchronized (blockedIps) {
-            blockedIps.put(ip, Long.valueOf(bTime));
+            blockedIps.put(ip, bTime);
         }
     
     }

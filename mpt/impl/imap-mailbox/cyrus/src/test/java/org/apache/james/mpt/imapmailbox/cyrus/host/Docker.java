@@ -102,7 +102,7 @@ public class Docker {
 
     public int getIMAPPort(ContainerCreation container) {
         try {
-            return Integer.valueOf(
+            return Integer.parseInt(
                     Iterables.getOnlyElement(
                             dockerClient.inspectContainer(
                                     container.id())

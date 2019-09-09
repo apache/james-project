@@ -114,31 +114,31 @@ public class MessageFlags {
      * Returns IMAP formatted String of MessageFlags for named user
      */
     public static String format(Flags flags) {
-        StringBuffer buf = new StringBuffer();
-        buf.append("(");
+        StringBuilder builder = new StringBuilder();
+        builder.append("(");
         if (flags.contains(Flags.Flag.ANSWERED)) {
-            buf.append("\\Answered ");
+            builder.append("\\Answered ");
         }
         if (flags.contains(Flags.Flag.DELETED)) {
-            buf.append("\\Deleted ");
+            builder.append("\\Deleted ");
         }
         if (flags.contains(Flags.Flag.DRAFT)) {
-            buf.append("\\Draft ");
+            builder.append("\\Draft ");
         }
         if (flags.contains(Flags.Flag.FLAGGED)) {
-            buf.append("\\Flagged ");
+            builder.append("\\Flagged ");
         }
         if (flags.contains(Flags.Flag.RECENT)) {
-            buf.append("\\Recent ");
+            builder.append("\\Recent ");
         }
         if (flags.contains(Flags.Flag.SEEN)) {
-            buf.append("\\Seen ");
+            builder.append("\\Seen ");
         }
         // Remove the trailing space, if necessary.
-        if (buf.length() > 1) {
-            buf.setLength(buf.length() - 1);
+        if (builder.length() > 1) {
+            builder.setLength(builder.length() - 1);
         }
-        buf.append(")");
-        return buf.toString();
+        builder.append(")");
+        return builder.toString();
     }
 }

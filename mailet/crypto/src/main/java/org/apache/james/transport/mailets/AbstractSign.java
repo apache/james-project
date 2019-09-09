@@ -172,7 +172,7 @@ public abstract class AbstractSign extends GenericMailet {
      * Initializer for property debug.
      */
     protected void initDebug() {
-        setDebug((getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug")));
+        setDebug((getInitParameter("debug") == null) ? false : Boolean.parseBoolean(getInitParameter("debug")));
     }
     
     /**
@@ -335,7 +335,7 @@ public abstract class AbstractSign extends GenericMailet {
      * Initializer for property postmasterSigns.
      */
     protected void initPostmasterSigns() {
-        setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? false : Boolean.valueOf(getInitParameter("postmasterSigns")));
+        setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? false : Boolean.parseBoolean(getInitParameter("postmasterSigns")));
     }
     
     /**
@@ -359,7 +359,7 @@ public abstract class AbstractSign extends GenericMailet {
      * Initializer for property rebuildFrom.
      */
     protected void initRebuildFrom() throws MessagingException {
-        setRebuildFrom((getInitParameter("rebuildFrom") == null) ? false : Boolean.valueOf(getInitParameter("rebuildFrom")));
+        setRebuildFrom((getInitParameter("rebuildFrom") == null) ? false : Boolean.parseBoolean(getInitParameter("rebuildFrom")));
         if (isDebug()) {
             if (isRebuildFrom()) {
                 LOGGER.debug("Will modify the \"From:\" header.");

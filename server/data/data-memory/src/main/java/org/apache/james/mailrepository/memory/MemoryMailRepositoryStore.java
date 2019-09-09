@@ -32,6 +32,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepository;
@@ -54,7 +55,7 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
     private final Set<MailRepositoryProvider> mailRepositories;
     private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
     private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
-    private final Map<Protocol, HierarchicalConfiguration> perProtocolMailRepositoryDefaultConfiguration;
+    private final Map<Protocol, HierarchicalConfiguration<ImmutableNode>> perProtocolMailRepositoryDefaultConfiguration;
     private final MailRepositoryStoreConfiguration configuration;
 
     @Inject

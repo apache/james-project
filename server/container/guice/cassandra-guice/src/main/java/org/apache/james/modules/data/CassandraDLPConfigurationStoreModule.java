@@ -26,6 +26,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraDLPConfigurationStoreModule extends AbstractModule {
@@ -35,8 +36,7 @@ public class CassandraDLPConfigurationStoreModule extends AbstractModule {
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
-        @SuppressWarnings("rawtypes")
-        Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        Multibinder<EventDTOModule<?, ?>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
 
         eventDTOModuleBinder.addBinding().toInstance(DLPConfigurationModules.DLP_CONFIGURATION_STORE);
         eventDTOModuleBinder.addBinding().toInstance(DLPConfigurationModules.DLP_CONFIGURATION_CLEAR);

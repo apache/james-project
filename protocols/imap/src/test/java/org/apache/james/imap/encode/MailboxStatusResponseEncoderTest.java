@@ -55,11 +55,11 @@ public class MailboxStatusResponseEncoderTest  {
 
     @Test
     public void testDoEncode() throws Exception {
-        final Long messages = new Long(2);
-        final Long recent = new Long(3);
+        final Long messages = 2L;
+        final Long recent = 3L;
         final MessageUid uidNext = MessageUid.of(5);
-        final Long uidValidity = new Long(7);
-        final Long unseen = new Long(11);
+        final Long uidValidity = 7L;
+        final Long unseen = 11L;
         final String mailbox = "A mailbox named desire";
 
         encoder.encode(new MailboxStatusResponse(messages, recent, uidNext,

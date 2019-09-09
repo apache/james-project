@@ -26,6 +26,7 @@ import javax.annotation.PostConstruct;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieve.jsieve.Parser;
@@ -80,11 +81,11 @@ public class ManageSieveServerFactory extends AbstractServerFactory {
     }
 
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
-        List<HierarchicalConfiguration> configs = config.configurationsAt("managesieveserver");
+        List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("managesieveserver");
 
-        for (HierarchicalConfiguration serverConfig: configs) {
+        for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             ManageSieveServer server = new ManageSieveServer(8000, manageSieveProcessor);
             server.setFileSystem(fileSystem);
             server.setHashWheelTimer(hashedWheelTimer);

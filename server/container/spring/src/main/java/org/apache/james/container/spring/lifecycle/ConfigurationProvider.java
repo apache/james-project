@@ -20,6 +20,7 @@ package org.apache.james.container.spring.lifecycle;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 /**
  * Load {@link HierarchicalConfiguration} for beans
@@ -38,7 +39,7 @@ public interface ConfigurationProvider {
      * @param conf
      *            The hierarchical configuration to register for the bean name.
      */
-    void registerConfiguration(String beanName, HierarchicalConfiguration conf);
+    void registerConfiguration(String beanName, HierarchicalConfiguration<ImmutableNode> conf);
 
     /**
      * Load and return the configuration for the bean with the given name. The
@@ -52,6 +53,6 @@ public interface ConfigurationProvider {
      * @return config
      * @throws ConfigurationException
      */
-    HierarchicalConfiguration getConfiguration(String beanName) throws ConfigurationException;
+    HierarchicalConfiguration<ImmutableNode> getConfiguration(String beanName) throws ConfigurationException;
 
 }

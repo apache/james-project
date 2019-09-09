@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitialisationOperation;
@@ -120,7 +121,7 @@ public class InitializationOperationsTest {
         }
 
         @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
             configured = true;
         }
 
@@ -143,7 +144,7 @@ public class InitializationOperationsTest {
         }
 
         @Override
-        public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+        public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
             configured = a.isConfigured();
         }
 

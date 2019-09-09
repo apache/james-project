@@ -21,6 +21,7 @@ package org.apache.james.modules.mailbox;
 import java.util.Set;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailbox.events.EventBus;
@@ -52,7 +53,7 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
     }
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) {
         configure(ListenersConfiguration.from(configuration));
     }
 

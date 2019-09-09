@@ -48,13 +48,12 @@ public class JsonEventSerializer {
 
     private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
     @Inject
-    public JsonEventSerializer(Set<EventDTOModule> modules) {
+    public JsonEventSerializer(Set<EventDTOModule<?, ?>> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);
     }
     
-    public JsonEventSerializer(@SuppressWarnings("rawtypes") EventDTOModule... modules) {
+    public JsonEventSerializer(EventDTOModule<?, ?>... modules) {
         this(ImmutableSet.copyOf(modules));
     }
 

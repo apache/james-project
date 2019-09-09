@@ -19,6 +19,7 @@
 package org.apache.james.container.spring.lifecycle;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 
 /**
@@ -40,7 +41,7 @@ public class ConfigurableBeanPostProcessor extends AbstractLifecycleBeanPostProc
 
     @Override
     protected void executeLifecycleMethodBeforeInit(Configurable bean, String beanname) throws Exception {
-        HierarchicalConfiguration config = provider.getConfiguration(beanname);
+        HierarchicalConfiguration<ImmutableNode> config = provider.getConfiguration(beanname);
         bean.configure(config);
     }
 

@@ -76,7 +76,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     private static final Hostname HOSTNAME = new Hostname("foo");
     private static final Hostname HOSTNAME_2 = new Hostname("bar");
-    private static final Set<EventDTOModule> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER).stream().collect(Guavate.toImmutableSet());
     private static final JsonEventSerializer EVENT_SERIALIZER = new JsonEventSerializer(MODULES);
 
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(

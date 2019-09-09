@@ -349,7 +349,7 @@ public class MaildirMessageName {
             if (timestamp == null) {
                 return null;
             }
-            internalDate = new Date(Long.valueOf(timestamp) * 1000);
+            internalDate = new Date(Long.parseLong(timestamp) * 1000);
         }
         return internalDate;
     }

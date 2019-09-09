@@ -81,7 +81,7 @@ public class AESPayloadCodec implements PayloadCodec {
         try (FileBackedOutputStream outputStream = new FileBackedOutputStream(MAX_BYTES.intValue())) {
             outputStream.write(aead.encrypt(IOUtils.toByteArray(inputStream), EMPTY_ASSOCIATED_DATA));
             ByteSource data = outputStream.asByteSource();
-            return new Payload(Payloads.newByteSourcePayload(data), Optional.of(Long.valueOf(data.size())));
+            return new Payload(Payloads.newByteSourcePayload(data), Optional.of(data.size()));
         } catch (IOException | GeneralSecurityException e) {
             throw new RuntimeException("Unable to build payload for object storage, failed to " +
                 "encrypt", e);

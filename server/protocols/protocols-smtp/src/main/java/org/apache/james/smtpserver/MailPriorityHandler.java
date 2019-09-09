@@ -27,6 +27,7 @@ import java.util.Map;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -80,8 +81,8 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
 
     @Override
     public void init(Configuration config) throws ConfigurationException {
-        List<HierarchicalConfiguration> entries = ((HierarchicalConfiguration)config).configurationsAt("priorityEntries.priorityEntry");
-        for (HierarchicalConfiguration prioConf : entries) {
+        List<HierarchicalConfiguration<ImmutableNode>> entries = ((HierarchicalConfiguration<ImmutableNode>)config).configurationsAt("priorityEntries.priorityEntry");
+        for (HierarchicalConfiguration<ImmutableNode> prioConf : entries) {
             Domain domain = Domain.of(prioConf.getString("domain"));
             int prio = prioConf.getInt("priority", MailPrioritySupport.NORMAL_PRIORITY);
             if (prio > MailPrioritySupport.HIGH_PRIORITY || prio < MailPrioritySupport.LOW_PRIORITY) {

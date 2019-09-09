@@ -54,7 +54,7 @@ public class FetchCommandParserPartialFetchTest  {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = new FetchData();
         data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
-                null, new Long(0), new Long(100)), false);
+                null, 0L, 100L), false);
         check("1 (BODY[]<0.100>)\r\n", ranges, false, data, "A01");
     }
 
@@ -63,7 +63,7 @@ public class FetchCommandParserPartialFetchTest  {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = new FetchData();
         data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
-                null, new Long(20), new Long(12342348)), false);
+                null, 20L, 12342348L), false);
         check("1 (BODY[]<20.12342348>)\r\n", ranges, false, data, "A01");
     }
 

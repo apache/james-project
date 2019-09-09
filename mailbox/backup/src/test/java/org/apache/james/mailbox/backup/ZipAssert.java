@@ -223,8 +223,7 @@ public class ZipAssert extends AbstractAssert<ZipAssert, ZipFile> implements Aut
     public ZipAssert allSatisfies(UnaryOperator<EntryChecks> entryChecksOperator) throws Exception {
         isNotNull();
         List<ZipArchiveEntry> entries = Collections.list(zipFile.getEntries());
-        for (int entryIndex = 0; entryIndex < entries.size(); entryIndex++) {
-            ZipArchiveEntry entry = entries.get(entryIndex);
+        for (ZipArchiveEntry entry : entries) {
             EntryChecks composedEntryChecks = entryChecksOperator.apply(new EntryChecks(entry.getName(), defaultNoCheck()));
             ZipArchiveEntryAssert zipAssertionOfEntry = assertThatZipEntry(zipFile, entry);
 

@@ -22,6 +22,7 @@ package org.apache.james.mailbox.quota.mailing.listeners;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.User;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
@@ -52,7 +53,7 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
     @Inject
     public QuotaThresholdCrossingListener(MailetContext mailetContext, UsersRepository usersRepository,
                                           FileSystem fileSystem, EventStore eventStore,
-                                          HierarchicalConfiguration config) {
+                                          HierarchicalConfiguration<ImmutableNode> config) {
         this(mailetContext, usersRepository, fileSystem, eventStore, QuotaMailingListenerConfiguration.from(config));
     }
 

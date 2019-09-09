@@ -67,12 +67,11 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Set<String> getImplementedCapabilities(POP3Session session) {
         if (session.isStartTLSSupported() && session.getHandlerState() == POP3Session.AUTHENTICATION_READY) {
             return CAPS;
         } else {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 

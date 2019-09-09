@@ -22,6 +22,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
@@ -64,7 +65,7 @@ public class ConfigurationBeanFactoryPostProcessor implements BeanFactoryPostPro
 
             try {
 
-                HierarchicalConfiguration config = confProvider.getConfiguration(name);
+                HierarchicalConfiguration<ImmutableNode> config = confProvider.getConfiguration(name);
 
                 // Get the configuration for the class
                 String repClass = config.getString("[@class]");

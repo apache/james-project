@@ -25,6 +25,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.metrics.api.MetricFactory;
@@ -56,12 +57,12 @@ public class SMTPServerFactory extends AbstractServerFactory {
     }
     
     @Override
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
-        List<HierarchicalConfiguration> configs = config.configurationsAt("smtpserver");
+        List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("smtpserver");
         
-        for (HierarchicalConfiguration serverConfig: configs) {
+        for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             SMTPServer server = createServer();
             server.setDnsService(dns);
             server.setProtocolHandlerLoader(loader);

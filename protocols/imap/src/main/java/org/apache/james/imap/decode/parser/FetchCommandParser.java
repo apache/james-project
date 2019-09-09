@@ -179,10 +179,10 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             final Long numberOfOctets;
             if (reader.nextChar() == '<') {
                 reader.consumeChar('<');
-                firstOctet = Long.valueOf(reader.number());
+                firstOctet = reader.number();
                 if (reader.nextChar() == '.') {
                     reader.consumeChar('.');
-                    numberOfOctets = new Long(reader.nzNumber());
+                    numberOfOctets = reader.nzNumber();
                 } else {
                     numberOfOctets = null;
                 }
@@ -250,14 +250,14 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private String readWord(ImapRequestLineReader request, String terminator) throws DecodingException {
-        StringBuffer buf = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         char next = request.nextChar();
         while (terminator.indexOf(next) == -1) {
-            buf.append(next);
+            builder.append(next);
             request.consume();
             next = request.nextChar();
         }
-        return buf.toString();
+        return builder.toString();
     }
 
     private char nextNonSpaceChar(ImapRequestLineReader request) throws DecodingException {

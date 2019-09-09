@@ -29,7 +29,7 @@ public class JPAMailboxIdDeserializerTest {
 
     private static final String SERIALIZED_ID = "123456789012";
     private static final String MALFORMED_SERIALIZED_ID = "abcz";
-    private static final JPAId JPA_ID = JPAId.of(Long.valueOf(SERIALIZED_ID));
+    private static final JPAId JPA_ID = JPAId.of(Long.parseLong(SERIALIZED_ID));
 
     private JPAMailboxIdDeserializer mailboxIdDeserializer;
 

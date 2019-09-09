@@ -147,7 +147,7 @@ public class SMIMESign extends Sign {
      */
     @Override
     protected void initPostmasterSigns() {
-        setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? true : Boolean.valueOf(getInitParameter("postmasterSigns")));
+        setPostmasterSigns((getInitParameter("postmasterSigns") == null) ? true : Boolean.parseBoolean(getInitParameter("postmasterSigns")));
     }
     
     /**
@@ -155,7 +155,7 @@ public class SMIMESign extends Sign {
      */
     @Override
     protected void initRebuildFrom() throws MessagingException {
-        setRebuildFrom((getInitParameter("rebuildFrom") == null) ? true : Boolean.valueOf(getInitParameter("rebuildFrom")));
+        setRebuildFrom((getInitParameter("rebuildFrom") == null) ? true : Boolean.parseBoolean(getInitParameter("rebuildFrom")));
         if (isDebug()) {
             if (isRebuildFrom()) {
                 LOGGER.debug("Will modify the \"From:\" header.");

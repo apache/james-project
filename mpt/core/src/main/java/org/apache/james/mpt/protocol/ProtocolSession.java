@@ -455,12 +455,11 @@ public class ProtocolSession implements ProtocolInteractor {
                 }
 
                 if (!foundMatch) {
-                    StringBuffer errMsg = new StringBuffer().append("\nLocation: ").append(location)
+                    StringBuilder errMsg = new StringBuilder().append("\nLocation: ").append(location)
                             .append("\nExpected one of: ");
-                    Iterator<String> iter = expectedLines.iterator();
-                    while (iter.hasNext()) {
+                    for (String expectedLine : expectedLines) {
                         errMsg.append("\n    ");
-                        errMsg.append(iter.next());
+                        errMsg.append(expectedLine);
                     }
                     errMsg.append("\nActual: ").append(actualLine);
                     handleFailure(continueAfterFailure, errMsg.toString());

@@ -136,10 +136,9 @@ public class LazyMimeDescriptor implements MimeDescriptor {
         return message.getBodyOctets();
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public Iterator<MimeDescriptor> parts() {
-        return Collections.EMPTY_LIST.iterator();
+        return Collections.<MimeDescriptor>emptyList().iterator();
     }
 
     @Override

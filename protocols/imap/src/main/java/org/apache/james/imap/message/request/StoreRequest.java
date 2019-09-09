@@ -48,7 +48,7 @@ public class StoreRequest extends AbstractImapRequest {
         if (sign == null) {
             signedMinus = false;
             signedPlus = false;
-        } else if (sign.booleanValue()) {
+        } else if (sign) {
             signedMinus = false;
             signedPlus = true;
         } else {
@@ -104,39 +104,39 @@ public class StoreRequest extends AbstractImapRequest {
     }
 
     public String toString() {
-        final StringBuffer buffer = new StringBuffer(100);
-        buffer.append("STORE ");
+        final StringBuilder builder = new StringBuilder(100);
+        builder.append("STORE ");
         if (isUseUids()) {
-            buffer.append("UID ");
+            builder.append("UID ");
         }
         if (isSilent()) {
-            buffer.append("SILENT ");
+            builder.append("SILENT ");
 
         }
         if (isSignedPlus()) {
-            buffer.append("+ ");
+            builder.append("+ ");
         }
         if (isSignedMinus()) {
-            buffer.append("- ");
+            builder.append("- ");
         }
         if (flags.contains(Flags.Flag.ANSWERED)) {
-            buffer.append(" ANSWERED");
+            builder.append(" ANSWERED");
         }
         if (flags.contains(Flags.Flag.DELETED)) {
-            buffer.append(" DELETED");
+            builder.append(" DELETED");
         }
         if (flags.contains(Flags.Flag.FLAGGED)) {
-            buffer.append(" FLAGGED");
+            builder.append(" FLAGGED");
         }
         if (flags.contains(Flags.Flag.DRAFT)) {
-            buffer.append(" DRAFT");
+            builder.append(" DRAFT");
         }
         if (flags.contains(Flags.Flag.SEEN)) {
-            buffer.append(" SEEN");
+            builder.append(" SEEN");
         }
         if (flags.contains(Flags.Flag.RECENT)) {
-            buffer.append(" RECEN");
+            builder.append(" RECEN");
         }
-        return buffer.toString();
+        return builder.toString();
     }
 }

@@ -169,7 +169,7 @@ public class SpamAssassinInvoker {
 
     private boolean spam(String string) {
         try {
-            return Boolean.valueOf(string);
+            return Boolean.parseBoolean(string);
         } catch (Exception e) {
             LOGGER.warn("Fail parsing spamassassin answer: " + string);
             return false;

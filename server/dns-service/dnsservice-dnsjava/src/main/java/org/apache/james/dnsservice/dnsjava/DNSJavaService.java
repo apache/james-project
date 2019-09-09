@@ -32,6 +32,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.DNSServiceMBean;
 import org.apache.james.dnsservice.api.TemporaryResolutionException;
@@ -126,7 +127,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
     }
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         boolean verbose = configuration.getBoolean("verbose", false);
         if (verbose) {
             System.setProperty("dnsjava.options", "verbose,verbosemsg,verbosecache");

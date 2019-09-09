@@ -27,6 +27,7 @@ import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.ConfigurationUtils;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.protocols.api.handler.ExtensibleHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
@@ -37,13 +38,13 @@ import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
 
     private final ProtocolHandlerLoader loader;
-    private final HierarchicalConfiguration handlerchainConfig;
+    private final HierarchicalConfiguration<ImmutableNode> handlerchainConfig;
     private final String jmxName;
     private final String coreHandlersPackage;
     private final String jmxHandlersPackage;
     private final List<Object> handlers = new LinkedList<>();
 
-    public ProtocolHandlerChainImpl(ProtocolHandlerLoader loader, HierarchicalConfiguration handlerchainConfig, String jmxName, Class<? extends HandlersPackage> coreHandlersPackage, Class<? extends HandlersPackage> jmxHandlersPackage) {
+    public ProtocolHandlerChainImpl(ProtocolHandlerLoader loader, HierarchicalConfiguration<ImmutableNode> handlerchainConfig, String jmxName, Class<? extends HandlersPackage> coreHandlersPackage, Class<? extends HandlersPackage> jmxHandlersPackage) {
         this.loader = loader;
         this.handlerchainConfig = handlerchainConfig;
         this.jmxName = jmxName;
@@ -52,7 +53,7 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     }
 
     public void init() throws Exception {
-        List<org.apache.commons.configuration2.HierarchicalConfiguration> children = handlerchainConfig.configurationsAt("handler");
+        List<org.apache.commons.configuration2.HierarchicalConfiguration<ImmutableNode>> children = handlerchainConfig.configurationsAt("handler");
 
         // check if the coreHandlersPackage was specified in the config, if
         // not add the default
@@ -72,14 +73,14 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
         registerHandlersPackage(handlersPackage, null, children);
 
         if (handlerchainConfig.getBoolean("[@enableJmx]", true)) {
-            HierarchicalConfiguration builder = new BaseHierarchicalConfiguration();
+            HierarchicalConfiguration<ImmutableNode> builder = new BaseHierarchicalConfiguration();
             builder.addProperty("jmxName", jmxName);
             HandlersPackage jmxPackage = (HandlersPackage) loader.load(jmxHandlersPackage, addHandler(jmxHandlersPackage));
 
             registerHandlersPackage(jmxPackage, builder, children);
         }
 
-        for (HierarchicalConfiguration hConf : children) {
+        for (HierarchicalConfiguration<ImmutableNode> hConf : children) {
             String className = hConf.getString("[@class]", null);
             if (className != null) {
                 handlers.add(loader.load(className, hConf));
@@ -105,13 +106,13 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
     }
 
 
-    private void registerHandlersPackage(HandlersPackage handlersPackage, HierarchicalConfiguration handlerConfig, List<HierarchicalConfiguration> children) throws ConfigurationException {
+    private void registerHandlersPackage(HandlersPackage handlersPackage, HierarchicalConfiguration<ImmutableNode> handlerConfig, List<HierarchicalConfiguration<ImmutableNode>> children) throws ConfigurationException {
         List<String> c = handlersPackage.getHandlers();
 
         for (String cName : c) {
             try {
                 CombinedConfiguration conf = new CombinedConfiguration();
-                HierarchicalConfiguration cmdConf = addHandler(cName);
+                HierarchicalConfiguration<ImmutableNode> cmdConf = addHandler(cName);
                 conf.addConfiguration(cmdConf);
                 if (handlerConfig != null) {
                     conf.addConfiguration(handlerConfig);
@@ -131,8 +132,8 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
      * @return DefaultConfiguration
      * @throws ConfigurationException
      */
-    private HierarchicalConfiguration addHandler(String className) throws ConfigurationException {
-        HierarchicalConfiguration hConf = new BaseHierarchicalConfiguration();
+    private HierarchicalConfiguration<ImmutableNode> addHandler(String className) throws ConfigurationException {
+        HierarchicalConfiguration<ImmutableNode> hConf = new BaseHierarchicalConfiguration();
         hConf.addProperty("[@class]", className);
         return hConf;
     }

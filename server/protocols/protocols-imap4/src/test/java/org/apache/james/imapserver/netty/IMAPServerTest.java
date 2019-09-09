@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.junit.Rule;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class IMAPServerTest {
 
     @Test
     public void getImapConfigurationShouldReturnSetValue() throws Exception {
-        HierarchicalConfiguration configurationBuilder = new BaseHierarchicalConfiguration();
+        HierarchicalConfiguration<ImmutableNode> configurationBuilder = new BaseHierarchicalConfiguration();
         configurationBuilder.addProperty("enableIdle", "false");
         configurationBuilder.addProperty("idleTimeInterval", "1");
         configurationBuilder.addProperty("idleTimeIntervalUnit", "MINUTES");

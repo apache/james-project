@@ -35,6 +35,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.lib.AbstractMailRepository;
@@ -81,7 +82,7 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration config) throws org.apache.commons.configuration2.ex.ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws org.apache.commons.configuration2.ex.ConfigurationException {
         super.doConfigure(config);
         destination = config.getString("[@destinationURL]");
         LOGGER.debug("FileMailRepository.destinationURL: {}", destination);

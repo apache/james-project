@@ -22,6 +22,7 @@ import java.net.URL;
 import java.util.Enumeration;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
@@ -162,7 +163,7 @@ public abstract class AbstractBundleTracker implements BeanFactoryAware, BundleL
     @Override
     public void afterPropertiesSet() throws Exception {
         ConfigurationProvider confProvider = factory.getBean(ConfigurationProvider.class);
-        HierarchicalConfiguration config = confProvider.getConfiguration(getComponentName());
+        HierarchicalConfiguration<ImmutableNode> config = confProvider.getConfiguration(getComponentName());
 
         // Get the configuration for the class
         configuredClass = config.getString("[@class]");

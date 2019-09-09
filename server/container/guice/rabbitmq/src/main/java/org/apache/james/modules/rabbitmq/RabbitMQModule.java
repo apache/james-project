@@ -53,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 public class RabbitMQModule extends AbstractModule {
@@ -77,8 +78,7 @@ public class RabbitMQModule extends AbstractModule {
         cassandraModuleBinder.addBinding().toInstance(CassandraMailQueueViewModule.MODULE);
 
         bind(EventsourcingConfigurationManagement.class).in(Scopes.SINGLETON);
-        @SuppressWarnings("rawtypes")
-        Multibinder<EventDTOModule> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        Multibinder<EventDTOModule<?, ?>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);

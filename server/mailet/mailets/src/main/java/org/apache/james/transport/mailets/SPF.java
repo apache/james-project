@@ -65,8 +65,8 @@ public class SPF extends GenericMailet {
 
     @Override
     public void init() {
-        addHeader = Boolean.valueOf(getInitParameter("addHeader", "false"));
-        SPFLoggerAdapter logger = new SPFLoggerAdapter(Boolean.valueOf(getInitParameter("debug", "false")));
+        addHeader = Boolean.parseBoolean(getInitParameter("addHeader", "false"));
+        SPFLoggerAdapter logger = new SPFLoggerAdapter(Boolean.parseBoolean(getInitParameter("debug", "false")));
 
         spf = new DefaultSPF(logger);
     }

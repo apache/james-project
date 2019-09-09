@@ -26,7 +26,7 @@ import com.google.common.base.Preconditions;
 public class CassandraVersionRequest {
     public static CassandraVersionRequest parse(String version) {
         Preconditions.checkNotNull(version, "Version is mandatory");
-        return new CassandraVersionRequest(Integer.valueOf(version));
+        return new CassandraVersionRequest(Integer.parseInt(version));
     }
 
     private final int value;

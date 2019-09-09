@@ -27,6 +27,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Disposable;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -94,7 +95,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     }
 
     @Override
-    public void configure(HierarchicalConfiguration config) {
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) {
         numThreads = config.getInt("threads", 100);
     }
 

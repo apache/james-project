@@ -39,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.protocols.api.Encryption;
@@ -155,7 +156,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
     }
     
     @Override
-    public final void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public final void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
 
         enabled = config.getBoolean("[@enabled]", true);
 
@@ -324,7 +325,7 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         // override me
     }
 
-    protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         // override me
     }
 

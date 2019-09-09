@@ -30,6 +30,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConversionException;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.MailAddress;
 import org.apache.james.domainlist.api.DomainList;
 import org.junit.jupiter.api.BeforeEach;
@@ -66,7 +67,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         public void supportVirtualHostingShouldReturnTrueWhenReportedInConfig() throws Exception {
-            HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "true");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
@@ -77,7 +78,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         public void supportVirtualHostingShouldReturnFalseWhenReportedInConfig() throws Exception {
-            HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "false");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
@@ -88,7 +89,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
 
         @Test
         public void configureShouldThrowOnNonBooleanValueForSupportsVirtualHosting() throws Exception {
-            HierarchicalConfiguration configuration = ldapRepositoryConfiguration();
+            HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "bad");
 
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
@@ -186,7 +187,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
             assertThat(ldapRepository.contains(ldapRepository.getUser(new MailAddress(JAMES_USER_MAIL)))).isTrue();
         }
 
-        private ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration ldapRepositoryConfiguration) throws Exception {
+        private ReadOnlyUsersLDAPRepository startUsersRepository(HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration) throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = new ReadOnlyUsersLDAPRepository(domainList);
             ldapRepository.configure(ldapRepositoryConfiguration);
             ldapRepository.init();
@@ -194,7 +195,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
     }
 
-    private static HierarchicalConfiguration ldapRepositoryConfiguration() {
+    private static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfiguration() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", DockerLdapSingleton.ldapContainer.getLdapHost());
         configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");
@@ -209,7 +210,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         return configuration;
     }
 
-    private static HierarchicalConfiguration ldapRepositoryConfigurationWithVirtualHosting() {
+    private static HierarchicalConfiguration<ImmutableNode> ldapRepositoryConfigurationWithVirtualHosting() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("[@ldapHost]", DockerLdapSingleton.ldapContainer.getLdapHost());
         configuration.addProperty("[@principal]", "cn=admin,dc=james,dc=org");

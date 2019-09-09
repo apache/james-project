@@ -31,6 +31,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -50,7 +51,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
     /**
      * Configuration object for this service
      */
-    private HierarchicalConfiguration conf;
+    private HierarchicalConfiguration<ImmutableNode> conf;
 
     /**
      * Whether this service is enabled.
@@ -88,7 +89,7 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
     }
 
     @Override
-    public final void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public final void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         this.conf = config;
     }
 
@@ -106,8 +107,8 @@ public class FetchScheduler implements FetchSchedulerMBean, Configurable {
             ScheduledExecutorService scheduler = new JMXEnabledScheduledThreadPoolExecutor(numThreads, jmxPath, "scheduler");
             MailQueue queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 
-            List<HierarchicalConfiguration> fetchConfs = conf.configurationsAt("fetch");
-            for (HierarchicalConfiguration fetchConf : fetchConfs) {
+            List<HierarchicalConfiguration<ImmutableNode>> fetchConfs = conf.configurationsAt("fetch");
+            for (HierarchicalConfiguration<ImmutableNode> fetchConf : fetchConfs) {
                 // read configuration
                 Long interval = fetchConf.getLong("interval");
 

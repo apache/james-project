@@ -25,19 +25,20 @@ import javax.servlet.Filter;
 import javax.servlet.Servlet;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.http.jetty.Configuration.Builder;
 
 public class JettyHttpServerFactory {
 
-    public List<JettyHttpServer> createServers(HierarchicalConfiguration config) throws Exception {
-        List<HierarchicalConfiguration> configs = config.configurationsAt("httpserver");
+    public List<JettyHttpServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
+        List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("httpserver");
         return configs.stream()
                 .map(this::buildConfiguration)
                 .map(JettyHttpServer::create)
                 .collect(Collectors.toList());
     }
 
-    private Configuration buildConfiguration(HierarchicalConfiguration serverConfig) {
+    private Configuration buildConfiguration(HierarchicalConfiguration<ImmutableNode> serverConfig) {
         Builder builder = Configuration.builder();
         
         boolean randomPort = serverConfig.getBoolean("port[@random]", false);
@@ -51,14 +52,14 @@ public class JettyHttpServerFactory {
         if (port != null) {
             builder.port(port);
         }
-        List<HierarchicalConfiguration> mappings = serverConfig.configurationsAt("mappings.mapping");
-        for (HierarchicalConfiguration mapping: mappings) {
+        List<HierarchicalConfiguration<ImmutableNode>> mappings = serverConfig.configurationsAt("mappings.mapping");
+        for (HierarchicalConfiguration<ImmutableNode> mapping: mappings) {
             String classname = mapping.getString("servlet");
             Class<? extends Servlet> servletClass = findServlet(classname);
             builder.serve(mapping.getString("path")).with(servletClass);
         }
-        List<HierarchicalConfiguration> filters = serverConfig.configurationsAt("filters.mapping");
-        for (HierarchicalConfiguration mapping: filters) {
+        List<HierarchicalConfiguration<ImmutableNode>> filters = serverConfig.configurationsAt("filters.mapping");
+        for (HierarchicalConfiguration<ImmutableNode> mapping: filters) {
             String classname = mapping.getString("filter");
             Class<? extends Filter> filterClass = findFilter(classname);
             builder.filter(mapping.getString("path")).with(filterClass);

@@ -43,6 +43,7 @@ import javax.naming.ldap.LdapContext;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.MailAddress;
@@ -279,7 +280,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      *            An encapsulation of the James server configuration data.
      */
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         configure(LdapRepositoryConfiguration.from(configuration));
     }
 

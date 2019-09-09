@@ -114,7 +114,7 @@ public class ReplaceContent extends GenericMailet {
     }
 
     private boolean isDebug() {
-        return Integer.valueOf(getInitParameter("debug", "0")) == 1;
+        return Integer.parseInt(getInitParameter("debug", "0")) == 1;
     }
 
     private ReplaceConfig initPatterns() throws MailetException {

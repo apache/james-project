@@ -224,11 +224,10 @@ public class PartContentBuilder {
         return content;
     }
 
-    @SuppressWarnings("unchecked")
     public List<MessageResult.Header> getMimeHeaders() throws IOException, UnexpectedEOFException, MimeException {
         final List<MessageResult.Header> results;
         if (empty) {
-            results = Collections.EMPTY_LIST;
+            results = Collections.emptyList();
         } else {
             results = new ArrayList<>();
             for (EntityState state = parser.getState(); state != EntityState.T_END_HEADER; state = parser
@@ -262,11 +261,10 @@ public class PartContentBuilder {
         return results;
     }
 
-    @SuppressWarnings("unchecked")
     public List<MessageResult.Header> getMessageHeaders() throws IOException, MimeException {
         final List<MessageResult.Header> results;
         if (empty) {
-            results = Collections.EMPTY_LIST;
+            results = Collections.emptyList();
         } else {
             results = new ArrayList<>();
             try {

@@ -26,6 +26,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 
 public class CassandraEventStoreModule extends AbstractModule {
@@ -39,6 +40,6 @@ public class CassandraEventStoreModule extends AbstractModule {
             .addBinding()
             .toInstance(org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule.MODULE);
 
-        Multibinder.newSetBinder(binder(), EventDTOModule.class);
+        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
     }
 }

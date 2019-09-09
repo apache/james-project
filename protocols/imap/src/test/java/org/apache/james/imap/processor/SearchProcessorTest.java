@@ -195,14 +195,13 @@ public class SearchProcessorTest {
         check(SearchKey.buildAll(), SearchQuery.all());
     }
 
-    @SuppressWarnings("unchecked")
     private void expectsGetSelectedMailbox() throws Exception {
         when(mailboxManager.getMailbox(mailboxId, mailboxSession)).thenReturn(mailbox, mailbox);
         when(session.getSelected()).thenReturn(selectedMailbox);
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);
         when(selectedMailbox.getPath()).thenReturn(mailboxPath);
-        when(selectedMailbox.flagUpdateUids()).thenReturn(Collections.EMPTY_LIST);
+        when(selectedMailbox.flagUpdateUids()).thenReturn(Collections.<MessageUid>emptyList());
         when(selectedMailbox.getRecent()).thenReturn(new ArrayList<>());
     }
 

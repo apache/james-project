@@ -51,6 +51,7 @@ import javax.sql.DataSource;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
@@ -168,7 +169,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         LOGGER.debug("{}.configure()", getClass().getName());
         destination = configuration.getString("[@destinationURL]");
@@ -245,7 +246,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
             if (filestore != null) {
 
                 // prepare Configurations for stream repositories
-                HierarchicalConfiguration streamConfiguration = new BaseHierarchicalConfiguration();
+                HierarchicalConfiguration<ImmutableNode> streamConfiguration = new BaseHierarchicalConfiguration();
 
                 streamConfiguration.addProperty("[@destinationURL]", filestore);
 

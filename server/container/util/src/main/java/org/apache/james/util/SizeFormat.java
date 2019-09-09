@@ -21,6 +21,7 @@ package org.apache.james.util;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.Locale;
@@ -75,7 +76,7 @@ public class SizeFormat {
         }
 
         public BigDecimal scaleToUnit(BigDecimal sizeAsDecimal) {
-            return sizeAsDecimal.divide(new BigDecimal((bytesCount)), SCALE, BigDecimal.ROUND_FLOOR);
+            return sizeAsDecimal.divide(new BigDecimal((bytesCount)), SCALE, RoundingMode.FLOOR);
         }
 
         private String asString(BigDecimal bigDecimal) {

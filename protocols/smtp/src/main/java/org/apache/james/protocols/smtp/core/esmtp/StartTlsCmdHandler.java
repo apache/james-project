@@ -93,13 +93,12 @@ public class StartTlsCmdHandler implements CommandHandler<SMTPSession>, EhloExte
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<String> getImplementedEsmtpFeatures(SMTPSession session) {
         // SMTP STARTTLS
         if (!session.isTLSStarted() && session.isStartTLSSupported()) {
             return FEATURES;
         } else {
-            return Collections.EMPTY_LIST;
+            return Collections.emptyList();
         }
 
     }

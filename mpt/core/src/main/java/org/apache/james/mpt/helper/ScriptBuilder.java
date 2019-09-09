@@ -436,7 +436,7 @@ public class ScriptBuilder {
     }
 
     public ScriptBuilder fetchSection(String section) throws Exception {
-        StringBuffer command = new StringBuffer("FETCH ");
+        StringBuilder command = new StringBuilder("FETCH ");
         command.append(messageNumber);
         if (peek) {
             command.append(" (BODY.PEEK[");

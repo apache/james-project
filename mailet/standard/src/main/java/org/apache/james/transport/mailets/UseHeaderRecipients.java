@@ -84,7 +84,7 @@ public class UseHeaderRecipients extends GenericMailet {
      */
     @Override
     public void init() {
-        isDebug = (getInitParameter("debug") == null) ? false : Boolean.valueOf(getInitParameter("debug"));
+        isDebug = (getInitParameter("debug") == null) ? false : Boolean.parseBoolean(getInitParameter("debug"));
     }
 
     /**

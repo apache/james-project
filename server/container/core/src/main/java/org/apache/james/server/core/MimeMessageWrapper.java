@@ -128,7 +128,7 @@ public class MimeMessageWrapper extends MimeMessage implements Disposable {
             boolean useMemoryCopy = false;
             String memoryCopy = System.getProperty(USE_MEMORY_COPY);
             if (memoryCopy != null) {
-                useMemoryCopy = Boolean.valueOf(memoryCopy);
+                useMemoryCopy = Boolean.parseBoolean(memoryCopy);
             }
             try {
 

@@ -55,13 +55,13 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
 
         if (messages != null) {
             composer.message(STATUS_MESSAGES);
-            final long messagesValue = messages.longValue();
+            final long messagesValue = messages;
             composer.message(messagesValue);
         }
 
         if (recent != null) {
             composer.message(STATUS_RECENT);
-            final long recentValue = recent.longValue();
+            final long recentValue = recent;
             composer.message(recentValue);
         }
 
@@ -78,13 +78,13 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
 
         if (uidValidity != null) {
             composer.message(STATUS_UIDVALIDITY);
-            final long uidValidityValue = uidValidity.longValue();
+            final long uidValidityValue = uidValidity;
             composer.message(uidValidityValue);
         }
 
         if (unseen != null) {
             composer.message(STATUS_UNSEEN);
-            final long unseenValue = unseen.longValue();
+            final long unseenValue = unseen;
             composer.message(unseenValue);
         }
 

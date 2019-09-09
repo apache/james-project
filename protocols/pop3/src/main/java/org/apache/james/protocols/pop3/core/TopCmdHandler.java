@@ -113,12 +113,11 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Set<String> getImplementedCapabilities(POP3Session session) {
         if (session.getHandlerState() == POP3Session.TRANSACTION) {
             return CAPS;
         } else {
-            return Collections.EMPTY_SET;
+            return Collections.emptySet();
         }
     }
 

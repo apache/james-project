@@ -53,7 +53,7 @@ public class QuotaMailingListenerConfiguration {
         String NAME = "name";
     }
 
-    public static QuotaMailingListenerConfiguration from(HierarchicalConfiguration config) {
+    public static QuotaMailingListenerConfiguration from(HierarchicalConfiguration<ImmutableNode> config) {
         return builder()
             .addThresholds(readThresholds(config))
             .subjectTemplate(readSubjectTemplate(config))
@@ -63,19 +63,19 @@ public class QuotaMailingListenerConfiguration {
             .build();
     }
 
-    private static Optional<String> readName(HierarchicalConfiguration config) {
+    private static Optional<String> readName(HierarchicalConfiguration<ImmutableNode> config) {
         return Optional.ofNullable(config.getString(XmlKeys.NAME, null));
     }
 
-    private static Optional<String> readSubjectTemplate(HierarchicalConfiguration config) {
+    private static Optional<String> readSubjectTemplate(HierarchicalConfiguration<ImmutableNode> config) {
         return Optional.ofNullable(config.getString(XmlKeys.SUBJECT_TEMPLATE, null));
     }
 
-    private static Optional<String> readBodyTemplate(HierarchicalConfiguration config) {
+    private static Optional<String> readBodyTemplate(HierarchicalConfiguration<ImmutableNode> config) {
         return Optional.ofNullable(config.getString(XmlKeys.BODY_TEMPLATE, null));
     }
 
-    private static Optional<Duration> readGracePeriod(HierarchicalConfiguration config) {
+    private static Optional<Duration> readGracePeriod(HierarchicalConfiguration<ImmutableNode> config) {
         return Optional.ofNullable(config.getString(XmlKeys.GRACE_PERIOD, null))
             .map(string -> DurationParser.parse(string, ChronoUnit.DAYS));
     }

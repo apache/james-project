@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
@@ -38,9 +39,9 @@ public class MailRepositoryStoreConfiguration {
     public static class Item {
         private final List<Protocol> protocols;
         private final String classFqdn;
-        private final HierarchicalConfiguration configuration;
+        private final HierarchicalConfiguration<ImmutableNode> configuration;
 
-        public Item(List<Protocol> protocols, String classFqdn, HierarchicalConfiguration configuration) {
+        public Item(List<Protocol> protocols, String classFqdn, HierarchicalConfiguration<ImmutableNode> configuration) {
             Preconditions.checkNotNull(protocols);
             Preconditions.checkNotNull(classFqdn);
             Preconditions.checkNotNull(configuration);
@@ -58,7 +59,7 @@ public class MailRepositoryStoreConfiguration {
             return classFqdn;
         }
 
-        public HierarchicalConfiguration getConfiguration() {
+        public HierarchicalConfiguration<ImmutableNode> getConfiguration() {
             return configuration;
         }
     }
@@ -75,7 +76,7 @@ public class MailRepositoryStoreConfiguration {
         return new MailRepositoryStoreConfiguration(items, defaultProtocol);
     }
 
-    public static MailRepositoryStoreConfiguration parse(HierarchicalConfiguration configuration) {
+    public static MailRepositoryStoreConfiguration parse(HierarchicalConfiguration<ImmutableNode> configuration) {
         ImmutableList<Item> items = retrieveRegisteredClassConfiguration(configuration)
             .stream()
             .map(MailRepositoryStoreConfiguration::readItem)
@@ -88,7 +89,7 @@ public class MailRepositoryStoreConfiguration {
         return new MailRepositoryStoreConfiguration(items, defaultProtocol);
     }
 
-    private static List<HierarchicalConfiguration> retrieveRegisteredClassConfiguration(HierarchicalConfiguration configuration) {
+    private static List<HierarchicalConfiguration<ImmutableNode>> retrieveRegisteredClassConfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
         try {
             return configuration.configurationsAt("mailrepositories.mailrepository");
         } catch (Exception e) {
@@ -103,15 +104,15 @@ public class MailRepositoryStoreConfiguration {
             .findFirst();
     }
 
-    private static Item readItem(HierarchicalConfiguration configuration) {
+    private static Item readItem(HierarchicalConfiguration<ImmutableNode> configuration) {
         String className = configuration.getString("[@class]");
         List<Protocol> protocolStream = Arrays.stream(configuration.getStringArray("protocols.protocol")).map(Protocol::new).collect(Guavate.toImmutableList());
-        HierarchicalConfiguration extraConfig = extraConfig(configuration);
+        HierarchicalConfiguration<ImmutableNode> extraConfig = extraConfig(configuration);
 
         return new Item(protocolStream, className, extraConfig);
     }
 
-    private static HierarchicalConfiguration extraConfig(HierarchicalConfiguration configuration) {
+    private static HierarchicalConfiguration<ImmutableNode> extraConfig(HierarchicalConfiguration<ImmutableNode> configuration) {
         if (configuration.getKeys("config").hasNext()) {
             return configuration.configurationAt("config");
         }

@@ -96,7 +96,7 @@ public class SearchResponse implements ImapResponseMessage {
     public String toString() {
         final String TAB = " ";
 
-        StringBuffer retValue = new StringBuffer();
+        StringBuilder retValue = new StringBuilder();
 
         retValue.append("SearchResponse ( ").append("ids = ").append(Arrays.toString(this.ids)).append(TAB).append(" )");
 

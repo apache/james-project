@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.camel.CamelContext;
 import org.apache.camel.CamelContextAware;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.MailetLoader;
 import org.apache.james.mailetcontainer.api.MatcherLoader;
@@ -98,7 +99,7 @@ public class CamelCompositeProcessor extends AbstractStateCompositeProcessor imp
     }
 
     @Override
-    protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration config) throws Exception {
+    protected MailProcessor createMailProcessor(String name, HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         CamelMailetProcessor processor = new CamelMailetProcessor(metricFactory);
         try {
             processor.setCamelContext(camelContext);

@@ -28,6 +28,7 @@ import javax.inject.Singleton;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -73,7 +74,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         super.doConfigure(configuration);
         destination = configuration.getString("destination.[@URL]");
 
@@ -88,7 +89,7 @@ public class UsersFileRepository extends AbstractJamesUsersRepository {
         try {
             // TODO Check how to remove this!
             // prepare Configurations for object and stream repositories
-            HierarchicalConfiguration objectConfiguration = new BaseHierarchicalConfiguration();
+            HierarchicalConfiguration<ImmutableNode> objectConfiguration = new BaseHierarchicalConfiguration();
 
             objectConfiguration.addProperty("[@destinationURL]", destination);
 

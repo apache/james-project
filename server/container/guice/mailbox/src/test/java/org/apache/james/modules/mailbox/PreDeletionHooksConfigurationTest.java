@@ -29,6 +29,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.jupiter.api.Test;
 
@@ -45,7 +46,7 @@ class PreDeletionHooksConfigurationTest {
 
     @Test
     void fromShouldReturnNoneWhenEmpty() throws Exception {
-        HierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        HierarchicalConfiguration<ImmutableNode> configuration = new BaseHierarchicalConfiguration();
 
         assertThat(PreDeletionHooksConfiguration.from(configuration))
             .isEqualTo(PreDeletionHooksConfiguration.none());
@@ -61,7 +62,7 @@ class PreDeletionHooksConfigurationTest {
                 "</preDeletionHooks>")
             .getBytes(StandardCharsets.UTF_8)));
 
-        HierarchicalConfiguration invalidConfigurationEntry = new BaseHierarchicalConfiguration();
+        HierarchicalConfiguration<ImmutableNode> invalidConfigurationEntry = new BaseHierarchicalConfiguration();
         configuration.addProperty(PreDeletionHooksConfiguration.CONFIGURATION_ENTRY_NAME, ImmutableList.of(invalidConfigurationEntry));
 
         assertThatThrownBy(() -> PreDeletionHooksConfiguration.from(configuration))

@@ -22,6 +22,7 @@ package org.apache.james.mpt.host;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.plist.PropertyListConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.imap.api.ImapConfiguration;
@@ -174,7 +175,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
         }
     }
 
-    private HierarchicalConfiguration userRepositoryConfiguration() {
+    private HierarchicalConfiguration<ImmutableNode> userRepositoryConfiguration() {
         PropertyListConfiguration configuration = new PropertyListConfiguration();
         configuration.addProperty("administratorId", "imapuser");
         return configuration;

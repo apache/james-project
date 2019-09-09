@@ -314,7 +314,7 @@ public class ReindexingRoutes implements Routes {
 
     private MessageUid extractUid(Request request) {
         try {
-            return MessageUid.of(Long.valueOf(request.params(UID_PARAM)));
+            return MessageUid.of(Long.parseLong(request.params(UID_PARAM)));
         } catch (NumberFormatException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

@@ -31,7 +31,7 @@ public class TestMessageId implements MessageId {
         
         @Override
         public MessageId fromString(String serialized) {
-            return of(Long.valueOf(serialized));
+            return of(Long.parseLong(serialized));
         }
         
         @Override

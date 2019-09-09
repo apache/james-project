@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.google.common.base.Preconditions;
 
@@ -150,7 +151,7 @@ public class LdapRepositoryConfiguration {
         return new Builder();
     }
 
-    public static LdapRepositoryConfiguration from(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public static LdapRepositoryConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         String ldapHost = configuration.getString("[@ldapHost]", "");
         String principal = configuration.getString("[@principal]", "");
         String credentials = configuration.getString("[@credentials]", "");
@@ -171,7 +172,7 @@ public class LdapRepositoryConfiguration {
         long retryMaxInterval = configuration.getLong("[@retryMaxInterval]", 60);
         int scale = configuration.getInt("[@retryIntervalScale]", 1000); // seconds
 
-        HierarchicalConfiguration restrictionConfig = null;
+        HierarchicalConfiguration<ImmutableNode> restrictionConfig = null;
         // Check if we have a restriction we can use
         // See JAMES-1204
         if (configuration.containsKey("restriction[@memberAttribute]")) {

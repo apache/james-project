@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -32,8 +33,8 @@ import com.google.common.collect.ImmutableList;
 public class PreDeletionHooksConfiguration {
     static final String CONFIGURATION_ENTRY_NAME = "preDeletionHook";
 
-    public static PreDeletionHooksConfiguration from(HierarchicalConfiguration configuration) throws ConfigurationException {
-        List<HierarchicalConfiguration> entries = configuration.configurationsAt(CONFIGURATION_ENTRY_NAME);
+    public static PreDeletionHooksConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
+        List<HierarchicalConfiguration<ImmutableNode>> entries = configuration.configurationsAt(CONFIGURATION_ENTRY_NAME);
 
         return new PreDeletionHooksConfiguration(entries
             .stream()

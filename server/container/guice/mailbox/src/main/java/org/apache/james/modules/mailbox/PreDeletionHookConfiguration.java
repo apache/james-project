@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 
 import com.google.common.base.Preconditions;
@@ -31,7 +32,7 @@ public class PreDeletionHookConfiguration {
 
     public static final String CLASS_NAME_CONFIGURATION_ENTRY = "class";
 
-    public static PreDeletionHookConfiguration from(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public static PreDeletionHookConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         Preconditions.checkNotNull(configuration);
 
         try {

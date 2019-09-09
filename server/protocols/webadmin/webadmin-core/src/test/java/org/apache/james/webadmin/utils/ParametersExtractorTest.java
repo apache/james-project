@@ -176,7 +176,7 @@ public class ParametersExtractorTest {
 
         Optional<Double> result = ParametersExtractor.extractPositiveDouble(request, parameterName);
 
-        assertThat(result).contains(Double.valueOf(123));
+        assertThat(result).contains(123d);
     }
 
     @Test
@@ -201,6 +201,6 @@ public class ParametersExtractorTest {
 
         Optional<Double> result = ParametersExtractor.extractPositiveDouble(request, parameterName);
 
-        assertThat(result).contains(Double.valueOf(0));
+        assertThat(result).contains(0d);
     }
 }

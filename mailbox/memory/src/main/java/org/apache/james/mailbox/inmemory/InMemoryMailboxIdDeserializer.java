@@ -27,7 +27,7 @@ public class InMemoryMailboxIdDeserializer implements MailboxIdDeserializer {
     @Override
     public InMemoryId deserialize(String serializedMailboxId) throws MailboxIdDeserialisationException {
         try {
-            return InMemoryId.of(Long.valueOf(serializedMailboxId));
+            return InMemoryId.of(Long.parseLong(serializedMailboxId));
         } catch (Exception e) {
             throw new MailboxIdDeserialisationException("Error deserializing " + serializedMailboxId, e);
         }

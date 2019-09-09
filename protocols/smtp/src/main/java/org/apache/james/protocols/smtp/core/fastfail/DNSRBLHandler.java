@@ -128,7 +128,7 @@ public class DNSRBLHandler implements RcptHook {
         }
         
         if (whitelist != null || blacklist != null) {
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
             StringTokenizer st = new StringTokenizer(ipAddress, " .", false);
             while (st.hasMoreTokens()) {
                 sb.insert(0, st.nextToken() + ".");

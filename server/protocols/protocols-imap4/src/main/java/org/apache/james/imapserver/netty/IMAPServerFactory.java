@@ -24,6 +24,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -59,11 +60,11 @@ public class IMAPServerFactory extends AbstractServerFactory {
     
     @Override
 
-    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration config) throws Exception {
+    protected List<AbstractConfigurableAsyncServer> createServers(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
         List<AbstractConfigurableAsyncServer> servers = new ArrayList<>();
-        List<HierarchicalConfiguration> configs = config.configurationsAt("imapserver");
+        List<HierarchicalConfiguration<ImmutableNode>> configs = config.configurationsAt("imapserver");
         
-        for (HierarchicalConfiguration serverConfig: configs) {
+        for (HierarchicalConfiguration<ImmutableNode> serverConfig: configs) {
             IMAPServer server = createServer();
             server.setFileSystem(fileSystem);
             server.setHashWheelTimer(hashedWheelTimer);

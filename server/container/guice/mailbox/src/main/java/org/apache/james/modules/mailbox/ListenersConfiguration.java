@@ -21,14 +21,15 @@ package org.apache.james.modules.mailbox;
 import java.util.List;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 
 public class ListenersConfiguration {
 
-    public static ListenersConfiguration from(HierarchicalConfiguration configuration) {
-        List<HierarchicalConfiguration> listeners = configuration.configurationsAt("listener");
+    public static ListenersConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
+        List<HierarchicalConfiguration<ImmutableNode>> listeners = configuration.configurationsAt("listener");
 
         return new ListenersConfiguration(listeners
             .stream()

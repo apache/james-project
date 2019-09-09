@@ -37,8 +37,8 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import com.google.common.collect.ImmutableSet;
 
 public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
-    @SuppressWarnings("rawtypes")
-    private final Set<EventDTOModule> modules;
+
+    private final Set<EventDTOModule<?, ?>> modules;
     private CassandraClusterExtension cassandra;
     private EventStoreDao eventStoreDao;
 
@@ -46,7 +46,7 @@ public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAll
         this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), ImmutableSet.copyOf(modules));
     }
 
-    public CassandraEventStoreExtension(CassandraClusterExtension cassandra, Set<EventDTOModule> module) {
+    public CassandraEventStoreExtension(CassandraClusterExtension cassandra, Set<EventDTOModule<?, ?>> module) {
         this.cassandra = cassandra;
         this.modules = module;
     }

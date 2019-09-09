@@ -39,6 +39,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -356,7 +357,7 @@ public abstract class AbstractJdbcUsersRepository extends AbstractJamesUsersRepo
      * </pre>
      */
     @Override
-    protected void doConfigure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         LOGGER.debug("{}.configure()", getClass().getName());
 
         // Parse the DestinationURL for the name of the datasource,

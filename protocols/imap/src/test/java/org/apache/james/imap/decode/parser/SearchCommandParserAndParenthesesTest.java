@@ -48,21 +48,21 @@ public class SearchCommandParserAndParenthesesTest {
 
     public static Input and(Input[] parts, boolean parens) {
         List<SearchKey> keys = new ArrayList<>();
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         if (parens) {
-            buffer.append("(");
+            builder.append("(");
         }
         for (int i = 0; i < parts.length; i++) {
             if (i > 0) {
-                buffer.append(' ');
+                builder.append(' ');
             }
-            buffer.append(parts[i].input);
+            builder.append(parts[i].input);
             keys.add(parts[i].key);
         }
         if (parens) {
-            buffer.append(")");
+            builder.append(")");
         }
-        return new Input(buffer.toString(), SearchKey.buildAnd(keys));
+        return new Input(builder.toString(), SearchKey.buildAnd(keys));
     }
 
     public static Input sequence() {

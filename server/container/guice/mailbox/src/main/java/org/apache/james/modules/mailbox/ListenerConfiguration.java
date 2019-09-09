@@ -21,13 +21,14 @@ package org.apache.james.modules.mailbox;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class ListenerConfiguration {
 
-    public static ListenerConfiguration from(HierarchicalConfiguration configuration) {
+    public static ListenerConfiguration from(HierarchicalConfiguration<ImmutableNode> configuration) {
         String listenerClass = configuration.getString("class");
         Preconditions.checkState(!Strings.isNullOrEmpty(listenerClass), "class name is mandatory");
         Optional<Boolean> isAsync = Optional.ofNullable(configuration.getBoolean("async", null));
@@ -39,7 +40,7 @@ public class ListenerConfiguration {
         return new ListenerConfiguration(clazz, Optional.empty(), Optional.empty(), Optional.empty());
     }
 
-    private static Optional<HierarchicalConfiguration> extractSubconfiguration(HierarchicalConfiguration configuration) {
+    private static Optional<HierarchicalConfiguration<ImmutableNode>> extractSubconfiguration(HierarchicalConfiguration<ImmutableNode> configuration) {
         return configuration.configurationsAt("configuration")
             .stream()
             .findFirst();
@@ -47,10 +48,10 @@ public class ListenerConfiguration {
 
     private final String clazz;
     private final Optional<String> group;
-    private final Optional<HierarchicalConfiguration> configuration;
+    private final Optional<HierarchicalConfiguration<ImmutableNode>> configuration;
     private final Optional<Boolean> isAsync;
 
-    private ListenerConfiguration(String clazz, Optional<String> group, Optional<HierarchicalConfiguration> configuration, Optional<Boolean> isAsync) {
+    private ListenerConfiguration(String clazz, Optional<String> group, Optional<HierarchicalConfiguration<ImmutableNode>> configuration, Optional<Boolean> isAsync) {
         this.clazz = clazz;
         this.group = group;
         this.configuration = configuration;
@@ -65,7 +66,7 @@ public class ListenerConfiguration {
         return clazz;
     }
 
-    public Optional<HierarchicalConfiguration> getConfiguration() {
+    public Optional<HierarchicalConfiguration<ImmutableNode>> getConfiguration() {
         return configuration;
     }
 

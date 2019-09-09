@@ -21,6 +21,7 @@ package org.apache.james.container.spring.bean.factorypostprocessor;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.container.spring.lifecycle.ConfigurationProvider;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.FatalBeanException;
@@ -41,7 +42,7 @@ public class IndexerConfigurationBeanFactoryPostProcessor implements BeanFactory
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         ConfigurationProvider confProvider = beanFactory.getBean(ConfigurationProvider.class);
         try {
-            HierarchicalConfiguration config = confProvider.getConfiguration("indexer");
+            HierarchicalConfiguration<ImmutableNode> config = confProvider.getConfiguration("indexer");
             String provider = config.getString("provider", "lazyIndex");
 
             BeanDefinitionRegistry registry = (BeanDefinitionRegistry) beanFactory;

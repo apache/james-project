@@ -30,6 +30,7 @@ import javax.mail.MessagingException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.james.mailetcontainer.api.mock.MockMailProcessor;
 import org.apache.james.server.core.MailImpl;
@@ -49,7 +50,7 @@ public abstract class AbstractStateCompositeProcessorTest {
         AbstractStateCompositeProcessor processor = new AbstractStateCompositeProcessor() {
 
             @Override
-            protected MailProcessor createMailProcessor(final String state, HierarchicalConfiguration config) throws
+            protected MailProcessor createMailProcessor(final String state, HierarchicalConfiguration<ImmutableNode> config) throws
                 Exception {
                 return new MockMailProcessor("") {
 
@@ -82,7 +83,7 @@ public abstract class AbstractStateCompositeProcessorTest {
 
     }
 
-    protected abstract AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration config) throws
+    protected abstract AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config) throws
             Exception;
 
     @Test
@@ -133,7 +134,7 @@ public abstract class AbstractStateCompositeProcessorTest {
     }
     }
 
-    private HierarchicalConfiguration createConfig(List<String> states) throws ConfigurationException, IOException {
+    private HierarchicalConfiguration<ImmutableNode> createConfig(List<String> states) throws ConfigurationException, IOException {
 
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\"?>");

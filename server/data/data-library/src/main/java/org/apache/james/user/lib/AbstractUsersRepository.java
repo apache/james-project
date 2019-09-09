@@ -25,6 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.User;
@@ -44,7 +45,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     private Optional<String> administratorId;
 
     @Override
-    public void configure(HierarchicalConfiguration configuration) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
 
         virtualHosting = configuration.getBoolean("enableVirtualHosting", getDefaultVirtualHostingValue());
         administratorId = Optional.ofNullable(configuration.getString("administratorId"));
@@ -56,7 +57,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         return false;
     }
 
-    protected void doConfigure(HierarchicalConfiguration config) throws ConfigurationException {
+    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
     }
 
     public void setEnableVirtualHosting(boolean virtualHosting) {

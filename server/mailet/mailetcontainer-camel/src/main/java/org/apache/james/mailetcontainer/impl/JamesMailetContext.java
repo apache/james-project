@@ -41,6 +41,7 @@ import javax.mail.internet.ParseException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
@@ -445,7 +446,7 @@ public class JamesMailetContext implements MailetContext, Configurable {
     }
 
     @Override
-    public void configure(HierarchicalConfiguration config) throws ConfigurationException {
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) throws ConfigurationException {
         this.rootMailQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
         try {
 
