@@ -659,12 +659,12 @@ Will return:
         "size":42
       },
       "occupation": {
-        "size":1000,
-        "count":10000,
+        "size":48,
+        "count":21,
         "ratio": {
-          "size":0.8,
-          "count":0.6,
-          "max":0.8
+          "size":0.9230,
+          "count":0.5,
+          "max":0.9230
         }
       }
     }
