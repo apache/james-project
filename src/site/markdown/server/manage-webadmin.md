@@ -1811,7 +1811,7 @@ curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/
+curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F
 ```
 
 The answer looks like:
