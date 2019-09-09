@@ -41,10 +41,10 @@ import org.apache.james.webadmin.dto.ExecutionDetailsDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
-
 import org.eclipse.jetty.http.HttpStatus;
 
 import com.google.common.base.Preconditions;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -192,26 +192,25 @@ public class TasksRoutes implements Routes {
 
     private Duration getTimeout(Request req) {
         try {
-            Optional<String> requestTimeout = Optional.ofNullable(req.queryParams("timeout"))
-                .filter(parameter -> !parameter.isEmpty());
-
-            requestTimeout.ifPresent(timeout ->
-                Preconditions.checkState(!timeout.replaceAll(" ", "").startsWith("-"), "Timeout should be positive"));
-
-            Duration timeout = requestTimeout
+            Duration timeout =  Optional.ofNullable(req.queryParams("timeout"))
+                .filter(parameter -> !parameter.isEmpty())
                 .map(rawString -> DurationParser.parse(rawString, ChronoUnit.SECONDS))
                 .orElse(MAXIMUM_AWAIT_TIMEOUT);
 
-            Preconditions.checkState(timeout.compareTo(MAXIMUM_AWAIT_TIMEOUT) <= 0, "Timeout should not exceed one year");
+            assertDoesNotExceedMaximumTimeout(timeout);
             return timeout;
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("Invalid timeout " + e.getMessage())
+                .message("Invalid timeout")
                 .haltError();
         }
+    }
+
+    private void assertDoesNotExceedMaximumTimeout(Duration timeout) {
+        Preconditions.checkState(timeout.compareTo(MAXIMUM_AWAIT_TIMEOUT) <= 0, "Timeout should not exceed 365 days");
     }
 
     private TaskExecutionDetails awaitTask(TaskId taskId, Duration timeout) {

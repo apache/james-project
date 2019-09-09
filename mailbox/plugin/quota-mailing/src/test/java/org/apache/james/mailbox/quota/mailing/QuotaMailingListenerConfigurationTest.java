@@ -174,7 +174,8 @@ public class QuotaMailingListenerConfigurationTest {
             "<configuration><gracePeriod>-12 ms</gracePeriod></configuration>"));
 
         assertThatThrownBy(() -> QuotaMailingListenerConfiguration.from(xmlConfiguration))
-            .isInstanceOf(NumberFormatException.class);
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Duration amount should be positive");
     }
 
     @Test

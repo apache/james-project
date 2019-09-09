@@ -20,6 +20,7 @@
 package org.apache.james.transport.mailets.remote.delivery;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
 
@@ -51,9 +52,10 @@ public class DelayTest {
     }
 
     @Test
-    public void stringConstructorShouldThrowOnNegativeNumbers() throws Exception {
-        expectedException.expect(NumberFormatException.class);
-        assertThat(Delay.from("-1s")).isEqualTo(new Delay(Delay.DEFAULT_ATTEMPTS, Duration.ofMillis(0)));
+    public void stringConstructorShouldThrowOnNegativeNumbers() {
+        assertThatThrownBy(() -> Delay.from("-1s"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Duration amount should be positive");
     }
 
     @Test

@@ -27,12 +27,13 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class DurationParser {
 
-    private static final String PATTERN_STRING = "\\s*([0-9]+)\\s*([a-z,A-Z]*)\\s*";
+    private static final String PATTERN_STRING = "\\s*(-?[0-9]+)\\s*([a-z,A-Z]*)\\s*";
     private static final int AMOUNT = 1;
     private static final int UNIT = 2;
 
@@ -87,14 +88,22 @@ public class DurationParser {
     public static Duration parse(String rawString, ChronoUnit defaultUnit) throws NumberFormatException {
         Matcher res = PATTERN.matcher(rawString);
         if (res.matches()) {
-            if (res.group(AMOUNT) != null && res.group(UNIT) != null) {
+            String unitAsString = res.group(UNIT);
+            String amountAsString = res.group(AMOUNT);
+            if (amountAsString != null && unitAsString != null) {
                 long time = Integer.parseInt(res.group(AMOUNT).trim());
-                return parseUnitAsDuration(res.group(UNIT))
-                    .orElse(defaultUnit.getDuration())
-                    .multipliedBy(time);
+                Duration unitAsDuration = parseUnitAsDuration(unitAsString).orElse(defaultUnit.getDuration());
+
+                return computeDuration(unitAsDuration, time);
             }
         }
         throw new NumberFormatException("The supplied String is not a supported format " + rawString);
+    }
+
+    private static Duration computeDuration(Duration unitAsDuration, long time) {
+        Preconditions.checkArgument(time >= 0, "Duration amount should be positive");
+
+        return unitAsDuration.multipliedBy(time);
     }
 
     private static Optional<Duration> parseUnitAsDuration(String unit) {

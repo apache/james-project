@@ -22,7 +22,6 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
-import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
@@ -230,7 +229,8 @@ class TasksRoutesTest {
             .get("/" + taskId.getValue() + "/await")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
-            .body("message", allOf(containsString("Invalid timeout"), containsString("Timeout should be positive")));
+            .body("message", containsString("Invalid timeout"))
+            .body("details", containsString("Duration amount should be positive"));
     }
 
     @Test
@@ -243,7 +243,8 @@ class TasksRoutesTest {
             .get("/" + taskId.getValue() + "/await")
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
-            .body("message", allOf(containsString("Invalid timeout"), containsString("Timeout should not exceed one year")));
+            .body("message", containsString("Invalid timeout"))
+            .body("details", containsString("Timeout should not exceed 365 days"));
     }
 
     @Test

@@ -59,6 +59,13 @@ class DurationParserTest {
             .isEqualTo(Duration.ofMinutes(2));
     }
 
+    @Test
+    void parseShouldThrowOnNegativeValue() {
+        assertThatThrownBy(() -> DurationParser.parse("-2 minutes"))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Duration amount should be positive");
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"2ms", "2", "2 ms", "2 msec", "2 msecs", "2 Ms"})
     void parseShouldHandleMilliseconds(String input) {
@@ -136,12 +143,6 @@ class DurationParserTest {
     @Test
     void parseShouldThrowWhenEmpty() {
         assertThatThrownBy(() -> DurationParser.parse(""))
-            .isInstanceOf(NumberFormatException.class);
-    }
-
-    @Test
-    void parseShouldThrowWhenNegativeAmount() {
-        assertThatThrownBy(() -> DurationParser.parse("-1 s"))
             .isInstanceOf(NumberFormatException.class);
     }
 
