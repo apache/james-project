@@ -91,11 +91,6 @@
             <artifactId>reactor-extra</artifactId>
         </dependency>
         <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.jclouds.api</groupId>
             <artifactId>openstack-swift</artifactId>
             <version>${jclouds.version}</version>

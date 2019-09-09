@@ -64,11 +64,6 @@
             <artifactId>feign-slf4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>nl.jqno.equalsverifier</groupId>
-            <artifactId>equalsverifier</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-configuration2</artifactId>
         </dependency>
