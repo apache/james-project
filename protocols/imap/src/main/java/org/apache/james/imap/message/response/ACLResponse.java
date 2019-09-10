@@ -43,16 +43,6 @@ public final class ACLResponse implements ImapResponseMessage {
         this.acl = acl;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof ACLResponse) {
-            ACLResponse other = (ACLResponse) o;
-            return (Objects.equals(this.acl, other.acl))
-                    && (Objects.equals(this.mailboxName, other.mailboxName));
-        }
-        return false;
-    }
-
     public MailboxACL getAcl() {
         return acl;
     }
@@ -62,7 +52,18 @@ public final class ACLResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final boolean equals(Object o) {
+        if (o instanceof ACLResponse) {
+            ACLResponse other = (ACLResponse) o;
+
+            return Objects.equals(this.acl, other.acl)
+                && Objects.equals(this.mailboxName, other.mailboxName);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
         return Objects.hash(acl, mailboxName);
     }
 

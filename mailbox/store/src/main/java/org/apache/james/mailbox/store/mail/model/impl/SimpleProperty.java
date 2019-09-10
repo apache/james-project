@@ -22,6 +22,8 @@ import java.util.Objects;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
+import com.google.common.base.MoreObjects;
+
 public final class SimpleProperty implements Property {
     private final String namespace;
     private final String localName;
@@ -88,31 +90,27 @@ public final class SimpleProperty implements Property {
      * of this object.
      */
     public String toString() {
-        return "SimpleProperty("
-        + "namespace='" + this.namespace 
-        + "' localName='" + this.localName  
-        + "' value='" + this.value 
-        + "')";
+        return MoreObjects.toStringHelper(this)
+            .add("namespace", namespace)
+            .add("localName", localName)
+            .add("value", value)
+            .toString();
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof SimpleProperty)) {
-            return false;
-        }
-        SimpleProperty that = (SimpleProperty) o;
+    public final boolean equals(Object o) {
+        if (o instanceof SimpleProperty) {
+            SimpleProperty that = (SimpleProperty) o;
 
-        return Objects.equals(namespace, that.namespace) &&
+            return Objects.equals(namespace, that.namespace) &&
                 Objects.equals(localName, that.localName) &&
                 Objects.equals(value, that.value);
-
+        }
+        return false;
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(namespace, localName, value);
     }
 }

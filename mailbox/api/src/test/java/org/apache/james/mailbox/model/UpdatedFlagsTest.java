@@ -26,10 +26,19 @@ import javax.mail.Flags;
 import org.apache.james.mailbox.MessageUid;
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class UpdatedFlagsTest {
 
     public static final MessageUid UID = MessageUid.of(45L);
     public static final long MOD_SEQ = 47L;
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(UpdatedFlags.class)
+            .withIgnoredFields("modifiedFlags")
+            .verify();
+    }
 
     @Test
     public void isModifiedToSetShouldReturnTrueWhenFlagOnlyInNewFlag() {

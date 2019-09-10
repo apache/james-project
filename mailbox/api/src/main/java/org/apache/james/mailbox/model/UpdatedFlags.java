@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
@@ -230,7 +231,7 @@ public class UpdatedFlags {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public final boolean equals(Object other) {
         if (this == other) {
             return true;
         }
@@ -247,7 +248,7 @@ public class UpdatedFlags {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hash(uid, oldFlags, newFlags, modSeq);
     }
     

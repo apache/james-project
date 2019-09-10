@@ -38,16 +38,6 @@ public final class MyRightsResponse implements ImapResponseMessage {
         this.myRights = myRights;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof MyRightsResponse) {
-            MyRightsResponse other = (MyRightsResponse) o;
-            return Objects.equals(this.myRights, other.myRights) &&
-                    Objects.equals(this.mailboxName, other.mailboxName);
-        }
-        return false;
-    }
-
     public String getMailboxName() {
         return mailboxName;
     }
@@ -57,7 +47,18 @@ public final class MyRightsResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final boolean equals(Object o) {
+        if (o instanceof MyRightsResponse) {
+            MyRightsResponse other = (MyRightsResponse) o;
+
+            return Objects.equals(this.myRights, other.myRights) &&
+                Objects.equals(this.mailboxName, other.mailboxName);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
         return Objects.hash(myRights, mailboxName);
     }
 

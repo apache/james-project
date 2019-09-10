@@ -35,16 +35,6 @@ public class QuotaRootResponse implements ImapResponseMessage {
         this.quotaRoot = quotaRoot;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof QuotaRootResponse) {
-            QuotaRootResponse other = (QuotaRootResponse) o;
-            return Objects.equals(this.quotaRoot, other.quotaRoot) &&
-                    Objects.equals(this.mailboxName, other.mailboxName);
-        }
-        return false;
-    }
-
     public String getQuotaRoot() {
         return quotaRoot;
     }
@@ -54,7 +44,18 @@ public class QuotaRootResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
+    public final boolean equals(Object o) {
+        if (o instanceof QuotaRootResponse) {
+            QuotaRootResponse other = (QuotaRootResponse) o;
+
+            return Objects.equals(this.quotaRoot, other.quotaRoot) &&
+                Objects.equals(this.mailboxName, other.mailboxName);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
         return Objects.hash(quotaRoot, mailboxName);
     }
 
