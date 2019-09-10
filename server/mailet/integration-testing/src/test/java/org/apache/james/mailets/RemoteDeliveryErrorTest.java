@@ -24,10 +24,10 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ConditionStep.anyInput;
-import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ConditionStep.inputContaining;
-import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ResponseStep.doesNotAcceptAnyMail;
-import static org.apache.james.mock.smtp.server.model.MockSmtpBehaviors.Builder.ResponseStep.serviceNotAvailable;
+import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ConditionStep.anyInput;
+import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ConditionStep.inputContaining;
+import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.doesNotAcceptAnyMail;
+import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.serviceNotAvailable;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
@@ -43,7 +43,6 @@ import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.mock.smtp.server.model.Mail;
-import org.apache.james.mock.smtp.server.model.MockSmtpBehaviors;
 import org.apache.james.mock.smtp.server.model.SMTPCommand;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -164,14 +163,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysRCPT421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .anyTimes()
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -186,14 +184,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysFROM421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .anyTimes()
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -208,14 +205,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldBounceWhenAlwaysDATA421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.DATA)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .anyTimes()
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -230,14 +226,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWhenRCPT500() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
                 .matching(anyInput())
                 .thenRespond(doesNotAcceptAnyMail("mock message"))
                 .onlySomeTimes(1)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -252,14 +247,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWhenFROM500() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
                 .matching(anyInput())
                 .thenRespond(doesNotAcceptAnyMail("mock message"))
                 .onlySomeTimes(1)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -274,14 +268,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotRetryWhenDATA500() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.DATA)
                 .matching(anyInput())
                 .thenRespond(doesNotAcceptAnyMail("mock message"))
                 .onlySomeTimes(1)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -296,14 +289,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenRCPT421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .onlySomeTimes(2)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -319,14 +311,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenFROM421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.MAIL_FROM)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .onlySomeTimes(2)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -342,14 +333,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldRetryWhenDATA421() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.DATA)
                 .matching(anyInput())
                 .thenRespond(serviceNotAvailable("mock response"))
                 .onlySomeTimes(2)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(FROM, RECIPIENT);
@@ -365,14 +355,13 @@ public class RemoteDeliveryErrorTest {
 
     @Test
     public void remoteDeliveryShouldNotDuplicateContentWhenSendPartial() throws Exception {
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
                 .matching(inputContaining(RECIPIENT1))
                 .thenRespond(serviceNotAvailable("mock response"))
                 .onlySomeTimes(1)
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(MailImpl.builder()
@@ -400,14 +389,13 @@ public class RemoteDeliveryErrorTest {
             .registerMxRecord(mockSmtp.getContainerIp(), mockSmtp.getContainerIp())
             .registerMxRecord(mockSmtp2.getContainerIp(), mockSmtp2.getContainerIp());
 
-        mockSMTP1Configuration.setBehaviors(
-            MockSmtpBehaviors.builder()
-                .addNewBehavior()
+        mockSMTP1Configuration
+            .addNewBehavior()
                 .expect(SMTPCommand.RCPT_TO)
                 .matching(inputContaining(RECIPIENT2))
                 .thenRespond(serviceNotAvailable("mock response"))
                 .anyTimes()
-                .build());
+            .post();
 
         messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
             .sendMessage(MailImpl.builder()
