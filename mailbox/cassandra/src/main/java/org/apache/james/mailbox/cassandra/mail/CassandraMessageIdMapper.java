@@ -210,17 +210,16 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         return Flux.fromIterable(mailboxIds)
             .distinct()
             .map(mailboxId -> (CassandraId) mailboxId)
-            .filter(mailboxId -> haveMetaData(messageId, mailboxId))
-            .flatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
+            .filterWhen(mailboxId -> haveMetaData(messageId, mailboxId))
+            .concatMap(mailboxId -> flagsUpdateWithRetry(newState, updateMode, mailboxId, messageId))
             .flatMap(this::updateCounts)
             .collect(Guavate.toImmutableMap(Pair::getLeft, Pair::getRight))
             .block();
     }
 
-    private boolean haveMetaData(MessageId messageId, CassandraId mailboxId) {
+    private Mono<Boolean> haveMetaData(MessageId messageId, CassandraId mailboxId) {
         return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(mailboxId))
-            .hasElements()
-            .block();
+            .hasElements();
     }
 
     private Mono<Pair<MailboxId, UpdatedFlags>> flagsUpdateWithRetry(Flags newState, MessageManager.FlagsUpdateMode updateMode, MailboxId mailboxId, MessageId messageId) {
