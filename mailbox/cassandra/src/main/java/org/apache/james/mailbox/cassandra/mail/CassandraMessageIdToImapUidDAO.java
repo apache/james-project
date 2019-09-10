@@ -56,9 +56,9 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 
 import com.datastax.driver.core.PreparedStatement;
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
+import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
@@ -192,8 +192,8 @@ public class CassandraMessageIdToImapUidDAO {
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
-        return selectStatement(messageId, mailboxId)
-                .flatMapMany(cassandraUtils::convertToFlux)
+        return cassandraAsyncExecutor.executeRows(
+                    selectStatement(messageId, mailboxId))
                 .map(this::toComposedMessageIdWithMetadata);
     }
 
@@ -208,12 +208,11 @@ public class CassandraMessageIdToImapUidDAO {
                 .build();
     }
 
-    private Mono<ResultSet> selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
+    private Statement selectStatement(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return mailboxId
-            .map(cassandraId -> cassandraAsyncExecutor.execute(select.bind()
+            .map(cassandraId -> select.bind()
                 .setUUID(MESSAGE_ID, messageId.get())
-                .setUUID(MAILBOX_ID, cassandraId.asUuid())))
-            .orElseGet(() -> cassandraAsyncExecutor.execute(selectAll.bind()
-                .setUUID(MESSAGE_ID, messageId.get())));
+                .setUUID(MAILBOX_ID, cassandraId.asUuid()))
+            .orElseGet(() -> selectAll.bind().setUUID(MESSAGE_ID, messageId.get()));
     }
 }
