@@ -55,6 +55,7 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -193,7 +194,7 @@ public class CassandraMessageIdToImapUidDAO {
 
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return cassandraAsyncExecutor.executeRows(
-                    selectStatement(messageId, mailboxId))
+                    selectStatement(messageId, mailboxId).setConsistencyLevel(ConsistencyLevel.SERIAL))
                 .map(this::toComposedMessageIdWithMetadata);
     }
 
