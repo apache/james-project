@@ -46,6 +46,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.util.FunctionalUtils;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.base.MoreObjects;
@@ -148,7 +149,8 @@ public class CassandraModSeqProvider implements ModSeqProvider {
     private Mono<Optional<ModSeq>> findHighestModSeq(CassandraId mailboxId) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             select.bind()
-                .setUUID(MAILBOX_ID, mailboxId.asUuid()))
+                .setUUID(MAILBOX_ID, mailboxId.asUuid())
+                .setConsistencyLevel(ConsistencyLevel.SERIAL))
             .map(maybeRow -> maybeRow.map(row -> new ModSeq(row.getLong(NEXT_MODSEQ))));
     }
 

@@ -45,6 +45,7 @@ import org.apache.james.util.FunctionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -153,7 +154,8 @@ public class CassandraACLMapper {
     private Mono<Row> getStoredACLRow(CassandraId cassandraId) {
         return executor.executeSingleRow(
             readStatement.bind()
-                .setUUID(CassandraACLTable.ID, cassandraId.asUuid()));
+                .setUUID(CassandraACLTable.ID, cassandraId.asUuid())
+                .setConsistencyLevel(ConsistencyLevel.SERIAL));
     }
 
     private Mono<MailboxACL> updateStoredACL(CassandraId cassandraId, ACLWithVersion aclWithVersion) {

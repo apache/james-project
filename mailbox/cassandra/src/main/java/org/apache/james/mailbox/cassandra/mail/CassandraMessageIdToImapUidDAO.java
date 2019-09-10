@@ -194,7 +194,8 @@ public class CassandraMessageIdToImapUidDAO {
 
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
         return cassandraAsyncExecutor.executeRows(
-                    selectStatement(messageId, mailboxId).setConsistencyLevel(ConsistencyLevel.SERIAL))
+                    selectStatement(messageId, mailboxId)
+                    .setConsistencyLevel(ConsistencyLevel.SERIAL))
                 .map(this::toComposedMessageIdWithMetadata);
     }
 
