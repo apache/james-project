@@ -126,11 +126,6 @@
             <artifactId>javax.inject</artifactId>
         </dependency>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>${james.protocols.groupId}</groupId>
             <artifactId>protocols-api</artifactId>
         </dependency>

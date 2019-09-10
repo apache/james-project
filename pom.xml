@@ -604,7 +604,6 @@
         <slf4j.version>1.7.27</slf4j.version>
 
         <dnsjava.version>2.1.9</dnsjava.version>
-        <junit.version>4.12</junit.version>
         <junit.jupiter.version>5.5.1</junit.jupiter.version>
         <junit.platform.version>1.5.1</junit.platform.version>
         <junit.vintage.version>5.5.1</junit.vintage.version>
@@ -2140,11 +2139,6 @@
                 <groupId>javax.xml.bind</groupId>
                 <artifactId>jaxb-api</artifactId>
                 <version>${jaxb.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>${junit.version}</version>
             </dependency>
             <dependency>
                 <groupId>net.javacrumbs.json-unit</groupId>
