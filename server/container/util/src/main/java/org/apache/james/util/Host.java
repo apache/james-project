@@ -130,8 +130,12 @@ public class Host {
         return false;
     }
 
+    public String asString() {
+        return this.hostName + ":" + this.port;
+    }
+
     @Override
     public String toString() {
-        return this.hostName + ":" + this.port;
+        return asString();
     }
 }

@@ -52,7 +52,7 @@ public class DockerAwsS3Container {
     public void start() {
         awsS3Container.start();
 
-        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost() + "/"));
+        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"));
     }
 
     public void stop() {
