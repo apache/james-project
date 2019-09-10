@@ -48,8 +48,8 @@ public class CassandraAsyncExecutor {
     }
 
     public Mono<Boolean> executeReturnApplied(Statement statement) {
-        return executeSingleRow(statement)
-                .map(row -> row.getBool(CassandraConstants.LIGHTWEIGHT_TRANSACTION_APPLIED));
+        return execute(statement)
+                .map(row -> row.wasApplied());
     }
 
     public Mono<Void> executeVoid(Statement statement) {
