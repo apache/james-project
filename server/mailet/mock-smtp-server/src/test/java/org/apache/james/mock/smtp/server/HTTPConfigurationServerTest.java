@@ -47,14 +47,14 @@ import net.javacrumbs.jsonunit.core.Option;
 import net.javacrumbs.jsonunit.core.internal.Options;
 
 class HTTPConfigurationServerTest {
-    private HTTPConfigurationServer server;
+    private HTTPConfigurationServer.RunningStage server;
 
     @Nested
     class SMTPBehaviorsTest {
         @BeforeEach
         void setUp() throws Exception {
-            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository());
-            server.start();
+            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), new ReceivedMailRepository())
+                .start();
 
             RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
@@ -147,8 +147,8 @@ class HTTPConfigurationServerTest {
         void setUp() throws Exception {
             mailRepository = new ReceivedMailRepository();
 
-            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), mailRepository);
-            server.start();
+            server = HTTPConfigurationServer.onRandomPort(new SMTPBehaviorRepository(), mailRepository)
+                .start();
 
             RestAssured.requestSpecification = new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)

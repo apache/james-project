@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 class ConfigurationClientTest {
     private ConfigurationClient testee;
-    private HTTPConfigurationServer server;
+    private HTTPConfigurationServer.RunningStage server;
     private SMTPBehaviorRepository behaviorRepository;
     private ReceivedMailRepository mailRepository;
 
@@ -37,8 +37,8 @@ class ConfigurationClientTest {
     void setUp() throws Exception {
         behaviorRepository = new SMTPBehaviorRepository();
         mailRepository = new ReceivedMailRepository();
-        server = HTTPConfigurationServer.onRandomPort(behaviorRepository, mailRepository);
-        server.start();
+        server = HTTPConfigurationServer.onRandomPort(behaviorRepository, mailRepository)
+            .start();
 
         testee = ConfigurationClient.fromServer(server);
     }

@@ -157,7 +157,7 @@ public interface ConfigurationClient {
     }
 
     @VisibleForTesting
-    static ConfigurationClient fromServer(HTTPConfigurationServer server) {
+    static ConfigurationClient fromServer(HTTPConfigurationServer.RunningStage server) {
         return from(Host.from("localhost", server.getPort().getValue()));
     }
 
