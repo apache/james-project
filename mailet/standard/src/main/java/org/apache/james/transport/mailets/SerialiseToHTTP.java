@@ -16,11 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.transport.mailets;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -35,6 +34,7 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -117,19 +117,28 @@ public class SerialiseToHTTP extends GenericMailet {
      */
     @Override
     public void service(Mail mail) {
+        MimeMessage message;
         try {
-            MimeMessage message = mail.getMessage();
-            String serialisedMessage = getSerialisedMessage(message);
-            NameValuePair[] nameValuePairs = getNameValuePairs(serialisedMessage);
-            String result = httpPost(nameValuePairs);
-            if (passThrough) {
-                addHeader(mail, (result == null || result.length() == 0), result);
-            } else {
-                mail.setState(Mail.GHOST);
-            }
-        } catch (MessagingException | IOException me) {
+            message = mail.getMessage();
+        } catch (MessagingException me) {
             LOGGER.error("Messaging exception", me);
             addHeader(mail, false, me.getMessage());
+            return;
+        }
+        String messageAsString;
+        try {
+            messageAsString = MimeMessageUtil.asString(message);
+        } catch (Exception e) {
+            LOGGER.error("Message to string exception", e);
+            addHeader(mail, false, e.getMessage());
+            return;
+        }
+
+        String result = httpPost(getNameValuePairs(messageAsString));
+        if (passThrough) {
+            addHeader(mail, (result == null || result.length() == 0), result);
+        } else {
+            mail.setState(Mail.GHOST);
         }
     }
 
@@ -146,20 +155,13 @@ public class SerialiseToHTTP extends GenericMailet {
         }
     }
 
-    private String getSerialisedMessage(MimeMessage message)
-            throws IOException, MessagingException {
-        ByteArrayOutputStream os = new ByteArrayOutputStream();
-        message.writeTo(os);
-        return os.toString();
-    }
-
     private String httpPost(NameValuePair[] data) {
 
         RequestBuilder requestBuilder = RequestBuilder.post(url);
 
-        if (data.length > 1 && data[1] != null) {
-            requestBuilder.addParameter(data[1].getName(),data[1].getValue());
-            LOGGER.debug("{}::{}", data[1].getName(), data[1].getValue());
+        for (NameValuePair parameter : data) {
+            requestBuilder.addParameter(parameter);
+            LOGGER.debug("{}::{}", parameter.getName(), parameter.getValue());
         }
 
 
@@ -180,7 +182,7 @@ public class SerialiseToHTTP extends GenericMailet {
         }
     }
 
-    private NameValuePair[] getNameValuePairs(String message) throws UnsupportedEncodingException {
+    private NameValuePair[] getNameValuePairs(String message) {
 
         int l = 1;
         if (parameterKey != null && parameterKey.length() > 0) {
