@@ -24,8 +24,9 @@ import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.isEmptyOrNullString;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.core.Is.is;
+import static org.hamcrest.text.IsEmptyString.emptyOrNullString;
 
 import java.util.List;
 import java.util.Map;
@@ -184,7 +185,7 @@ public class JmapCommonRequests {
             .expectBody(NAME, equalTo("messagesSet"))
             .expectBody(ARGUMENTS + ".updated", hasSize(1))
             .expectBody(ARGUMENTS + ".updated", contains(messageId))
-            .expectBody(ARGUMENTS + ".error", isEmptyOrNullString())
+            .expectBody(ARGUMENTS + ".error", is(emptyOrNullString()))
             .expectBody(NOT_UPDATED, not(hasKey(messageId)));
         return builder.build();
     }
