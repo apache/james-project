@@ -7,6 +7,9 @@ printUsage() {
    echo "    JAMES_IMAP_PORT: Exposed IMAP port of this James server"
    echo "    JAMES_SMTP_PORT: Exposed SMTP port of this James server"
    echo "    SHA1(optional): Branch to build or master if none"
+   echo ""
+   echo "Environment:"
+   echo " - MVN_ADDITIONAL_ARG_LINE: Allow passing additional command arguments to the maven command"
    exit 1
 }
 
@@ -63,5 +66,5 @@ git clone $ORIGIN/.
 git checkout $SHA1
 
 
-mvn -T 1C -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am install
-mvn -T 1C -pl org.apache.james:apache-james-mpt-external-james test -Pintegration-tests
+mvn -T 1C -DskipTests -pl org.apache.james:apache-james-mpt-external-james -am install ${MVN_ADDITIONAL_ARG_LINE}
+mvn -T 1C -pl org.apache.james:apache-james-mpt-external-james test -Pintegration-tests ${MVN_ADDITIONAL_ARG_LINE}
