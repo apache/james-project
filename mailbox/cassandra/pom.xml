@@ -78,12 +78,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-api</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-task</artifactId>
         </dependency>
         <dependency>
@@ -93,12 +87,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-util</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>javax-mail-extension</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -133,11 +121,6 @@
         <dependency>
             <groupId>net.javacrumbs.json-unit</groupId>
             <artifactId>json-unit-assertj</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-guava</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -34,11 +34,6 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-core</artifactId>
         </dependency>
         <dependency>
@@ -60,10 +55,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-dnsservice-dnsjava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-dnsservice-library</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -103,33 +94,11 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-webadmin</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailet-dkim</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailets</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailrepository-memory</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-onami</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-library</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -165,24 +134,6 @@
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.google.inject.extensions</groupId>
-            <artifactId>guice-multibindings</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.rest-assured</groupId>
-            <artifactId>rest-assured</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.awaitility</groupId>
-            <artifactId>awaitility</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-core</artifactId>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

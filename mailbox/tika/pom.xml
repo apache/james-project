@@ -34,7 +34,7 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-james-mailbox-store</artifactId>
+            <artifactId>apache-james-mailbox-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -55,20 +55,12 @@
             <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-guava</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.github.steveash.guavate</groupId>
             <artifactId>guavate</artifactId>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-configuration2</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

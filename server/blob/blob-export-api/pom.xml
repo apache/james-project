@@ -35,10 +35,6 @@
     <dependencies>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>blob-api</artifactId>
         </dependency>
         <dependency>
@@ -46,6 +42,10 @@
             <artifactId>blob-api</artifactId>
             <scope>test</scope>
             <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-core</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

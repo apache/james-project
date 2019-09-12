@@ -53,11 +53,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-protocols-smtp</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-api</artifactId>
         </dependency>
         <dependency>
@@ -73,22 +68,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>javax-mail-extension</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>metrics-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>metrics-tests</artifactId>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.protocols.groupId}</groupId>
-            <artifactId>protocols-smtp</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -133,10 +118,6 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.threeten</groupId>
-            <artifactId>threeten-extra</artifactId>
         </dependency>
     </dependencies>
 </project>

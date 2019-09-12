@@ -34,11 +34,6 @@
 
     <dependencies>
         <dependency>
-            <!-- only used by JamesUser (for MailAddress) -->
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-core</artifactId>
         </dependency>

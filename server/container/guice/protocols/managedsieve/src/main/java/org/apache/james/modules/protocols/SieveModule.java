@@ -16,19 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.modules;
 
-import org.apache.james.modules.server.CamelMailetContainerModule;
-import org.apache.james.modules.server.MailStoreRepositoryModule;
+package org.apache.james.modules.protocols;
+
+import org.apache.james.managesieve.api.SieveParser;
+import org.apache.james.managesieve.jsieve.Parser;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Scopes;
 
-public class MailetProcessingModule extends AbstractModule {
+public class SieveModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        install(new MailStoreRepositoryModule());
-        install(new CamelMailetContainerModule());
+        bind(Parser.class).in(Scopes.SINGLETON);
+        bind(SieveParser.class).to(Parser.class);
     }
-    
+
 }

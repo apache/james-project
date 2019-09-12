@@ -38,10 +38,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-mailbox</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-protocols-imap4</artifactId>
         </dependency>
         <dependency>

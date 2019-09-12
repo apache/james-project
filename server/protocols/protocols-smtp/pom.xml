@@ -44,19 +44,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>${javax.activation.groupId}</groupId>
-            <artifactId>${javax.activation.artifactId}</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>apache-mailet-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>apache-mailet-base</artifactId>
-            <classifier>tests</classifier>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -65,12 +54,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-data-api</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -93,12 +76,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-filesystem-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-filesystem-api</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -126,12 +103,6 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-queue-memory</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-queue-api</artifactId>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -169,10 +140,6 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>

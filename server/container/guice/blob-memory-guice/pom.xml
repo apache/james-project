@@ -44,8 +44,8 @@
             <artifactId>blob-memory</artifactId>
         </dependency>
         <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-common</artifactId>
+            <groupId>com.google.inject</groupId>
+            <artifactId>guice</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

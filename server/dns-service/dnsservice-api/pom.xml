@@ -32,19 +32,6 @@
 
     <name>Apache James :: Server :: DNS Service :: API</name>
 
-    <dependencies>
-
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>testing-base</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-        </dependency>
-    </dependencies>
-
     <build>
         <plugins>
             <plugin>

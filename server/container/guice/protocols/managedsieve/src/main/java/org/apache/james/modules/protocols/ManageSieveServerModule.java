@@ -36,6 +36,7 @@ public class ManageSieveServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new SieveModule());
         bind(CoreCommands.class).to(CoreProcessor.class);
         Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(ManageSieveModuleInitialisationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);

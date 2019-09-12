@@ -43,15 +43,7 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>james-server-data-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-lifecycle-api</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
@@ -85,16 +77,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>javax.annotation</groupId>
-            <artifactId>javax.annotation-api</artifactId>
         </dependency>
         <dependency>
             <groupId>javax.inject</groupId>
