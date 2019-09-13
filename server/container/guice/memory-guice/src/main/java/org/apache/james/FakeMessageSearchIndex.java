@@ -60,7 +60,7 @@ public class FakeMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception {
+    public void deleteAll(MailboxSession session, MailboxId mailboxId) throws Exception {
         throw new NotImplementedException("not implemented");
     }
 

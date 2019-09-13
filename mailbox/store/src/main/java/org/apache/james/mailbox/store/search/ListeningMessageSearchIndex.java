@@ -27,6 +27,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -74,18 +75,21 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     }
 
     private void handleMailboxEvent(Event event, MailboxSession session, MailboxEvent mailboxEvent) throws Exception {
-        Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxEvent.getMailboxId());
+        MailboxId mailboxId = mailboxEvent.getMailboxId();
 
         if (event instanceof Added) {
+            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
             handleAdded(session, mailbox, (Added) event);
         } else if (event instanceof Expunged) {
+            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
             Expunged expunged = (Expunged) event;
             delete(session, mailbox, expunged.getUids());
         } else if (event instanceof FlagsUpdated) {
+            Mailbox mailbox = factory.getMailboxMapper(session).findMailboxById(mailboxId);
             FlagsUpdated flagsUpdated = (FlagsUpdated) event;
             update(session, mailbox, flagsUpdated.getUpdatedFlags());
         } else if (event instanceof MailboxDeletion) {
-            deleteAll(session, mailbox);
+            deleteAll(session, mailboxId);
         }
     }
 
@@ -128,9 +132,9 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
      * Delete the messages contained in the given {@link Mailbox} from the index
      *
      * @param session The mailbox session performing the expunge
-     * @param mailbox mailbox on which the expunge was performed
+     * @param mailboxId mailboxId on which the expunge was performed
      */
-    public abstract void deleteAll(MailboxSession session, Mailbox mailbox) throws Exception;
+    public abstract void deleteAll(MailboxSession session, MailboxId mailboxId) throws Exception;
 
     /**
      * Update the messages concerned by the updated flags list for the given {@link Mailbox}

@@ -256,14 +256,14 @@ class ReindexingRoutesTest {
 
 
                 ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
-                ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
+                ArgumentCaptor<MailboxId> mailboxIdCaptor = ArgumentCaptor.forClass(MailboxId.class);
                 ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
 
-                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
+                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
                 verifyNoMoreInteractions(searchIndex);
 
-                assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+                assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
                 assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
                     && message.getUid().equals(createdMessage.getUid()));
@@ -443,14 +443,14 @@ class ReindexingRoutesTest {
 
 
                 ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
-                ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
+                ArgumentCaptor<MailboxId> mailboxIdCaptor = ArgumentCaptor.forClass(MailboxId.class);
                 ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
 
-                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
+                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
                 verifyNoMoreInteractions(searchIndex);
 
-                assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+                assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
                 assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
                     && message.getUid().equals(createdMessage.getUid()));
@@ -631,14 +631,14 @@ class ReindexingRoutesTest {
 
 
                 ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
-                ArgumentCaptor<Mailbox> mailboxCaptor1 = ArgumentCaptor.forClass(Mailbox.class);
+                ArgumentCaptor<MailboxId> mailboxIdCaptor = ArgumentCaptor.forClass(MailboxId.class);
                 ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);
 
-                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxCaptor1.capture());
+                verify(searchIndex).deleteAll(any(MailboxSession.class), mailboxIdCaptor.capture());
                 verify(searchIndex).add(any(MailboxSession.class), mailboxCaptor2.capture(), messageCaptor.capture());
                 verifyNoMoreInteractions(searchIndex);
 
-                assertThat(mailboxCaptor1.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
+                assertThat(mailboxIdCaptor.getValue()).matches(capturedMailboxId -> capturedMailboxId.equals(mailboxId));
                 assertThat(mailboxCaptor2.getValue()).matches(mailbox -> mailbox.getMailboxId().equals(mailboxId));
                 assertThat(messageCaptor.getValue()).matches(message -> message.getMailboxId().equals(mailboxId)
                     && message.getUid().equals(createdMessage.getUid()));

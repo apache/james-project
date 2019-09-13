@@ -73,7 +73,7 @@ public class ReIndexerPerformer {
         LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
         MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
-        messageSearchIndex.deleteAll(mailboxSession, mailbox);
+        messageSearchIndex.deleteAll(mailboxSession, mailboxId);
         try {
             return Iterators.toStream(
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)

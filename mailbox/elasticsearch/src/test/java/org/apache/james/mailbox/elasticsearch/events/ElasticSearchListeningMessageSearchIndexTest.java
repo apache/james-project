@@ -250,7 +250,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     @Test
     public void deleteAllShouldWork() {
         //Given
-        testee.deleteAll(session, mailbox);
+        testee.deleteAll(session, MAILBOX_ID);
         
         //Then
         QueryBuilder expectedQueryBuilder = QueryBuilders.termQuery("mailboxId", "12");
@@ -264,7 +264,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
             .when(elasticSearchIndexer).deleteAllMatchingQuery(any());
 
         //Then
-        assertThatThrownBy(() -> testee.deleteAll(session, mailbox)).isInstanceOf(RuntimeException.class);
+        assertThatThrownBy(() -> testee.deleteAll(session, MAILBOX_ID)).isInstanceOf(RuntimeException.class);
     }
 
 }

@@ -1332,18 +1332,18 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public void delete(MailboxSession session, Mailbox mailbox, Collection<MessageUid> expungedUids) throws IOException {
         Collection<MessageRange> messageRanges = MessageRange.toRanges(expungedUids);
         for (MessageRange messageRange : messageRanges) {
-            delete(mailbox, messageRange);
+            delete(mailbox.getMailboxId(), messageRange);
         }
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) throws IOException {
-        delete(mailbox, MessageRange.all());
+    public void deleteAll(MailboxSession session, MailboxId mailboxId) throws IOException {
+        delete(mailboxId, MessageRange.all());
     }
 
-    public void delete(Mailbox mailbox, MessageRange range) throws IOException {
+    public void delete(MailboxId mailboxId, MessageRange range) throws IOException {
         BooleanQuery query = new BooleanQuery();
-        query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailbox.getMailboxId().serialize())), BooleanClause.Occur.MUST);
+        query.add(new TermQuery(new Term(MAILBOX_ID_FIELD, mailboxId.serialize())), BooleanClause.Occur.MUST);
         query.add(createQuery(range), BooleanClause.Occur.MUST);
 
         writer.deleteDocuments(query);

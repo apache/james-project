@@ -37,6 +37,7 @@ import org.apache.james.mailbox.cassandra.CassandraMailboxManagerProvider;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.PreDeletionHooks;
@@ -94,7 +95,7 @@ public class CassandraReIndexerImplTest {
         reIndexer.reIndex(INBOX).run();
 
         // The indexer is called for each message
-        verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(Mailbox.class));
+        verify(messageSearchIndex).deleteAll(any(MailboxSession.class), any(MailboxId.class));
         verify(messageSearchIndex, times(threadCount * operationCount))
             .add(any(MailboxSession.class), any(Mailbox.class),any(MailboxMessage.class));
         verifyNoMoreInteractions(messageSearchIndex);

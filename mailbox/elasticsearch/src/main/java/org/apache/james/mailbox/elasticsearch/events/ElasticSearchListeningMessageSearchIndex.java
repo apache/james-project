@@ -164,12 +164,12 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     }
 
     @Override
-    public void deleteAll(MailboxSession session, Mailbox mailbox) {
+    public void deleteAll(MailboxSession session, MailboxId mailboxId) {
             elasticSearchIndexer
                 .deleteAllMatchingQuery(
                     termQuery(
                         JsonMessageConstants.MAILBOX_ID,
-                        mailbox.getMailboxId().serialize()));
+                        mailboxId.serialize()));
     }
 
     @Override
