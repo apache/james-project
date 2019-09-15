@@ -27,7 +27,7 @@ import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetVacationRequest;
 import org.apache.james.jmap.model.SetVacationResponse;
@@ -69,9 +69,9 @@ public class SetVacationResponseMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
-        Preconditions.checkNotNull(clientId);
+        Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof SetVacationRequest);
         SetVacationRequest setVacationRequest = (SetVacationRequest) request;
@@ -81,14 +81,14 @@ public class SetVacationResponseMethod implements Method {
                 .addContext(MDCBuilder.ACTION, "SET_VACATION")
                 .addContext("update", setVacationRequest.getUpdate())
                 .wrapArround(
-                    () -> process(clientId, mailboxSession, setVacationRequest)));
+                    () -> process(methodCallId, mailboxSession, setVacationRequest)));
     }
 
-    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetVacationRequest setVacationRequest) {
         if (!setVacationRequest.isValid()) {
             return Stream.of(JmapResponse
                 .builder()
-                .clientId(clientId)
+                .methodCallId(methodCallId)
                 .error(ErrorResponse.builder()
                     .type(INVALID_ARGUMENTS1)
                     .description(INVALID_ARGUMENT_DESCRIPTION)
@@ -96,18 +96,18 @@ public class SetVacationResponseMethod implements Method {
                 .build());
         }
 
-        return process(clientId,
+        return process(methodCallId,
             AccountId.fromString(mailboxSession.getUser().asString()),
             setVacationRequest.getUpdate().get(Vacation.ID));
     }
 
 
-    private Stream<JmapResponse> process(ClientId clientId, AccountId accountId, VacationResponse vacationResponse) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, AccountId accountId, VacationResponse vacationResponse) {
         if (vacationResponse.isValid()) {
             vacationRepository.modifyVacation(accountId, vacationResponse.getPatch()).block();
             notificationRegistry.flush(accountId).block();
             return Stream.of(JmapResponse.builder()
-                .clientId(clientId)
+                .methodCallId(methodCallId)
                 .responseName(RESPONSE_NAME)
                 .response(SetVacationResponse.builder()
                     .updatedId(Vacation.ID)
@@ -115,7 +115,7 @@ public class SetVacationResponseMethod implements Method {
                 .build());
         } else {
             return Stream.of(JmapResponse.builder()
-                .clientId(clientId)
+                .methodCallId(methodCallId)
                 .responseName(RESPONSE_NAME)
                 .response(SetVacationResponse.builder()
                     .notUpdated(Vacation.ID,

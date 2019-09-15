@@ -32,7 +32,7 @@ public class AuthenticatedRequest extends InvocationRequest {
     private final HttpServletRequest httpServletRequest;
 
     private AuthenticatedRequest(InvocationRequest request, HttpServletRequest httpServletRequest) {
-        super(request.getMethodName(), request.getParameters(), request.getClientId());
+        super(request.getMethodName(), request.getParameters(), request.getMethodCallId());
         this.httpServletRequest = httpServletRequest;
         
     }

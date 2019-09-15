@@ -26,7 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.Stream;
 
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.MailboxCreationId;
 import org.apache.james.jmap.model.SetMailboxesRequest;
@@ -61,16 +61,16 @@ public class SetMailboxesMethodTest {
     public void processShouldThrowWhenNullJmapRequest() {
         MailboxSession session = mock(MailboxSession.class);
         JmapRequest nullJmapRequest = null;
-        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(nullJmapRequest, ClientId.of("clientId"), session))
+        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(nullJmapRequest, MethodCallId.of("methodCallId"), session))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void processShouldThrowWhenNullClientId() {
+    public void processShouldThrowWhenNullMethodCallId() {
         MailboxSession session = mock(MailboxSession.class);
         JmapRequest jmapRequest = mock(JmapRequest.class);
-        ClientId nullClientId = null;
-        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(jmapRequest, nullClientId, session))
+        MethodCallId nullMethodCallId = null;
+        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(jmapRequest, nullMethodCallId, session))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -78,7 +78,7 @@ public class SetMailboxesMethodTest {
     public void processShouldThrowWhenNullMailboxSession() {
         MailboxSession nullMailboxSession = null;
         JmapRequest jmapRequest = mock(JmapRequest.class);
-        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(jmapRequest, ClientId.of("clientId"), nullMailboxSession))
+        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(jmapRequest, MethodCallId.of("methodCallId"), nullMailboxSession))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -86,7 +86,7 @@ public class SetMailboxesMethodTest {
     public void processShouldThrowWhenJmapRequestTypeMismatch() {
         MailboxSession session = mock(MailboxSession.class);
         JmapRequest getMailboxesRequest = GetMailboxesRequest.builder().build();
-        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(getMailboxesRequest, ClientId.of("clientId"), session))
+        assertThatThrownBy(() -> new SetMailboxesMethod(NO_PROCESSOR, TIME_METRIC_FACTORY).process(getMailboxesRequest, MethodCallId.of("methodCallId"), session))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -100,7 +100,7 @@ public class SetMailboxesMethodTest {
         SetMailboxesResponse creationResponse = SetMailboxesResponse.builder().created(creationId, createdfooFolder).build();
         JmapResponse jmapResponse = JmapResponse.builder()
             .response(creationResponse)
-            .clientId(ClientId.of("clientId"))
+            .methodCallId(MethodCallId.of("methodCallId"))
             .responseName(SetMailboxesMethod.RESPONSE_NAME)
             .build();
 
@@ -110,7 +110,7 @@ public class SetMailboxesMethodTest {
 
         Stream<JmapResponse> actual =
             new SetMailboxesMethod(ImmutableSet.of(creatorProcessor), TIME_METRIC_FACTORY)
-                    .process(creationRequest, ClientId.of("clientId"), session);
+                    .process(creationRequest, MethodCallId.of("methodCallId"), session);
 
         assertThat(actual).contains(jmapResponse);
     }
@@ -123,7 +123,7 @@ public class SetMailboxesMethodTest {
         SetMailboxesResponse destructionResponse = SetMailboxesResponse.builder().destroyed(deletions).build();
         JmapResponse jmapResponse = JmapResponse.builder()
             .response(destructionResponse)
-            .clientId(ClientId.of("clientId"))
+            .methodCallId(MethodCallId.of("methodCallId"))
             .responseName(SetMailboxesMethod.RESPONSE_NAME)
             .build();
 
@@ -133,7 +133,7 @@ public class SetMailboxesMethodTest {
 
         Stream<JmapResponse> actual =
             new SetMailboxesMethod(ImmutableSet.of(destructorProcessor), TIME_METRIC_FACTORY)
-                    .process(destructionRequest, ClientId.of("clientId"), session);
+                    .process(destructionRequest, MethodCallId.of("methodCallId"), session);
 
         assertThat(actual).contains(jmapResponse);
     }

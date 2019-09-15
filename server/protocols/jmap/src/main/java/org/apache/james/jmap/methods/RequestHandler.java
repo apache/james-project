@@ -75,7 +75,7 @@ public class RequestHandler {
         return (Method method) -> {
                     try {
                         JmapRequest jmapRequest = jmapRequestParser.extractJmapRequest(request, method.requestType());
-                        return method.process(jmapRequest, request.getClientId(), mailboxSession);
+                        return method.process(jmapRequest, request.getMethodCallId(), mailboxSession);
                     } catch (IOException e) {
                         LOGGER.error("Error occured while parsing the request.", e);
                         if (e.getCause() instanceof JmapFieldNotSupportedException) {
@@ -98,7 +98,7 @@ public class RequestHandler {
     private Stream<JmapResponse> errorNotImplemented(JmapFieldNotSupportedException error, AuthenticatedRequest request) {
         return Stream.of(
                 JmapResponse.builder()
-                    .clientId(request.getClientId())
+                    .methodCallId(request.getMethodCallId())
                     .error(generateInvalidArgumentError("The field '" + error.getField() + "' of '" + error.getIssuer() + "' is not supported"))
                     .build());
     }
@@ -106,7 +106,7 @@ public class RequestHandler {
     private Stream<JmapResponse> error(AuthenticatedRequest request, ErrorResponse error) {
         return Stream.of(
                 JmapResponse.builder()
-                    .clientId(request.getClientId())
+                    .methodCallId(request.getMethodCallId())
                     .error(error)
                     .build());
     }

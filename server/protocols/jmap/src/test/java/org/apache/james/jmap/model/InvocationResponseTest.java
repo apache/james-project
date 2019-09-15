@@ -31,27 +31,27 @@ public class InvocationResponseTest {
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenMethodIsNull() {
-        new InvocationResponse(null, new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new InvocationResponse(null, new ObjectNode(JsonNodeFactory.instance), MethodCallId.of("id"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
-        new InvocationResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new InvocationResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), MethodCallId.of("id"));
     }
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
-        new InvocationResponse(Method.Response.name("method"), null, ClientId.of("id"));
+        new InvocationResponse(Method.Response.name("method"), null, MethodCallId.of("id"));
     }
 
     @Test(expected = NullPointerException.class)
-    public void newInstanceShouldThrowWhenClientIdIsNull() {
+    public void newInstanceShouldThrowWhenMethodCallIdIsNull() {
         new InvocationResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }
 
     @Test
     public void asProtocolSpecificationShouldReturnAnArrayWithThreeElements() {
-        Object[] asProtocolSpecification = new InvocationResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
+        Object[] asProtocolSpecification = new InvocationResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), MethodCallId.of("#1"))
                 .asProtocolSpecification();
 
         assertThat(asProtocolSpecification).hasSize(3);

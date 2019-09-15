@@ -23,22 +23,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
-public class ClientIdTest {
+public class MethodCallIdTest {
 
     @Test
     public void nullInputShouldThrow() {
-        assertThatThrownBy(() -> ClientId.of(null)).isInstanceOf(NullPointerException.class);
+        assertThatThrownBy(() -> MethodCallId.of(null)).isInstanceOf(NullPointerException.class);
     }
     
     @Test
     public void emptyInputShouldThrow() {
-        assertThatThrownBy(() -> ClientId.of("")).isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> MethodCallId.of("")).isInstanceOf(IllegalArgumentException.class);
     }
     
 
     @Test
-    public void validInputShouldCreateClientId() {
-        ClientId testee = ClientId.of("valid");
+    public void validInputShouldCreateMethodCallId() {
+        MethodCallId testee = MethodCallId.of("valid");
         assertThat(testee).isNotNull();
         assertThat(testee.getId()).isEqualTo("valid");
     }

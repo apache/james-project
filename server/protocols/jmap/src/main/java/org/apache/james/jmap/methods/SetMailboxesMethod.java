@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.SetMailboxesRequest;
 import org.apache.james.jmap.model.SetMailboxesResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -59,9 +59,9 @@ public class SetMailboxesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
-        Preconditions.checkNotNull(clientId);
+        Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof SetMailboxesRequest);
 
@@ -75,7 +75,7 @@ public class SetMailboxesMethod implements Method {
                 .addContext("destroy", setMailboxesRequest.getDestroy())
                 .wrapArround(
                     () -> Stream.of(
-                        JmapResponse.builder().clientId(clientId)
+                        JmapResponse.builder().methodCallId(methodCallId)
                             .response(setMailboxesResponse(setMailboxesRequest, mailboxSession))
                             .responseName(RESPONSE_NAME)
                             .build())));

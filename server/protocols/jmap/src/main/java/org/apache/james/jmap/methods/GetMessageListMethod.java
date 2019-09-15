@@ -28,12 +28,12 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Filter;
 import org.apache.james.jmap.model.FilterCondition;
 import org.apache.james.jmap.model.GetMessageListRequest;
 import org.apache.james.jmap.model.GetMessageListResponse;
 import org.apache.james.jmap.model.GetMessagesRequest;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.Number;
 import org.apache.james.jmap.utils.FilterToSearchQuery;
 import org.apache.james.jmap.utils.SortConverter;
@@ -89,7 +89,7 @@ public class GetMessageListMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMessageListRequest);
 
         GetMessageListRequest messageListRequest = (GetMessageListRequest) request;
@@ -107,17 +107,17 @@ public class GetMessageListMethod implements Method {
             .addContext("isFetchMessage", messageListRequest.isFetchMessages())
             .addContext("isCollapseThread", messageListRequest.isCollapseThreads())
             .wrapArround(
-                () -> process(clientId, mailboxSession, messageListRequest)));
+                () -> process(methodCallId, mailboxSession, messageListRequest)));
     }
 
-    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMessageListRequest messageListRequest) {
         GetMessageListResponse messageListResponse = getMessageListResponse(messageListRequest, mailboxSession);
-        Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().clientId(clientId)
+        Stream<JmapResponse> jmapResponse = Stream.of(JmapResponse.builder().methodCallId(methodCallId)
             .response(messageListResponse)
             .responseName(RESPONSE_NAME)
             .build());
         return Stream.concat(jmapResponse,
-            processGetMessages(messageListRequest, messageListResponse, clientId, mailboxSession));
+            processGetMessages(messageListRequest, messageListResponse, methodCallId, mailboxSession));
     }
 
     private GetMessageListResponse getMessageListResponse(GetMessageListRequest messageListRequest, MailboxSession mailboxSession) {
@@ -172,13 +172,13 @@ public class GetMessageListMethod implements Method {
                 });
     }
     
-    private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, ClientId clientId, MailboxSession mailboxSession) {
+    private Stream<JmapResponse> processGetMessages(GetMessageListRequest messageListRequest, GetMessageListResponse messageListResponse, MethodCallId methodCallId, MailboxSession mailboxSession) {
         if (shouldChainToGetMessages(messageListRequest)) {
             GetMessagesRequest getMessagesRequest = GetMessagesRequest.builder()
                     .ids(messageListResponse.getMessageIds())
                     .properties(messageListRequest.getFetchMessageProperties())
                     .build();
-            return getMessagesMethod.process(getMessagesRequest, clientId, mailboxSession);
+            return getMessagesMethod.process(getMessagesRequest, methodCallId, mailboxSession);
         }
         return Stream.empty();
     }

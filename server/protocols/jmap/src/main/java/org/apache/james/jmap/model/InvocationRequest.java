@@ -31,17 +31,17 @@ public class InvocationRequest {
         Preconditions.checkState(json[0].isTextual(), "first element should be a String");
         Preconditions.checkState(json[1].isObject(), "second element should be a Json");
         Preconditions.checkState(json[2].isTextual(), "third element should be a String");
-        return new InvocationRequest(Method.Request.name(json[0].textValue()), (ObjectNode) json[1], ClientId.of(json[2].textValue()));
+        return new InvocationRequest(Method.Request.name(json[0].textValue()), (ObjectNode) json[1], MethodCallId.of(json[2].textValue()));
     }
 
     private final Method.Request.Name method;
     private final ObjectNode parameters;
-    private final ClientId clientId;
+    private final MethodCallId methodCallId;
 
-    protected InvocationRequest(Method.Request.Name method, ObjectNode parameters, ClientId clientId) {
+    protected InvocationRequest(Method.Request.Name method, ObjectNode parameters, MethodCallId methodCallId) {
         this.method = method;
         this.parameters = parameters;
-        this.clientId = clientId;
+        this.methodCallId = methodCallId;
     }
 
     public Method.Request.Name getMethodName() {
@@ -52,7 +52,7 @@ public class InvocationRequest {
         return parameters;
     }
 
-    public ClientId getClientId() {
-        return clientId;
+    public MethodCallId getMethodCallId() {
+        return methodCallId;
     }
 }

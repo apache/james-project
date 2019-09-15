@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.SetMessagesRequest;
 import org.apache.james.jmap.model.SetMessagesResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -59,7 +59,7 @@ public class SetMessagesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof SetMessagesRequest);
         SetMessagesRequest setMessagesRequest = (SetMessagesRequest) request;
 
@@ -72,7 +72,7 @@ public class SetMessagesMethod implements Method {
                 .addContext("ifInState", setMessagesRequest.getIfInState())
                 .wrapArround(
                     () ->  Stream.of(
-                        JmapResponse.builder().clientId(clientId)
+                        JmapResponse.builder().methodCallId(methodCallId)
                             .response(setMessagesResponse(setMessagesRequest, mailboxSession))
                             .responseName(RESPONSE_NAME)
                             .build())));

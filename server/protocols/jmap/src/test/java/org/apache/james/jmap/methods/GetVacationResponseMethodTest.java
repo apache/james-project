@@ -31,7 +31,7 @@ import org.apache.james.core.User;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetVacationRequest;
 import org.apache.james.jmap.model.GetVacationResponse;
@@ -71,27 +71,27 @@ public class GetVacationResponseMethodTest {
 
     @Test(expected = NullPointerException.class)
     public void processShouldThrowOnNullRequest() {
-        testee.process(null, mock(ClientId.class), mock(MailboxSession.class));
+        testee.process(null, mock(MethodCallId.class), mock(MailboxSession.class));
     }
 
     @Test(expected = NullPointerException.class)
-    public void processShouldThrowOnNullClientId() {
+    public void processShouldThrowOnNullMethodCallId() {
         testee.process(mock(GetMailboxesRequest.class), null, mock(MailboxSession.class));
     }
 
     @Test(expected = NullPointerException.class)
     public void processShouldThrowOnNullMailboxSession() {
-        testee.process(mock(GetMailboxesRequest.class), mock(ClientId.class), null);
+        testee.process(mock(GetMailboxesRequest.class), mock(MethodCallId.class), null);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void processShouldThrowOnWrongRequestType() {
-        testee.process(mock(SetMailboxesRequest.class), mock(ClientId.class), mock(MailboxSession.class));
+        testee.process(mock(SetMailboxesRequest.class), mock(MethodCallId.class), mock(MailboxSession.class));
     }
 
     @Test
     public void processShouldReturnTheAppropriateVacationResponse() {
-        ClientId clientId = mock(ClientId.class);
+        MethodCallId methodCallId = mock(MethodCallId.class);
         Vacation vacation = Vacation.builder()
             .enabled(true)
             .textBody("I am in vacation")
@@ -105,10 +105,10 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, clientId, mailboxSession);
+        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(GetVacationResponseMethod.RESPONSE_NAME)
             .response(GetVacationResponse.builder()
                 .accountId(USERNAME)
@@ -123,7 +123,7 @@ public class GetVacationResponseMethodTest {
 
     @Test
     public void processShouldReturnUnActivatedVacationResponseWhenBeforeDate() {
-        ClientId clientId = mock(ClientId.class);
+        MethodCallId methodCallId = mock(MethodCallId.class);
         Vacation vacation = Vacation.builder()
             .enabled(true)
             .textBody("I am in vacation")
@@ -137,10 +137,10 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, clientId, mailboxSession);
+        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(GetVacationResponseMethod.RESPONSE_NAME)
             .response(GetVacationResponse.builder()
                 .accountId(USERNAME)
@@ -157,7 +157,7 @@ public class GetVacationResponseMethodTest {
 
     @Test
     public void processShouldReturnUnActivatedVacationResponseWhenAfterDate() {
-        ClientId clientId = mock(ClientId.class);
+        MethodCallId methodCallId = mock(MethodCallId.class);
         Vacation vacation = Vacation.builder()
             .enabled(true)
             .textBody("I am in vacation")
@@ -171,10 +171,10 @@ public class GetVacationResponseMethodTest {
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
 
-        Stream<JmapResponse> result = testee.process(getVacationRequest, clientId, mailboxSession);
+        Stream<JmapResponse> result = testee.process(getVacationRequest, methodCallId, mailboxSession);
 
         JmapResponse expected = JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(GetVacationResponseMethod.RESPONSE_NAME)
             .response(GetVacationResponse.builder()
                 .accountId(USERNAME)

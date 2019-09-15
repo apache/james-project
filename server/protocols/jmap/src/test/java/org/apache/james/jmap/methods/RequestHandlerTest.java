@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.AuthenticatedRequest;
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.mailbox.MailboxSession;
@@ -106,14 +106,14 @@ public class RequestHandlerTest {
         }
 
         @Override
-        public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
             Preconditions.checkArgument(request instanceof TestJmapRequest);
             TestJmapRequest typedRequest = (TestJmapRequest) request;
             return Stream.of(
                     JmapResponse.builder()
                             .response(new TestJmapResponse(typedRequest.getId(), typedRequest.getName(), "works"))
                             .responseName(Response.name("test"))
-                            .clientId(ClientId.of("#0"))
+                            .methodCallId(MethodCallId.of("#0"))
                             .build());
         }
     }
@@ -193,7 +193,7 @@ public class RequestHandlerTest {
         }
         
         @Override
-        public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+        public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
             return null;
         }
     }
