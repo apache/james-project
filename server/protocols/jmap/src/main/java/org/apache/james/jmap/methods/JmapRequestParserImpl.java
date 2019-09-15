@@ -24,7 +24,7 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.jmap.model.InvocationRequest;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -40,7 +40,7 @@ public class JmapRequestParserImpl implements JmapRequestParser {
     }
 
     @Override
-    public <T extends JmapRequest> T extractJmapRequest(ProtocolRequest request, Class<T> requestClass) 
+    public <T extends JmapRequest> T extractJmapRequest(InvocationRequest request, Class<T> requestClass)
             throws IOException, JsonParseException, JsonMappingException {
         return objectMapper.readValue(request.getParameters().toString(), requestClass);
     }

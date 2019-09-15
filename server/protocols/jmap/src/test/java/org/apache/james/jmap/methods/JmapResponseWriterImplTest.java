@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.Property;
-import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -219,7 +219,7 @@ public class JmapResponseWriterImplTest {
         List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
-                    .clientId(ProtocolRequest.deserialize(nodes).getClientId())
+                    .clientId(InvocationRequest.deserialize(nodes).getClientId())
                     .error()
                     .build()))
                 .collect(Collectors.toList());
@@ -242,7 +242,7 @@ public class JmapResponseWriterImplTest {
         List<ProtocolResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
-                    .clientId(ProtocolRequest.deserialize(nodes).getClientId())
+                    .clientId(InvocationRequest.deserialize(nodes).getClientId())
                     .error(ErrorResponse
                             .builder()
                             .type("errorType")

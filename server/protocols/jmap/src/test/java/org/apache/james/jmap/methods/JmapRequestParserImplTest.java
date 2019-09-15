@@ -20,7 +20,7 @@
 package org.apache.james.jmap.methods;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.ProtocolRequest;
+import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.junit.Before;
@@ -44,7 +44,7 @@ public class JmapRequestParserImplTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), null);
+        testee.extractJmapRequest(InvocationRequest.deserialize(nodes), null);
     }
 
     @Test
@@ -55,7 +55,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
+        testee.extractJmapRequest(InvocationRequest.deserialize(nodes), RequestClass.class);
     }
 
     @Test
@@ -65,7 +65,7 @@ public class JmapRequestParserImplTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        testee.extractJmapRequest(ProtocolRequest.deserialize(nodes), RequestClass.class);
+        testee.extractJmapRequest(InvocationRequest.deserialize(nodes), RequestClass.class);
     }
 
     private static class RequestClass implements JmapRequest {
