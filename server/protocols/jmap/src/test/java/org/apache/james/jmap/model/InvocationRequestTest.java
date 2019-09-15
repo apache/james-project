@@ -32,14 +32,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ProtocolRequestTest {
+public class InvocationRequestTest {
 
     @Test(expected = IllegalStateException.class)
     public void deserializedRequestsShouldThrowWhenNotEnoughElements() throws Exception {
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("getAccounts"),
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}")};
 
-        ProtocolRequest.deserialize(nodes);
+        InvocationRequest.deserialize(nodes);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -49,7 +49,7 @@ public class ProtocolRequestTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#0"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("tooMuch")};
 
-        ProtocolRequest.deserialize(nodes);
+        InvocationRequest.deserialize(nodes);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -58,7 +58,7 @@ public class ProtocolRequestTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#0")};
 
-        ProtocolRequest.deserialize(nodes);
+        InvocationRequest.deserialize(nodes);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -67,7 +67,7 @@ public class ProtocolRequestTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode("true"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#0")};
 
-        ProtocolRequest.deserialize(nodes);
+        InvocationRequest.deserialize(nodes);
     }
 
     @Test(expected = IllegalStateException.class)
@@ -76,7 +76,7 @@ public class ProtocolRequestTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{}"),
                 new ObjectNode(new JsonNodeFactory(false)).booleanNode(true)};
 
-        ProtocolRequest.deserialize(nodes);
+        InvocationRequest.deserialize(nodes);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class ProtocolRequestTest {
                 new ObjectNode(new JsonNodeFactory(false)).putObject("{\"id\": \"id\"}"),
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        ProtocolRequest request = ProtocolRequest.deserialize(nodes);
+        InvocationRequest request = InvocationRequest.deserialize(nodes);
 
         assertThat(request.getMethodName()).isEqualTo(Method.Request.name("getAccounts"));
         assertThat(request.getParameters()).isNotNull();
