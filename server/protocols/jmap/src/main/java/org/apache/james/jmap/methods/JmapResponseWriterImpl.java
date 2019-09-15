@@ -27,7 +27,7 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.Property;
-import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.jmap.model.InvocationResponse;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
@@ -47,11 +47,11 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
     }
 
     @Override
-    public Stream<ProtocolResponse> formatMethodResponse(Stream<JmapResponse> jmapResponses) {
+    public Stream<InvocationResponse> formatMethodResponse(Stream<JmapResponse> jmapResponses) {
         return jmapResponses.map(jmapResponse -> {
             ObjectMapper objectMapper = newConfiguredObjectMapper(jmapResponse);
 
-            return new ProtocolResponse(
+            return new InvocationResponse(
                     jmapResponse.getResponseName(),
                     objectMapper.valueToTree(jmapResponse.getResponse()),
                     jmapResponse.getClientId());

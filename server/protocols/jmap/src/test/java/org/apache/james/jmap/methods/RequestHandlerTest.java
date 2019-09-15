@@ -34,7 +34,7 @@ import org.apache.james.jmap.json.ObjectMapperFactory;
 import org.apache.james.jmap.model.AuthenticatedRequest;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.InvocationRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -208,7 +208,7 @@ public class RequestHandlerTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        List<ProtocolResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest))
+        List<InvocationResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest))
                 .collect(Collectors.toList());
 
         assertThat(responses).hasSize(1)

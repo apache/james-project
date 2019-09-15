@@ -36,7 +36,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.model.AuthenticatedRequest;
 import org.apache.james.jmap.model.InvocationRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
@@ -75,7 +75,7 @@ public class JMAPServlet extends HttpServlet {
                     .map(InvocationRequest::deserialize)
                     .map(x -> AuthenticatedRequest.decorate(x, req))
                     .flatMap(this::handle)
-                    .map(ProtocolResponse::asProtocolSpecification)
+                    .map(InvocationResponse::asProtocolSpecification)
                     .collect(Collectors.toList());
 
             resp.setContentType(JSON_CONTENT_TYPE);
@@ -100,7 +100,7 @@ public class JMAPServlet extends HttpServlet {
         }
     }
 
-    private Stream<? extends ProtocolResponse> handle(AuthenticatedRequest request) {
+    private Stream<? extends InvocationResponse> handle(AuthenticatedRequest request) {
         try {
             return requestHandler.handle(request);
         } catch (IOException e) {

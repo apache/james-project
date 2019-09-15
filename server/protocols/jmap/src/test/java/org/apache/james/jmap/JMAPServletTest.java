@@ -35,7 +35,7 @@ import org.apache.james.jmap.methods.ErrorResponse;
 import org.apache.james.jmap.methods.Method;
 import org.apache.james.jmap.methods.RequestHandler;
 import org.apache.james.jmap.model.ClientId;
-import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.junit.After;
 import org.junit.Before;
@@ -99,7 +99,7 @@ public class JMAPServletTest {
         json.put("type", "invalidArgument");
 
         when(requestHandler.handle(any()))
-            .thenReturn(Stream.of(new ProtocolResponse(ErrorResponse.ERROR_METHOD, json, ClientId.of("#0"))));
+            .thenReturn(Stream.of(new InvocationResponse(ErrorResponse.ERROR_METHOD, json, ClientId.of("#0"))));
 
         given()
             .body("[[\"getAccounts\", {\"state\":false}, \"#0\"]]")
@@ -121,7 +121,7 @@ public class JMAPServletTest {
         arrayNode.add(list);
 
         when(requestHandler.handle(any()))
-            .thenReturn(Stream.of(new ProtocolResponse(Method.Response.name("accounts"), json, ClientId.of("#0"))));
+            .thenReturn(Stream.of(new InvocationResponse(Method.Response.name("accounts"), json, ClientId.of("#0"))));
 
         given()
             .body("[[\"getAccounts\", {}, \"#0\"]]")

@@ -27,31 +27,31 @@ import org.junit.Test;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-public class ProtocolResponseTest {
+public class InvocationResponseTest {
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenMethodIsNull() {
-        new ProtocolResponse(null, new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new InvocationResponse(null, new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void newInstanceShouldThrowWhenMethodIsEmpty() {
-        new ProtocolResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
+        new InvocationResponse(Method.Response.name(""), new ObjectNode(JsonNodeFactory.instance), ClientId.of("id"));
     }
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenResultsIsNull() {
-        new ProtocolResponse(Method.Response.name("method"), null, ClientId.of("id"));
+        new InvocationResponse(Method.Response.name("method"), null, ClientId.of("id"));
     }
 
     @Test(expected = NullPointerException.class)
     public void newInstanceShouldThrowWhenClientIdIsNull() {
-        new ProtocolResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
+        new InvocationResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), null);
     }
 
     @Test
     public void asProtocolSpecificationShouldReturnAnArrayWithThreeElements() {
-        Object[] asProtocolSpecification = new ProtocolResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
+        Object[] asProtocolSpecification = new InvocationResponse(Method.Response.name("method"), new ObjectNode(new JsonNodeFactory(false)).putObject("{}"), ClientId.of("#1"))
                 .asProtocolSpecification();
 
         assertThat(asProtocolSpecification).hasSize(3);
