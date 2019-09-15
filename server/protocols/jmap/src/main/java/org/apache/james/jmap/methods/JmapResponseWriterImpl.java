@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.InvocationResponse;
+import org.apache.james.jmap.model.Property;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
@@ -54,7 +54,7 @@ public class JmapResponseWriterImpl implements JmapResponseWriter {
             return new InvocationResponse(
                     jmapResponse.getResponseName(),
                     objectMapper.valueToTree(jmapResponse.getResponse()),
-                    jmapResponse.getClientId());
+                    jmapResponse.getMethodCallId());
         });
     }
     

@@ -27,11 +27,11 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMailboxesRequest;
 import org.apache.james.jmap.model.GetMailboxesResponse;
 import org.apache.james.jmap.model.MailboxFactory;
 import org.apache.james.jmap.model.MailboxProperty;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.mailbox.Mailbox;
 import org.apache.james.jmap.utils.quotas.QuotaLoader;
 import org.apache.james.jmap.utils.quotas.QuotaLoaderWithDefaultPreloaded;
@@ -88,7 +88,7 @@ public class GetMailboxesMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkArgument(request instanceof GetMailboxesRequest);
         GetMailboxesRequest mailboxesRequest = (GetMailboxesRequest) request;
         return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
@@ -97,12 +97,12 @@ public class GetMailboxesMethod implements Method {
                 .addContext("accountId", mailboxesRequest.getAccountId())
                 .addContext("mailboxIds", mailboxesRequest.getIds())
                 .addContext("properties", mailboxesRequest.getProperties())
-                .wrapArround(() -> process(clientId, mailboxSession, mailboxesRequest)));
+                .wrapArround(() -> process(methodCallId, mailboxSession, mailboxesRequest)));
     }
 
-    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetMailboxesRequest mailboxesRequest) {
         return Stream.of(
-            JmapResponse.builder().clientId(clientId)
+            JmapResponse.builder().methodCallId(methodCallId)
                 .response(getMailboxesResponse(mailboxesRequest, mailboxSession))
                 .properties(mailboxesRequest.getProperties().map(this::ensureContainsId))
                 .responseName(RESPONSE_NAME)

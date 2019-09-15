@@ -30,8 +30,8 @@ import javax.inject.Inject;
 import org.apache.james.core.User;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.JmapRuleDTO;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.jmap.model.SetFilterRequest;
 import org.apache.james.jmap.model.SetFilterResponse;
@@ -102,9 +102,9 @@ public class SetFilterMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
-        Preconditions.checkNotNull(clientId);
+        Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
 
         Preconditions.checkArgument(request instanceof SetFilterRequest);
@@ -116,25 +116,25 @@ public class SetFilterMethod implements Method {
                 .addContext(MDCBuilder.ACTION, "SET_FILTER")
                 .addContext("update", setFilterRequest.getSingleton())
                 .wrapArround(
-                    () -> process(clientId, mailboxSession, setFilterRequest)));
+                    () -> process(methodCallId, mailboxSession, setFilterRequest)));
     }
 
-    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, SetFilterRequest request) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, SetFilterRequest request) {
         try {
-            return updateFilter(clientId, request, mailboxSession.getUser());
+            return updateFilter(methodCallId, request, mailboxSession.getUser());
         } catch (MultipleMailboxIdException e) {
             LOGGER.debug("Rule targeting several mailboxes", e);
-            return Stream.of(multipleMailboxesError(clientId, e));
+            return Stream.of(multipleMailboxesError(methodCallId, e));
         }  catch (DuplicatedRuleException e) {
             LOGGER.debug("Duplicated rules", e);
-            return Stream.of(duplicatedIdsError(clientId, e));
+            return Stream.of(duplicatedIdsError(methodCallId, e));
         } catch (Exception e) {
             LOGGER.warn("Failed setting Rules", e);
-            return Stream.of(unKnownError(clientId));
+            return Stream.of(unKnownError(methodCallId));
         }
     }
 
-    private Stream<JmapResponse> updateFilter(ClientId clientId, SetFilterRequest request, User user) throws DuplicatedRuleException, MultipleMailboxIdException {
+    private Stream<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, User user) throws DuplicatedRuleException, MultipleMailboxIdException {
         ImmutableList<Rule> rules = request.getSingleton().stream()
             .map(JmapRuleDTO::toRule)
             .collect(ImmutableList.toImmutableList());
@@ -145,7 +145,7 @@ public class SetFilterMethod implements Method {
         filteringManagement.defineRulesForUser(user, rules);
 
         return Stream.of(JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(SetFilterResponse.updated())
             .build());
@@ -179,9 +179,9 @@ public class SetFilterMethod implements Method {
         }
     }
 
-    private JmapResponse unKnownError(ClientId clientId) {
+    private JmapResponse unKnownError(MethodCallId methodCallId) {
         return JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(ErrorResponse.builder()
                 .type(SetError.Type.ERROR.asString())
@@ -190,9 +190,9 @@ public class SetFilterMethod implements Method {
             .build();
     }
 
-    private JmapResponse duplicatedIdsError(ClientId clientId, DuplicatedRuleException e) {
+    private JmapResponse duplicatedIdsError(MethodCallId methodCallId, DuplicatedRuleException e) {
         return JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(SetFilterResponse.notUpdated(SetError.builder()
                 .type(SetError.Type.INVALID_ARGUMENTS)
@@ -201,9 +201,9 @@ public class SetFilterMethod implements Method {
             .build();
     }
 
-    private JmapResponse multipleMailboxesError(ClientId clientId, MultipleMailboxIdException e) {
+    private JmapResponse multipleMailboxesError(MethodCallId methodCallId, MultipleMailboxIdException e) {
         return JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(SetFilterResponse.notUpdated(SetError.builder()
                 .type(SetError.Type.INVALID_ARGUMENTS)

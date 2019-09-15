@@ -29,7 +29,6 @@ import javax.inject.Inject;
 
 import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.json.FieldNamePropertyFilter;
-import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetMessagesRequest;
 import org.apache.james.jmap.model.GetMessagesResponse;
 import org.apache.james.jmap.model.Keywords;
@@ -38,6 +37,7 @@ import org.apache.james.jmap.model.MessageFactory;
 import org.apache.james.jmap.model.MessageFactory.MetaDataWithContent;
 import org.apache.james.jmap.model.MessageProperties;
 import org.apache.james.jmap.model.MessageProperties.HeaderProperty;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -92,7 +92,7 @@ public class GetMessagesMethod implements Method {
     }
     
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetMessagesRequest);
@@ -107,7 +107,7 @@ public class GetMessagesMethod implements Method {
                 .addContext("ids", getMessagesRequest.getIds())
                 .addContext("properties", getMessagesRequest.getProperties())
                 .wrapArround(
-                    () -> Stream.of(JmapResponse.builder().clientId(clientId)
+                    () -> Stream.of(JmapResponse.builder().methodCallId(methodCallId)
                         .response(getMessagesResponse(mailboxSession, getMessagesRequest))
                         .responseName(RESPONSE_NAME)
                         .properties(outputProperties.getOptionalMessageProperties())

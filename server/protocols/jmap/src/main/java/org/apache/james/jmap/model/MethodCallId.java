@@ -23,15 +23,15 @@ import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.Preconditions;
 
-public class ClientId {
+public class MethodCallId {
 
-    public static ClientId of(String clientId) {
-        return new ClientId(clientId);
+    public static MethodCallId of(String methodCallId) {
+        return new MethodCallId(methodCallId);
     }
     
     private final String id;
 
-    private ClientId(String id) {
+    private MethodCallId(String id) {
         Preconditions.checkNotNull(id);
         Preconditions.checkArgument(!id.isEmpty());
         this.id = id;
@@ -44,8 +44,8 @@ public class ClientId {
     
     @Override
     public boolean equals(Object obj) {
-        if (obj instanceof ClientId) {
-            ClientId other = (ClientId) obj;
+        if (obj instanceof MethodCallId) {
+            MethodCallId other = (MethodCallId) obj;
             return Objects.equals(this.id, other.id);
         }
         return false;

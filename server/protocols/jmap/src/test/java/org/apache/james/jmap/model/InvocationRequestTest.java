@@ -89,6 +89,6 @@ public class InvocationRequestTest {
 
         assertThat(request.getMethodName()).isEqualTo(Method.Request.name("getAccounts"));
         assertThat(request.getParameters()).isNotNull();
-        assertThat(request.getClientId()).isEqualTo(ClientId.of("#1"));
+        assertThat(request.getMethodCallId()).isEqualTo(MethodCallId.of("#1"));
     }
 }

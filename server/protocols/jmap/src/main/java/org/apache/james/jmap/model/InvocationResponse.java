@@ -27,15 +27,15 @@ public class InvocationResponse {
 
     private final Method.Response.Name name;
     private final ObjectNode results;
-    private final ClientId clientId;
+    private final MethodCallId methodCallId;
 
-    public InvocationResponse(Method.Response.Name name, ObjectNode results, ClientId clientId) {
+    public InvocationResponse(Method.Response.Name name, ObjectNode results, MethodCallId methodCallId) {
         Preconditions.checkNotNull(name, "method is mandatory");
         Preconditions.checkNotNull(results, "results is mandatory");
-        Preconditions.checkNotNull(clientId,  "clientId is mandatory");
+        Preconditions.checkNotNull(methodCallId,  "methodCallId is mandatory");
         this.name = name;
         this.results = results;
-        this.clientId = clientId;
+        this.methodCallId = methodCallId;
     }
 
     public Method.Response.Name getResponseName() {
@@ -46,11 +46,11 @@ public class InvocationResponse {
         return results;
     }
 
-    public ClientId getClientId() {
-        return clientId;
+    public MethodCallId getMethodCallId() {
+        return methodCallId;
     }
 
     public Object[] asProtocolSpecification() {
-        return new Object[] { getResponseName(), getResults(), getClientId() };
+        return new Object[] { getResponseName(), getResults(), getMethodCallId() };
     }
 }

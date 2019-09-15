@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.ClientId;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.Property;
 import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.jmap.model.InvocationResponse;
@@ -58,24 +58,24 @@ public class JmapResponseWriterImplTest {
     @Test(expected = IllegalStateException.class)
     public void formatMethodResponseShouldWorkWhenNullJmapResponse() {
         String expectedMethod = "nwonMethod";
-        String expectedClientId = "#1";
+        String expectedMethodCallId = "#1";
         String expectedId = "myId";
 
         Stream<InvocationResponse> response = testee.formatMethodResponse(Stream.of(JmapResponse
                 .builder()
-                .clientId(ClientId.of(expectedClientId))
+                .methodCallId(MethodCallId.of(expectedMethodCallId))
                 .response(null)
                 .build()));
 
         List<InvocationResponse> responseList = response.collect(Collectors.toList());
         assertThat(responseList).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getClientId)
-                .containsExactly(tuple(expectedMethod, expectedId, expectedClientId));
+                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
+                .containsExactly(tuple(expectedMethod, expectedId, expectedMethodCallId));
     }
 
     @Test
     public void formatMethodResponseShouldWork() {
-        String expectedClientId = "#1";
+        String expectedMethodCallId = "#1";
         String expectedId = "myId";
 
         ResponseClass responseClass = new ResponseClass();
@@ -85,14 +85,14 @@ public class JmapResponseWriterImplTest {
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
-                .clientId(ClientId.of(expectedClientId))
+                .methodCallId(MethodCallId.of(expectedMethodCallId))
                 .response(responseClass)
                 .build()))
                 .collect(Collectors.toList());
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getClientId)
-                .containsExactly(tuple(Method.Response.name("unknownMethod"), expectedId, ClientId.of(expectedClientId)));
+                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("id").asText(), InvocationResponse::getMethodCallId)
+                .containsExactly(tuple(Method.Response.name("unknownMethod"), expectedId, MethodCallId.of(expectedMethodCallId)));
     }
 
     private static class ResponseClass implements Method.Response {
@@ -112,7 +112,7 @@ public class JmapResponseWriterImplTest {
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
-                .clientId(ClientId.of("#1"))
+                .methodCallId(MethodCallId.of("#1"))
                 .properties(ImmutableSet.of(property))
                 .response(responseClass)
                 .build()))
@@ -137,7 +137,7 @@ public class JmapResponseWriterImplTest {
                 Stream.of(JmapResponse
                         .builder()
                         .responseName(Method.Response.name("unknownMethod"))
-                        .clientId(ClientId.of("#1"))
+                        .methodCallId(MethodCallId.of("#1"))
                         .properties(ImmutableSet.of(property))
                         .response(responseClass)
                         .build()));
@@ -146,7 +146,7 @@ public class JmapResponseWriterImplTest {
                 Stream.of(JmapResponse
                 .builder()
                 .responseName(Method.Response.name("unknownMethod"))
-                .clientId(ClientId.of("#1"))
+                .methodCallId(MethodCallId.of("#1"))
                 .response(responseClass)
                 .build()))
                 .collect(Collectors.toList());
@@ -169,14 +169,14 @@ public class JmapResponseWriterImplTest {
                 Stream.of(JmapResponse
                             .builder()
                             .responseName(Method.Response.name("unknownMethod"))
-                            .clientId(ClientId.of("#1"))
+                            .methodCallId(MethodCallId.of("#1"))
                             .properties(ImmutableSet.of(idProperty, nameProperty))
                             .response(responseClass)
                             .build(),
                         JmapResponse
                             .builder()
                             .responseName(Method.Response.name("unknownMethod"))
-                            .clientId(ClientId.of("#1"))
+                            .methodCallId(MethodCallId.of("#1"))
                             .properties(ImmutableSet.of(idProperty))
                             .response(responseClass)
                             .build()))
@@ -208,41 +208,41 @@ public class JmapResponseWriterImplTest {
 
     @Test
     public void formatErrorResponseShouldWork() {
-        String expectedClientId = "#1";
+        String expectedMethodCallId = "#1";
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", "myId");
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)};
+                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
 
         List<InvocationResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
-                    .clientId(InvocationRequest.deserialize(nodes).getClientId())
+                    .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
                     .error()
                     .build()))
                 .collect(Collectors.toList());
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), InvocationResponse::getClientId)
-                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, ErrorResponse.DEFAULT_ERROR_MESSAGE, ClientId.of(expectedClientId)));
+                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), InvocationResponse::getMethodCallId)
+                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, ErrorResponse.DEFAULT_ERROR_MESSAGE, MethodCallId.of(expectedMethodCallId)));
     }
 
     @Test
     public void formatErrorResponseShouldWorkWithTypeAndDescription() {
-        String expectedClientId = "#1";
+        String expectedMethodCallId = "#1";
 
         ObjectNode parameters = new ObjectNode(new JsonNodeFactory(false));
         parameters.put("id", "myId");
         JsonNode[] nodes = new JsonNode[] { new ObjectNode(new JsonNodeFactory(false)).textNode("unknwonMethod"),
                 parameters,
-                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedClientId)};
+                new ObjectNode(new JsonNodeFactory(false)).textNode(expectedMethodCallId)};
 
         List<InvocationResponse> response = testee.formatMethodResponse(
                 Stream.of(JmapResponse
                     .builder()
-                    .clientId(InvocationRequest.deserialize(nodes).getClientId())
+                    .methodCallId(InvocationRequest.deserialize(nodes).getMethodCallId())
                     .error(ErrorResponse
                             .builder()
                             .type("errorType")
@@ -252,8 +252,8 @@ public class JmapResponseWriterImplTest {
                 .collect(Collectors.toList());
 
         assertThat(response).hasSize(1)
-                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), x -> x.getResults().get("description").asText(), InvocationResponse::getClientId)
-                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, "errorType", "complete description", ClientId.of(expectedClientId)));
+                .extracting(InvocationResponse::getResponseName, x -> x.getResults().get("type").asText(), x -> x.getResults().get("description").asText(), InvocationResponse::getMethodCallId)
+                .containsExactly(tuple(ErrorResponse.ERROR_METHOD, "errorType", "complete description", MethodCallId.of(expectedMethodCallId)));
     }
 
 }

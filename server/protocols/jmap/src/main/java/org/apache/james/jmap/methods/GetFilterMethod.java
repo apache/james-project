@@ -27,9 +27,9 @@ import javax.inject.Inject;
 import org.apache.james.core.User;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
-import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.GetFilterRequest;
 import org.apache.james.jmap.model.GetFilterResponse;
+import org.apache.james.jmap.model.MethodCallId;
 import org.apache.james.jmap.model.SetError;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
@@ -65,9 +65,9 @@ public class GetFilterMethod implements Method {
     }
 
     @Override
-    public Stream<JmapResponse> process(JmapRequest request, ClientId clientId, MailboxSession mailboxSession) {
+    public Stream<JmapResponse> process(JmapRequest request, MethodCallId methodCallId, MailboxSession mailboxSession) {
         Preconditions.checkNotNull(request);
-        Preconditions.checkNotNull(clientId);
+        Preconditions.checkNotNull(methodCallId);
         Preconditions.checkNotNull(mailboxSession);
         Preconditions.checkArgument(request instanceof GetFilterRequest);
 
@@ -76,20 +76,20 @@ public class GetFilterMethod implements Method {
         return metricFactory.runPublishingTimerMetric(JMAP_PREFIX + METHOD_NAME.getName(),
             MDCBuilder.create()
                 .addContext(MDCBuilder.ACTION, "GET_FILTER")
-                .wrapArround(() -> process(clientId, mailboxSession, filterRequest)));
+                .wrapArround(() -> process(methodCallId, mailboxSession, filterRequest)));
     }
 
-    private Stream<JmapResponse> process(ClientId clientId, MailboxSession mailboxSession, GetFilterRequest request) {
+    private Stream<JmapResponse> process(MethodCallId methodCallId, MailboxSession mailboxSession, GetFilterRequest request) {
         try {
-            return retrieveFilter(clientId, mailboxSession.getUser());
+            return retrieveFilter(methodCallId, mailboxSession.getUser());
         } catch (Exception e) {
             LOGGER.warn("Failed to retrieve filter");
 
-            return Stream.of(unKnownError(clientId));
+            return Stream.of(unKnownError(methodCallId));
         }
     }
 
-    private Stream<JmapResponse> retrieveFilter(ClientId clientId, User user) {
+    private Stream<JmapResponse> retrieveFilter(MethodCallId methodCallId, User user) {
         List<Rule> rules = filteringManagement.listRulesForUser(user);
 
         GetFilterResponse getFilterResponse = GetFilterResponse.builder()
@@ -97,15 +97,15 @@ public class GetFilterMethod implements Method {
             .build();
 
         return Stream.of(JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .response(getFilterResponse)
             .responseName(RESPONSE_NAME)
             .build());
     }
 
-    private JmapResponse unKnownError(ClientId clientId) {
+    private JmapResponse unKnownError(MethodCallId methodCallId) {
         return JmapResponse.builder()
-            .clientId(clientId)
+            .methodCallId(methodCallId)
             .responseName(RESPONSE_NAME)
             .response(ErrorResponse.builder()
                 .type(SetError.Type.ERROR.asString())
