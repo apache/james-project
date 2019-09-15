@@ -23,15 +23,15 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.james.jmap.AuthenticationFilter;
 import org.apache.james.mailbox.MailboxSession;
 
-public class AuthenticatedProtocolRequest extends InvocationRequest {
+public class AuthenticatedRequest extends InvocationRequest {
     
-    public static AuthenticatedProtocolRequest decorate(InvocationRequest request, HttpServletRequest httpServletRequest) {
-        return new AuthenticatedProtocolRequest(request, httpServletRequest);
+    public static AuthenticatedRequest decorate(InvocationRequest request, HttpServletRequest httpServletRequest) {
+        return new AuthenticatedRequest(request, httpServletRequest);
     }
 
     private final HttpServletRequest httpServletRequest;
 
-    private AuthenticatedProtocolRequest(InvocationRequest request, HttpServletRequest httpServletRequest) {
+    private AuthenticatedRequest(InvocationRequest request, HttpServletRequest httpServletRequest) {
         super(request.getMethodName(), request.getParameters(), request.getClientId());
         this.httpServletRequest = httpServletRequest;
         

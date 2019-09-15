@@ -32,7 +32,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.User;
 import org.apache.james.jmap.JmapFieldNotSupportedException;
-import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
+import org.apache.james.jmap.model.AuthenticatedRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
@@ -55,7 +55,7 @@ public class RequestHandler {
                 .collect(Collectors.toMap(Method::requestHandled, Function.identity()));
     }
 
-    public Stream<ProtocolResponse> handle(AuthenticatedProtocolRequest request) throws IOException {
+    public Stream<ProtocolResponse> handle(AuthenticatedRequest request) throws IOException {
         Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -70,7 +70,7 @@ public class RequestHandler {
         }
     }
     
-    private Function<Method, Stream<JmapResponse>> extractAndProcess(AuthenticatedProtocolRequest request) {
+    private Function<Method, Stream<JmapResponse>> extractAndProcess(AuthenticatedRequest request) {
         MailboxSession mailboxSession = request.getMailboxSession();
         return (Method method) -> {
                     try {
@@ -95,7 +95,7 @@ public class RequestHandler {
             .build();
     }
 
-    private Stream<JmapResponse> errorNotImplemented(JmapFieldNotSupportedException error, AuthenticatedProtocolRequest request) {
+    private Stream<JmapResponse> errorNotImplemented(JmapFieldNotSupportedException error, AuthenticatedRequest request) {
         return Stream.of(
                 JmapResponse.builder()
                     .clientId(request.getClientId())
@@ -103,7 +103,7 @@ public class RequestHandler {
                     .build());
     }
 
-    private Stream<JmapResponse> error(AuthenticatedProtocolRequest request, ErrorResponse error) {
+    private Stream<JmapResponse> error(AuthenticatedRequest request, ErrorResponse error) {
         return Stream.of(
                 JmapResponse.builder()
                     .clientId(request.getClientId())

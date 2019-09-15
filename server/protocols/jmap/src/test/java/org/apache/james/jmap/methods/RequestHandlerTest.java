@@ -31,7 +31,7 @@ import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.jmap.json.ObjectMapperFactory;
-import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
+import org.apache.james.jmap.model.AuthenticatedRequest;
 import org.apache.james.jmap.model.ClientId;
 import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
@@ -140,7 +140,7 @@ public class RequestHandlerTest {
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
         RequestHandler requestHandler = new RequestHandler(ImmutableSet.of(), jmapRequestParser, jmapResponseWriter);
-        requestHandler.handle(AuthenticatedProtocolRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest));
+        requestHandler.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -208,7 +208,7 @@ public class RequestHandlerTest {
                 parameters,
                 new ObjectNode(new JsonNodeFactory(false)).textNode("#1")};
 
-        List<ProtocolResponse> responses = testee.handle(AuthenticatedProtocolRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest))
+        List<ProtocolResponse> responses = testee.handle(AuthenticatedRequest.decorate(InvocationRequest.deserialize(nodes), mockHttpServletRequest))
                 .collect(Collectors.toList());
 
         assertThat(responses).hasSize(1)
