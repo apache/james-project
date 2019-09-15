@@ -33,7 +33,7 @@ import javax.inject.Inject;
 import org.apache.james.core.User;
 import org.apache.james.jmap.JmapFieldNotSupportedException;
 import org.apache.james.jmap.model.AuthenticatedRequest;
-import org.apache.james.jmap.model.ProtocolResponse;
+import org.apache.james.jmap.model.InvocationResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -55,7 +55,7 @@ public class RequestHandler {
                 .collect(Collectors.toMap(Method::requestHandled, Function.identity()));
     }
 
-    public Stream<ProtocolResponse> handle(AuthenticatedRequest request) throws IOException {
+    public Stream<InvocationResponse> handle(AuthenticatedRequest request) throws IOException {
         Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
         try (Closeable closeable =
                  MDCBuilder.create()

@@ -23,13 +23,13 @@ import org.apache.james.jmap.methods.Method;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 
-public class ProtocolResponse {
+public class InvocationResponse {
 
     private final Method.Response.Name name;
     private final ObjectNode results;
     private final ClientId clientId;
 
-    public ProtocolResponse(Method.Response.Name name, ObjectNode results, ClientId clientId) {
+    public InvocationResponse(Method.Response.Name name, ObjectNode results, ClientId clientId) {
         Preconditions.checkNotNull(name, "method is mandatory");
         Preconditions.checkNotNull(results, "results is mandatory");
         Preconditions.checkNotNull(clientId,  "clientId is mandatory");
