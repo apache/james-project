@@ -34,7 +34,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.jmap.methods.RequestHandler;
-import org.apache.james.jmap.model.AuthenticatedProtocolRequest;
+import org.apache.james.jmap.model.AuthenticatedRequest;
 import org.apache.james.jmap.model.InvocationRequest;
 import org.apache.james.jmap.model.ProtocolResponse;
 import org.apache.james.metrics.api.MetricFactory;
@@ -73,7 +73,7 @@ public class JMAPServlet extends HttpServlet {
             List<Object[]> responses =
                 requestAsJsonStream(req)
                     .map(InvocationRequest::deserialize)
-                    .map(x -> AuthenticatedProtocolRequest.decorate(x, req))
+                    .map(x -> AuthenticatedRequest.decorate(x, req))
                     .flatMap(this::handle)
                     .map(ProtocolResponse::asProtocolSpecification)
                     .collect(Collectors.toList());
@@ -100,7 +100,7 @@ public class JMAPServlet extends HttpServlet {
         }
     }
 
-    private Stream<? extends ProtocolResponse> handle(AuthenticatedProtocolRequest request) {
+    private Stream<? extends ProtocolResponse> handle(AuthenticatedRequest request) {
         try {
             return requestHandler.handle(request);
         } catch (IOException e) {
