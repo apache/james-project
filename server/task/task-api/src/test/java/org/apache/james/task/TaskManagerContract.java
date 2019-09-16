@@ -242,8 +242,7 @@ public interface TaskManagerContract {
                 waitingForResultLatch.await();
                 return Task.Result.COMPLETED;
             }));
-        TaskId waitingId = taskManager.submit(
-            new CompletedTask());
+        TaskId waitingId = taskManager.submit(new CompletedTask());
 
         latch1.await();
 

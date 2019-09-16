@@ -20,25 +20,24 @@
 package org.apache.james.task;
 
 import java.io.IOException;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.UnicastProcessor;
 import reactor.core.scheduler.Schedulers;
 
 public class MemoryWorkQueue implements WorkQueue {
-
     private final TaskManagerWorker worker;
     private final Disposable subscription;
-    private final LinkedBlockingQueue<TaskWithId> tasks;
+    private final UnicastProcessor<TaskWithId> tasks;
 
     public MemoryWorkQueue(TaskManagerWorker worker) {
         this.worker = worker;
-        this.tasks = new LinkedBlockingQueue<>();
-        this.subscription = Mono.fromCallable(tasks::take)
-            .repeat()
+        this.tasks = UnicastProcessor.create();
+        this.subscription = tasks
             .subscribeOn(Schedulers.boundedElastic())
-            .flatMapSequential(this::dispatchTaskToWorker)
+            .limitRate(1)
+            .concatMap(this::dispatchTaskToWorker)
             .subscribe();
     }
 
@@ -47,11 +46,7 @@ public class MemoryWorkQueue implements WorkQueue {
     }
 
     public void submit(TaskWithId taskWithId) {
-        try {
-            tasks.put(taskWithId);
-        } catch (InterruptedException e) {
-            worker.cancelTask(taskWithId.getId());
-        }
+        tasks.onNext(taskWithId);
     }
 
     public void cancel(TaskId taskId) {
