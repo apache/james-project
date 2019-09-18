@@ -19,100 +19,22 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.server.task.json.dto.TaskDTO;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.Multimap;
 
 public class ErrorRecoveryIndexationTask implements Task {
-    private static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("ErrorRecoveryIndexation");
-
-    public static final Function<ErrorRecoveryIndexationTask.Factory, TaskDTOModule<ErrorRecoveryIndexationTask, ErrorRecoveryIndexationTaskDTO>> MODULE = (factory) ->
-        DTOModule
-            .forDomainObject(ErrorRecoveryIndexationTask.class)
-            .convertToDTO(ErrorRecoveryIndexationTask.ErrorRecoveryIndexationTaskDTO.class)
-            .toDomainObjectConverter(factory::create)
-            .toDTOConverter(ErrorRecoveryIndexationTask.ErrorRecoveryIndexationTaskDTO::of)
-            .typeName(PREVIOUS_FAILURES_INDEXING.asString())
-            .withFactory(TaskDTOModule::new);
-
-    public static class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
-
-        public static ErrorRecoveryIndexationTaskDTO of(ErrorRecoveryIndexationTask task, String type) {
-            Multimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailboxId = task.previousFailures
-                .failures()
-                .stream()
-                .collect(Guavate.toImmutableListMultimap(ReIndexingExecutionFailures.ReIndexingFailure::getMailboxId, Function.identity()));
-
-            List<ReindexingFailureDTO> failureDTOs = failuresByMailboxId.asMap()
-                .entrySet().stream()
-                .map(ErrorRecoveryIndexationTaskDTO::failuresByMailboxToReindexingFailureDTO).collect(Guavate.toImmutableList());
-            return new ErrorRecoveryIndexationTaskDTO(type, failureDTOs);
-        }
-
-        private static ReindexingFailureDTO failuresByMailboxToReindexingFailureDTO(Map.Entry<MailboxId,
-            Collection<ReIndexingExecutionFailures.ReIndexingFailure>> entry) {
-            List<Long> uids = entry.getValue().stream()
-                .map(ReIndexingExecutionFailures.ReIndexingFailure::getUid)
-                .map(MessageUid::asLong)
-                .collect(Guavate.toImmutableList());
-            return new ReindexingFailureDTO(entry.getKey().serialize(), uids);
-        }
-
-        public static class ReindexingFailureDTO {
-
-            private final String mailboxId;
-            private final List<Long> uids;
-
-            private ReindexingFailureDTO(@JsonProperty("mailboxId") String mailboxId, @JsonProperty("uids") List<Long> uids) {
-                this.mailboxId = mailboxId;
-                this.uids = uids;
-            }
-
-            public String getMailboxId() {
-                return mailboxId;
-            }
-
-            public List<Long> getUids() {
-                return uids;
-            }
-        }
-
-        private final String type;
-        private final List<ReindexingFailureDTO> previousFailures;
-
-        private ErrorRecoveryIndexationTaskDTO(@JsonProperty("type") String type, @JsonProperty("previousFailures") List<ReindexingFailureDTO> previousFailures) {
-            this.type = type;
-            this.previousFailures = previousFailures;
-        }
-
-        @Override
-        public String getType() {
-            return type;
-        }
-
-        public List<ReindexingFailureDTO> getPreviousFailures() {
-            return previousFailures;
-        }
-
-    }
+    public static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("ErrorRecoveryIndexation");
 
     public static class Factory {
 
@@ -157,6 +79,10 @@ public class ErrorRecoveryIndexationTask implements Task {
     @Override
     public TaskType type() {
         return PREVIOUS_FAILURES_INDEXING;
+    }
+
+    public ReIndexingExecutionFailures getPreviousFailures() {
+        return previousFailures;
     }
 
     @Override

@@ -58,7 +58,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, new TestId.Factory());
-        taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTask.MODULE.apply(factory));
+        taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.MODULE.apply(factory));
     }
 
     @Test
