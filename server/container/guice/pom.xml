@@ -42,7 +42,6 @@
         <module>cassandra-rabbitmq-guice</module>
         <module>cassandra-rabbitmq-ldap-guice</module>
         <module>configuration</module>
-        <module>custom-mailets</module>
         <module>es-metric-reporter</module>
         <module>guice-common</module>
         <module>guice-utils</module>
@@ -75,6 +74,7 @@
         <module>protocols/webadmin-swagger</module>
         <module>activemq</module>
         <module>rabbitmq</module>
+        <module>testing</module>
     </modules>
 
     <dependencyManagement>
