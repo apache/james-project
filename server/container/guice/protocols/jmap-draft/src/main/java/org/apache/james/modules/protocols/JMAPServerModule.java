@@ -21,15 +21,15 @@ package org.apache.james.modules.protocols;
 
 import java.security.Security;
 
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.JMAPModule;
-import org.apache.james.jmap.JMAPServer;
-import org.apache.james.jmap.crypto.JamesSignatureHandler;
+import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.draft.JMAPModule;
+import org.apache.james.jmap.draft.JMAPServer;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.jmap.draft.MessageIdProbe;
+import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitialisationOperation;
-import org.apache.james.utils.JmapGuiceProbe;
-import org.apache.james.utils.MessageIdProbe;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.google.inject.AbstractModule;

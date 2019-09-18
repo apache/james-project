@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.EnumSet;
 
-import org.apache.james.jmap.JMAPModule;
+import org.apache.james.jmap.draft.JMAPModule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;

@@ -24,7 +24,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.SetMessagesMethodTest;
+import org.apache.james.jmap.draft.methods.integration.SetMessagesMethodTest;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.junit.Rule;

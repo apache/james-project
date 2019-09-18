@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.ForwardIntegrationTest;
+import org.apache.james.jmap.draft.methods.integration.ForwardIntegrationTest;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;
 

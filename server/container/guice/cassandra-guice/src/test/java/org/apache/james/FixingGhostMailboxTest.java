@@ -61,7 +61,7 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;

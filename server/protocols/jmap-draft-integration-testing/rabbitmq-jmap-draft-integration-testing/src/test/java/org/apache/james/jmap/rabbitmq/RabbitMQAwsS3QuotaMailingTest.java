@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.methods.integration.QuotaMailingTest;
+import org.apache.james.jmap.draft.methods.integration.QuotaMailingTest;
 import org.junit.Rule;
 
 public class RabbitMQAwsS3QuotaMailingTest extends QuotaMailingTest {

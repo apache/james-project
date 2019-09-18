@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.methods.integration.SetVacationResponseTest;
+import org.apache.james.jmap.draft.methods.integration.SetVacationResponseTest;
 import org.junit.Rule;
 
 public class CassandraSetVacationResponseTest extends SetVacationResponseTest {

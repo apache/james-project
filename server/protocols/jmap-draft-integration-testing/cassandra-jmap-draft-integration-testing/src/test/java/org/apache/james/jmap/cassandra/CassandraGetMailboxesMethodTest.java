@@ -24,7 +24,7 @@ import java.io.IOException;
 import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
+import org.apache.james.jmap.draft.methods.integration.GetMailboxesMethodTest;
 import org.junit.Rule;
 
 public class CassandraGetMailboxesMethodTest extends GetMailboxesMethodTest {

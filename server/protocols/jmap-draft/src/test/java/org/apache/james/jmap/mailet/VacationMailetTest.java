@@ -38,7 +38,7 @@ import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.RecipientId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
-import org.apache.james.jmap.utils.MimeMessageBodyGenerator;
+import org.apache.james.jmap.draft.utils.MimeMessageBodyGenerator;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.mailet.MailetContext;
 import org.apache.mailet.base.AutomaticallySentMailDetector;

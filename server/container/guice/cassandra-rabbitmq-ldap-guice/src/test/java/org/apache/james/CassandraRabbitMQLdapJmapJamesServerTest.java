@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import static org.apache.james.JmapJamesServerContract.JAMES_SERVER_HOST;
+import static org.apache.james.jmap.draft.JmapJamesServerContract.JAMES_SERVER_HOST;
 import static org.apache.james.user.ldap.DockerLdapSingleton.JAMES_USER;
 import static org.apache.james.user.ldap.DockerLdapSingleton.PASSWORD;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.SwiftBlobStoreExtension;

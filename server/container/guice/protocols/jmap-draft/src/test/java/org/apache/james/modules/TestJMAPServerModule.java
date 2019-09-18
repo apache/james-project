@@ -25,8 +25,8 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.jmap.JMAPConfiguration;
-import org.apache.james.jmap.methods.GetMessageListMethod;
+import org.apache.james.jmap.draft.JMAPConfiguration;
+import org.apache.james.jmap.draft.methods.GetMessageListMethod;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
