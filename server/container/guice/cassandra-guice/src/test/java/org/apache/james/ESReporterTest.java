@@ -41,7 +41,7 @@ import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.awaitility.Duration;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RestHighLevelClient;

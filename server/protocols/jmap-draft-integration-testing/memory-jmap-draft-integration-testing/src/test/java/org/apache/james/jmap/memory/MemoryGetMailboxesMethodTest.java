@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.GetMailboxesMethodTest;
+import org.apache.james.jmap.draft.methods.integration.GetMailboxesMethodTest;
 import org.junit.Rule;
 
 public class MemoryGetMailboxesMethodTest extends GetMailboxesMethodTest {

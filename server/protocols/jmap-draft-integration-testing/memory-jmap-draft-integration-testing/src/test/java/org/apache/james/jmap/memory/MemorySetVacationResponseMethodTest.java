@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.SetVacationResponseTest;
+import org.apache.james.jmap.draft.methods.integration.SetVacationResponseTest;
 import org.junit.Rule;
 
 public class MemorySetVacationResponseMethodTest extends SetVacationResponseTest {

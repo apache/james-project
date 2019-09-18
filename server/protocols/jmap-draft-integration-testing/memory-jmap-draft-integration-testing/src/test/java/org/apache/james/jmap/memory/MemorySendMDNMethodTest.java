@@ -27,7 +27,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.jmap.methods.integration.SendMDNMethodTest;
+import org.apache.james.jmap.draft.methods.integration.SendMDNMethodTest;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MessageId;

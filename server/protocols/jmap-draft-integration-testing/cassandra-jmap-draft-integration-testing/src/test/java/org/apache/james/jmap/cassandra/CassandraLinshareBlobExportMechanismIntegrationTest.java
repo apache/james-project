@@ -26,7 +26,7 @@ import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
-import org.apache.james.jmap.methods.integration.LinshareBlobExportMechanismIntegrationTest;
+import org.apache.james.jmap.draft.methods.integration.LinshareBlobExportMechanismIntegrationTest;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;

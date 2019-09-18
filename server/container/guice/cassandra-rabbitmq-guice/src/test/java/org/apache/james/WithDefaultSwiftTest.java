@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
 import org.apache.james.blob.objectstorage.PayloadCodec;
+import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

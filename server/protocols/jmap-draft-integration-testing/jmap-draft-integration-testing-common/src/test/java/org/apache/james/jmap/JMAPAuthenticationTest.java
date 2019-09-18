@@ -34,9 +34,9 @@ import java.util.UUID;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.categories.BasicFeature;
-import org.apache.james.jmap.model.ContinuationToken;
+import org.apache.james.jmap.draft.model.ContinuationToken;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.JmapGuiceProbe;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

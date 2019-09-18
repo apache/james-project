@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.SetMessagesMethodReRoutingTest;
+import org.apache.james.jmap.draft.methods.integration.SetMessagesMethodReRoutingTest;
 import org.junit.Rule;
 
 public class MemorySetMessagesMethodReRoutingTest extends SetMessagesMethodReRoutingTest {

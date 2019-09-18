@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.SetMessagesOutboxFlagUpdateTest;
+import org.apache.james.jmap.draft.methods.integration.SetMessagesOutboxFlagUpdateTest;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.junit.Rule;
 

@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.GetVacationResponseTest;
+import org.apache.james.jmap.draft.methods.integration.GetVacationResponseTest;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.junit.Rule;
 

@@ -25,7 +25,7 @@ import java.time.Clock;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.methods.integration.DeletedMessagesVaultTest;
+import org.apache.james.jmap.draft.methods.integration.DeletedMessagesVaultTest;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.junit.Rule;

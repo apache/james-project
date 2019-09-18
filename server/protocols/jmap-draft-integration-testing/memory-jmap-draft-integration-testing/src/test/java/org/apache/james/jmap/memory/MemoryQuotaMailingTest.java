@@ -23,7 +23,7 @@ import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.jmap.methods.integration.QuotaMailingTest;
+import org.apache.james.jmap.draft.methods.integration.QuotaMailingTest;
 import org.junit.Rule;
 
 public class MemoryQuotaMailingTest extends QuotaMailingTest {
