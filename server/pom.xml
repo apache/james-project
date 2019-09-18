@@ -84,8 +84,8 @@
         <module>mailrepository/mailrepository-memory</module>
 
         <module>protocols/fetchmail</module>
-        <module>protocols/jmap</module>
-        <module>protocols/jmap-integration-testing</module>
+        <module>protocols/jmap-draft</module>
+        <module>protocols/jmap-draft-integration-testing</module>
         <module>protocols/jwt</module>
         <module>protocols/protocols-imap4</module>
         <module>protocols/protocols-library</module>

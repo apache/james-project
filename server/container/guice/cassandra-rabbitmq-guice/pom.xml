@@ -123,13 +123,13 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-guice-jmap</artifactId>
+            <artifactId>james-server-guice-jmap-draft</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-jmap-integration-testing</artifactId>
+            <artifactId>james-server-jmap-draft-integration-testing</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
