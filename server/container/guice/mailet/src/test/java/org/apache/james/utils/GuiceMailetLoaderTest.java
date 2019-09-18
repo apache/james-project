@@ -23,12 +23,14 @@ import static org.apache.james.filesystem.api.FileSystemFixture.CLASSPATH_FILE_S
 import static org.apache.james.filesystem.api.FileSystemFixture.RECURSIVE_CLASSPATH_FILE_SYSTEM;
 import static org.apache.james.filesystem.api.FileSystemFixture.THROWING_FILE_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.transport.mailets.AddFooter;
 import org.apache.james.transport.mailets.sub.TestMailet;
 import org.apache.mailet.Mailet;
+import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.Rule;
@@ -147,4 +149,32 @@ public class GuiceMailetLoaderTest {
             .build());
     }
 
+    @Test
+    public void getMailetShouldLoadMailetsWithCustomDependencyInConstructor() throws Exception {
+        GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
+            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
+
+        Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
+            .mailetName("CustomMailetWithCustomDependencyInConstructor")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+
+        assertThat(mailet.getClass().getCanonicalName())
+            .isEqualTo("org.apache.james.transport.mailets.CustomMailetWithCustomDependencyInConstructor");
+    }
+
+    @Test
+    public void getMailetShouldLoadMailetsWithCustomDependencyInService() throws Exception {
+        GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(injector,
+            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
+            NO_MAILET_CONFIG_OVERRIDES);
+
+        Mailet mailet = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
+            .mailetName("CustomMailetWithCustomDependencyInService")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+
+        assertThatCode(() -> mailet.service(FakeMail.defaultFakeMail())).doesNotThrowAnyException();
+    }
 }

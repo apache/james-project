@@ -23,7 +23,7 @@
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server</artifactId>
+        <artifactId>james-server-guice</artifactId>
         <version>3.5.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
@@ -34,5 +34,6 @@
 
     <modules>
         <module>custom-mailets</module>
+        <module>dependency</module>
     </modules>
 </project>
