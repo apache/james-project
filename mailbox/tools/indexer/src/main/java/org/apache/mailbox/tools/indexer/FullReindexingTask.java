@@ -39,7 +39,6 @@ public class FullReindexingTask implements Task {
     public static final TaskType FULL_RE_INDEXING = TaskType.of("FullReIndexing");
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
 
     public static final Function<FullReindexingTask.Factory, TaskDTOModule<FullReindexingTask, FullReindexingTaskDTO>> MODULE = (factory) ->
@@ -84,7 +83,6 @@ public class FullReindexingTask implements Task {
     public FullReindexingTask(ReIndexerPerformer reIndexerPerformer) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new ReprocessingContextInformation(reprocessingContext);
     }
 
     @Override
@@ -103,6 +101,6 @@ public class FullReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(ReprocessingContextInformation.from(reprocessingContext));
     }
 }

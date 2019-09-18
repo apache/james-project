@@ -27,26 +27,35 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
-    private final ReprocessingContext reprocessingContext;
 
-    ReprocessingContextInformation(ReprocessingContext reprocessingContext) {
-        this.reprocessingContext = reprocessingContext;
+    public static ReprocessingContextInformation from(ReprocessingContext reprocessingContext) {
+        return new ReprocessingContextInformation(reprocessingContext.successfullyReprocessedMailCount(), reprocessingContext.failedReprocessingMailCount(), reprocessingContext.failures());
+    }
+
+    private final int successfullyReprocessedMailCount;
+    private final int failedReprocessedMailCount;
+    private final ReIndexingExecutionFailures failures;
+
+    ReprocessingContextInformation(int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures) {
+        this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
+        this.failedReprocessedMailCount = failedReprocessedMailCount;
+        this.failures = failures;
     }
 
     @Override
     public int getSuccessfullyReprocessedMailCount() {
-        return reprocessingContext.successfullyReprocessedMailCount();
+        return successfullyReprocessedMailCount;
     }
 
     @Override
     public int getFailedReprocessedMailCount() {
-        return reprocessingContext.failedReprocessingMailCount();
+        return failedReprocessedMailCount;
     }
 
     @Override
     @JsonIgnore
     public ReIndexingExecutionFailures failures() {
-        return reprocessingContext.failures();
+        return failures;
     }
 
     @JsonProperty("failures")

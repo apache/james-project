@@ -25,6 +25,7 @@ import java.util.function.Function;
 import javax.inject.Inject;
 
 import org.apache.james.json.DTOModule;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -75,8 +76,8 @@ public class SingleMailboxReindexingTask implements Task {
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final MailboxId mailboxId;
 
-        AdditionalInformation(MailboxId mailboxId, ReprocessingContext reprocessingContext) {
-            super(reprocessingContext);
+        AdditionalInformation(MailboxId mailboxId, int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures);
             this.mailboxId = mailboxId;
         }
 
@@ -104,7 +105,6 @@ public class SingleMailboxReindexingTask implements Task {
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final MailboxId mailboxId;
-    private final AdditionalInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
 
     @Inject
@@ -112,7 +112,6 @@ public class SingleMailboxReindexingTask implements Task {
         this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxId = mailboxId;
         this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new AdditionalInformation(mailboxId, reprocessingContext);
     }
 
     @Override
@@ -131,7 +130,13 @@ public class SingleMailboxReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(
+            new SingleMailboxReindexingTask.AdditionalInformation(
+                mailboxId,
+                reprocessingContext.successfullyReprocessedMailCount(),
+                reprocessingContext.failedReprocessingMailCount(),
+                reprocessingContext.failures())
+        );
     }
 
 }

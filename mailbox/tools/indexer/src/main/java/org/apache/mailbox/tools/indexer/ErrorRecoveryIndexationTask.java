@@ -140,7 +140,6 @@ public class ErrorRecoveryIndexationTask implements Task {
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final ReprocessingContextInformation additionalInformation;
     private final ReprocessingContext reprocessingContext;
     private final ReIndexingExecutionFailures previousFailures;
 
@@ -148,7 +147,6 @@ public class ErrorRecoveryIndexationTask implements Task {
         this.reIndexerPerformer = reIndexerPerformer;
         this.previousFailures = previousFailures;
         this.reprocessingContext = new ReprocessingContext();
-        this.additionalInformation = new ReprocessingContextInformation(reprocessingContext);
     }
 
     @Override
@@ -163,6 +161,6 @@ public class ErrorRecoveryIndexationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(ReprocessingContextInformation.from(reprocessingContext));
     }
 }
