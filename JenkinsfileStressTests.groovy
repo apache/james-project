@@ -41,7 +41,7 @@ pipeline {
                             sh "cp -r server/container/guice/cassandra-rabbitmq-guice/target/james-server-cassandra-rabbitmq-guice.lib dockerfiles/run/guice/cassandra-rabbitmq/destination"
                             sh "cp server/container/cli/target/james-server-cli.jar dockerfiles/run/guice/cassandra-rabbitmq/destination"
                             sh "cp -r server/container/cli/target/james-server-cli.lib dockerfiles/run/guice/cassandra-rabbitmq/destination"
-                            sh 'cp server/protocols/jmap-integration-testing/rabbitmq-jmap-integration-testing/src/test/resources/keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf'
+                            sh 'cp server/protocols/jmap-draft-integration-testing/rabbitmq-jmap-draft-integration-testing/src/test/resources/keystore dockerfiles/run/guice/cassandra-rabbitmq/destination/conf'
                             sh 'wget -O dockerfiles/run/guice/cassandra-rabbitmq/destination/glowroot.zip https://github.com/glowroot/glowroot/releases/download/v0.13.4/glowroot-0.13.4-dist.zip && unzip -u dockerfiles/run/guice/cassandra-rabbitmq/destination/glowroot.zip -d dockerfiles/run/guice/cassandra-rabbitmq/destination'
                             sh 'docker build -t james_run dockerfiles/run/guice/cassandra-rabbitmq'
                         }

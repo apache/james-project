@@ -27,10 +27,10 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-jmap</artifactId>
+    <artifactId>james-server-jmap-draft</artifactId>
     <packaging>jar</packaging>
 
-    <name>Apache James :: Server :: JMAP</name>
+    <name>Apache James :: Server :: JMAP (Draft)</name>
 
     <properties>
         <zalando.version>1.13.0</zalando.version>

@@ -1435,12 +1435,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-jmap</artifactId>
+                <artifactId>james-server-guice-jmap-draft</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-jmap</artifactId>
+                <artifactId>james-server-guice-jmap-draft</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
@@ -1471,17 +1471,17 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jmap</artifactId>
+                <artifactId>james-server-jmap-draft</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jmap-integration-testing</artifactId>
+                <artifactId>james-server-jmap-draft-integration-testing</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-jmap-integration-testing</artifactId>
+                <artifactId>james-server-jmap-draft-integration-testing</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
             </dependency>
