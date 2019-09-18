@@ -31,7 +31,7 @@ import org.apache.james.modules.data.MemoryDataModule;
 import org.apache.james.modules.eventstore.MemoryEventStoreModule;
 import org.apache.james.modules.mailbox.MemoryMailboxModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
-import org.apache.james.modules.protocols.JMAPServerModule;
+import org.apache.james.modules.protocols.JMAPDraftServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
@@ -95,7 +95,7 @@ public class MemoryJamesServerMain {
 
     public static final Module JMAP = Modules.combine(
         new MemoryDataJmapModule(),
-        new JMAPServerModule());
+        new JMAPDraftServerModule());
 
     public static final Module IN_MEMORY_SERVER_MODULE = Modules.combine(
         new BlobMemoryModule(),
