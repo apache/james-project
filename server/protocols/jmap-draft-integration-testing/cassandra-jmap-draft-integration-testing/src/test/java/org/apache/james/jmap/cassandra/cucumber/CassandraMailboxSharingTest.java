@@ -35,7 +35,7 @@ import cucumber.api.junit.Cucumber;
     "classpath:cucumber/sharing/MailboxDeletionAndSharing.feature",
     "classpath:cucumber/sharing/MoveMailboxAndSharing.feature",
     "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature" },
-    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
+    glue = { "org.apache.james.jmap.draft.methods.integration", "org.apache.james.jmap.cassandra.cucumber" },
     tags = {"not @Ignore", "@BasicFeature"},
     strict = true)
 @Category(EnableCucumber.class)

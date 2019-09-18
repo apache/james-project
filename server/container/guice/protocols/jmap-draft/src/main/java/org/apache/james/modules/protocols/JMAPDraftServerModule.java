@@ -37,7 +37,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 
-public class JMAPServerModule extends AbstractModule {
+public class JMAPDraftServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
