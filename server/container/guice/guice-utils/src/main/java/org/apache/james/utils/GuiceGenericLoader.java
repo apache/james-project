@@ -23,6 +23,8 @@ import java.util.stream.Stream;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -30,6 +32,11 @@ import com.google.inject.util.Modules;
 
 public class GuiceGenericLoader {
     private static final Module NO_CHILD_MODULE = binder -> { };
+
+    @VisibleForTesting
+    public static GuiceGenericLoader forTesting(ExtendedClassLoader extendedClassLoader) {
+        return new GuiceGenericLoader(Guice.createInjector(), extendedClassLoader, ExtensionConfiguration.DEFAULT);
+    }
 
     public static class InvocationPerformer<T> {
         private final Injector injector;

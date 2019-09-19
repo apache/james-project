@@ -40,7 +40,7 @@ public class ExtensionConfiguration {
 
     private final List<ClassName> additionalGuiceModulesForExtensions;
 
-    private ExtensionConfiguration(List<ClassName> additionalGuiceModulesForExtensions) {
+    public ExtensionConfiguration(List<ClassName> additionalGuiceModulesForExtensions) {
         this.additionalGuiceModulesForExtensions = additionalGuiceModulesForExtensions;
     }
 
