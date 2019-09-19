@@ -41,6 +41,7 @@ import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.utils.ExtendedClassLoader;
+import org.apache.james.utils.GuiceGenericLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -59,8 +60,9 @@ class MailboxListenersLoaderImplTest {
             .thenThrow(new FileNotFoundException());
 
         eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(Guice.createInjector()), eventBus,
-            new ExtendedClassLoader(fileSystem), ImmutableSet.of());
+
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(Guice.createInjector(), new ExtendedClassLoader(fileSystem));
+        testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(genericLoader), eventBus, ImmutableSet.of());
     }
 
     @Test

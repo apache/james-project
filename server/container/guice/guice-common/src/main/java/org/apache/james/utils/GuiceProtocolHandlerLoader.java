@@ -25,17 +25,13 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.apache.james.protocols.lib.handler.ProtocolHandlerLoader;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
-
-    private final Injector injector;
-    private final ExtendedClassLoader extendedClassLoader;
+    private final GuiceGenericLoader genericLoader;
 
     @Inject
-    public GuiceProtocolHandlerLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
-        this.injector = injector;
-        this.extendedClassLoader = extendedClassLoader;
+    public GuiceProtocolHandlerLoader(GuiceGenericLoader genericLoader) {
+        this.genericLoader = genericLoader;
     }
 
     @Override
@@ -51,10 +47,10 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
 
     private ProtocolHandler createProtocolHandler(String name) throws LoadingException {
         try {
-            Class<ProtocolHandler> clazz = extendedClassLoader.locateClass(name);
-            return injector.getInstance(clazz);
-        } catch (ClassNotFoundException e) {
-            throw new LoadingException("Can not load " + name);
+            ClassName className = new ClassName(name);
+            return genericLoader.instanciate(className);
+        } catch (Exception e) {
+            throw new LoadingException("Can not load " + name, e);
         }
     }
 

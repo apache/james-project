@@ -26,24 +26,24 @@ import org.apache.mailet.Matcher;
 import org.apache.mailet.MatcherConfig;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 public class GuiceMatcherLoader implements MatcherLoader {
     private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.matchers.");
     private static final NamingScheme MATCHER_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
 
-    private final GuiceGenericLoader<Matcher> genericLoader;
+    private final GuiceGenericLoader genericLoader;
 
     @Inject
-    public GuiceMatcherLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, MATCHER_NAMING_SCHEME);
+    public GuiceMatcherLoader(GuiceGenericLoader genericLoader) {
+        this.genericLoader = genericLoader;
     }
 
     @Override
     public Matcher getMatcher(MatcherConfig config) throws MessagingException {
         try {
             ClassName className = new ClassName(config.getMatcherName());
-            Matcher result = genericLoader.instanciate(className);
+            Matcher result = genericLoader.<Matcher>withNamingSheme(MATCHER_NAMING_SCHEME)
+                .instanciate(className);
             result.init(config);
             return result;
         } catch (Exception e) {

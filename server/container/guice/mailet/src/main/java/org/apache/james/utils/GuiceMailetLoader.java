@@ -31,18 +31,17 @@ import org.apache.mailet.MailetConfig;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 
 public class GuiceMailetLoader implements MailetLoader {
     private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.mailets.");
     private static final NamingScheme MAILET_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
 
-    private final GuiceGenericLoader<Mailet> genericLoader;
+    private final GuiceGenericLoader genericLoader;
     private final Map<Class<? extends Mailet>, MailetConfig> configurationOverrides;
 
     @Inject
-    public GuiceMailetLoader(Injector injector, ExtendedClassLoader extendedClassLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, MAILET_NAMING_SCHEME);
+    public GuiceMailetLoader(GuiceGenericLoader genericLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
+        this.genericLoader = genericLoader;
         this.configurationOverrides = mailetConfigurationOverrides.stream()
             .collect(Guavate.toImmutableMap(
                 MailetConfigurationOverride::getClazz,
@@ -53,7 +52,8 @@ public class GuiceMailetLoader implements MailetLoader {
     public Mailet getMailet(MailetConfig config) throws MessagingException {
         try {
             ClassName className = new ClassName(config.getMailetName());
-            Mailet result = genericLoader.instanciate(className);
+            Mailet result = genericLoader.<Mailet>withNamingSheme(MAILET_NAMING_SCHEME)
+                .instanciate(className);
             result.init(resolveConfiguration(result, config));
             return result;
         } catch (Exception e) {

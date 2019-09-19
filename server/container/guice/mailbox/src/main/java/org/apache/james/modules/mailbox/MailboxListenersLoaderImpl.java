@@ -28,7 +28,7 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.GenericGroup;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
-import org.apache.james.utils.ExtendedClassLoader;
+import org.apache.james.utils.ClassName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,15 +40,13 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
     private final MailboxListenerFactory mailboxListenerFactory;
     private final EventBus eventBus;
-    private final ExtendedClassLoader classLoader;
     private final Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners;
 
     @Inject
     MailboxListenersLoaderImpl(MailboxListenerFactory mailboxListenerFactory, EventBus eventBus,
-                                  ExtendedClassLoader classLoader, Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners) {
+                               Set<MailboxListener.GroupMailboxListener> guiceDefinedListeners) {
         this.mailboxListenerFactory = mailboxListenerFactory;
         this.eventBus = eventBus;
-        this.classLoader = classLoader;
         this.guiceDefinedListeners = guiceDefinedListeners;
     }
 
@@ -74,13 +72,13 @@ public class MailboxListenersLoaderImpl implements Configurable, MailboxListener
 
     @Override
     public Pair<Group, MailboxListener> createListener(ListenerConfiguration configuration) {
-        String listenerClass = configuration.getClazz();
+        ClassName listenerClass = new ClassName(configuration.getClazz());
         try {
             LOGGER.info("Loading user registered mailbox listener {}", listenerClass);
             MailboxListener mailboxListener = mailboxListenerFactory.newInstance()
                 .withConfiguration(configuration.getConfiguration())
                 .withExecutionMode(configuration.isAsync().map(this::getExecutionMode))
-                .clazz(classLoader.locateClass(listenerClass))
+                .clazz(listenerClass)
                 .build();
 
 

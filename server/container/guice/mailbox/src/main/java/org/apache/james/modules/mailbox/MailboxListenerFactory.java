@@ -26,21 +26,24 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
 
 import com.google.common.base.Preconditions;
-import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.TypeLiteral;
+import com.google.inject.util.Modules;
 
 public class MailboxListenerFactory {
 
     public static class MailboxListenerBuilder {
-        private final Injector injector;
-        private Optional<Class<MailboxListener>> clazz;
+        private final GuiceGenericLoader genericLoader;
+        private Optional<ClassName> clazz;
         private Optional<MailboxListener.ExecutionMode> executionMode;
         private Optional<HierarchicalConfiguration<ImmutableNode>> configuration;
 
-        public MailboxListenerBuilder(Injector injector) {
-            this.injector = injector;
+        public MailboxListenerBuilder(GuiceGenericLoader genericLoader) {
+            this.genericLoader = genericLoader;
             this.clazz = Optional.empty();
             this.executionMode = Optional.empty();
             this.configuration = Optional.empty();
@@ -66,30 +69,32 @@ public class MailboxListenerFactory {
             return this;
         }
 
-        public MailboxListenerBuilder clazz(Class<MailboxListener> clazz) {
+        public MailboxListenerBuilder clazz(ClassName clazz) {
             this.clazz = Optional.of(clazz);
             return this;
         }
 
-        public MailboxListener build() {
+        public MailboxListener build() throws ClassNotFoundException {
             Preconditions.checkState(clazz.isPresent(), "'clazz' is mandatory");
-            return injector.createChildInjector(
+            Module childModule = Modules.combine(
                 binder -> binder.bind(MailboxListener.ExecutionMode.class)
                     .toInstance(executionMode.orElse(MailboxListener.ExecutionMode.SYNCHRONOUS)),
                 binder -> binder.bind(new TypeLiteral<HierarchicalConfiguration<ImmutableNode>>() {})
-                        .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())))
-                .getInstance(clazz.get());
+                    .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())));
+
+            return genericLoader.<MailboxListener>withChildModule(childModule)
+                .instanciate(clazz.get());
         }
     }
 
-    private final Injector injector;
+    private final GuiceGenericLoader genericLoader;
 
     @Inject
-    public MailboxListenerFactory(Injector injector) {
-        this.injector = injector;
+    public MailboxListenerFactory(GuiceGenericLoader genericLoader) {
+        this.genericLoader = genericLoader;
     }
 
     public MailboxListenerBuilder newInstance() {
-        return new MailboxListenerBuilder(injector);
+        return new MailboxListenerBuilder(genericLoader);
     }
 }

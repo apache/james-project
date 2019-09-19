@@ -29,6 +29,7 @@ import java.io.FileNotFoundException;
 
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.utils.ExtendedClassLoader;
+import org.apache.james.utils.GuiceGenericLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +44,10 @@ class PreDeletionHookLoaderImplTest {
         when(fileSystem.getFile(anyString()))
             .thenThrow(new FileNotFoundException());
 
-        testee = new PreDeletionHookLoaderImpl(Guice.createInjector(), new ExtendedClassLoader(fileSystem));
+        testee = new PreDeletionHookLoaderImpl(
+            new GuiceGenericLoader(
+                Guice.createInjector(),
+                new ExtendedClassLoader(fileSystem)));
     }
 
     @Test

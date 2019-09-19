@@ -45,8 +45,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldLoadClass() throws Exception {
-        GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(genericLoader);
 
         Matcher matcher = guiceMailetLoader.getMatcher(FakeMatcherConfig.builder()
             .matcherName("All")
@@ -58,8 +58,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldLoadClassWhenInSubPackageFromDefaultPackage() throws Exception {
-        GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMailetLoader = new GuiceMatcherLoader(genericLoader);
 
         Matcher matcher = guiceMailetLoader.getMatcher(FakeMatcherConfig.builder()
             .matcherName("sub.TestMatcher")
@@ -71,8 +71,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldThrowOnBadType() throws Exception {
-        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(THROWING_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
         expectedException.expect(MessagingException.class);
 
@@ -84,8 +84,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldLoadClassWhenInExtensionsJars() throws Exception {
-        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
         Matcher matcher = guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
             .matcherName("CustomMatcher")
@@ -98,8 +98,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldBrowseRecursivelyExtensionJars() throws Exception {
-        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
         Matcher matcher = guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
             .matcherName("CustomMatcher")
@@ -112,8 +112,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldAllowCustomPackages() throws Exception {
-        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
         Matcher matcher = guiceMatcherLoader.getMatcher(FakeMatcherConfig.builder()
             .matcherName("com.custom.matchers.AnotherMatcher")
@@ -126,8 +126,8 @@ public class GuiceMatcherLoaderTest {
 
     @Test
     public void getMatcherShouldThrowOnUnknownMailet() throws Exception {
-        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(injector,
-            new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(injector, new ExtendedClassLoader(CLASSPATH_FILE_SYSTEM));
+        GuiceMatcherLoader guiceMatcherLoader = new GuiceMatcherLoader(genericLoader);
 
         expectedException.expect(MessagingException.class);
 
