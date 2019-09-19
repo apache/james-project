@@ -34,15 +34,15 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 
 public class GuiceMailetLoader implements MailetLoader {
-
-    private static final String STANDARD_PACKAGE = "org.apache.james.transport.mailets.";
+    private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.mailets.");
+    private static final NamingScheme MAILET_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
 
     private final GuiceGenericLoader<Mailet> genericLoader;
     private final Map<Class<? extends Mailet>, MailetConfig> configurationOverrides;
 
     @Inject
     public GuiceMailetLoader(Injector injector, ExtendedClassLoader extendedClassLoader, Set<MailetConfigurationOverride> mailetConfigurationOverrides) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, STANDARD_PACKAGE);
+        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, MAILET_NAMING_SCHEME);
         this.configurationOverrides = mailetConfigurationOverrides.stream()
             .collect(Guavate.toImmutableMap(
                 MailetConfigurationOverride::getClazz,
@@ -52,7 +52,8 @@ public class GuiceMailetLoader implements MailetLoader {
     @Override
     public Mailet getMailet(MailetConfig config) throws MessagingException {
         try {
-            Mailet result = genericLoader.instanciate(config.getMailetName());
+            ClassName className = new ClassName(config.getMailetName());
+            Mailet result = genericLoader.instanciate(className);
             result.init(resolveConfiguration(result, config));
             return result;
         } catch (Exception e) {
@@ -64,5 +65,4 @@ public class GuiceMailetLoader implements MailetLoader {
         return Optional.ofNullable(configurationOverrides.get(result.getClass()))
             .orElse(providedConfiguration);
     }
-
 }

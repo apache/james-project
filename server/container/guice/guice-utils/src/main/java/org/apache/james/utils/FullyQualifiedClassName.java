@@ -19,35 +19,36 @@
 
 package org.apache.james.utils;
 
-import javax.mail.MessagingException;
+import java.util.Objects;
 
-import org.apache.james.mailetcontainer.api.MatcherLoader;
-import org.apache.mailet.Matcher;
-import org.apache.mailet.MatcherConfig;
+import com.google.common.base.Preconditions;
 
-import com.google.inject.Inject;
-import com.google.inject.Injector;
+public class FullyQualifiedClassName {
+    private final String name;
 
-public class GuiceMatcherLoader implements MatcherLoader {
-    private static final PackageName STANDARD_PACKAGE = PackageName.of("org.apache.james.transport.matchers.");
-    private static final NamingScheme MATCHER_NAMING_SCHEME = new NamingScheme.OptionalPackagePrefix(STANDARD_PACKAGE);
+    FullyQualifiedClassName(String name) {
+        Preconditions.checkNotNull(name);
+        Preconditions.checkArgument(!name.isEmpty(), "A class name can not be empty");
 
-    private final GuiceGenericLoader<Matcher> genericLoader;
+        this.name = name;
+    }
 
-    @Inject
-    public GuiceMatcherLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
-        this.genericLoader = new GuiceGenericLoader<>(injector, extendedClassLoader, MATCHER_NAMING_SCHEME);
+    public String getName() {
+        return name;
     }
 
     @Override
-    public Matcher getMatcher(MatcherConfig config) throws MessagingException {
-        try {
-            ClassName className = new ClassName(config.getMatcherName());
-            Matcher result = genericLoader.instanciate(className);
-            result.init(config);
-            return result;
-        } catch (Exception e) {
-            throw new MessagingException("Can not load matcher " + config.getMatcherName(), e);
+    public final boolean equals(Object o) {
+        if (o instanceof FullyQualifiedClassName) {
+            FullyQualifiedClassName className = (FullyQualifiedClassName) o;
+
+            return Objects.equals(this.name, className.name);
         }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(name);
     }
 }

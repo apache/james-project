@@ -73,7 +73,7 @@ public class ExtendedClassLoader {
     }
 
     @SuppressWarnings("unchecked")
-    public <T> Class<T> locateClass(String className) throws ClassNotFoundException {
-        return (Class<T>) urlClassLoader.loadClass(className);
+    public <T> Class<T> locateClass(FullyQualifiedClassName className) throws ClassNotFoundException {
+        return (Class<T>) urlClassLoader.loadClass(className.getName());
     }
 }

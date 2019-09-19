@@ -21,37 +21,23 @@ package org.apache.james.utils;
 
 import java.util.stream.Stream;
 
-import com.google.inject.Injector;
+public interface NamingScheme {
+    Stream<FullyQualifiedClassName> toFullyQualifiedClassNames(ClassName className);
 
-public class GuiceGenericLoader<T> {
-    private final Injector injector;
-    private final NamingScheme namingScheme;
-    private final ExtendedClassLoader extendedClassLoader;
+    NamingScheme IDENTITY =  className -> Stream.of(className.asFullyQualified());
 
-    public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingScheme) {
-        this.injector = injector;
-        this.namingScheme = namingScheme;
-        this.extendedClassLoader = extendedClassLoader;
-    }
+    class OptionalPackagePrefix implements NamingScheme {
+        private final PackageName packageName;
 
-    public T instanciate(ClassName className) throws Exception {
-        Class<T> clazz = locateClass(className);
-        return injector.getInstance(clazz);
-    }
+        public OptionalPackagePrefix(PackageName packageName) {
+            this.packageName = packageName;
+        }
 
-    private Class<T> locateClass(ClassName className) throws ClassNotFoundException {
-        return namingScheme.toFullyQualifiedClassNames(className)
-            .flatMap(this::tryLocateClass)
-            .findFirst()
-            .orElseThrow(() -> new ClassNotFoundException(className.getName()));
-    }
-
-    private Stream<Class<T>> tryLocateClass(FullyQualifiedClassName className) {
-        try {
-            return Stream.of(extendedClassLoader.locateClass(className));
-        } catch (ClassNotFoundException e) {
-            return Stream.empty();
+        @Override
+        public Stream<FullyQualifiedClassName> toFullyQualifiedClassNames(ClassName className) {
+            return Stream.of(
+                className.asFullyQualified(),
+                className.appendPackage(packageName));
         }
     }
-
 }

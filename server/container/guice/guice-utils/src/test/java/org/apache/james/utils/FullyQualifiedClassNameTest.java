@@ -19,39 +19,43 @@
 
 package org.apache.james.utils;
 
-import java.util.stream.Stream;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.inject.Injector;
+import org.junit.jupiter.api.Test;
 
-public class GuiceGenericLoader<T> {
-    private final Injector injector;
-    private final NamingScheme namingScheme;
-    private final ExtendedClassLoader extendedClassLoader;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingScheme) {
-        this.injector = injector;
-        this.namingScheme = namingScheme;
-        this.extendedClassLoader = extendedClassLoader;
+class FullyQualifiedClassNameTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(FullyQualifiedClassName.class)
+            .verify();
     }
 
-    public T instanciate(ClassName className) throws Exception {
-        Class<T> clazz = locateClass(className);
-        return injector.getInstance(clazz);
+    @Test
+    void constructorShouldThrowWhenNull() {
+        assertThatThrownBy(() -> new FullyQualifiedClassName(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
-    private Class<T> locateClass(ClassName className) throws ClassNotFoundException {
-        return namingScheme.toFullyQualifiedClassNames(className)
-            .flatMap(this::tryLocateClass)
-            .findFirst()
-            .orElseThrow(() -> new ClassNotFoundException(className.getName()));
+    @Test
+    void constructorShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> new FullyQualifiedClassName(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
-    private Stream<Class<T>> tryLocateClass(FullyQualifiedClassName className) {
-        try {
-            return Stream.of(extendedClassLoader.locateClass(className));
-        } catch (ClassNotFoundException e) {
-            return Stream.empty();
-        }
+    @Test
+    void getNameShouldReturnSuppliedValue() {
+        String name = "org.apache.MyClass";
+        assertThat(new FullyQualifiedClassName(name).getName())
+            .isEqualTo(name);
     }
 
+    @Test
+    void getNameShouldReturnSuppliedValueWhenOnlyAClassName() {
+        String name = "MyClass";
+        assertThat(new FullyQualifiedClassName(name).getName())
+            .isEqualTo(name);
+    }
 }
