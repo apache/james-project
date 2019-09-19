@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,10 +39,18 @@ import com.google.common.collect.ImmutableList;
 
 class ErrorRecoveryIndexationTaskSerializationTest {
 
+    private final TestId.Factory mailboxIdFactory = new TestId.Factory();
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
+    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+
+    private final int successfullyReprocessedMailCount = 42;
+    private final int failedReprocessedMailCount = 2;
+    private  ReIndexingExecutionFailures reIndexingExecutionFailures;
+
     private final String serializedErrorRecoveryReindexingTask = "{\"type\": \"ErrorRecoveryIndexation\"," +
         " \"previousFailures\" : [{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -57,8 +66,18 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     @BeforeEach
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
-        ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, new TestId.Factory());
+        ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, mailboxIdFactory);
         taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.MODULE.apply(factory));
+
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+            ReprocessingContextInformationDTO
+                .SERIALIZATION_MODULE
+                .apply(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING)
+                .apply(mailboxIdFactory));
+
+        reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)));
     }
 
     @Test
@@ -77,6 +96,19 @@ class ErrorRecoveryIndexationTaskSerializationTest {
         assertThat(task instanceof ErrorRecoveryIndexationTask);
         assertThat(deserializedTask)
             .isEqualToComparingOnlyGivenFields(task, "reIndexerPerformer", "previousFailures");
+    }
+
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThat(jsonAdditionalInformationSerializer.deserialize("ErrorRecoveryIndexation", SERIALIZED_ADDITIONAL_INFORMATION))
+            .isEqualToComparingFieldByField(details);
     }
 
 }
