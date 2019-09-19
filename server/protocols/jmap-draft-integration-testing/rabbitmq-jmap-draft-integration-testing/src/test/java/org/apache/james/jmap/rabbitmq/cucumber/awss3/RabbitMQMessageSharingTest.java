@@ -36,7 +36,7 @@ import cucumber.api.junit.Cucumber;
     "classpath:cucumber/sharing/MoveMessageAndSharing.feature",
     "classpath:cucumber/sharing/SetFlagAndSharing.feature",
     "classpath:cucumber/sharing/CopyAndSharing.feature" },
-    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.awss3" },
+    glue = { "org.apache.james.jmap.draft.methods.integration", "org.apache.james.jmap.rabbitmq.cucumber.awss3" },
     tags = {"not @Ignore", "@BasicFeature"},
     strict = true)
 @Category(EnableCucumber.class)

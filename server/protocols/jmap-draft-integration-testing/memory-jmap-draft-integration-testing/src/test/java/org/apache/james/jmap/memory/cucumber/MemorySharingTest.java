@@ -41,7 +41,7 @@ import cucumber.api.junit.Cucumber;
     "classpath:cucumber/sharing/SetFlagAndSharing.feature",
     "classpath:cucumber/sharing/RenamingMailboxAndSharing.feature",
     "classpath:cucumber/sharing/CopyAndSharing.feature" },
-    glue = { "org.apache.james.jmap.methods.integration", "org.apache.james.jmap.memory.cucumber" },
+    glue = { "org.apache.james.jmap.draft.methods.integration", "org.apache.james.jmap.memory.cucumber" },
     tags = {"not @Ignore"},
     strict = true)
 public class MemorySharingTest {
