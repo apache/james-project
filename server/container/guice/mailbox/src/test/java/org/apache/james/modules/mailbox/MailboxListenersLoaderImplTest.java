@@ -61,7 +61,7 @@ class MailboxListenersLoaderImplTest {
 
         eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
 
-        GuiceGenericLoader genericLoader = new GuiceGenericLoader(Guice.createInjector(), new ExtendedClassLoader(fileSystem));
+        GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(fileSystem));
         testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(genericLoader), eventBus, ImmutableSet.of());
     }
 

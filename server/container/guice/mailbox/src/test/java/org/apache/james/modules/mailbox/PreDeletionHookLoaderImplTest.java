@@ -45,8 +45,7 @@ class PreDeletionHookLoaderImplTest {
             .thenThrow(new FileNotFoundException());
 
         testee = new PreDeletionHookLoaderImpl(
-            new GuiceGenericLoader(
-                Guice.createInjector(),
+            GuiceGenericLoader.forTesting(
                 new ExtendedClassLoader(fileSystem)));
     }
 

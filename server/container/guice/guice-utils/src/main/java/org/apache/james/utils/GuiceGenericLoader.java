@@ -19,23 +19,25 @@
 
 package org.apache.james.utils;
 
-import java.util.Optional;
 import java.util.stream.Stream;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.util.Modules;
 
 public class GuiceGenericLoader {
-    private static final Optional<Module> NO_CHILD_MODULE = Optional.empty();
+    private static final Module NO_CHILD_MODULE = binder -> { };
 
     public static class InvocationPerformer<T> {
         private final Injector injector;
         private final ExtendedClassLoader extendedClassLoader;
         private final NamingScheme namingSheme;
-        private final Optional<Module> childModule;
+        private final Module childModule;
 
-        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingSheme, Optional<Module> childModule) {
+        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingSheme, Module childModule) {
             this.injector = injector;
             this.extendedClassLoader = extendedClassLoader;
             this.namingSheme = namingSheme;
@@ -44,11 +46,8 @@ public class GuiceGenericLoader {
 
         public T instanciate(ClassName className) throws ClassNotFoundException {
             Class<T> clazz = locateClass(className, namingSheme);
-
-            Injector resolvedInjector = childModule.map(this.injector::createChildInjector)
-                .orElse(this.injector);
-
-            return resolvedInjector.getInstance(clazz);
+            return injector.createChildInjector(childModule)
+                .getInstance(clazz);
         }
 
         private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
@@ -69,23 +68,34 @@ public class GuiceGenericLoader {
 
     private final Injector injector;
     private final ExtendedClassLoader extendedClassLoader;
+    private final Module additionalExtensionBindings;
 
     @Inject
-    public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader) {
+    public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader, ExtensionConfiguration extensionConfiguration) {
         this.injector = injector;
         this.extendedClassLoader = extendedClassLoader;
+
+        this.additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
+            .stream()
+            .map(Throwing.function(this::<Module>instanciateNoChildModule))
+            .collect(Guavate.toImmutableList()));
     }
 
-    public <T> T instanciate(ClassName className) throws ClassNotFoundException {
+    private  <T> T instanciateNoChildModule(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, NO_CHILD_MODULE)
             .instanciate(className);
     }
 
+    public <T> T instanciate(ClassName className) throws ClassNotFoundException {
+        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, additionalExtensionBindings)
+            .instanciate(className);
+    }
+
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, namingSheme, NO_CHILD_MODULE);
+        return new InvocationPerformer<T>(injector, extendedClassLoader, namingSheme, additionalExtensionBindings);
     }
 
     public <T> InvocationPerformer<T> withChildModule(Module childModule) {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, Optional.of(childModule));
+        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, Modules.combine(additionalExtensionBindings, childModule));
     }
 }
