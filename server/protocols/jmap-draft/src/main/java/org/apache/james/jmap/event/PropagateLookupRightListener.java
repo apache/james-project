@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.event;
+package org.apache.james.jmap.event;
 
 import java.util.stream.Stream;
 

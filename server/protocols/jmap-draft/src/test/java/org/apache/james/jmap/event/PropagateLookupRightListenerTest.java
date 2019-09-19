@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.event;
+package org.apache.james.jmap.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
