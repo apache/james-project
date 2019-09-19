@@ -24,23 +24,50 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
+import org.apache.james.mailbox.model.TestId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
 
 class FullReindexingTaskSerializationTest {
 
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
+    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+
+    private final TestId mailboxId2 = TestId.of(2L);
+    private final MessageUid messageUid2 = MessageUid.of(20L);
+    private final TestId mailboxId = TestId.of(1L);
+    private final MessageUid messageUid = MessageUid.of(10L);
+
+    private final int successfullyReprocessedMailCount = 42;
+    private final int failedReprocessedMailCount = 2;
+    private ReIndexingExecutionFailures reIndexingExecutionFailures;
+
     private final String serializedFullReindexingTask = "{\"type\": \"FullReIndexing\"}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
 
     @BeforeEach
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         FullReindexingTask.Factory factory = new FullReindexingTask.Factory(reIndexerPerformer);
         taskSerializer = new JsonTaskSerializer(FullReindexingTask.MODULE.apply(factory));
+
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+            ReprocessingContextInformationDTO
+                .SERIALIZATION_MODULE
+                .apply(FullReindexingTask.FULL_RE_INDEXING)
+                .apply(new TestId.Factory()));
+
+        reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId2, messageUid2)));
     }
 
     @Test
@@ -58,5 +85,19 @@ class FullReindexingTaskSerializationTest {
         assertThat(taskSerializer.deserialize(serializedFullReindexingTask))
             .isEqualToComparingOnlyGivenFields(task, "reIndexerPerformer");
     }
+
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThat(jsonAdditionalInformationSerializer.deserialize("FullReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+            .isEqualToComparingFieldByField(details);
+    }
+
 }
 
