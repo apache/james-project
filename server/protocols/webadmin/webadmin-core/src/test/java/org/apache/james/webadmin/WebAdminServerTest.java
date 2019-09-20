@@ -18,11 +18,16 @@
  ****************************************************************/
 package org.apache.james.webadmin;
 
+import static io.restassured.RestAssured.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.hamcrest.CoreMatchers.is;
 
 import org.apache.james.util.Port;
 import org.junit.Test;
+
+import io.restassured.RestAssured;
+import spark.Service;
 
 public class WebAdminServerTest {
 
@@ -40,5 +45,102 @@ public class WebAdminServerTest {
         Port port = server.getPort();
 
         assertThat(port).isNotNull();
+    }
+
+    @Test
+    public void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutes() {
+        String firstAnswer = "1";
+        String secondAnswer = "2";
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(
+            myPrivateRouteWithConstAnswer(firstAnswer),
+            myPrivateRouteWithConstAnswer(secondAnswer));
+        server.start();
+
+        try {
+            RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
+                .setBasePath("/myRoute")
+                .build();
+
+            when()
+                .get()
+            .then()
+                .body(is(firstAnswer));
+        } finally {
+            server.destroy();
+        }
+    }
+
+    @Test
+    public void aSecondRouteWithSameEndpointShouldNotOverridePreviouslyDefinedRoutesWhenPublic() {
+        String firstAnswer = "1";
+        String secondAnswer = "2";
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(
+            myPrivateRouteWithConstAnswer(firstAnswer),
+            myPublicRouteWithConstAnswer(secondAnswer));
+        server.start();
+
+        try {
+            RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
+                .setBasePath("/myRoute")
+                .build();
+
+            when()
+                .get()
+            .then()
+                .body(is(firstAnswer));
+        } finally {
+            server.destroy();
+        }
+    }
+
+    @Test
+    public void privateRoutesShouldBePrioritizedOverPublicRoutes() {
+        String firstAnswer = "1";
+        String secondAnswer = "2";
+        WebAdminServer server = WebAdminUtils.createWebAdminServer(
+            myPublicRouteWithConstAnswer(firstAnswer),
+            myPrivateRouteWithConstAnswer(secondAnswer));
+        server.start();
+
+        try {
+            RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
+                .setBasePath("/myRoute")
+                .build();
+
+            when()
+                .get()
+            .then()
+                .body(is(secondAnswer));
+        } finally {
+            server.destroy();
+        }
+    }
+
+    private Routes myPrivateRouteWithConstAnswer(String constAnswer) {
+        return new Routes() {
+            @Override
+            public String getBasePath() {
+                return "/myRoute";
+            }
+
+            @Override
+            public void define(Service service) {
+                service.get("/myRoute", (req, res) -> constAnswer);
+            }
+        };
+    }
+
+    private Routes myPublicRouteWithConstAnswer(String constAnswer) {
+        return new PublicRoutes() {
+            @Override
+            public String getBasePath() {
+                return "/myRoute";
+            }
+
+            @Override
+            public void define(Service service) {
+                service.get("/myRoute", (req, res) -> constAnswer);
+            }
+        };
     }
 }
