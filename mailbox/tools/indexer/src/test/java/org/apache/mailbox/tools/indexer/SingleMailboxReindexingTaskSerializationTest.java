@@ -23,25 +23,55 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.collect.ImmutableList;
 
 class SingleMailboxReindexingTaskSerializationTest {
 
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
+    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+
+    private final int successfullyReprocessedMailCount = 42;
+    private final int failedReprocessedMailCount = 2;
+    private  ReIndexingExecutionFailures reIndexingExecutionFailures;
+
     private final String serializedMailboxReindexingTask = "{\"type\": \"mailboxReIndexing\", \"mailboxId\": \"1\"}";
+
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{ \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}]}";
+
+    private final TestId mailboxId = TestId.of(1L);
+    private final MessageUid messageUid = MessageUid.of(10L);
+    private final MessageUid messageUid2 = MessageUid.of(20L);
+
+    private final ReIndexingExecutionFailures.ReIndexingFailure indexingFailure = new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid);
+    private final ReIndexingExecutionFailures.ReIndexingFailure indexingFailure2 = new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid2);
+    private final List<ReIndexingExecutionFailures.ReIndexingFailure> failures = ImmutableList.of(indexingFailure, indexingFailure2);
 
     @BeforeEach
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         SingleMailboxReindexingTask.Factory factory = new SingleMailboxReindexingTask.Factory(reIndexerPerformer, new TestId.Factory());
         taskSerializer = new JsonTaskSerializer(SingleMailboxReindexingTaskDTO.MODULE.apply(factory));
+
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+            SingleMailboxReindexingTaskAdditionalInformationDTO
+                .SERIALIZATION_MODULE
+                .apply(new TestId.Factory()));
+
+        reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
+            new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid2)));
     }
 
     @Test
@@ -60,6 +90,19 @@ class SingleMailboxReindexingTaskSerializationTest {
 
         assertThat(taskSerializer.deserialize(serializedMailboxReindexingTask))
             .isEqualToComparingOnlyGivenFields(task, "reIndexerPerformer", "mailboxId");
+    }
+
+    @Test
+    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+        SingleMailboxReindexingTask.AdditionalInformation details = new SingleMailboxReindexingTask.AdditionalInformation(mailboxId, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+    }
+
+    @Test
+    void additonalInformationShouldBeDeserializable() throws IOException {
+        SingleMailboxReindexingTask.AdditionalInformation details = new SingleMailboxReindexingTask.AdditionalInformation(mailboxId, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        assertThat(jsonAdditionalInformationSerializer.deserialize("mailboxReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+            .isEqualToComparingFieldByField(details);
     }
 }
 
