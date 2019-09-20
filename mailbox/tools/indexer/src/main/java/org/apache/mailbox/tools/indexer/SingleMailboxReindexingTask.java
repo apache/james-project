@@ -20,58 +20,18 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 
-import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.server.task.json.dto.TaskDTO;
-import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 public class SingleMailboxReindexingTask implements Task {
 
-    public static class SingleMailboxReindexingTaskDTO implements TaskDTO {
-
-        public static SingleMailboxReindexingTask.SingleMailboxReindexingTaskDTO of(SingleMailboxReindexingTask task, String typeName) {
-            return new SingleMailboxReindexingTask.SingleMailboxReindexingTaskDTO(typeName, task.mailboxId.serialize());
-        }
-
-        private final String type;
-        private final String mailboxId;
-
-        public SingleMailboxReindexingTaskDTO(@JsonProperty("type") String type, @JsonProperty("mailboxId") String mailboxId) {
-            this.type = type;
-            this.mailboxId = mailboxId;
-        }
-
-        @Override
-        public String getType() {
-            return type;
-        }
-
-        public String getMailboxId() {
-            return mailboxId;
-        }
-
-    }
-
     public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailboxReIndexing");
-
-    public static final Function<Factory, TaskDTOModule<SingleMailboxReindexingTask, SingleMailboxReindexingTaskDTO>> MODULE = (factory) ->
-        DTOModule
-            .forDomainObject(SingleMailboxReindexingTask.class)
-            .convertToDTO(SingleMailboxReindexingTaskDTO.class)
-            .toDomainObjectConverter(factory::create)
-            .toDTOConverter(SingleMailboxReindexingTaskDTO::of)
-            .typeName(MAILBOX_RE_INDEXING.asString())
-            .withFactory(TaskDTOModule::new);
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final MailboxId mailboxId;
@@ -121,6 +81,10 @@ public class SingleMailboxReindexingTask implements Task {
         } catch (Exception e) {
             return Result.PARTIAL;
         }
+    }
+
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
 
     @Override
