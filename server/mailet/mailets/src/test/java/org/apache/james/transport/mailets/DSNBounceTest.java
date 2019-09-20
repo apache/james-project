@@ -526,10 +526,9 @@ public class DSNBounceTest {
                 .build();
 
         dsnBounce.service(mail);
-        
-        assertThat(fakeMailContext.getSentMails())
-        .hasSize(1)
-        .allSatisfy(sentMail -> assertThat(sentMail.getSubject()).contains("pre My subject"));
+
+        assertThat(fakeMailContext.getSentMails()).hasSize(1).allSatisfy(
+                sentMail -> assertThat(sentMail.getSubject()).contains("pre My subject"));
     }
 
     @Test
@@ -555,7 +554,8 @@ public class DSNBounceTest {
         assertThat(sentMails).hasSize(1);
         SentMail sentMail = sentMails.get(0);
 
-        assertThat(sentMail.getMsg().getFrom()).containsOnly(fakeMailContext.getPostmaster().toInternetAddress());
+        assertThat(sentMail.getMsg().getFrom())
+                .containsOnly(fakeMailContext.getPostmaster().toInternetAddress());
         assertThat(sentMail.getRecipients()).containsOnly(mail.getSender());
     }
 
