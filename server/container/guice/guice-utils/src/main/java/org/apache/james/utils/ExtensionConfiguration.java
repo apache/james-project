@@ -21,6 +21,7 @@ package org.apache.james.utils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 
@@ -31,7 +32,9 @@ public class ExtensionConfiguration {
     public static final ExtensionConfiguration DEFAULT = new ExtensionConfiguration(ImmutableList.of());
 
     public static ExtensionConfiguration from(Configuration configuration) {
-        List<String> list = Arrays.asList(configuration.getStringArray("guice.extension.module"));
+        List<String> list = Optional.ofNullable(configuration.getStringArray("guice.extension.module"))
+            .map(Arrays::asList)
+            .orElse(ImmutableList.of());
 
         return new ExtensionConfiguration(list.stream()
             .map(ClassName::new)
