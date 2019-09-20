@@ -54,6 +54,9 @@
         <dd>Specify a truststore file for https (default: null)</dd>
         <dt><strong>https.trust.password</strong></dt>
         <dd>Specify the truststore password (default: null)</dd>
+        <dt><strong>extensions.routes</strong></dt>
+        <dd>List of Routes specified as fully qualified class name that should be load in addition to your product routes list. Routes
+            needs to be on the classpath or in the ./extensions-jars folder.</dd>
     </dl>
   </section>
 

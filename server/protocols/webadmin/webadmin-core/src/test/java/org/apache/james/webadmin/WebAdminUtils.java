@@ -25,13 +25,12 @@ import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Set;
 
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.config.RestAssuredConfig;
@@ -42,23 +41,9 @@ public class WebAdminUtils {
 
     public static WebAdminServer createWebAdminServer(Routes... routes) {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
-            privateRoutes(routes),
-            publicRoutes(routes),
+            ImmutableList.copyOf(routes),
             new NoAuthenticationFilter(),
             new NoopMetricFactory());
-    }
-
-    private static Set<Routes> privateRoutes(Routes[] routes) {
-        return Arrays.stream(routes)
-                .filter(route -> !(route instanceof PublicRoutes))
-                .collect(Guavate.toImmutableSet());
-    }
-
-    private static Set<PublicRoutes> publicRoutes(Routes[] routes) {
-        return Arrays.stream(routes)
-                .filter(PublicRoutes.class::isInstance)
-                .map(PublicRoutes.class::cast)
-                .collect(Guavate.toImmutableSet());
     }
 
     public static RequestSpecBuilder buildRequestSpecification(WebAdminServer webAdminServer) {

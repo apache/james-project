@@ -26,10 +26,11 @@ import static org.eclipse.jetty.http.HttpStatus.BAD_REQUEST_400;
 import static org.eclipse.jetty.http.HttpStatus.INTERNAL_SERVER_ERROR_500;
 import static org.eclipse.jetty.http.HttpStatus.NOT_FOUND_404;
 
-import java.util.Set;
+import java.util.List;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
@@ -47,6 +48,8 @@ import org.apache.james.webadmin.utils.JsonExtractException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
+
 import spark.Service;
 
 public class WebAdminServer implements Startable {
@@ -55,21 +58,36 @@ public class WebAdminServer implements Startable {
     public static final int DEFAULT_PORT = 8080;
 
     private final WebAdminConfiguration configuration;
-    private final Set<Routes> routesList;
-    private final Set<PublicRoutes> publicRoutes;
+    private final List<Routes> privateRoutes;
+    private final List<PublicRoutes> publicRoutes;
     private final Service service;
     private final AuthenticationFilter authenticationFilter;
     private final MetricFactory metricFactory;
 
     @Inject
-    protected WebAdminServer(WebAdminConfiguration configuration, Set<Routes> routesList, Set<PublicRoutes> publicRoutes, AuthenticationFilter authenticationFilter,
-                           MetricFactory metricFactory) {
+    protected WebAdminServer(WebAdminConfiguration configuration,
+                          @Named("webAdminRoutes") List<Routes> routesList,
+                          AuthenticationFilter authenticationFilter,
+                          MetricFactory metricFactory) {
         this.configuration = configuration;
-        this.routesList = routesList;
-        this.publicRoutes = publicRoutes;
+        this.privateRoutes = privateRoutes(routesList);
+        this.publicRoutes = publicRoutes(routesList);
         this.authenticationFilter = authenticationFilter;
         this.metricFactory = metricFactory;
         this.service = Service.ignite();
+    }
+
+    private static List<Routes> privateRoutes(List<Routes> routes) {
+        return routes.stream()
+            .filter(route -> !(route instanceof PublicRoutes))
+            .collect(Guavate.toImmutableList());
+    }
+
+    private static List<PublicRoutes> publicRoutes(List<Routes>  routes) {
+        return routes.stream()
+            .filter(PublicRoutes.class::isInstance)
+            .map(PublicRoutes.class::cast)
+            .collect(Guavate.toImmutableList());
     }
 
     public WebAdminServer start() {
@@ -81,7 +99,7 @@ public class WebAdminServer implements Startable {
             configureMetrics();
             service.before((request, response) -> response.type(Constants.JSON_CONTENT_TYPE));
             configureMDC();
-            routesList.forEach(routes -> {
+            privateRoutes.forEach(routes -> {
                 service.before(routes.getBasePath(), authenticationFilter);
                 service.before(routes.getBasePath() + "/*", authenticationFilter);
                 routes.define(service);

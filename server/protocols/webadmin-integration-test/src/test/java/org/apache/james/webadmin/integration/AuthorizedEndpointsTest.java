@@ -32,7 +32,6 @@ import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -71,7 +70,6 @@ public class AuthorizedEndpointsTest {
             .statusCode(not(HttpStatus.UNAUTHORIZED_401));
     }
 
-    @Ignore("Swagger endpoint is not public despite SwaggerRoutes being an instance of PublicRoutes")
     @Test
     public void getSwaggerShouldNotNeedAuthentication() {
         when()

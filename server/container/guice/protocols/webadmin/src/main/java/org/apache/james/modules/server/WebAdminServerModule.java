@@ -22,16 +22,24 @@ package org.apache.james.modules.server;
 import static org.apache.james.webadmin.WebAdminConfiguration.DISABLED_CONFIGURATION;
 
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+
+import javax.inject.Named;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.NamingScheme;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPortSupplier;
+import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.TlsConfiguration;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminServer;
@@ -43,6 +51,9 @@ import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
@@ -78,9 +89,31 @@ public class WebAdminServerModule extends AbstractModule {
 
     @Provides
     @Singleton
+    @Named("webAdminRoutes")
+    public List<Routes> provideRoutes(GuiceGenericLoader loader, WebAdminConfiguration configuration, Set<Routes> routesList) {
+        List<Routes> customRoutes = configuration.getAdditionalRoutes()
+            .stream()
+            .map(ClassName::new)
+            .map(Throwing.function(loader.<Routes>withNamingSheme(NamingScheme.IDENTITY)::instantiate))
+            .peek(routes -> LOGGER.info("Loading WebAdmin route extension {}", routes.getClass().getCanonicalName()))
+            .collect(Guavate.toImmutableList());
+
+        return ImmutableList.<Routes>builder()
+            .addAll(routesList)
+            .addAll(customRoutes)
+            .build();
+    }
+
+    @Provides
+    @Singleton
     public WebAdminConfiguration provideWebAdminConfiguration(PropertiesProvider propertiesProvider) throws Exception {
         try {
             Configuration configurationFile = propertiesProvider.getConfiguration("webadmin");
+
+            List<String> additionalRoutes = Optional.ofNullable(configurationFile.getStringArray("extensions.routes"))
+                .map(ImmutableList::copyOf)
+                .orElse(ImmutableList.of());
+
             return WebAdminConfiguration.builder()
                 .enable(configurationFile.getBoolean("enabled", DEFAULT_DISABLED))
                 .port(new FixedPortSupplier(configurationFile.getInt("port", WebAdminServer.DEFAULT_PORT)))
@@ -88,6 +121,7 @@ public class WebAdminServerModule extends AbstractModule {
                 .enableCORS(configurationFile.getBoolean("cors.enable", DEFAULT_CORS_DISABLED))
                 .urlCORSOrigin(configurationFile.getString("cors.origin", DEFAULT_NO_CORS_ORIGIN))
                 .host(configurationFile.getString("host", WebAdminConfiguration.DEFAULT_HOST))
+                .additionalRoutes(additionalRoutes)
                 .build();
         } catch (FileNotFoundException e) {
             LOGGER.info("No webadmin.properties file. Disabling WebAdmin interface.");

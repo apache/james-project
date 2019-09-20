@@ -20,11 +20,14 @@
 
 package org.apache.james.webadmin;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class WebAdminConfiguration {
 
@@ -54,6 +57,7 @@ public class WebAdminConfiguration {
         private Optional<TlsConfiguration> tlsConfiguration = Optional.empty();
         private Optional<String> urlCORSOrigin = Optional.empty();
         private Optional<String> host = Optional.empty();
+        private ImmutableList.Builder<String> additionalRoutes = ImmutableList.builder();
 
         public Builder tls(TlsConfiguration tlsConfiguration) {
             this.tlsConfiguration = Optional.of(tlsConfiguration);
@@ -106,15 +110,27 @@ public class WebAdminConfiguration {
             return this;
         }
 
+        public Builder additionalRoute(String additionalRoute) {
+            this.additionalRoutes.add(additionalRoute);
+            return this;
+        }
+
+        public Builder additionalRoutes(Collection<String> additionalRoutes) {
+            this.additionalRoutes.addAll(additionalRoutes);
+            return this;
+        }
+
         public WebAdminConfiguration build() {
             Preconditions.checkState(enabled.isPresent(), "You need to explicitly enable or disable WebAdmin server");
             Preconditions.checkState(!enabled.get() || port.isPresent(), "You need to specify a port for WebAdminConfiguration");
+
             return new WebAdminConfiguration(enabled.get(),
                 port,
                 tlsConfiguration,
                 enableCORS.orElse(DEFAULT_CORS_DISABLED),
                 urlCORSOrigin.orElse(CORS_ALL_ORIGINS),
-                host.orElse(DEFAULT_HOST));
+                host.orElse(DEFAULT_HOST),
+                additionalRoutes.build());
         }
     }
 
@@ -124,16 +140,22 @@ public class WebAdminConfiguration {
     private final boolean enableCORS;
     private final String urlCORSOrigin;
     private final String host;
+    private final List<String> additionalRoutes;
 
     @VisibleForTesting
     WebAdminConfiguration(boolean enabled, Optional<PortSupplier> port, Optional<TlsConfiguration> tlsConfiguration,
-                          boolean enableCORS, String urlCORSOrigin, String host) {
+                          boolean enableCORS, String urlCORSOrigin, String host, List<String> additionalRoutes) {
         this.enabled = enabled;
         this.port = port;
         this.tlsConfiguration = tlsConfiguration;
         this.enableCORS = enableCORS;
         this.urlCORSOrigin = urlCORSOrigin;
         this.host = host;
+        this.additionalRoutes = additionalRoutes;
+    }
+
+    public List<String> getAdditionalRoutes() {
+        return additionalRoutes;
     }
 
     public boolean isEnabled() {
@@ -174,13 +196,14 @@ public class WebAdminConfiguration {
                 && Objects.equals(this.tlsConfiguration, that.tlsConfiguration)
                 && Objects.equals(this.enableCORS, that.enableCORS)
                 && Objects.equals(this.urlCORSOrigin, that.urlCORSOrigin)
-                && Objects.equals(this.host, that.host);
+                && Objects.equals(this.host, that.host)
+                && Objects.equals(this.additionalRoutes, that.additionalRoutes);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, urlCORSOrigin, host);
+        return Objects.hash(enabled, port, tlsConfiguration, enableCORS, urlCORSOrigin, host, additionalRoutes);
     }
 }

@@ -17,24 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james;
 
-import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.routes.HealthCheckRoutes;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+import spark.Service;
 
-public class HealthCheckRoutesModule extends AbstractModule {
+public class MyRoute implements Routes {
+    static final String ENDPOINT = "/myRoutes";
+    static final String SHABANG = "SHABANG";
+
     @Override
-    protected void configure() {
-        bind(HealthCheckRoutes.class).in(Scopes.SINGLETON);
+    public String getBasePath() {
+        return ENDPOINT;
+    }
 
-        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(HealthCheckRoutes.class);
-
-        Multibinder.newSetBinder(binder(), HealthCheck.class);
+    @Override
+    public void define(Service service) {
+        service.get(ENDPOINT, (req, res) -> SHABANG);
     }
 }
