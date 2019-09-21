@@ -21,9 +21,13 @@ package org.apache.james.utils;
 
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -31,6 +35,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
 public class GuiceGenericLoader {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceGenericLoader.class);
     private static final Module NO_CHILD_MODULE = binder -> { };
 
     @VisibleForTesting
@@ -58,10 +63,18 @@ public class GuiceGenericLoader {
         }
 
         private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
-            return namingScheme.toFullyQualifiedClassNames(className)
+            ImmutableList<Class<T>> classes = namingScheme.toFullyQualifiedClassNames(className)
                 .flatMap(this::tryLocateClass)
-                .findFirst()
-                .orElseThrow(() -> new ClassNotFoundException(className.getName()));
+                .collect(Guavate.toImmutableList());
+
+            if (classes.size() == 0) {
+                throw new ClassNotFoundException(className.getName());
+            }
+            if (classes.size() > 1) {
+                LOGGER.warn("Ambiguous class name for {}. Corresponding classes are {} and {} will be loaded",
+                    className, classes, classes.get(0));
+            }
+            return classes.get(0);
         }
 
         private Stream<Class<T>> tryLocateClass(FullyQualifiedClassName className) {
