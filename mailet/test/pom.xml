@@ -79,10 +79,6 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>mailetdocs-maven-plugin</artifactId>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
