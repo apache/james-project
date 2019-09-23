@@ -48,7 +48,6 @@ import javax.sql.DataSource;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
@@ -127,7 +126,7 @@ import org.slf4j.LoggerFactory;
 @Experimental
 @SuppressWarnings("deprecation")
 public class WhiteListManager extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WhiteListManager.class);
 
     private boolean automaticInsert;
     private String displayFlag;

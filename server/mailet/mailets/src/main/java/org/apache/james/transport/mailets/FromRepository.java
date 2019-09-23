@@ -31,7 +31,6 @@ import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Experimental;
 import org.apache.mailet.Mail;
@@ -52,7 +51,7 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental
 public class FromRepository extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(FromRepository.class);
 
     /** The repository from where this mailet spools mail. */
     private MailRepository repository;

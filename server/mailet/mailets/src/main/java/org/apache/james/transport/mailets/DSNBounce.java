@@ -39,7 +39,6 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.javax.MimeMultipartReport;
 import org.apache.james.server.core.MailImpl;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.MailModifier;
 import org.apache.james.transport.mailets.redirect.NotifyMailetInitParameters;
@@ -107,7 +106,7 @@ import com.google.common.collect.ImmutableList;
  */
 
 public class DSNBounce extends GenericMailet implements RedirectNotify {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSNBounce.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[]{ "debug", "passThrough", "messageString", "attachment", "sender", "prefix" };
     private static final List<MailAddress> RECIPIENT_MAIL_ADDRESSES = ImmutableList.of(SpecialAddress.REVERSE_PATH);

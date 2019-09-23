@@ -25,7 +25,6 @@ import javax.mail.internet.MimeMessage;
 import org.apache.james.jspf.core.Logger;
 import org.apache.james.jspf.executor.SPFResult;
 import org.apache.james.jspf.impl.DefaultSPF;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
@@ -56,7 +55,7 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental
 public class SPF extends GenericMailet {
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(SPF.class);
 
     private boolean addHeader = false;
     private org.apache.james.jspf.impl.SPF spf;

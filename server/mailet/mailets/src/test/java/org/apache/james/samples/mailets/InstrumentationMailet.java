@@ -33,7 +33,6 @@ import javax.mail.internet.MimeMessage.RecipientType;
 import javax.mail.internet.NewsAddress;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
@@ -45,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * debugging.
  */
 public class InstrumentationMailet implements Mailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(InstrumentationMailet.class);
 
     private MailetConfig config;
 

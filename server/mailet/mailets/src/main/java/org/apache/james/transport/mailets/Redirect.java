@@ -28,7 +28,6 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.transport.mailets.redirect.AddressExtractor;
 import org.apache.james.transport.mailets.redirect.InitParameters;
 import org.apache.james.transport.mailets.redirect.ProcessRedirectNotify;
@@ -302,7 +301,7 @@ import com.google.common.collect.ImmutableList;
  */
 
 public class Redirect extends GenericMailet implements RedirectNotify {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Redirect.class);
 
     private static final String[] CONFIGURABLE_PARAMETERS = new String[] {
             "static", "debug", "passThrough", "fakeDomainCheck", "inline", "attachment", "message", "recipients", "to", "replyTo", "replyto", "reversePath", "sender", "subject", "prefix", "attachError", "isReply" };

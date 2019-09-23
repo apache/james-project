@@ -32,7 +32,6 @@ import javax.mail.internet.MimeMessage;
 import javax.sql.DataSource;
 
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.transport.mailets.managesieve.ManageSieveMailet;
 import org.apache.james.util.bayesian.JDBCBayesianAnalyzer;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.mailet.Experimental;
@@ -132,7 +131,7 @@ import org.slf4j.LoggerFactory;
  */
 @Experimental
 public class BayesianAnalysisFeeder extends GenericMailet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ManageSieveMailet.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BayesianAnalysisFeeder.class);
 
     /**
      * The JDBCUtil helper class
