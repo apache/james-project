@@ -82,35 +82,4 @@
         <url>http://issues.apache.org/jira/browse/MAILBOX</url>
     </issueManagement>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
-    <repositories>
-        <!-- apache.snapshot is needed for james-project SNAPSHOT, see JAMES-1470 -->
-        <repository>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-            <id>apache.snapshots</id>
-            <name>Apache Snapshot Repository</name>
-            <url>http://repository.apache.org/snapshots</url>
-        </repository>
-    </repositories>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <descriptorRefs>
-                        <descriptorRef>bin</descriptorRef>
-                        <descriptorRef>src</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>
