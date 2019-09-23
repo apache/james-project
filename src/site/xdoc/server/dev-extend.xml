@@ -72,6 +72,61 @@
   
   </subsection>
 
+    <subsection name="Extension and Guice wiring">
+
+        <p>This section does not concern the Spring / server/app wiring.</p>
+
+        <p>Guice applications let you load several type of user defined components. These components include:</p>
+
+        <ul>
+            <li><a href="https://github.com/apache/james-project/blob/master/mailet/api/src/main/java/org/apache/mailet/Mailet.java">Mailets</a></li>
+            <li><a href="https://github.com/apache/james-project/blob/master/mailet/api/src/main/java/org/apache/mailet/Matcher.java">Matchers</a></li>
+            <li><a href="https://github.com/apache/james-project/blob/master/mailbox/api/src/main/java/org/apache/james/mailbox/events/MailboxListener.java">Mailbox Listeners</a></li>
+            <li><a href="https://github.com/apache/james-project/blob/master/mailbox/api/src/main/java/org/apache/james/mailbox/extension/PreDeletionHook.java">PreDeletion hooks</a></li>
+            <li><a href="https://github.com/apache/james-project/blob/master/protocols/api/src/main/java/org/apache/james/protocols/api/handler/ProtocolHandler.java">Protocol handlers</a> (SMTP/LMTP/POP3)</li>
+            <li><a href="https://github.com/apache/james-project/blob/master/server/protocols/webadmin/webadmin-core/src/main/java/org/apache/james/webadmin/Routes.java">Additional webAdmin routes</a></li>
+        </ul>
+
+        <p>Given a custom maven module implementing one or more of the following APIs, first create a
+        <a href="https://maven.apache.org/plugins/maven-assembly-plugin/descriptor-refs.html#jar-with-dependencies">jar-with-dependencies</a>
+        of your module. Then copy the jar-with-dependencies into the <code>./extensions-jars</code> folder of your guice
+        James server installation.</p>
+
+        <p>Note: Transitive dependency resolution is only done if you are packaging your extension into a jar-with-dependencies.
+        Your extension class-loader will be the modified one (James and extensions-jars content) but James class-loader
+        stays unmodified everywhere else.</p>
+
+        <p>Once done, you need to explicitly require James to load your extensions. This needs to be done in the following
+        configuration files:</p>
+
+        <ul>
+            <li><a href="config-mailetcontainer.html">Mailets</a></li>
+            <li><a href="config-mailetcontainer.html">Matchers</a></li>
+            <li><a href="config-listeners.html">Mailbox Listeners</a></li>
+            <li><a href="config-listeners.html">PreDeletion hooks</a></li>
+            <li>Protocol handlers for <a href="config-smtp.html">SMTP</a>,<a href="config-lmtp.html">LMTP</a>,<a href="config-pop3.html">POP3</a></li>
+            <li><a href="config-webadmin.html">Additional webAdmin routes</a></li>
+        </ul>
+
+        <p>Also, it is possible to register additional Guice bindings, that are applied as a Guice child injector
+        for creating extensions.</p>
+
+        <p>Note: Extensions are loaded in their own classpath to avoid breaking James server but they can retrieve James services to implement their business logic.</p>
+
+        <p>To do so, write an <a href="https://google.github.io/guice/api-docs/latest/javadoc/index.html?com/google/inject/Module.html">
+        Module</a> with the additional guice bindings you need. Then package it as a <b>jar-with-dependencies</b>, and copy the
+        jar-with-dependencies within the <b>extensions-jars</b> folder of your James installation, as you will do for any other extension.</p>
+
+        <p>Then register your additional Guice modules for extensions within the
+        <a href="https://github.com/apache/james-project/tree/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/extensions.properties">extensions.properties</a>
+        configuration file.</p>
+
+        <p>Note: No Guice extensions will be applied upon Guice extension module invocation.</p>
+
+        <p>This enables injections defined in your Module into all extensions.</p>
+
+    </subsection>
+
 </section>
 
 </body>
