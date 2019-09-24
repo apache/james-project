@@ -4,3 +4,4 @@ dockerfiles/run/**/*.lib
 dockerfiles/run/**/*.jar
 dockerfiles/run/**/keystore
 .m2
+test-run.log
