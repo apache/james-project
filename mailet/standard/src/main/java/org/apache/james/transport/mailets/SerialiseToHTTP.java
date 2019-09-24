@@ -41,6 +41,8 @@ import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Strings;
+
 /**
  * Serialise the email and pass it to an HTTP call
  * 
@@ -136,7 +138,7 @@ public class SerialiseToHTTP extends GenericMailet {
 
         String result = httpPost(getNameValuePairs(messageAsString));
         if (passThrough) {
-            addHeader(mail, (result == null || result.length() == 0), result);
+            addHeader(mail, Strings.isNullOrEmpty(result), result);
         } else {
             mail.setState(Mail.GHOST);
         }

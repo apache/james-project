@@ -22,7 +22,6 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +49,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class HeadersToHTTPTest {
+class HeadersToHTTPTest {
 
     private static HttpServer server;
     private static UriHttpRequestHandlerMapper mapper;
@@ -59,7 +58,7 @@ public class HeadersToHTTPTest {
     private String urlTestPattern;
 
     @BeforeAll
-    static void setupServer() throws MessagingException, IOException {
+    static void setupServer() throws Exception {
         mapper = new UriHttpRequestHandlerMapper();
 
         SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(50000).build();
@@ -67,7 +66,6 @@ public class HeadersToHTTPTest {
                 .setExceptionLogger(ExceptionLogger.NO_OP).setHandlerMapper(mapper).create();
 
         server.start();
-
     }
 
     @AfterAll
@@ -76,19 +74,18 @@ public class HeadersToHTTPTest {
     }
 
     @BeforeEach
-    void setup() throws MessagingException, IOException {
+    void setup() throws Exception {
         mail = MailUtil.createMockMail2Recipients(MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("mime/sendToRemoteHttp.mime")));
     }
 
     @AfterEach
-    void cleanMapper() throws MessagingException, IOException {
+    void cleanMapper() {
         mapper.unregister(urlTestPattern);
     }
 
     @Test
     void shouldBeFailedWhenServiceNotExists() throws Exception {
-
         urlTestPattern = "/path/to/service/failed";
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -100,16 +97,16 @@ public class HeadersToHTTPTest {
 
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getHeader("X-headerToHTTP")).hasSize(1)
-                .allSatisfy((header) -> assertThat(header).isEqualTo("Failed"));
-        assertThat(mail.getMessage().getHeader("X-headerToHTTPFailure")).hasSize(1)
-                .allSatisfy((header) -> assertThat(header).isNotBlank());
-
+        assertThat(mail.getMessage().getHeader("X-headerToHTTP"))
+            .hasSize(1)
+            .allSatisfy((header) -> assertThat(header).isEqualTo("Failed"));
+        assertThat(mail.getMessage().getHeader("X-headerToHTTPFailure"))
+            .hasSize(1)
+            .allSatisfy((header) -> assertThat(header).isNotBlank());
     }
 
     @Test
     void shouldBeSucceededWhenServiceResponseIsOk() throws Exception {
-
         urlTestPattern = "/path/to/service/succeeded";
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -118,23 +115,20 @@ public class HeadersToHTTPTest {
                         + server.getLocalPort() + urlTestPattern)
                 .build();
 
-        mapper.register(urlTestPattern, (request, response, context) -> {
-            response.setStatusCode(HttpStatus.SC_OK);
-        });
+        mapper.register(urlTestPattern, (request, response, context) -> response.setStatusCode(HttpStatus.SC_OK));
 
         Mailet mailet = new HeadersToHTTP();
         mailet.init(mailetConfig);
 
         mailet.service(mail);
 
-        assertThat(mail.getMessage().getHeader("X-headerToHTTP")).hasSize(1)
-                .allSatisfy((header) -> assertThat(header).isEqualTo("Succeeded"));
-
+        assertThat(mail.getMessage().getHeader("X-headerToHTTP"))
+            .hasSize(1)
+            .allSatisfy((header) -> assertThat(header).isEqualTo("Succeeded"));
     }
 
     @Test
     void serviceShouldNotModifyHeadersContent() throws Exception {
-
         urlTestPattern = "/path/to/service/succeeded";
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -186,7 +180,6 @@ public class HeadersToHTTPTest {
 
     @Test
     void shouldSetTheMailStateWhenPassThroughIsFalse() throws Exception {
-
         urlTestPattern = "/path/to/service/PassThroughIsFalse";
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
@@ -196,9 +189,7 @@ public class HeadersToHTTPTest {
                                 + server.getLocalPort() + urlTestPattern)
                 .setProperty("passThrough", "false").build();
 
-        mapper.register(urlTestPattern, (request, response, context) -> {
-            response.setStatusCode(HttpStatus.SC_OK);
-        });
+        mapper.register(urlTestPattern, (request, response, context) -> response.setStatusCode(HttpStatus.SC_OK));
 
         Mailet mailet = new HeadersToHTTP();
         mailet.init(mailetConfig);
@@ -211,31 +202,25 @@ public class HeadersToHTTPTest {
     }
 
     @Test
-    void shouldThrowMessagingExceptionWhenInvalidUrl() throws Exception {
-
+    void shouldThrowMessagingExceptionWhenInvalidUrl() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .setProperty("parameterKey", "pKey").setProperty("parameterValue", "pValue")
                 .setProperty("url", "qwerty://invalid.url").build();
 
-        assertThatThrownBy(() -> {
-            new HeadersToHTTP().init(mailetConfig);
-        }).isExactlyInstanceOf(MessagingException.class)
-                .hasMessageContaining("Unable to contruct URL object from url");
-
+        assertThatThrownBy(() -> new HeadersToHTTP().init(mailetConfig))
+            .isExactlyInstanceOf(MessagingException.class)
+            .hasMessageContaining("Unable to contruct URL object from url");
     }
 
     @Test
-    void shouldThrowMessagingExceptionWhenUrlIsNull() throws Exception {
-
+    void shouldThrowMessagingExceptionWhenUrlIsNull() {
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .setProperty("parameterKey", "pKey").setProperty("parameterValue", "pValue")
                 .build();
 
-        assertThatThrownBy(() -> {
-            new HeadersToHTTP().init(mailetConfig);
-        }).isExactlyInstanceOf(MessagingException.class)
-                .hasMessageContaining("Please configure a targetUrl (\"url\")");
-
+        assertThatThrownBy(() -> new HeadersToHTTP().init(mailetConfig))
+            .isExactlyInstanceOf(MessagingException.class)
+            .hasMessageContaining("Please configure a targetUrl (\"url\")");
     }
 
 }
