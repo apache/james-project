@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backend.rabbitmq;
+package org.apache.james.backends.rabbitmq;
 
 import java.net.URI;
 import java.util.Arrays;

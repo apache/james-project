@@ -19,15 +19,15 @@
 
 package org.apache.james.modules;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
 
 import java.net.URISyntaxException;
 
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceModuleTestRule;
-import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 

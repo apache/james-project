@@ -19,12 +19,12 @@
 
 package org.apache.james.mailbox.events;
 
-import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
-import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
-import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
-import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
-import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backend.rabbitmq.Constants.NO_ARGUMENTS;
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
+import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.NO_ARGUMENTS;
 import static org.apache.james.mailbox.events.EventBusConcurrentTestContract.newCountingListener;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ALL_GROUPS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT;
@@ -52,11 +52,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.backend.rabbitmq.RabbitMQExtension;
-import org.apache.james.backend.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
-import org.apache.james.backend.rabbitmq.RabbitMQFixture;
-import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
-import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
+import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQExtension.DockerRestartPolicy;
+import org.apache.james.backends.rabbitmq.RabbitMQFixture;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.EventBusTestFixture.GroupA;
 import org.apache.james.mailbox.events.EventBusTestFixture.MailboxListenerCountingSuccessfulExecution;

@@ -19,7 +19,8 @@
 package org.apache.james.task.eventsourcing.distributed
 
 import javax.inject.Inject
-import org.apache.james.backend.rabbitmq.SimpleConnectionPool
+
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListener}

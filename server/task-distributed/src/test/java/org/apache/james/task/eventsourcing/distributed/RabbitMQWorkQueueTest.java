@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.stream.IntStream;
 
-import org.apache.james.backend.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.TestTask;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;

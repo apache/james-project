@@ -16,11 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backend.rabbitmq;
+package org.apache.james.backends.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_PASSWORD_STRING;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.DEFAULT_USER;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_MANAGEMENT_CREDENTIAL;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_PASSWORD_STRING;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.DEFAULT_USER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

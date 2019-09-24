@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backend.rabbitmq;
+package org.apache.james.backends.rabbitmq;
 
 import com.rabbitmq.client.Channel;
 import reactor.core.publisher.Flux;

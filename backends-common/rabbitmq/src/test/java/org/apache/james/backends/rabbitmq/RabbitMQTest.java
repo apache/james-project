@@ -16,21 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.backend.rabbitmq;
+package org.apache.james.backends.rabbitmq;
 
-import static org.apache.james.backend.rabbitmq.Constants.AUTO_ACK;
-import static org.apache.james.backend.rabbitmq.Constants.AUTO_DELETE;
-import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
-import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
-import static org.apache.james.backend.rabbitmq.Constants.EXCLUSIVE;
-import static org.apache.james.backend.rabbitmq.Constants.MULTIPLE;
-import static org.apache.james.backend.rabbitmq.Constants.NO_LOCAL;
-import static org.apache.james.backend.rabbitmq.Constants.NO_PROPERTIES;
-import static org.apache.james.backend.rabbitmq.Constants.REQUEUE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.ROUTING_KEY;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.WORK_QUEUE;
-import static org.apache.james.backend.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_ACK;
+import static org.apache.james.backends.rabbitmq.Constants.AUTO_DELETE;
+import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EXCLUSIVE;
+import static org.apache.james.backends.rabbitmq.Constants.MULTIPLE;
+import static org.apache.james.backends.rabbitmq.Constants.NO_LOCAL;
+import static org.apache.james.backends.rabbitmq.Constants.NO_PROPERTIES;
+import static org.apache.james.backends.rabbitmq.Constants.REQUEUE;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.EXCHANGE_NAME;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.ROUTING_KEY;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.WORK_QUEUE;
+import static org.apache.james.backends.rabbitmq.RabbitMQFixture.awaitAtMostOneMinute;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

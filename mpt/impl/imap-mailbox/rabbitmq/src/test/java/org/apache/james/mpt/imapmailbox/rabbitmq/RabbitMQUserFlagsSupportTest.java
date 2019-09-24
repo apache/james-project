@@ -19,7 +19,7 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq;
 
-import org.apache.james.backend.rabbitmq.DockerRabbitMQTestRule;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQTestRule;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.rabbitmq.host.RabbitMQEventBusHostSystemRule;
 import org.apache.james.mpt.imapmailbox.suite.UserFlagsSupport;

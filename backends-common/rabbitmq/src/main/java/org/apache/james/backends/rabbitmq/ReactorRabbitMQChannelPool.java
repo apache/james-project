@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backend.rabbitmq;
+package org.apache.james.backends.rabbitmq;
 
 import java.time.Duration;
 import java.util.Comparator;

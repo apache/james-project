@@ -19,9 +19,9 @@
 
 package org.apache.james.mailbox.events;
 
-import static org.apache.james.backend.rabbitmq.Constants.DIRECT_EXCHANGE;
-import static org.apache.james.backend.rabbitmq.Constants.DURABLE;
-import static org.apache.james.backend.rabbitmq.Constants.EMPTY_ROUTING_KEY;
+import static org.apache.james.backends.rabbitmq.Constants.DIRECT_EXCHANGE;
+import static org.apache.james.backends.rabbitmq.Constants.DURABLE;
+import static org.apache.james.backends.rabbitmq.Constants.EMPTY_ROUTING_KEY;
 import static org.apache.james.mailbox.events.GroupRegistration.RETRY_COUNT;
 import static org.apache.james.mailbox.events.RabbitMQEventBus.MAILBOX_EVENT;
 

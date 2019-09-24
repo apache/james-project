@@ -21,7 +21,7 @@ package org.apache.james;
 
 import java.io.IOException;
 
-import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;

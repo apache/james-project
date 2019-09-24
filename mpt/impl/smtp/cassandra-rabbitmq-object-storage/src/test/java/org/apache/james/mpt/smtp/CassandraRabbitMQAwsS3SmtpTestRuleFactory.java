@@ -22,7 +22,7 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.CassandraJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backend.rabbitmq.DockerRabbitMQSingleton;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestAwsS3BlobStoreModule;

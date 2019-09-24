@@ -28,8 +28,8 @@ import java.util.UUID;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.backend.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.lifecycle.api.Startable;

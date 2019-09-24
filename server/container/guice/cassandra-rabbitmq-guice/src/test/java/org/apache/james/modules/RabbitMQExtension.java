@@ -20,7 +20,7 @@
 package org.apache.james.modules;
 
 import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;

@@ -19,7 +19,7 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
-import org.apache.james.backend.rabbitmq.DockerRabbitMQTestRule;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQTestRule;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;

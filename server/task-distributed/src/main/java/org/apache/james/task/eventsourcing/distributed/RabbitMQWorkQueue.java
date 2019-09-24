@@ -26,8 +26,8 @@ import java.util.UUID;
 
 import javax.annotation.PreDestroy;
 
-import org.apache.james.backend.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;

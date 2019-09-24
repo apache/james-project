@@ -23,8 +23,8 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.backend.rabbitmq.RabbitMQConfiguration;
-import org.apache.james.backend.rabbitmq.RabbitMQManagementAPI;
+import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
+import org.apache.james.backends.rabbitmq.RabbitMQManagementAPI;
 import org.apache.james.util.OptionalUtils;
 
 import com.google.common.annotations.VisibleForTesting;

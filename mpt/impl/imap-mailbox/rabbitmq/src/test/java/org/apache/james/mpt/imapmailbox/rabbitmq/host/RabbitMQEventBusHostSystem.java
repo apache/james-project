@@ -23,8 +23,8 @@ package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.backend.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backend.rabbitmq.SimpleConnectionPool;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.event.json.EventSerializer;
