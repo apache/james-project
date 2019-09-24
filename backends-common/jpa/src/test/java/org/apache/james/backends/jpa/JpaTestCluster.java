@@ -41,7 +41,6 @@ public class JpaTestCluster {
         properties.put("openjpa.ConnectionDriverName", org.apache.derby.jdbc.EmbeddedDriver.class.getName());
         properties.put("openjpa.ConnectionURL", "jdbc:derby:memory:mailboxintegrationtesting;create=true"); // Memory Derby database
         properties.put("openjpa.jdbc.SynchronizeMappings", "buildSchema(ForeignKeys=true)"); // Create Foreign Keys
-        properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=restrict, JoinForeignKeyDeleteAction=restrict");
         properties.put("openjpa.jdbc.SchemaFactory", "native(ForeignKeys=true)");
         properties.put("openjpa.jdbc.MappingDefaults", "ForeignKeyDeleteAction=cascade, JoinForeignKeyDeleteAction=cascade");
         properties.put("openjpa.jdbc.QuerySQLCache", "false");
