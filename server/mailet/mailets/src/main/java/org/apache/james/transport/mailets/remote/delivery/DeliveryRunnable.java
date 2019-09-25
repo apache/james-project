@@ -81,7 +81,7 @@ public class DeliveryRunnable implements Disposable {
     }
 
     public void start() {
-        Scheduler remoteDeliveryScheduler = Schedulers.newElastic("RemoteDelivery");
+        Scheduler remoteDeliveryScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery");
         disposable = Flux.from(queue.deQueue())
             .publishOn(remoteDeliveryScheduler)
             .flatMap(this::runStep)
