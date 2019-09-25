@@ -46,7 +46,7 @@ import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
-import reactor.core.publisher.WorkQueueProcessor;
+import reactor.core.publisher.UnicastProcessor;
 
 class JamesMailSpoolerTest {
     private static final ConditionFactory CALMLY_AWAIT = Awaitility
@@ -62,7 +62,7 @@ class JamesMailSpoolerTest {
         JamesMailSpooler spooler = new JamesMailSpooler(metricFactory);
         MailQueueFactory<?> queueFactory = mock(MailQueueFactory.class);
 
-        WorkQueueProcessor<MockedMailQueueItem> workQueue = WorkQueueProcessor.create("fakeMQ", 1);
+        UnicastProcessor<MockedMailQueueItem> workQueue = UnicastProcessor.create();
         MockedMailQueueItem item = new MockedMailQueueItem();
         item.addCallback(isDone -> {
             if (!isDone) {
@@ -98,7 +98,7 @@ class JamesMailSpoolerTest {
         JamesMailSpooler spooler = new JamesMailSpooler(metricFactory);
         MailQueueFactory<?> queueFactory = mock(MailQueueFactory.class);
 
-        WorkQueueProcessor<MockedMailQueueItem> workQueue = WorkQueueProcessor.create("fakeMQ", 1);
+        UnicastProcessor<MockedMailQueueItem> workQueue = UnicastProcessor.create();
         MockedMailQueueItem item = new MockedMailQueueItem();
         item.addCallback(isDone -> {
             if (!isDone) {
