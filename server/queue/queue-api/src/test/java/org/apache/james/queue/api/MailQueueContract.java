@@ -331,7 +331,7 @@ public interface MailQueueContract {
             .name(secondExpectedName)
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         mailQueueItem1.done(true);
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
@@ -350,7 +350,7 @@ public interface MailQueueContract {
             .build());
 
         Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue())
-            .subscribeOn(Schedulers.elastic()).toIterable().iterator();
+            .subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem1.done(true);
@@ -369,7 +369,7 @@ public interface MailQueueContract {
             .name("name2")
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
         mailQueueItem2.done(true);
@@ -384,7 +384,7 @@ public interface MailQueueContract {
             .name("name1")
             .build());
 
-        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> items = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = items.next();
         mailQueueItem1.done(false);
         MailQueue.MailQueueItem mailQueueItem2 = items.next();
@@ -400,7 +400,7 @@ public interface MailQueueContract {
             .build());
 
         LinkedBlockingQueue<MailQueue.MailQueueItem> queue = new LinkedBlockingQueue<>(1);
-        Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).subscribe(Throwing.consumer(queue::put));
+        Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).subscribe(Throwing.consumer(queue::put));
         queue.take();
 
         assertThat(queue.poll(2, TimeUnit.SECONDS)).isNull();
@@ -408,7 +408,7 @@ public interface MailQueueContract {
 
     @Test
     default void deQueueShouldBlockWhenNoMail() {
-        Mono<MailQueue.MailQueueItem> item = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
+        Mono<MailQueue.MailQueueItem> item = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).next();
 
         assertThatThrownBy(() -> item.block(Duration.ofSeconds(2)))
             .isInstanceOf(RuntimeException.class);
@@ -439,7 +439,7 @@ public interface MailQueueContract {
         LinkedBlockingQueue<MailQueue.MailQueueItem> itemQueue = new LinkedBlockingQueue<>(1);
         Flux.from(testee
             .deQueue())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMap(e -> {
                 try {
                     itemQueue.put(e);
@@ -481,7 +481,7 @@ public interface MailQueueContract {
         int operationCount = 15;
         int totalDequeuedMessages = 50;
         LinkedBlockingDeque<MailQueue.MailQueueItem> deque = new LinkedBlockingDeque<>();
-        Flux.from(testee.deQueue()).subscribeOn(Schedulers.elastic()).doOnNext(deque::addFirst).subscribe();
+        Flux.from(testee.deQueue()).subscribeOn(Schedulers.boundedElastic()).doOnNext(deque::addFirst).subscribe();
         ConcurrentTestRunner.builder()
             .operation((threadNumber, step) -> {
                 if (step % 3 == 0) {

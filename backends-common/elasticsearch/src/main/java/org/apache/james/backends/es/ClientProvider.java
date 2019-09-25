@@ -60,8 +60,8 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
         return Mono.fromCallable(() -> connectToCluster(configuration))
             .doOnError(e -> LOGGER.warn("Error establishing ElasticSearch connection. Next retry scheduled in {}",
                 DurationFormatUtils.formatDurationWords(waitDelay.toMillis(), suppressLeadingZeroElements, suppressTrailingZeroElements), e))
-            .retryBackoff(configuration.getMaxRetries(), waitDelay, forever, Schedulers.elastic())
-            .publishOn(Schedulers.elastic())
+            .retryBackoff(configuration.getMaxRetries(), waitDelay, forever, Schedulers.boundedElastic())
+            .publishOn(Schedulers.boundedElastic())
             .block();
     }
 

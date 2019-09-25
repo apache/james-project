@@ -114,7 +114,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
         }
 
         return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(user, source)).sneakyThrow())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .doOnError(e -> LOGGER.error("Error during account restoration for user : " + user, e))
             .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
             .thenReturn(BackupStatus.DONE)

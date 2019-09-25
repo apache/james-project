@@ -80,7 +80,7 @@ class EventDispatcher {
             .concat(
                 dispatchToLocalListeners(event, keys),
                 dispatchToRemoteListeners(serializeEvent(event), keys))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .doOnError(throwable -> LOGGER.error("error while dispatching event", throwable))
             .then()
             .subscribeWith(MonoProcessor.create());

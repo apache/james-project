@@ -71,13 +71,13 @@ public class InVmEventDelivery implements EventDelivery {
         Mono<Void> deliveryToListener = Mono.fromRunnable(() -> doDeliverToListener(listener, event))
             .doOnError(throwable -> structuredLogger(event, listener)
                 .log(logger -> logger.error("Error while processing listener", throwable)))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .then();
 
         return deliveryOption.getRetrier().doRetry(deliveryToListener, event)
             .onErrorResume(throwable -> deliveryOption.getPermanentFailureHandler().handle(event))
             .subscribeWith(MonoProcessor.create())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
 

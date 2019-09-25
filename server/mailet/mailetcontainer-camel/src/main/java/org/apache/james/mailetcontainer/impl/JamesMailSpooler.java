@@ -118,7 +118,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
             .publishOn(spooler)
             .flatMap(this::handleOnQueueItem)
             .onErrorContinue((throwable, item) -> LOGGER.error("Exception processing mail while spooling {}", item, throwable))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
     }
 
@@ -138,7 +138,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     private Mono<Void> processMail(MailQueueItem queueItem) {
         Mail mail = queueItem.getMail();
         return Mono.fromRunnable(() -> LOGGER.debug("==== Begin processing mail {} ====", mail.getName()))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .then(Mono.fromCallable(() -> performProcessMail(mail)))
             .flatMap(any -> acknowledgeItem(queueItem, true))
             .onErrorResume(any -> acknowledgeItem(queueItem, false))

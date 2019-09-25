@@ -89,14 +89,14 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         sendQueue = UnicastProcessor.create();
         sendQueueHandle = sender
             .send(sendQueue)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
 
         Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
         listener = DirectProcessor.create();
         listenQueueHandle = receiver
             .consumeAutoAck(queueName)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .concatMap(this::toEvent)
             .subscribe(listener::onNext);
     }

@@ -59,7 +59,7 @@ class WaitDelayGenerator {
         }
 
         return countRetryMono
-            .delayElement(generateDelay(retryCount), Schedulers.elastic());
+            .delayElement(generateDelay(retryCount), Schedulers.boundedElastic());
     }
 
     @VisibleForTesting

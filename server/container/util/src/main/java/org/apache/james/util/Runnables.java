@@ -31,9 +31,9 @@ public class Runnables {
 
     public static void runParallel(Flux<Runnable> runnables) {
         runnables
-            .publishOn(Schedulers.elastic())
+            .publishOn(Schedulers.boundedElastic())
             .parallel()
-            .runOn(Schedulers.elastic())
+            .runOn(Schedulers.boundedElastic())
             .flatMap(runnable -> {
                 runnable.run();
                 return Mono.empty();

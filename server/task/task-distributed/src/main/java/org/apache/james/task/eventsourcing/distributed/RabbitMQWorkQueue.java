@@ -106,7 +106,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private void consumeWorkqueue() {
         receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(connectionMono));
         receiver.consumeExclusiveManualAck(QUEUE_NAME, new ConsumeOptions())
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMap(this::executeTask)
             .subscribe();
     }
@@ -140,7 +140,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
         sendCancelRequestsQueue = UnicastProcessor.create();
         sendCancelRequestsQueueHandle = cancelRequestSender
             .send(sendCancelRequestsQueue.map(this::makeCancelRequestMessage))
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
     }
 
@@ -148,7 +148,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
         RabbitFlux
             .createReceiver(new ReceiverOptions().connectionMono(connectionMono))
             .consumeAutoAck(queueName)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .map(this::readCancelRequestMessage)
             .doOnNext(worker::cancelTask)
             .subscribe();

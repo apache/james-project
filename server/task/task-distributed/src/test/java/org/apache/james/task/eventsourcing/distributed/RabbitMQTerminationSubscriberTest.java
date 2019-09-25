@@ -62,7 +62,7 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
         sendEvents(subscriber1, COMPLETED_EVENT);
 
         List<List<Event>> listenedEvents = Flux.just(subscriber1, subscriber2)
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMap(this::collectEvents)
             .collectList()
             .block();

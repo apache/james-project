@@ -72,7 +72,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool {
             return Mono.fromCallable(connection::openChannel)
                 .map(maybeChannel ->
                     maybeChannel.orElseThrow(() -> new RuntimeException("RabbitMQ reached to maximum opened channels, cannot get more channels")))
-                .retryBackoff(MAX_RETRIES, RETRY_FIRST_BACK_OFF, FOREVER, Schedulers.elastic())
+                .retryBackoff(MAX_RETRIES, RETRY_FIRST_BACK_OFF, FOREVER, Schedulers.boundedElastic())
                 .doOnError(throwable -> LOGGER.error("error when creating new channel", throwable));
         }
 

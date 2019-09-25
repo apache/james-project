@@ -177,11 +177,11 @@ public class AwsS3ObjectStorage {
 
         private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
             return Mono.<Void>fromRunnable(Throwing.runnable(() -> put(bucketName, configuration, blob, file)).sneakyThrow())
-                .publishOn(Schedulers.elastic())
+                .publishOn(Schedulers.boundedElastic())
                 .retryWhen(Retry
                     .<Void>onlyIf(retryContext -> needToCreateBucket(retryContext.exception()))
                     .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
-                    .withBackoffScheduler(Schedulers.elastic())
+                    .withBackoffScheduler(Schedulers.boundedElastic())
                     .retryMax(MAX_RETRY_ON_EXCEPTION)
                     .doOnRetry(retryContext -> createBucket(bucketName, configuration)));
         }

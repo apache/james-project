@@ -37,7 +37,7 @@ public class MemoryWorkQueue implements WorkQueue {
         this.tasks = new LinkedBlockingQueue<>();
         this.subscription = Mono.fromCallable(tasks::take)
             .repeat()
-            .subscribeOn(Schedulers.elastic())
+            .subscribeOn(Schedulers.boundedElastic())
             .flatMapSequential(this::dispatchTaskToWorker)
             .subscribe();
     }

@@ -92,7 +92,7 @@ public class CassandraBlobStore implements BlobStore {
     private Mono<Integer> saveBlobParts(BucketName bucketName, byte[] data, BlobId blobId) {
         Stream<Pair<Integer, ByteBuffer>> chunks = dataChunker.chunk(data, configuration.getBlobPartSize());
         return Flux.fromStream(chunks)
-            .publishOn(Schedulers.elastic(), PREFETCH)
+            .publishOn(Schedulers.boundedElastic(), PREFETCH)
             .flatMap(pair -> writePart(bucketName, blobId, pair.getKey(), pair.getValue())
                 .then(Mono.just(getChunkNum(pair))))
             .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
@@ -129,13 +129,13 @@ public class CassandraBlobStore implements BlobStore {
 
     private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
         Integer rowCount = selectRowCount(bucketName, blobId)
-            .publishOn(Schedulers.elastic())
+            .publishOn(Schedulers.boundedElastic())
             .single()
             .onErrorResume(NoSuchElementException.class, e -> Mono.error(
                 new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
             .block();
         return Flux.range(0, rowCount)
-            .publishOn(Schedulers.elastic(), PREFETCH)
+            .publishOn(Schedulers.boundedElastic(), PREFETCH)
             .flatMapSequential(partIndex -> readPart(bucketName, blobId, partIndex)
                 .single()
                 .onErrorResume(NoSuchElementException.class, e -> Mono.error(

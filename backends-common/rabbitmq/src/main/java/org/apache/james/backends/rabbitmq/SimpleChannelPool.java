@@ -87,13 +87,13 @@ public class SimpleChannelPool implements RabbitMQChannelPool {
         Duration initialDelay = Duration.ofMillis(100);
         Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         return Mono.defer(this::getOpenChannel)
-            .retryBackoff(numRetries, initialDelay, forever, Schedulers.elastic());
+            .retryBackoff(numRetries, initialDelay, forever, Schedulers.boundedElastic());
     }
 
     private Mono<Channel> getOpenChannel() {
         Channel previous = channelReference.get();
         return Mono.justOrEmpty(previous)
-            .publishOn(Schedulers.elastic())
+            .publishOn(Schedulers.boundedElastic())
             .filter(Channel::isOpen)
             .switchIfEmpty(connectionPool.getResilientConnection()
                 .flatMap(connection -> Mono.fromCallable(connection::createChannel)))

@@ -186,7 +186,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     public Mono<Void> deleteBucket(BucketName bucketName) {
         ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
         return Mono.<Void>fromRunnable(() -> blobStore.deleteContainer(resolvedBucketName.asString()))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     public PayloadCodec getPayloadCodec() {
@@ -196,7 +196,7 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     @VisibleForTesting
     Mono<Void> deleteAllBuckets() {
         return Flux.fromIterable(blobStore.list())
-            .publishOn(Schedulers.elastic())
+            .publishOn(Schedulers.boundedElastic())
             .filter(storageMetadata -> storageMetadata.getType().equals(StorageType.CONTAINER))
             .map(StorageMetadata::getName)
             .doOnNext(blobStore::deleteContainer)
@@ -207,6 +207,6 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
         ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
         return Mono.<Void>fromRunnable(() -> blobStore.removeBlob(resolvedBucketName.asString(), blobId.asString()))
-            .subscribeOn(Schedulers.elastic());
+            .subscribeOn(Schedulers.boundedElastic());
     }
 }
