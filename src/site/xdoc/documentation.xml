@@ -43,7 +43,7 @@
              James is made of <b>internal projects</b> - Server, Mailet, Mailbox, Protocols, MPT - and of <b>external projects</b> – Hupa, Mime4J, jSieve, jSPF, jDKIM.</p>
 
           <p>You can also read the <a href="http://wiki.apache.org/james/">wiki</a>
-             (discover <a href="http://wiki.apache.org/james/JamesUsers">who uses James</a>,...)</p>
+             (discover <a href="https://cwiki.apache.org/confluence/display/JAMES2/JamesUsers">who uses James</a>,...)</p>
 
         <img class="centered" src="images/james-schema-subprojects.png" alt="" usemap="#Map" />
            <map name="Map" id="Map">
