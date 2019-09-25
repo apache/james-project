@@ -36,9 +36,9 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
-import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.MailAddressFixture;
 import org.apache.mailet.base.test.FakeMail;
@@ -47,7 +47,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 class ToSenderDomainRepositoryTest {
 
@@ -75,7 +74,7 @@ class ToSenderDomainRepositoryTest {
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
 
-        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
+        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new TestingMailRepositoryLoader(), configuration);
         mailRepositoryStore.init();
     }
 

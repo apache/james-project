@@ -22,11 +22,13 @@ package org.apache.james.mailrepository.cassandra;
 import java.util.Collection;
 import java.util.Iterator;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
@@ -36,16 +38,22 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailRepository implements MailRepository {
-
     private final MailRepositoryUrl url;
     private final CassandraMailRepositoryKeysDAO keysDAO;
     private final CassandraMailRepositoryCountDAO countDAO;
     private final CassandraMailRepositoryMailDaoAPI mailDAO;
     private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
 
-    public CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
-                                   CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
-                                   Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
+    @Inject
+    CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
+                            CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
+                            MimeMessageStore.Factory mimeMessageStoreFactory) {
+        this(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory.mimeMessageStore());
+    }
+
+    CassandraMailRepository(MailRepositoryUrl url, CassandraMailRepositoryKeysDAO keysDAO,
+                            CassandraMailRepositoryCountDAO countDAO, CassandraMailRepositoryMailDaoAPI mailDAO,
+                            Store<MimeMessage, MimeMessagePartsId> mimeMessageStore) {
         this.url = url;
         this.keysDAO = keysDAO;
         this.countDAO = countDAO;

@@ -17,37 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.cassandra;
+package org.apache.james.mailrepository.memory;
 
-import javax.inject.Inject;
-
-import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 
-public class CassandraMailRepositoryProvider implements MailRepositoryProvider {
-    private final CassandraMailRepositoryKeysDAO keysDAO;
-    private final CassandraMailRepositoryCountDAO countDAO;
-    private final CassandraMailRepositoryMailDaoAPI mailDAO;
-    private final MimeMessageStore.Factory mimeMessageStoreFactory;
-
-    @Inject
-    public CassandraMailRepositoryProvider(CassandraMailRepositoryKeysDAO keysDAO, CassandraMailRepositoryCountDAO countDAO,
-                                           CassandraMailRepositoryMailDaoAPI mailDAO, MimeMessageStore.Factory mimeMessageStoreFactory) {
-        this.keysDAO = keysDAO;
-        this.countDAO = countDAO;
-        this.mailDAO = mailDAO;
-        this.mimeMessageStoreFactory = mimeMessageStoreFactory;
-    }
-
-    @Override
-    public String canonicalName() {
-        return CassandraMailRepository.class.getCanonicalName();
-    }
-
-    @Override
-    public MailRepository provide(MailRepositoryUrl url) {
-        return new CassandraMailRepository(url, keysDAO, countDAO, mailDAO, mimeMessageStoreFactory.mimeMessageStore());
-    }
+public interface MailRepositoryLoader {
+    MailRepository load(String fullyQualifiedClassName, MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException;
 }

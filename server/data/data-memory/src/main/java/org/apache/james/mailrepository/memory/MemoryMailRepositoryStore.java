@@ -22,7 +22,6 @@ package org.apache.james.mailrepository.memory;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Stream;
@@ -31,13 +30,11 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
@@ -47,24 +44,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.functions.ThrowingFunction;
 
 public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable {
     private static final Logger LOGGER = LoggerFactory.getLogger(MemoryMailRepositoryStore.class);
 
     private final MailRepositoryUrlStore urlStore;
-    private final Set<MailRepositoryProvider> mailRepositories;
     private final ConcurrentMap<MailRepositoryUrl, MailRepository> destinationToRepositoryAssociations;
-    private final Map<Protocol, MailRepositoryProvider> protocolToRepositoryProvider;
+    private final Map<Protocol, String> protocolToClass;
+    private final MailRepositoryLoader mailRepositoryLoader;
     private final Map<Protocol, HierarchicalConfiguration<ImmutableNode>> perProtocolMailRepositoryDefaultConfiguration;
     private final MailRepositoryStoreConfiguration configuration;
 
     @Inject
-    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, Set<MailRepositoryProvider> mailRepositories, MailRepositoryStoreConfiguration configuration) {
+    public MemoryMailRepositoryStore(MailRepositoryUrlStore urlStore, MailRepositoryLoader mailRepositoryLoader, MailRepositoryStoreConfiguration configuration) {
         this.urlStore = urlStore;
-        this.mailRepositories = mailRepositories;
+        this.mailRepositoryLoader = mailRepositoryLoader;
         this.configuration = configuration;
         this.destinationToRepositoryAssociations = new ConcurrentHashMap<>();
-        this.protocolToRepositoryProvider = new HashMap<>();
+        this.protocolToClass = new HashMap<>();
         this.perProtocolMailRepositoryDefaultConfiguration = new HashMap<>();
     }
 
@@ -76,16 +74,9 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
         }
     }
 
-    private void initEntry(MailRepositoryStoreConfiguration.Item item) throws ConfigurationException {
-        String className = item.getClassFqdn();
-
-        MailRepositoryProvider usedMailRepository = mailRepositories.stream()
-            .filter(mailRepositoryProvider -> mailRepositoryProvider.canonicalName().equals(className))
-            .findAny()
-            .orElseThrow(() -> new ConfigurationException("MailRepository " + className + " has not been registered"));
-
+    private void initEntry(MailRepositoryStoreConfiguration.Item item) {
         for (Protocol protocol : item.getProtocols()) {
-            protocolToRepositoryProvider.put(protocol, usedMailRepository);
+            protocolToClass.put(protocol, item.getClassFqdn());
             perProtocolMailRepositoryDefaultConfiguration.put(protocol, item.getConfiguration());
         }
     }
@@ -148,8 +139,12 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
 
     private MailRepository retrieveMailRepository(MailRepositoryUrl mailRepositoryUrl) throws MailRepositoryStoreException {
         Protocol protocol = mailRepositoryUrl.getProtocol();
-        return Optional.ofNullable(protocolToRepositoryProvider.get(protocol))
-            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()))
-            .provide(mailRepositoryUrl);
+        Optional<String> fullyQualifiedClass = Optional.ofNullable(protocolToClass.get(protocol));
+
+        ThrowingFunction<String, MailRepository> fqcnToMailRepository = className -> mailRepositoryLoader.load(className, mailRepositoryUrl);
+
+        return fullyQualifiedClass
+            .map(Throwing.function(fqcnToMailRepository).sneakyThrow())
+            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()));
     }
 }

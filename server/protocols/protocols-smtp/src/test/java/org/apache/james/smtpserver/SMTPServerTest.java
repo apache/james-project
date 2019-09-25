@@ -54,9 +54,9 @@ import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
-import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
@@ -82,7 +82,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class SMTPServerTest {
 
@@ -210,7 +209,7 @@ public class SMTPServerTest {
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
 
-        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
+        mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new TestingMailRepositoryLoader(), configuration);
         mailRepositoryStore.init();
     }
 

@@ -17,33 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.file;
+package org.apache.james.modules.server;
 
-import javax.inject.Inject;
-
-import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.memory.MailRepositoryLoader;
+import org.apache.james.utils.ClassName;
+import org.apache.james.utils.GuiceGenericLoader;
 
-public class FileMailRepositoryProvider implements MailRepositoryProvider {
+import com.google.inject.Inject;
+import com.google.inject.Module;
 
-    private final FileSystem fileSystem;
+public class GuiceMailRepositoryLoader implements MailRepositoryLoader {
+    private final GuiceGenericLoader genericLoader;
 
     @Inject
-    public FileMailRepositoryProvider(FileSystem fileSystem) {
-        this.fileSystem = fileSystem;
+    public GuiceMailRepositoryLoader(GuiceGenericLoader genericLoader) {
+        this.genericLoader = genericLoader;
     }
 
     @Override
-    public String canonicalName() {
-        return FileMailRepository.class.getCanonicalName();
-    }
+    public MailRepository load(String fullyQualifiedClassName, MailRepositoryUrl url) throws MailRepositoryStore.MailRepositoryStoreException {
+        try {
+            Module urlModule = binder -> binder.bind(MailRepositoryUrl.class).toInstance(url);
 
-    @Override
-    public MailRepository provide(MailRepositoryUrl url) {
-        FileMailRepository fileMailRepository = new FileMailRepository();
-        fileMailRepository.setFileSystem(fileSystem);
-        return fileMailRepository;
+            return genericLoader.<MailRepository>withChildModule(urlModule)
+                .instanciate(new ClassName(fullyQualifiedClassName));
+        } catch (ClassNotFoundException e) {
+            throw new MailRepositoryStore.MailRepositoryStoreException("No Mail Repository found with class name " + fullyQualifiedClassName);
+        } catch (ClassCastException e) {
+            throw new MailRepositoryStore.MailRepositoryStoreException(fullyQualifiedClassName + " is not a MailRepository");
+        }
     }
 }

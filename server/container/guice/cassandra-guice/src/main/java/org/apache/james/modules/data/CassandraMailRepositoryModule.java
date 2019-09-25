@@ -21,7 +21,6 @@ package org.apache.james.modules.data;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.mailrepository.api.MailRepositoryProvider;
 import org.apache.james.mailrepository.api.MailRepositoryUrlStore;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepository;
@@ -30,7 +29,6 @@ import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryKeysDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDAO;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoAPI;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoV2;
-import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryProvider;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlModule;
 import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryUrlStore;
 import org.apache.james.mailrepository.cassandra.MergingCassandraMailRepositoryMailDao;
@@ -59,9 +57,6 @@ public class CassandraMailRepositoryModule extends AbstractModule {
 
         bind(CassandraMailRepositoryMailDaoAPI.class).to(MergingCassandraMailRepositoryMailDao.class);
         bind(MailRepositoryUrlStore.class).to(CassandraMailRepositoryUrlStore.class);
-
-        Multibinder<MailRepositoryProvider> multibinder = Multibinder.newSetBinder(binder(), MailRepositoryProvider.class);
-        multibinder.addBinding().to(CassandraMailRepositoryProvider.class);
 
         bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> CASSANDRA_MAILREPOSITORY_DEFAULT_DECLARATION);
 

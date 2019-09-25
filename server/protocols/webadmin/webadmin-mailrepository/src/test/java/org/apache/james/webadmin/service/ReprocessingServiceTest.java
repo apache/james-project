@@ -33,9 +33,9 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
-import org.apache.james.mailrepository.memory.MemoryMailRepositoryProvider;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
+import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
@@ -47,7 +47,6 @@ import org.junit.Test;
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.consumers.ConsumerChainer;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Sets;
 
 public class ReprocessingServiceTest {
     private static final String MEMORY_PROTOCOL = "memory";
@@ -187,7 +186,7 @@ public class ReprocessingServiceTest {
                 MemoryMailRepository.class.getName(),
                 new BaseHierarchicalConfiguration()));
 
-        MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(new MemoryMailRepositoryProvider()), configuration);
+        MemoryMailRepositoryStore mailRepositoryStore = new MemoryMailRepositoryStore(urlStore, new TestingMailRepositoryLoader(), configuration);
         mailRepositoryStore.init();
         return mailRepositoryStore;
     }

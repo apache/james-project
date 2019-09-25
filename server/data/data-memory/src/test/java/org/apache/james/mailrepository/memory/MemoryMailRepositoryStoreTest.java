@@ -25,12 +25,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Duration;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.api.Protocol;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -38,8 +38,6 @@ import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
-
-import com.google.common.collect.Sets;
 
 public class MemoryMailRepositoryStoreTest {
     private static final MailRepositoryUrl MEMORY1_REPO = MailRepositoryUrl.from("memory1://repo");
@@ -49,12 +47,14 @@ public class MemoryMailRepositoryStoreTest {
 
     private MemoryMailRepositoryUrlStore urlStore;
 
+    private TestingMailRepositoryLoader loader;
     private MemoryMailRepositoryStore repositoryStore;
     private FileSystemImpl fileSystem;
     private Configuration configuration;
 
     @Before
     public void setUp() throws Exception {
+        loader = new TestingMailRepositoryLoader();
         configuration = Configuration.builder()
             .workingDirectory("../")
             .configurationFromClasspath()
@@ -65,10 +65,7 @@ public class MemoryMailRepositoryStoreTest {
         MailRepositoryStoreConfiguration storeConfiguration = MailRepositoryStoreConfiguration.parse(
             new FileConfigurationProvider(fileSystem, configuration).getConfiguration("mailrepositorystore"));
 
-        repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
-                new MemoryMailRepositoryProvider(),
-                new MemoryMailRepositoryProvider()),
-            storeConfiguration);
+        repositoryStore = new MemoryMailRepositoryStore(urlStore, loader, storeConfiguration);
         repositoryStore.init();
     }
 
@@ -100,19 +97,20 @@ public class MemoryMailRepositoryStoreTest {
         MailRepositoryStoreConfiguration storeConfiguration = MailRepositoryStoreConfiguration.parse(
             new FileConfigurationProvider(fileSystem, configuration).getConfiguration("fakemailrepositorystore"));
 
-        repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
-            new MemoryMailRepositoryProvider()), storeConfiguration);
+        repositoryStore = new MemoryMailRepositoryStore(urlStore, loader, storeConfiguration);
 
-        assertThatThrownBy(() -> repositoryStore.init())
-            .isInstanceOf(ConfigurationException.class);
+        repositoryStore.init();
+
+        assertThatThrownBy(() -> repositoryStore.select(MailRepositoryUrl.fromPathAndProtocol(
+            new Protocol("memory"), MailRepositoryPath.from("/var/will/fail"))))
+            .isInstanceOf(MailRepositoryStore.MailRepositoryStoreException.class);
     }
 
     @Test
     public void configureShouldNotThrowOnEmptyConfiguration() throws Exception {
         MailRepositoryStoreConfiguration configuration = MailRepositoryStoreConfiguration.parse(new BaseHierarchicalConfiguration());
 
-        repositoryStore = new MemoryMailRepositoryStore(urlStore, Sets.newHashSet(
-            new MemoryMailRepositoryProvider()), configuration);
+        repositoryStore = new MemoryMailRepositoryStore(urlStore, loader, configuration);
 
         repositoryStore.init();
     }
