@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import org.apache.http.HttpStatus;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -59,6 +60,8 @@ public class NodeMappingFactory {
         return client;
     }
 
+    // ElasticSearch 6.3.2 does not support field master_timeout that is set up by 6.4.3 REST client when relying on getMapping
+    @SuppressWarnings("deprecation")
     public static boolean mappingAlreadyExist(RestHighLevelClient client, IndexName indexName) throws IOException {
         try {
             client.getLowLevelClient().performRequest("GET", indexName.getValue() + "/_mapping/" + NodeMappingFactory.DEFAULT_MAPPING_NAME);
@@ -75,7 +78,8 @@ public class NodeMappingFactory {
         client.indices().putMapping(
             new PutMappingRequest(indexName.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                .source(mappingsSources));
+                .source(mappingsSources),
+            RequestOptions.DEFAULT);
     }
 
 }

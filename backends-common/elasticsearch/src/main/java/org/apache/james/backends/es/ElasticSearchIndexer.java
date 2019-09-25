@@ -29,6 +29,7 @@ import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.ValidationException;
 import org.elasticsearch.common.xcontent.XContentType;
@@ -72,7 +73,8 @@ public class ElasticSearchIndexer {
             new IndexRequest(aliasName.getValue())
                 .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
                 .id(id)
-                .source(content, XContentType.JSON));
+                .source(content, XContentType.JSON),
+            RequestOptions.DEFAULT);
     }
 
     public Optional<BulkResponse> update(List<UpdatedRepresentation> updatedDocumentParts) throws IOException {
@@ -84,7 +86,7 @@ public class ElasticSearchIndexer {
                     NodeMappingFactory.DEFAULT_MAPPING_NAME,
                     updatedDocumentPart.getId())
                 .doc(updatedDocumentPart.getUpdatedDocumentPart(), XContentType.JSON)));
-            return Optional.of(client.bulk(request));
+            return Optional.of(client.bulk(request, RequestOptions.DEFAULT));
         } catch (ValidationException e) {
             LOGGER.warn("Error while updating index", e);
             return Optional.empty();

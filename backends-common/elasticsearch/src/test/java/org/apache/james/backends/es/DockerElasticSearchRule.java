@@ -26,7 +26,7 @@ public class DockerElasticSearchRule extends ExternalResource {
     private final DockerElasticSearch dockerElasticSearch = DockerElasticSearchSingleton.INSTANCE;
 
     @Override
-    protected void before() throws Throwable {
+    protected void before() {
         dockerElasticSearch.start();
     }
 

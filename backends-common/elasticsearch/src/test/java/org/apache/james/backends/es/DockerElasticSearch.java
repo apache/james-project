@@ -19,6 +19,9 @@
 
 package org.apache.james.backends.es;
 
+import java.time.Duration;
+import java.util.Optional;
+
 import org.apache.http.HttpStatus;
 import org.apache.james.util.Host;
 import org.apache.james.util.docker.DockerContainer;
