@@ -659,7 +659,7 @@
             <dependency>
                 <groupId>io.projectreactor</groupId>
                 <artifactId>reactor-bom</artifactId>
-                <version>Californium-SR10</version>
+                <version>Dysprosium-RELEASE</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -2137,11 +2137,6 @@
                 <groupId>io.netty</groupId>
                 <artifactId>netty</artifactId>
                 <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.projectreactor.rabbitmq</groupId>
-                <artifactId>reactor-rabbitmq</artifactId>
-                <version>1.2.0.RELEASE</version>
             </dependency>
             <dependency>
                 <groupId>javax.activation</groupId>
