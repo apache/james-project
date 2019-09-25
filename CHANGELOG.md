@@ -5,6 +5,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Removed
+- Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
+  - SieveDefaultRepository. Please use SieveFileRepository instead.
+  - JDBCRecipientRewriteTable, XMLRecipientRewriteTable, UsersRepositoryAliasingForwarding, JDBCAlias mailets. Please use RecipientRewriteTable mailet instead.
+  - JDBCRecipientRewriteTable implementation. Please use JPARecipientRewriteTable instead.
+  - JamesUsersJdbcRepository, DefaultUsersJdbcRepository. Please use JpaUsersRepository instead.
+  - MailboxQuotaFixed matcher. Please use IsOverQuota instead.
+
 ### Third party softwares
  - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
 

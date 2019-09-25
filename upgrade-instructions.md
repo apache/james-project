@@ -14,6 +14,29 @@ Note: this section is in progress. It will be updated during all the development
 
 Changes to apply between 3.4.x and 3.5.x will be reported here.
 
+Change list:
+
+ - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
+ 
+#### JAMES-2703 Post 3.4.0 release removals
+
+Date: 25/09/2019
+
+SHA-1: f721747edf8deb50406a5a44f6476507a03e2543
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2703
+
+Concerned products: Spring, default bundled mailets
+
+- Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703) had been removed. 
+
+This includes:
+  - SieveDefaultRepository. Please use SieveFileRepository instead.
+  - JDBCRecipientRewriteTable, XMLRecipientRewriteTable, UsersRepositoryAliasingForwarding, JDBCAlias mailets. Please use RecipientRewriteTable mailet instead.
+  - JDBCRecipientRewriteTable implementation. Please use JPARecipientRewriteTable instead.
+  - JamesUsersJdbcRepository, DefaultUsersJdbcRepository. Please use JpaUsersRepository instead.
+  - MailboxQuotaFixed matcher. Please use IsOverQuota instead.
+
 ## 3.4.0 version
 
 Changes to apply between 3.3.x and 3.4.x will be reported here.
