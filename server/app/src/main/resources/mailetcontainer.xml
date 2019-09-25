@@ -50,7 +50,7 @@
        <!-- This mailet redirects mail for the user 'postmaster' at any local domain to -->
        <!-- the postmaster address specified for the server. The postmaster address -->
        <!-- is required by rfc822. Do not remove this mailet unless you are meeting -->
-       <!-- this requirement through other means (e.g. a XML/JDBCRecipientRewriteTable defined in recipientrewritetable-store.xml) -->
+       <!-- this requirement through other means  -->
        <mailet match="All" class="PostmasterAlias"/>
 
        <!-- Important check to avoid looping -->

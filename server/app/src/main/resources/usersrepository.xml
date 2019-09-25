@@ -66,21 +66,3 @@
     <enableVirtualHosting>false</enableVirtualHosting>    
 </usersrepository>
 -->
-
-<!-- Database backed user repositories -->
-<!-- -->
-<!-- Use these configurations to store user info in a database. -->
-<!-- Note: The<data-source>element must refer to a connection configured -->
-<!--       in the<database-connections>configuration section. -->
-<!-- The LocalUsers repository, for storing James' User info. -->
-<!-- DEPRECATED: This implementation will get removed in the next release -->
-<!--             Use JPAUsersRepository if you want to store the Users in a database -->
-<!-- 
-<usersrepository name="LocalUsers" class="org.apache.james.user.jdbc.JamesUsersJdbcRepository" destinationURL="db://maildb/users">
-    <sqlFile>file://conf/sqlResources.xml</sqlFile>
-    <ignoreCase>true</ignoreCase>
-    <enableAliases>true</enableAliases>
-    <enableForwarding>true</enableForwarding>
-    <enableVirtualHosting>false</enableVirtualHosting>    
-</usersrepository>
--->

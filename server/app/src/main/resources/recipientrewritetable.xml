@@ -37,17 +37,6 @@
    <mapping>some@domain=someuser</mapping>
 </recipientrewritetable>
 -->
-
-<!-- Database backed RecipientRewritetable -->
-<!-- -->
-<!-- Use these configurations to store the RecipientRewriteTable in a database. -->
-<!-- 
-<recipientrewritetable class="org.apache.james.rrt.jdbc.JDBCRecipientRewriteTable" destinationURL="db://maildb/RecipientRewriteTable">
-   <recursiveMapping>true</recursiveMapping>
-   <mappingLimit>10</mappingLimit>
-   <sqlFile>file://conf/sqlResources.xml</sqlFile>
-</recipientrewritetable>
--->
     
 <!-- The default table for storing James' RecipientRewriteTable mappings. -->
 <recipientrewritetable class="org.apache.james.rrt.jpa.JPARecipientRewriteTable">
