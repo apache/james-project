@@ -90,13 +90,6 @@
 
     </subsection>
 
-    <subsection name="JDBC Users Repository">
-
-      <p>The JDBC UsersRepository implementations below are DEPRECATED and will get removed in the next release.</p>
-      <p>It just listed here for backward-compatibility.</p>
-
-    </subsection>
-
     <subsection name="LDAP Users Repository">
 
        <p>Read-Only LDAP based UsersRepository</p>

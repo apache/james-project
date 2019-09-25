@@ -44,40 +44,6 @@
 
     </subsection>
 
-    <subsection name="XML Recipient Rewrite Table">
-
-     <p>Add a class attribute to recipientrewritetable tag (class="org.apache.james.rrt.xml.XMLRecipientRewriteTable).</p>
-
-      <dl>
-        <dt><strong>recursiveMapping</strong></dt>
-        <dd>If set recursiveMapping false only the first mapping will get processed - Default true.</dd>
-        <dt><strong>mappingLimit</strong></dt>
-        <dd>By setting the mappingLimit you can specify how much mapping will get processed before a bounce will send. This avoid infinity loops. Default 10.</dd>
-        <dt><strong>mapping</strong></dt>
-        <dd>Example: some@domain=someuser</dd>
-      </dl>
-
-    </subsection>
-
-    <subsection name="JDBC Recipient Rewrite Table">
-
-     <p>Database backed RecipientRewrite table</p>
-     
-     <p>Add a class attribute and a destinationURL attributed to recipientrewritetable tag (class="org.apache.james.rrt.jdbc.JDBCRecipientRewriteTable" destinationURL="db://maildb/RecipientRewriteTable").</p>
-
-     <p>Use these configurations to store the RecipientRewriteTable in a database.</p>
-    
-      <dl>
-        <dt><strong>recursiveMapping</strong></dt>
-        <dd>If set recursiveMapping false only the first mapping will get processed - Default true.</dd>
-        <dt><strong>mappingLimit</strong></dt>
-        <dd>By setting the mappingLimit you can specify how much mapping will get processed before a bounce will send. This avoid infinity loops. Default 10.</dd>
-        <dt><strong>sqlFile</strong></dt>
-        <dd>file://conf/sqlResources.xml</dd>
-      </dl>
-
-    </subsection>
-
     </section>
 
 </body>
