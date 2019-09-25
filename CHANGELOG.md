@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Third party softwares
+ - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
+
 ## [3.4.0] - 2019-09-05
 ### Added
 - Add in-memory docker image
