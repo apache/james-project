@@ -126,6 +126,7 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
             Mail m = mView.getMail();
             long nextDelivery = -1;
             Optional<ZonedDateTime> nextDeliveryTime = mView.getNextDelivery();
+            // check if zone date time is present
             if (nextDeliveryTime.isPresent()) {
                 ZonedDateTime nextDeliveryZonedDateTime = nextDeliveryTime.get();
                 nextDelivery = nextDeliveryZonedDateTime.toInstant().toEpochMilli();
