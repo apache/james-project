@@ -26,8 +26,6 @@ import java.util.StringTokenizer;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
@@ -61,16 +59,6 @@ public class RcptCmdHandler extends AbstractHookableCmdHandler<RcptHook> impleme
     @Inject
     public RcptCmdHandler(MetricFactory metricFactory) {
         super(metricFactory);
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     /**

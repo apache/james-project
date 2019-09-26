@@ -25,8 +25,6 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.inject.Named;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -100,15 +98,5 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 .smtpDescription(" Temporary error deliver message to " + recipient)
                 .build();
         }
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

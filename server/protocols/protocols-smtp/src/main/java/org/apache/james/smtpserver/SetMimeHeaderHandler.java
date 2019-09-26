@@ -88,10 +88,4 @@ public class SetMimeHeaderHandler implements JamesMessageHook, ProtocolHandler {
         setHeaderName(config.getString("headername"));
         setHeaderValue(config.getString("headervalue"));        
     }
-
-    @Override
-    public void destroy() {
-        // nothing to do
-    }
-
 }

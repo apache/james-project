@@ -123,16 +123,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
 
     private LineHandler<SMTPSession> lineHandler;
 
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
-
     /**
      * process DATA command
      *

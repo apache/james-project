@@ -21,8 +21,6 @@ package org.apache.james.protocols.smtp.core.fastfail;
 
 import java.util.Collection;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -40,16 +38,6 @@ import org.slf4j.LoggerFactory;
  */
 public class SupressDuplicateRcptHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SupressDuplicateRcptHandler.class);
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     @SuppressWarnings("unchecked")

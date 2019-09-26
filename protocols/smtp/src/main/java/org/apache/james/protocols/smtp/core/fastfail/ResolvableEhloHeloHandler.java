@@ -22,8 +22,6 @@ package org.apache.james.protocols.smtp.core.fastfail;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
@@ -42,16 +40,6 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 public class ResolvableEhloHeloHandler implements RcptHook, HeloHook {
 
     public static final String BAD_EHLO_HELO = "BAD_EHLO_HELO";
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     /**
      * Check if EHLO/HELO is resolvable

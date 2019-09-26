@@ -21,8 +21,6 @@ package org.apache.james.smtpserver.jmx;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
 
 public class JMXHandlersLoader implements HandlersPackage {
@@ -39,15 +37,5 @@ public class JMXHandlersLoader implements HandlersPackage {
     @Override
     public List<String> getHandlers() {
         return handlers;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

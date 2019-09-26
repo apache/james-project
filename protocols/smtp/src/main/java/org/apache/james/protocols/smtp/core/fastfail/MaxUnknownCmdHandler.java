@@ -20,8 +20,6 @@
 
 package org.apache.james.protocols.smtp.core.fastfail;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -37,16 +35,6 @@ public class MaxUnknownCmdHandler implements UnknownHook {
     
     private static final String UNKOWN_COMMAND_COUNT = "UNKNOWN_COMMAND_COUNT";
     private int maxUnknown = DEFAULT_MAX_UNKOWN;
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     public void setMaxUnknownCmdCount(int maxUnknown) {
         this.maxUnknown = maxUnknown;

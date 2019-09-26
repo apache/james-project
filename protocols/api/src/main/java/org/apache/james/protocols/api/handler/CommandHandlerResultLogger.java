@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.api.handler;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.slf4j.Logger;
@@ -40,15 +38,5 @@ public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<
             LOGGER.debug("{}: {}", handler.getClass().getName(), response);
         }
         return response;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

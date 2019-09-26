@@ -109,9 +109,4 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     public void init(Configuration config) throws ConfigurationException {
         setSupportsRecipientRewriteTable(config.getBoolean("enableRecipientRewriteTable", true));
     }
-
-    @Override
-    public void destroy() {
-        // nothing to-do
-    }
 }

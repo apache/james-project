@@ -53,11 +53,6 @@ public class SendMailHandler implements JamesMessageHook {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 
-    @Override
-    public void destroy() {
-
-    }
-
     /**
      * Adds header to the message
      *

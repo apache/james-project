@@ -23,8 +23,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -54,16 +52,6 @@ public class QuitCmdHandler implements CommandHandler<POP3Session> {
         response = new POP3Response(POP3Response.ERR_RESPONSE, "Some deleted messages were not removed");
         response.setEndSession(true);
         SIGN_OFF_NOT_CLEAN = response.immutable();
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     /**

@@ -33,8 +33,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -139,16 +137,6 @@ public class AuthCmdHandler
     
     private List<HookResultHook> rHooks;
 
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
-
     /**
      * handles AUTH command
      *
@@ -187,16 +175,6 @@ public class AuthCmdHandler
                         protected Response onCommand(SMTPSession session, String l) {
                             return doPlainAuthPass(session, l);
                         }
-
-                        @Override
-                        public void init(Configuration config) throws ConfigurationException {
-
-                        }
-
-                        @Override
-                        public void destroy() {
-
-                        }
                     });
                     return AUTH_READY_PLAIN;
                 } else {
@@ -210,16 +188,6 @@ public class AuthCmdHandler
                         @Override
                         protected Response onCommand(SMTPSession session, String l) {
                             return doLoginAuthPass(session, l);
-                        }
-
-                        @Override
-                        public void init(Configuration config) throws ConfigurationException {
-
-                        }
-
-                        @Override
-                        public void destroy() {
-
                         }
                     });
                     return AUTH_READY_USERNAME_LOGIN;
@@ -345,16 +313,6 @@ public class AuthCmdHandler
             @Override
             protected Response onCommand(SMTPSession session, String l) {
                 return doLoginAuthPassCheck(session, user, l);
-            }
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
             }
         }.setUser(user));
         return AUTH_READY_PASSWORD_LOGIN;

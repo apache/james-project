@@ -21,7 +21,6 @@ package org.apache.james.smtpserver;
 
 import java.time.Duration;
 
-import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
@@ -74,15 +73,5 @@ public class POP3BeforeSMTPHandler implements ConnectHandler<SMTPSession>, Confi
             session.setRelayingAllowed(true);
         }
         return null;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

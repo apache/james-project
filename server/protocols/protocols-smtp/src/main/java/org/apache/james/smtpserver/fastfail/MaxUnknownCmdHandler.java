@@ -24,16 +24,10 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 public class MaxUnknownCmdHandler extends org.apache.james.protocols.smtp.core.fastfail.MaxUnknownCmdHandler implements ProtocolHandler {
-
     @Override
     public void init(Configuration config) throws ConfigurationException {
         int maxUnknown = config.getInt("maxUnknownCmdCount", DEFAULT_MAX_UNKOWN);
         setMaxUnknownCmdCount(maxUnknown);        
-    }
-
-    @Override
-    public void destroy() {
-        // nothing to do
     }
 }
 

@@ -29,8 +29,6 @@ import java.util.StringTokenizer;
 import javax.inject.Inject;
 import javax.mail.internet.AddressException;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.MetricFactory;
@@ -81,16 +79,6 @@ public class MailCmdHandler extends AbstractHookableCmdHandler<MailHook> {
     @Inject
     public MailCmdHandler(MetricFactory metricFactory) {
         super(metricFactory);
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     @Override

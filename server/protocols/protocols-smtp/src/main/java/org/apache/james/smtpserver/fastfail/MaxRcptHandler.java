@@ -24,15 +24,9 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 public class MaxRcptHandler extends org.apache.james.protocols.smtp.core.fastfail.MaxRcptHandler implements ProtocolHandler {
-
     @Override
     public void init(Configuration config) throws ConfigurationException {
         int maxRcpt = config.getInt("maxRcpt", 0);
         setMaxRcpt(maxRcpt);        
-    }
-
-    @Override
-    public void destroy() {
-        // nothing to do
     }
 }

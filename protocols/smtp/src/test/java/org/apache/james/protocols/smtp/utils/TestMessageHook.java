@@ -21,8 +21,6 @@ package org.apache.james.protocols.smtp.utils;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -40,15 +38,5 @@ public class TestMessageHook implements MessageHook {
  
     public List<MailEnvelope> getQueued() {
         return queued;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

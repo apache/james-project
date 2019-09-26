@@ -55,8 +55,6 @@ public abstract class AbstractConnectHandlerResultJMXMonitor<R extends Response,
         }
     }
 
-
-
     @Override
     public Response onResponse(ProtocolSession session, Response response, long executionTime, ProtocolHandler handler) {
         if (handler instanceof ConnectHandler) {

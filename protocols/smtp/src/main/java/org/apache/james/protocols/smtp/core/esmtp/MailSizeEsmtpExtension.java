@@ -24,8 +24,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Response;
@@ -66,16 +64,6 @@ public class MailSizeEsmtpExtension implements MailParametersHook, EhloExtension
         .build();
     public static final int SINGLE_CHARACTER_LINE = 3;
     public static final int DOT_BYTE = 46;
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     public HookResult doMailParameter(SMTPSession session, String paramName,

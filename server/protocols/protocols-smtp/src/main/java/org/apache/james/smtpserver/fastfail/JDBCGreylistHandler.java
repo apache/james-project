@@ -415,9 +415,4 @@ public class JDBCGreylistHandler extends AbstractGreylistHandler implements Prot
             throw new RuntimeException("Unable to init datasource", e);
         }
     }
-
-    @Override
-    public void destroy() {
-        // nothing to do
-    }
 }

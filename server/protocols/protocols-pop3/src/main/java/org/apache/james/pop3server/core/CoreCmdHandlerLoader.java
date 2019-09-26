@@ -22,8 +22,6 @@ package org.apache.james.pop3server.core;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.lib.handler.HandlersPackage;
@@ -95,15 +93,5 @@ public class CoreCmdHandlerLoader implements HandlersPackage {
     @Override
     public List<String> getHandlers() {
         return commands;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

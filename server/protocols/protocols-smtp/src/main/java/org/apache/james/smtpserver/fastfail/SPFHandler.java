@@ -287,10 +287,4 @@ public class SPFHandler implements JamesMessageHook, MailHook, RcptHook, Protoco
         setBlockSoftFail(config.getBoolean("blockSoftFail", false));
         setBlockPermError(config.getBoolean("blockPermError", true));        
     }
-
-    @Override
-    public void destroy() {
-        // nothing to-do
-    }
-
 }

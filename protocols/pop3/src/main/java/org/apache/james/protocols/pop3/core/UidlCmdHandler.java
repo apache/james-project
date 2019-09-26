@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -43,16 +41,6 @@ import com.google.common.collect.ImmutableSet;
 public class UidlCmdHandler implements CommandHandler<POP3Session>, CapaCapability {
     private static final Collection<String> COMMANDS = ImmutableSet.of("UIDL");
     private static final Set<String> CAPS = ImmutableSet.of("UIDL");
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     /**
      * Handler method called upon receipt of a UIDL command. Returns a listing

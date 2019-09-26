@@ -28,8 +28,6 @@ import java.util.List;
 
 import javax.mail.MessagingException;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -69,16 +67,6 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
     private List<HookResultHook> rHooks;
 
     private List<MessageHook> mHandlers;
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     public Response onLine(SMTPSession session, ByteBuffer lineByteBuffer, LineHandler<SMTPSession> next) {

@@ -240,9 +240,4 @@ public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
 
         setGetDetail(config.getBoolean("getDetail", false));        
     }
-
-    @Override
-    public void destroy() {
-
-    }
 }

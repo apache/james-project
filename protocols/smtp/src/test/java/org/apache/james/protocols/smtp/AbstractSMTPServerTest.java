@@ -32,8 +32,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.MailAddress;
@@ -41,7 +39,6 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
-import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -486,23 +483,7 @@ public abstract class AbstractSMTPServerTest {
     
     @Test
     public void testHeloHookPermanentError() throws Exception {
-        HeloHook hook = new HeloHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public HookResult doHelo(SMTPSession session, String helo) {
-                return HookResult.DENY;
-            }
-        };
+        HeloHook hook = (session, helo) -> HookResult.DENY;
         
         ProtocolServer server = null;
         try {
@@ -534,23 +515,7 @@ public abstract class AbstractSMTPServerTest {
     
     @Test
     public void testHeloHookTempraryError() throws Exception {
-        HeloHook hook = new HeloHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public HookResult doHelo(SMTPSession session, String helo) {
-                return HookResult.DENYSOFT;
-            }
-        };
+        HeloHook hook = (session, helo) -> HookResult.DENYSOFT;
         
         ProtocolServer server = null;
         try {
@@ -582,17 +547,6 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testMailHookPermanentError() throws Exception {
         MailHook hook = new MailHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
             @Override
             public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENY;
@@ -632,17 +586,6 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testMailHookTemporaryError() throws Exception {
         MailHook hook = new MailHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
             @Override
             public HookResult doMail(SMTPSession session, MaybeSender sender) {
                 return HookResult.DENYSOFT;
@@ -683,17 +626,6 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testRcptHookPermanentError() throws Exception {
         RcptHook hook = new RcptHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
             @Override
             public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
@@ -747,17 +679,6 @@ public abstract class AbstractSMTPServerTest {
     @Test
     public void testRcptHookTemporaryError() throws Exception {
         RcptHook hook = new RcptHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
             @Override
             public HookResult doRcpt(SMTPSession session, MaybeSender sender, MailAddress rcpt) {
                 if (RCPT1.equals(rcpt.toString())) {
@@ -845,25 +766,7 @@ public abstract class AbstractSMTPServerTest {
     public void testMessageHookPermanentError() throws Exception {
         TestMessageHook testHook = new TestMessageHook();
 
-        MessageHook hook = new MessageHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return HookResult.DENY;
-            }
-
-
-        };
+        MessageHook hook = (session, mail) -> HookResult.DENY;
         
         ProtocolServer server = null;
         try {
@@ -909,25 +812,7 @@ public abstract class AbstractSMTPServerTest {
     public void testMessageHookTemporaryError() throws Exception {
         TestMessageHook testHook = new TestMessageHook();
 
-        MessageHook hook = new MessageHook() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public HookResult onMessage(SMTPSession session, MailEnvelope mail) {
-                return HookResult.DENYSOFT;
-            }
-
-
-        };
+        MessageHook hook = (session, mail) -> HookResult.DENYSOFT;
         
         ProtocolServer server = null;
         try {
@@ -972,23 +857,7 @@ public abstract class AbstractSMTPServerTest {
     
     @Test
     public void testConnectHandlerPermananet() throws Exception {
-        ConnectHandler<SMTPSession> connectHandler = new ConnectHandler<SMTPSession>() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public Response onConnect(SMTPSession session) {
-                return new SMTPResponse("554", "Bye Bye");
-            }
-        };
+        ConnectHandler<SMTPSession> connectHandler = session -> new SMTPResponse("554", "Bye Bye");
         
         ProtocolServer server = null;
         try {
@@ -1015,23 +884,7 @@ public abstract class AbstractSMTPServerTest {
     
     @Test
     public void testConnectHandlerTemporary() throws Exception {
-        ConnectHandler<SMTPSession> connectHandler = new ConnectHandler<SMTPSession>() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public Response onConnect(SMTPSession session) {
-                return new SMTPResponse("451", "Bye Bye");
-            }
-        };
+        ConnectHandler<SMTPSession> connectHandler = session -> new SMTPResponse("451", "Bye Bye");
         
         ProtocolServer server = null;
         try {
@@ -1058,23 +911,7 @@ public abstract class AbstractSMTPServerTest {
     public void testDisconnectHandler() throws Exception {
         
         final AtomicBoolean called = new AtomicBoolean(false);
-        DisconnectHandler<SMTPSession> handler = new DisconnectHandler<SMTPSession>() {
-
-            @Override
-            public void init(Configuration config) throws ConfigurationException {
-
-            }
-
-            @Override
-            public void destroy() {
-
-            }
-
-            @Override
-            public void onDisconnect(SMTPSession session) {
-                called.set(true);
-            }
-        };
+        DisconnectHandler<SMTPSession> handler = session -> called.set(true);
         
         ProtocolServer server = null;
         try {

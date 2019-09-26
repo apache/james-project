@@ -69,11 +69,6 @@ public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail
     }
 
     @Override
-    public void destroy() {
-        // Do nothing
-    }
-
-    @Override
     protected boolean resolve(String ip) {
         try {
             dns.getByName(ip);

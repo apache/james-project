@@ -91,10 +91,4 @@ public class MailPriorityHandler implements JamesMessageHook, ProtocolHandler {
             prioMap.put(domain, prio);
         }        
     }
-
-    @Override
-    public void destroy() {
-        // nothing to do
-    }
-
 }

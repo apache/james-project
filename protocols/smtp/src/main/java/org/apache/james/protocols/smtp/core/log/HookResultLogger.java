@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core.log;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.Hook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -30,22 +28,12 @@ import org.slf4j.LoggerFactory;
 
 /**
  * 
- * Log the {@link HookResult}. If {@link HookReturnCode#DENY}, {@link HookReturnCode#DENYSOFT} or {@link HookReturnCode#DISCONNECT} was used it will get 
+ * Log the {@link HookResult}. If {@link HookReturnCode.Action#DENY}, {@link HookReturnCode.Action#DENYSOFT} or {@link HookReturnCode#isDisconnected()} was used it will get
  * logged to INFO. If not to DEBUG
  *
  */
 public class HookResultLogger implements HookResultHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(HookResultLogger.class);
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     public HookResult onHookResult(SMTPSession session, HookResult hResult, long executionTime, Hook hook) {

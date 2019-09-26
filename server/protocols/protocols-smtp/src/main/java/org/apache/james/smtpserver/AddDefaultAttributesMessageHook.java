@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookResult;
 import org.apache.james.server.core.MailImpl;
@@ -36,16 +34,6 @@ public class AddDefaultAttributesMessageHook implements JamesMessageHook {
      * The mail attribute which get set if the client is allowed to relay
      */
     public static final String SMTP_AUTH_NETWORK_NAME = "org.apache.james.SMTPIsAuthNetwork";
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {

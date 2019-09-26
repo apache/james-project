@@ -145,9 +145,4 @@ public class ValidRcptMX implements RcptHook, ProtocolHandler {
             throw new ConfigurationException("Please configure at least on invalid MX network");
         }
     }
-
-    @Override
-    public void destroy() {
-        // nothing to-do
-    }
 }

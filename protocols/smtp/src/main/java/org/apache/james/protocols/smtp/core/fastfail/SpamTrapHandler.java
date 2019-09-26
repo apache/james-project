@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -50,16 +48,6 @@ public class SpamTrapHandler implements RcptHook {
     
     /** Default blocktime 12 hours */
     protected long blockTime = 4320000;
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     public void setSpamTrapRecipients(Collection<String> spamTrapRecips) {
         this.spamTrapRecips = spamTrapRecips;

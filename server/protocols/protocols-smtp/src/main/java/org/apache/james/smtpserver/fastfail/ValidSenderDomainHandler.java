@@ -22,8 +22,6 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
 
@@ -53,16 +51,6 @@ public class ValidSenderDomainHandler extends org.apache.james.protocols.smtp.co
             }
 
         return !(records == null || records.size() == 0);
-
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
 
     }
 }

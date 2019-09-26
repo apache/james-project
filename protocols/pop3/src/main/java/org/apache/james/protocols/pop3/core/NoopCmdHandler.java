@@ -21,8 +21,6 @@ package org.apache.james.protocols.pop3.core;
 
 import java.util.Collection;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -37,16 +35,6 @@ import com.google.common.collect.ImmutableSet;
 public class NoopCmdHandler implements CommandHandler<POP3Session> {
 
     private static final Collection<String> COMMANDS = ImmutableSet.of("NOOP");
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     /**
      * Handler method called upon receipt of a NOOP command. Like all good

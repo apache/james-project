@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.core;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.SMTPSession;
@@ -37,15 +35,5 @@ public class AcceptRecipientIfRelayingIsAllowed implements RcptHook {
             return HookResult.OK;
         }
         return HookResult.DECLINED;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

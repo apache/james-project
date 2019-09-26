@@ -163,9 +163,4 @@ public class SpamAssassinHandler implements JamesMessageHook, ProtocolHandler {
         setSpamdPort(config.getInt("spamdPort", 783));
         setSpamdRejectionHits(config.getDouble("spamdRejectionHits", 0.0));        
     }
-
-    @Override
-    public void destroy() {
-        // nothing to-do
-    }
 }

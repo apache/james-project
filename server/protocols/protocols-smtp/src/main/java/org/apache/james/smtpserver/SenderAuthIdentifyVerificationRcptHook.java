@@ -20,8 +20,6 @@ package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
@@ -49,16 +47,6 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     @Inject
     public void setDomainList(DomainList domains) {
         this.domains = domains;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     @Override

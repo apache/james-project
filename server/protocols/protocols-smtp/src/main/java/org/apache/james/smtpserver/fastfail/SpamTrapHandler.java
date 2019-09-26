@@ -39,9 +39,4 @@ public class SpamTrapHandler extends org.apache.james.protocols.smtp.core.fastfa
 
         setBlockTime(config.getLong("blockTime", blockTime));
     }
-
-    @Override
-    public void destroy() {
-        // nothing to-do
-    }
 }

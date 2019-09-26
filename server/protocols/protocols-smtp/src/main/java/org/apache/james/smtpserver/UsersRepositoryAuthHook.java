@@ -20,8 +20,6 @@ package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -74,15 +72,5 @@ public class UsersRepositoryAuthHook implements AuthHook {
             LOGGER.info("Unable to access UsersRepository", e);
         }
         return HookResult.DECLINED;
-    }
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 }

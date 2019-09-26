@@ -23,8 +23,6 @@ import java.util.Collection;
 
 import javax.inject.Inject;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.smtp.SMTPResponse;
@@ -61,17 +59,6 @@ public class QuitCmdHandler extends AbstractHookableCmdHandler<QuitHook> {
     @Inject
     public QuitCmdHandler(MetricFactory metricFactory) {
         super(metricFactory);
-    }
-
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     /**

@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Set;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -44,16 +42,6 @@ public class StlsCmdHandler implements CommandHandler<POP3Session>, CapaCapabili
     private static final Set<String> CAPS = ImmutableSet.of("STLS");
 
     private static final Response BEGIN_TLS = new POP3StartTlsResponse(POP3Response.OK_RESPONSE, "Begin TLS negotiation").immutable();
-
-    @Override
-    public void init(Configuration config) throws ConfigurationException {
-
-    }
-
-    @Override
-    public void destroy() {
-
-    }
 
     @Override
     public Response onCommand(POP3Session session, Request request) {
