@@ -36,11 +36,15 @@ public interface ProtocolHandler {
      * @param config
      * @throws ConfigurationException
      */
-    void init(Configuration config) throws ConfigurationException;
+    default void init(Configuration config) throws ConfigurationException {
+
+    }
 
     /**
      * Destroy object
      */
-    void destroy();
+    default void destroy() {
+
+    }
   
 }
