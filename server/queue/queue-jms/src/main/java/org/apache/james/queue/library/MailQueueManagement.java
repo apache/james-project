@@ -124,7 +124,12 @@ public class MailQueueManagement extends StandardMBean implements MailQueueManag
 
             MailQueueItemView mView = it.next();
             Mail m = mView.getMail();
-            Optional<ZonedDateTime> nextDelivery = mView.getNextDelivery();
+            long nextDelivery = -1;
+            Optional<ZonedDateTime> nextDeliveryTime = mView.getNextDelivery();
+            if (nextDeliveryTime.isPresent()) {
+                ZonedDateTime nextDeliveryZonedDateTime = nextDeliveryTime.get();
+                nextDelivery = nextDeliveryZonedDateTime.toInstant().toEpochMilli();
+            }
             Map<String, Object> map = new HashMap<>();
             map.put(names[0], m.getName());
             String sender = m.getMaybeSender().asString(null);
