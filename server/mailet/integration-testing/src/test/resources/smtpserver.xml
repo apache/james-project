@@ -44,6 +44,9 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+            {{#hooks}}
+            <handler class="{{hookFqcn}}"/>
+            {{/hooks}}
         </handlerchain>
     </smtpserver>
     <smtpserver enabled="true">
@@ -74,6 +77,9 @@
         <handlerchain>
             <handler class="org.apache.james.smtpserver.fastfail.ValidRcptHandler"/>
             <handler class="org.apache.james.smtpserver.CoreCmdHandlerLoader"/>
+            {{#hooks}}
+            <handler class="{{hookFqcn}}"/>
+            {{/hooks}}
         </handlerchain>
     </smtpserver>
 </smtpservers>
