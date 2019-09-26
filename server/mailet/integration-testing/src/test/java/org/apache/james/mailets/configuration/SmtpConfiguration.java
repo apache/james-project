@@ -30,12 +30,12 @@ import java.util.HashMap;
 import java.util.Optional;
 
 import org.apache.commons.io.IOUtils;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.mustachejava.DefaultMustacheFactory;
 import com.github.mustachejava.Mustache;
 import com.github.mustachejava.MustacheFactory;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 public class SmtpConfiguration implements SerializableAsXml {
     public static final boolean AUTH_REQUIRED = true;
