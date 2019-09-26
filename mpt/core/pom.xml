@@ -116,7 +116,7 @@
                             <goal>javadoc</goal>
                             <goal>jar</goal>
                         </goals>
-                        <phase>package</phase>
+                        <phase>site</phase>
                     </execution>
                 </executions>
             </plugin>
