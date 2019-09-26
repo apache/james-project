@@ -81,6 +81,8 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private RabbitMQExclusiveConsumer receiver;
     private UnicastProcessor<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
+    private Disposable receiverHandle;
+    private Disposable cancelRequestListenerHandle;
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, SimpleConnectionPool simpleConnectionPool, JsonTaskSerializer taskSerializer) {
         this.worker = worker;
@@ -105,7 +107,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
 
     private void consumeWorkqueue() {
         receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(connectionMono));
-        receiver.consumeExclusiveManualAck(QUEUE_NAME, new ConsumeOptions())
+        receiverHandle = receiver.consumeExclusiveManualAck(QUEUE_NAME, new ConsumeOptions())
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(this::executeTask)
             .subscribe();
@@ -145,7 +147,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     private void registerCancelRequestsListener(String queueName) {
-        RabbitFlux
+        cancelRequestListenerHandle = RabbitFlux
             .createReceiver(new ReceiverOptions().connectionMono(connectionMono))
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.boundedElastic())
@@ -187,7 +189,10 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     @Override
     @PreDestroy
     public void close() {
+        System.out.println("close");
+        Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
+        Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
         channelPool.close();
     }
 }
