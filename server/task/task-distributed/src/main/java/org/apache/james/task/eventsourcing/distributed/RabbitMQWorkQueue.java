@@ -189,7 +189,6 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     @Override
     @PreDestroy
     public void close() {
-        System.out.println("close");
         Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);

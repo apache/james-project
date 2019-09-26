@@ -23,13 +23,13 @@ import javax.inject.Inject
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer
+import org.apache.james.task.SerialTaskManagerWorker
 import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListener}
-import org.apache.james.task.{SerialTaskManagerWorker, WorkQueue}
 
 @Inject
 class RabbitMQWorkQueueSupplier(private val rabbitMQConnectionPool: SimpleConnectionPool,
                                 private val jsonTaskSerializer: JsonTaskSerializer) extends WorkQueueSupplier {
-  override def apply(eventSourcingSystem: EventSourcingSystem): WorkQueue = {
+  override def apply(eventSourcingSystem: EventSourcingSystem): RabbitMQWorkQueue = {
     val listener = WorkerStatusListener(eventSourcingSystem)
     val worker = new SerialTaskManagerWorker(listener)
     val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, rabbitMQConnectionPool, jsonTaskSerializer)
