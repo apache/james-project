@@ -238,4 +238,9 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
     @Override
     public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
     }
+
+    @Ignore
+    @Override
+    public void headerWithDotsShouldBeIndexed() throws MailboxException {
+    }
 }

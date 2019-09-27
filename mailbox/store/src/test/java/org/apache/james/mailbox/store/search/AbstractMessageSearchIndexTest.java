@@ -423,6 +423,21 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
+    public void headerWithDotsShouldBeIndexed() throws MailboxException {
+
+        ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/headerWithDot.eml")),
+            session);
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.headerExists("X-header.with.dots"));
+
+        assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
+            .contains(mailWithDotsInHeader.getUid());
+    }
+
+    @Test
     public void searchShouldBeExactOnEmailAddresses() throws MailboxException {
         Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
 

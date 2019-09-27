@@ -116,13 +116,13 @@ class HeaderCollectionTest {
     }
 
     @Test
-    void getHeadersShouldIgnoreHeadersWithDots() {
+    void getHeadersShouldNotIgnoreHeadersWithDots() {
         HeaderCollection headerCollection = HeaderCollection.builder()
             .add(new FieldImpl("a.b.c", "value"))
             .build();
 
         assertThat(headerCollection.getHeaders().get("a.b.c"))
-            .isEmpty();
+            .containsExactly("value");
     }
 
     @Test

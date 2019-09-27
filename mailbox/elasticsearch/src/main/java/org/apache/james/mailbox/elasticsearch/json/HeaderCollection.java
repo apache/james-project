@@ -74,9 +74,8 @@ public class HeaderCollection {
             String rawHeaderValue = field.getBody();
             String sanitizedValue = MimeUtil.unscrambleHeaderValue(rawHeaderValue);
 
-            if (!headerName.contains(".")) {
-                headers.put(headerName, sanitizedValue);
-            }
+            headers.put(headerName, sanitizedValue);
+
             handleSpecificHeader(headerName, sanitizedValue, rawHeaderValue);
             return this;
         }
