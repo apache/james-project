@@ -30,6 +30,7 @@
 
     <artifactId>james-server-task-api</artifactId>
     <name>Apache James :: Server :: Task :: API</name>
+    <description>Defines the TaskManager API allow to manage James' long running jobs</description>
 
     <dependencies>
         <dependency>

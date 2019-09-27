@@ -30,6 +30,7 @@
 
     <artifactId>james-server-task-memory</artifactId>
     <name>Apache James :: Server :: Task :: Memory implementation</name>
+    <description>Memory implementation, event based for the TaskManager</description>
 
     <dependencies>
         <dependency>

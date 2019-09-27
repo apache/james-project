@@ -30,6 +30,7 @@
 
     <artifactId>james-server-task-json</artifactId>
     <name>Apache James :: Server :: Task :: Json</name>
+    <description>Utilities for serializing and de-serializing tasks and their additionalInformation</description>
 
     <dependencies>
         <dependency>
