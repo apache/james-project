@@ -56,6 +56,7 @@
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-task</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
