@@ -119,7 +119,7 @@ public class DomainQuotaRoutes implements Routes {
     @PUT
     @ApiOperation(value = "Updating count and size at the same time")
     @ApiImplicitParams({
-            @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.QuotaDTO", paramType = "body")
+            @ApiImplicitParam(required = true, dataTypeClass = QuotaDTO.class, paramType = "body")
     })
     @ApiResponses(value = {
             @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. The value has been updated."),

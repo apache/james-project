@@ -267,7 +267,7 @@ public class MailQueueRoutes implements Routes {
         @ApiImplicitParam(required = true, dataType = "string", name = "mailQueueName", paramType = "path"),
         @ApiImplicitParam(
                 required = false, 
-                dataType = "MailAddress", 
+                dataTypeClass = MailAddress.class,
                 name = SENDER_QUERY_PARAM, 
                 paramType = "query",
                 example = "?sender=sender@james.org",

@@ -113,7 +113,7 @@ public class UserRoutes implements Routes {
     @ApiOperation(value = "Creating an user")
     @ApiImplicitParams({
             @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
-            @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.AddUserRequest", paramType = "body")
+            @ApiImplicitParam(required = true, dataTypeClass = AddUserRequest.class, paramType = "body")
     })
     @ApiResponses(value = {
             @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. New user is added."),

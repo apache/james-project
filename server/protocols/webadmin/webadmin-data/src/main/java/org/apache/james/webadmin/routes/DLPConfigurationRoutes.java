@@ -110,7 +110,7 @@ public class DLPConfigurationRoutes implements Routes {
     @ApiOperation(value = "Store a DLP configuration for given senderDomain")
     @ApiImplicitParams({
         @ApiImplicitParam(required = true, dataType = "string", name = "senderDomain", paramType = "path"),
-        @ApiImplicitParam(required = true, dataType = "org.apache.james.webadmin.dto.DLPConfigurationDTO", paramType = "body")
+        @ApiImplicitParam(required = true, dataTypeClass = DLPConfigurationDTO.class, paramType = "body")
     })
     @ApiResponses(value = {
         @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK. DLP configuration is stored."),

@@ -96,7 +96,7 @@ public class CassandraMailboxMergingRoutes implements Routes {
             @ApiImplicitParam(
                 required = true,
                 paramType = "body",
-                dataType = "Mailbox merging request",
+                dataTypeClass = MailboxMergingRequest.class,
                 example = "{\"oldMailboxId\":\"4555-656-4554\",\"oldMailboxId\":\"9693-665-2500\"}",
                 value = "The mailboxes to merge together.")
         })
