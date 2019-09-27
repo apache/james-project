@@ -103,11 +103,12 @@
         <module>queue/queue-memory</module>
         <module>queue/queue-rabbitmq</module>
 
-        <module>task</module>
+        <module>task-api</module>
         <module>task-distributed</module>
         <module>task-json</module>
+        <module>task-memory</module>
+
         <module>testing</module>
-        <module>task-api</module>
     </modules>
 
     <properties>

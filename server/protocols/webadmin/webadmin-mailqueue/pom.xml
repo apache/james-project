@@ -55,12 +55,12 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-task</artifactId>
-            <scope>test</scope>
+            <artifactId>james-server-task-json</artifactId>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-task-json</artifactId>
+            <artifactId>james-server-task-memory</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

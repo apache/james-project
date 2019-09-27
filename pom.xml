@@ -1715,12 +1715,12 @@
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-task</artifactId>
+                <artifactId>james-server-task-memory</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-task</artifactId>
+                <artifactId>james-server-task-memory</artifactId>
                 <type>test-jar</type>
                 <version>${project.version}</version>
             </dependency>

@@ -27,8 +27,8 @@
         <version>3.5.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>james-server-task</artifactId>
-    <name>Apache James :: Server :: Task</name>
+    <artifactId>james-server-task-memory</artifactId>
+    <name>Apache James :: Server :: Task :: Memory implementation</name>
 
     <dependencies>
         <dependency>
