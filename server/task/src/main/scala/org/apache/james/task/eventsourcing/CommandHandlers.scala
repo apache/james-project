@@ -22,8 +22,8 @@ import java.util
 
 import org.apache.james.eventsourcing.eventstore.History
 import org.apache.james.eventsourcing.{CommandHandler, Event}
-import org.apache.james.task.TaskId
 import org.apache.james.task.eventsourcing.TaskCommand._
+import org.apache.james.task.{Hostname, TaskId}
 
 sealed abstract class TaskCommandHandler[T <: TaskCommand] extends CommandHandler[T] {
 

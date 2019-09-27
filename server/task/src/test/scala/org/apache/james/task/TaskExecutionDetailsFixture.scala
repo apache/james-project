@@ -22,7 +22,6 @@ import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.Optional
 
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
-import org.apache.james.task.eventsourcing.Hostname
 
 object TaskExecutionDetailsFixture {
   val SUBMITTED_DATE = ZonedDateTime.of(LocalDateTime.of(2000, 1, 1, 0, 0), ZoneId.of("Europe/Paris"))

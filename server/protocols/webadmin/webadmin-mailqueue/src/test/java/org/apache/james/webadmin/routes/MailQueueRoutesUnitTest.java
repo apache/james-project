@@ -25,8 +25,8 @@ import java.util.Optional;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
+import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
-import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.Before;
 import org.junit.Test;

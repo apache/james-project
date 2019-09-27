@@ -21,8 +21,9 @@ package org.apache.james.task.eventsourcing
 import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.james.eventsourcing.Subscriber
-import org.apache.james.task.{TaskExecutionDetails, TaskId}
-import collection.JavaConverters._
+import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
+
+import scala.collection.JavaConverters._
 
 trait TaskExecutionDetailsProjection {
   def asSubscriber(hostname: Hostname): Subscriber = {

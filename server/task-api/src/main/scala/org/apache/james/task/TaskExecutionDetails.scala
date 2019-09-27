@@ -22,10 +22,8 @@ package org.apache.james.task
 import java.time.ZonedDateTime
 import java.util.{Objects, Optional}
 
-import org.apache.james.task.TaskManager.Status._
-import org.apache.james.task.eventsourcing.Hostname
-
 import com.google.common.base.MoreObjects
+import org.apache.james.task.TaskManager.Status._
 
 object TaskExecutionDetails {
 

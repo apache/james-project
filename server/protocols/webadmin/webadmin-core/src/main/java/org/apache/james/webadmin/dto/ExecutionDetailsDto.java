@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.james.task.Hostname;
 import org.apache.james.task.TaskExecutionDetails;
-import org.apache.james.task.eventsourcing.Hostname;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

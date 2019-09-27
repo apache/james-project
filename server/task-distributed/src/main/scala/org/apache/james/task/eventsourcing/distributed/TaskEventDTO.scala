@@ -23,8 +23,8 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.eventsourcing.EventId
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO
 import org.apache.james.server.task.json.JsonTaskSerializer
-import org.apache.james.task.{Task, TaskId}
 import org.apache.james.task.eventsourcing._
+import org.apache.james.task.{Hostname, Task, TaskId}
 
 sealed abstract class TaskEventDTO(val getType: String, val getAggregate: String, val getEvent: Int) extends EventDTO {
   protected def domainAggregateId: TaskAggregateId = TaskAggregateId(TaskId.fromString(getAggregate))

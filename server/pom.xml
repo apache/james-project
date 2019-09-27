@@ -107,6 +107,7 @@
         <module>task-distributed</module>
         <module>task-json</module>
         <module>testing</module>
+        <module>task-api</module>
     </modules>
 
     <properties>

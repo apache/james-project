@@ -1,5 +1,4 @@
-/**
- * *************************************************************
+/** **************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -8,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  * *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ * http://www.apache.org/licenses/LICENSE-2.0                 *
  * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -16,17 +15,23 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ***************************************************************/
+ * ***************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.task
 
-import org.apache.james.task.Hostname;
+import java.net.{InetAddress, UnknownHostException}
 
-import com.google.inject.AbstractModule;
+object Hostname {
+  def fromLocalHostname = try new Hostname(InetAddress.getLocalHost.getHostName)
+  catch {
+    case e: UnknownHostException =>
+      throw new UnconfigurableHostnameException("Hostname can not be retrieved", e)
+  }
+}
 
-public class HostnameModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        bind(Hostname.class).toInstance(Hostname.fromLocalHostname());
-    }
+case class Hostname(private val value: String) {
+  def asString: String = value
+}
+
+private class UnconfigurableHostnameException(val message: String, val originException: Exception) extends RuntimeException(message, originException) {
 }

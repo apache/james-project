@@ -26,9 +26,8 @@ import com.datastax.driver.core.{Row, Session}
 import javax.inject.Inject
 import org.apache.james.backends.cassandra.init.{CassandraTypesProvider, CassandraZonedDateTimeModule}
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor
-import org.apache.james.task.eventsourcing.Hostname
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionTable._
-import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManager, TaskType}
+import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId, TaskManager, TaskType}
 import reactor.core.publisher.{Flux, Mono}
 
 @Inject

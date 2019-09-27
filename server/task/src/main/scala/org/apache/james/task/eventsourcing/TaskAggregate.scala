@@ -22,9 +22,9 @@ import java.util
 
 import org.apache.james.eventsourcing.eventstore.History
 import org.apache.james.eventsourcing.{Event, EventId}
-import org.apache.james.task.Task
 import org.apache.james.task.Task.Result
 import org.apache.james.task.TaskManager.Status
+import org.apache.james.task.{Hostname, Task}
 
 import scala.collection.JavaConverters._
 

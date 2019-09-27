@@ -285,7 +285,7 @@
     <bean id="sievemanagerbean" class="org.apache.james.sieverepository.lib.SieveRepositoryManagement"/>
 
 
-    <bean id="hostname" class="org.apache.james.task.eventsourcing.Hostname" factory-method="fromLocalHostname" />
+    <bean id="hostname" class="org.apache.james.task.Hostname" factory-method="fromLocalHostname" />
     <bean id="taskManager" class="org.apache.james.task.MemoryTaskManager">
         <constructor-arg index="0" ref="hostname"/>
     </bean>

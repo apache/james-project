@@ -30,10 +30,9 @@ import java.util.function.Consumer;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
-import org.apache.james.task.eventsourcing.Hostname;
-
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 

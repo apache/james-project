@@ -18,33 +18,15 @@
  * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
-import java.net.{InetAddress, UnknownHostException}
-
 import org.apache.james.eventsourcing.{Event, EventId}
-import org.apache.james.task.Task
 import org.apache.james.task.Task.Result
+import org.apache.james.task.{Hostname, Task}
 
 sealed abstract class TaskEvent(aggregateId: TaskAggregateId, val eventId: EventId) extends Event {
   override def getAggregateId: TaskAggregateId = aggregateId
 }
 
 sealed abstract class TerminalTaskEvent(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
-
-case class Hostname(private val value: String) {
-  def asString: String = value
-}
-
-object Hostname {
-  def fromLocalHostname = try new Hostname(InetAddress.getLocalHost.getHostName)
-  catch {
-    case e: UnknownHostException =>
-      throw new UnconfigurableHostnameException("Hostname can not be retrieved", e)
-  }
-}
-
-private class UnconfigurableHostnameException(val message: String, val originException: Exception) extends RuntimeException(message, originException) {
-}
-
 
 case class Created(aggregateId: TaskAggregateId, override val eventId: EventId, task: Task, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 

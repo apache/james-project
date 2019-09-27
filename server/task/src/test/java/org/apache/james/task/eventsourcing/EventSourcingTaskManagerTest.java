@@ -22,10 +22,10 @@ package org.apache.james.task.eventsourcing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 
-import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.task.CountDownLatchExtension;
+import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryWorkQueue;
 import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.Task;
@@ -33,7 +33,6 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskManagerContract;
 import org.apache.james.task.TaskManagerWorker;
-
 import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.AfterEach;

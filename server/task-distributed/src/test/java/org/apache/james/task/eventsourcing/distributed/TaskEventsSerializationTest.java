@@ -24,29 +24,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.stream.Stream;
 
-import com.github.steveash.guavate.Guavate;
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
+import org.apache.james.task.Hostname;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
-import org.apache.james.task.eventsourcing.Created;
-import org.apache.james.task.eventsourcing.Cancelled;
 import org.apache.james.task.eventsourcing.CancelRequested;
+import org.apache.james.task.eventsourcing.Cancelled;
 import org.apache.james.task.eventsourcing.Completed;
+import org.apache.james.task.eventsourcing.Created;
 import org.apache.james.task.eventsourcing.Failed;
-import org.apache.james.task.eventsourcing.Hostname;
 import org.apache.james.task.eventsourcing.Started;
 import org.apache.james.task.eventsourcing.TaskAggregateId;
 import org.apache.james.task.eventsourcing.TaskEvent;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.github.steveash.guavate.Guavate;
+
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class TaskEventsSerializationTest {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE);
