@@ -51,6 +51,7 @@ import org.apache.james.mime4j.dom.Message;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.After;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -217,5 +218,54 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
 
         assertThat(messageManager.search(new SearchQuery(SearchQuery.bodyContains(reasonableLongTerm)), session))
             .containsExactly(composedMessageId.getUid());
+    }
+
+    @Test
+    @Ignore("JAMES-2078 issue with dynamic mapping")
+    public void headerSearchShouldIncludeMessageWhenDifferentTypesOnAnIndexedField() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        ComposedMessageId customDateHeaderMessageId = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
+            session);
+
+        elasticSearch.awaitForElasticSearch();
+
+        ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
+            session);
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(new SearchQuery(SearchQuery.headerExists("Custom-header")), session))
+            .containsExactly(customDateHeaderMessageId.getUid(), customStringHeaderMessageId.getUid());
+    }
+
+    @Test
+    public void messageShouldStillBeIndexedEvenAfterOneFieldFailsIndexation() throws Exception {
+        MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
+        MailboxSession session = MailboxSessionUtil.create(USERNAME);
+        MessageManager messageManager = storeMailboxManager.getMailbox(mailboxPath, session);
+
+        messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomDateHeader.eml")),
+            session);
+
+        elasticSearch.awaitForElasticSearch();
+
+        ComposedMessageId customStringHeaderMessageId = messageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoader.getSystemResourceAsStream("eml/mailCustomStringHeader.eml")),
+            session);
+
+        elasticSearch.awaitForElasticSearch();
+
+        assertThat(messageManager.search(new SearchQuery(SearchQuery.all()), session))
+            .contains(customStringHeaderMessageId.getUid());
     }
 }
