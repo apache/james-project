@@ -4,7 +4,7 @@
 
 ### Requirements
 
- - Java 8 SDK
+ - Java 11 SDK
  - Maven 3 (optional)
 
 ### Download the artifacts

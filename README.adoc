@@ -44,10 +44,10 @@ There is many other ways one can help us: packaging, communication, etc ...
  * link:#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * link:#how-to-check-the-compilation[How to check the compilation]
  * link:#how-to-run-james-in-docker[How to run James in Docker]
- ** link:#run-james-with-java-8-%2Dguice-%2Dcassandra-%2Drabbitmq-%2Dswift-%2Delasticsearch[Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
- ** link:#run-james-with-java-8-%2Dguice-%2Dcassandra-%2Delasticsearch[Run James with Java 8 + Guice + Cassandra + ElasticSearch]
- ** link:#run-james-with-java-8-%2Dguice-%2Djpa-%2Dlucene[Run James with Java 8 + Guice + JPA + Lucene]
- ** link:#run-james-with-java-8-%2Dspring-%2Djpa[Run James with Java 8 + Spring + JPA]
+ ** link:#run-james-with-%2Dguice-%2Dcassandra-%2Drabbitmq-%2Dswift-%2Delasticsearch[Run James with Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
+ ** link:#run-james-with-%2Dguice-%2Dcassandra-%2Delasticsearch[Run James with Guice + Cassandra + ElasticSearch]
+ ** link:#run-james-with-%2Dguice-%2Djpa-%2Dlucene[Run James with Guice + JPA + Lucene]
+ ** link:#run-james-with-%2Dspring-%2Djpa[Run James with Spring + JPA]
  * link:#other-useful-commands[Other Useful commands]
  ** link:#how-to-add-a-domain-[How to add a domain?]
  ** link:#how-to-add-a-user-[How to add a user?]
@@ -159,11 +159,11 @@ Don't forget to add your key to https://downloads.apache.org/james/KEYS
 
 In order to have a standard compilation environment, we introduce Dockerfiles, using java-8.
 
-=== Java 8
+=== Java 11
 
 First step, you have to build the Docker image
 
-    $ docker build -t james/project dockerfiles/compilation/java-8
+    $ docker build -t james/project dockerfiles/compilation/java-11
 
 In order to run the build, you have to launch the following command:
 
@@ -198,13 +198,13 @@ If you are using a a fresh installation of Docker, your DOCKER_HOST should be un
 
 This feature is available for three configurations :
 
- * Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
- * Java 8 + Guice + Cassandra + ElasticSearch
- * Java 8 + Guice + JPA + Lucene
- * Java 8 + Spring + JPA
+ * Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
+ * Guice + Cassandra + ElasticSearch
+ * Guice + JPA + Lucene
+ * Spring + JPA
 
 
-=== Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
+=== Run James with Guice + Cassandra + RabbitMQ + Swift + ElasticSearch
 
 
 ==== Requirements
@@ -294,7 +294,7 @@ Add a link for the tika container in the above command line:
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link rabbitmq:rabbitmq
     --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
-=== Run James with Java 8 + Guice + Cassandra + ElasticSearch
+=== Run James with Guice + Cassandra + ElasticSearch
 
 
 ==== Requirements
@@ -356,7 +356,7 @@ Add a link for the tika container in the above command line:
 
     $ docker run --hostname HOSTNAME -p "25:25" -p 80:80 -p "110:110" -p "143:143" -p "465:465" -p "587:587" -p "993:993" --link cassandra:cassandra --link elasticsearch:elasticsearch --link tika:tika --name james_run -t james_run
 
-=== Run James with Java 8 + Guice + JPA + Lucene
+=== Run James with Guice + JPA + Lucene
 
 ==== Requirements
 Built artifacts should be in ./dockerfiles/run/guice/jpa/destination folder for jpa.
@@ -391,7 +391,7 @@ You can add an optional port binding to port 8000, to expose the webadmin server
 To have log file accessible on a volume, add *-v  $PWD/logs:/logs* option to the above command line, where *$PWD/logs* is your local directory to put files in.
 
 
-=== Run James with Java 8 + Spring + JPA
+=== Run James with Spring + JPA
 
 ==== Requirements
 
