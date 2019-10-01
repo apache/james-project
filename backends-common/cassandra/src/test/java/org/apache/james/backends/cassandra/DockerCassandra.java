@@ -19,6 +19,8 @@
 
 package org.apache.james.backends.cassandra;
 
+import java.util.function.Function;
+
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +28,8 @@ import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
+import org.testcontainers.images.builder.dockerfile.traits.RunStatementTrait;
 
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
@@ -45,17 +49,21 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
+        this("cassandra_3_11_3", Function.identity());
+    }
+
+    public DockerCassandra(String imageName, Function<DockerfileBuilder, DockerfileBuilder> additionalSteps) {
         client = DockerClientFactory.instance().client();
         boolean doNotDeleteImageAfterUsage = false;
         cassandraContainer = new GenericContainer<>(
-            new ImageFromDockerfile("cassandra_3_11_3", doNotDeleteImageAfterUsage)
+            new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
-                    builder
+                    additionalSteps.apply(builder
                         .from("cassandra:3.11.3")
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
                         .run("echo \"-Xmx" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)
-                        .run("sed", "-i", "s/auto_snapshot: true/auto_snapshot: false/g", "/etc/cassandra/cassandra.yaml")
+                        .run("sed", "-i", "s/auto_snapshot: true/auto_snapshot: false/g", "/etc/cassandra/cassandra.yaml"))
                         .build()))
             .withTmpFs(ImmutableMap.of("/var/lib/cassandra", "rw,noexec,nosuid,size=200m"))
             .withExposedPorts(CASSANDRA_PORT)

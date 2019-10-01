@@ -50,7 +50,7 @@ public class CassandraWaitStrategy implements WaitStrategy {
         Unreliables.retryUntilTrue(Ints.checkedCast(timeout.getSeconds()), TimeUnit.SECONDS, () -> {
                 try {
                     return cassandraContainer
-                        .execInContainer("cqlsh", "-e", "show host")
+                        .execInContainer("cqlsh", "-u", "cassandra", "-p", "cassandra", "-e", "show host")
                         .getStdout()
                         .contains("Connected to Test Cluster");
                 } catch (IOException | InterruptedException e) {

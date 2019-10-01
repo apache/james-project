@@ -46,6 +46,9 @@ public class ClusterConfiguration {
         private Optional<PoolingOptions> poolingOptions;
         private Optional<Integer> readTimeoutMillis;
         private Optional<Integer> connectTimeoutMillis;
+        private Optional<Boolean> useSsl;
+        private Optional<String> username;
+        private Optional<String> password;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -57,6 +60,9 @@ public class ClusterConfiguration {
             poolingOptions = Optional.empty();
             readTimeoutMillis = Optional.empty();
             connectTimeoutMillis = Optional.empty();
+            username = Optional.empty();
+            password = Optional.empty();
+            useSsl = Optional.empty();
         }
 
         public Builder host(Host host) {
@@ -138,6 +144,33 @@ public class ClusterConfiguration {
             return this;
         }
 
+        public Builder username(Optional<String> username) {
+            this.username = username;
+            return this;
+        }
+
+        public Builder username(String username) {
+            return username(Optional.of(username));
+        }
+
+        public Builder password(Optional<String> password) {
+            this.password = password;
+            return this;
+        }
+
+        public Builder password(String password) {
+            return password(Optional.of(password));
+        }
+
+        public Builder useSsl(boolean useSsl) {
+            this.useSsl = Optional.of(useSsl);
+            return this;
+        }
+
+        public Builder useSsl() {
+            return useSsl(true);
+        }
+
         public Builder connectTimeoutMillis(int connectTimeoutMillis) {
             return connectTimeoutMillis(Optional.of(connectTimeoutMillis));
         }
@@ -152,12 +185,18 @@ public class ClusterConfiguration {
                 queryLoggerConfiguration.orElse(QueryLoggerConfiguration.DEFAULT),
                 poolingOptions,
                 readTimeoutMillis.orElse(DEFAULT_READ_TIMEOUT_MILLIS),
-                connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS));
+                connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS),
+                useSsl.orElse(false),
+                username,
+                password);
         }
     }
 
     private static final String CASSANDRA_NODES = "cassandra.nodes";
     public static final String CASSANDRA_KEYSPACE = "cassandra.keyspace";
+    public static final String CASSANDRA_USER = "cassandra.user";
+    public static final String CASSANDRA_PASSWORD = "cassandra.password";
+    public static final String CASSANDRA_SSL = "cassandra.ssl";
     public static final String REPLICATION_FACTOR = "cassandra.replication.factor";
     public static final String READ_TIMEOUT_MILLIS = "cassandra.readTimeoutMillis";
     public static final String CONNECT_TIMEOUT_MILLIS = "cassandra.connectTimeoutMillis";
@@ -170,6 +209,7 @@ public class ClusterConfiguration {
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+    private static final boolean DEFAULT_SSL = false;
 
     public static Builder builder() {
         return new Builder();
@@ -186,6 +226,9 @@ public class ClusterConfiguration {
             .poolingOptions(readPoolingOptions(configuration))
             .readTimeoutMillis(Optional.ofNullable(configuration.getInteger(READ_TIMEOUT_MILLIS, null)))
             .connectTimeoutMillis(Optional.ofNullable(configuration.getInteger(CONNECT_TIMEOUT_MILLIS, null)))
+            .useSsl(configuration.getBoolean(CASSANDRA_SSL, false))
+            .username(Optional.ofNullable(configuration.getString(CASSANDRA_USER, null)))
+            .password(Optional.ofNullable(configuration.getString(CASSANDRA_PASSWORD, null)))
             .build();
     }
 
@@ -237,10 +280,13 @@ public class ClusterConfiguration {
     private final Optional<PoolingOptions> poolingOptions;
     private final int readTimeoutMillis;
     private final int connectTimeoutMillis;
+    private final boolean useSsl;
+    private final Optional<String> username;
+    private final Optional<String> password;
 
     public ClusterConfiguration(List<Host> hosts, String keyspace, int replicationFactor, int minDelay, int maxRetry,
                                 QueryLoggerConfiguration queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
-                                int readTimeoutMillis, int connectTimeoutMillis) {
+                                int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username, Optional<String> password) {
         this.hosts = hosts;
         this.keyspace = keyspace;
         this.replicationFactor = replicationFactor;
@@ -250,6 +296,9 @@ public class ClusterConfiguration {
         this.poolingOptions = poolingOptions;
         this.readTimeoutMillis = readTimeoutMillis;
         this.connectTimeoutMillis = connectTimeoutMillis;
+        this.useSsl = useSsl;
+        this.username = username;
+        this.password = password;
     }
 
     public List<Host> getHosts() {
@@ -288,6 +337,18 @@ public class ClusterConfiguration {
         return connectTimeoutMillis;
     }
 
+    public boolean isUseSsl() {
+        return useSsl;
+    }
+
+    public Optional<String> getUsername() {
+        return username;
+    }
+
+    public Optional<String> getPassword() {
+        return password;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ClusterConfiguration) {
@@ -301,7 +362,10 @@ public class ClusterConfiguration {
                 && Objects.equals(this.queryLoggerConfiguration, that.queryLoggerConfiguration)
                 && Objects.equals(this.poolingOptions, that.poolingOptions)
                 && Objects.equals(this.readTimeoutMillis, that.readTimeoutMillis)
-                && Objects.equals(this.connectTimeoutMillis, that.connectTimeoutMillis);
+                && Objects.equals(this.connectTimeoutMillis, that.connectTimeoutMillis)
+                && Objects.equals(this.useSsl, that.useSsl)
+                && Objects.equals(this.username, that.username)
+                && Objects.equals(this.password, that.password);
         }
         return false;
     }
@@ -309,6 +373,6 @@ public class ClusterConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(hosts, keyspace, replicationFactor, minDelay, maxRetry, queryLoggerConfiguration, poolingOptions,
-            readTimeoutMillis, connectTimeoutMillis);
+            readTimeoutMillis, connectTimeoutMillis, username, useSsl, password);
     }
 }

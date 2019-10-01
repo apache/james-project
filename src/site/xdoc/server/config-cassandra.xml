@@ -38,6 +38,19 @@
         <dt><strong>cassandra.keyspace</strong></dt>
         <dd>Is the name of the keyspace used by James. Optional, default value: <b>apache_james</b></dd>
 
+        <dt><strong>cassandra.user</strong></dt>
+        <dd>Username used as a credential for contacting Cassandra cluster. Optional, default is absent,
+          required if <strong>cassandra.password</strong> is supplied</dd>
+
+        <dt><strong>cassandra.password</strong></dt>
+        <dd>Password used as a credential for contacting Cassandra cluster. Optional, default is absent,
+          required if <strong>cassandra.user</strong> is supplied</dd>
+
+        <dt><strong>cassandra.ssl</strong></dt>
+        <dd>Wether SSL should be enabled on the communications with Cassandra cluster. Optional, defaults to false.<br/>
+        The keystore used for trusting SLL server socket can be set via JSSE system properties as explained on
+        <a href="https://docs.datastax.com/en/developer/java-driver/3.7/manual/ssl/">Cassandra driver manual</a>.</dd>
+
         <dt><strong>cassandra.replication.factor</strong></dt>
         <dd>Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
         will have no effect. Optional. Default value 1.</dd>

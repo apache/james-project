@@ -55,10 +55,12 @@ public class ClusterBuilder {
     private Optional<Integer> readTimeoutMillis;
     private Optional<Integer> connectTimeoutMillis;
     private Optional<PoolingOptions> poolingOptions;
+    private Optional<Boolean> useSsl;
 
     private ClusterBuilder() {
         username = Optional.empty();
         password = Optional.empty();
+        useSsl = Optional.empty();
 
         host = Optional.empty();
         port = Optional.empty();
@@ -71,13 +73,21 @@ public class ClusterBuilder {
     }
 
     public ClusterBuilder username(String username) {
-        this.username = Optional.of(username);
+        return username(Optional.of(username));
+    }
+
+    public ClusterBuilder password(String password) {
+        return password(Optional.of(password));
+    }
+
+    public ClusterBuilder username(Optional<String> username) {
+        this.username = username;
 
         return this;
     }
 
-    public ClusterBuilder password(String password) {
-        this.password = Optional.of(password);
+    public ClusterBuilder password(Optional<String> password) {
+        this.password = password;
 
         return this;
     }
@@ -90,6 +100,12 @@ public class ClusterBuilder {
 
     public ClusterBuilder port(int port) {
         this.port = Optional.of(port);
+
+        return this;
+    }
+
+    public ClusterBuilder useSsl(boolean useSsl) {
+        this.useSsl = Optional.of(useSsl);
 
         return this;
     }
@@ -154,6 +170,8 @@ public class ClusterBuilder {
         connectTimeoutMillis.ifPresent(socketOptions::setConnectTimeoutMillis);
         clusterBuilder.withSocketOptions(socketOptions);
         poolingOptions.ifPresent(clusterBuilder::withPoolingOptions);
+
+        useSsl.filter(b -> b).ifPresent(any -> clusterBuilder.withSSL());
 
         Cluster cluster = clusterBuilder.build();
         try {

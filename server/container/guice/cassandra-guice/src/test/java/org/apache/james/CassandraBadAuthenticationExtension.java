@@ -19,46 +19,36 @@
 
 package org.apache.james;
 
+import org.apache.james.backends.cassandra.DockerCassandraAuthenticatedSingleton;
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+import org.apache.james.server.CassandraTruncateTableTask;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.util.Modules;
 
-public class CassandraExtension implements GuiceModuleTestExtension {
-
-    private final DockerCassandraRule cassandra;
-
-    public CassandraExtension() {
-        this(new DockerCassandraRule());
-    }
-
-    public CassandraExtension(DockerCassandraRule cassandra) {
-        this.cassandra = cassandra;
-    }
+public class CassandraBadAuthenticationExtension implements GuiceModuleTestExtension {
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        cassandra.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        cassandra.stop();
+        DockerCassandraAuthenticatedSingleton.singleton.start();
     }
 
     @Override
     public Module getModule() {
-        return cassandra.getModule();
-    }
-
-    public DockerCassandraRule getCassandra() {
-        return cassandra;
-    }
-
-    public void pause() {
-        cassandra.pause();
-    }
-
-    public void unpause() {
-        cassandra.unpause();
+        return Modules.combine((binder) -> binder.bind(ClusterConfiguration.class)
+                .toInstance(ClusterConfiguration.builder()
+                    .host(DockerCassandraAuthenticatedSingleton.singleton.getHost())
+                    .keyspace("testing")
+                    .username("cassandra")
+                    .password("bad")
+                    .replicationFactor(1)
+                    .maxRetry(1)
+                    .minDelay(100)
+                    .build()),
+            binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
+                .addBinding()
+                .to(CassandraTruncateTableTask.class));
     }
 }

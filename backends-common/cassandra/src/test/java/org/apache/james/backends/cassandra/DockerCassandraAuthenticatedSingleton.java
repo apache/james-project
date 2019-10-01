@@ -17,48 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.backends.cassandra;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
+public class DockerCassandraAuthenticatedSingleton {
+    public static final DockerCassandra singleton = new DockerCassandra("cassandra_3_11_3_auth",
+        dockerfileBuilder -> dockerfileBuilder
+            .run("echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml"));
 
-import com.google.inject.Module;
-
-public class CassandraExtension implements GuiceModuleTestExtension {
-
-    private final DockerCassandraRule cassandra;
-
-    public CassandraExtension() {
-        this(new DockerCassandraRule());
-    }
-
-    public CassandraExtension(DockerCassandraRule cassandra) {
-        this.cassandra = cassandra;
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) {
-        cassandra.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        cassandra.stop();
-    }
-
-    @Override
-    public Module getModule() {
-        return cassandra.getModule();
-    }
-
-    public DockerCassandraRule getCassandra() {
-        return cassandra;
-    }
-
-    public void pause() {
-        cassandra.pause();
-    }
-
-    public void unpause() {
-        cassandra.unpause();
+    static {
+        singleton.start();
     }
 }

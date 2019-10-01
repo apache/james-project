@@ -64,6 +64,9 @@ public class ResilientClusterProvider implements Provider<Cluster> {
         return () -> {
             Cluster cluster = ClusterBuilder.builder()
                     .servers(configuration.getHosts())
+                    .username(configuration.getUsername())
+                    .password(configuration.getPassword())
+                    .useSsl(configuration.isUseSsl())
                     .poolingOptions(configuration.getPoolingOptions())
                     .queryLoggerConfiguration(configuration.getQueryLoggerConfiguration())
                     .readTimeoutMillis(configuration.getReadTimeoutMillis())
