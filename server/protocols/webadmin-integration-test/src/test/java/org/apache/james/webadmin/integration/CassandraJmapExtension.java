@@ -18,21 +18,23 @@
  ****************************************************************/
 package org.apache.james.webadmin.integration;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.CleanupTasksPerformer;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.DockerElasticSearchRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.TestRabbitMQModule;
+import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.Runnables;
@@ -50,6 +52,7 @@ import org.junit.rules.TemporaryFolder;
 import com.github.fge.lambdas.Throwing;
 
 public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
+
     public interface JamesLifeCyclePolicy {
         JamesLifeCyclePolicy FOR_EACH_TEST = serverSupplier -> JamesLifecycleHandler.builder()
             .beforeAll(Optional::empty)
@@ -127,6 +130,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     private static final int LIMIT_TO_20_MESSAGES = 20;
 
     private final TemporaryFolder temporaryFolder;
+    private final DockerAwsS3TestRule dockerAwsS3TestRule;
     private final DockerCassandraRule cassandra;
     private final DockerElasticSearchRule elasticSearchRule;
     private final JamesLifecycleHandler jamesLifecycleHandler;
@@ -140,6 +144,7 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
         this.temporaryFolder = new TemporaryFolder();
         this.cassandra = new DockerCassandraRule();
         this.elasticSearchRule = new DockerElasticSearchRule();
+        this.dockerAwsS3TestRule = new DockerAwsS3TestRule();
         this.jamesLifecycleHandler = jamesLifeCyclePolicy.createHandler(jamesSupplier());
     }
 
@@ -150,11 +155,14 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
                 .build();
 
         return GuiceJamesServer.forConfiguration(configuration)
-                .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE).overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+                .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+                .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
                 .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearchRule.getDockerEs().getHttpHost()))
                 .overrideWith(cassandra.getModule())
                 .overrideWith(elasticSearchRule.getModule())
+                .overrideWith(dockerAwsS3TestRule.getModule())
+                .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
                 .overrideWith(new UnauthorizedModule())
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
@@ -167,14 +175,14 @@ public class CassandraJmapExtension implements BeforeAllCallback, AfterAllCallba
     @Override
     public void beforeAll(ExtensionContext context) throws Exception {
         temporaryFolder.create();
-        Runnables.runParallel(cassandra::start, elasticSearchRule::start);
+        Runnables.runParallel(cassandra::start, elasticSearchRule::start, dockerAwsS3TestRule::start);
         james = jamesLifecycleHandler.beforeAll().orElse(james);
     }
 
     @Override
     public void afterAll(ExtensionContext context) {
         jamesLifecycleHandler.afterAll(james);
-        Runnables.runParallel(cassandra::stop, elasticSearchRule.getDockerEs()::cleanUpData);
+        Runnables.runParallel(cassandra::stop, elasticSearchRule.getDockerEs()::cleanUpData, dockerAwsS3TestRule::stop);
     }
 
     @Override

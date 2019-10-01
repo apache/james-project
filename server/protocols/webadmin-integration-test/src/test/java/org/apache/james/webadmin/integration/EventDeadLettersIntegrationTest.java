@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -32,8 +33,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -60,7 +62,6 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.inject.multibindings.Multibinder;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -73,14 +74,16 @@ public class EventDeadLettersIntegrationTest {
     public static class RetryEventsListener implements MailboxListener.GroupMailboxListener {
         static final Group GROUP = new RetryEventsListenerGroup();
 
-        private int retriesBeforeSuccess;
-        private Map<Event.EventId, Integer> retries;
+        private final AtomicInteger totalCalls;
+        private int callsBeforeSuccess;
+        private Map<Event.EventId, Integer> callsByEventId;
         private List<Event> successfulEvents;
 
         RetryEventsListener() {
-            this.retriesBeforeSuccess = 0;
-            this.retries = new HashMap<>();
+            this.callsBeforeSuccess = 0;
+            this.callsByEventId = new HashMap<>();
             this.successfulEvents = new ArrayList<>();
+            this.totalCalls = new AtomicInteger(0);
         }
 
         @Override
@@ -90,25 +93,40 @@ public class EventDeadLettersIntegrationTest {
 
         @Override
         public void event(Event event) throws Exception {
-            int currentRetries = retries.getOrDefault(event.getEventId(), 0);
-
-            if (currentRetries < retriesBeforeSuccess) {
-                retries.put(event.getEventId(), currentRetries + 1);
-                throw new RuntimeException("throw to trigger retry");
-            } else {
-                retries.remove(event.getEventId());
+            totalCalls.incrementAndGet();
+            if (done(event)) {
+                callsByEventId.remove(event.getEventId());
                 successfulEvents.add(event);
+            } else {
+                increaseRetriesCount(event);
+                throw new RuntimeException("throw to trigger retry");
             }
+        }
+
+        private void increaseRetriesCount(Event event) {
+            callsByEventId.put(event.getEventId(), retriesCount(event) + 1);
+        }
+
+        int retriesCount(Event event) {
+            return callsByEventId.getOrDefault(event.getEventId(), 0);
+        }
+
+        boolean done(Event event) {
+            return retriesCount(event) >= callsBeforeSuccess;
         }
 
         List<Event> getSuccessfulEvents() {
             return successfulEvents;
         }
 
-        void setRetriesBeforeSuccess(int retriesBeforeSuccess) {
-            this.retriesBeforeSuccess = retriesBeforeSuccess;
+        void callsPerEventBeforeSuccess(int retriesBeforeSuccess) {
+            this.callsBeforeSuccess = retriesBeforeSuccess;
         }
     }
+
+    //This value is duplicated from default configuration to ensure we keep the same behavior over time
+    //unless we really want to change that default value
+    private static final int MAX_RETRIES = 3;
 
     private static final String DOMAIN = "domain.tld";
     private static final String BOB = "bob@" + DOMAIN;
@@ -132,7 +150,7 @@ public class EventDeadLettersIntegrationTest {
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
+    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     private GuiceJamesServer guiceJamesServer;
     private MailboxProbeImpl mailboxProbe;
@@ -140,7 +158,7 @@ public class EventDeadLettersIntegrationTest {
     @Before
     public void setUp() throws Exception {
         retryEventsListener = new RetryEventsListener();
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
+        guiceJamesServer = jamesTestRule.jmapServer(cassandra.getModule())
             .overrideWith(binder -> Multibinder.newSetBinder(binder, MailboxListener.GroupMailboxListener.class).addBinding().toInstance(retryEventsListener));
         guiceJamesServer.start();
 
@@ -179,8 +197,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void failedEventShouldBeStoredInDeadLetterUnderItsGroupId() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
@@ -192,8 +212,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void successfulEventShouldNotBeStoredInDeadLetter() {
-        retryEventsListener.setRetriesBeforeSuccess(3);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES - 1);
         generateInitialEvent();
+
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> !retryEventsListener.successfulEvents.isEmpty());
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
@@ -205,8 +227,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void groupIdOfFailedEventShouldBeStoredInDeadLetter() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
@@ -218,8 +242,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void failedEventShouldBeStoredInDeadLetter() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         MailboxId mailboxId = generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -237,9 +263,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void multipleFailedEventShouldBeStoredInDeadLetter() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
@@ -251,8 +279,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void failedEventShouldNotBeInDeadLetterAfterBeingDeleted() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -267,8 +297,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void taskShouldBeCompletedAfterSuccessfulRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -292,8 +324,10 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void failedEventShouldNotBeInDeadLettersAfterSuccessfulRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -314,9 +348,11 @@ public class EventDeadLettersIntegrationTest {
     }
 
     @Test
-    public void failedEventShouldBeCorrectlyProcessedByListenerAfterSuccessfulRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(5);
+    public void failedEventShouldBeCorrectlyProcessedByListenerAfterSuccessfulRedelivery() throws InterruptedException {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -333,11 +369,17 @@ public class EventDeadLettersIntegrationTest {
         awaitAtMostTenSeconds.until(() -> retryEventsListener.getSuccessfulEvents().size() == 1);
     }
 
+    private void waitForCalls(int count) {
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> retryEventsListener.totalCalls.intValue() >= count);
+    }
+
     @Test
     public void taskShouldBeCompletedAfterSuccessfulGroupRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -358,9 +400,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulGroupRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -382,9 +426,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulGroupRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(5);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -401,9 +447,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void taskShouldBeCompletedAfterSuccessfulAllRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -423,9 +471,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulAllRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(4);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -447,9 +497,11 @@ public class EventDeadLettersIntegrationTest {
 
     @Test
     public void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulAllRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(5);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
+
+        waitForCalls((MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -467,8 +519,10 @@ public class EventDeadLettersIntegrationTest {
     @Ignore("retry rest API delivers only once, see JAMES-2907. We need same retry cound for this test to work")
     @Test
     public void failedEventShouldStillBeInDeadLettersAfterFailedRedelivery() {
-        retryEventsListener.setRetriesBeforeSuccess(8);
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES * 2 + 1);
         generateInitialEvent();
+
+        waitForCalls(MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 

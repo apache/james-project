@@ -22,7 +22,7 @@ package org.apache.james.webadmin.integration;
 import static io.restassured.RestAssured.when;
 import static org.hamcrest.core.IsNot.not;
 
-import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -40,15 +40,15 @@ public class AuthorizedEndpointsTest {
 
     @Rule
     public DockerCassandraRule cassandra = new DockerCassandraRule();
-    
+
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
+    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     private GuiceJamesServer guiceJamesServer;
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule());
+        guiceJamesServer = jamesTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule());
         guiceJamesServer.start();
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 

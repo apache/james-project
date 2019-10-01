@@ -32,7 +32,7 @@ import static org.hamcrest.Matchers.is;
 
 import java.util.List;
 
-import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
@@ -85,14 +85,14 @@ public class WebAdminServerIntegrationTest {
     public DockerCassandraRule cassandra = new DockerCassandraRule();
 
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
+    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     private GuiceJamesServer guiceJamesServer;
     private DataProbe dataProbe;
 
     @Before
     public void setUp() throws Exception {
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule());
+        guiceJamesServer = jamesTestRule.jmapServer(cassandra.getModule());
         guiceJamesServer.start();
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);

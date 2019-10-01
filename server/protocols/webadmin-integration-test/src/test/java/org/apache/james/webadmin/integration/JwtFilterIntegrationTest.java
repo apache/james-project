@@ -25,7 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.james.CassandraJmapTestRule;
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jwt.JwtConfiguration;
@@ -63,7 +63,7 @@ public class JwtFilterIntegrationTest {
     public DockerCassandraRule cassandra = new DockerCassandraRule();
     
     @Rule
-    public CassandraJmapTestRule cassandraJmapTestRule = CassandraJmapTestRule.defaultTestRule();
+    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
 
     private GuiceJamesServer guiceJamesServer;
     private DataProbeImpl dataProbe;
@@ -74,7 +74,7 @@ public class JwtFilterIntegrationTest {
         JwtConfiguration jwtConfiguration = new JwtConfiguration(
             Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
 
-        guiceJamesServer = cassandraJmapTestRule.jmapServer(cassandra.getModule())
+        guiceJamesServer = jamesTestRule.jmapServer(cassandra.getModule())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class),
                 binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration));
         guiceJamesServer.start();

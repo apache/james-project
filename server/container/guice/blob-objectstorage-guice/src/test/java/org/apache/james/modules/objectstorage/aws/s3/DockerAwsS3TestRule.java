@@ -114,5 +114,9 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
     public void start() {
         ensureAwsS3started();
     }
+
+    public void stop() {
+        //nothing to stop
+    }
 }
 
