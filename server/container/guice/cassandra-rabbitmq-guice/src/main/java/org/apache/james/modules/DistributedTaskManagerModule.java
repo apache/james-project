@@ -18,7 +18,7 @@
  * under the License.                                           *
  ***************************************************************/
 
-package org.apache.james;
+package org.apache.james.modules;
 
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.task.TaskManager;
