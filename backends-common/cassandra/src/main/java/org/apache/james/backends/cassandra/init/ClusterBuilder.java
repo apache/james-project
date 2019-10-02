@@ -47,8 +47,6 @@ public class ClusterBuilder {
     private Optional<String> username;
     private Optional<String> password;
 
-    private Optional<String> host;
-    private Optional<Integer> port;
     private Optional<Collection<Host>> servers;
 
     private Optional<QueryLoggerConfiguration> queryLogger;
@@ -62,8 +60,6 @@ public class ClusterBuilder {
         password = Optional.empty();
         useSsl = Optional.empty();
 
-        host = Optional.empty();
-        port = Optional.empty();
         servers = Optional.empty();
 
         queryLogger = Optional.empty();
@@ -88,18 +84,6 @@ public class ClusterBuilder {
 
     public ClusterBuilder password(Optional<String> password) {
         this.password = password;
-
-        return this;
-    }
-
-    public ClusterBuilder host(String host) {
-        this.host = Optional.of(host);
-
-        return this;
-    }
-
-    public ClusterBuilder port(int port) {
-        this.port = Optional.of(port);
 
         return this;
     }
@@ -149,15 +133,13 @@ public class ClusterBuilder {
     }
 
     public Cluster build() {
-        Preconditions.checkState(!(servers.isPresent() && host.isPresent()), "You can't specify a list of servers and a host at the same time");
-        Preconditions.checkState(!(servers.isPresent() && port.isPresent()), "You can't specify a list of servers and a port at the same time");
         Preconditions.checkState(username.isPresent() == password.isPresent(), "If you specify username, you must specify password");
 
         Cluster.Builder clusterBuilder = Cluster.builder()
             .withoutJMXReporting();
-        getServers().forEach(
-                (server) -> clusterBuilder.addContactPoint(server.getHostName()).withPort(server.getPort())
-        );
+        getServers().forEach(server -> clusterBuilder
+            .addContactPoint(server.getHostName())
+            .withPort(server.getPort()));
 
         username.map(username ->
             password.map(password ->
@@ -190,19 +172,7 @@ public class ClusterBuilder {
     }
 
     private Collection<Host> getServers() {
-        return servers.orElse(getServersFromHostAndPort());
-    }
-
-    private Collection<Host> getServersFromHostAndPort() {
-        String host = this.host.orElseGet(() -> {
-            LOGGER.info("No cassandra host specified. Falling back to {}", DEFAULT_CLUSTER_IP);
-            return DEFAULT_CLUSTER_IP;
-        });
-        int port = this.port.orElseGet(() -> {
-            LOGGER.info("No cassandra port specified. Falling back to {}", DEFAULT_CASSANDRA_PORT);
-            return DEFAULT_CASSANDRA_PORT;
-        });
-
-        return ImmutableList.of(Host.from(host, port));
+        return servers.orElse(ImmutableList.of(
+            Host.from(DEFAULT_CLUSTER_IP, DEFAULT_CASSANDRA_PORT)));
     }
 }

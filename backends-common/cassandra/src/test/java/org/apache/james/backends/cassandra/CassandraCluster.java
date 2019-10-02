@@ -58,8 +58,7 @@ public final class CassandraCluster implements AutoCloseable {
         this.module = module;
         try {
             cluster = ClusterBuilder.builder()
-                .host(host.getHostName())
-                .port(host.getPort())
+                .servers(host)
                 .build();
             ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
                 .host(host)

@@ -123,9 +123,8 @@ class SessionWithInitializedTablesFactoryTest {
     private static Supplier<Session> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
         Host host = cassandraServer.getHost();
         Cluster cluster = ClusterBuilder.builder()
-                .host(host.getHostName())
-                .port(host.getPort())
-                .build();
+            .servers(host)
+            .build();
         ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
             .host(host)
             .keyspace(KEYSPACE)
