@@ -55,6 +55,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** https://github.com/apache/james-project/#how-to-retrieve-users-and-password-from-my-previous-container[How to retrieve users and password from my previous container?]
  ** https://github.com/apache/james-project/#how-to-run-deployment-tests[How to run deployment Tests]
  * https://github.com/apache/james-project/#generating-a-package-for-james[Generating a package for James]
+ * https://github.com/apache/james-project/#know-more-about-james[Know more about James]
 
 == How to try James
 
@@ -563,3 +564,6 @@ Once installed, try:
 
 By default James is configured without LDAP support.
 
+= Know more about James
+
+James comes with a https://james.apache.org/documentation.html[Documentation] and https://github.com/linagora/james-project/tree/master/src/adr[Architectural Decision Records].
