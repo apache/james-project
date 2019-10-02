@@ -20,13 +20,24 @@
 package org.apache.james.backends.cassandra.migration;
 
 import org.apache.james.task.Task;
+import org.apache.james.task.TaskType;
 
 public interface Migration {
 
     void apply() throws InterruptedException;
 
     default Task asTask() {
-        return this::runTask;
+        return new Task() {
+            @Override
+            public Result run() throws InterruptedException {
+                return runTask();
+            }
+
+            @Override
+            public TaskType type() {
+                return TaskType.of("migration_sub_task");
+            }
+        };
     }
 
     default Task.Result runTask() throws InterruptedException {
