@@ -92,10 +92,7 @@ public interface Task {
      */
     Result run() throws InterruptedException;
 
-
-    default TaskType type() {
-        return UNKNOWN;
-    }
+    TaskType type();
 
     default Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.empty();
