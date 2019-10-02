@@ -71,10 +71,8 @@ public class ResilientClusterProvider implements Provider<Cluster> {
                     .connectTimeoutMillis(configuration.getConnectTimeoutMillis())
                     .build();
             try {
-                return ClusterWithKeyspaceCreatedFactory
-                    .config(cluster, configuration.getKeyspace())
-                    .replicationFactor(configuration.getReplicationFactor())
-                    .clusterWithInitializedKeyspace();
+                ClusterWithKeyspaceCreatedFactory.createKeyspace(cluster, configuration);
+                return cluster;
             } catch (Exception e) {
                 cluster.close();
                 throw e;

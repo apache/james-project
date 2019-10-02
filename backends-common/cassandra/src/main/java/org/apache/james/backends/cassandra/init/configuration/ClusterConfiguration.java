@@ -47,6 +47,7 @@ public class ClusterConfiguration {
         private Optional<Integer> readTimeoutMillis;
         private Optional<Integer> connectTimeoutMillis;
         private Optional<Boolean> useSsl;
+        private Optional<Boolean> durableWrites;
         private Optional<String> username;
         private Optional<String> password;
 
@@ -63,6 +64,7 @@ public class ClusterConfiguration {
             username = Optional.empty();
             password = Optional.empty();
             useSsl = Optional.empty();
+            durableWrites = Optional.empty();
         }
 
         public Builder host(Host host) {
@@ -175,6 +177,12 @@ public class ClusterConfiguration {
             return connectTimeoutMillis(Optional.of(connectTimeoutMillis));
         }
 
+        public Builder disableDurableWrites() {
+            this.durableWrites = Optional.of(false);
+
+            return this;
+        }
+
         public ClusterConfiguration build() {
             return new ClusterConfiguration(
                 hosts.build(),
@@ -188,7 +196,8 @@ public class ClusterConfiguration {
                 connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS),
                 useSsl.orElse(false),
                 username,
-                password);
+                password,
+                durableWrites.orElse(true));
         }
     }
 
@@ -283,10 +292,12 @@ public class ClusterConfiguration {
     private final boolean useSsl;
     private final Optional<String> username;
     private final Optional<String> password;
+    private final boolean durableWrites;
 
     public ClusterConfiguration(List<Host> hosts, String keyspace, int replicationFactor, int minDelay, int maxRetry,
                                 QueryLoggerConfiguration queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
-                                int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username, Optional<String> password) {
+                                int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username,
+                                Optional<String> password, boolean durableWrites) {
         this.hosts = hosts;
         this.keyspace = keyspace;
         this.replicationFactor = replicationFactor;
@@ -299,6 +310,11 @@ public class ClusterConfiguration {
         this.useSsl = useSsl;
         this.username = username;
         this.password = password;
+        this.durableWrites = durableWrites;
+    }
+
+    public boolean isDurableWrites() {
+        return durableWrites;
     }
 
     public List<Host> getHosts() {

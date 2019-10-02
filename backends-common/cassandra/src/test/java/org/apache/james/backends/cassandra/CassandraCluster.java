@@ -61,19 +61,14 @@ public final class CassandraCluster implements AutoCloseable {
                 .host(host.getHostName())
                 .port(host.getPort())
                 .build();
-            session = new SessionWithInitializedTablesFactory(
-                ClusterConfiguration.builder()
-                    .host(host)
-                    .keyspace(KEYSPACE)
-                    .replicationFactor(1)
-                    .build(),
-                ClusterWithKeyspaceCreatedFactory
-                    .config(cluster, KEYSPACE)
-                    .replicationFactor(1)
-                    .disableDurableWrites()
-                    .clusterWithInitializedKeyspace(),
-                module)
-                .get();
+            ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
+                .host(host)
+                .keyspace(KEYSPACE)
+                .replicationFactor(1)
+                .disableDurableWrites()
+                .build();
+            ClusterWithKeyspaceCreatedFactory.createKeyspace(cluster, clusterConfiguration);
+            session = new SessionWithInitializedTablesFactory(clusterConfiguration, cluster, module).get();
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {
             throw new RuntimeException(exception);

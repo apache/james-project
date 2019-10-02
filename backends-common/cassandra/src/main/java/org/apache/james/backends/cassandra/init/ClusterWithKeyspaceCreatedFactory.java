@@ -19,53 +19,18 @@
 
 package org.apache.james.backends.cassandra.init;
 
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
+
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.Session;
 
 public class ClusterWithKeyspaceCreatedFactory {
-
-    private static final int DEFAULT_REPLICATION_FACTOR = 1;
-    
-    public static Configuration config(Cluster cluster, String keyspace) {
-        return new Configuration(cluster, keyspace);
-    }
-    
-    public static class Configuration {
-        private Cluster cluster;
-        private String keyspace;
-        private boolean durableWrites;
-        private int replicationFactor;
-        
-        private Configuration(Cluster cluster, String keyspace) {
-            this.cluster = cluster;
-            this.keyspace = keyspace;
-            this.durableWrites = true;
-            this.replicationFactor = DEFAULT_REPLICATION_FACTOR;
-        }
-        
-        public Configuration disableDurableWrites() {
-            this.durableWrites = false;
-            return this;
-        }
-        
-        public Configuration replicationFactor(int replicationFactor) {
-            this.replicationFactor = replicationFactor;
-            return this;
-        }
-        
-        public Cluster clusterWithInitializedKeyspace() {
-            createKeyspace(cluster, keyspace, replicationFactor, durableWrites);
-            return cluster;
-        }
-    }
-
-    private static void createKeyspace(Cluster cluster, String keyspace, int replicationFactor, boolean durableWrites) {
+    public static void createKeyspace(Cluster cluster, ClusterConfiguration clusterConfiguration) {
         try (Session session = cluster.connect()) {
-            session.execute("CREATE KEYSPACE IF NOT EXISTS " + keyspace
-                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + replicationFactor + "}"
-                + " AND durable_writes = " + String.valueOf(durableWrites)
+            session.execute("CREATE KEYSPACE IF NOT EXISTS " + clusterConfiguration.getKeyspace()
+                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + clusterConfiguration.getReplicationFactor() + "}"
+                + " AND durable_writes = " + clusterConfiguration.isDurableWrites()
                 + ";");
         }
     }
-
 }

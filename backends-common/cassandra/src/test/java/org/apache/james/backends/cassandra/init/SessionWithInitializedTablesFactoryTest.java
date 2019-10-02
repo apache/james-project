@@ -126,18 +126,18 @@ class SessionWithInitializedTablesFactoryTest {
                 .host(host.getHostName())
                 .port(host.getPort())
                 .build();
+        ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
+            .host(host)
+            .keyspace(KEYSPACE)
+            .replicationFactor(1)
+            .disableDurableWrites()
+            .build();
+        ClusterWithKeyspaceCreatedFactory.createKeyspace(cluster, clusterConfiguration);
         return () -> new SessionWithInitializedTablesFactory(
-                ClusterConfiguration.builder()
-                        .host(host)
-                        .keyspace(KEYSPACE)
-                        .replicationFactor(1)
-                        .build(),
-                ClusterWithKeyspaceCreatedFactory
-                        .config(cluster, KEYSPACE)
-                        .replicationFactor(1)
-                        .disableDurableWrites()
-                        .clusterWithInitializedKeyspace(),
-                MODULE).get();
+                clusterConfiguration,
+                cluster,
+                MODULE)
+            .get();
     }
 
     private static void cleanCassandra(Session session) {
