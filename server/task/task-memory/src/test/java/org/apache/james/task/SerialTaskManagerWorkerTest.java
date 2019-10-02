@@ -94,11 +94,11 @@ class SerialTaskManagerWorkerTest {
         CountDownLatch latch = new CountDownLatch(1);
         CountDownLatch taskLaunched = new CountDownLatch(1);
 
-        Task inProgressTask = () -> {
+        Task inProgressTask = new MemoryReferenceTask(() -> {
             taskLaunched.countDown();
             await(latch);
             return Task.Result.COMPLETED;
-        };
+        });
 
         TaskWithId taskWithId = new TaskWithId(id, inProgressTask);
 
@@ -116,11 +116,11 @@ class SerialTaskManagerWorkerTest {
         AtomicInteger counter = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(1);
 
-        Task inProgressTask = () -> {
+        Task inProgressTask = new MemoryReferenceTask(() -> {
             await(latch);
             counter.incrementAndGet();
             return Task.Result.COMPLETED;
-        };
+        });
 
         TaskWithId taskWithId = new TaskWithId(id, inProgressTask);
 

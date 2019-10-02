@@ -65,7 +65,12 @@
             <artifactId>james-server-memory-guice</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-task-api</artifactId>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
             <artifactId>testing-base</artifactId>

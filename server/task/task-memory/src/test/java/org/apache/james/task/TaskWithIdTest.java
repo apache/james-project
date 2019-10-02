@@ -28,8 +28,8 @@ public class TaskWithIdTest {
     @Test
     public void twoTasksWithSameIdShouldBeEqual() {
         TaskId id = TaskId.generateTaskId();
-        Task task1 = () -> Task.Result.COMPLETED;
-        Task task2 = () -> Task.Result.COMPLETED;
+        Task task1 = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
+        Task task2 = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
         TaskWithId taskWithId1 = new TaskWithId(id, task1);
         TaskWithId taskWithId2 = new TaskWithId(id, task2);
         assertThat(taskWithId1).isEqualTo(taskWithId2);
@@ -39,7 +39,7 @@ public class TaskWithIdTest {
     public void sameTaskWithDifferentIdShouldNotBeEqual() {
         TaskId id1 = TaskId.generateTaskId();
         TaskId id2 = TaskId.generateTaskId();
-        Task task = () -> Task.Result.COMPLETED;
+        Task task = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
         TaskWithId taskWithId1 = new TaskWithId(id1, task);
         TaskWithId taskWithId2 = new TaskWithId(id2, task);
         assertThat(taskWithId1).isNotEqualTo(taskWithId2);

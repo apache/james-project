@@ -26,6 +26,7 @@ import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.task.CountDownLatchExtension;
 import org.apache.james.task.Hostname;
+import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.MemoryWorkQueue;
 import org.apache.james.task.SerialTaskManagerWorker;
 import org.apache.james.task.Task;
@@ -75,7 +76,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     @Test
     void createdTaskShouldKeepOriginHostname() {
-        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
         assertThat(eventStore.getEventsOfAggregate(aggregateId).getEvents())
                 .filteredOn(event -> event instanceof Created)
@@ -85,7 +86,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     @Test
     void startedTaskShouldKeepOriginHostname() {
-        TaskId taskId = taskManager.submit(() -> Task.Result.COMPLETED);
+        TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
 
         CALMLY_AWAIT.untilAsserted(() ->
@@ -97,10 +98,10 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
     @Test
     void cancelRequestedTaskShouldKeepOriginHostname() {
-        TaskId taskId = taskManager.submit(() -> {
+        TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> {
             Thread.sleep(100);
             return Task.Result.COMPLETED;
-        });
+        }));
         taskManager.cancel(taskId);
 
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);

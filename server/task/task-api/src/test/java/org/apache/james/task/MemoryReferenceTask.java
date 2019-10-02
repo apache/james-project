@@ -20,17 +20,25 @@ package org.apache.james.task;
 
 import java.util.Optional;
 
+import org.junit.jupiter.api.function.ThrowingSupplier;
+
 public class MemoryReferenceTask implements Task {
     public static final TaskType TYPE = TaskType.of("memory-reference-task");
-    private final Task task;
+    private final ThrowingSupplier<Result> task;
 
-    public MemoryReferenceTask(Task task) {
+    public MemoryReferenceTask(ThrowingSupplier<Result> task) {
         this.task = task;
     }
 
     @Override
     public Result run() throws InterruptedException {
-        return task.run();
+        try {
+            return task.get();
+        } catch (InterruptedException e) {
+            throw e;
+        } catch (Throwable throwable) {
+            throw new RuntimeException(throwable);
+        }
     }
 
     @Override
