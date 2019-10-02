@@ -20,19 +20,20 @@ package org.apache.james.backends.cassandra.init;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Test;
 
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
 
-class ClusterBuilderTest {
+class ClusterFactoryTest {
 
     @Test
     void consistencyLevelShouldBeEqualToQuorum() {
-        Cluster cluster = ClusterBuilder.builder()
-            .servers(Host.from("localhost", ClusterBuilder.DEFAULT_CASSANDRA_PORT))
-            .build();
+        Cluster cluster = ClusterFactory.create(ClusterConfiguration.builder()
+                .host(Host.from("localhost", ClusterConfiguration.DEFAULT_CASSANDRA_PORT))
+                .build());
 
         ConsistencyLevel consistencyLevel = cluster.getConfiguration()
                 .getQueryOptions()

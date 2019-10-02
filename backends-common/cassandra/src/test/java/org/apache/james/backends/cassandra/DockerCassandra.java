@@ -19,8 +19,6 @@
 
 package org.apache.james.backends.cassandra;
 
-import java.util.function.Function;
-
 import org.apache.james.util.Host;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +27,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.images.builder.dockerfile.DockerfileBuilder;
-import org.testcontainers.images.builder.dockerfile.traits.RunStatementTrait;
 
 import com.github.dockerjava.api.DockerClient;
 import com.google.common.collect.ImmutableMap;
@@ -37,6 +34,13 @@ import com.google.common.collect.ImmutableMap;
 public class DockerCassandra {
 
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
+
+    @FunctionalInterface
+    interface AdditionalDockerFileStep {
+        AdditionalDockerFileStep IDENTITY = builder -> builder;
+
+        DockerfileBuilder applyStep(DockerfileBuilder builder);
+    }
 
     private static final int CASSANDRA_PORT = 9042;
     private static final int CASSANDRA_MEMORY = 650;
@@ -49,16 +53,16 @@ public class DockerCassandra {
 
     @SuppressWarnings("resource")
     public DockerCassandra() {
-        this("cassandra_3_11_3", Function.identity());
+        this("cassandra_3_11_3", AdditionalDockerFileStep.IDENTITY);
     }
 
-    public DockerCassandra(String imageName, Function<DockerfileBuilder, DockerfileBuilder> additionalSteps) {
+    public DockerCassandra(String imageName, AdditionalDockerFileStep additionalSteps) {
         client = DockerClientFactory.instance().client();
         boolean doNotDeleteImageAfterUsage = false;
         cassandraContainer = new GenericContainer<>(
             new ImageFromDockerfile(imageName,doNotDeleteImageAfterUsage)
                 .withDockerfileFromBuilder(builder ->
-                    additionalSteps.apply(builder
+                    additionalSteps.applyStep(builder
                         .from("cassandra:3.11.3")
                         .env("ENV CASSANDRA_CONFIG", "/etc/cassandra")
                         .run("echo \"-Xms" + CASSANDRA_MEMORY + "M\" >> " + JVM_OPTIONS)

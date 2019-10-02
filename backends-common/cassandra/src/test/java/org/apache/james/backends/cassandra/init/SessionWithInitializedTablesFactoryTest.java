@@ -121,17 +121,13 @@ class SessionWithInitializedTablesFactoryTest {
     }
 
     private static Supplier<Session> createSession(DockerCassandraExtension.DockerCassandra cassandraServer) {
-        Host host = cassandraServer.getHost();
-        Cluster cluster = ClusterBuilder.builder()
-            .servers(host)
-            .build();
         ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
-            .host(host)
+            .host(cassandraServer.getHost())
             .keyspace(KEYSPACE)
             .replicationFactor(1)
             .disableDurableWrites()
             .build();
-        ClusterWithKeyspaceCreatedFactory.createKeyspace(cluster, clusterConfiguration);
+        Cluster cluster = ClusterFactory.createWithKeyspace(clusterConfiguration);
         return () -> new SessionWithInitializedTablesFactory(
                 clusterConfiguration,
                 cluster,

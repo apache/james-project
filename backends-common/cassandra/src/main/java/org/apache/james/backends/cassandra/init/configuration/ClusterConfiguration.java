@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.james.backends.cassandra.init.ClusterBuilder;
 import org.apache.james.util.Host;
 
 import com.datastax.driver.core.HostDistance;
@@ -190,7 +189,7 @@ public class ClusterConfiguration {
                 replicationFactor.orElse(DEFAULT_REPLICATION_FACTOR),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
                 maxRetry.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
-                queryLoggerConfiguration.orElse(QueryLoggerConfiguration.DEFAULT),
+                queryLoggerConfiguration,
                 poolingOptions,
                 readTimeoutMillis.orElse(DEFAULT_READ_TIMEOUT_MILLIS),
                 connectTimeoutMillis.orElse(DEFAULT_CONNECT_TIMEOUT_MILLIS),
@@ -218,6 +217,8 @@ public class ClusterConfiguration {
     private static final int DEFAULT_CONNECTION_MIN_DELAY = 5000;
     private static final int DEFAULT_READ_TIMEOUT_MILLIS = 5000;
     private static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
+    public static final int DEFAULT_CASSANDRA_PORT = 9042;
+
     private static final boolean DEFAULT_SSL = false;
 
     public static Builder builder() {
@@ -245,7 +246,7 @@ public class ClusterConfiguration {
         String[] ipAndPorts = configuration.getStringArray(CASSANDRA_NODES);
 
         return Arrays.stream(ipAndPorts)
-            .map(string -> Host.parseConfString(string, ClusterBuilder.DEFAULT_CASSANDRA_PORT))
+            .map(string -> Host.parseConfString(string, DEFAULT_CASSANDRA_PORT))
             .collect(Guavate.toImmutableList());
     }
 
@@ -285,7 +286,7 @@ public class ClusterConfiguration {
     private final int replicationFactor;
     private final int minDelay;
     private final int maxRetry;
-    private final QueryLoggerConfiguration queryLoggerConfiguration;
+    private final Optional<QueryLoggerConfiguration> queryLoggerConfiguration;
     private final Optional<PoolingOptions> poolingOptions;
     private final int readTimeoutMillis;
     private final int connectTimeoutMillis;
@@ -295,7 +296,7 @@ public class ClusterConfiguration {
     private final boolean durableWrites;
 
     public ClusterConfiguration(List<Host> hosts, String keyspace, int replicationFactor, int minDelay, int maxRetry,
-                                QueryLoggerConfiguration queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
+                                Optional<QueryLoggerConfiguration> queryLoggerConfiguration, Optional<PoolingOptions> poolingOptions,
                                 int readTimeoutMillis, int connectTimeoutMillis, boolean useSsl, Optional<String> username,
                                 Optional<String> password, boolean durableWrites) {
         this.hosts = hosts;
@@ -337,7 +338,7 @@ public class ClusterConfiguration {
         return maxRetry;
     }
 
-    public QueryLoggerConfiguration getQueryLoggerConfiguration() {
+    public Optional<QueryLoggerConfiguration> getQueryLoggerConfiguration() {
         return queryLoggerConfiguration;
     }
 
@@ -353,7 +354,7 @@ public class ClusterConfiguration {
         return connectTimeoutMillis;
     }
 
-    public boolean isUseSsl() {
+    public boolean useSsl() {
         return useSsl;
     }
 
