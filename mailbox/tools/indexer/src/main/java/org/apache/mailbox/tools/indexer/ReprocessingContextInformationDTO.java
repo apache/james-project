@@ -21,7 +21,6 @@ package org.apache.mailbox.tools.indexer;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.apache.james.json.DTOModule;
@@ -58,14 +57,14 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
         }
     }
 
-    public static final Function<TaskType, Function<MailboxId.Factory, AdditionalInformationDTOModule<ReprocessingContextInformation, ReprocessingContextInformationDTO>>> SERIALIZATION_MODULE =
-        taskType -> factory ->
-            DTOModule.forDomainObject(ReprocessingContextInformation.class)
+    public static AdditionalInformationDTOModule<ReprocessingContextInformation, ReprocessingContextInformationDTO> serializationModule(TaskType taskType, MailboxId.Factory mailboxIdFactory) {
+        return DTOModule.forDomainObject(ReprocessingContextInformation.class)
                 .convertToDTO(ReprocessingContextInformationDTO.class)
-                .toDomainObjectConverter(dto -> new ReprocessingContextInformation(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(factory, dto.failures)))
+                .toDomainObjectConverter(dto -> new ReprocessingContextInformation(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures)))
                 .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(type, details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(), serializeFailures(details.failures())))
                 .typeName(taskType.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     static ReIndexingExecutionFailures deserializeFailures(MailboxId.Factory mailboxIdFactory,
                                                            List<ReindexingFailureDTO> failures) {

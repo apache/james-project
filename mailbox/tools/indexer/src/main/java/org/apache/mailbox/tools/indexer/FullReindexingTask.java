@@ -20,7 +20,6 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import javax.inject.Inject;
 
@@ -41,14 +40,15 @@ public class FullReindexingTask implements Task {
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContext reprocessingContext;
 
-    public static final Function<FullReindexingTask.Factory, TaskDTOModule<FullReindexingTask, FullReindexingTaskDTO>> MODULE = (factory) ->
-        DTOModule
+    public static TaskDTOModule<FullReindexingTask, FullReindexingTaskDTO> module(ReIndexerPerformer reIndexerPerformer) {
+        return DTOModule
             .forDomainObject(FullReindexingTask.class)
             .convertToDTO(FullReindexingTask.FullReindexingTaskDTO.class)
-            .toDomainObjectConverter(factory::create)
+            .toDomainObjectConverter(dto -> new FullReindexingTask(reIndexerPerformer))
             .toDTOConverter((task, type) -> new FullReindexingTaskDTO(type))
             .typeName(FULL_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static class FullReindexingTaskDTO implements TaskDTO {
 
@@ -63,20 +63,6 @@ public class FullReindexingTask implements Task {
             return type;
         }
 
-    }
-
-    public static class Factory {
-
-        private final ReIndexerPerformer reIndexerPerformer;
-
-        @Inject
-        public Factory(ReIndexerPerformer reIndexerPerformer) {
-            this.reIndexerPerformer = reIndexerPerformer;
-        }
-
-        public FullReindexingTask create(FullReindexingTaskDTO dto) {
-            return new FullReindexingTask(reIndexerPerformer);
-        }
     }
 
     @Inject

@@ -70,10 +70,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
         taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.MODULE.apply(factory));
 
         jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
-            ReprocessingContextInformationDTO
-                .SERIALIZATION_MODULE
-                .apply(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING)
-                .apply(mailboxIdFactory));
+            ReprocessingContextInformationDTO.serializationModule(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING, mailboxIdFactory));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
             new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),

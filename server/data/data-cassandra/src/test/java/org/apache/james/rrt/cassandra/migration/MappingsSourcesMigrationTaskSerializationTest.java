@@ -28,7 +28,6 @@ import java.io.IOException;
 
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-import org.apache.james.task.TaskExecutionDetails;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
@@ -41,7 +40,7 @@ class MappingsSourcesMigrationTaskSerializationTest {
     private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mappingsSourcesMigration\", \"successfulMappingsCount\":42,\"errorMappinsCount\":10}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MappingsSourcesMigrationTaskDTO.MODULE.apply(MIGRATION));
-    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MappingsSourcesMigrationTaskAdditionalInformationDTO.MODULE);
+    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(MappingsSourcesMigration.TYPE));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {

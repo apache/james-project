@@ -26,7 +26,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.JamesDirectoriesProvider;
 import org.apache.james.modules.server.DNSServiceModule;
 import org.apache.james.modules.server.DropWizardMetricsModule;
-import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.onami.lifecycle.PreDestroyModule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
@@ -60,7 +59,6 @@ public class CommonServicesModule extends AbstractModule {
         install(new PreDestroyModule());
         install(new DNSServiceModule());
         install(new DropWizardMetricsModule());
-        install(new TaskManagerModule());
         install(new CleanupTaskModule());
         install(new MimeMessageModule());
         install(new ClockModule());

@@ -32,6 +32,7 @@ import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
+import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.server.core.configuration.Configuration;
 
@@ -48,7 +49,8 @@ public class JPAJamesServerMain {
         new MailRepositoriesRoutesModule(),
         new MailQueueRoutesModule(),
         new NoJwtModule(),
-        new DefaultProcessorsConfigurationProviderModule());
+        new DefaultProcessorsConfigurationProviderModule(),
+        new TaskManagerModule());
     
     public static final Module JPA_SERVER_MODULE = Modules.combine(
         new JPAEntityManagerModule(),

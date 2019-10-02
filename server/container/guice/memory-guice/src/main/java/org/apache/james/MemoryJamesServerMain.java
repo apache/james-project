@@ -49,6 +49,7 @@ import org.apache.james.modules.server.MemoryMailQueueModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
+import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultModule;
@@ -105,7 +106,8 @@ public class MemoryJamesServerMain {
         new MemoryDataModule(),
         new MemoryEventStoreModule(),
         new MemoryMailboxModule(),
-        new MemoryMailQueueModule());
+        new MemoryMailQueueModule(),
+        new TaskManagerModule());
 
     public static final Module SMTP_ONLY_MODULE = Modules.combine(
         MemoryJamesServerMain.IN_MEMORY_SERVER_MODULE,

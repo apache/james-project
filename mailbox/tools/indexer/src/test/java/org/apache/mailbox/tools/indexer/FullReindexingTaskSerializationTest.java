@@ -56,14 +56,10 @@ class FullReindexingTaskSerializationTest {
     @BeforeEach
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
-        FullReindexingTask.Factory factory = new FullReindexingTask.Factory(reIndexerPerformer);
-        taskSerializer = new JsonTaskSerializer(FullReindexingTask.MODULE.apply(factory));
+        taskSerializer = new JsonTaskSerializer(FullReindexingTask.module(reIndexerPerformer));
 
         jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
-            ReprocessingContextInformationDTO
-                .SERIALIZATION_MODULE
-                .apply(FullReindexingTask.FULL_RE_INDEXING)
-                .apply(new TestId.Factory()));
+            ReprocessingContextInformationDTO.serializationModule(FullReindexingTask.FULL_RE_INDEXING, new TestId.Factory()));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
             new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),

@@ -46,6 +46,7 @@ import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
+import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -86,6 +87,7 @@ public class JPAJamesServerMain {
         new RawPostDequeueDecoratorModule(),
         new SieveJPARepositoryModules(),
         new DefaultEventModule(),
+        new TaskManagerModule(),
         new MemoryDeadLetterModule(),
         new SpamAssassinListenerModule());
 

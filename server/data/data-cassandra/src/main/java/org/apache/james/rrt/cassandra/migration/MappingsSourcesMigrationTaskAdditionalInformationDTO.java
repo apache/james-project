@@ -23,6 +23,7 @@ package org.apache.james.rrt.cassandra.migration;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
+import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -36,14 +37,15 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
         );
     }
 
-    public static final AdditionalInformationDTOModule<MappingsSourcesMigration.AdditionalInformation, MappingsSourcesMigrationTaskAdditionalInformationDTO> MODULE =
-        DTOModule
+    public static final AdditionalInformationDTOModule<MappingsSourcesMigration.AdditionalInformation, MappingsSourcesMigrationTaskAdditionalInformationDTO> serializationModule(TaskType type) {
+        return DTOModule
             .forDomainObject(MappingsSourcesMigration.AdditionalInformation.class)
             .convertToDTO(MappingsSourcesMigrationTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(MappingsSourcesMigrationTaskAdditionalInformationDTO::toDomainObject)
             .toDTOConverter(MappingsSourcesMigrationTaskAdditionalInformationDTO::fromDomainObject)
-            .typeName(MappingsSourcesMigration.TYPE.asString())
+            .typeName(type.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final long successfulMappingsCount;

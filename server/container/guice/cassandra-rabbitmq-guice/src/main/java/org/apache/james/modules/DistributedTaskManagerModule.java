@@ -20,6 +20,7 @@
 
 package org.apache.james.modules;
 
+import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.modules.server.HostnameModule;
 import org.apache.james.task.TaskManager;
 import org.apache.james.task.eventsourcing.EventSourcingTaskManager;
@@ -27,24 +28,41 @@ import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TerminationSubscriber;
 import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
+import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueSupplier;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class DistributedTaskManagerModule extends AbstractModule {
 
     @Override
     protected void configure() {
         install(new HostnameModule());
-        bind(TaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
-        bind(TaskManager.class).in(Scopes.SINGLETON);
-        bind(WorkQueueSupplier.class).in(Scopes.SINGLETON);
+        bind(CassandraTaskExecutionDetailsProjection.class).in(Scopes.SINGLETON);
+        bind(EventSourcingTaskManager.class).in(Scopes.SINGLETON);
+        bind(RabbitMQWorkQueueSupplier.class).in(Scopes.SINGLETON);
+        bind(RabbitMQTerminationSubscriber.class).in(Scopes.SINGLETON);
         bind(TaskExecutionDetailsProjection.class).to(CassandraTaskExecutionDetailsProjection.class);
-        bind(TerminationSubscriber.class).in(Scopes.SINGLETON);
         bind(TerminationSubscriber.class).to(RabbitMQTerminationSubscriber.class);
         bind(TaskManager.class).to(EventSourcingTaskManager.class);
         bind(WorkQueueSupplier.class).to(RabbitMQWorkQueueSupplier.class);
+
+        Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraTaskExecutionDetailsProjectionModule.MODULE());
     }
+
+    @ProvidesIntoSet
+    InitializationOperation terminationSubscriber(RabbitMQTerminationSubscriber instance) {
+        return InitilizationOperationBuilder
+            .forClass(RabbitMQTerminationSubscriber.class)
+            .init(instance::start);
+    }
+
+
 }

@@ -27,13 +27,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MigrationTaskAdditionalInformationsDTO implements AdditionalInformationDTO {
 
-    static final AdditionalInformationDTOModule<MigrationTask.AdditionalInformations, MigrationTaskAdditionalInformationsDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(MigrationTask.AdditionalInformations.class)
+    public static final AdditionalInformationDTOModule<MigrationTask.AdditionalInformations, MigrationTaskAdditionalInformationsDTO> serializationModule() {
+        return DTOModule.forDomainObject(MigrationTask.AdditionalInformations.class)
             .convertToDTO(MigrationTaskAdditionalInformationsDTO.class)
             .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformations(new SchemaVersion(dto.getTargetVersion())))
             .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(type, details.getToVersion()))
             .typeName(MigrationTask.CASSANDRA_MIGRATION.asString())
             .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final int targetVersion;

@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra.migration;
 
-import java.util.function.Function;
-
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -27,15 +25,16 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class MigrationTaskDTO implements TaskDTO {
+public class MigrationTaskDTO implements TaskDTO {
 
-    static final Function<MigrationTask.Factory, TaskDTOModule<MigrationTask, MigrationTaskDTO>> SERIALIZATION_MODULE =
-        factory -> DTOModule.forDomainObject(MigrationTask.class)
+    public static final TaskDTOModule<MigrationTask, MigrationTaskDTO> module(MigrationTask.Factory factory) {
+        return DTOModule.forDomainObject(MigrationTask.class)
             .convertToDTO(MigrationTaskDTO.class)
             .toDomainObjectConverter(dto -> factory.create(new SchemaVersion(dto.targetVersion)))
             .toDTOConverter((task, type) -> new MigrationTaskDTO(type, task.getTarget().getValue()))
             .typeName(MigrationTask.CASSANDRA_MIGRATION.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     private final int targetVersion;
     private final String type;

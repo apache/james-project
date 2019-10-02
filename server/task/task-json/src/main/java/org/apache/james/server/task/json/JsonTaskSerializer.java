@@ -48,9 +48,8 @@ public class JsonTaskSerializer {
 
     private JsonGenericSerializer<Task, TaskDTO> jsonGenericSerializer;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Inject
-    public JsonTaskSerializer(Set<TaskDTOModule> modules) {
+    public JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);
     }
 

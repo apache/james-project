@@ -31,9 +31,7 @@ import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetai
 import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId, TaskManager, TaskType}
 import reactor.core.publisher.{Flux, Mono}
 
-@Inject
-class CassandraTaskExecutionDetailsProjectionDAO(session: Session, typesProvider: CassandraTypesProvider, jsonTaskAdditionalInformationsSerializer: JsonTaskAdditionalInformationsSerializer) {
-
+class CassandraTaskExecutionDetailsProjectionDAO @Inject()(session: Session, typesProvider: CassandraTypesProvider, jsonTaskAdditionalInformationsSerializer: JsonTaskAdditionalInformationsSerializer) {
   private val cassandraAsyncExecutor = new CassandraAsyncExecutor(session)
   private val dateType = typesProvider.getDefinedUserType(CassandraZonedDateTimeModule.ZONED_DATE_TIME)
 

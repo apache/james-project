@@ -47,9 +47,8 @@ public class JsonTaskAdditionalInformationsSerializer {
 
     private JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> jsonGenericSerializer;
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
     @Inject
-    public JsonTaskAdditionalInformationsSerializer(Set<AdditionalInformationDTOModule> modules) {
+    public JsonTaskAdditionalInformationsSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);
     }
 

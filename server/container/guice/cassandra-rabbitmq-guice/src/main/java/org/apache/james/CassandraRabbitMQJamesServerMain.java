@@ -19,8 +19,10 @@
 
 package org.apache.james;
 
-import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.apache.james.CassandraJamesServerMain.REQUIRE_TASK_MANAGER_MODULE;
 
+import org.apache.james.modules.DistributedTaskManagerModule;
+import org.apache.james.modules.TaskSerializationModule;
 import org.apache.james.modules.blobstore.BlobStoreChoosingModule;
 import org.apache.james.modules.event.RabbitMQEventBusModule;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
@@ -33,7 +35,11 @@ import com.google.inject.util.Modules;
 public class CassandraRabbitMQJamesServerMain {
     public static final Module MODULES =
         Modules
-            .override(Modules.combine(ALL_BUT_JMX_CASSANDRA_MODULE))
+            .override(
+                Modules.combine(
+                    REQUIRE_TASK_MANAGER_MODULE,
+                    new DistributedTaskManagerModule(),
+                    new TaskSerializationModule()))
             .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule());
 
     public static void main(String[] args) throws Exception {

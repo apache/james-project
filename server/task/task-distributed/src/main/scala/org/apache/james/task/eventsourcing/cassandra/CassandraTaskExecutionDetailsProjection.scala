@@ -26,8 +26,7 @@ import org.apache.james.task.{TaskExecutionDetails, TaskId}
 import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
 
-@Inject
-class CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO: CassandraTaskExecutionDetailsProjectionDAO) extends TaskExecutionDetailsProjection {
+class CassandraTaskExecutionDetailsProjection  @Inject()(cassandraTaskExecutionDetailsProjectionDAO: CassandraTaskExecutionDetailsProjectionDAO) extends TaskExecutionDetailsProjection {
 
   override def load(taskId: TaskId): Option[TaskExecutionDetails] =
     cassandraTaskExecutionDetailsProjectionDAO.readDetails(taskId).blockOptional().asScala

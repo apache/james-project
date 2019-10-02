@@ -26,8 +26,7 @@ import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.task.SerialTaskManagerWorker
 import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListener}
 
-@Inject
-class RabbitMQWorkQueueSupplier(private val rabbitMQConnectionPool: SimpleConnectionPool,
+class RabbitMQWorkQueueSupplier @Inject()(private val rabbitMQConnectionPool: SimpleConnectionPool,
                                 private val jsonTaskSerializer: JsonTaskSerializer) extends WorkQueueSupplier {
   override def apply(eventSourcingSystem: EventSourcingSystem): RabbitMQWorkQueue = {
     val listener = WorkerStatusListener(eventSourcingSystem)
