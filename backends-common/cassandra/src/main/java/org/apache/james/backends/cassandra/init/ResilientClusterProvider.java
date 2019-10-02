@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.mailbox;
+package org.apache.james.backends.cassandra.init;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -28,8 +28,6 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.inject.Singleton;
 
-import org.apache.james.backends.cassandra.init.ClusterBuilder;
-import org.apache.james.backends.cassandra.init.ClusterWithKeyspaceCreatedFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
