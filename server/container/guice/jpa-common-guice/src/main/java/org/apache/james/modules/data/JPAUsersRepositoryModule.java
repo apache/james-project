@@ -22,7 +22,7 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.jpa.JPAUsersRepository;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -36,16 +36,16 @@ public class JPAUsersRepositoryModule extends AbstractModule {
         bind(JPAUsersRepository.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(JPAUsersRepository.class);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(JPAUsersRepositoryInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(JPAUsersRepositoryInitializationOperation.class);
     }
 
     @Singleton
-    public static class JPAUsersRepositoryInitialisationOperation implements InitialisationOperation {
+    public static class JPAUsersRepositoryInitializationOperation implements InitializationOperation {
         private final ConfigurationProvider configurationProvider;
         private final JPAUsersRepository usersRepository;
 
         @Inject
-        public JPAUsersRepositoryInitialisationOperation(ConfigurationProvider configurationProvider, JPAUsersRepository usersRepository) {
+        public JPAUsersRepositoryInitializationOperation(ConfigurationProvider configurationProvider, JPAUsersRepository usersRepository) {
             this.configurationProvider = configurationProvider;
             this.usersRepository = usersRepository;
         }

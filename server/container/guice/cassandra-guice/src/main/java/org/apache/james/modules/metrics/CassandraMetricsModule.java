@@ -20,7 +20,7 @@
 package org.apache.james.modules.metrics;
 
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Session;
@@ -36,12 +36,12 @@ public class CassandraMetricsModule extends AbstractModule {
         bind(CassandraMetricsInjector.class)
             .in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class)
+        Multibinder.newSetBinder(binder(), InitializationOperation.class)
             .addBinding()
             .to(CassandraMetricsInjector.class);
     }
 
-    public static class CassandraMetricsInjector implements InitialisationOperation, Startable {
+    public static class CassandraMetricsInjector implements InitializationOperation, Startable {
 
         private final MetricRegistry metricRegistry;
         private final Session session;

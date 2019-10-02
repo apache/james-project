@@ -25,7 +25,7 @@ import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.OioSMTPServerFactory;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -41,19 +41,19 @@ public class SMTPServerModule extends AbstractModule {
         bind(SMTPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioSMTPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(SMTPModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(SMTPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
     }
 
     @Singleton
-    public static class SMTPModuleInitialisationOperation implements InitialisationOperation {
+    public static class SMTPModuleInitializationOperation implements InitializationOperation {
 
         private final ConfigurationProvider configurationProvider;
         private final SMTPServerFactory smtpServerFactory;
         private final SendMailHandler sendMailHandler;
 
         @Inject
-        public SMTPModuleInitialisationOperation(ConfigurationProvider configurationProvider,
+        public SMTPModuleInitializationOperation(ConfigurationProvider configurationProvider,
                                                  SMTPServerFactory smtpServerFactory,
                                                  SendMailHandler sendMailHandler) {
             this.configurationProvider = configurationProvider;

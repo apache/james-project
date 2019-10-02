@@ -28,7 +28,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.FixedPortSupplier;
@@ -71,7 +71,7 @@ public class WebAdminServerModule extends AbstractModule {
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(WebAdminServerModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(WebAdminServerModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(WebAdminGuiceProbe.class);
         Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
     }
@@ -124,11 +124,11 @@ public class WebAdminServerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class WebAdminServerModuleInitialisationOperation implements InitialisationOperation {
+    public static class WebAdminServerModuleInitializationOperation implements InitializationOperation {
         private final WebAdminServer webAdminServer;
 
         @Inject
-        public WebAdminServerModuleInitialisationOperation(WebAdminServer webAdminServer) {
+        public WebAdminServerModuleInitializationOperation(WebAdminServer webAdminServer) {
             this.webAdminServer = webAdminServer;
         }
 

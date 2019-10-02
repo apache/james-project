@@ -28,7 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.lifecycle.api.Startable;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitializationOperations;
 import org.junit.Test;
 
@@ -58,16 +58,16 @@ public class InitializationOperationsTest {
             bind(A.class).in(Scopes.SINGLETON);
             bind(C.class).in(Scopes.SINGLETON);
     
-            Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(BInitialisationOperation.class);
-            Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(AInitialisationOperation.class);
+            Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(BInitializationOperation.class);
+            Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(AInitializationOperation.class);
         }
     }
 
-    private static class AInitialisationOperation implements InitialisationOperation {
+    private static class AInitializationOperation implements InitializationOperation {
         private final A a;
 
         @Inject
-        private AInitialisationOperation(A a) {
+        private AInitializationOperation(A a) {
             this.a = a;
         }
 
@@ -86,11 +86,11 @@ public class InitializationOperationsTest {
         }
     }
 
-    private static class BInitialisationOperation implements InitialisationOperation {
+    private static class BInitializationOperation implements InitializationOperation {
         private final B b;
 
         @Inject
-        private BInitialisationOperation(B b) {
+        private BInitializationOperation(B b) {
             this.b = b;
         }
 

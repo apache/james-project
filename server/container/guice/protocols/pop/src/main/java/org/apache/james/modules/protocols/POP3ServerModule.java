@@ -24,7 +24,7 @@ import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -39,17 +39,17 @@ public class POP3ServerModule extends AbstractModule {
         bind(POP3ServerFactory.class).in(Scopes.SINGLETON);
         bind(OioPOP3ServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(POP3ModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(POP3ModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(Pop3GuiceProbe.class);
     }
 
     @Singleton
-    public static class POP3ModuleInitialisationOperation implements InitialisationOperation {
+    public static class POP3ModuleInitializationOperation implements InitializationOperation {
         private final ConfigurationProvider configurationProvider;
         private final POP3ServerFactory pop3ServerFactory;
 
         @Inject
-        public POP3ModuleInitialisationOperation(ConfigurationProvider configurationProvider, POP3ServerFactory pop3ServerFactory) {
+        public POP3ModuleInitializationOperation(ConfigurationProvider configurationProvider, POP3ServerFactory pop3ServerFactory) {
             this.configurationProvider = configurationProvider;
             this.pop3ServerFactory = pop3ServerFactory;
         }

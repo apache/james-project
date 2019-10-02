@@ -46,7 +46,7 @@ import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.GuiceMailetLoader;
 import org.apache.james.utils.GuiceMatcherLoader;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.MailetConfigurationOverride;
 import org.apache.james.utils.SpoolerProbe;
 import org.apache.mailet.Mailet;
@@ -89,10 +89,10 @@ public class CamelMailetContainerModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), MailetConfigurationOverride.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SpoolerProbe.class);
-        Multibinder<InitialisationOperation> initialisationOperations = Multibinder.newSetBinder(binder(), InitialisationOperation.class);
-        initialisationOperations.addBinding().to(MailetModuleInitialisationOperation.class);
+        Multibinder<InitializationOperation> initialisationOperations = Multibinder.newSetBinder(binder(), InitializationOperation.class);
+        initialisationOperations.addBinding().to(MailetModuleInitializationOperation.class);
         initialisationOperations.addBinding().to(SpoolerStarter.class);
-        initialisationOperations.addBinding().to(MailetContextInitialisationOperation.class);
+        initialisationOperations.addBinding().to(MailetContextInitializationOperation.class);
 
         Multibinder<CamelMailetContainerModule.TransportProcessorCheck> transportProcessorChecks = Multibinder.newSetBinder(binder(), CamelMailetContainerModule.TransportProcessorCheck.class);
         transportProcessorChecks.addBinding().toInstance(BCC_Check);
@@ -108,7 +108,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class SpoolerStarter implements InitialisationOperation {
+    public static class SpoolerStarter implements InitializationOperation {
         private final JamesMailSpooler jamesMailSpooler;
         private final ConfigurationProvider configurationProvider;
 
@@ -141,12 +141,12 @@ public class CamelMailetContainerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MailetContextInitialisationOperation implements InitialisationOperation {
+    public static class MailetContextInitializationOperation implements InitializationOperation {
         private final ConfigurationProvider configurationProvider;
         private final JamesMailetContext mailetContext;
 
         @Inject
-        public MailetContextInitialisationOperation(ConfigurationProvider configurationProvider, JamesMailetContext mailetContext) {
+        public MailetContextInitializationOperation(ConfigurationProvider configurationProvider, JamesMailetContext mailetContext) {
             this.configurationProvider = configurationProvider;
             this.mailetContext = mailetContext;
         }
@@ -173,7 +173,7 @@ public class CamelMailetContainerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MailetModuleInitialisationOperation implements InitialisationOperation {
+    public static class MailetModuleInitializationOperation implements InitializationOperation {
         private final ConfigurationProvider configurationProvider;
         private final CamelCompositeProcessor camelCompositeProcessor;
         private final DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier;
@@ -181,7 +181,7 @@ public class CamelMailetContainerModule extends AbstractModule {
         private final DefaultCamelContext camelContext;
 
         @Inject
-        public MailetModuleInitialisationOperation(ConfigurationProvider configurationProvider,
+        public MailetModuleInitializationOperation(ConfigurationProvider configurationProvider,
                                                    CamelCompositeProcessor camelCompositeProcessor,
                                                    Set<TransportProcessorCheck> transportProcessorCheckSet,
                                                    DefaultProcessorsConfigurationSupplier defaultProcessorsConfigurationSupplier, DefaultCamelContext camelContext) {

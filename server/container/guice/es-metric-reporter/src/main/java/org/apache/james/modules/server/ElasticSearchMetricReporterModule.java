@@ -26,7 +26,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(ESMetricReporterStarter.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(ESMetricReporterStarter.class);
     }
 
     @Provides
@@ -84,7 +84,7 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
     }
 
     @Singleton
-    public static class ESMetricReporterStarter implements InitialisationOperation {
+    public static class ESMetricReporterStarter implements InitializationOperation {
         private final ESMetricReporter esMetricReporter;
 
         @Inject

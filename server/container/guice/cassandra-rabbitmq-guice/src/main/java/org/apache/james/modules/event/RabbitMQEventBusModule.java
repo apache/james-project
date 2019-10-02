@@ -26,7 +26,7 @@ import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.RabbitMQEventBus;
 import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -45,13 +45,13 @@ public class RabbitMQEventBusModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), RegistrationKey.Factory.class)
             .addBinding().to(MailboxIdRegistrationKey.Factory.class);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class)
+        Multibinder.newSetBinder(binder(), InitializationOperation.class)
             .addBinding().to(RabbitMQEventBusInitializer.class);
 
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
     }
 
-    static class RabbitMQEventBusInitializer implements InitialisationOperation {
+    static class RabbitMQEventBusInitializer implements InitializationOperation {
         private final RabbitMQEventBus rabbitMQEventBus;
 
         @Inject

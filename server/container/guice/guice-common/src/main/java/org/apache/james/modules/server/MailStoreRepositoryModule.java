@@ -31,7 +31,7 @@ import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class MailStoreRepositoryModule extends AbstractModule {
         bind(GuiceMailRepositoryLoader.class).in(Scopes.SINGLETON);
         bind(MailRepositoryLoader.class).to(GuiceMailRepositoryLoader.class);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(MailRepositoryStoreModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(MailRepositoryStoreModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
@@ -74,11 +74,11 @@ public class MailStoreRepositoryModule extends AbstractModule {
     }
 
     @Singleton
-    public static class MailRepositoryStoreModuleInitialisationOperation implements InitialisationOperation {
+    public static class MailRepositoryStoreModuleInitializationOperation implements InitializationOperation {
         private final MemoryMailRepositoryStore javaMailRepositoryStore;
 
         @Inject
-        public MailRepositoryStoreModuleInitialisationOperation(MemoryMailRepositoryStore javaMailRepositoryStore) {
+        public MailRepositoryStoreModuleInitializationOperation(MemoryMailRepositoryStore javaMailRepositoryStore) {
             this.javaMailRepositoryStore = javaMailRepositoryStore;
         }
 

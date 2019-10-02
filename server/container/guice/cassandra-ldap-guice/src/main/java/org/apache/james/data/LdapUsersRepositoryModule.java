@@ -24,7 +24,7 @@ import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -40,7 +40,7 @@ public class LdapUsersRepositoryModule extends AbstractModule {
         bind(ReadOnlyUsersLDAPRepository.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(ReadOnlyUsersLDAPRepository.class);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(LdapUsersRepositoryInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(LdapUsersRepositoryInitializationOperation.class);
     }
 
     @Provides
@@ -51,12 +51,12 @@ public class LdapUsersRepositoryModule extends AbstractModule {
     }
 
     @Singleton
-    public static class LdapUsersRepositoryInitialisationOperation implements InitialisationOperation {
+    public static class LdapUsersRepositoryInitializationOperation implements InitializationOperation {
         private final LdapRepositoryConfiguration configuration;
         private final ReadOnlyUsersLDAPRepository usersRepository;
 
         @Inject
-        public LdapUsersRepositoryInitialisationOperation(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
+        public LdapUsersRepositoryInitializationOperation(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
             this.configuration = configuration;
             this.usersRepository = usersRepository;
         }

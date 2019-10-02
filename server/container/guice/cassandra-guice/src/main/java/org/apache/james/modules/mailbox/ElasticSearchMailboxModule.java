@@ -46,7 +46,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
@@ -83,7 +83,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         }
     }
 
-    static class ElasticSearchMailboxIndexCreationPerformer implements InitialisationOperation {
+    static class ElasticSearchMailboxIndexCreationPerformer implements InitializationOperation {
         private final MailboxIndexCreator mailboxIndexCreator;
 
         @Inject
@@ -118,7 +118,7 @@ public class ElasticSearchMailboxModule extends AbstractModule {
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class)
+        Multibinder.newSetBinder(binder(), InitializationOperation.class)
             .addBinding()
             .to(ElasticSearchMailboxIndexCreationPerformer.class);
 

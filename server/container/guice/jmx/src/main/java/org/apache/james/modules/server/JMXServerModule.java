@@ -46,7 +46,7 @@ import org.apache.james.sieverepository.lib.SieveRepositoryManagement;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.slf4j.Logger;
@@ -96,8 +96,8 @@ public class JMXServerModule extends AbstractModule {
         bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         bind(QuotaManagementMBean.class).to(QuotaManagement.class);
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
-        Multibinder<InitialisationOperation> configurationMultibinder = Multibinder.newSetBinder(binder(), InitialisationOperation.class);
-        configurationMultibinder.addBinding().to(JMXModuleInitialisationOperation.class);
+        Multibinder<InitializationOperation> configurationMultibinder = Multibinder.newSetBinder(binder(), InitializationOperation.class);
+        configurationMultibinder.addBinding().to(JMXModuleInitializationOperation.class);
     }
 
     @Provides
@@ -112,7 +112,7 @@ public class JMXServerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class JMXModuleInitialisationOperation implements InitialisationOperation {
+    public static class JMXModuleInitializationOperation implements InitializationOperation {
 
         private final JMXServer jmxServer;
         private final DomainListManagementMBean domainListManagementMBean;
@@ -125,7 +125,7 @@ public class JMXServerModule extends AbstractModule {
         private final SieveRepositoryManagementMBean sieveRepositoryManagementMBean;
 
         @Inject
-        public JMXModuleInitialisationOperation(JMXServer jmxServer,
+        public JMXModuleInitializationOperation(JMXServer jmxServer,
                                                 DomainListManagementMBean domainListManagementMBean,
                                                 UsersRepositoryManagementMBean usersRepositoryManagementMBean,
                                                 RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,

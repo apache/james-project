@@ -32,7 +32,7 @@ import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -43,7 +43,7 @@ import com.google.inject.multibindings.Multibinder;
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(ListenerRegistrationPerformer.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(ListenerRegistrationPerformer.class);
 
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
@@ -67,7 +67,7 @@ public class DefaultEventModule extends AbstractModule {
     }
 
     @Singleton
-    public static class ListenerRegistrationPerformer implements InitialisationOperation {
+    public static class ListenerRegistrationPerformer implements InitializationOperation {
         private final MailboxListenersLoaderImpl listeners;
         private final ListenersConfiguration configuration;
 

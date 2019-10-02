@@ -29,7 +29,7 @@ import org.apache.james.jmap.draft.MessageIdProbe;
 import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.google.inject.AbstractModule;
@@ -42,19 +42,19 @@ public class JMAPDraftServerModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new JMAPModule());
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(JMAPModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(JMAPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
     }
 
     @Singleton
-    public static class JMAPModuleInitialisationOperation implements InitialisationOperation {
+    public static class JMAPModuleInitializationOperation implements InitializationOperation {
         private final JMAPServer server;
         private final JamesSignatureHandler signatureHandler;
         private final JMAPConfiguration jmapConfiguration;
 
         @Inject
-        public JMAPModuleInitialisationOperation(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
+        public JMAPModuleInitializationOperation(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
             this.server = server;
             this.signatureHandler = signatureHandler;
             this.jmapConfiguration = jmapConfiguration;

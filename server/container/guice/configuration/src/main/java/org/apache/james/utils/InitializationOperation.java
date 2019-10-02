@@ -21,13 +21,13 @@ package org.apache.james.utils;
 
 import org.apache.james.lifecycle.api.Startable;
 
-public interface InitialisationOperation {
+public interface InitializationOperation {
 
     void initModule() throws Exception;
 
     /**
      * In order to initialize components in the right order, every
-     * {@link InitialisationOperation} is supposed to declare which
+     * {@link InitializationOperation} is supposed to declare which
      * class it will initialize.
      *
      * @return the Class that this object will initialize.

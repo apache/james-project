@@ -25,7 +25,7 @@ import org.apache.james.domainlist.cassandra.CassandraDomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -41,7 +41,7 @@ public class CassandraDomainListModule extends AbstractModule {
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(CassandraDomainList.class);
         Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(org.apache.james.domainlist.cassandra.CassandraDomainListModule.MODULE);
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(CassandraDomainListInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(CassandraDomainListInitializationOperation.class);
     }
 
     @Provides
@@ -55,12 +55,12 @@ public class CassandraDomainListModule extends AbstractModule {
     }
     
     @Singleton
-    public static class CassandraDomainListInitialisationOperation implements InitialisationOperation {
+    public static class CassandraDomainListInitializationOperation implements InitializationOperation {
         private final DomainListConfiguration configuration;
         private final CassandraDomainList cassandraDomainList;
 
         @Inject
-        public CassandraDomainListInitialisationOperation(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
+        public CassandraDomainListInitializationOperation(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
             this.configuration = configuration;
             this.cassandraDomainList = cassandraDomainList;
         }

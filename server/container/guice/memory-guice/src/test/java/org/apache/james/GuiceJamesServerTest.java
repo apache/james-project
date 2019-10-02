@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -56,7 +56,7 @@ class GuiceJamesServerTest {
 
     @Nested
     class InitFailed {
-        private final InitialisationOperation throwingInitialisationOperation = new InitialisationOperation() {
+        private final InitializationOperation throwingInitializationOperation = new InitializationOperation() {
             @Override
             public void initModule() {
                 throw new RuntimeException();
@@ -70,9 +70,9 @@ class GuiceJamesServerTest {
 
         @RegisterExtension
         JamesServerExtension jamesServerExtension = extensionBuilder()
-            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, InitialisationOperation.class)
+            .overrideServerModule(binder -> Multibinder.newSetBinder(binder, InitializationOperation.class)
                 .addBinding()
-                .toInstance(throwingInitialisationOperation))
+                .toInstance(throwingInitializationOperation))
             .build();
 
         @Test

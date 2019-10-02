@@ -30,37 +30,37 @@ import com.google.inject.Inject;
 
 public class InitializationOperations {
 
-    private final Set<InitialisationOperation> initialisationOperations;
+    private final Set<InitializationOperation> initializationOperations;
     private final Startables configurables;
 
     @Inject
-    public InitializationOperations(Set<InitialisationOperation> initialisationOperations, Startables configurables) {
-        this.initialisationOperations = initialisationOperations;
+    public InitializationOperations(Set<InitializationOperation> initializationOperations, Startables configurables) {
+        this.initializationOperations = initializationOperations;
         this.configurables = configurables;
     }
 
     public void initModules() throws Exception {
-        Set<InitialisationOperation> processed = processConfigurables();
+        Set<InitializationOperation> processed = processConfigurables();
         
         processOthers(processed);
     }
 
-    private Set<InitialisationOperation> processConfigurables() {
+    private Set<InitializationOperation> processConfigurables() {
         return configurables.get().stream()
             .flatMap(this::configurationPerformerFor)
             .distinct()
-            .peek(Throwing.consumer(InitialisationOperation::initModule).sneakyThrow())
+            .peek(Throwing.consumer(InitializationOperation::initModule).sneakyThrow())
             .collect(Collectors.toSet());
     }
 
-    private Stream<InitialisationOperation> configurationPerformerFor(Class<? extends Startable> configurable) {
-        return initialisationOperations.stream()
+    private Stream<InitializationOperation> configurationPerformerFor(Class<? extends Startable> configurable) {
+        return initializationOperations.stream()
                 .filter(x -> x.forClass().equals(configurable));
     }
 
-    private void processOthers(Set<InitialisationOperation> processed) {
-        initialisationOperations.stream()
+    private void processOthers(Set<InitializationOperation> processed) {
+        initializationOperations.stream()
             .filter(x -> !processed.contains(x))
-            .forEach(Throwing.consumer(InitialisationOperation::initModule).sneakyThrow());
+            .forEach(Throwing.consumer(InitializationOperation::initModule).sneakyThrow());
     }
 }

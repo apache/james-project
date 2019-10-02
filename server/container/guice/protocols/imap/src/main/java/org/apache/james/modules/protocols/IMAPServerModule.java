@@ -35,7 +35,7 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
@@ -51,7 +51,7 @@ public class IMAPServerModule extends AbstractModule {
         bind(IMAPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioIMAPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(IMAPModuleInitialisationOperation.class);
+        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(IMAPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
     }
 
@@ -86,13 +86,13 @@ public class IMAPServerModule extends AbstractModule {
     }
 
     @Singleton
-    public static class IMAPModuleInitialisationOperation implements InitialisationOperation {
+    public static class IMAPModuleInitializationOperation implements InitializationOperation {
 
         private final ConfigurationProvider configurationProvider;
         private final IMAPServerFactory imapServerFactory;
 
         @Inject
-        public IMAPModuleInitialisationOperation(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
+        public IMAPModuleInitializationOperation(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
             this.configurationProvider = configurationProvider;
             this.imapServerFactory = imapServerFactory;
         }
