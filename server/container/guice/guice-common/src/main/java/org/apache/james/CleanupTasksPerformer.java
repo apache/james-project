@@ -25,6 +25,7 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.task.Task;
+import org.apache.james.task.TaskType;
 import org.apache.james.util.Runnables;
 
 import com.github.fge.lambdas.Throwing;
@@ -33,7 +34,9 @@ import reactor.core.publisher.Flux;
 public class CleanupTasksPerformer {
 
     public interface CleanupTask extends Task {
-
+        default TaskType type() {
+            return TaskType.of("cleanup_task");
+        }
     }
 
     private final Set<CleanupTask> cleanupTasks;
