@@ -28,7 +28,7 @@ import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.jmap.memory.vacation.MemoryNotificationRegistry;
 import org.apache.james.jmap.memory.vacation.MemoryVacationRepository;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.inmemory.JsoupTextExtractor;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 
 import com.google.inject.AbstractModule;

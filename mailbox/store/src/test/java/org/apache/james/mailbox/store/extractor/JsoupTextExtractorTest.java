@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.inmemory;
+package org.apache.james.mailbox.store.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

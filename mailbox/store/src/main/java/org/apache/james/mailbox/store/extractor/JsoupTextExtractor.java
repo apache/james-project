@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.inmemory;
+package org.apache.james.mailbox.store.extractor;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -32,7 +32,6 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import com.google.common.collect.Maps;
-
 
 public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";

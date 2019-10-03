@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.tika.CachingTextExtractor;
 import org.apache.james.mailbox.tika.ContentTypeFilteringTextExtractor;
 import org.apache.james.mailbox.tika.TikaConfiguration;
@@ -96,7 +97,7 @@ public class TikaMailboxModule extends AbstractModule {
         LOGGER.info("Tika text extraction has been disabled." +
             " Using DefaultTextExtractor instead. " +
             "No complex extraction will be done.");
-        return new DefaultTextExtractor();
+        return new JsoupTextExtractor();
     }
 
 }
