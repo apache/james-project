@@ -40,7 +40,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 public class MimePart {
 
@@ -220,11 +219,6 @@ public class MimePart {
     @JsonIgnore
     public HeaderCollection getHeaderCollection() {
         return headerCollection;
-    }
-
-    @JsonProperty(JsonMessageConstants.HEADERS)
-    public Multimap<String, String> getHeaders() {
-        return headerCollection.getHeaders();
     }
 
     @JsonProperty(JsonMessageConstants.Attachment.FILENAME)
