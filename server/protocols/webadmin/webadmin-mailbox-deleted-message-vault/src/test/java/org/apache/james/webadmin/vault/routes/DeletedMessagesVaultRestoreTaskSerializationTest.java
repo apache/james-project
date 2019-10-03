@@ -62,7 +62,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
     void setUp() {
         exportService = mock(RestoreService.class);
         DeletedMessagesVaultRestoreTaskDTO.Factory factory = new DeletedMessagesVaultRestoreTaskDTO.Factory(exportService, queryTranslator);
-        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultRestoreTaskDTO.MODULE.apply(factory));
+        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultRestoreTaskDTO.module(factory));
     }
 
     @Test

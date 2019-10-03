@@ -333,7 +333,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void deletedMessageVaultRestoreShouldComplete() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         String query =
