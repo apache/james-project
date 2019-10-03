@@ -23,6 +23,9 @@ import static java.time.temporal.ChronoUnit.HOURS;
 import static org.apache.james.queue.api.Mails.defaultMail;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -30,23 +33,24 @@ import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
-import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+import org.apache.james.metrics.api.Gauge;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueMetricContract;
 import org.apache.james.queue.api.MailQueueMetricExtension;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueueContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.CassandraMailQueueViewTestFactory;
@@ -57,15 +61,17 @@ import org.apache.mailet.Mail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQueueMetricContract {
+class RabbitMQMailQueueTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
     private static final int THREE_BUCKET_COUNT = 3;
     private static final int UPDATE_BROWSE_START_PACE = 2;
@@ -92,159 +98,213 @@ public class RabbitMQMailQueueTest implements ManageableMailQueueContract, MailQ
     private RabbitMQMailQueue mailQueue;
     private RabbitMQMailQueueManagement mqManagementApi;
 
-    @Override
-    public void enQueue(Mail mail) throws MailQueue.MailQueueException {
-        ManageableMailQueueContract.super.enQueue(mail);
-        clock.tick();
-    }
-
-    @BeforeEach
-    void setup(DockerRabbitMQ rabbitMQ, CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
-        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
-        MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
-        clock = new UpdatableTickingClock(IN_SLICE_1);
-
-        MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
-            CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
-                    .build(),
-            mimeMessageStoreFactory);
-
-        RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
-        RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
-            metricTestSystem.getMetricFactory(),
-            metricTestSystem.getSpyGaugeRegistry(),
-            rabbitClient,
-            mimeMessageStoreFactory,
-            BLOB_ID_FACTORY,
-            mailQueueViewFactory,
-            clock,
-            new RawMailQueueItemDecoratorFactory());
-        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
-        mailQueue = mailQueueFactory.createQueue(SPOOL);
-    }
-
     @AfterEach
     void tearDown() {
         mqManagementApi.deleteAllQueues();
     }
 
-    @Override
-    public MailQueue getMailQueue() {
-        return mailQueue;
+    @Nested
+    class MailQueueSizeMetricsEnabled implements ManageableMailQueueContract, MailQueueMetricContract {
+        @BeforeEach
+        void setup(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
+            MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
+            clock = new UpdatableTickingClock(IN_SLICE_1);
+
+            MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
+                CassandraMailQueueViewConfiguration.builder()
+                    .bucketCount(THREE_BUCKET_COUNT)
+                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
+                    .build(),
+                mimeMessageStoreFactory);
+
+            RabbitMQMailQueueConfiguration configuration = RabbitMQMailQueueConfiguration.builder()
+                .sizeMetricsEnabled(true)
+                .build();
+
+            RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
+            RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
+                metricTestSystem.getMetricFactory(),
+                metricTestSystem.getSpyGaugeRegistry(),
+                rabbitClient,
+                mimeMessageStoreFactory,
+                BLOB_ID_FACTORY,
+                mailQueueViewFactory,
+                clock,
+                new RawMailQueueItemDecoratorFactory(),
+                configuration);
+            mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
+            mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
+            mailQueue = mailQueueFactory.createQueue(SPOOL);
+        }
+
+        @Override
+        public void enQueue(Mail mail) throws MailQueue.MailQueueException {
+            ManageableMailQueueContract.super.enQueue(mail);
+            clock.tick();
+        }
+
+        @Override
+        public MailQueue getMailQueue() {
+            return mailQueue;
+        }
+
+        @Override
+        public ManageableMailQueue getManageableMailQueue() {
+            return mailQueue;
+        }
+
+        @Test
+        void browseShouldReturnCurrentlyEnqueuedMailFromAllSlices() throws Exception {
+            ManageableMailQueue mailQueue = getManageableMailQueue();
+            int emailCount = 5;
+
+            clock.setInstant(IN_SLICE_1);
+            enqueueSomeMails(namePatternForSlice(1), emailCount);
+
+            clock.setInstant(IN_SLICE_2);
+            enqueueSomeMails(namePatternForSlice(2), emailCount);
+
+            clock.setInstant(IN_SLICE_3);
+            enqueueSomeMails(namePatternForSlice(3), emailCount);
+
+            clock.setInstant(IN_SLICE_5);
+            enqueueSomeMails(namePatternForSlice(5), emailCount);
+
+            clock.setInstant(IN_SLICE_7);
+            Stream<String> names = Iterators.toStream(mailQueue.browse())
+                .map(ManageableMailQueue.MailQueueItemView::getMail)
+                .map(Mail::getName);
+
+            assertThat(names).containsExactly(
+                "1-1", "1-2", "1-3", "1-4", "1-5",
+                "2-1", "2-2", "2-3", "2-4", "2-5",
+                "3-1", "3-2", "3-3", "3-4", "3-5",
+                "5-1", "5-2", "5-3", "5-4", "5-5");
+        }
+
+        @Test
+        void browseAndDequeueShouldCombineWellWhenDifferentSlices() throws Exception {
+            ManageableMailQueue mailQueue = getManageableMailQueue();
+            int emailCount = 5;
+
+            clock.setInstant(IN_SLICE_1);
+            enqueueSomeMails(namePatternForSlice(1), emailCount);
+
+            clock.setInstant(IN_SLICE_2);
+            enqueueSomeMails(namePatternForSlice(2), emailCount);
+
+            clock.setInstant(IN_SLICE_3);
+            enqueueSomeMails(namePatternForSlice(3), emailCount);
+
+            clock.setInstant(IN_SLICE_5);
+            enqueueSomeMails(namePatternForSlice(5), emailCount);
+
+            clock.setInstant(IN_SLICE_7);
+            dequeueMails(5);
+            dequeueMails(5);
+            dequeueMails(3);
+
+            Stream<String> names = Iterators.toStream(mailQueue.browse())
+                .map(ManageableMailQueue.MailQueueItemView::getMail)
+                .map(Mail::getName);
+
+            assertThat(names)
+                .containsExactly("3-4", "3-5", "5-1", "5-2", "5-3", "5-4", "5-5");
+        }
+
+        private Function<Integer, String> namePatternForSlice(int sliceId) {
+            return i -> sliceId + "-" + i;
+        }
+
+        @Test
+        void mailQueueShouldBeInitializedWhenCreating(CassandraCluster cassandra) {
+            String name = "myQueue";
+            mailQueueFactory.createQueue(name);
+
+            boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
+            assertThat(initialized).isTrue();
+        }
+
+        @Test
+        void enQueueShouldNotThrowOnMailNameWithNegativeHash() {
+            String negativehashedString = "this sting will have a negative hash"; //hash value: -1256871313
+
+            assertThatCode(() -> getMailQueue().enQueue(defaultMail().name(negativehashedString).build()))
+                .doesNotThrowAnyException();
+        }
+
+        @Disabled("JAMES-2614 RabbitMQMailQueueTest::concurrentEnqueueDequeueShouldNotFail is unstable." +
+            "The related test is disabled, and need to be re-enabled after investigation and a fix.")
+        @Test
+        @Override
+        public void concurrentEnqueueDequeueShouldNotFail() {
+
+        }
+
+        private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
+            IntStream.rangeClosed(1, emailCount)
+                .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
+                    .name(namePattern.apply(i))
+                    .build())));
+        }
+
+        private void dequeueMails(int times) {
+            Flux.from(getManageableMailQueue()
+                .deQueue())
+                .take(times)
+                .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
+                    mailQueueItem.done(true);
+                    return mailQueueItem;
+                }))
+                .blockLast();
+        }
     }
 
-    @Override
-    public ManageableMailQueue getManageableMailQueue() {
-        return mailQueue;
-    }
+    @Nested
+    class MailQueueSizeMetricsDisabled {
+        @RegisterExtension
+        MailQueueMetricExtension mailQueueMetricExtension = new MailQueueMetricExtension();
 
-    @Test
-    void browseShouldReturnCurrentlyEnqueuedMailFromAllSlices() throws Exception {
-        ManageableMailQueue mailQueue = getManageableMailQueue();
-        int emailCount = 5;
+        @BeforeEach
+        void setup(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
+            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
+            MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
+            clock = new UpdatableTickingClock(IN_SLICE_1);
 
-        clock.setInstant(IN_SLICE_1);
-        enqueueSomeMails(namePatternForSlice(1), emailCount);
+            MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
+                CassandraMailQueueViewConfiguration.builder()
+                    .bucketCount(THREE_BUCKET_COUNT)
+                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
+                    .build(),
+                mimeMessageStoreFactory);
 
-        clock.setInstant(IN_SLICE_2);
-        enqueueSomeMails(namePatternForSlice(2), emailCount);
+            RabbitMQMailQueueConfiguration configuration = RabbitMQMailQueueConfiguration.builder()
+                .sizeMetricsEnabled(false)
+                .build();
 
-        clock.setInstant(IN_SLICE_3);
-        enqueueSomeMails(namePatternForSlice(3), emailCount);
+            RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
+            RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
+                metricTestSystem.getMetricFactory(),
+                metricTestSystem.getSpyGaugeRegistry(),
+                rabbitClient,
+                mimeMessageStoreFactory,
+                BLOB_ID_FACTORY,
+                mailQueueViewFactory,
+                clock,
+                new RawMailQueueItemDecoratorFactory(),
+                configuration);
+            mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
+            mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
+            mailQueue = mailQueueFactory.createQueue(SPOOL);
+        }
 
-        clock.setInstant(IN_SLICE_5);
-        enqueueSomeMails(namePatternForSlice(5), emailCount);
-
-        clock.setInstant(IN_SLICE_7);
-        Stream<String> names = Iterators.toStream(mailQueue.browse())
-            .map(ManageableMailQueue.MailQueueItemView::getMail)
-            .map(Mail::getName);
-
-        assertThat(names).containsExactly(
-            "1-1", "1-2", "1-3", "1-4", "1-5",
-            "2-1", "2-2", "2-3", "2-4", "2-5",
-            "3-1", "3-2", "3-3", "3-4", "3-5",
-            "5-1", "5-2", "5-3", "5-4", "5-5");
-    }
-
-    @Test
-    void browseAndDequeueShouldCombineWellWhenDifferentSlices() throws Exception {
-        ManageableMailQueue mailQueue = getManageableMailQueue();
-        int emailCount = 5;
-
-        clock.setInstant(IN_SLICE_1);
-        enqueueSomeMails(namePatternForSlice(1), emailCount);
-
-        clock.setInstant(IN_SLICE_2);
-        enqueueSomeMails(namePatternForSlice(2), emailCount);
-
-        clock.setInstant(IN_SLICE_3);
-        enqueueSomeMails(namePatternForSlice(3), emailCount);
-
-        clock.setInstant(IN_SLICE_5);
-        enqueueSomeMails(namePatternForSlice(5), emailCount);
-
-        clock.setInstant(IN_SLICE_7);
-        dequeueMails(5);
-        dequeueMails(5);
-        dequeueMails(3);
-
-        Stream<String> names = Iterators.toStream(mailQueue.browse())
-            .map(ManageableMailQueue.MailQueueItemView::getMail)
-            .map(Mail::getName);
-
-        assertThat(names)
-            .containsExactly("3-4", "3-5", "5-1", "5-2", "5-3", "5-4", "5-5");
-    }
-
-    private Function<Integer, String> namePatternForSlice(int sliceId) {
-        return i -> sliceId + "-" + i;
-    }
-
-    @Test
-    void mailQueueShouldBeInitializedWhenCreating(CassandraCluster cassandra) {
-        String name = "myQueue";
-        mailQueueFactory.createQueue(name);
-
-        boolean initialized = CassandraMailQueueViewTestFactory.isInitialized(cassandra.getConf(), MailQueueName.fromString(name));
-        assertThat(initialized).isTrue();
-    }
-
-    @Test
-    void enQueueShouldNotThrowOnMailNameWithNegativeHash() {
-        String negativehashedString = "this sting will have a negative hash"; //hash value: -1256871313
-        
-        assertThatCode(() -> getMailQueue().enQueue(defaultMail().name(negativehashedString).build()))
-            .doesNotThrowAnyException();
-    }
-
-    @Disabled("JAMES-2614 RabbitMQMailQueueTest::concurrentEnqueueDequeueShouldNotFail is unstable." +
-        "The related test is disabled, and need to be re-enabled after investigation and a fix.")
-    @Test
-    @Override
-    public void concurrentEnqueueDequeueShouldNotFail() {
-
-    }
-
-    private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
-        IntStream.rangeClosed(1, emailCount)
-            .forEach(Throwing.intConsumer(i -> enQueue(defaultMail()
-                .name(namePattern.apply(i))
-                .build())));
-    }
-
-    private void dequeueMails(int times) {
-        Flux.from(getManageableMailQueue()
-            .deQueue())
-            .take(times)
-            .flatMap(mailQueueItem -> Mono.fromCallable(() -> {
-                mailQueueItem.done(true);
-                return mailQueueItem;
-            }))
-            .blockLast();
+        @Test
+        void constructorShouldNotRegisterGetQueueSizeGaugeWhenSizeMetricsDisabled(MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
+            ArgumentCaptor<Gauge<?>> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
+            verify(metricTestSystem.getSpyGaugeRegistry(), never()).register(any(), gaugeCaptor.capture());
+        }
     }
 }

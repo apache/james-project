@@ -38,6 +38,7 @@ import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
+import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 
 import com.github.fge.lambdas.Throwing;
@@ -56,6 +57,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         private final MailQueueView.Factory mailQueueViewFactory;
         private final Clock clock;
         private final MailQueueItemDecoratorFactory decoratorFactory;
+        private final RabbitMQMailQueueConfiguration configuration;
 
         @Inject
         @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
@@ -65,7 +67,8 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                                           BlobId.Factory blobIdFactory,
                                           MailQueueView.Factory mailQueueViewFactory,
                                           Clock clock,
-                                          MailQueueItemDecoratorFactory decoratorFactory) {
+                                          MailQueueItemDecoratorFactory decoratorFactory,
+                                          RabbitMQMailQueueConfiguration configuration) {
             this.metricFactory = metricFactory;
             this.gaugeRegistry = gaugeRegistry;
             this.rabbitClient = rabbitClient;
@@ -75,6 +78,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             this.decoratorFactory = decoratorFactory;
             this.mailReferenceSerializer = new MailReferenceSerializer();
             this.mailLoader = Throwing.function(new MailLoader(mimeMessageStore, blobIdFactory)::load).sneakyThrow();
+            this.configuration = configuration;
         }
 
         RabbitMQMailQueue create(MailQueueName mailQueueName) {
@@ -96,7 +100,9 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         }
 
         private void registerGaugeFor(RabbitMQMailQueue rabbitMQMailQueue) {
-            this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + rabbitMQMailQueue.getName(), rabbitMQMailQueue::getSize);
+            if (configuration.isSizeMetricsEnabled()) {
+                this.gaugeRegistry.register(QUEUE_SIZE_METRIC_NAME_PREFIX + rabbitMQMailQueue.getName(), rabbitMQMailQueue::getSize);
+            }
         }
     }
 

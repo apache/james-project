@@ -37,6 +37,7 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
+import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
@@ -61,6 +62,10 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
         when(mailQueueViewFactory.create(any()))
             .thenReturn(mailQueueView);
 
+        RabbitMQMailQueueConfiguration configuration = RabbitMQMailQueueConfiguration.builder()
+            .sizeMetricsEnabled(true)
+            .build();
+
         RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             new NoopMetricFactory(),
@@ -70,7 +75,8 @@ class RabbitMqMailQueueFactoryTest implements MailQueueFactoryContract<RabbitMQM
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             Clock.systemUTC(),
-            new RawMailQueueItemDecoratorFactory());
+            new RawMailQueueItemDecoratorFactory(),
+            configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
         mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
     }
