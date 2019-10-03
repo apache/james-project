@@ -37,6 +37,7 @@ import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
 import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
 import static org.apache.james.backends.es.NodeMappingFactory.TYPE;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.ATTACHMENTS;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.BCC;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.CC;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.DATE;
@@ -51,12 +52,14 @@ import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.I
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_RECENT;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_UNREAD;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MAILBOX_ID;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MEDIA_TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MESSAGE_ID;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MIME_MESSAGE_ID;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MODSEQ;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SENT_DATE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SIZE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBJECT;
+import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBTYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT_BODY;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TO;
@@ -67,6 +70,7 @@ import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 import java.io.IOException;
 
 import org.apache.james.backends.es.NodeMappingFactory;
+import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.Attachment;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.EMailer;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.HEADER;
 import org.elasticsearch.common.xcontent.XContentBuilder;
@@ -137,6 +141,14 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(USER_FLAGS)
+                            .field(TYPE, KEYWORD)
+                        .endObject()
+
+                        .startObject(MEDIA_TYPE)
+                            .field(TYPE, KEYWORD)
+                        .endObject()
+
+                        .startObject(SUBTYPE)
                             .field(TYPE, KEYWORD)
                         .endObject()
 
@@ -331,6 +343,32 @@ public class MailboxMappingFactory {
                                 .endObject()
                             .endObject()
                         .endObject()
+
+                        .startObject(ATTACHMENTS)
+                            .startObject(PROPERTIES)
+                                .startObject(Attachment.FILENAME)
+                                    .field(TYPE, TEXT)
+                                    .field(ANALYZER, STANDARD)
+                                .endObject()
+                                .startObject(Attachment.TEXT_CONTENT)
+                                    .field(TYPE, TEXT)
+                                    .field(ANALYZER, STANDARD)
+                                .endObject()
+                                .startObject(Attachment.MEDIA_TYPE)
+                                    .field(TYPE, KEYWORD)
+                                .endObject()
+                                .startObject(Attachment.SUBTYPE)
+                                    .field(TYPE, KEYWORD)
+                                .endObject()
+                                .startObject(Attachment.FILE_EXTENSION)
+                                    .field(TYPE, KEYWORD)
+                                .endObject()
+                                .startObject(Attachment.CONTENT_DISPOSITION)
+                                    .field(TYPE, KEYWORD)
+                                .endObject()
+                            .endObject()
+                        .endObject()
+
                     .endObject()
                 .endObject();
         } catch (IOException e) {
