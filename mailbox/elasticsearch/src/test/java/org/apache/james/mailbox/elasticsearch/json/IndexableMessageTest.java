@@ -119,7 +119,9 @@ public class IndexableMessageTest {
                 .indexAttachments(IndexAttachments.NO)
                 .build();
 
-        assertThat(indexableMessage.getText()).isEqualTo("Second user user2@james.org First user user@james.org");
+        assertThat(indexableMessage.getText())
+            .contains("Second user user2@james.org")
+            .contains("First user user@james.org");
     }
 
     @Test
@@ -144,7 +146,9 @@ public class IndexableMessageTest {
                 .indexAttachments(IndexAttachments.NO)
                 .build();
 
-        assertThat(indexableMessage.getText()).isEqualTo("First to user@james.org Second to user2@james.org");
+        assertThat(indexableMessage.getText())
+            .contains("First to user@james.org")
+            .contains("Second to user2@james.org");
     }
 
     @Test
@@ -169,7 +173,9 @@ public class IndexableMessageTest {
                 .indexAttachments(IndexAttachments.NO)
                 .build();
 
-        assertThat(indexableMessage.getText()).isEqualTo("First cc user@james.org Second cc user2@james.org");
+        assertThat(indexableMessage.getText())
+            .contains("Second cc user2@james.org")
+            .contains("First cc user@james.org");
     }
 
     @Test
@@ -194,7 +200,9 @@ public class IndexableMessageTest {
                 .indexAttachments(IndexAttachments.NO)
                 .build();
 
-        assertThat(indexableMessage.getText()).isEqualTo("Second bcc user2@james.org First bcc user@james.org");
+        assertThat(indexableMessage.getText())
+            .contains("Second bcc user2@james.org")
+            .contains("First bcc user@james.org");
     }
 
     @Test

@@ -9,85 +9,94 @@
   "subtype": "text",
   "mimeMessageID": "<VASs-IZaXqmZao@spam.minet.net>",
   "userFlags": [],
-  "headers": {
-	"mime-version": [
-	  "1.0"
-	],
-	"date": [
-	  "Wed, 3 Jun 2015 09:05:46 +0000 (UTC)"
-	],
-	"x-beenthere": [
-	  "root@listes.minet.net"
-	],
-	"list-unsubscribe": [
-	  "<https://listes.minet.net/cgi-bin/mailman/options/root>, <mailto:root-request@listes.minet.net?subject=unsubscribe>"
-	],
-	"return-path": [
-	  "<root-bounces@listes.minet.net>"
-	],
-	"subject": [
-	  "[root] UNCHECKED contents in mail FROM <quentin.h@riseup.net>"
-	],
-	"list-post": [
-	  "<mailto:root@listes.minet.net>"
-	],
-	"received": [
-	  "from mx1.minet.net (mx1.minet.net [192.168.102.25])\t by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;\t Wed, 03 Jun 2015 11:05:45 +0200",
-	  "from smtp.minet.net (smtp.minet.net [192.168.102.18])\tby mx1.minet.net (Postfix) with ESMTP id F06FE610F72;\tWed,  3 Jun 2015 11:05:48 +0200 (CEST)",
-	  "from listes.minet.net (listes.minet.net [192.168.102.29])\tby smtp.minet.net (Postfix) with ESMTP id AAB15610F70;\tWed,  3 Jun 2015 09:05:48 +0000 (UTC)",
-	  "from listes.minet.net (listes.minet.net [127.0.0.1])\tby listes.minet.net (Postfix) with ESMTP id 9CD5BA27FF9;\tWed,  3 Jun 2015 09:05:48 +0000 (UTC)",
-	  "from mx1.minet.net (mx1.minet.net [192.168.102.25]) by listes.minet.net (Postfix) with ESMTP id B8C1FA27FEF for <root@listes.minet.net>; Wed,  3 Jun 2015 09:05:46 +0000 (UTC)",
-	  "from localhost (spam.minet.net [192.168.102.97]) by mx1.minet.net (Postfix) with ESMTP id AD28B610F6D for <root@listes.minet.net>; Wed,  3 Jun 2015 11:05:46 +0200 (CEST)"
-	],
-	"errors-to": [
-	  "root-bounces@listes.minet.net"
-	],
-	"precedence": [
-	  "list"
-	],
-	"list-subscribe": [
-	  "<https://listes.minet.net/cgi-bin/mailman/listinfo/root>, <mailto:root-request@listes.minet.net?subject=subscribe>"
-	],
-	"x-sieve": [
-	  "CMU Sieve 2.4"
-	],
-	"list-help": [
-	  "<mailto:root-request@listes.minet.net?subject=help>"
-	],
-	"content-transfer-encoding": [
-	  "7bit"
-	],
-	"sender": [
-	  "\"root\" <root-bounces@listes.minet.net>"
-	],
-	"delivered-to": [
-	  "root@listes.minet.net"
-	],
-	"x-mailman-version": [
-	  "2.1.15"
-	],
-	"message-id": [
-	  "<VASs-IZaXqmZao@spam.minet.net>"
-	],
-	"content-type": [
-	  "multipart/mixed; boundary=\"----------=_1433322346-12583-0\""
-	],
-	"from": [
-	  "\"Content-filter at spam.minet.net\" <postmaster@minet.net>"
-	],
-	"x-original-to": [
-	  "root@listes.minet.net"
-	],
-	"to": [
-	  "<root@listes.minet.net>"
-	],
-	"list-id": [
-	  "<root.listes.minet.net>"
-	],
-	"dkim-signature": [
-	  "v=1; a=rsa-sha256; c=simple/simple; d=minet.net; s=mail;\tt=1433322348; bh=8OtmVRMX7IWWyQo8WQIi5rKeDEQFghSX2r1WN9/pqUk=;\th=From:Date:To:Subject:List-Id:List-Unsubscribe:List-Post:List-Help:\t List-Subscribe:From;\tb=UkthSFXn5mtPnn7sYvDJIxgCk1O36L0p+hTOnI/xTF2WRMGJyXtLyCdFdE5jQ5gE4\t EGNdhwmfjaKsoE7IDtc/4GrPvbnM8i9ojpSOBW1hXJPOeYnRgah/4gsXsMJWvmmq/A\t 4oTnw8ZswFXiShDmBMyaSEZuVrWTdaPBgUhVhGw8="
-	]
-  },
+  "headers": [{
+    "name": "return-path",
+    "value": "<root-bounces@listes.minet.net>"
+  }, {
+    "name": "received",
+    "value": "from mx1.minet.net (mx1.minet.net [192.168.102.25])\t by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;\t Wed, 03 Jun 2015 11:05:45 +0200"
+  }, {
+    "name": "x-sieve",
+    "value": "CMU Sieve 2.4"
+  }, {
+    "name": "received",
+    "value": "from smtp.minet.net (smtp.minet.net [192.168.102.18])\tby mx1.minet.net (Postfix) with ESMTP id F06FE610F72;\tWed,  3 Jun 2015 11:05:48 +0200 (CEST)"
+  }, {
+    "name": "received",
+    "value": "from listes.minet.net (listes.minet.net [192.168.102.29])\tby smtp.minet.net (Postfix) with ESMTP id AAB15610F70;\tWed,  3 Jun 2015 09:05:48 +0000 (UTC)"
+  }, {
+    "name": "dkim-signature",
+    "value": "v=1; a=rsa-sha256; c=simple/simple; d=minet.net; s=mail;\tt=1433322348; bh=8OtmVRMX7IWWyQo8WQIi5rKeDEQFghSX2r1WN9/pqUk=;\th=From:Date:To:Subject:List-Id:List-Unsubscribe:List-Post:List-Help:\t List-Subscribe:From;\tb=UkthSFXn5mtPnn7sYvDJIxgCk1O36L0p+hTOnI/xTF2WRMGJyXtLyCdFdE5jQ5gE4\t EGNdhwmfjaKsoE7IDtc/4GrPvbnM8i9ojpSOBW1hXJPOeYnRgah/4gsXsMJWvmmq/A\t 4oTnw8ZswFXiShDmBMyaSEZuVrWTdaPBgUhVhGw8="
+  }, {
+    "name": "received",
+    "value": "from listes.minet.net (listes.minet.net [127.0.0.1])\tby listes.minet.net (Postfix) with ESMTP id 9CD5BA27FF9;\tWed,  3 Jun 2015 09:05:48 +0000 (UTC)"
+  }, {
+    "name": "x-original-to",
+    "value": "root@listes.minet.net"
+  }, {
+    "name": "delivered-to",
+    "value": "root@listes.minet.net"
+  }, {
+    "name": "received",
+    "value": "from mx1.minet.net (mx1.minet.net [192.168.102.25]) by listes.minet.net (Postfix) with ESMTP id B8C1FA27FEF for <root@listes.minet.net>; Wed,  3 Jun 2015 09:05:46 +0000 (UTC)"
+  }, {
+    "name": "received",
+    "value": "from localhost (spam.minet.net [192.168.102.97]) by mx1.minet.net (Postfix) with ESMTP id AD28B610F6D for <root@listes.minet.net>; Wed,  3 Jun 2015 11:05:46 +0200 (CEST)"
+  }, {
+    "name": "content-type",
+    "value": "multipart/mixed; boundary=\"----------=_1433322346-12583-0\""
+  }, {
+    "name": "content-transfer-encoding",
+    "value": "7bit"
+  }, {
+    "name": "mime-version",
+    "value": "1.0"
+  }, {
+    "name": "from",
+    "value": "\"Content-filter at spam.minet.net\" <postmaster@minet.net>"
+  }, {
+    "name": "date",
+    "value": "Wed, 3 Jun 2015 09:05:46 +0000 (UTC)"
+  }, {
+    "name": "to",
+    "value": "<root@listes.minet.net>"
+  }, {
+    "name": "message-id",
+    "value": "<VASs-IZaXqmZao@spam.minet.net>"
+  }, {
+    "name": "subject",
+    "value": "[root] UNCHECKED contents in mail FROM <quentin.h@riseup.net>"
+  }, {
+    "name": "x-beenthere",
+    "value": "root@listes.minet.net"
+  }, {
+    "name": "x-mailman-version",
+    "value": "2.1.15"
+  }, {
+    "name": "precedence",
+    "value": "list"
+  }, {
+    "name": "list-id",
+    "value": "<root.listes.minet.net>"
+  }, {
+    "name": "list-unsubscribe",
+    "value": "<https://listes.minet.net/cgi-bin/mailman/options/root>, <mailto:root-request@listes.minet.net?subject=unsubscribe>"
+  }, {
+    "name": "list-post",
+    "value": "<mailto:root@listes.minet.net>"
+  }, {
+    "name": "list-help",
+    "value": "<mailto:root-request@listes.minet.net?subject=help>"
+  }, {
+    "name": "list-subscribe",
+    "value": "<https://listes.minet.net/cgi-bin/mailman/listinfo/root>, <mailto:root-request@listes.minet.net?subject=subscribe>"
+  }, {
+    "name": "errors-to",
+    "value": "root-bounces@listes.minet.net"
+  }, {
+    "name": "sender",
+    "value": "\"root\" <root-bounces@listes.minet.net>"
+  }],
   "from": [
 	{
 	  "name": "Content-filter at spam.minet.net",

@@ -59,6 +59,11 @@ public interface JsonMessageConstants {
         String ADDRESS = "address";
     }
 
+    interface HEADER {
+        String NAME = "name";
+        String VALUE = "value";
+    }
+
     interface Attachment {
         String TEXT_CONTENT = "textContent";
         String MEDIA_TYPE = "mediaType";

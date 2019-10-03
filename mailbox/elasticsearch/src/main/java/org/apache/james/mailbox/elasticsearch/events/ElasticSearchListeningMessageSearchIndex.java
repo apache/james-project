@@ -138,6 +138,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             message.getUid());
 
         String jsonContent = generateIndexedJson(mailbox, message, session);
+
         elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), jsonContent);
     }
 

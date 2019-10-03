@@ -111,8 +111,9 @@ class HeaderCollectionTest {
             .add(new FieldImpl("From", "=?UTF-8?B?RnLDqWTDqXJpYyBNQVJUSU4=?= <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"))
             .build();
 
-        assertThat(headerCollection.getHeaders().get("from"))
-            .containsExactly("Frédéric MARTIN <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>");
+        assertThat(headerCollection.getHeaders())
+            .containsExactly(new HeaderCollection.Header("from",
+                "Frédéric MARTIN <fmartin@linagora.com>, Graham CROSMARIE <gcrosmarie@linagora.com>"));
     }
 
     @Test
@@ -121,8 +122,8 @@ class HeaderCollectionTest {
             .add(new FieldImpl("a.b.c", "value"))
             .build();
 
-        assertThat(headerCollection.getHeaders().get("a.b.c"))
-            .containsExactly("value");
+        assertThat(headerCollection.getHeaders())
+            .containsExactly(new HeaderCollection.Header("a.b.c", "value"));
     }
 
     @Test
@@ -155,8 +156,10 @@ class HeaderCollectionTest {
                 " Graham CROSMARIE <grah.crosmarie@linagora.com>"))
             .build();
 
-        assertThat(headerCollection.getHeaders().get("from"))
-            .containsOnly("Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>");
+
+        assertThat(headerCollection.getHeaders())
+            .containsExactly(new HeaderCollection.Header("from",
+                "Christophe Hamerling <chri.hamerling@linagora.com>, Graham CROSMARIE <grah.crosmarie@linagora.com>"));
     }
 
     @Test

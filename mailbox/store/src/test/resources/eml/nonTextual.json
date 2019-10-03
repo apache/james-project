@@ -23,18 +23,43 @@
   "date":"2015-06-07T00:00:00+0200",
   "from":[{"name":"Benoit Tellier","address":"btellier@linagora.com"}],
   "hasAttachment":false,
-  "headers":{
-    "date":["Thu, 18 Jun 2015 12:43:26 +0200"],
-    "mime-version":["1.0"],
-    "x-sieve":["CMU Sieve 2.2"],
-    "return-path":["<btellier@linagora.com>"],
-    "subject":["Test message"],
-    "message-id":["<5582A0CE.4020801@linagora.com>"],
-    "received":["from alderaan.linagora.com (smtp.linagora.dc1 [172.16.18.53])\t by imap (Cyrus v2.2.13-Debian-2.2.13-19+squeeze3) with LMTPA;\t Thu, 18 Jun 2015 12:43:28 +0200","from [10.75.9.154] (unknown [92.103.166.6])\t(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))\t(No client certificate requested)\tby alderaan.linagora.com (Postfix) with ESMTPSA id 0EB1078A\tfor <btellier@linagora.com>; Thu, 18 Jun 2015 12:43:28 +0200 (CEST)"],
-    "from":["Benoit Tellier <btellier@linagora.com>"],
-    "content-type":["multipart/mixed; boundary=\"------------030000010109090603040500\""],
-    "to":["btellier@linagora.com"],
-    "user-agent":["Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Thunderbird/38.0.1"]},
+  "headers": [{
+    "name": "return-path",
+    "value": "<btellier@linagora.com>"
+  }, {
+    "name": "received",
+    "value": "from alderaan.linagora.com (smtp.linagora.dc1 [172.16.18.53])\t by imap (Cyrus v2.2.13-Debian-2.2.13-19+squeeze3) with LMTPA;\t Thu, 18 Jun 2015 12:43:28 +0200"
+  }, {
+    "name": "x-sieve",
+    "value": "CMU Sieve 2.2"
+  }, {
+    "name": "received",
+    "value": "from [10.75.9.154] (unknown [92.103.166.6])\t(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))\t(No client certificate requested)\tby alderaan.linagora.com (Postfix) with ESMTPSA id 0EB1078A\tfor <btellier@linagora.com>; Thu, 18 Jun 2015 12:43:28 +0200 (CEST)"
+  }, {
+    "name": "to",
+    "value": "btellier@linagora.com"
+  }, {
+    "name": "from",
+    "value": "Benoit Tellier <btellier@linagora.com>"
+  }, {
+    "name": "subject",
+    "value": "Test message"
+  }, {
+    "name": "message-id",
+    "value": "<5582A0CE.4020801@linagora.com>"
+  }, {
+    "name": "date",
+    "value": "Thu, 18 Jun 2015 12:43:26 +0200"
+  }, {
+    "name": "user-agent",
+    "value": "Mozilla/5.0 (X11; Linux x86_64; rv:38.0) Gecko/20100101 Thunderbird/38.0.1"
+  }, {
+    "name": "mime-version",
+    "value": "1.0"
+  }, {
+    "name": "content-type",
+    "value": "multipart/mixed; boundary=\"------------030000010109090603040500\""
+  }],
   "mailboxId":"18",
   "mediaType":"plain",
   "messageId":"184",

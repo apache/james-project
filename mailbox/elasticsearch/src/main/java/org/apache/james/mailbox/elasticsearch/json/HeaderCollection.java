@@ -20,11 +20,11 @@
 package org.apache.james.mailbox.elasticsearch.json;
 
 import java.time.ZonedDateTime;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.store.search.SearchUtil;
@@ -36,34 +36,69 @@ import org.apache.james.mime4j.field.address.LenientAddressParser;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
 
 public class HeaderCollection {
 
+    public static class Header {
+        private final String headerName;
+        private final String value;
+
+        Header(String headerName, String value) {
+            this.headerName = headerName;
+            this.value = value;
+        }
+
+        @JsonProperty(JsonMessageConstants.HEADER.NAME)
+        public String getHeaderName() {
+            return headerName;
+        }
+
+        @JsonProperty(JsonMessageConstants.HEADER.VALUE)
+        public String getValue() {
+            return value;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Header) {
+                Header header = (Header) o;
+
+                return Objects.equals(this.headerName, header.headerName)
+                    && Objects.equals(this.value, header.value);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(headerName, value);
+        }
+    }
+
     public static class Builder {
 
-        private final Set<EMailer> toAddressSet;
-        private final Set<EMailer> fromAddressSet;
-        private final Set<EMailer> ccAddressSet;
-        private final Set<EMailer> bccAddressSet;
-        private final Set<EMailer> replyToAddressSet;
-        private final Set<String> subjectSet;
-        private final Multimap<String, String> headers;
+        private final ImmutableSet.Builder<EMailer> toAddressSet;
+        private final ImmutableSet.Builder<EMailer> fromAddressSet;
+        private final ImmutableSet.Builder<EMailer> ccAddressSet;
+        private final ImmutableSet.Builder<EMailer> bccAddressSet;
+        private final ImmutableSet.Builder<EMailer> replyToAddressSet;
+        private final ImmutableSet.Builder<String> subjectSet;
+        private final ImmutableList.Builder<Header> headers;
         private Optional<ZonedDateTime> sentDate;
         private Optional<String> messageID;
 
         private Builder() {
-            toAddressSet = new HashSet<>();
-            fromAddressSet = new HashSet<>();
-            ccAddressSet = new HashSet<>();
-            bccAddressSet = new HashSet<>();
-            replyToAddressSet = new HashSet<>();
-            subjectSet = new HashSet<>();
-            headers = ArrayListMultimap.create();
+            toAddressSet = ImmutableSet.builder();
+            fromAddressSet = ImmutableSet.builder();
+            ccAddressSet = ImmutableSet.builder();
+            bccAddressSet = ImmutableSet.builder();
+            replyToAddressSet = ImmutableSet.builder();
+            subjectSet = ImmutableSet.builder();
+            headers = ImmutableList.builder();
             sentDate = Optional.empty();
             messageID = Optional.empty();
         }
@@ -74,7 +109,7 @@ public class HeaderCollection {
             String rawHeaderValue = field.getBody();
             String sanitizedValue = MimeUtil.unscrambleHeaderValue(rawHeaderValue);
 
-            headers.put(headerName, sanitizedValue);
+            headers.add(new Header(headerName, sanitizedValue));
 
             handleSpecificHeader(headerName, sanitizedValue, rawHeaderValue);
             return this;
@@ -82,14 +117,15 @@ public class HeaderCollection {
 
         public HeaderCollection build() {
             return new HeaderCollection(
-                ImmutableSet.copyOf(toAddressSet),
-                ImmutableSet.copyOf(fromAddressSet),
-                ImmutableSet.copyOf(ccAddressSet),
-                ImmutableSet.copyOf(bccAddressSet),
-                ImmutableSet.copyOf(replyToAddressSet),
-                ImmutableSet.copyOf(subjectSet),
-                ImmutableMultimap.copyOf(headers),
-                sentDate, messageID);
+                toAddressSet.build(),
+                fromAddressSet.build(),
+                ccAddressSet.build(),
+                bccAddressSet.build(),
+                replyToAddressSet.build(),
+                subjectSet.build(),
+                headers.build(),
+                sentDate,
+                messageID);
         }
 
         private void handleSpecificHeader(String headerName, String headerValue, String rawHeaderValue) {
@@ -114,12 +150,13 @@ public class HeaderCollection {
         }
 
         private void manageAddressField(String headerName, String rawHeaderValue) {
+            ImmutableSet.Builder<EMailer> addressSet = getAddressSet(headerName);
             LenientAddressParser.DEFAULT
                 .parseAddressList(rawHeaderValue)
                 .stream()
                 .flatMap(this::convertAddressToMailboxStream)
                 .map((mailbox) -> new EMailer(SearchUtil.getDisplayAddress(mailbox), mailbox.getAddress()))
-                .collect(Collectors.toCollection(() -> getAddressSet(headerName)));
+                .forEach(addressSet::add);
         }
 
         private Stream<Mailbox> convertAddressToMailboxStream(Address address) {
@@ -131,7 +168,7 @@ public class HeaderCollection {
             return Stream.empty();
         }
 
-        private Set<EMailer> getAddressSet(String headerName) {
+        private ImmutableSet.Builder<EMailer> getAddressSet(String headerName) {
             switch (headerName) {
                 case TO:
                     return toAddressSet;
@@ -167,13 +204,14 @@ public class HeaderCollection {
     private final ImmutableSet<EMailer> bccAddressSet;
     private final ImmutableSet<EMailer> replyToAddressSet;
     private final ImmutableSet<String> subjectSet;
-    private final ImmutableMultimap<String, String> headers;
+    private final List<Header> headers;
     private final Optional<ZonedDateTime> sentDate;
     private final Optional<String> messageID;
 
     private HeaderCollection(ImmutableSet<EMailer> toAddressSet, ImmutableSet<EMailer> fromAddressSet,
-                             ImmutableSet<EMailer> ccAddressSet, ImmutableSet<EMailer> bccAddressSet, ImmutableSet<EMailer> replyToAddressSet, ImmutableSet<String> subjectSet,
-                             ImmutableMultimap<String, String> headers, Optional<ZonedDateTime> sentDate, Optional<String> messageID) {
+                             ImmutableSet<EMailer> ccAddressSet, ImmutableSet<EMailer> bccAddressSet,
+                             ImmutableSet<EMailer> replyToAddressSet, ImmutableSet<String> subjectSet,
+                             List<Header> headers, Optional<ZonedDateTime> sentDate, Optional<String> messageID) {
         this.toAddressSet = toAddressSet;
         this.fromAddressSet = fromAddressSet;
         this.ccAddressSet = ccAddressSet;
@@ -213,7 +251,7 @@ public class HeaderCollection {
         return sentDate;
     }
 
-    public Multimap<String, String> getHeaders() {
+    public List<Header> getHeaders() {
         return headers;
     }
 

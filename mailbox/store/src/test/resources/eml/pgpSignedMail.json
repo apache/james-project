@@ -12,121 +12,136 @@
 	"debian"
   ],
   "mimeMessageID": "<E1Z0E7U-0004Bc-Jv@master.debian.org>",
-  "headers": {
-	"date": [
-	  "Wed, 03 Jun 2015 19:14:32 +0000"
-	],
-	"resent-from": [
-	  "debian-security-announce@lists.debian.org"
-	],
-	"return-path": [
-	  "<bounce-debian-security-announce=benwa=minet.net@lists.debian.org>"
-	],
-	"subject": [
-	  "[SECURITY] [DSA 3278-1] libapache-mod-jk security update"
-	],
-	"x-debian": [
-	  "PGP check passed for security officers"
-	],
-	"x-spam-score": [
-	  "-1.51"
-	],
-	"list-subscribe": [
-	  "<mailto:debian-security-announce-request@lists.debian.org?subject=subscribe>"
-	],
-	"precedence": [
-	  "list"
-	],
-	"x-sieve": [
-	  "CMU Sieve 2.4"
-	],
-	"list-help": [
-	  "<mailto:debian-security-announce-request@lists.debian.org?subject=help>"
-	],
-	"received-spf": [
-	  "None (no SPF record) identity=mailfrom; client-ip=82.195.75.100; helo=bendel.debian.org; envelope-from=bounce-debian-security-announce=benwa=minet.net@lists.debian.org; receiver=benwa@minet.net"
-	],
-	"x-mailing-list": [
-	  "<debian-security-announce@lists.debian.org> archive/latest/2089"
-	],
-	"x-spam-level": [
-	  ""
-	],
-	"message-id": [
-	  "<E1Z0E7U-0004Bc-Jv@master.debian.org>"
-	],
-	"resent-message-id": [
-	  "<Aqb4x1ejWlF.A.ltC.qI1bVB@bendel>"
-	],
-	"from": [
-	  "Markus Koschany <apo@gambaru.de>"
-	],
-	"reply-to": [
-	  "debian-security@lists.debian.org"
-	],
-	"resent-date": [
-	  "Wed,  3 Jun 2015 19:14:50 +0000 (UTC)"
-	],
-	"x-spam-flag": [
-	  "NO"
-	],
-	"x-rc-spam": [
-	  "2008-11-04_01"
-	],
-	"list-unsubscribe": [
-	  "<mailto:debian-security-announce-request@lists.debian.org?subject=unsubscribe>"
-	],
-	"list-post": [
-	  "<mailto:debian-security-announce@lists.debian.org>"
-	],
-	"received": [
-	  "from mx2.minet.net (mx2.minet.net [192.168.102.26])\t by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;\t Wed, 03 Jun 2015 21:19:59 +0200",
-	  "from localhost (spam.minet.net [192.168.102.97])\tby mx2.minet.net (Postfix) with ESMTP id 8A9DAA27DA1\tfor <benwa@minet.net>; Wed,  3 Jun 2015 21:20:03 +0200 (CEST)",
-	  "from mx2.minet.net ([IPv6:::ffff:192.168.102.26])\tby localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)\twith ESMTP id cF6J0AAnzsTX for <benwa@minet.net>;\tWed,  3 Jun 2015 19:20:02 +0000 (UTC)",
-	  "from bendel.debian.org (bendel.debian.org [82.195.75.100])\t(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))\t(No client certificate requested)\tby mx2.minet.net (Postfix) with ESMTPS id 7F69FA27D98\tfor <benwa@minet.net>; Wed,  3 Jun 2015 21:20:01 +0200 (CEST)",
-	  "from localhost (localhost [127.0.0.1])\tby bendel.debian.org (Postfix) with QMQP\tid 1C2F6275; Wed,  3 Jun 2015 19:14:50 +0000 (UTC)",
-	  "from localhost (localhost [127.0.0.1])\tby bendel.debian.org (Postfix) with ESMTP id 7EFBF228\tfor <lists-debian-security-announce@bendel.debian.org>; Wed,  3 Jun 2015 19:14:39 +0000 (UTC)",
-	  "from bendel.debian.org ([127.0.0.1])\tby localhost (lists.debian.org [127.0.0.1]) (amavisd-new, port 2525)\twith ESMTP id RiKdt2PVwXOm\tfor <lists-debian-security-announce@bendel.debian.org>;\tWed,  3 Jun 2015 19:14:34 +0000 (UTC)",
-	  "from master.debian.org (master.debian.org [IPv6:2001:41b8:202:deb:216:36ff:fe40:4001])\t(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))\t(Client CN \"master.debian.org\", Issuer \"Debian SMTP CA\" (not verified))\tby bendel.debian.org (Postfix) with ESMTPS id ABE761B7\tfor <debian-security-announce@lists.debian.org>; Wed,  3 Jun 2015 19:14:34 +0000 (UTC)",
-	  "from carnil by master.debian.org with local (Exim 4.84)\t(envelope-from <carnil@master.debian.org>)\tid 1Z0E7U-0004Bc-Jv\tfor debian-security-announce@lists.debian.org; Wed, 03 Jun 2015 19:14:32 +0000"
-	],
-	"x-rc-virus": [
-	  "2007-09-13_01"
-	],
-	"x-loop": [
-	  "debian-security-announce@lists.debian.org"
-	],
-	"priority": [
-	  "urgent"
-	],
-	"x-virus-scanned": [
-	  "by amavisd-new using ClamAV at minet.net"
-	],
-	"x-spam-status": [
-	  "No, score=-1.51 required=1 tests=[BAYES_00=-1.5,\tT_RP_MATCHES_RCVD=-0.01] autolearn=unavailable"
-	],
-	"delivered-to": [
-	  "lists-debian-security-announce@bendel.debian.org"
-	],
-	"x-amavis-spam-status": [
-	  "No, score=-8.99 tagged_above=-10000 required=5.3\ttests=[BAYES_00=-2, DIGITS_LETTERS=1, FVGT_m_MULTI_ODD=0.02,\tLDO_WHITELIST=-5, OUR_MTA_MSGID=2, PGPSIGNATURE=-5,\tT_RP_MATCHES_RCVD=-0.01] autolearn=ham"
-	],
-	"resent-sender": [
-	  "debian-security-announce-request@lists.debian.org"
-	],
-	"x-original-to": [
-	  "lists-debian-security-announce@bendel.debian.org"
-	],
-	"to": [
-	  "debian-security-announce@lists.debian.org"
-	],
-	"list-id": [
-	  "<debian-security-announce.lists.debian.org>"
-	],
-	"old-return-path": [
-	  "<carnil@master.debian.org>"
-	]
-  },
+  "headers": [{
+    "name": "return-path",
+    "value": "<bounce-debian-security-announce=benwa=minet.net@lists.debian.org>"
+  }, {
+    "name": "received",
+    "value": "from mx2.minet.net (mx2.minet.net [192.168.102.26])\t by imap (Cyrus v2.4.16-Debian-2.4.16-4+deb7u1) with LMTPA;\t Wed, 03 Jun 2015 21:19:59 +0200"
+  }, {
+    "name": "x-sieve",
+    "value": "CMU Sieve 2.4"
+  }, {
+    "name": "received",
+    "value": "from localhost (spam.minet.net [192.168.102.97])\tby mx2.minet.net (Postfix) with ESMTP id 8A9DAA27DA1\tfor <benwa@minet.net>; Wed,  3 Jun 2015 21:20:03 +0200 (CEST)"
+  }, {
+    "name": "x-virus-scanned",
+    "value": "by amavisd-new using ClamAV at minet.net"
+  }, {
+    "name": "x-spam-flag",
+    "value": "NO"
+  }, {
+    "name": "x-spam-score",
+    "value": "-1.51"
+  }, {
+    "name": "x-spam-level",
+    "value": ""
+  }, {
+    "name": "x-spam-status",
+    "value": "No, score=-1.51 required=1 tests=[BAYES_00=-1.5,\tT_RP_MATCHES_RCVD=-0.01] autolearn=unavailable"
+  }, {
+    "name": "received",
+    "value": "from mx2.minet.net ([IPv6:::ffff:192.168.102.26])\tby localhost (spam.minet.net [::ffff:192.168.102.97]) (amavisd-new, port 10024)\twith ESMTP id cF6J0AAnzsTX for <benwa@minet.net>;\tWed,  3 Jun 2015 19:20:02 +0000 (UTC)"
+  }, {
+    "name": "received-spf",
+    "value": "None (no SPF record) identity=mailfrom; client-ip=82.195.75.100; helo=bendel.debian.org; envelope-from=bounce-debian-security-announce=benwa=minet.net@lists.debian.org; receiver=benwa@minet.net"
+  }, {
+    "name": "received",
+    "value": "from bendel.debian.org (bendel.debian.org [82.195.75.100])\t(using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))\t(No client certificate requested)\tby mx2.minet.net (Postfix) with ESMTPS id 7F69FA27D98\tfor <benwa@minet.net>; Wed,  3 Jun 2015 21:20:01 +0200 (CEST)"
+  }, {
+    "name": "received",
+    "value": "from localhost (localhost [127.0.0.1])\tby bendel.debian.org (Postfix) with QMQP\tid 1C2F6275; Wed,  3 Jun 2015 19:14:50 +0000 (UTC)"
+  }, {
+    "name": "old-return-path",
+    "value": "<carnil@master.debian.org>"
+  }, {
+    "name": "x-original-to",
+    "value": "lists-debian-security-announce@bendel.debian.org"
+  }, {
+    "name": "delivered-to",
+    "value": "lists-debian-security-announce@bendel.debian.org"
+  }, {
+    "name": "received",
+    "value": "from localhost (localhost [127.0.0.1])\tby bendel.debian.org (Postfix) with ESMTP id 7EFBF228\tfor <lists-debian-security-announce@bendel.debian.org>; Wed,  3 Jun 2015 19:14:39 +0000 (UTC)"
+  }, {
+    "name": "x-amavis-spam-status",
+    "value": "No, score=-8.99 tagged_above=-10000 required=5.3\ttests=[BAYES_00=-2, DIGITS_LETTERS=1, FVGT_m_MULTI_ODD=0.02,\tLDO_WHITELIST=-5, OUR_MTA_MSGID=2, PGPSIGNATURE=-5,\tT_RP_MATCHES_RCVD=-0.01] autolearn=ham"
+  }, {
+    "name": "received",
+    "value": "from bendel.debian.org ([127.0.0.1])\tby localhost (lists.debian.org [127.0.0.1]) (amavisd-new, port 2525)\twith ESMTP id RiKdt2PVwXOm\tfor <lists-debian-security-announce@bendel.debian.org>;\tWed,  3 Jun 2015 19:14:34 +0000 (UTC)"
+  }, {
+    "name": "received",
+    "value": "from master.debian.org (master.debian.org [IPv6:2001:41b8:202:deb:216:36ff:fe40:4001])\t(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))\t(Client CN \"master.debian.org\", Issuer \"Debian SMTP CA\" (not verified))\tby bendel.debian.org (Postfix) with ESMTPS id ABE761B7\tfor <debian-security-announce@lists.debian.org>; Wed,  3 Jun 2015 19:14:34 +0000 (UTC)"
+  }, {
+    "name": "received",
+    "value": "from carnil by master.debian.org with local (Exim 4.84)\t(envelope-from <carnil@master.debian.org>)\tid 1Z0E7U-0004Bc-Jv\tfor debian-security-announce@lists.debian.org; Wed, 03 Jun 2015 19:14:32 +0000"
+  }, {
+    "name": "from",
+    "value": "Markus Koschany <apo@gambaru.de>"
+  }, {
+    "name": "to",
+    "value": "debian-security-announce@lists.debian.org"
+  }, {
+    "name": "message-id",
+    "value": "<E1Z0E7U-0004Bc-Jv@master.debian.org>"
+  }, {
+    "name": "date",
+    "value": "Wed, 03 Jun 2015 19:14:32 +0000"
+  }, {
+    "name": "x-debian",
+    "value": "PGP check passed for security officers"
+  }, {
+    "name": "subject",
+    "value": "[SECURITY] [DSA 3278-1] libapache-mod-jk security update"
+  }, {
+    "name": "priority",
+    "value": "urgent"
+  }, {
+    "name": "reply-to",
+    "value": "debian-security@lists.debian.org"
+  }, {
+    "name": "x-rc-virus",
+    "value": "2007-09-13_01"
+  }, {
+    "name": "x-rc-spam",
+    "value": "2008-11-04_01"
+  }, {
+    "name": "resent-message-id",
+    "value": "<Aqb4x1ejWlF.A.ltC.qI1bVB@bendel>"
+  }, {
+    "name": "resent-from",
+    "value": "debian-security-announce@lists.debian.org"
+  }, {
+    "name": "x-mailing-list",
+    "value": "<debian-security-announce@lists.debian.org> archive/latest/2089"
+  }, {
+    "name": "x-loop",
+    "value": "debian-security-announce@lists.debian.org"
+  }, {
+    "name": "list-id",
+    "value": "<debian-security-announce.lists.debian.org>"
+  }, {
+    "name": "list-post",
+    "value": "<mailto:debian-security-announce@lists.debian.org>"
+  }, {
+    "name": "list-help",
+    "value": "<mailto:debian-security-announce-request@lists.debian.org?subject=help>"
+  }, {
+    "name": "list-subscribe",
+    "value": "<mailto:debian-security-announce-request@lists.debian.org?subject=subscribe>"
+  }, {
+    "name": "list-unsubscribe",
+    "value": "<mailto:debian-security-announce-request@lists.debian.org?subject=unsubscribe>"
+  }, {
+    "name": "precedence",
+    "value": "list"
+  }, {
+    "name": "resent-sender",
+    "value": "debian-security-announce-request@lists.debian.org"
+  }, {
+    "name": "resent-date",
+    "value": "Wed,  3 Jun 2015 19:14:50 +0000 (UTC)"
+  }],
   "from": [
 	{
 	  "name": "Markus Koschany",
