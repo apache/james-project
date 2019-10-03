@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -59,12 +60,14 @@ public class TikaTextExtractor implements TextExtractor {
     private final MetricFactory metricFactory;
     private final TikaHttpClient tikaHttpClient;
     private final ObjectMapper objectMapper;
+    private final JsoupTextExtractor jsoupTextExtractor;
 
     @Inject
     public TikaTextExtractor(MetricFactory metricFactory, TikaHttpClient tikaHttpClient) {
         this.metricFactory = metricFactory;
         this.tikaHttpClient = tikaHttpClient;
         this.objectMapper = initializeObjectMapper();
+        this.jsoupTextExtractor = new JsoupTextExtractor();
     }
 
     private ObjectMapper initializeObjectMapper() {
@@ -77,6 +80,9 @@ public class TikaTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        if (contentType.startsWith("text/")) {
+            return jsoupTextExtractor.extractContent(inputStream, contentType);
+        }
         return metricFactory.runPublishingTimerMetric("tikaTextExtraction", Throwing.supplier(
             () -> performContentExtraction(inputStream, contentType))
             .sneakyThrow());

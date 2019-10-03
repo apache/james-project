@@ -62,9 +62,9 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void textualContentShouldReturnNullWhenInputStreamIsEmpty() throws Exception {
+    public void textualContentShouldReturnEmptyWhenInputStreamIsEmpty() throws Exception {
         assertThat(textExtractor.extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "text/plain").getTextualContent())
-            .isEmpty();
+            .contains("");
     }
 
     @Test
@@ -72,7 +72,7 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
-            .contains("This is some awesome text text.\n\n\n");
+            .contains("This is some awesome text text.\n\n");
     }
 
     @Test
@@ -174,8 +174,8 @@ public class TikaTextExtractorTest {
                                                             "{\"X-TIKA:content\": \"content B\"}]")
                                                         .getBytes(StandardCharsets.UTF_8))));
 
-        InputStream inputStream = null;
-        ParsedContent parsedContent = textExtractor.extractContent(inputStream, "text/plain");
+        InputStream inputStream = new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8));
+        ParsedContent parsedContent = textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         assertThat(parsedContent.getTextualContent()).contains(expectedExtractedContent);
     }
@@ -190,8 +190,8 @@ public class TikaTextExtractorTest {
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream("[\"value1\"]"
                                                         .getBytes(StandardCharsets.UTF_8))));
 
-        InputStream inputStream = null;
-        textExtractor.extractContent(inputStream, "text/plain");
+        InputStream inputStream = new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8));
+        textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
     }
 
     @Test

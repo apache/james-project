@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 
+import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,6 +42,20 @@ public class JsoupTextExtractorTest {
 
         assertThat(textExtractor.extractContent(inputStream, "text/html").getTextualContent().get())
                 .doesNotContain("*|MC:SUBJECT|*");
+    }
+
+    @Test
+    public void extractContentShouldReturnEmptyWhenNullData() throws Exception {
+        assertThat(textExtractor.extractContent(null, "text/html"))
+            .isEqualTo(ParsedContent.empty());
+    }
+
+    @Test
+    public void extractContentShouldReturnEmptyWhenNullContentType() throws Exception {
+        InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
+
+        assertThat(textExtractor.extractContent(inputStream, null))
+            .isEqualTo(ParsedContent.empty());
     }
 
 }

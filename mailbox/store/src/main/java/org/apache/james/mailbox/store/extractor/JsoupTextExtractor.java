@@ -38,6 +38,9 @@ public class JsoupTextExtractor implements TextExtractor {
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        if (inputStream == null) {
+            return ParsedContent.empty();
+        }
         Map<String, List<String>> emptyMetadata = Maps.newHashMap();
         if (contentType != null) {
            if (contentType.equals("text/plain")) {
@@ -49,6 +52,6 @@ public class JsoupTextExtractor implements TextExtractor {
                return new ParsedContent(Optional.ofNullable(doc.text()), emptyMetadata);
            }
         }
-        return new ParsedContent(null, emptyMetadata);
+        return ParsedContent.empty();
     }
 }
