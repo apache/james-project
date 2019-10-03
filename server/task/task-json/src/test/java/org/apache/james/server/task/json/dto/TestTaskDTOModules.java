@@ -26,6 +26,7 @@ import org.apache.james.server.task.json.TestTask;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.FailedTask;
 import org.apache.james.task.MemoryReferenceTask;
+import org.apache.james.task.MemoryReferenceWithCounterTask;
 import org.apache.james.task.ThrowingTask;
 
 public interface TestTaskDTOModules {
@@ -70,6 +71,15 @@ public interface TestTaskDTOModules {
         .convertToDTO(MemoryReferenceTaskDTO.class)
         .toDomainObjectConverter(dto -> store.get(dto.getReference()))
         .toDTOConverter((task, typeName) -> new MemoryReferenceTaskDTO(typeName, store.add(task)))
-        .typeName("memory-reference-task")
+        .typeName(MemoryReferenceTask.TYPE.asString())
         .withFactory(TaskDTOModule::new);
+
+    Function<MemoryReferenceWithCounterTaskStore, TaskDTOModule<MemoryReferenceWithCounterTask, MemoryReferenceTaskDTO>> MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE = store -> DTOModule
+        .forDomainObject(MemoryReferenceWithCounterTask.class)
+        .convertToDTO(MemoryReferenceTaskDTO.class)
+        .toDomainObjectConverter(dto -> store.get(dto.getReference()))
+        .toDTOConverter((task, typeName) -> new MemoryReferenceTaskDTO(typeName, store.add(task)))
+        .typeName(MemoryReferenceWithCounterTask.TYPE.asString())
+        .withFactory(TaskDTOModule::new);
+
 }
