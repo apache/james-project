@@ -47,6 +47,9 @@ import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.ProvidesIntoSet;
+import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
+import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
+import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskDTO;
 
 public class TaskSerializationModule extends AbstractModule {
 
@@ -111,6 +114,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> singleMessageReindexingTask(SingleMessageReindexingTask.Factory factory) {
+        return SingleMessageReindexingTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
         return MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE);
     }
@@ -138,5 +146,10 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> reprocessingOneMailAdditionalInformation() {
         return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+        return SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 }

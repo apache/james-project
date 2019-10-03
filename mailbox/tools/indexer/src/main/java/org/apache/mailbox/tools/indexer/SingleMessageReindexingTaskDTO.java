@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -28,14 +26,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingleMessageReindexingTaskDTO implements TaskDTO {
 
-    public static final Function<SingleMessageReindexingTask.Factory, TaskDTOModule<SingleMessageReindexingTask, SingleMessageReindexingTaskDTO>> MODULE = (factory) ->
-        DTOModule
+    public static TaskDTOModule<SingleMessageReindexingTask, SingleMessageReindexingTaskDTO> module(SingleMessageReindexingTask.Factory factory) {
+        return DTOModule
             .forDomainObject(SingleMessageReindexingTask.class)
             .convertToDTO(SingleMessageReindexingTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(SingleMessageReindexingTaskDTO::of)
             .typeName(SingleMessageReindexingTask.MESSAGE_RE_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static SingleMessageReindexingTaskDTO of(SingleMessageReindexingTask task, String type) {
         return new SingleMessageReindexingTaskDTO(type, task.getMailboxId().serialize(), task.getUid().asLong());

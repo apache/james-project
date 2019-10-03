@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.MailboxId;
@@ -30,14 +28,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingleMessageReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    static final Function<MailboxId.Factory, AdditionalInformationDTOModule<SingleMessageReindexingTask.AdditionalInformation, SingleMessageReindexingTaskAdditionalInformationDTO>> SERIALIZATION_MODULE =
-        factory ->
-            DTOModule.forDomainObject(SingleMessageReindexingTask.AdditionalInformation.class)
-                .convertToDTO(SingleMessageReindexingTaskAdditionalInformationDTO.class)
-                .toDomainObjectConverter(dto -> new SingleMessageReindexingTask.AdditionalInformation(factory.fromString(dto.mailboxId), MessageUid.of(dto.getUid())))
-                .toDTOConverter((details, type) -> new SingleMessageReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getUid()))
-                .typeName(SingleMessageReindexingTask.MESSAGE_RE_INDEXING.asString())
-                .withFactory(AdditionalInformationDTOModule::new);
+    public static AdditionalInformationDTOModule<SingleMessageReindexingTask.AdditionalInformation, SingleMessageReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
+        return DTOModule.forDomainObject(SingleMessageReindexingTask.AdditionalInformation.class)
+            .convertToDTO(SingleMessageReindexingTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new SingleMessageReindexingTask.AdditionalInformation(factory.fromString(dto.mailboxId), MessageUid.of(dto.getUid())))
+            .toDTOConverter((details, type) -> new SingleMessageReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getUid()))
+            .typeName(SingleMessageReindexingTask.MESSAGE_RE_INDEXING.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String mailboxId;
