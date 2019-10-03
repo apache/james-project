@@ -1,7 +1,6 @@
 package org.apache.james.webadmin.service;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.json.DTOModule;
@@ -15,14 +14,15 @@ import com.github.fge.lambdas.Throwing;
 
 public class DeleteMailsFromMailQueueTaskDTO implements TaskDTO {
 
-    public static final Function<MailQueueFactory<ManageableMailQueue>, TaskDTOModule<DeleteMailsFromMailQueueTask, DeleteMailsFromMailQueueTaskDTO>> MODULE = (mailQueueFactory) ->
-        DTOModule
+    public static TaskDTOModule<DeleteMailsFromMailQueueTask, DeleteMailsFromMailQueueTaskDTO> module(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+        return DTOModule
             .forDomainObject(DeleteMailsFromMailQueueTask.class)
             .convertToDTO(DeleteMailsFromMailQueueTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
             .toDTOConverter(DeleteMailsFromMailQueueTaskDTO::toDTO)
             .typeName(DeleteMailsFromMailQueueTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static DeleteMailsFromMailQueueTaskDTO toDTO(DeleteMailsFromMailQueueTask domainObject, String typeName) {
         return new DeleteMailsFromMailQueueTaskDTO(

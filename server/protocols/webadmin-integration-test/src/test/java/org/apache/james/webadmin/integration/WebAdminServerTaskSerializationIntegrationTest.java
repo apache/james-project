@@ -142,7 +142,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void deleteMailsFromMailQueueShouldCompleteWhenSenderIsValid() {
         String firstMailQueue = with()
                 .basePath(MailQueueRoutes.BASE_URL)

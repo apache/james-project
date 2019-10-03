@@ -23,6 +23,8 @@ import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInfo
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigrationTaskAdditionalInformationDTO;
@@ -32,6 +34,8 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.eventsourcing.distributed.TasksSerializationModule;
 import org.apache.james.webadmin.service.CassandraMappingsSolveInconsistenciesTask;
+import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskDTO;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
@@ -77,6 +81,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<?> mailQueueFactory) {
+        return DeleteMailsFromMailQueueTaskDTO.module((MailQueueFactory<ManageableMailQueue>) mailQueueFactory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> fullReindexTask(ReIndexerPerformer performer) {
         return FullReindexingTask.module(performer);
     }
@@ -89,6 +98,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
         return MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> deleteMailsFromMailQueueAdditionalInformation() {
+        return DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
