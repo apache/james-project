@@ -48,12 +48,15 @@ import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInforma
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.ProvidesIntoSet;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskDTO;
+import org.apache.mailbox.tools.indexer.UserReindexingTask;
+import org.apache.mailbox.tools.indexer.UserReindexingTaskAdditionalInformationDTO;
+import org.apache.mailbox.tools.indexer.UserReindexingTaskDTO;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class TaskSerializationModule extends AbstractModule {
 
@@ -128,6 +131,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> userReindexingTask(UserReindexingTask.Factory factory) {
+        return UserReindexingTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
         return MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE);
     }
@@ -165,5 +173,10 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+        return UserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 }

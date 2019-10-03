@@ -19,7 +19,6 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.james.core.User;
 import org.apache.james.json.DTOModule;
@@ -32,18 +31,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static final Function<MailboxId.Factory, AdditionalInformationDTOModule<UserReindexingTask.AdditionalInformation, UserReindexingTaskAdditionalInformationDTO>> SERIALIZATION_MODULE =
-        factory ->
-            DTOModule.forDomainObject(UserReindexingTask.AdditionalInformation.class)
-                .convertToDTO(UserReindexingTaskAdditionalInformationDTO.class)
-                .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(User.fromUsername(dto.getUser()),
-                    dto.getSuccessfullyReprocessedMailCount(),
-                    dto.getFailedReprocessedMailCount(),
-                    ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
-                .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(type, details.getUser(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
-                    ReprocessingContextInformationDTO.serializeFailures(details.failures())))
-                .typeName(UserReindexingTask.USER_RE_INDEXING.asString())
-                .withFactory(AdditionalInformationDTOModule::new);
+    public static AdditionalInformationDTOModule<UserReindexingTask.AdditionalInformation, UserReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
+        return DTOModule.forDomainObject(UserReindexingTask.AdditionalInformation.class)
+            .convertToDTO(UserReindexingTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(User.fromUsername(dto.getUser()),
+                dto.getSuccessfullyReprocessedMailCount(),
+                dto.getFailedReprocessedMailCount(),
+                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
+            .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(type, details.getUser(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
+                ReprocessingContextInformationDTO.serializeFailures(details.failures())))
+            .typeName(UserReindexingTask.USER_RE_INDEXING.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final ReprocessingContextInformationDTO reprocessingContextInformationDTO;
     private final String user;

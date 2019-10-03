@@ -310,7 +310,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void userReindexingShouldComplete() {
         String taskId = with()
                 .queryParam("user", USERNAME)

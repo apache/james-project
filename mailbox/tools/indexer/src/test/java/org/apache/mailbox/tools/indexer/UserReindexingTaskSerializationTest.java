@@ -65,11 +65,9 @@ class UserReindexingTaskSerializationTest {
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         UserReindexingTask.Factory factory = new UserReindexingTask.Factory(reIndexerPerformer);
-        taskSerializer = new JsonTaskSerializer(UserReindexingTaskDTO.MODULE.apply(factory));
+        taskSerializer = new JsonTaskSerializer(UserReindexingTaskDTO.module(factory));
         jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
-            UserReindexingTaskAdditionalInformationDTO
-                .SERIALIZATION_MODULE
-                .apply(new TestId.Factory()));
+            UserReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
             new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
