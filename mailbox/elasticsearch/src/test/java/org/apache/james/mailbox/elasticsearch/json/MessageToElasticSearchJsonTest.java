@@ -41,6 +41,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
+import org.apache.james.mailbox.store.extractor.JsoupTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -384,5 +385,36 @@ public class MessageToElasticSearchJsonTest {
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/emailWithNonIndexableAttachmentWithoutAttachment.json"));
+    }
+
+    @Test
+    public void convertToJsonShouldExtractHtmlText() throws IOException {
+        // Given
+        MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
+            date,
+            SIZE,
+            BODY_START_OCTET,
+            ClassLoaderUtils.getSystemResourceAsSharedStream("eml/emailWithNonIndexableAttachment.eml"),
+            new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.SEEN).add("debian", "security").build(),
+            propertyBuilder,
+            MAILBOX_ID);
+        message.setModSeq(MOD_SEQ);
+        message.setUid(UID);
+
+        // When
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+                new JsoupTextExtractor(),
+                ZoneId.of("Europe/Paris"),
+                IndexAttachments.NO);
+        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(USER));
+
+        System.out.println(convertToJsonWithoutAttachment);
+
+        // Then
+        assertThatJson(convertToJsonWithoutAttachment)
+            .when(IGNORING_ARRAY_ORDER)
+            .inPath("htmlBody")
+            .isString()
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/htmlContent.txt", StandardCharsets.UTF_8));
     }
 }

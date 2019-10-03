@@ -152,18 +152,26 @@ public class MimePart {
         }
 
         private ParsedContent extractText(TextExtractor textExtractor, InputStream bodyContent) throws Exception {
-            if (isTextBody()) {
-                return new ParsedContent(
-                        Optional.ofNullable(IOUtils.toString(bodyContent, charset.orElse(StandardCharsets.UTF_8))),
-                        ImmutableMap.of());
+            if (shouldPerformTextExtraction()) {
+                return textExtractor.extractContent(
+                    bodyContent,
+                    computeContentType().orElse(null));
             }
-            return textExtractor.extractContent(
-                bodyContent,
-                computeContentType().orElse(null));
+            return new ParsedContent(
+                Optional.ofNullable(IOUtils.toString(bodyContent, charset.orElse(StandardCharsets.UTF_8))),
+                ImmutableMap.of());
+        }
+
+        private boolean shouldPerformTextExtraction() {
+            return !isTextBody() || isHtml();
         }
 
         private Boolean isTextBody() {
             return mediaType.map("text"::equals).orElse(false);
+        }
+
+        private Boolean isHtml() {
+            return isTextBody() && subType.map("html"::equals).orElse(false);
         }
 
         private Optional<String> computeContentType() {
