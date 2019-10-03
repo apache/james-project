@@ -86,6 +86,8 @@ public class MailboxMappingFactory {
             return jsonBuilder()
                 .startObject()
 
+                    .field("dynamic", "strict")
+
                     .startObject(PROPERTIES)
 
                         .startObject(MESSAGE_ID)
