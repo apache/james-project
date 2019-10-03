@@ -365,7 +365,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void deletedMessageVaultExportShouldComplete() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         String query = "{" +

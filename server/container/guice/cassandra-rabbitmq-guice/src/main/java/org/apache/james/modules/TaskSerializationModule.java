@@ -42,6 +42,8 @@ import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskDTO;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
@@ -103,6 +105,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> deletedMessagesVaultExportTask(DeletedMessagesVaultExportTaskDTO.Factory factory) {
+        return DeletedMessagesVaultExportTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> deletedMessagesVaultRestoreTask(DeletedMessagesVaultRestoreTaskDTO.Factory factory) {
         return DeletedMessagesVaultRestoreTaskDTO.module(factory);
     }
@@ -153,7 +160,12 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultAdditionalInformation() {
+    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultExportAdditionalInformation() {
+        return DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultRestoreAdditionalInformation() {
         return DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE;
     }
 
