@@ -283,7 +283,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void messageIdReIndexingShouldCompleteWhenMail() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(

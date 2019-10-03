@@ -40,6 +40,7 @@ public class MessageIdReIndexingTask implements Task {
 
         @Inject
         public Factory(ReIndexerPerformer reIndexerPerformer, MessageId.Factory messageIdFactory) {
+            this.reIndexerPerformer = reIndexerPerformer;
             this.messageIdFactory = messageIdFactory;
         }
 

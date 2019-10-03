@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -29,14 +27,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageIdReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    static final Function<MessageId.Factory, AdditionalInformationDTOModule<MessageIdReIndexingTask.AdditionalInformation, MessageIdReindexingTaskAdditionalInformationDTO>> SERIALIZATION_MODULE =
-        factory ->
-            DTOModule.forDomainObject(MessageIdReIndexingTask.AdditionalInformation.class)
-                .convertToDTO(MessageIdReindexingTaskAdditionalInformationDTO.class)
-                .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId())))
-                .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(type, details.getMessageId()))
-                .typeName(MessageIdReIndexingTask.TYPE.asString())
-                .withFactory(AdditionalInformationDTOModule::new);
+    public static AdditionalInformationDTOModule<MessageIdReIndexingTask.AdditionalInformation, MessageIdReindexingTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
+        return DTOModule.forDomainObject(MessageIdReIndexingTask.AdditionalInformation.class)
+            .convertToDTO(MessageIdReindexingTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId())))
+            .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(type, details.getMessageId()))
+            .typeName(MessageIdReIndexingTask.TYPE.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String messageId;

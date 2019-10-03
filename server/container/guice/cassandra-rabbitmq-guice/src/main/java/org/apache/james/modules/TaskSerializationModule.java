@@ -23,6 +23,7 @@ import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInfo
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
@@ -42,6 +43,9 @@ import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInform
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
+import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
+import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
+import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
 
@@ -99,6 +103,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
+        return MessageIdReindexingTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> migrationTask(MigrationTask.Factory factory) {
         return MigrationTaskDTO.module(factory);
     }
@@ -131,6 +140,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return ReprocessingContextInformationDTO.serializationModule(FullReindexingTask.FULL_RE_INDEXING, mailboxIdFactory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> messageIdReindexingAdditionalInformation(MessageId.Factory messageIdFactory) {
+        return MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory);
     }
 
     @ProvidesIntoSet
