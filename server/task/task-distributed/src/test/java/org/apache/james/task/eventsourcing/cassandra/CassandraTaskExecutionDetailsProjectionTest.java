@@ -26,6 +26,8 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjectionContract;
 
@@ -41,12 +43,13 @@ class CassandraTaskExecutionDetailsProjectionTest implements TaskExecutionDetail
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
             CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE, CassandraZonedDateTimeModule.MODULE, CassandraTaskExecutionDetailsProjectionModule.MODULE()));
+    private static final JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     private Supplier<CassandraTaskExecutionDetailsProjection> testeeSupplier;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider());
+        CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), jsonTaskAdditionalInformationsSerializer);
         testeeSupplier = () -> new CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO);
     }
 
@@ -55,8 +58,4 @@ class CassandraTaskExecutionDetailsProjectionTest implements TaskExecutionDetail
         return testeeSupplier.get();
     }
 
-    @Test
-    @Disabled("Serialization and deserialization of additionalInformations is not implemented")
-    public void readDetailsShouldBeAbleToRetrieveASavedRecordWithAdditionalInformation() {
-    }
 }

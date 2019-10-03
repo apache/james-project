@@ -30,16 +30,16 @@ object TaskExecutionDetailsFixture {
   val SUBMITTED_NODE_2 = Hostname("bar")
   val TASK_ID = TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd")
   val TASK_ID_2 = TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafe")
-  val ADDITIONAL_INFORMATION: () => Optional[AdditionalInformation] = Optional.empty
+  val EMPTY_ADDITIONAL_INFORMATION: () => Optional[AdditionalInformation] = Optional.empty
 
   val TYPE = TaskType.of("type")
-  val TASK_EXECUTION_DETAILS = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE, SUBMITTED_NODE, ADDITIONAL_INFORMATION)
-  val TASK_EXECUTION_DETAILS_2 = new TaskExecutionDetails(TASK_ID_2, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE, SUBMITTED_NODE, ADDITIONAL_INFORMATION)
-  val TASK_EXECUTION_DETAILS_UPDATED = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.FAILED, SUBMITTED_DATE, SUBMITTED_NODE, ADDITIONAL_INFORMATION)
+  val TASK_EXECUTION_DETAILS = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE, SUBMITTED_NODE, EMPTY_ADDITIONAL_INFORMATION)
+  val TASK_EXECUTION_DETAILS_2 = new TaskExecutionDetails(TASK_ID_2, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE, SUBMITTED_NODE, EMPTY_ADDITIONAL_INFORMATION)
+  val TASK_EXECUTION_DETAILS_UPDATED = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.FAILED, SUBMITTED_DATE, SUBMITTED_NODE, EMPTY_ADDITIONAL_INFORMATION)
 
 
-  val ADDITIONAL_INFORMATION_2: () => Optional[AdditionalInformation] = () => Optional.of(new CustomAdditionalInformation("hello"))
-  val TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE_2, SUBMITTED_NODE_2, ADDITIONAL_INFORMATION)
+  val ADDITIONAL_INFORMATION: () => Optional[AdditionalInformation] = () => Optional.of(new MemoryReferenceWithCounterTask.AdditionalInformation(5))
+  val TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION = new TaskExecutionDetails(TASK_ID, MemoryReferenceWithCounterTask.TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE_2, SUBMITTED_NODE_2, ADDITIONAL_INFORMATION)
 
 }
 
