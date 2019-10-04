@@ -217,7 +217,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void reprocessingOneMailShouldCreateATask() throws Exception {
         MailRepositoryStore mailRepositoryStore = guiceJamesServer.getProbe(MailRepositoryProbeImpl.class).getMailRepositoryStore();
         Stream<MailRepositoryUrl> urls = mailRepositoryStore.getUrls();

@@ -38,6 +38,8 @@ import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalI
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
+import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ReprocessingOneMailTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
@@ -104,6 +106,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> reprocessingOneMailsTask(ReprocessingService reprocessingService) {
+        return ReprocessingOneMailTaskDTO.module(reprocessingService);
+    }
+
+    @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
         return MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE);
     }
@@ -126,5 +133,10 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> reprocessingAllMailsAdditionalInformation() {
         return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> reprocessingOneMailAdditionalInformation() {
+        return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 }

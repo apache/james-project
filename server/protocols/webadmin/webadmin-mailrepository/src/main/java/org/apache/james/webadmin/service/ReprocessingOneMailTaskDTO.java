@@ -19,7 +19,6 @@
 package org.apache.james.webadmin.service;
 
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailrepository.api.MailKey;
@@ -29,16 +28,17 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class ReprocessingOneMailTaskDTO implements TaskDTO {
+public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
-    public static final Function<ReprocessingService, TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO>> MODULE = (reprocessingService) ->
-        DTOModule
+    public static final TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO> module(ReprocessingService reprocessingService) {
+        return DTOModule
             .forDomainObject(ReprocessingOneMailTask.class)
             .convertToDTO(ReprocessingOneMailTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
             .toDTOConverter(ReprocessingOneMailTaskDTO::toDTO)
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static ReprocessingOneMailTaskDTO toDTO(ReprocessingOneMailTask domainObject, String typeName) {
         try {

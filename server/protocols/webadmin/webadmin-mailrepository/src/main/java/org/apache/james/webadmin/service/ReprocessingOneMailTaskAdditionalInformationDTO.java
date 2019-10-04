@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingOneMailTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    static final AdditionalInformationDTOModule<ReprocessingOneMailTask.AdditionalInformation, ReprocessingOneMailTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+    public static final AdditionalInformationDTOModule<ReprocessingOneMailTask.AdditionalInformation, ReprocessingOneMailTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
         DTOModule.forDomainObject(ReprocessingOneMailTask.AdditionalInformation.class)
             .convertToDTO(ReprocessingOneMailTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ReprocessingOneMailTask.AdditionalInformation(
