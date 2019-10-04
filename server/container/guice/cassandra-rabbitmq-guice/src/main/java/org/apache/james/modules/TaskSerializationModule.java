@@ -34,6 +34,9 @@ import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.eventsourcing.distributed.TasksSerializationModule;
+import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTask;
+import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO;
+import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskDTO;
 import org.apache.james.webadmin.service.CassandraMappingsSolveInconsistenciesTask;
 import org.apache.james.webadmin.service.ClearMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ClearMailQueueTaskDTO;
@@ -99,6 +102,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> blobStoreVaultGarbageCollectionTask(BlobStoreVaultGarbageCollectionTask.Factory factory) {
+        return BlobStoreVaultGarbageCollectionTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> cassandraMappingsSolveInconsistenciesTask(MappingsSourcesMigration migration, CassandraMappingsSourcesDAO dao) {
         return CassandraMappingsSolveInconsistenciesTask.module(migration, dao);
     }
@@ -161,6 +169,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<?, ?> userReindexingTask(UserReindexingTask.Factory factory) {
         return UserReindexingTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> blobStoreVaultGarbageCollectionAdditionalInformation() {
+        return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet

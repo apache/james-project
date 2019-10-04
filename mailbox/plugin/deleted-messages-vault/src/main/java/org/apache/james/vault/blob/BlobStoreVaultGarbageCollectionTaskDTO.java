@@ -20,8 +20,6 @@
 
 package org.apache.james.vault.blob;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -33,14 +31,15 @@ public class BlobStoreVaultGarbageCollectionTaskDTO implements TaskDTO {
         return new BlobStoreVaultGarbageCollectionTaskDTO(type);
     }
 
-    public static final Function<BlobStoreVaultGarbageCollectionTask.Factory, TaskDTOModule<BlobStoreVaultGarbageCollectionTask, BlobStoreVaultGarbageCollectionTaskDTO>> MODULE = factory ->
-        DTOModule
+    public static TaskDTOModule<BlobStoreVaultGarbageCollectionTask, BlobStoreVaultGarbageCollectionTaskDTO> module(BlobStoreVaultGarbageCollectionTask.Factory factory) {
+        return DTOModule
             .forDomainObject(BlobStoreVaultGarbageCollectionTask.class)
             .convertToDTO(BlobStoreVaultGarbageCollectionTaskDTO.class)
             .toDomainObjectConverter(dto -> BlobStoreVaultGarbageCollectionTaskDTO.toDomainObject(factory))
             .toDTOConverter(BlobStoreVaultGarbageCollectionTaskDTO::fromDomainObject)
             .typeName(BlobStoreVaultGarbageCollectionTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
 
     private final String type;

@@ -577,8 +577,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
-    public void blobStoreBasedGarbageCollectionShoudComplete() {
+    public void blobStoreVaultGarbageCollectionShouldComplete() {
         String taskId =
             with()
                 .basePath(DeletedMessagesVaultRoutes.ROOT_PATH)

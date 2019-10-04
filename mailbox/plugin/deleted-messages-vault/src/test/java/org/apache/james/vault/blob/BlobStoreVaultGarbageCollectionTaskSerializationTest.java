@@ -45,7 +45,7 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
    private static final BlobStoreDeletedMessageVault DELETED_MESSAGE_VAULT = Mockito.mock(BlobStoreDeletedMessageVault.class);
    private static final BlobStoreVaultGarbageCollectionTask.Factory TASK_FACTORY = new BlobStoreVaultGarbageCollectionTask.Factory(DELETED_MESSAGE_VAULT);
 
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(BlobStoreVaultGarbageCollectionTaskDTO.MODULE.apply(TASK_FACTORY));
+    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(BlobStoreVaultGarbageCollectionTaskDTO.module(TASK_FACTORY));
     private static final ZonedDateTime BEGINNING_OF_RETENTION_PERIOD = ZonedDateTime.parse("2019-09-03T15:26:13.356+02:00[Europe/Paris]");
     private static final ImmutableList<BucketName> BUCKET_IDS = ImmutableList.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
     private static final Flux<BucketName> RETENTION_OPERATION = Flux.fromIterable(BUCKET_IDS);
