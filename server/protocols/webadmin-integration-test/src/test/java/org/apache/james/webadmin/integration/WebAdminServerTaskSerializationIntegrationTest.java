@@ -599,7 +599,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void clearMailRepositoryShouldComplete() {
         String escapedRepositoryPath = with()
                 .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)

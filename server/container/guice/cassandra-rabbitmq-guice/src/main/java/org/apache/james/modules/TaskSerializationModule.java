@@ -40,6 +40,9 @@ import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskDTO;
 import org.apache.james.webadmin.service.CassandraMappingsSolveInconsistenciesTask;
 import org.apache.james.webadmin.service.ClearMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ClearMailQueueTaskDTO;
+import org.apache.james.webadmin.service.ClearMailRepositoryTask;
+import org.apache.james.webadmin.service.ClearMailRepositoryTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.service.ClearMailRepositoryTaskDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
@@ -117,6 +120,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> clearMailRepositoryTask(ClearMailRepositoryTask.Factory factory) {
+        return ClearMailRepositoryTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<?> mailQueueFactory) {
         return DeleteMailsFromMailQueueTaskDTO.module((MailQueueFactory<ManageableMailQueue>) mailQueueFactory);
     }
@@ -184,6 +192,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> clearMailQueueAdditionalInformation() {
         return ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> clearMailRepositoryAdditionalInformation() {
+        return ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet

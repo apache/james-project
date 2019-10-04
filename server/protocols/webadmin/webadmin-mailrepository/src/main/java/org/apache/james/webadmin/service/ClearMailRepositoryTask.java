@@ -22,19 +22,37 @@ package org.apache.james.webadmin.service;
 import java.util.List;
 import java.util.Optional;
 
+import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
+import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 public class ClearMailRepositoryTask implements Task {
 
     public static final TaskType TYPE = TaskType.of("clearMailRepository");
+
+    public static class Factory {
+        private final MailRepositoryStore mailRepositoryStore;
+
+        @Inject
+        public Factory(MailRepositoryStore mailRepositoryStore) {
+            this.mailRepositoryStore = mailRepositoryStore;
+        }
+
+        public ClearMailRepositoryTask create(MailRepositoryPath mailRepositoryPath) throws MailRepositoryStore.MailRepositoryStoreException {
+            List<MailRepository> mailRepositories = mailRepositoryStore.getByPath(mailRepositoryPath)
+                .collect(Guavate.toImmutableList());
+            return new ClearMailRepositoryTask(mailRepositories, mailRepositoryPath);
+        }
+    }
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;
