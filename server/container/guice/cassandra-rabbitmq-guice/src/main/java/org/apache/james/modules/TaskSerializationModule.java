@@ -65,6 +65,15 @@ import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInforma
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.ProvidesIntoSet;
+
+import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
+import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskAdditionalInformationDTO;
+import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMessageReindexingTaskDTO;
@@ -178,6 +187,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> singleMailboxReindexingTask(SingleMailboxReindexingTask.Factory factory) {
+        return SingleMailboxReindexingTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> singleMessageReindexingTask(SingleMessageReindexingTask.Factory factory) {
         return SingleMessageReindexingTaskDTO.module(factory);
     }
@@ -255,6 +269,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> reprocessingOneMailAdditionalInformation() {
         return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> singleMailboxReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+        return SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet

@@ -19,7 +19,6 @@
 package org.apache.mailbox.tools.indexer;
 
 import java.util.List;
-import java.util.function.Function;
 
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MailboxId;
@@ -31,18 +30,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class SingleMailboxReindexingTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static final Function<MailboxId.Factory, AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, SingleMailboxReindexingTaskAdditionalInformationDTO>> SERIALIZATION_MODULE =
-        factory ->
-            DTOModule.forDomainObject(SingleMailboxReindexingTask.AdditionalInformation.class)
-                .convertToDTO(SingleMailboxReindexingTaskAdditionalInformationDTO.class)
-                .toDomainObjectConverter(dto -> new SingleMailboxReindexingTask.AdditionalInformation(factory.fromString(dto.getMailboxId()),
-                    dto.getSuccessfullyReprocessedMailCount(),
-                    dto.getFailedReprocessedMailCount(),
-                    ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
-                .toDTOConverter((details, type) -> new SingleMailboxReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
-                    ReprocessingContextInformationDTO.serializeFailures(details.failures())))
-                .typeName(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString())
-                .withFactory(AdditionalInformationDTOModule::new);
+    public static AdditionalInformationDTOModule<SingleMailboxReindexingTask.AdditionalInformation, SingleMailboxReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
+        return DTOModule.forDomainObject(SingleMailboxReindexingTask.AdditionalInformation.class)
+            .convertToDTO(SingleMailboxReindexingTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new SingleMailboxReindexingTask.AdditionalInformation(factory.fromString(dto.getMailboxId()),
+                dto.getSuccessfullyReprocessedMailCount(),
+                dto.getFailedReprocessedMailCount(),
+                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
+            .toDTOConverter((details, type) -> new SingleMailboxReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
+                ReprocessingContextInformationDTO.serializeFailures(details.failures())))
+            .typeName(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final ReprocessingContextInformationDTO reprocessingContextInformationDTO;
     private final String mailboxId;
