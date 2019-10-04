@@ -71,28 +71,10 @@
   ],
   "cc": [],
   "bcc": [],
-  "replyTo": [],
   "subject": [
     "Fwd: Courbe Sprint"
   ],
   "sentDate": "2015-06-10T10:45:27+02:00",
-  "properties": [
-    {
-      "namespace": "http://james.apache.org/rfc2045/Content-Type",
-      "localName": "type",
-      "value": "plain"
-    },
-    {
-      "namespace": "http://james.apache.org/rfc2045/Content-Type",
-      "localName": "subtype",
-      "value": "text"
-    },
-    {
-      "namespace": "http://james.apache.org/rfc2045",
-      "localName": "Content-Description",
-      "value": "An e-mail"
-    }
-  ],
   "attachments": [
     {
       "textContent": "Forward as attachment !\n\n\n",
@@ -100,15 +82,7 @@
       "subtype": "plain",
       "fileName": null,
       "fileExtension": null,
-      "contentDisposition": null,
-      "headers": {
-        "content-transfer-encoding": [
-          "7bit"
-        ],
-        "content-type": [
-          "text/plain; charset=utf-8; format=flowed"
-        ]
-      }
+      "contentDisposition": null
     },
     {
       "textContent": null,
@@ -116,18 +90,7 @@
       "subtype": null,
       "fileName": null,
       "fileExtension": null,
-      "contentDisposition": null,
-      "headers": {
-        "content-transfer-encoding": [
-          "8bit"
-        ],
-        "content-disposition": [
-          "attachment; filename=\"Courbe Sprint.eml\""
-        ],
-        "content-type": [
-          "message/rfc822; name=\"Courbe Sprint.eml\""
-        ]
-      }
+      "contentDisposition": null
     },
     {
       "textContent": null,
@@ -135,43 +98,7 @@
       "subtype": null,
       "fileName": null,
       "fileExtension": null,
-      "contentDisposition": null,
-      "headers": {
-        "date": [
-          "Wed, 03 Jun 2015 08:59:44 +0200"
-        ],
-        "mime-version": [
-          "1.0"
-        ],
-        "x-sieve": [
-          "CMU Sieve 2.2"
-        ],
-        "return-path": [
-          "<aduprat@linagora.com>"
-        ],
-        "subject": [
-          "Courbe Sprint"
-        ],
-        "message-id": [
-          "<556EA5E0.8010008@linagora.com>"
-        ],
-        "received": [
-          "from alderaan.linagora.com (smtp.linagora.dc1 [172.16.18.53])\t by imap (Cyrus v2.2.13-Debian-2.2.13-19+squeeze3) with LMTPA;\t Wed, 03 Jun 2015 08:59:45 +0200",
-          "from [10.69.43.36] (mne69-10-88-173-78-196.fbx.proxad.net [88.173.78.196])\t(using TLSv1 with cipher DHE-RSA-AES128-SHA (128/128 bits))\t(No client certificate requested)\tby alderaan.linagora.com (Postfix) with ESMTPSA id 4FBAF720\tfor <mbaechler@linagora.com>; Wed,  3 Jun 2015 08:59:45 +0200 (CEST)"
-        ],
-        "from": [
-          "Antoine DUPRAT <aduprat@linagora.com>"
-        ],
-        "content-type": [
-          "multipart/mixed; boundary=\"------------000406070706000403020805\""
-        ],
-        "to": [
-          "\"mbaechler@linagora.com\" <mbaechler@linagora.com>"
-        ],
-        "user-agent": [
-          "Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.6.0"
-        ]
-      }
+      "contentDisposition": null
     },
     {
       "textContent": "Textual content of one attachment ( mail signature )\n",
@@ -179,15 +106,7 @@
       "subtype": "plain",
       "fileName": null,
       "fileExtension": null,
-      "contentDisposition": null,
-      "headers": {
-        "content-transfer-encoding": [
-          "8bit"
-        ],
-        "content-type": [
-          "text/plain; charset=utf-8; format=flowed"
-        ]
-      }
+      "contentDisposition": null
     },
     {
       "textContent": null,
@@ -195,18 +114,7 @@
       "subtype": "vnd.oasis.opendocument.spreadsheet",
       "fileName": "Sprint-2015-05-18.ods",
       "fileExtension": "ods",
-      "contentDisposition": "attachment",
-      "headers": {
-        "content-transfer-encoding": [
-          "base64"
-        ],
-        "content-disposition": [
-          "attachment; filename=\"Sprint-2015-05-18.ods\""
-        ],
-        "content-type": [
-          "application/vnd.oasis.opendocument.spreadsheet; name=\"Sprint-2015-05-18.ods\""
-        ]
-      }
+      "contentDisposition": "attachment"
     }
   ],
   "textBody": "Forward as attachment !\n\n\n",
@@ -218,8 +126,5 @@
   "isDeleted": true,
   "hasAttachment": true,
   "isUnread": false,
-  "users": [
-    "username"
-  ],
   "text": "Matthieu Baechler mbaechler@linagora.com btellier@linagora.com btellier@linagora.com Fwd: Courbe Sprint Forward as attachment !\n\n\n"
 }

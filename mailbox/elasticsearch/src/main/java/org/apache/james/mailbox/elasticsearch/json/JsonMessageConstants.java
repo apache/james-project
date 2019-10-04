@@ -27,7 +27,6 @@ public interface JsonMessageConstants {
     String MESSAGE_ID = "messageId";
     String UID = "uid";
     String MAILBOX_ID = "mailboxId";
-    String USERS = "users";
     String IS_UNREAD = "isUnread";
     String IS_FLAGGED = "isFlagged";
     String IS_ANSWERED = "isAnswered";
@@ -37,7 +36,6 @@ public interface JsonMessageConstants {
     String TO = "to";
     String CC = "cc";
     String BCC = "bcc";
-    String REPLY_TO = "replyTo";
     String SUBJECT = "subject";
     String DATE = "date";
     String SIZE = "size";
@@ -48,10 +46,6 @@ public interface JsonMessageConstants {
     String TEXT = "text";
     String MIME_MESSAGE_ID = "mimeMessageID";
 
-    /*
-    James properties we can easily get
-     */
-    String PROPERTIES = "properties";
     String MODSEQ = "modSeq";
     String USER_FLAGS = "userFlags";
     String IS_RECENT = "isRecent";

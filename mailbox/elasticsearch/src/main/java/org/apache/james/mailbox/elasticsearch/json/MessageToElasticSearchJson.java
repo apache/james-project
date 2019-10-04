@@ -62,7 +62,6 @@ public class MessageToElasticSearchJson {
 
         return mapper.writeValueAsString(IndexableMessage.builder()
                 .message(message)
-                .users(users)
                 .extractor(textExtractor)
                 .zoneId(zoneId)
                 .indexAttachments(indexAttachments)
@@ -72,7 +71,6 @@ public class MessageToElasticSearchJson {
     public String convertToJsonWithoutAttachment(MailboxMessage message, List<User> users) throws JsonProcessingException {
         return mapper.writeValueAsString(IndexableMessage.builder()
                 .message(message)
-                .users(users)
                 .extractor(textExtractor)
                 .zoneId(zoneId)
                 .indexAttachments(IndexAttachments.NO)

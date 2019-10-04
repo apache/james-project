@@ -30,7 +30,6 @@ import java.time.ZoneId;
 import java.util.Date;
 
 import javax.mail.Flags;
-import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.FlagsBuilder;
@@ -89,25 +88,6 @@ public class MessageToElasticSearchJsonTest {
         propertyBuilder.setSubType("text");
         propertyBuilder.setTextualLineCount(18L);
         propertyBuilder.setContentDescription("An e-mail");
-    }
-
-    @Test
-    public void convertToJsonShouldThrowWhenNoUser() {
-        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
-                new DefaultTextExtractor(),
-                ZoneId.of("Europe/Paris"), IndexAttachments.YES);
-        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
-                date,
-                SIZE,
-                BODY_START_OCTET,
-                new SharedByteArrayInputStream("message".getBytes(StandardCharsets.UTF_8)),
-                new Flags(),
-                propertyBuilder,
-                MAILBOX_ID);
-        ImmutableList<User> users = ImmutableList.of();
-
-        assertThatThrownBy(() -> messageToElasticSearchJson.convertToJson(spamMail, users))
-            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test

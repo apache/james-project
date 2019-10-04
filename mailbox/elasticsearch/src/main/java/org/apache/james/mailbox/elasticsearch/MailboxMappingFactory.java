@@ -50,19 +50,16 @@ import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.I
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_RECENT;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.IS_UNREAD;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MAILBOX_ID;
-import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MEDIA_TYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MESSAGE_ID;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MIME_MESSAGE_ID;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.MODSEQ;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SENT_DATE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SIZE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBJECT;
-import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.SUBTYPE;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TEXT_BODY;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.TO;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.UID;
-import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.USERS;
 import static org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants.USER_FLAGS;
 import static org.elasticsearch.common.xcontent.XContentFactory.jsonBuilder;
 
@@ -135,14 +132,6 @@ public class MailboxMappingFactory {
                         .startObject(SENT_DATE)
                             .field(TYPE, NodeMappingFactory.DATE)
                             .field(FORMAT, "yyyy-MM-dd'T'HH:mm:ssZ")
-                        .endObject()
-
-                        .startObject(MEDIA_TYPE)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(SUBTYPE)
-                            .field(TYPE, KEYWORD)
                         .endObject()
 
                         .startObject(USER_FLAGS)
@@ -274,10 +263,6 @@ public class MailboxMappingFactory {
                         .endObject()
 
                         .startObject(MIME_MESSAGE_ID)
-                            .field(TYPE, KEYWORD)
-                        .endObject()
-
-                        .startObject(USERS)
                             .field(TYPE, KEYWORD)
                         .endObject()
 

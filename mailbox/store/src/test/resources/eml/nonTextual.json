@@ -6,10 +6,6 @@
       "fileName":null,
       "fileExtension":null,
       "contentDisposition":null,
-      "headers":{
-        "content-transfer-encoding":["7bit"],
-        "content-type":["text/plain; charset=utf-8"]
-      },
       "textContent":"This mail have a non textual attachment !\r\n"
     },
     {
@@ -17,11 +13,6 @@
       "subtype":"vnd.oasis.opendocument.text",
       "fileName":"toto.odt","fileExtension":"odt",
       "contentDisposition":"attachment",
-      "headers":{
-        "content-transfer-encoding":["base64"],
-        "content-disposition":["attachment; filename=\"toto.odt\""],
-        "content-type":["application/vnd.oasis.opendocument.text; name=\"toto.odt\""]
-      },
       "textContent":"Awesome document provided for text extraction !\n"
     }
   ],
@@ -48,19 +39,14 @@
   "mediaType":"plain",
   "messageId":"184",
   "modSeq":42,
-  "properties":[
-    {"namespace":"http://james.apache.org/rfc2045/Content-Type","localName":"type","value":"plain"},
-    {"namespace":"http://james.apache.org/rfc2045/Content-Type","localName":"subtype","value":"text"},
-    {"namespace":"http://james.apache.org/rfc2045","localName":"Content-Description","value":"An e-mail"}],
-  "replyTo":[],
   "sentDate":"2015-06-18T12:43:26+0200",
-  "size":25,"subject":["Test message"],
+  "size":25,
+  "subject":["Test message"],
   "subtype":"text",
   "text":"Benoit Tellier btellier@linagora.com btellier@linagora.com btellier@linagora.com Test message This mail have a non textual attachment !\r\n",
   "to":[{"name":"btellier@linagora.com","address":"btellier@linagora.com"}],
   "uid":25,
   "userFlags":[],
-  "users":["username"],
   "mimeMessageID":"<5582A0CE.4020801@linagora.com>",
   "isAnswered":false,
   "isDeleted":false,

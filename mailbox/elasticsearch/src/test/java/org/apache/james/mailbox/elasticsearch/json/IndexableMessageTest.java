@@ -31,7 +31,6 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.User;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
@@ -90,7 +89,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -116,7 +114,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -142,7 +139,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -168,7 +164,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -194,7 +189,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -220,7 +214,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -246,7 +239,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -272,7 +264,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -309,7 +300,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -340,7 +330,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -371,7 +360,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -400,7 +388,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.NO)
@@ -429,7 +416,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(new DefaultTextExtractor())
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -464,7 +450,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -505,7 +490,6 @@ public class IndexableMessageTest {
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -537,7 +521,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)
@@ -566,7 +549,6 @@ public class IndexableMessageTest {
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
-                .users(ImmutableList.of(User.fromUsername("username")))
                 .extractor(textExtractor)
                 .zoneId(ZoneId.of("Europe/Paris"))
                 .indexAttachments(IndexAttachments.YES)

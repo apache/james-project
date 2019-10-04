@@ -95,28 +95,10 @@
   ],
   "cc":[],
   "bcc":[],
-  "replyTo":[],
   "subject":[
     "Text and Html not similar"
   ],
   "sentDate":"2015-06-04T07:36:08+0000",
-  "properties":[
-    {
-      "namespace":"http://james.apache.org/rfc2045/Content-Type",
-      "localName":"type",
-      "value":"plain"
-    },
-    {
-      "namespace":"http://james.apache.org/rfc2045/Content-Type",
-      "localName":"subtype",
-      "value":"text"
-    },
-    {
-      "namespace":"http://james.apache.org/rfc2045",
-      "localName":"Content-Description",
-      "value":"An e-mail"
-    }
-  ],
   "attachments":[
     {
       "textContent":"The text/plain part is not matching the html one.\r\n",
@@ -124,15 +106,7 @@
       "subtype":"plain",
       "fileName":null,
       "fileExtension":null,
-      "contentDisposition":null,
-      "headers":{
-        "content-transfer-encoding":[
-          "quoted-printable"
-        ],
-        "content-type":[
-          "text/plain; charset=UTF-8"
-        ]
-      }
+      "contentDisposition":null
     },
     {
       "textContent":"<html>\r\n  <head>\r\n\r\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n  </head>\r\n  <body bgcolor=\"#FFFFFF\" text=\"#000000\">\r\n    <i>This is a mail with <b>beautifull</b> html content which contains a banana.</i><br>\r\n  </body>\r\n</html>\r\n",
@@ -140,15 +114,7 @@
       "subtype":"html",
       "fileName":null,
       "fileExtension":null,
-      "contentDisposition":null,
-      "headers":{
-        "content-transfer-encoding":[
-          "7bit"
-        ],
-        "content-type":[
-          "text/html; charset=utf-8"
-        ]
-      }
+      "contentDisposition":null
     }
   ],
   "textBody": "The text/plain part is not matching the html one.\r\n",
@@ -160,8 +126,5 @@
   "isRecent":false,
   "hasAttachment":false,
   "isUnread":false,
-  "users": [
-    "username"
-  ],
   "text": "Airbnb discover@airbnb.com mister@james.org mister@james.org Text and Html not similar The text/plain part is not matching the html one.\r\n <html>\r\n  <head>\r\n\r\n    <meta http-equiv=\"content-type\" content=\"text/html; charset=utf-8\">\r\n  </head>\r\n  <body bgcolor=\"#FFFFFF\" text=\"#000000\">\r\n    <i>This is a mail with <b>beautifull</b> html content which contains a banana.</i><br>\r\n  </body>\r\n</html>\r\n"
 }

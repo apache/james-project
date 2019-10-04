@@ -102,28 +102,10 @@
   ],
   "cc": [],
   "bcc": [],
-  "replyTo": [],
   "subject": [
 	"[root] UNCHECKED contents in mail FROM <quentin.h@riseup.net>"
   ],
   "sentDate": "2015-06-03T09:05:46+0000",
-  "properties": [
-	{
-	  "namespace": "http://james.apache.org/rfc2045/Content-Type",
-	  "localName": "type",
-	  "value": "plain"
-	},
-	{
-	  "namespace": "http://james.apache.org/rfc2045/Content-Type",
-	  "localName": "subtype",
-	  "value": "text"
-	},
-	{
-	  "namespace": "http://james.apache.org/rfc2045",
-	  "localName": "Content-Description",
-	  "value": "An e-mail"
-	}
-  ],
   "attachments": [
 	{
 	  "textContent": "No viruses were found.\r\n\r\nContent type: Unchecked\r\nInternal reference code for the message is 12583-16/Ss-IZaXqmZao\r\n\r\nAccording to a 'Received:' trace, the message apparently originated at:\r\n  [198.252.153.129], [127.0.0.1] localhost [127.0.0.1] Authenticated sender:\r\n  quentin.h\r\n\r\nReturn-Path: <quentin.h@riseup.net>\r\nFrom: Quentin <quentin.h@riseup.net>\r\nMessage-ID: <556EC361.6000308@riseup.net>\r\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\r\n  =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\r\n  =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\r\n  =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\r\nNot quarantined.\r\n\r\nThe message WILL BE relayed to:\r\n<yann@minet.net>\r\n\r\n",
@@ -131,18 +113,7 @@
 	  "subtype": "plain",
 	  "fileName": null,
 	  "fileExtension": null,
-	  "contentDisposition": "inline",
-	  "headers": {
-		"content-disposition": [
-		  "inline"
-		],
-		"content-transfer-encoding": [
-		  "7bit"
-		],
-		"content-type": [
-		  "text/plain; charset=\"UTF-8\""
-		]
-	  }
+	  "contentDisposition": "inline"
 	},
 	{
 	  "textContent": "Return-Path: <quentin.h@riseup.net>\r\nReceived-SPF: Pass (sender SPF authorized) identity=mailfrom; client-ip=198.252.153.129; helo=mx1.riseup.net; envelope-from=quentin.h@riseup.net; receiver=yann@minet.net\r\nAuthentication-Results: mx2.minet.net; dkim=pass\r\n\treason=\"1024-bit key; insecure key\"\r\n\theader.d=riseup.net header.i=@riseup.net header.b=RVs2xP3R;\r\n\tdkim-adsp=pass; dkim-atps=neutral\r\nReceived: from mx1.riseup.net (mx1.riseup.net [198.252.153.129])\r\n\t(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))\r\n\t(No client certificate requested)\r\n\tby mx2.minet.net (Postfix) with ESMTPS id 6D9E0A27FCA\r\n\tfor <yann@minet.net>; Wed,  3 Jun 2015 11:05:44 +0200 (CEST)\r\nReceived: from plantcutter.riseup.net (plantcutter-pn.riseup.net [10.0.1.121])\r\n\t(using TLSv1 with cipher ECDHE-RSA-AES256-SHA (256/256 bits))\r\n\t(Client CN \"*.riseup.net\", Issuer \"COMODO RSA Domain Validation Secure Server CA\" (verified OK))\r\n\tby mx1.riseup.net (Postfix) with ESMTPS id 5CC6541A75;\r\n\tWed,  3 Jun 2015 09:05:42 +0000 (UTC)\r\nDKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=riseup.net; s=squak;\r\n\tt=1433322342; bh=Lz3x5ntYzOhQOpyviKamr5VE0TinfpBCnsivvJzojYk=;\r\n\th=Date:From:To:Subject:References:In-Reply-To:From;\r\n\tb=RVs2xP3RV4zWi3Jbs6p85cO8s44yLq1LXxwe6NQvgZjsHQdWaMY16jQzSbCRRdCRY\r\n\t IesTpg1mncqIinhXxL9grw2+0MgO+E0HM0ZPZzXM/xNTGZpALI1X6tDM0rxB+GEnHa\r\n\t NfGRbWnesWFLyba7am02KbTKeKq7svIBBmSbaFsE=\r\nReceived: from [127.0.0.1] (localhost [127.0.0.1])\r\n\t(Authenticated sender: quentin.h)\r\n\twith ESMTPSA id 6DBAC20827\r\nMessage-ID: <556EC361.6000308@riseup.net>\r\nDate: Wed, 03 Jun 2015 11:05:37 +0200\r\nFrom: Quentin <quentin.h@riseup.net>\r\nUser-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Thunderbird/31.7.0\r\nMIME-Version: 1.0\r\nTo: Yann Sionneau <yann@minet.net>, =?UTF-8?B?U3TDqXBoYW5pZSBPdWlsbG9u?=\r\n <stephanie@ouillon.fr>, =?UTF-8?B?TmF0YWxpYSBDYWxkZXJvbiBCZWx0csOhbg==?=\r\n <natalia@calderon.be>\r\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\r\n =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\r\n =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\r\n =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\r\nReferences: <556E332B.8020808@wootdevices.io> <556E3512.3050404@minet.net>\r\nIn-Reply-To: <556E3512.3050404@minet.net>\r\nOpenPGP: id=AA5EE4B4EA20E2BEAA70B98E49CBF006922B990A;\r\n\turl=pgp.mit.edu\r\nContent-Type: multipart/encrypted;\r\n protocol=\"application/pgp-encrypted\";\r\n boundary=\"M0xVhKIvXqi85dG57o5RfCUAoFwhAw1Nh\"\r\nX-Virus-Scanned: clamav-milter 0.98.7 at mx1\r\nX-Virus-Status: Clean\r\n",
@@ -150,21 +121,7 @@
 	  "subtype": "rfc822-headers",
 	  "fileName": "header",
 	  "fileExtension": "",
-	  "contentDisposition": "inline",
-	  "headers": {
-		"content-disposition": [
-		  "inline; filename=\"header\""
-		],
-		"content-transfer-encoding": [
-		  "7bit"
-		],
-		"content-type": [
-		  "text/rfc822-headers; name=\"header\""
-		],
-		"content-description": [
-		  "Message header section"
-		]
-	  }
+	  "contentDisposition": "inline"
 	},
 	{
 	  "textContent": "_______________________________________________\r\nroot mailing list\r\nroot@listes.minet.net\r\nhttps://listes.minet.net/cgi-bin/mailman/listinfo/root",
@@ -172,21 +129,7 @@
 	  "subtype": "plain",
 	  "fileName": null,
 	  "fileExtension": null,
-	  "contentDisposition": "inline",
-	  "headers": {
-		"mime-version": [
-		  "1.0"
-		],
-		"content-transfer-encoding": [
-		  "quoted-printable"
-		],
-		"content-disposition": [
-		  "inline"
-		],
-		"content-type": [
-		  "text/plain; charset=\"iso-8859-1\""
-		]
-	  }
+	  "contentDisposition": "inline"
 	}
   ],
   "textBody": "No viruses were found.\r\n\r\nContent type: Unchecked\r\nInternal reference code for the message is 12583-16/Ss-IZaXqmZao\r\n\r\nAccording to a 'Received:' trace, the message apparently originated at:\r\n  [198.252.153.129], [127.0.0.1] localhost [127.0.0.1] Authenticated sender:\r\n  quentin.h\r\n\r\nReturn-Path: <quentin.h@riseup.net>\r\nFrom: Quentin <quentin.h@riseup.net>\r\nMessage-ID: <556EC361.6000308@riseup.net>\r\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\r\n  =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\r\n  =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\r\n  =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\r\nNot quarantined.\r\n\r\nThe message WILL BE relayed to:\r\n<yann@minet.net>\r\n\r\n",
@@ -198,8 +141,5 @@
   "isRecent": false,
   "hasAttachment": false,
   "isUnread": true,
-  "users": [
-    "username"
-  ],
   "text": "Content-filter at spam.minet.net postmaster@minet.net root@listes.minet.net root@listes.minet.net [root] UNCHECKED contents in mail FROM <quentin.h@riseup.net> No viruses were found.\r\n\r\nContent type: Unchecked\r\nInternal reference code for the message is 12583-16/Ss-IZaXqmZao\r\n\r\nAccording to a 'Received:' trace, the message apparently originated at:\r\n  [198.252.153.129], [127.0.0.1] localhost [127.0.0.1] Authenticated sender:\r\n  quentin.h\r\n\r\nReturn-Path: <quentin.h@riseup.net>\r\nFrom: Quentin <quentin.h@riseup.net>\r\nMessage-ID: <556EC361.6000308@riseup.net>\r\nSubject: =?UTF-8?B?UmU6IEZ3ZDogW1RtcGxhYl0gW0FQUEVMIEEgUEFSVElDSVBBVElPTl0=?=\r\n  =?UTF-8?B?IFdvb3QgZGV2aWNlcyAjMiAgOiB2ZW5leiBmYWlyZSBsZXVyIGhhY2tmw6p0ZSA=?=\r\n  =?UTF-8?B?YXV4IHBldGl0ZXMgbWFjaGluZXMgcHJvZ3JhbW1hYmxlcyBsZXMgNi03IGp1aW4=?=\r\n  =?UTF-8?B?IGF1IEphcmRpbiBkJ2FsaWNlL0JsYWNrbG9vcA==?=\r\nNot quarantined.\r\n\r\nThe message WILL BE relayed to:\r\n<yann@minet.net>\r\n\r\n"
 }
