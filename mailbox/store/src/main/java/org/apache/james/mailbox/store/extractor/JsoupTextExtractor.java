@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.extractor;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -31,28 +32,34 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
-import com.google.common.collect.Maps;
+import com.google.common.collect.ImmutableMap;
 
 public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";
     private static final String NO_BASE_URI = "";
+    private static final Map<String, List<String>> EMPTY_METADATA = ImmutableMap.of();
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
-        if (inputStream == null) {
+        if (inputStream == null || contentType == null) {
             return ParsedContent.empty();
         }
-        Map<String, List<String>> emptyMetadata = Maps.newHashMap();
-        if (contentType != null) {
-            if (contentType.equals("text/html")) {
-                Document doc = Jsoup.parse(inputStream, StandardCharsets.UTF_8.name(), NO_BASE_URI);
-                doc.select(TITLE_HTML_TAG).remove();
-                return new ParsedContent(Optional.ofNullable(doc.text()), emptyMetadata);
-            }
-            if (contentType.equals("text/plain")) {
-                return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), emptyMetadata);
-            }
+        if (contentType.equals("text/html")) {
+            return parseHtmlContent(inputStream);
+        }
+        if (contentType.equals("text/plain")) {
+            return parsePlainTextContent(inputStream);
         }
         return ParsedContent.empty();
+    }
+
+    private ParsedContent parsePlainTextContent(InputStream inputStream) throws IOException {
+        return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), EMPTY_METADATA);
+    }
+
+    private ParsedContent parseHtmlContent(InputStream inputStream) throws IOException {
+        Document doc = Jsoup.parse(inputStream, StandardCharsets.UTF_8.name(), NO_BASE_URI);
+        doc.select(TITLE_HTML_TAG).remove();
+        return new ParsedContent(Optional.ofNullable(doc.text()), EMPTY_METADATA);
     }
 }
