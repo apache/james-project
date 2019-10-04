@@ -43,14 +43,14 @@ public class JsoupTextExtractor implements TextExtractor {
         }
         Map<String, List<String>> emptyMetadata = Maps.newHashMap();
         if (contentType != null) {
-           if (contentType.equals("text/plain")) {
-            return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), emptyMetadata);
-           }
-           if (contentType.equals("text/html")) {
-               Document doc = Jsoup.parse(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
-               doc.select(TITLE_HTML_TAG).remove();
-               return new ParsedContent(Optional.ofNullable(doc.text()), emptyMetadata);
-           }
+            if (contentType.equals("text/html")) {
+                Document doc = Jsoup.parse(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+                doc.select(TITLE_HTML_TAG).remove();
+                return new ParsedContent(Optional.ofNullable(doc.text()), emptyMetadata);
+            }
+            if (contentType.equals("text/plain")) {
+                return new ParsedContent(Optional.ofNullable(IOUtils.toString(inputStream, StandardCharsets.UTF_8)), emptyMetadata);
+            }
         }
         return ParsedContent.empty();
     }

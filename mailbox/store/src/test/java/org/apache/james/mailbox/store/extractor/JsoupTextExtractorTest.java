@@ -21,7 +21,9 @@ package org.apache.james.mailbox.store.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -42,6 +44,22 @@ public class JsoupTextExtractorTest {
 
         assertThat(textExtractor.extractContent(inputStream, "text/html").getTextualContent().get())
                 .doesNotContain("*|MC:SUBJECT|*");
+    }
+
+    @Test
+    public void extractContentShouldHandlePlainText() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
+                .contains("myText");
+    }
+
+    @Test
+    public void extractContentShouldHandleArbitraryTextMediaType() throws Exception {
+        InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
+
+        assertThat(textExtractor.extractContent(inputStream, "text/arbitrary").getTextualContent())
+                .isEmpty();
     }
 
     @Test
