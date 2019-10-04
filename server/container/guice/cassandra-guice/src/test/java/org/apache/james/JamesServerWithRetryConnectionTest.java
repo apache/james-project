@@ -46,13 +46,13 @@ class JamesServerWithRetryConnectionTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
-    private static final DockerCassandraRule cassandraRule = new DockerCassandraRule();
     private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension();
+    private static final CassandraExtension dockerCassandra = new CassandraExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(dockerElasticSearch)
-        .extension(new CassandraExtension(cassandraRule))
+        .extension(dockerCassandra)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
@@ -83,9 +83,9 @@ class JamesServerWithRetryConnectionTest {
 
     @Test
     void serverShouldRetryToConnectToCassandraWhenStartService(GuiceJamesServer server) throws Exception {
-        cassandraRule.pause();
+        dockerCassandra.getCassandra().pause();
 
-        waitToStartContainer(WAITING_TIME, cassandraRule::unpause);
+        waitToStartContainer(WAITING_TIME, dockerCassandra.getCassandra()::unpause);
 
         assertThatServerStartCorrectly(server);
     }

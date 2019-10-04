@@ -24,15 +24,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 import com.google.inject.Module;
 
 public class CassandraExtension implements GuiceModuleTestExtension {
-
     private final DockerCassandraRule cassandra;
 
     public CassandraExtension() {
-        this(new DockerCassandraRule());
-    }
-
-    public CassandraExtension(DockerCassandraRule cassandra) {
-        this.cassandra = cassandra;
+        this.cassandra = new DockerCassandraRule();
     }
 
     @Override

@@ -60,6 +60,7 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
+import org.apache.james.util.Host;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -92,12 +93,12 @@ public class FixingGhostMailboxTest {
     private static final String ALICE_SECRET = "aliceSecret";
     private static final String BOB_SECRET = "bobSecret";
 
-    public static final DockerCassandraRule cassandra = new DockerCassandraRule();
+    public static final CassandraExtension dockerCassandra = new CassandraExtension();
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
-        .extension(new CassandraExtension(cassandra))
+        .extension(dockerCassandra)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
@@ -138,10 +139,11 @@ public class FixingGhostMailboxTest {
             .addUser(BOB, BOB_SECRET);
         accessToken = authenticateJamesUser(baseUri(server), ALICE, ALICE_SECRET);
 
+        Host cassandraHost = dockerCassandra.getCassandra().getHost();
         session = Cluster.builder()
             .withoutJMXReporting()
-            .addContactPoint(cassandra.getIp())
-            .withPort(cassandra.getMappedPort(9042))
+            .addContactPoint(cassandraHost.getHostName())
+            .withPort(cassandraHost.getPort())
             .build()
             .connect(server.getProbe(CassandraProbe.class).getKeyspace());
 
