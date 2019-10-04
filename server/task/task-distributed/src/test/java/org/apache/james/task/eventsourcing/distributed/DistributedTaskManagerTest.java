@@ -67,7 +67,6 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -107,12 +106,13 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())
         );
 
+    private static final JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+
     private static final Hostname HOSTNAME = new Hostname("foo");
     private static final Hostname HOSTNAME_2 = new Hostname("bar");
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, jsonTaskAdditionalInformationsSerializer).stream().collect(Guavate.toImmutableSet());
     private static final JsonEventSerializer EVENT_SERIALIZER = new JsonEventSerializer(MODULES);
 
-    private static final JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
         CassandraModule.aggregateModules(
@@ -157,24 +157,6 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);
-    }
-
-    @Test
-    @Disabled("Enable when the Distributed Task Manager will persist and retrieve additional informations")
-    public void additionalInformationShouldBeUpdatedWhenRunSuccessfully() {
-        //Disabled
-    }
-
-    @Test
-    @Disabled("Enable when the Distributed Task Manager will persist and retrieve additional informations")
-    public void additionalInformationShouldBeUpdatedWhenCancelled(CountDownLatch countDownLatch) {
-        //Disabled
-    }
-
-    @Test
-    @Disabled("Enable when the Distributed Task Manager will persist and retrieve additional informations")
-    public void additionalInformationShouldBeUpdatedWhenFailed() {
-        //Disabled
     }
 
     @Test

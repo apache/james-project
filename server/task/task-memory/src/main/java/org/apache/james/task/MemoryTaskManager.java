@@ -59,26 +59,26 @@ public class MemoryTaskManager implements TaskManager {
         }
 
         @Override
-        public void completed(TaskId taskId, Task.Result result) {
+        public void completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
             updaterFactory.apply(taskId)
-                .accept(TaskExecutionDetails::completed);
+                .accept(details -> details.completed(additionalInformation));
         }
 
         @Override
-        public void failed(TaskId taskId, Throwable t) {
-            failed(taskId);
+        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
+            failed(taskId, additionalInformation);
         }
 
         @Override
-        public void failed(TaskId taskId) {
+        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
             updaterFactory.apply(taskId)
-                .accept(TaskExecutionDetails::failed);
+                .accept(details -> details.failed(additionalInformation));
         }
 
         @Override
-        public void cancelled(TaskId taskId) {
+        public void cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {
             updaterFactory.apply(taskId)
-                .accept(TaskExecutionDetails::cancelEffectively);
+                .accept(details -> details.cancelEffectively(additionalInformation));
         }
     }
 

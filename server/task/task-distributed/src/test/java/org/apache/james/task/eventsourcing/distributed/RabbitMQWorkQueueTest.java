@@ -28,6 +28,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -139,7 +140,7 @@ class RabbitMQWorkQueueTest {
         otherWorkQueue.submit(taskWithId);
 
         verify(taskManagerWorker, new Timeout(100, times(0))).executeTask(any());
-        verify(taskManagerWorker, timeout(100)).fail(eq(taskId), any());
+        verify(taskManagerWorker, timeout(100)).fail(eq(taskId), eq(Optional.empty()), any());
 
         testee.submit(TASK_WITH_ID);
         verify(taskManagerWorker, timeout(100)).executeTask(any());

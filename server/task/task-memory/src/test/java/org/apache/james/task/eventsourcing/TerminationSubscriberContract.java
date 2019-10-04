@@ -29,6 +29,7 @@ import java.util.List;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.task.CompletedTask;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -40,12 +41,13 @@ import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import scala.Option;
 
 public interface TerminationSubscriberContract {
 
-    Completed COMPLETED_EVENT = new Completed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Task.Result.COMPLETED);
-    Failed FAILED_EVENT = new Failed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42));
-    Cancelled CANCELLED_EVENT = new Cancelled(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42));
+    Completed COMPLETED_EVENT = new Completed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Task.Result.COMPLETED, Option.empty());
+    Failed FAILED_EVENT = new Failed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty());
+    Cancelled CANCELLED_EVENT = new Cancelled(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty());
     Duration DELAY_BETWEEN_EVENTS = Duration.ofMillis(50);
     Duration DELAY_BEFORE_PUBLISHING = Duration.ofMillis(50);
 

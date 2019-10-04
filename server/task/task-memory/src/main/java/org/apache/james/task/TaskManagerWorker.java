@@ -19,6 +19,7 @@
 package org.apache.james.task;
 
 import java.io.Closeable;
+import java.util.Optional;
 
 import reactor.core.publisher.Mono;
 
@@ -27,18 +28,18 @@ public interface TaskManagerWorker extends Closeable {
     interface Listener {
         void started(TaskId taskId);
 
-        void completed(TaskId taskId, Task.Result result);
+        void completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
-        void failed(TaskId taskId, Throwable t);
+        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t);
 
-        void failed(TaskId taskId);
+        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
-        void cancelled(TaskId taskId);
+        void cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
     }
 
     Mono<Task.Result> executeTask(TaskWithId taskWithId);
 
     void cancelTask(TaskId taskId);
 
-    void fail(TaskId taskId, Throwable reason);
+    void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable reason);
 }

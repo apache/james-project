@@ -23,8 +23,9 @@ import java.util
 import org.apache.james.eventsourcing.eventstore.History
 import org.apache.james.eventsourcing.{Event, EventId}
 import org.apache.james.task.Task.Result
+import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.TaskManager.Status
-import org.apache.james.task.{Hostname, Task}
+import org.apache.james.task.{Hostname, Task, TaskType}
 
 import scala.collection.JavaConverters._
 
@@ -57,23 +58,23 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     }
   }
 
-  private[eventsourcing] def complete(result: Result): util.List[Event] = {
+  private[eventsourcing] def complete(result: Result, additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
     currentStatus match {
-      case Some(status) if !status.isFinished => createEventWithId(Completed(aggregateId, _, result))
+      case Some(status) if !status.isFinished => createEventWithId(Completed(aggregateId, _, result, additionalInformation))
       case _ => Nil.asJava
     }
   }
 
-  private[eventsourcing] def fail(): util.List[Event] = {
+  private[eventsourcing] def fail(additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
     currentStatus match {
-      case Some(status) if !status.isFinished => createEventWithId(Failed(aggregateId, _))
+      case Some(status) if !status.isFinished => createEventWithId(Failed(aggregateId, _, additionalInformation))
       case _ => Nil.asJava
     }
   }
 
-  private[eventsourcing] def cancel(): util.List[Event] = {
+  private[eventsourcing] def cancel(additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
     currentStatus match {
-      case Some(status) if !status.isFinished => createEventWithId(Cancelled(aggregateId, _))
+      case Some(status) if !status.isFinished => createEventWithId(Cancelled(aggregateId, _, additionalInformation))
       case _ => Nil.asJava
     }
   }

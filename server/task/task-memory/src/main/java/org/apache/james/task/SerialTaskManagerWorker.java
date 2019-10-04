@@ -74,7 +74,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                     semaphore.acquire();
                     return semaphore;
                 } catch (InterruptedException e) {
-                    listener.cancelled(taskWithId.getId());
+                    listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
                     throw e;
                 }
             };
@@ -89,14 +89,14 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                 return Mono.fromFuture(future)
                         .doOnError(exception -> {
                             if (exception instanceof CancellationException) {
-                                listener.cancelled(taskWithId.getId());
+                                listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
                             } else {
-                                listener.failed(taskWithId.getId(), exception);
+                                listener.failed(taskWithId.getId(), taskWithId.getTask().details(), exception);
                             }
                         })
                         .onErrorReturn(Task.Result.PARTIAL);
             } else {
-                listener.cancelled(taskWithId.getId());
+                listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
                 return Mono.empty();
             }
         };
@@ -116,17 +116,17 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         try {
             return taskWithId.getTask()
                 .run()
-                .onComplete(result -> listener.completed(taskWithId.getId(), result))
+                .onComplete(result -> listener.completed(taskWithId.getId(), result, taskWithId.getTask().details()))
                 .onFailure(() -> {
                     LOGGER.error("Task was partially performed. Check logs for more details. Taskid : " + taskWithId.getId());
-                    listener.failed(taskWithId.getId());
+                    listener.failed(taskWithId.getId(), taskWithId.getTask().details());
                 });
         } catch (InterruptedException e) {
-            listener.cancelled(taskWithId.getId());
+            listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
             return Task.Result.PARTIAL;
         } catch (Exception e) {
             LOGGER.error("Error while running task {}", taskWithId.getId(), e);
-            listener.failed(taskWithId.getId(), e);
+            listener.failed(taskWithId.getId(), taskWithId.getTask().details(), e);
             return Task.Result.PARTIAL;
         }
     }
@@ -140,8 +140,8 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
     @Override
-    public void fail(TaskId taskId, Throwable reason) {
-        listener.failed(taskId, reason);
+    public void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable reason) {
+        listener.failed(taskId, additionalInformation, reason);
     }
 
     @Override

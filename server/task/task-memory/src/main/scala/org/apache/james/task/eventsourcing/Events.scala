@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
@@ -20,13 +20,14 @@ package org.apache.james.task.eventsourcing
 
 import org.apache.james.eventsourcing.{Event, EventId}
 import org.apache.james.task.Task.Result
-import org.apache.james.task.{Hostname, Task}
+import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
+import org.apache.james.task.{Hostname, Task, TaskType}
 
 sealed abstract class TaskEvent(aggregateId: TaskAggregateId, val eventId: EventId) extends Event {
   override def getAggregateId: TaskAggregateId = aggregateId
 }
 
-sealed abstract class TerminalTaskEvent(aggregateId: TaskAggregateId, override val eventId: EventId) extends TaskEvent(aggregateId, eventId)
+sealed abstract class TerminalTaskEvent(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation]) extends TaskEvent(aggregateId, eventId)
 
 case class Created(aggregateId: TaskAggregateId, override val eventId: EventId, task: Task, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
@@ -34,8 +35,8 @@ case class Started(aggregateId: TaskAggregateId, override val eventId: EventId, 
 
 case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: EventId, hostname: Hostname) extends TaskEvent(aggregateId, eventId)
 
-case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result) extends TerminalTaskEvent(aggregateId, eventId)
+case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)
 
-case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId) extends TerminalTaskEvent(aggregateId, eventId)
+case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)
 
-case class Cancelled(aggregateId: TaskAggregateId, override val eventId: EventId) extends TerminalTaskEvent(aggregateId, eventId)
+case class Cancelled(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)

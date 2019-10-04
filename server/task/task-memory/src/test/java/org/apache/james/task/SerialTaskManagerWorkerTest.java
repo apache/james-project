@@ -28,6 +28,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -65,7 +66,7 @@ class SerialTaskManagerWorkerTest {
 
         assertThat(result.block()).isEqualTo(Task.Result.COMPLETED);
 
-        verify(listener, atLeastOnce()).completed(taskWithId.getId(), Task.Result.COMPLETED);
+        verify(listener, atLeastOnce()).completed(taskWithId.getId(), Task.Result.COMPLETED, Optional.empty());
     }
 
     @Test
@@ -75,7 +76,7 @@ class SerialTaskManagerWorkerTest {
         Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed(taskWithId.getId());
+        verify(listener, atLeastOnce()).failed(taskWithId.getId(), Optional.empty());
     }
 
     @Test
@@ -85,7 +86,7 @@ class SerialTaskManagerWorkerTest {
         Mono<Task.Result> result = worker.executeTask(taskWithId);
 
         assertThat(result.block()).isEqualTo(Task.Result.PARTIAL);
-        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), any(RuntimeException.class));
+        verify(listener, atLeastOnce()).failed(eq(taskWithId.getId()), eq(Optional.empty()), any(RuntimeException.class));
     }
 
     @Test
@@ -134,7 +135,7 @@ class SerialTaskManagerWorkerTest {
 
         resultMono.block(Duration.ofSeconds(10));
 
-        verify(listener, atLeastOnce()).cancelled(id);
+        verify(listener, atLeastOnce()).cancelled(id, Optional.empty());
         verifyNoMoreInteractions(listener);
     }
 

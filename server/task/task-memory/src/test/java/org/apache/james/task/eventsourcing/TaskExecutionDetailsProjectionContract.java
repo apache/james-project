@@ -20,7 +20,6 @@
 
 package org.apache.james.task.eventsourcing;
 
-import static org.apache.james.task.TaskExecutionDetailsFixture.ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_2;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_UPDATED;
@@ -31,10 +30,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.task.MemoryReferenceWithCounterTask;
 import org.apache.james.task.TaskExecutionDetails;
 
-import org.apache.james.task.TaskExecutionDetailsFixture;
 import org.junit.jupiter.api.Test;
 
 import scala.collection.JavaConverters;

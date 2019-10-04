@@ -114,20 +114,31 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     private Mono<Task.Result> executeTask(AcknowledgableDelivery delivery) {
+        delivery.ack();
         String json = new String(delivery.getBody(), StandardCharsets.UTF_8);
 
         TaskId taskId = TaskId.fromString(delivery.getProperties().getHeaders().get(TASK_ID).toString());
 
-        try {
-            Task task = taskSerializer.deserialize(json);
-            delivery.ack();
-            return worker.executeTask(new TaskWithId(taskId, task));
-        } catch (Exception e) {
-            LOGGER.error("Unable to run submitted Task " + taskId.asString(), e);
-            delivery.ack();
-            worker.fail(taskId, e);
-            return Mono.empty();
-        }
+        return deserialize(json, taskId)
+            .flatMap(task -> executeOnWorker(taskId, task));
+    }
+
+    private Mono<Task> deserialize(String json, TaskId taskId) {
+        return Mono.fromCallable(() -> taskSerializer.deserialize(json))
+            .doOnError(error -> {
+                LOGGER.warn("Unable to deserialize submitted Task {}", taskId.asString(), error);
+                worker.fail(taskId, Optional.empty(), error);
+            })
+            .onErrorResume(error -> Mono.empty());
+    }
+
+    private Mono<Task.Result> executeOnWorker(TaskId taskId, Task task) {
+        return worker.executeTask(new TaskWithId(taskId, task))
+            .doOnError(error -> {
+                LOGGER.warn("Unable to run submitted Task {}", taskId.asString(), error);
+                worker.fail(taskId, task.details(), error);
+            })
+            .onErrorResume(error -> Mono.empty());
     }
 
     void listenToCancelRequests() {

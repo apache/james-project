@@ -59,6 +59,7 @@ public class RabbitMQExclusiveConsumer implements Closeable {
 
     private static final boolean NON_LOCAL = true;
     private static final boolean EXCLUSIVE = true;
+    private static final boolean AUTO_ACK = true;
 
     private static class ChannelCreationFunction implements Function<Connection, Channel> {
 
@@ -93,7 +94,6 @@ public class RabbitMQExclusiveConsumer implements Closeable {
         return Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, name);
     }
 
-
     public Flux<AcknowledgableDelivery> consumeExclusiveManualAck(final String queue, ConsumeOptions options) {
         // TODO track flux so it can be disposed when the sender is closed?
         // could be also developer responsibility
@@ -123,7 +123,7 @@ public class RabbitMQExclusiveConsumer implements Closeable {
                 completeOnChannelShutdown(channel, emitter);
 
                 Map<String, Object> arguments = ImmutableMap.of();
-                final String consumerTag = channel.basicConsume(queue, false, UUID.randomUUID().toString(), !NON_LOCAL, EXCLUSIVE, arguments, deliverCallback, cancelCallback);
+                final String consumerTag = channel.basicConsume(queue, !AUTO_ACK, UUID.randomUUID().toString(), !NON_LOCAL, EXCLUSIVE, arguments, deliverCallback, cancelCallback);
                 AtomicBoolean cancelled = new AtomicBoolean(false);
                 LOGGER.info("Consumer {} consuming from {} has been registered", consumerTag, queue);
                 emitter.onDispose(() -> {

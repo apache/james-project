@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap
 
 import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
+import scala.compat.java8.OptionConverters._
 
 import scala.collection.JavaConverters._
 
@@ -34,11 +35,11 @@ trait TaskExecutionDetailsProjection {
     case started: Started =>
       update(started.aggregateId.taskId)(_.started(hostname))
     case completed: Completed =>
-      update(completed.aggregateId.taskId)(_.completed)
+      update(completed.aggregateId.taskId)(_.completed(completed.additionalInformation.asJava))
     case failed: Failed =>
-      update(failed.aggregateId.taskId)(_.failed)
+      update(failed.aggregateId.taskId)(_.failed(failed.additionalInformation.asJava))
     case canceled: Cancelled =>
-      update(canceled.aggregateId.taskId)(_.cancelEffectively)
+      update(canceled.aggregateId.taskId)(_.cancelEffectively(canceled.additionalInformation.asJava))
   }
 
   private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =
