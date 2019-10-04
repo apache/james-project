@@ -72,7 +72,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
-            .contains("This is some awesome text text.\n\n");
+            .isPresent()
+            .asString()
+            .contains("This is some awesome text text.");
     }
 
     @Test
@@ -80,7 +82,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.docx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document").getTextualContent())
-            .contains("This is an awesome document on libroffice writter !\n");
+            .isPresent()
+            .asString()
+            .contains("This is an awesome document on libroffice writter !");
     }
 
     @Test
@@ -88,7 +92,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.odt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
-            .contains("This is an awesome document on libroffice writter !\n");
+            .isPresent()
+            .asString()
+            .contains("This is an awesome document on libroffice writter !");
     }
 
     @Test
@@ -96,7 +102,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/fake.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
-            .contains("This is an awesome document on libroffice writter !\n");
+            .isPresent()
+            .asString()
+            .contains("This is an awesome document on libroffice writter !");
     }
     
     @Test
@@ -104,7 +112,10 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.pptx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.presentationml.presentation").getTextualContent())
-            .contains("James is awesome\nIt manages attachments so well !\n\n\n");
+            .isPresent()
+            .asString()
+            .contains("James is awesome")
+            .contains("It manages attachments so well !");
     }
 
     @Test
@@ -112,7 +123,10 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.odp");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.presentation").getTextualContent())
-            .contains("James is awesome\n\nIt manages attachments so well !\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+            .isPresent()
+            .asString()
+            .contains("James is awesome")
+            .contains("It manages attachments so well !");
     }
     
     @Test
@@ -120,7 +134,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/PDF.pdf");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/pdf").getTextualContent())
-            .contains("This is an awesome document on libroffice writter !\n\n\n");
+            .isPresent()
+            .asString()
+            .contains("This is an awesome document on libroffice writter !");
     }
     
     @Test
@@ -128,14 +144,9 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.ods");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.spreadsheet").getTextualContent())
-            .contains("This is an aesome LibreOffice document !\n" +
-                "\n" +
-                "\n" +
-                "???\n" +
-                "Page \n" +
-                "??? (???)\n" +
-                "00/00/0000, 00:00:00\n" +
-                "Page  / \n");
+            .isPresent()
+            .asString()
+            .contains("This is an aesome LibreOffice document !");
     }
     
     @Test
@@ -143,14 +154,10 @@ public class TikaTextExtractorTest {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.xlsx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").getTextualContent())
-            .contains("Feuille1\n" +
-                "\tThis is an aesome LibreOffice document !\n" +
-                "\n" +
-                "&A\t\n" +
-                "\n" +
-                "Page &P\t\n" +
-                "\n" +
-                "\n");
+            .isPresent()
+            .asString()
+            .contains("Feuille1")
+            .contains("This is an aesome LibreOffice document !");
     }
 
     @Test
