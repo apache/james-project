@@ -163,9 +163,13 @@ public class ClusterConfiguration {
             return password(Optional.of(password));
         }
 
-        public Builder useSsl(boolean useSsl) {
-            this.useSsl = Optional.of(useSsl);
+        public Builder useSsl(Optional<Boolean> useSsl) {
+            this.useSsl = useSsl;
             return this;
+        }
+
+        public Builder useSsl(boolean useSsl) {
+            return useSsl(Optional.of(useSsl));
         }
 
         public Builder useSsl() {
@@ -236,7 +240,7 @@ public class ClusterConfiguration {
             .poolingOptions(readPoolingOptions(configuration))
             .readTimeoutMillis(Optional.ofNullable(configuration.getInteger(READ_TIMEOUT_MILLIS, null)))
             .connectTimeoutMillis(Optional.ofNullable(configuration.getInteger(CONNECT_TIMEOUT_MILLIS, null)))
-            .useSsl(configuration.getBoolean(CASSANDRA_SSL, false))
+            .useSsl(Optional.ofNullable(configuration.getBoolean(CASSANDRA_SSL, null)))
             .username(Optional.ofNullable(configuration.getString(CASSANDRA_USER, null)))
             .password(Optional.ofNullable(configuration.getString(CASSANDRA_PASSWORD, null)))
             .build();

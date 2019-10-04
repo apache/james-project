@@ -36,7 +36,7 @@ public class DockerCassandra {
     private static final Logger logger = LoggerFactory.getLogger(DockerCassandra.class);
 
     @FunctionalInterface
-    interface AdditionalDockerFileStep {
+    public interface AdditionalDockerFileStep {
         AdditionalDockerFileStep IDENTITY = builder -> builder;
 
         DockerfileBuilder applyStep(DockerfileBuilder builder);

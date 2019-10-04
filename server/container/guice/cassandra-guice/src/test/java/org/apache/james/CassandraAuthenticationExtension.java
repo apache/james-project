@@ -19,7 +19,7 @@
 
 package org.apache.james;
 
-import org.apache.james.backends.cassandra.DockerCassandraAuthenticatedSingleton;
+import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.server.CassandraTruncateTableTask;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -29,23 +29,54 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.util.Modules;
 
 public class CassandraAuthenticationExtension implements GuiceModuleTestExtension {
+    private static final String VALID_PASSWORD = "cassandra";
+    private static final String INVALID_PASSWORD = "bad";
+    private static final DockerCassandra authenticatedCassandra = new DockerCassandra("cassandra_3_11_3_auth",
+        dockerfileBuilder -> dockerfileBuilder
+            .run("echo 'authenticator: PasswordAuthenticator' >> /etc/cassandra/cassandra.yaml"));
+
+    static {
+        authenticatedCassandra.start();
+    }
+
+    public static CassandraAuthenticationExtension withValidCredentials() {
+        return new CassandraAuthenticationExtension(ClusterConfiguration.builder()
+            .password(VALID_PASSWORD)
+            .maxRetry(20)
+            .minDelay(5000));
+    }
+
+    public static CassandraAuthenticationExtension withInvalidCredentials() {
+        return new CassandraAuthenticationExtension(ClusterConfiguration.builder()
+            .password(INVALID_PASSWORD)
+            .maxRetry(1)
+            .minDelay(100));
+    }
+
+    private final ClusterConfiguration.Builder configurationBuilder;
+
+    private CassandraAuthenticationExtension(ClusterConfiguration.Builder configurationBuilder) {
+        this.configurationBuilder = configurationBuilder;
+    }
 
     @Override
     public void beforeAll(ExtensionContext extensionContext) {
-        DockerCassandraAuthenticatedSingleton.singleton.start();
+        authenticatedCassandra.start();
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+        authenticatedCassandra.stop();
     }
 
     @Override
     public Module getModule() {
         return Modules.combine((binder) -> binder.bind(ClusterConfiguration.class)
-                .toInstance(ClusterConfiguration.builder()
-                    .host(DockerCassandraAuthenticatedSingleton.singleton.getHost())
+                .toInstance(configurationBuilder
+                    .host(authenticatedCassandra.getHost())
                     .keyspace("testing")
                     .username("cassandra")
-                    .password("cassandra")
                     .replicationFactor(1)
-                    .maxRetry(20)
-                    .minDelay(5000)
                     .build()),
             binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class)
                 .addBinding()

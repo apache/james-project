@@ -21,11 +21,8 @@ package org.apache.james;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.apache.james.JamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.backends.cassandra.DockerCassandraAuthenticatedSingleton;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
@@ -34,7 +31,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.datastax.driver.core.exceptions.AuthenticationException;
 import com.google.inject.CreationException;
 
 class AuthenticatedCassandraJamesServerTest {
@@ -45,7 +41,7 @@ class AuthenticatedCassandraJamesServerTest {
         @RegisterExtension
         JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraAuthenticationExtension())
+            .extension(CassandraAuthenticationExtension.withValidCredentials())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
@@ -56,10 +52,12 @@ class AuthenticatedCassandraJamesServerTest {
 
     @Nested
     class SslTest {
+        private final CassandraExtension cassandraExtension = new CassandraExtension();
+
         @RegisterExtension
         JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraExtension())
+            .extension(cassandraExtension)
             .disableAutoStart()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
@@ -68,7 +66,7 @@ class AuthenticatedCassandraJamesServerTest {
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(ClusterConfiguration.builder()
-                    .host(DockerCassandraAuthenticatedSingleton.singleton.getHost())
+                    .host(cassandraExtension.getCassandra().getHost())
                     .keyspace("testing")
                     .replicationFactor(1)
                     .maxRetry(1)
@@ -90,7 +88,7 @@ class AuthenticatedCassandraJamesServerTest {
         @RegisterExtension
         JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
-            .extension(new CassandraBadAuthenticationExtension())
+            .extension(CassandraAuthenticationExtension.withInvalidCredentials())
             .disableAutoStart()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
