@@ -51,7 +51,6 @@ import org.apache.james.mime4j.dom.Message;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.junit.After;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -221,7 +220,6 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
     }
 
     @Test
-    @Ignore("JAMES-2078 issue with dynamic mapping")
     public void headerSearchShouldIncludeMessageWhenDifferentTypesOnAnIndexedField() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, INBOX);
         MailboxSession session = MailboxSessionUtil.create(USERNAME);
