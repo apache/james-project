@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -28,16 +26,17 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class ClearMailQueueTaskDTO implements TaskDTO {
+public class ClearMailQueueTaskDTO implements TaskDTO {
 
-    public static final Function<MailQueueFactory<ManageableMailQueue>, TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO>> MODULE = (mailQueueFactory) ->
-        DTOModule
+    public static TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO> module(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+        return DTOModule
             .forDomainObject(ClearMailQueueTask.class)
             .convertToDTO(ClearMailQueueTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.fromDTO(mailQueueFactory))
             .toDTOConverter(ClearMailQueueTaskDTO::toDTO)
             .typeName(ClearMailQueueTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static ClearMailQueueTaskDTO toDTO(ClearMailQueueTask domainObject, String typeName) {
         return new ClearMailQueueTaskDTO(typeName, domainObject.getQueue().getName());

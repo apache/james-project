@@ -545,7 +545,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void clearMailQueueShouldCompleteWhenNoQueryParameters() {
         String firstMailQueue = with()
                 .basePath(MailQueueRoutes.BASE_URL)

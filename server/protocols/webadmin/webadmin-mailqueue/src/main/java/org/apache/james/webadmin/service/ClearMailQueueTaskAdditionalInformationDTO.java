@@ -26,7 +26,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    static final AdditionalInformationDTOModule<ClearMailQueueTask.AdditionalInformation, ClearMailQueueTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+    public static final AdditionalInformationDTOModule<ClearMailQueueTask.AdditionalInformation, ClearMailQueueTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
         DTOModule.forDomainObject(ClearMailQueueTask.AdditionalInformation.class)
             .convertToDTO(ClearMailQueueTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new ClearMailQueueTask.AdditionalInformation(
