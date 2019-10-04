@@ -35,6 +35,7 @@ import com.google.common.collect.Maps;
 
 public class JsoupTextExtractor implements TextExtractor {
     private static final String TITLE_HTML_TAG = "title";
+    private static final String NO_BASE_URI = "";
 
     @Override
     public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
@@ -44,7 +45,7 @@ public class JsoupTextExtractor implements TextExtractor {
         Map<String, List<String>> emptyMetadata = Maps.newHashMap();
         if (contentType != null) {
             if (contentType.equals("text/html")) {
-                Document doc = Jsoup.parse(IOUtils.toString(inputStream, StandardCharsets.UTF_8));
+                Document doc = Jsoup.parse(inputStream, StandardCharsets.UTF_8.name(), NO_BASE_URI);
                 doc.select(TITLE_HTML_TAG).remove();
                 return new ParsedContent(Optional.ofNullable(doc.text()), emptyMetadata);
             }
