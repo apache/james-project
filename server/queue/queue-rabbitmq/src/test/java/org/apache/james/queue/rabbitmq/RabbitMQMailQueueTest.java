@@ -38,6 +38,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
@@ -67,6 +68,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
+import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -82,6 +84,7 @@ class RabbitMQMailQueueTest {
     private static final Instant IN_SLICE_3 = IN_SLICE_1.plus(2, HOURS);
     private static final Instant IN_SLICE_5 = IN_SLICE_1.plus(4, HOURS);
     private static final Instant IN_SLICE_7 = IN_SLICE_1.plus(6, HOURS);
+    private static final int POOL_SIZE = 5;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
@@ -107,36 +110,11 @@ class RabbitMQMailQueueTest {
     class MailQueueSizeMetricsEnabled implements ManageableMailQueueContract, MailQueueMetricContract {
         @BeforeEach
         void setup(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
-            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
-            MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
-            clock = new UpdatableTickingClock(IN_SLICE_1);
-
-            MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
-                CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
-                    .build(),
-                mimeMessageStoreFactory);
-
-            RabbitMQMailQueueConfiguration configuration = RabbitMQMailQueueConfiguration.builder()
-                .sizeMetricsEnabled(true)
-                .build();
-
-            RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
-            RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
-                metricTestSystem.getMetricFactory(),
-                metricTestSystem.getSpyGaugeRegistry(),
-                rabbitClient,
-                mimeMessageStoreFactory,
-                BLOB_ID_FACTORY,
-                mailQueueViewFactory,
-                clock,
-                new RawMailQueueItemDecoratorFactory(),
-                configuration);
-            mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-            mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
-            mailQueue = mailQueueFactory.createQueue(SPOOL);
+            setUp(cassandra,
+                metricTestSystem,
+                RabbitMQMailQueueConfiguration.builder()
+                    .sizeMetricsEnabled(true)
+                    .build());
         }
 
         @Override
@@ -260,6 +238,11 @@ class RabbitMQMailQueueTest {
                 }))
                 .blockLast();
         }
+
+        @AfterEach
+        void tearDown() {
+            mqManagementApi.deleteAllQueues();
+        }
     }
 
     @Nested
@@ -269,36 +252,11 @@ class RabbitMQMailQueueTest {
 
         @BeforeEach
         void setup(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) throws Exception {
-            CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
-            MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
-            clock = new UpdatableTickingClock(IN_SLICE_1);
-
-            MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
-                CassandraMailQueueViewConfiguration.builder()
-                    .bucketCount(THREE_BUCKET_COUNT)
-                    .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
-                    .sliceWindow(ONE_HOUR_SLICE_WINDOW)
-                    .build(),
-                mimeMessageStoreFactory);
-
-            RabbitMQMailQueueConfiguration configuration = RabbitMQMailQueueConfiguration.builder()
+            setUp(cassandra,
+                metricTestSystem,
+                RabbitMQMailQueueConfiguration.builder()
                 .sizeMetricsEnabled(false)
-                .build();
-
-            RabbitClient rabbitClient = new RabbitClient(rabbitMQExtension.getRabbitChannelPool());
-            RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
-                metricTestSystem.getMetricFactory(),
-                metricTestSystem.getSpyGaugeRegistry(),
-                rabbitClient,
-                mimeMessageStoreFactory,
-                BLOB_ID_FACTORY,
-                mailQueueViewFactory,
-                clock,
-                new RawMailQueueItemDecoratorFactory(),
-                configuration);
-            mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-            mailQueueFactory = new RabbitMQMailQueueFactory(rabbitClient, mqManagementApi, factory);
-            mailQueue = mailQueueFactory.createQueue(SPOOL);
+                .build());
         }
 
         @Test
@@ -306,5 +264,43 @@ class RabbitMQMailQueueTest {
             ArgumentCaptor<Gauge<?>> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
             verify(metricTestSystem.getSpyGaugeRegistry(), never()).register(any(), gaugeCaptor.capture());
         }
+
+        @AfterEach
+        void tearDown() {
+            mqManagementApi.deleteAllQueues();
+        }
+    }
+
+    private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration) throws Exception {
+        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
+        MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
+        clock = new UpdatableTickingClock(IN_SLICE_1);
+
+        MailQueueView.Factory mailQueueViewFactory = CassandraMailQueueViewTestFactory.factory(clock, cassandra.getConf(),
+            CassandraMailQueueViewConfiguration.builder()
+                .bucketCount(THREE_BUCKET_COUNT)
+                .updateBrowseStartPace(UPDATE_BROWSE_START_PACE)
+                .sliceWindow(ONE_HOUR_SLICE_WINDOW)
+                .build(),
+            mimeMessageStoreFactory);
+
+        Mono<Connection> connectionMono = rabbitMQExtension.getRabbitConnectionPool().getResilientConnection();
+        ReactorRabbitMQChannelPool reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionMono, POOL_SIZE);
+
+        RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
+            metricTestSystem.getMetricFactory(),
+            metricTestSystem.getSpyGaugeRegistry(),
+            connectionMono,
+            reactorRabbitMQChannelPool.createSender(),
+            mimeMessageStoreFactory,
+            BLOB_ID_FACTORY,
+            mailQueueViewFactory,
+            clock,
+            new RawMailQueueItemDecoratorFactory(),
+            configuration);
+        mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitConnectionPool(), mqManagementApi, factory);
+        mailQueueFactory.start();
+        mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 }
