@@ -14,7 +14,7 @@ Using an Architectural Decision Records-based process as a support of discussion
 
 ## Decision
 
-We will use Architecture Decision Records, as [described by Michael Nygard](http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions).
+We will use Architecture Decision Records, as [described by Michael Nygard](https://web.archive.org/web/20190824074401/http://thinkrelevance.com/blog/2011/11/15/documenting-architecture-decisions).
 
 Each ADR will be discussed on the Apache James' developers mailing-list before being accepted.
 
