@@ -18,28 +18,27 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
-import java.util.function.BiFunction;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class EventDeadLettersRedeliverTaskDTO implements TaskDTO {
+public class EventDeadLettersRedeliverAllTaskDTO implements TaskDTO {
 
-    public static final BiFunction<EventDeadLettersRedeliverService, EventRetriever, TaskDTOModule<EventDeadLettersRedeliverTask, EventDeadLettersRedeliverTaskDTO>> MODULE = (service, eventRetriever) ->
-        DTOModule
-            .forDomainObject(EventDeadLettersRedeliverTask.class)
-            .convertToDTO(EventDeadLettersRedeliverTaskDTO.class)
-            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverTask(service, eventRetriever))
-            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverTaskDTO(typeName))
-            .typeName(EventDeadLettersRedeliverTask.TYPE.asString())
+    public static TaskDTOModule<EventDeadLettersRedeliverAllTask, EventDeadLettersRedeliverAllTaskDTO> module(EventDeadLettersRedeliverService service) {
+        return DTOModule
+            .forDomainObject(EventDeadLettersRedeliverAllTask.class)
+            .convertToDTO(EventDeadLettersRedeliverAllTaskDTO.class)
+            .toDomainObjectConverter(dto -> new EventDeadLettersRedeliverAllTask(service))
+            .toDTOConverter((domainObject, typeName) -> new EventDeadLettersRedeliverAllTaskDTO(typeName))
+            .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     private final String type;
 
-    public EventDeadLettersRedeliverTaskDTO(@JsonProperty("type") String type) {
+    public EventDeadLettersRedeliverAllTaskDTO(@JsonProperty("type") String type) {
         this.type = type;
     }
 

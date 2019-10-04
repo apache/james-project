@@ -54,8 +54,10 @@ import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverAllTask;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverGroupTask;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverOneTask;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
-import org.apache.james.webadmin.service.EventDeadLettersRedeliverTask;
 import org.apache.james.webadmin.service.EventDeadLettersService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -410,7 +412,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(nullValue()))
                 .body("additionalInformation.insertionId", is(nullValue()))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+                .body("type", is(EventDeadLettersRedeliverAllTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -597,7 +599,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
                 .body("additionalInformation.insertionId", is(nullValue()))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+                .body("type", is(EventDeadLettersRedeliverGroupTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -817,7 +819,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
                 .body("additionalInformation.insertionId", is(INSERTION_UUID_1))
-                .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+                .body("type", is(EventDeadLettersRedeliverOneTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));

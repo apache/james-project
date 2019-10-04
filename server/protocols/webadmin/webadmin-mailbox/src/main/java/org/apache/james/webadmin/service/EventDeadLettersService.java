@@ -69,14 +69,14 @@ public class EventDeadLettersService {
     }
 
     public Task redeliverAllEvents() {
-        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.allEvents());
+        return new EventDeadLettersRedeliverAllTask(redeliverService);
     }
 
     public Task redeliverGroupEvents(Group group) {
-        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.groupEvents(group));
+        return new EventDeadLettersRedeliverGroupTask(redeliverService, group);
     }
 
     public Task redeliverSingleEvent(Group group, EventDeadLetters.InsertionId insertionId) {
-        return new EventDeadLettersRedeliverTask(redeliverService, EventRetriever.singleEvent(group, insertionId));
+        return new EventDeadLettersRedeliverOneTask(redeliverService, group, insertionId);
     }
 }

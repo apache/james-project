@@ -82,7 +82,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -433,7 +432,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void eventDeadLettersRedeliverShouldComplete() {
         String taskId = with()
             .queryParam("action", "reDeliver")
@@ -451,14 +449,13 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverTask"))
+            .body("type", is("eventDeadLettersRedeliverAllTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0));
 
     }
 
     @Test
-    @Ignore("WIP")
     public void eventDeadLettersRedeliverShouldCreateATask() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
@@ -494,14 +491,13 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverTask"))
+            .body("type", is("eventDeadLettersRedeliverGroupTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()));
     }
 
     @Test
-    @Ignore("WIP")
     public void postRedeliverSingleEventShouldCreateATask() {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
@@ -537,7 +533,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverTask"))
+            .body("type", is("eventDeadLettersRedeliverOneTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()))

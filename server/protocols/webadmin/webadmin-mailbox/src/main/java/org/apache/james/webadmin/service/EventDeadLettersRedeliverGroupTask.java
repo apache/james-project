@@ -22,58 +22,25 @@ package org.apache.james.webadmin.service;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-
-public class EventDeadLettersRedeliverTask implements Task {
-    public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverTask");
-
-    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-        private final long successfulRedeliveriesCount;
-        private final long failedRedeliveriesCount;
-        private final Optional<Group> group;
-        private final Optional<EventDeadLetters.InsertionId> insertionId;
-
-        AdditionalInformation(long successfulRedeliveriesCount, long failedRedeliveriesCount,
-                              Optional<Group> group, Optional<EventDeadLetters.InsertionId> insertionId) {
-            this.successfulRedeliveriesCount = successfulRedeliveriesCount;
-            this.failedRedeliveriesCount = failedRedeliveriesCount;
-            this.group = group;
-            this.insertionId = insertionId;
-        }
-
-        public long getSuccessfulRedeliveriesCount() {
-            return successfulRedeliveriesCount;
-        }
-
-        public long getFailedRedeliveriesCount() {
-            return failedRedeliveriesCount;
-        }
-
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public Optional<String> getGroup() {
-            return group.map(Group::asString);
-        }
-
-        @JsonInclude(JsonInclude.Include.NON_ABSENT)
-        public Optional<String> getInsertionId() {
-            return insertionId.map(insertionId -> insertionId.getId().toString());
-        }
-    }
+public class EventDeadLettersRedeliverGroupTask implements Task {
+    public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverGroupTask");
 
     private final EventDeadLettersRedeliverService service;
     private final EventRetriever eventRetriever;
     private final AtomicLong successfulRedeliveriesCount;
     private final AtomicLong failedRedeliveriesCount;
+    private final Group group;
 
-    EventDeadLettersRedeliverTask(EventDeadLettersRedeliverService service, EventRetriever eventRetriever) {
+    EventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service, Group group) {
         this.service = service;
-        this.eventRetriever = eventRetriever;
+        this.group = group;
+        this.eventRetriever = EventRetriever.groupEvents(group);
         this.successfulRedeliveriesCount = new AtomicLong(0L);
         this.failedRedeliveriesCount = new AtomicLong(0L);
     }
@@ -110,11 +77,18 @@ public class EventDeadLettersRedeliverTask implements Task {
         return Optional.of(createAdditionalInformation());
     }
 
-    AdditionalInformation createAdditionalInformation() {
-        return new AdditionalInformation(
+    public EventRetriever getEventRetriever() {
+        return eventRetriever;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
+        return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
-            eventRetriever.forGroup(),
-            eventRetriever.forEvent());
+            eventRetriever.forGroup());
     }
 }

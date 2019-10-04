@@ -48,6 +48,11 @@ import org.apache.james.webadmin.service.ClearMailRepositoryTaskAdditionalInform
 import org.apache.james.webadmin.service.ClearMailRepositoryTaskDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTaskDTO;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverAllTaskDTO;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverGroupTaskDTO;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverOneTaskDTO;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliverService;
+import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
@@ -154,6 +159,21 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> eventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service) {
+        return EventDeadLettersRedeliverAllTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<?, ?> eventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service) {
+        return EventDeadLettersRedeliverGroupTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<?, ?> eventDeadLettersRedeliverOneTask(EventDeadLettersRedeliverService service) {
+        return EventDeadLettersRedeliverOneTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> fullReindexTask(ReIndexerPerformer performer) {
         return FullReindexingTask.module(performer);
     }
@@ -246,6 +266,21 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForAll() {
+        return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForGroup() {
+        return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForOne() {
+        return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE;
     }
 
     @ProvidesIntoSet
