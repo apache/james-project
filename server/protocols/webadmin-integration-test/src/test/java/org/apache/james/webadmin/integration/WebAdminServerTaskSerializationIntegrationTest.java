@@ -630,9 +630,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.remainingCount", is(0));
     }
 
-
     @Test
-    @Ignore("WIP")
     public void mailboxMergingShouldComplete() {
         MailboxId origin = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         MailboxId destination = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX + "2");

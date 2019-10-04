@@ -22,6 +22,9 @@ import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationsDTO;
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskAdditionalInformationDTO;
+import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskDTO;
+import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -150,6 +153,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> mailboxMergingTask(MailboxMergingTaskRunner taskRunner) {
+        return MailboxMergingTaskDTO.module(taskRunner);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
         return MessageIdReindexingTaskDTO.module(factory);
     }
@@ -222,6 +230,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.serializationModule(mailboxIdFactory);
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> mailboxMergingAdditionalInformation() {
+        return MailboxMergingTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet

@@ -41,7 +41,7 @@ public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInf
         );
     }
 
-    static final AdditionalInformationDTOModule<MailboxMergingTask.Details, MailboxMergingTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+    public static final AdditionalInformationDTOModule<MailboxMergingTask.Details, MailboxMergingTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
         DTOModule.forDomainObject(MailboxMergingTask.Details.class)
             .convertToDTO(MailboxMergingTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(MailboxMergingTaskAdditionalInformationDTO::toDomainObject)

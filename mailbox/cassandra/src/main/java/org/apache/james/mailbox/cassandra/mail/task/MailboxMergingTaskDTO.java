@@ -20,8 +20,6 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.server.task.json.dto.TaskDTO;
@@ -29,7 +27,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-class MailboxMergingTaskDTO implements TaskDTO {
+public class MailboxMergingTaskDTO implements TaskDTO {
     private static final CassandraId.Factory CASSANDRA_ID_FACTORY = new CassandraId.Factory();
 
     private static MailboxMergingTaskDTO fromDTO(MailboxMergingTask domainObject, String typeName) {
@@ -41,14 +39,15 @@ class MailboxMergingTaskDTO implements TaskDTO {
         );
     }
 
-    public static final Function<MailboxMergingTaskRunner, TaskDTOModule<MailboxMergingTask, MailboxMergingTaskDTO>> MODULE = (taskRunner) ->
-        DTOModule
+    public static TaskDTOModule<MailboxMergingTask, MailboxMergingTaskDTO> module(MailboxMergingTaskRunner taskRunner) {
+        return DTOModule
             .forDomainObject(MailboxMergingTask.class)
             .convertToDTO(MailboxMergingTaskDTO.class)
             .toDomainObjectConverter(dto -> dto.toDTO(taskRunner))
             .toDTOConverter(MailboxMergingTaskDTO::fromDTO)
             .typeName(MailboxMergingTask.MAILBOX_MERGING.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     private final String type;
 
