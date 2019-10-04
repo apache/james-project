@@ -214,6 +214,68 @@ public interface TaskManagerContract {
     }
 
     @Test
+    default void additionalInformationShouldBeUpdatedWhenRunSuccessfully() {
+        TaskManager taskManager = taskManager();
+        TaskId taskId = taskManager.submit(new MemoryReferenceWithCounterTask(counter -> {
+            counter.incrementAndGet();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.COMPLETED, taskManager);
+        MemoryReferenceWithCounterTask.AdditionalInformation additionalInformation = (MemoryReferenceWithCounterTask.AdditionalInformation) taskManager
+            .getExecutionDetails(taskId)
+            .getAdditionalInformation()
+            .get();
+
+        assertThat(additionalInformation.getCount())
+            .isEqualTo(1);
+    }
+
+    @Test
+    default void additionalInformationShouldBeUpdatedWhenFailed() {
+        TaskManager taskManager = taskManager();
+        TaskId taskId = taskManager.submit(new MemoryReferenceWithCounterTask(counter -> {
+            counter.incrementAndGet();
+            throw new RuntimeException();
+        }));
+
+        awaitUntilTaskHasStatus(taskId, TaskManager.Status.FAILED, taskManager);
+        MemoryReferenceWithCounterTask.AdditionalInformation additionalInformation = (MemoryReferenceWithCounterTask.AdditionalInformation) taskManager
+            .getExecutionDetails(taskId)
+            .getAdditionalInformation()
+            .get();
+
+        assertThat(additionalInformation.getCount())
+            .isEqualTo(1);
+    }
+
+    @Test
+    default void additionalInformationShouldBeUpdatedWhenCancelled(CountDownLatch countDownLatch) {
+        TaskManager taskManager = taskManager();
+        TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
+            counter.incrementAndGet();
+            countDownLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
+        taskManager.cancel(id);
+        awaitUntilTaskHasStatus(id, TaskManager.Status.CANCELLED, taskManager);
+
+        assertThat(taskManager.getExecutionDetails(id).getStatus())
+            .isEqualTo(TaskManager.Status.CANCELLED);
+
+        MemoryReferenceWithCounterTask.AdditionalInformation additionalInformation = (MemoryReferenceWithCounterTask.AdditionalInformation) taskManager
+            .getExecutionDetails(id)
+            .getAdditionalInformation()
+            .get();
+
+        assertThat(additionalInformation.getCount())
+            .isEqualTo(1);
+        countDownLatch.countDown();
+    }
+
+    @Test
     default void getStatusShouldReturnFailedWhenRunPartially() {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
