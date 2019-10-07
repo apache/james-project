@@ -36,11 +36,11 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
-import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
+import org.apache.james.transport.mailets.AddDeliveredToHeader;
 import org.apache.james.transport.matchers.All;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.FakeSmtp;
@@ -48,6 +48,7 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.junit.After;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -96,9 +97,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(CommonProcessors.simpleRoot())
-                .putProcessor(CommonProcessors.error())
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
@@ -124,9 +123,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(CommonProcessors.simpleRoot())
-                .putProcessor(CommonProcessors.error())
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
                 .putProcessor(directResolutionTransport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
@@ -150,9 +147,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(CommonProcessors.simpleRoot())
-                .putProcessor(CommonProcessors.error())
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
@@ -178,9 +173,7 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
         jamesServer = TemporaryJamesServer.builder()
             .withBase(SMTP_AND_IMAP_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(MailetContainer.builder()
-                .putProcessor(CommonProcessors.simpleRoot())
-                .putProcessor(CommonProcessors.error())
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
                 .putProcessor(transport())
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
@@ -196,6 +189,42 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .login(FROM, PASSWORD)
             .select(IMAPMessageReader.INBOX)
             .awaitMessage(awaitAtMostOneMinute);
+    }
+
+    @Ignore("JAMES-2913 PerRecipientHeaders are not handled by RemoteDelivery")
+    @Test
+    public void remoteDeliveryShouldAddPerRecipientHeaders() throws Exception {
+        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+            .registerMxRecord(JAMES_ANOTHER_DOMAIN, fakeSmtp.getContainer().getContainerIp());
+
+        jamesServer = TemporaryJamesServer.builder()
+            .withBase(SMTP_AND_IMAP_MODULE)
+            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                .putProcessor(ProcessorConfiguration.transport()
+                    .addMailet(MailetConfiguration.BCC_STRIPPER)
+                    .addMailet(LOCAL_DELIVERY)
+                    .addMailet(MailetConfiguration.builder()
+                        .matcher(All.class)
+                        .mailet(AddDeliveredToHeader.class)
+                        .build())
+                    .addMailet(MailetConfiguration.remoteDeliveryBuilder()
+                        .matcher(All.class)))
+                .putProcessor(CommonProcessors.bounces()))
+            .build(temporaryFolder.newFolder());
+
+        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+        dataProbe.addDomain(DEFAULT_DOMAIN);
+        dataProbe.addUser(FROM, PASSWORD);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .sendMessage(FROM, RECIPIENT);
+
+        awaitAtMostOneMinute
+            .untilAsserted(this::assertMessageReceivedByTheSmtpServer);
+
+        fakeSmtp.assertEmailReceived(response -> response
+            .body("[0].headers.delivered-to", equalTo(FROM)));
     }
 
     private void assertMessageReceivedByTheSmtpServer() {
@@ -219,5 +248,4 @@ public class DirectResolutionRemoteDeliveryIntegrationTest {
             .addMailet(MailetConfiguration.remoteDeliveryBuilder()
                 .matcher(All.class));
     }
-
 }
