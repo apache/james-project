@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.send;
 
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -30,12 +31,17 @@ import org.apache.mailet.Mail;
 
 import com.google.common.annotations.VisibleForTesting;
 
-public class MailSpool {
+public class MailSpool implements Startable {
 
-    private final MailQueue queue;
+    private final MailQueueFactory<?> queueFactory;
+    private MailQueue queue;
 
     @Inject
     @VisibleForTesting MailSpool(MailQueueFactory<?> queueFactory) {
+        this.queueFactory = queueFactory;
+    }
+
+    public void start() {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 

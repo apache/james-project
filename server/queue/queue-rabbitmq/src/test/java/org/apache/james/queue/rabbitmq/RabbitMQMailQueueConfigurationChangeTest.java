@@ -61,9 +61,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.fge.lambdas.Throwing;
-import com.rabbitmq.client.Connection;
-
-import reactor.core.publisher.Mono;
 
 class RabbitMQMailQueueConfigurationChangeTest {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
@@ -79,7 +76,6 @@ class RabbitMQMailQueueConfigurationChangeTest {
     private static final Instant IN_SLICE_1 = Instant.parse("2007-12-03T10:15:30.00Z");
     private static final Instant IN_SLICE_2 = IN_SLICE_1.plus(1, HOURS);
     private static final Instant IN_SLICE_3 = IN_SLICE_1.plus(2, HOURS);
-    public static final int POOL_SIZE = 5;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
@@ -94,6 +90,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
     private UpdatableTickingClock clock;
     private RabbitMQMailQueueManagement mqManagementApi;
     private MimeMessageStore.Factory mimeMessageStoreFactory;
+    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     @BeforeEach
     void setup(CassandraCluster cassandra) throws Exception {
@@ -101,11 +98,14 @@ class RabbitMQMailQueueConfigurationChangeTest {
         mimeMessageStoreFactory = MimeMessageStore.factory(blobsDAO);
         clock = new UpdatableTickingClock(IN_SLICE_1);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
+        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
+        reactorRabbitMQChannelPool.start();
     }
 
     @AfterEach
     void tearDown() {
         mqManagementApi.deleteAllQueues();
+        reactorRabbitMQChannelPool.close();
     }
 
     private RabbitMQMailQueue getRabbitMQMailQueue(CassandraCluster cassandra, CassandraMailQueueViewConfiguration mailQueueViewConfiguration) throws Exception {
@@ -119,21 +119,18 @@ class RabbitMQMailQueueConfigurationChangeTest {
             .sizeMetricsEnabled(true)
             .build();
 
-        Mono<Connection> connectionMono = rabbitMQExtension.getRabbitConnectionPool().getResilientConnection();
-        ReactorRabbitMQChannelPool reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionMono, POOL_SIZE);
+
         RabbitMQMailQueueFactory.PrivateFactory privateFactory = new RabbitMQMailQueueFactory.PrivateFactory(
             new NoopMetricFactory(),
             new NoopGaugeRegistry(),
-            connectionMono,
-            reactorRabbitMQChannelPool.createSender(),
+            reactorRabbitMQChannelPool,
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
             clock,
             new RawMailQueueItemDecoratorFactory(),
             mailQueueSizeConfiguration);
-        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitConnectionPool(), mqManagementApi, privateFactory);
-        mailQueueFactory.start();
+        RabbitMQMailQueueFactory mailQueueFactory = new RabbitMQMailQueueFactory(reactorRabbitMQChannelPool, mqManagementApi, privateFactory);
         return mailQueueFactory.createQueue(SPOOL);
     }
 

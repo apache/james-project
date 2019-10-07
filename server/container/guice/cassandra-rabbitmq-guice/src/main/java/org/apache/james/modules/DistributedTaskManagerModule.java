@@ -30,6 +30,7 @@ import org.apache.james.task.eventsourcing.WorkQueueSupplier;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionModule;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQTerminationSubscriber;
+import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueue;
 import org.apache.james.task.eventsourcing.distributed.RabbitMQWorkQueueSupplier;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -64,5 +65,11 @@ public class DistributedTaskManagerModule extends AbstractModule {
             .init(instance::start);
     }
 
+    @ProvidesIntoSet
+    InitializationOperation workQueue(EventSourcingTaskManager instance) {
+        return InitilizationOperationBuilder
+            .forClass(RabbitMQWorkQueue.class)
+            .init(instance::start);
+    }
 
 }

@@ -42,6 +42,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Delivery;
+
 import reactor.core.Disposable;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Mono;
@@ -83,7 +84,8 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     }
 
     public void start() {
-        sender = channelPool.createSender();
+        channelPool.start();
+        sender = channelPool.getSender();
 
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         sender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();

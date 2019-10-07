@@ -20,10 +20,10 @@
 
 package org.apache.james.mpt.imapmailbox.rabbitmq.host;
 
-import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
@@ -63,6 +63,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     private RabbitMQEventBus eventBus;
     private SimpleConnectionPool connectionPool;
     private InMemoryIntegrationResources resources;
+    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     RabbitMQEventBusHostSystem(DockerRabbitMQ dockerRabbitMQ) {
         this.dockerRabbitMQ = dockerRabbitMQ;
@@ -73,6 +74,8 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
         super.beforeTest();
 
         connectionPool = new SimpleConnectionPool(dockerRabbitMQ.createRabbitConnectionFactory());
+        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionPool);
+        reactorRabbitMQChannelPool.start();
         eventBus = createEventBus();
         eventBus.start();
 
@@ -101,18 +104,19 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
             defaultImapProcessorFactory);
     }
 
-    private RabbitMQEventBus createEventBus() throws URISyntaxException {
+    private RabbitMQEventBus createEventBus() {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         EventSerializer eventSerializer = new EventSerializer(mailboxIdFactory, messageIdFactory, new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         RoutingKeyConverter routingKeyConverter = new RoutingKeyConverter(ImmutableSet.of(new MailboxIdRegistrationKey.Factory(mailboxIdFactory)));
-        return new RabbitMQEventBus(connectionPool, eventSerializer, RetryBackoffConfiguration.DEFAULT,
+        return new RabbitMQEventBus(reactorRabbitMQChannelPool, eventSerializer, RetryBackoffConfiguration.DEFAULT,
             routingKeyConverter, new MemoryEventDeadLetters(), new NoopMetricFactory());
     }
 
     @Override
     public void afterTest() {
         eventBus.stop();
+        reactorRabbitMQChannelPool.close();
         connectionPool.close();
     }
 

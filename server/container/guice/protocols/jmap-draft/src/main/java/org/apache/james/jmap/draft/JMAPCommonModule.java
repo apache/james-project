@@ -42,6 +42,8 @@ import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.mailet.base.AutomaticallySentMailDetector;
 import org.apache.mailet.base.AutomaticallySentMailDetectorImpl;
 
@@ -50,6 +52,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
 public class JMAPCommonModule extends AbstractModule {
@@ -95,5 +98,12 @@ public class JMAPCommonModule extends AbstractModule {
                 jwtAuthenticationStrategy,
                 accessTokenAuthenticationStrategy,
                 queryParameterAuthenticationStrategy);
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation workQueue(MailSpool instance) {
+        return InitilizationOperationBuilder
+            .forClass(MailSpool.class)
+            .init(instance::start);
     }
 }

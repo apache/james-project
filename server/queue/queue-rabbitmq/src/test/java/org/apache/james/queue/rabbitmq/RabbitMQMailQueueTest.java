@@ -44,6 +44,7 @@ import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
+
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueMetricContract;
@@ -68,7 +69,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.ArgumentCaptor;
 
 import com.github.fge.lambdas.Throwing;
-import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -84,7 +84,6 @@ class RabbitMQMailQueueTest {
     private static final Instant IN_SLICE_3 = IN_SLICE_1.plus(2, HOURS);
     private static final Instant IN_SLICE_5 = IN_SLICE_1.plus(4, HOURS);
     private static final Instant IN_SLICE_7 = IN_SLICE_1.plus(6, HOURS);
-    private static final int POOL_SIZE = 5;
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
@@ -100,9 +99,11 @@ class RabbitMQMailQueueTest {
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
     private RabbitMQMailQueueManagement mqManagementApi;
+    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     @AfterEach
     void tearDown() {
+        reactorRabbitMQChannelPool.close();
         mqManagementApi.deleteAllQueues();
     }
 
@@ -238,11 +239,6 @@ class RabbitMQMailQueueTest {
                 }))
                 .blockLast();
         }
-
-        @AfterEach
-        void tearDown() {
-            mqManagementApi.deleteAllQueues();
-        }
     }
 
     @Nested
@@ -264,11 +260,6 @@ class RabbitMQMailQueueTest {
             ArgumentCaptor<Gauge<?>> gaugeCaptor = ArgumentCaptor.forClass(Gauge.class);
             verify(metricTestSystem.getSpyGaugeRegistry(), never()).register(any(), gaugeCaptor.capture());
         }
-
-        @AfterEach
-        void tearDown() {
-            mqManagementApi.deleteAllQueues();
-        }
     }
 
     private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration) throws Exception {
@@ -284,14 +275,12 @@ class RabbitMQMailQueueTest {
                 .build(),
             mimeMessageStoreFactory);
 
-        Mono<Connection> connectionMono = rabbitMQExtension.getRabbitConnectionPool().getResilientConnection();
-        ReactorRabbitMQChannelPool reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionMono, POOL_SIZE);
-
+        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
+        reactorRabbitMQChannelPool.start();
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),
-            connectionMono,
-            reactorRabbitMQChannelPool.createSender(),
+            reactorRabbitMQChannelPool,
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
@@ -299,8 +288,7 @@ class RabbitMQMailQueueTest {
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitConnectionPool(), mqManagementApi, factory);
-        mailQueueFactory.start();
+        mailQueueFactory = new RabbitMQMailQueueFactory(reactorRabbitMQChannelPool, mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 }

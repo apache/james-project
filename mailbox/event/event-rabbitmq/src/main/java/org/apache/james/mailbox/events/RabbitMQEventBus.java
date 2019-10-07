@@ -25,47 +25,42 @@ import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.base.Preconditions;
-import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
-import reactor.rabbitmq.Sender;
 
 public class RabbitMQEventBus implements EventBus, Startable {
-    private static final int MAX_CHANNELS_NUMBER = 5;
     private static final String NOT_RUNNING_ERROR_MESSAGE = "Event Bus is not running";
     static final String MAILBOX_EVENT = "mailboxEvent";
     static final String MAILBOX_EVENT_EXCHANGE_NAME = MAILBOX_EVENT + "-exchange";
     static final String EVENT_BUS_ID = "eventBusId";
 
-    private final Mono<Connection> connectionMono;
     private final EventSerializer eventSerializer;
     private final RoutingKeyConverter routingKeyConverter;
     private final RetryBackoffConfiguration retryBackoff;
     private final EventBusId eventBusId;
     private final EventDeadLetters eventDeadLetters;
+    private final ReactorRabbitMQChannelPool channelPool;
     private final MailboxListenerExecutor mailboxListenerExecutor;
 
     private volatile boolean isRunning;
     private volatile boolean isStopping;
-    private ReactorRabbitMQChannelPool channelPool;
     private GroupRegistrationHandler groupRegistrationHandler;
     private KeyRegistrationHandler keyRegistrationHandler;
-    EventDispatcher eventDispatcher;
-    private Sender sender;
+    private EventDispatcher eventDispatcher;
 
     @Inject
-    public RabbitMQEventBus(SimpleConnectionPool simpleConnectionPool, EventSerializer eventSerializer,
+    public RabbitMQEventBus(ReactorRabbitMQChannelPool reactorRabbitMQChannelPool, EventSerializer eventSerializer,
                      RetryBackoffConfiguration retryBackoff,
                      RoutingKeyConverter routingKeyConverter,
                      EventDeadLetters eventDeadLetters, MetricFactory metricFactory) {
+        this.channelPool = reactorRabbitMQChannelPool;
         this.mailboxListenerExecutor = new MailboxListenerExecutor(metricFactory);
         this.eventBusId = EventBusId.random();
-        this.connectionMono = simpleConnectionPool.getResilientConnection();
         this.eventSerializer = eventSerializer;
         this.routingKeyConverter = routingKeyConverter;
         this.retryBackoff = retryBackoff;
@@ -76,13 +71,11 @@ public class RabbitMQEventBus implements EventBus, Startable {
 
     public void start() {
         if (!isRunning && !isStopping) {
-            this.channelPool = new ReactorRabbitMQChannelPool(connectionMono, MAX_CHANNELS_NUMBER);
 
-            sender = channelPool.createSender();
             LocalListenerRegistry localListenerRegistry = new LocalListenerRegistry();
-            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, sender, connectionMono, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
-            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, sender, connectionMono, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
-            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, sender, localListenerRegistry, mailboxListenerExecutor);
+            keyRegistrationHandler = new KeyRegistrationHandler(eventBusId, eventSerializer, channelPool, routingKeyConverter, localListenerRegistry, mailboxListenerExecutor);
+            groupRegistrationHandler = new GroupRegistrationHandler(eventSerializer, channelPool, retryBackoff, eventDeadLetters, mailboxListenerExecutor);
+            eventDispatcher = new EventDispatcher(eventBusId, eventSerializer, channelPool.getSender(), localListenerRegistry, mailboxListenerExecutor);
 
             eventDispatcher.start();
             keyRegistrationHandler.start();
@@ -97,8 +90,6 @@ public class RabbitMQEventBus implements EventBus, Startable {
             isRunning = false;
             groupRegistrationHandler.stop();
             keyRegistrationHandler.stop();
-            sender.close();
-            channelPool.close();
         }
     }
 

@@ -22,14 +22,15 @@ import java.io.Closeable
 import java.time.Duration
 import java.util
 
+import com.google.common.annotations.VisibleForTesting
+import javax.annotation.PreDestroy
 import javax.inject.Inject
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Subscriber}
+import org.apache.james.lifecycle.api.Startable
 import org.apache.james.task.TaskManager.ReachedTimeoutException
 import org.apache.james.task._
 import org.apache.james.task.eventsourcing.TaskCommand._
-import com.google.common.annotations.VisibleForTesting
-import javax.annotation.PreDestroy
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scheduler.Schedulers
 
@@ -38,7 +39,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
                                                                                   val eventStore: EventStore,
                                                                                   val executionDetailsProjection: TaskExecutionDetailsProjection,
                                                                                   val hostname: Hostname,
-                                                                                  val terminationSubscriber: TerminationSubscriber) extends TaskManager with Closeable {
+                                                                                  val terminationSubscriber: TerminationSubscriber) extends TaskManager with Closeable with Startable {
 
   private def workDispatcher: Subscriber = {
     case Created(aggregateId, _, task, _) =>
@@ -68,6 +69,8 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     eventStore = eventStore)
 
   private val workQueue: WorkQueue = workQueueSupplier(eventSourcingSystem)
+
+  def start(): Unit = workQueue.start()
 
   override def submit(task: Task): TaskId = {
     val taskId = TaskId.generateTaskId

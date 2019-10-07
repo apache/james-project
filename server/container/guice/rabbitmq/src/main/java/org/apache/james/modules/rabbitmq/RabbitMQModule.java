@@ -29,10 +29,10 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.rabbitmq.RabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.RabbitMQConfiguration;
 import org.apache.james.backends.rabbitmq.RabbitMQHealthCheck;
+import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleChannelPool;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.rabbitmq.RabbitMQMailQueue;
@@ -50,17 +50,18 @@ import org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDAO;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfiguration;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMailQueueViewConfigurationModule;
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
-import org.apache.james.utils.InitialisationOperation;
+import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class RabbitMQModule extends AbstractModule {
 
@@ -70,6 +71,7 @@ public class RabbitMQModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        bind(ReactorRabbitMQChannelPool.class).in(Scopes.SINGLETON);
         bind(EnqueuedMailsDAO.class).in(Scopes.SINGLETON);
         bind(DeletedMailsDAO.class).in(Scopes.SINGLETON);
         bind(BrowseStartDAO.class).in(Scopes.SINGLETON);
@@ -88,7 +90,6 @@ public class RabbitMQModule extends AbstractModule {
         eventDTOModuleBinder.addBinding().toInstance(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
 
         Multibinder.newSetBinder(binder(), HealthCheck.class).addBinding().to(RabbitMQHealthCheck.class);
-        Multibinder.newSetBinder(binder(), InitialisationOperation.class).addBinding().to(RabbitMQMailQueueFactoryInitialisationOperation.class);
     }
 
     @Provides
@@ -145,23 +146,10 @@ public class RabbitMQModule extends AbstractModule {
         return RabbitMQMailQueueConfiguration.from(configuration);
     }
 
-    @Singleton
-    public static class RabbitMQMailQueueFactoryInitialisationOperation implements InitialisationOperation {
-        private final RabbitMQMailQueueFactory rabbitMQMailQueueFactory;
-
-        @Inject
-        public RabbitMQMailQueueFactoryInitialisationOperation(RabbitMQMailQueueFactory rabbitMQMailQueueFactory) {
-            this.rabbitMQMailQueueFactory = rabbitMQMailQueueFactory;
-        }
-
-        @Override
-        public void initModule() {
-            rabbitMQMailQueueFactory.start();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return RabbitMQMailQueueFactory.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation workQueue(ReactorRabbitMQChannelPool instance) {
+        return InitilizationOperationBuilder
+            .forClass(ReactorRabbitMQChannelPool.class)
+            .init(instance::start);
     }
 }

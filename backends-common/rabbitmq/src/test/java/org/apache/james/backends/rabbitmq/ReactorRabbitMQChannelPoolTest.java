@@ -66,9 +66,11 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
     }
 
     private ReactorRabbitMQChannelPool generateChannelPool(int poolSize) {
-        return new ReactorRabbitMQChannelPool(
-                rabbitMQExtension.getRabbitConnectionPool().getResilientConnection(),
-                poolSize);
+        ReactorRabbitMQChannelPool reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(
+            rabbitMQExtension.getRabbitConnectionPool().getResilientConnection(),
+            poolSize);
+        reactorRabbitMQChannelPool.start();
+        return reactorRabbitMQChannelPool;
     }
 
     // Pool wait timeout is an expected exception

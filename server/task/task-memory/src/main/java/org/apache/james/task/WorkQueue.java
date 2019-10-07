@@ -20,7 +20,13 @@ package org.apache.james.task;
 
 import java.io.Closeable;
 
-public interface WorkQueue extends Closeable {
+import org.apache.james.lifecycle.api.Startable;
+
+public interface WorkQueue extends Closeable, Startable {
+
+    default void start() {
+
+    }
 
     void submit(TaskWithId taskWithId);
 

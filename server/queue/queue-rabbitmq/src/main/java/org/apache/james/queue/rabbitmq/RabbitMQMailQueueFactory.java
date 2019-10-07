@@ -32,17 +32,14 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
-import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.mail.MimeMessagePartsId;
 import org.apache.james.blob.mail.MimeMessageStore;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -53,23 +50,18 @@ import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
-import com.rabbitmq.client.Connection;
 
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
-import reactor.rabbitmq.Sender;
 
-public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQueue>, Startable {
-    private static final int MAX_CHANNELS_NUMBER = 5;
+public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQueue> {
 
     @VisibleForTesting static class PrivateFactory {
         private final MetricFactory metricFactory;
         private final GaugeRegistry gaugeRegistry;
-        private final Mono<Connection> connectionMono;
-        private final Sender sender;
+        private final ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
         private final Store<MimeMessage, MimeMessagePartsId> mimeMessageStore;
         private final MailReferenceSerializer mailReferenceSerializer;
         private final Function<MailReferenceDTO, MailWithEnqueueId> mailLoader;
@@ -81,7 +73,8 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
         @Inject
         @VisibleForTesting PrivateFactory(MetricFactory metricFactory,
                                           GaugeRegistry gaugeRegistry,
-                                          Mono<Connection> connectionMono, Sender sender, MimeMessageStore.Factory mimeMessageStoreFactory,
+                                          ReactorRabbitMQChannelPool reactorRabbitMQChannelPool,
+                                          MimeMessageStore.Factory mimeMessageStoreFactory,
                                           BlobId.Factory blobIdFactory,
                                           MailQueueView.Factory mailQueueViewFactory,
                                           Clock clock,
@@ -89,8 +82,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                                           RabbitMQMailQueueConfiguration configuration) {
             this.metricFactory = metricFactory;
             this.gaugeRegistry = gaugeRegistry;
-            this.connectionMono = connectionMono;
-            this.sender = sender;
+            this.reactorRabbitMQChannelPool = reactorRabbitMQChannelPool;
             this.mimeMessageStore = mimeMessageStoreFactory.mimeMessageStore();
             this.mailQueueViewFactory = mailQueueViewFactory;
             this.clock = clock;
@@ -107,9 +99,9 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             RabbitMQMailQueue rabbitMQMailQueue = new RabbitMQMailQueue(
                 metricFactory,
                 mailQueueName,
-                new Enqueuer(mailQueueName, sender, mimeMessageStore, mailReferenceSerializer,
+                new Enqueuer(mailQueueName, reactorRabbitMQChannelPool, mimeMessageStore, mailReferenceSerializer,
                     metricFactory, mailQueueView, clock),
-                new Dequeuer(mailQueueName, connectionMono, mailLoader, mailReferenceSerializer,
+                new Dequeuer(mailQueueName, reactorRabbitMQChannelPool, mailLoader, mailReferenceSerializer,
                     metricFactory, mailQueueView),
                 mailQueueView,
                 decoratorFactory);
@@ -145,24 +137,17 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     private final RabbitMQMailQueueManagement mqManagementApi;
     private final PrivateFactory privateFactory;
     private final RabbitMQMailQueueObjectPool mailQueueObjectPool;
-    private final Mono<Connection> connectionMono;
-    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
-    private Sender sender;
+    private final ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     @VisibleForTesting
     @Inject
-    RabbitMQMailQueueFactory(SimpleConnectionPool simpleConnectionPool,
+    RabbitMQMailQueueFactory(ReactorRabbitMQChannelPool reactorRabbitMQChannelPool,
                              RabbitMQMailQueueManagement mqManagementApi,
                              PrivateFactory privateFactory) {
-        this.connectionMono = simpleConnectionPool.getResilientConnection();
+        this.reactorRabbitMQChannelPool = reactorRabbitMQChannelPool;
         this.mqManagementApi = mqManagementApi;
         this.privateFactory = privateFactory;
         this.mailQueueObjectPool = new RabbitMQMailQueueObjectPool();
-    }
-
-    public void start() {
-        this.reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(connectionMono, MAX_CHANNELS_NUMBER);
-        this.sender = reactorRabbitMQChannelPool.createSender();
     }
 
     @Override
@@ -187,15 +172,15 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     private RabbitMQMailQueue createQueueIntoRabbitServer(MailQueueName mailQueueName) {
         String exchangeName = mailQueueName.toRabbitExchangeName().asString();
         Flux.concat(
-            sender.declareExchange(ExchangeSpecification.exchange(exchangeName)
+            reactorRabbitMQChannelPool.getSender().declareExchange(ExchangeSpecification.exchange(exchangeName)
                 .durable(true)
                 .type("direct")),
-            sender.declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
+            reactorRabbitMQChannelPool.getSender().declareQueue(QueueSpecification.queue(mailQueueName.toWorkQueueName().asString())
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
                 .arguments(NO_ARGUMENTS)),
-            sender.bind(BindingSpecification.binding()
+            reactorRabbitMQChannelPool.getSender().bind(BindingSpecification.binding()
                 .exchange(mailQueueName.toRabbitExchangeName().asString())
                 .queue(mailQueueName.toWorkQueueName().asString())
                 .routingKey(EMPTY_ROUTING_KEY)))
@@ -210,11 +195,4 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             .map(mailQueueObjectPool::retrieveInstanceFor)
             .findFirst();
     }
-
-    @PreDestroy
-    public void stop() {
-        sender.close();
-        reactorRabbitMQChannelPool.close();
-    }
-
 }

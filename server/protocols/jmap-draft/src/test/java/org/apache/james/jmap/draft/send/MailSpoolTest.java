@@ -49,6 +49,7 @@ public class MailSpoolTest {
         myQueue = mailQueueFactory.createQueue(MailQueueFactory.SPOOL);
 
         mailSpool = new MailSpool(mailQueueFactory);
+        mailSpool.start();
     }
 
     @Test
