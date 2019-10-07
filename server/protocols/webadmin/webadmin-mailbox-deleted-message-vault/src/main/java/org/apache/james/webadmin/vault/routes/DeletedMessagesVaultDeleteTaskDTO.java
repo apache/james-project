@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.webadmin.vault.routes;
 
-import java.util.function.Function;
-
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -28,14 +26,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeletedMessagesVaultDeleteTaskDTO implements TaskDTO {
 
-    public static final Function<DeletedMessagesVaultDeleteTask.Factory, TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO>> MODULE = (factory) ->
-        DTOModule
+    public static final TaskDTOModule<DeletedMessagesVaultDeleteTask, DeletedMessagesVaultDeleteTaskDTO> module(DeletedMessagesVaultDeleteTask.Factory factory) {
+        return DTOModule
             .forDomainObject(DeletedMessagesVaultDeleteTask.class)
             .convertToDTO(DeletedMessagesVaultDeleteTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(DeletedMessagesVaultDeleteTaskDTO::of)
             .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     private final String type;
     private final String userName;

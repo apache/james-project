@@ -54,8 +54,8 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     void setUp() {
         deletedMessageVault = mock(DeletedMessageVault.class);
         DeletedMessagesVaultDeleteTask.Factory factory = new DeletedMessagesVaultDeleteTask.Factory(deletedMessageVault, messageIdFactory);
-        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultDeleteTaskDTO.MODULE.apply(factory));
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.SERIALIZATION_MODULE.apply(messageIdFactory));
+        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultDeleteTaskDTO.module(factory));
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
     }
 
     @Test

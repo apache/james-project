@@ -53,6 +53,9 @@ import org.apache.james.webadmin.service.ReprocessingAllMailsTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ReprocessingOneMailTaskDTO;
 import org.apache.james.webadmin.service.ReprocessingService;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultDeleteTask;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultDeleteTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultDeleteTaskDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskAdditionalInformationDTO;
@@ -65,12 +68,6 @@ import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInforma
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskDTO;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO;
-
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.ProvidesIntoSet;
-
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTaskDTO;
@@ -139,6 +136,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<?> mailQueueFactory) {
         return DeleteMailsFromMailQueueTaskDTO.module((MailQueueFactory<ManageableMailQueue>) mailQueueFactory);
+    }
+
+    @ProvidesIntoSet
+    public TaskDTOModule<?, ?> deletedMessagesVaultDeleteTask(DeletedMessagesVaultDeleteTask.Factory factory) {
+        return DeletedMessagesVaultDeleteTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
@@ -224,6 +226,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> deleteMailsFromMailQueueAdditionalInformation() {
         return DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultDeleteAdditionalInformation(MessageId.Factory factory) {
+        return DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(factory);
     }
 
     @ProvidesIntoSet

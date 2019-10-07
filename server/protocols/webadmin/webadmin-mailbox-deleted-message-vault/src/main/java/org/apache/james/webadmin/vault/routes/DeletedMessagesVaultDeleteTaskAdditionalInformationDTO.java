@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.webadmin.vault.routes;
 
-import java.util.function.Function;
-
 import org.apache.james.core.User;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MessageId;
@@ -30,14 +28,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    static final Function<MessageId.Factory, AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO>> SERIALIZATION_MODULE =
-        factory ->
-            DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
-                .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
-                .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(User.fromUsername(dto.userName), factory.fromString(dto.getMessageId())))
-                .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUser(), details.getDeleteMessageId()))
-                .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
-                .withFactory(AdditionalInformationDTOModule::new);
+    public static AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
+        return DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
+            .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(User.fromUsername(dto.userName), factory.fromString(dto.getMessageId())))
+            .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUser(), details.getDeleteMessageId()))
+            .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
+            .withFactory(AdditionalInformationDTOModule::new);
+    }
 
     private final String type;
     private final String userName;
