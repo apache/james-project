@@ -58,6 +58,18 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     }
   }
 
+  private[eventsourcing] def update(additionalInformation: AdditionalInformation): util.List[Event] = {
+    currentStatus match {
+      case Some(Status.IN_PROGRESS) => createEventWithId(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+      case Some(Status.CANCEL_REQUESTED) => createEventWithId(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+      case Some(Status.COMPLETED) => Nil.asJava
+      case Some(Status.FAILED) => Nil.asJava
+      case Some(Status.WAITING) => Nil.asJava
+      case Some(Status.CANCELLED) => Nil.asJava
+      case _ => Nil.asJava
+    }
+  }
+
   private[eventsourcing] def complete(result: Result, additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
     currentStatus match {
       case Some(status) if !status.isFinished => createEventWithId(Completed(aggregateId, _, result, additionalInformation))

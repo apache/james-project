@@ -31,6 +31,8 @@ object TaskCommand {
 
   case class Start(id: TaskId) extends TaskCommand
 
+  case class UpdateAdditionalInformation(id: TaskId, additionalInformation: AdditionalInformation) extends TaskCommand
+
   case class Complete(id: TaskId, result: Result, additionalInformation: Option[AdditionalInformation]) extends TaskCommand
 
   case class RequestCancel(id: TaskId) extends TaskCommand
