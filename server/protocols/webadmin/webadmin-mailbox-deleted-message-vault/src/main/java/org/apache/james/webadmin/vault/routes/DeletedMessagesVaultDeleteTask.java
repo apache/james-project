@@ -34,7 +34,7 @@ import reactor.core.publisher.Mono;
 
 public class DeletedMessagesVaultDeleteTask implements Task {
 
-    static final TaskType TYPE = TaskType.of("deletedMessages/delete");
+    public static final TaskType TYPE = TaskType.of("deletedMessages/delete");
 
     public static class Factory {
 

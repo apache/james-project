@@ -35,9 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-class DeletedMessagesVaultExportTask implements Task {
+public class DeletedMessagesVaultExportTask implements Task {
 
-    static final TaskType TYPE = TaskType.of("deletedMessages/export");
+    public static final TaskType TYPE = TaskType.of("deletedMessages/export");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 

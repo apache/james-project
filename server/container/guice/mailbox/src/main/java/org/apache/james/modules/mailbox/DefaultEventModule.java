@@ -31,7 +31,9 @@ import org.apache.james.mailbox.events.MemoryEventDeadLetters;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.events.delivery.EventDelivery;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
+import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitialisationOperation;
 
 import com.google.inject.AbstractModule;
@@ -52,6 +54,7 @@ public class DefaultEventModule extends AbstractModule {
         bind(MemoryEventDeadLetters.class).in(Scopes.SINGLETON);
 
         bind(EventDeadLetters.class).to(MemoryEventDeadLetters.class);
+        Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(EventDeadLettersProbe.class);
         bind(MailboxListenersLoader.class).to(MailboxListenersLoaderImpl.class);
         bind(EventDelivery.class).to(InVmEventDelivery.class);
         bind(EventBus.class).to(InVMEventBus.class);

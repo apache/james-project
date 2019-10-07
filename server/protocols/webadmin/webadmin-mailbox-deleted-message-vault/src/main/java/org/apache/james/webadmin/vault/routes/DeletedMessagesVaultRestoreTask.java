@@ -35,9 +35,9 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 
-class DeletedMessagesVaultRestoreTask implements Task {
+public class DeletedMessagesVaultRestoreTask implements Task {
 
-    static final TaskType TYPE = TaskType.of("deletedMessages/restore");
+    public static final TaskType TYPE = TaskType.of("deletedMessages/restore");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final User user;

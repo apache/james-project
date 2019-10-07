@@ -139,8 +139,8 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     public static final String ROOT_PATH = "deletedMessages";
     public static final String USERS = "users";
+    public static final String MESSAGE_PATH_PARAM = "messages";
     private static final String USER_PATH_PARAM = ":user";
-    static final String MESSAGE_PATH_PARAM = "messages";
     private static final String MESSAGE_ID_PARAM = ":messageId";
     static final String USER_PATH = ROOT_PATH + SEPARATOR + USERS + SEPARATOR + USER_PATH_PARAM;
     private static final String DELETE_PATH = ROOT_PATH + SEPARATOR + USERS + SEPARATOR + USER_PATH_PARAM + SEPARATOR + MESSAGE_PATH_PARAM + SEPARATOR + MESSAGE_ID_PARAM;

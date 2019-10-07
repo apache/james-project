@@ -61,4 +61,7 @@ public class MailRepositoryProbeImpl implements GuiceProbe {
             .collect(Guavate.toImmutableList());
     }
 
+    public MailRepositoryStore getMailRepositoryStore() {
+        return repositoryStore;
+    }
 }
