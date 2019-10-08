@@ -520,6 +520,22 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m6.getUid());
     }
+
+    @Test
+    public void searchShouldReturnSeenMessagesWhenFlagsGotUpdated() throws MailboxException {
+        inboxMessageManager.setFlags(
+            new Flags(Flags.Flag.SEEN),
+            MessageManager.FlagsUpdateMode.ADD,
+            MessageRange.one(m5.getUid()),
+            session);
+
+        await();
+
+        SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
+
+        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
+            .contains(m5.getUid());
+    }
     
     @Test
     public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
