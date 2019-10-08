@@ -37,7 +37,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DeletedMessagesVaultRestoreTask implements Task {
 
-    public static final TaskType TYPE = TaskType.of("deletedMessages/restore");
+    static final TaskType TYPE = TaskType.of("deletedMessages/restore");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final User user;

@@ -28,7 +28,6 @@ import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.Matchers.anEmptyMap;
 import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.emptyArray;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 
@@ -41,13 +40,11 @@ import javax.mail.Flags;
 import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.GenericGroup;
@@ -75,21 +72,7 @@ import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.apache.james.webadmin.service.ClearMailQueueTask;
-import org.apache.james.webadmin.service.ClearMailRepositoryTask;
-import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
-import org.apache.james.webadmin.service.EventDeadLettersRedeliverTask;
-import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
-import org.apache.james.webadmin.service.ReprocessingOneMailTask;
-import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultDeleteTask;
-import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTask;
-import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTask;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
-import org.apache.mailbox.tools.indexer.FullReindexingTask;
-import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
-import org.apache.mailbox.tools.indexer.SingleMailboxReindexingTask;
-import org.apache.mailbox.tools.indexer.SingleMessageReindexingTask;
-import org.apache.mailbox.tools.indexer.UserReindexingTask;
 import org.apache.mailet.base.test.FakeMail;
 
 import io.restassured.RestAssured;
@@ -150,7 +133,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is(FullReindexingTask.FULL_RE_INDEXING.asString()))
+            .body("type", is("FullReIndexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.failures", is(anEmptyMap()));
@@ -183,7 +166,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .then()
                 .body("status", is("completed"))
                 .body("taskId", is(notNullValue()))
-                .body("type", is(DeleteMailsFromMailQueueTask.TYPE.asString()))
+                .body("type", is("delete-mails-from-mail-queue"))
                 .body("additionalInformation.mailQueueName", is(notNullValue()))
                 .body("additionalInformation.remainingCount", is(0))
                 .body("additionalInformation.initialCount", is(0))
@@ -223,7 +206,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is(ReprocessingAllMailsTask.TYPE.asString()))
+            .body("type", is("reprocessingAllTask"))
             .body("additionalInformation.repositoryPath", is(notNullValue()))
             .body("additionalInformation.targetQueue", is(notNullValue()))
             .body("additionalInformation.targetProcessor", is(nullValue()))
@@ -261,7 +244,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is(ReprocessingOneMailTask.TYPE.asString()))
+            .body("type", is("reprocessingOneTask"))
             .body("additionalInformation.repositoryPath", is(mailRepositoryUrl.asString()))
             .body("additionalInformation.targetQueue", is(notNullValue()))
             .body("additionalInformation.mailKey", is(mailKey))
@@ -292,7 +275,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(SingleMessageReindexingTask.MESSAGE_RE_INDEXING.asString()))
+            .body("type", is("messageReIndexing"))
             .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
             .body("additionalInformation.uid", is(Math.toIntExact(composedMessageId.getUid().asLong())));
     }
@@ -320,7 +303,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(MessageIdReIndexingTask.TYPE.asString()))
+            .body("type", is("MessageIdReIndexingTask"))
             .body("additionalInformation.messageId", is(composedMessageId.getMessageId().serialize()));
     }
 
@@ -340,7 +323,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(UserReindexingTask.USER_RE_INDEXING.asString()))
+            .body("type", is("userReIndexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.user", is(USERNAME))
@@ -373,7 +356,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(DeletedMessagesVaultRestoreTask.TYPE.asString()))
+            .body("type", is("deletedMessages/restore"))
             .body("additionalInformation.user", is(USERNAME))
             .body("additionalInformation.successfulRestoreCount", is(0))
             .body("additionalInformation.errorRestoreCount", is(0));
@@ -407,7 +390,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(DeletedMessagesVaultExportTask.TYPE.asString()))
+            .body("type", is("deletedMessages/export"))
             .body("additionalInformation.userExportFrom", is(USERNAME))
             .body("additionalInformation.exportTo", is(exportTo))
             .body("additionalInformation.totalExportedMessages", is(0));
@@ -465,7 +448,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+            .body("type", is("eventDeadLettersRedeliverTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0));
 
@@ -507,7 +490,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+            .body("type", is("eventDeadLettersRedeliverTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()));
@@ -549,7 +532,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(EventDeadLettersRedeliverTask.TYPE.asString()))
+            .body("type", is("eventDeadLettersRedeliverTask"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()))
@@ -582,7 +565,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(ClearMailQueueTask.TYPE.asString()))
+            .body("type", is("clear-mail-queue"))
             .body("additionalInformation.mailQueueName", is(notNullValue()))
             .body("additionalInformation.initialCount", is(0))
             .body("additionalInformation.remainingCount", is(0));
@@ -636,7 +619,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is(ClearMailRepositoryTask.TYPE.asString()))
+            .body("type", is("clearMailRepository"))
             .body("additionalInformation.repositoryPath", is(notNullValue()))
             .body("additionalInformation.initialCount", is(0))
             .body("additionalInformation.remainingCount", is(0));
@@ -664,7 +647,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
-            .body("type", is(MailboxMergingTask.MAILBOX_MERGING.asString()))
+            .body("type", is("mailboxMerging"))
             .body("additionalInformation.oldMailboxId", is(origin.serialize()))
             .body("additionalInformation.newMailboxId", is(destination.serialize()))
             .body("additionalInformation.totalMessageCount", is(0))
@@ -688,7 +671,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString()))
+            .body("type", is("mailboxReIndexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
@@ -721,7 +704,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is(DeletedMessagesVaultDeleteTask.TYPE.asString()))
+            .body("type", is("deletedMessages/delete"))
             .body("additionalInformation.user", is(USERNAME))
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
     }
@@ -742,7 +725,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is(MigrationTask.CASSANDRA_MIGRATION.asString()))
+            .body("type", is("CassandraMigration"))
             .body("additionalInformation.toVersion", is(toVersion.getValue()));
     }
 }
