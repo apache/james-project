@@ -37,7 +37,7 @@ class CreateCommandHandler(private val loadHistory: TaskAggregateId => History, 
   override def handledClass: Class[Create] = classOf[Create]
 
   override def handle(command: Create): util.List[_ <: Event] = {
-    loadAggregate(loadHistory, command.id).create(command.task, hostname)
+    TaskAggregate.create(TaskAggregateId(command.id), command.task, hostname)
   }
 }
 

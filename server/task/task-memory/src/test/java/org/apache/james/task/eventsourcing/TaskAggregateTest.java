@@ -19,6 +19,7 @@
 package org.apache.james.task.eventsourcing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Arrays;
 import java.util.function.Function;
@@ -35,8 +36,7 @@ import org.apache.james.task.TaskId;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Streams;
-import scala.None;
-import scala.None$;
+import scala.Option;
 
 class TaskAggregateTest {
 
@@ -50,6 +50,17 @@ class TaskAggregateTest {
                     Arrays.stream(events),
                     (id, event) -> event.apply(id))
                 .collect(Collectors.toList()));
+    }
+
+    @Test
+    void TaskAggregateShouldThrowWhenHistoryDoesntStartWithCreatedEvent() {
+        assertThatThrownBy(() -> TaskAggregate.fromHistory(ID, buildHistory(eventId -> Started.apply(ID, eventId, HOSTNAME))))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void TaskAggregateShouldThrowWhenEmptyHistory() {
+        assertThatThrownBy(() -> TaskAggregate.fromHistory(ID, History.empty())).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -90,7 +101,7 @@ class TaskAggregateTest {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),
             eventId -> Started.apply(ID, eventId, HOSTNAME),
-            eventId -> Completed.apply(ID, eventId, Task.Result.COMPLETED, task.type(), None$.empty())
+            eventId -> Completed.apply(ID, eventId, Task.Result.COMPLETED, Option.empty())
         );
         TaskAggregate aggregate = TaskAggregate.fromHistory(ID, history);
         assertThat(aggregate.update(new MemoryReferenceWithCounterTask.AdditionalInformation(3))).isEmpty();
@@ -102,7 +113,7 @@ class TaskAggregateTest {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),
             eventId -> Started.apply(ID, eventId, HOSTNAME),
-            eventId -> Failed.apply(ID, eventId, task.type(), None$.empty())
+            eventId -> Failed.apply(ID, eventId, Option.empty(), Option.empty(), Option.empty())
         );
         TaskAggregate aggregate = TaskAggregate.fromHistory(ID, history);
         assertThat(aggregate.update(new MemoryReferenceWithCounterTask.AdditionalInformation(3))).isEmpty();
@@ -114,7 +125,7 @@ class TaskAggregateTest {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),
             eventId -> Started.apply(ID, eventId, HOSTNAME),
-            eventId -> Cancelled.apply(ID, eventId, task.type(), None$.empty())
+            eventId -> Cancelled.apply(ID, eventId, Option.empty())
         );
         TaskAggregate aggregate = TaskAggregate.fromHistory(ID, history);
         assertThat(aggregate.update(new MemoryReferenceWithCounterTask.AdditionalInformation(3))).isEmpty();
