@@ -69,6 +69,7 @@ import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
+import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
@@ -728,4 +729,27 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("CassandraMigration"))
             .body("additionalInformation.toVersion", is(toVersion.getValue()));
     }
+
+    @Test
+    public void cassandraMappingsSolveInconsistenciesShouldComplete() {
+        String taskId = with()
+                .basePath(CassandraMappingsRoutes.ROOT_PATH)
+                .queryParam("action", "SolveInconsistencies")
+            .post()
+                .jsonPath()
+                .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is("cassandraMappingsSolveInconsistencies"))
+            .body("additionalInformation.successfulMappingsCount", is(0))
+            .body("additionalInformation.errorMappingsCount", is(0));
+    }
+
+
 }
