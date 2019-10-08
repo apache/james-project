@@ -1,21 +1,21 @@
 /** **************************************************************
-  * Licensed to the Apache Software Foundation (ASF) under one   *
-  * or more contributor license agreements.  See the NOTICE file *
-  * distributed with this work for additional information        *
-  * regarding copyright ownership.  The ASF licenses this file   *
-  * to you under the Apache License, Version 2.0 (the            *
-  * "License"); you may not use this file except in compliance   *
-  * with the License.  You may obtain a copy of the License at   *
-  * *
-  * http://www.apache.org/licenses/LICENSE-2.0                 *
-  * *
-  * Unless required by applicable law or agreed to in writing,   *
-  * software distributed under the License is distributed on an  *
-  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
-  * KIND, either express or implied.  See the License for the    *
-  * specific language governing permissions and limitations      *
-  * under the License.                                           *
-  * ***************************************************************/
+ * Licensed to the Apache Software Foundation (ASF) under one   *
+ * or more contributor license agreements.  See the NOTICE file *
+ * distributed with this work for additional information        *
+ * regarding copyright ownership.  The ASF licenses this file   *
+ * to you under the Apache License, Version 2.0 (the            *
+ * "License"); you may not use this file except in compliance   *
+ * with the License.  You may obtain a copy of the License at   *
+ * *
+ * http://www.apache.org/licenses/LICENSE-2.0                 *
+ * *
+ * Unless required by applicable law or agreed to in writing,   *
+ * software distributed under the License is distributed on an  *
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
+ * KIND, either express or implied.  See the License for the    *
+ * specific language governing permissions and limitations      *
+ * under the License.                                           *
+ * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
 import java.util
@@ -43,62 +43,42 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     .status
     .get
 
-  private[eventsourcing] def start(hostname: Hostname): util.List[Event] = {
+  private def optionToJavaList[T](element: Option[T]): util.List[T] = element.toList.asJava
+
+  private def createEventIfNotFinished(event: EventId => Event): Option[Event] = {
     if (!currentStatus.isFinished) {
-      createEventWithId(Started(aggregateId, _, hostname))
-    } else {
-      Nil.asJava
-    }
+      Some(event(history.getNextEventId))
+    } else
+      None
   }
 
-  def requestCancel(hostname: Hostname): util.List[Event] = {
-    if (!currentStatus.isFinished) {
-      createEventWithId(CancelRequested(aggregateId, _, hostname))
-    } else {
-      Nil.asJava
-    }
-  }
+  private def createEvent(event: EventId => Event): Option[Event] = Some(event(history.getNextEventId))
 
-  private[eventsourcing] def update(additionalInformation: AdditionalInformation): util.List[Event] = {
-    currentStatus match {
-      case Status.IN_PROGRESS => createEventWithId(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
-      case Status.CANCEL_REQUESTED => createEventWithId(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
-      case Status.COMPLETED => Nil.asJava
-      case Status.FAILED => Nil.asJava
-      case Status.WAITING => Nil.asJava
-      case Status.CANCELLED => Nil.asJava
-      case _ => Nil.asJava
-    }
-  }
+  private def createEventIfNotFinishedAsJavaList(event: EventId => Event): util.List[Event] = optionToJavaList(createEventIfNotFinished(event))
 
-  private[eventsourcing] def complete(result: Result, additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
-    if (!currentStatus.isFinished) {
-      createEventWithId(Completed(aggregateId, _, result, additionalInformation))
-    } else {
-      Nil.asJava
-    }
-  }
+  private[eventsourcing] def start(hostname: Hostname): util.List[Event] =
+    createEventIfNotFinishedAsJavaList(Started(aggregateId, _, hostname))
 
-  private[eventsourcing] def fail(additionalInformation: Option[AdditionalInformation], errorMessage: Option[String], exception: Option[String]): util.List[Event] = {
-    if (!currentStatus.isFinished) {
-      createEventWithId(Failed(aggregateId, _, additionalInformation, errorMessage, exception))
-    } else {
-      Nil.asJava
-    }
-  }
+  private[eventsourcing] def requestCancel(hostname: Hostname): util.List[Event] =
+    createEventIfNotFinishedAsJavaList(CancelRequested(aggregateId, _, hostname))
 
-  private[eventsourcing] def cancel(additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
-    if (!currentStatus.isFinished) {
-      createEventWithId(Cancelled(aggregateId, _, additionalInformation))
-    } else {
-      Nil.asJava
-    }
-  }
+  private[eventsourcing] def update(additionalInformation: AdditionalInformation): util.List[Event] =
+    (currentStatus match {
+      case Status.IN_PROGRESS => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+      case Status.CANCEL_REQUESTED => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+      case _ => None
+    }).toList.asJava
 
-  private def createEventWithId(event: EventId => Event): util.List[Event] =
-    List(history.getNextEventId)
-      .map({ eventId => event(eventId) })
-      .asJava
+  private[eventsourcing] def complete(result: Result, additionalInformation: Option[AdditionalInformation]): util.List[Event] =
+    createEventIfNotFinishedAsJavaList(Completed(aggregateId, _, result, additionalInformation))
+
+
+  private[eventsourcing] def fail(additionalInformation: Option[AdditionalInformation], errorMessage: Option[String], exception: Option[String]): util.List[Event] =
+    createEventIfNotFinishedAsJavaList(Failed(aggregateId, _, additionalInformation, errorMessage, exception))
+
+  private[eventsourcing] def cancel(additionalInformation: Option[AdditionalInformation]): util.List[Event] =
+    createEventIfNotFinishedAsJavaList(Cancelled(aggregateId, _, additionalInformation))
+
 }
 
 object TaskAggregate {
