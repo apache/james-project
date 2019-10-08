@@ -22,22 +22,14 @@ package org.apache.james.app.spring;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
-import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
-import org.assertj.core.api.Condition;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 public class JamesSpringContextTest {
-    private static final Condition<Group> QUOTA_UPDATER_LISTENER = new Condition<Group>() {
-        @Override
-        public boolean matches(Group group) {
-            return ListeningCurrentQuotaUpdater.GROUP.equals(group);
-        }
-    };
-    private static final int ONCE = 1;
     private JamesServerApplicationContext context;
 
     @Before
@@ -58,7 +50,6 @@ public class JamesSpringContextTest {
         InVMEventBus eventBus = context.getBean(InVMEventBus.class);
 
         assertThat(eventBus.registeredGroups())
-            .areExactly(ONCE, QUOTA_UPDATER_LISTENER);
+            .containsExactlyInAnyOrder(ListeningCurrentQuotaUpdater.GROUP, LuceneMessageSearchIndex.GROUP);
     }
-
 }

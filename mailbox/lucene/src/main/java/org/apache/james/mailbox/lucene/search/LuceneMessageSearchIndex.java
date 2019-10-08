@@ -138,7 +138,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     private static final Logger LOGGER = LoggerFactory.getLogger(LuceneMessageSearchIndex.class);
     private static final Date MAX_DATE;
     private static final Date MIN_DATE;
-    private static final org.apache.james.mailbox.events.Group GROUP = new LuceneMessageSearchIndexGroup();
+    public static final org.apache.james.mailbox.events.Group GROUP = new LuceneMessageSearchIndexGroup();
     
     static {
         Calendar cal = Calendar.getInstance();

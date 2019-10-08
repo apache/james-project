@@ -57,7 +57,7 @@
        <mailet match="RelayLimit=30" class="Null"/>
 
         <mailet matcher="All" class="WithPriority">
-            <value>8</value>
+            <priority>8</priority>
         </mailet>
 
         <mailet matcher="HasPriority=8" class="Null"/>
