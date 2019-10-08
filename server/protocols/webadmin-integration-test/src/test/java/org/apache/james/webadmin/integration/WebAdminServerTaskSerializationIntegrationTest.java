@@ -41,6 +41,9 @@ import javax.mail.Flags;
 import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.backends.cassandra.migration.MigrationTask;
+import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.User;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxSession;
@@ -721,5 +724,25 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("type", is(DeletedMessagesVaultDeleteTask.TYPE.asString()))
             .body("additionalInformation.user", is(USERNAME))
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
+    }
+
+    @Test
+    public void cassandraMigrationShouldComplete() {
+        SchemaVersion toVersion = CassandraSchemaVersionManager.MAX_VERSION;
+        String taskId = with()
+                .body(String.valueOf(toVersion.getValue()))
+            .post("cassandra/version/upgrade")
+                .jsonPath()
+                .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("taskId", is(taskId))
+            .body("type", is(MigrationTask.CASSANDRA_MIGRATION.asString()))
+            .body("additionalInformation.toVersion", is(toVersion.getValue()));
     }
 }
