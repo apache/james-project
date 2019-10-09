@@ -65,9 +65,9 @@ public class JsonTaskAdditionalInformationsSerializer {
         }
     }
 
-    public TaskExecutionDetails.AdditionalInformation deserialize(String type, String value) throws IOException {
+    public TaskExecutionDetails.AdditionalInformation deserialize(String value) throws IOException {
         try {
-            return jsonGenericSerializer.deserialize(type, value);
+            return jsonGenericSerializer.deserialize(value);
         } catch (JsonGenericSerializer.UnknownTypeException e) {
             throw new UnknownAdditionalInformationException(e);
         } catch (JsonGenericSerializer.InvalidTypeException e) {

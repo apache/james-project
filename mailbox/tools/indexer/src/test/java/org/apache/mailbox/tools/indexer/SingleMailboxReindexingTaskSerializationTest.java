@@ -48,7 +48,7 @@ class SingleMailboxReindexingTaskSerializationTest {
 
     private final String serializedMailboxReindexingTask = "{\"type\": \"mailboxReIndexing\", \"mailboxId\": \"1\"}";
 
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{ \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mailboxReIndexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}]}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -101,7 +101,7 @@ class SingleMailboxReindexingTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         SingleMailboxReindexingTask.AdditionalInformation details = new SingleMailboxReindexingTask.AdditionalInformation(mailboxId, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("mailboxReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

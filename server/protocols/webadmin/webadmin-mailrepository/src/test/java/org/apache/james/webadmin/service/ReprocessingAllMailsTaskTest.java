@@ -50,8 +50,8 @@ class ReprocessingAllMailsTaskTest {
     private static final long REMAINING_COUNT = 3L;
     private static final String SERIALIZED_TASK_WITH_TARGET_PROCESSOR = "{\"type\":\"reprocessingAllTask\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\"}";
     private static final String SERIALIZED_TASK_WITHOUT_TARGET_PROCESSOR = "{\"type\":\"reprocessingAllTask\",\"repositorySize\":5,\"repositoryPath\":\"a\",\"targetQueue\":\"queue\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITH_TARGET_PROCESSOR = "{\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"initialCount\":5,\"remainingCount\":3}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITHOUT_TARGET_PROCESSOR = "{\"repositoryPath\":\"a\",\"targetQueue\":\"queue\", \"initialCount\":5,\"remainingCount\":3}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITH_TARGET_PROCESSOR = "{\"type\":\"reprocessingAllTask\", \"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"targetProcessor\":\"targetProcessor\",\"initialCount\":5,\"remainingCount\":3}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITHOUT_TARGET_PROCESSOR = "{\"type\":\"reprocessingAllTask\", \"repositoryPath\":\"a\",\"targetQueue\":\"queue\", \"initialCount\":5,\"remainingCount\":3}";
 
     @ParameterizedTest
     @MethodSource
@@ -137,7 +137,7 @@ class ReprocessingAllMailsTaskTest {
                                                      long remainingCount,
                                                      String serialized) throws IOException {
         ReprocessingAllMailsTask.AdditionalInformation details = new ReprocessingAllMailsTask.AdditionalInformation(repositoryPath, targetQueue, targetProcessor, repositorySize, remainingCount);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("reprocessingAllTask", serialized))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(serialized))
             .isEqualToComparingFieldByField(details);
     }
 

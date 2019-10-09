@@ -107,16 +107,6 @@ public class JsonGenericSerializer<T, U extends DTO> {
         }
     }
 
-    public T deserialize(String type, String value) throws IOException {
-        try {
-            DTOModule<T, U> dtoModule = retrieveModuleForType(type);
-            U dto = objectMapper.readValue(value, dtoModule.getDTOClass());
-            return dtoModule.getToDomainObjectConverter().convert(dto);
-        } catch (MismatchedInputException e) {
-            throw new JsonGenericSerializer.InvalidTypeException("Unable to deserialize the json document", e);
-        }
-    }
-
     private DTOModule<T, U> retrieveModuleForType(String type) {
         return Optional.ofNullable(typeToModule.get(type))
             .orElseThrow(() -> new UnknownTypeException("unknown type " + type));

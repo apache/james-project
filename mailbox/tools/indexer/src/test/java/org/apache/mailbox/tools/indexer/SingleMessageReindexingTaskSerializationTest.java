@@ -39,7 +39,7 @@ class SingleMessageReindexingTaskSerializationTest {
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
     private final String serializedMessageReindexingTask = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"mailboxId\": \"1\", \"uid\": 10}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10}";
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
@@ -79,7 +79,7 @@ class SingleMessageReindexingTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("messageReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

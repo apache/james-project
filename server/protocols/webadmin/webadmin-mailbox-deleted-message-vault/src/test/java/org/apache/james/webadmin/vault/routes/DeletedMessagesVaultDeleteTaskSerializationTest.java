@@ -46,7 +46,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     private final MessageId messageId = messageIdFactory.generate();
 
     private final String serializedDeleteMessagesVaultDeleteTask = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
-    private final String serializedAdditionalInformation = "{\"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
+    private final String serializedAdditionalInformation = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
 
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
 
@@ -84,7 +84,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(user, messageId);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("deletedMessages/delete", serializedAdditionalInformation))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(serializedAdditionalInformation))
             .isEqualToComparingFieldByField(details);
     }
 }

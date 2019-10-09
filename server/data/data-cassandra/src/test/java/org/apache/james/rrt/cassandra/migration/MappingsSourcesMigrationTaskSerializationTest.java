@@ -38,7 +38,7 @@ class MappingsSourcesMigrationTaskSerializationTest {
     private static final MappingsSourcesMigration.MappingsSourcesMigrationTask TASK = new MappingsSourcesMigration.MappingsSourcesMigrationTask(MIGRATION);
     private static final String SERIALIZED_TASK = "{\"type\": \"mappingsSourcesMigration\"}";
     private static final MappingsSourcesMigration.AdditionalInformation DETAILS = new MappingsSourcesMigration.AdditionalInformation(42L, 10);
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfulMappingsCount\":42,\"errorMappinsCount\":10}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mappingsSourcesMigration\", \"successfulMappingsCount\":42,\"errorMappinsCount\":10}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MappingsSourcesMigrationTaskDTO.MODULE.apply(MIGRATION));
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MappingsSourcesMigrationTaskAdditionalInformationDTO.MODULE);
@@ -62,7 +62,7 @@ class MappingsSourcesMigrationTaskSerializationTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("mappingsSourcesMigration", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(DETAILS);
     }
 }

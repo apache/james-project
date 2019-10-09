@@ -50,7 +50,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
 
     private final String serializedErrorRecoveryReindexingTask = "{\"type\": \"ErrorRecoveryIndexation\"," +
         " \"previousFailures\" : [{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"ErrorRecoveryIndexation\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -107,7 +107,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("ErrorRecoveryIndexation", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 

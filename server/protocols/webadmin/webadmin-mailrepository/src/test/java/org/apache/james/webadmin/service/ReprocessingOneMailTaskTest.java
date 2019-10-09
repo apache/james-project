@@ -44,7 +44,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 class ReprocessingOneMailTaskTest {
     private static final ReprocessingService REPROCESSING_SERVICE = mock(ReprocessingService.class);
     private static final String SERIALIZED_TASK_1 = "{\"type\":\"reprocessingOneTask\",\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\",\"targetProcessor\":\"targetProcessor\"}";
-    private static final String SERIALIZED_TASK_1_ADDITIONAL_INFORMATION = "{\"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\",\"targetProcessor\":\"targetProcessor\"}";
+    private static final String SERIALIZED_TASK_1_ADDITIONAL_INFORMATION = "{\"type\":\"reprocessingOneTask\", \"repositoryPath\":\"a\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\",\"targetProcessor\":\"targetProcessor\"}";
     private static final MailRepositoryPath REPOSITORY_PATH = MailRepositoryPath.from("a");
     private static final String TARGET_QUEUE = "queue";
     private static final MailKey MAIL_KEY = new MailKey("myMail");
@@ -111,7 +111,7 @@ class ReprocessingOneMailTaskTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         ReprocessingOneMailTask.AdditionalInformation details = new ReprocessingOneMailTask.AdditionalInformation(REPOSITORY_PATH, TARGET_QUEUE, MAIL_KEY, TARGET_PROCESSOR);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("reprocessingOneTask", SERIALIZED_TASK_1_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_1_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

@@ -36,7 +36,7 @@ class MigrationTaskSerializationTest {
 
     private static final int SCHEMA_VERSION = 12;
     private static final String SERIALIZED_TASK = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"targetVersion\": 12}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
 
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
     private final CassandraSchemaTransitions transitions = mock(CassandraSchemaTransitions.class);
@@ -66,7 +66,7 @@ class MigrationTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION));
-        assertThat(jsonAdditionalInformationSerializer.deserialize("CassandraMigration", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

@@ -36,7 +36,7 @@ import org.junit.jupiter.api.Test;
 class MailboxMergingTaskTest {
     private static final CassandraId.Factory CASSANDRA_ID_FACTORY = new CassandraId.Factory();
     private static final String SERIALIZED = "{\"type\":\"mailboxMerging\",\"totalMessageCount\":0,\"oldMailboxId\":\"3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c\",\"newMailboxId\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\"}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"oldMailboxId\":\"3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c\",\"newMailboxId\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"totalMessageCount\":10,\"messageMovedCount\":15,\"messageFailedCount\":20}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\":\"mailboxMerging\", \"oldMailboxId\":\"3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c\",\"newMailboxId\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"totalMessageCount\":10,\"messageMovedCount\":15,\"messageFailedCount\":20}";
     private static final MailboxMergingTaskRunner TASK_RUNNER = mock(MailboxMergingTaskRunner.class);
     private static final MailboxMergingTask TASK = new MailboxMergingTask(TASK_RUNNER, 0L, CASSANDRA_ID_FACTORY.fromString("3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c"), CASSANDRA_ID_FACTORY.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
     private static final MailboxMergingTask.Details DETAILS = new MailboxMergingTask.Details(CASSANDRA_ID_FACTORY.fromString("3b8e5f90-b94f-20f8-ce7b-3c4aad93b90c"), CASSANDRA_ID_FACTORY.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"), 10, 15, 20);
@@ -62,7 +62,7 @@ class MailboxMergingTaskTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("mailboxMerging", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(DETAILS);
     }
 }

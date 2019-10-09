@@ -51,7 +51,7 @@ class FullReindexingTaskSerializationTest {
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
 
     private final String serializedFullReindexingTask = "{\"type\": \"FullReIndexing\"}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"FullReIndexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
 
     @BeforeEach
     void setUp() {
@@ -95,7 +95,7 @@ class FullReindexingTaskSerializationTest {
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
         ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("FullReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 

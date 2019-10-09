@@ -38,7 +38,7 @@ class MailboxPathV2MigrationTaskSerializationTest {
     private static final MailboxPathV2Migration.MailboxPathV2MigrationTask TASK = new MailboxPathV2Migration.MailboxPathV2MigrationTask(MIGRATION);
     private static final String SERIALIZED_TASK = "{\"type\": \"Cassandra_mailboxPathV2Migration\"}";
     private static final MailboxPathV2Migration.AdditionalInformation DETAILS = new MailboxPathV2Migration.AdditionalInformation(42L, 10);
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"remainingCount\":42,\"initialCount\":10}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"Cassandra_mailboxPathV2Migration\", \"remainingCount\":42,\"initialCount\":10}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);
@@ -62,7 +62,7 @@ class MailboxPathV2MigrationTaskSerializationTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        TaskExecutionDetails.AdditionalInformation deserialized = JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("Cassandra_mailboxPathV2Migration", SERIALIZED_ADDITIONAL_INFORMATION);
+        TaskExecutionDetails.AdditionalInformation deserialized = JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION);
         assertThat(deserialized).isInstanceOf(MailboxPathV2Migration.AdditionalInformation.class);
 
         MailboxPathV2Migration.AdditionalInformation additionalInformation = (MailboxPathV2Migration.AdditionalInformation) deserialized;

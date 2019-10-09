@@ -38,8 +38,8 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class EventDeadLettersRedeliverTaskTest {
     private static final String SERIALIZED = "{\"type\":\"eventDeadLettersRedeliverTask\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\",\"insertionId\":\"53db3dd9-80eb-476f-b25a-722ad364905a\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_EMPTY_FIELDS = "{\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"eventDeadLettersRedeliverTask\", \"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\",\"insertionId\":\"53db3dd9-80eb-476f-b25a-722ad364905a\"}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_EMPTY_FIELDS = "{\"type\":\"eventDeadLettersRedeliverTask\", \"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4}";
     private static final EventDeadLettersRedeliverService SERVICE = mock(EventDeadLettersRedeliverService.class);
     private static final EventRetriever EVENT_RETRIEVER = mock(EventRetriever.class);
     private static final EventDeadLettersRedeliverTask TASK = new EventDeadLettersRedeliverTask(SERVICE, EVENT_RETRIEVER);
@@ -88,7 +88,7 @@ class EventDeadLettersRedeliverTaskTest {
             FAILED_REDELIVERY_COUNT,
             SOME_GROUP,
             SOME_INSERTION_ID);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("eventDeadLettersRedeliverTask", SERIALIZED_TASK_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 
@@ -107,7 +107,7 @@ class EventDeadLettersRedeliverTaskTest {
             FAILED_REDELIVERY_COUNT,
             NO_GROUP,
             NO_INSERTION_ID);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("eventDeadLettersRedeliverTask", SERIALIZED_TASK_ADDITIONAL_INFORMATION_EMPTY_FIELDS))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION_EMPTY_FIELDS))
             .isEqualToComparingFieldByField(details);
     }
 }

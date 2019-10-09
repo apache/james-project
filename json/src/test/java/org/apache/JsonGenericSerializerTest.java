@@ -66,14 +66,6 @@ class JsonGenericSerializerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    void shouldDeserializeWithMissingWhenSpecifiedType() throws Exception {
-        assertThat(JsonGenericSerializer.of(TestModules.FIRST_TYPE)
-            .deserialize("first", MISSING_TYPE_JSON))
-            .isEqualTo(FIRST);
-    }
-
-    @SuppressWarnings("unchecked")
-    @Test
     void shouldThrowWhenDeserializeEventWithDuplicatedTypes() {
         assertThatThrownBy(() -> JsonGenericSerializer.of(
                 TestModules.FIRST_TYPE,
@@ -86,13 +78,6 @@ class JsonGenericSerializerTest {
     void shouldThrowWhenDeserializeUnknownType() {
         assertThatThrownBy(() -> JsonGenericSerializer.of()
             .deserialize(FIRST_JSON))
-            .isInstanceOf(JsonGenericSerializer.UnknownTypeException.class);
-    }
-
-    @Test
-    void shouldThrowWhenDeserializeUnknownTypeWhenSpecifiedType() {
-        assertThatThrownBy(() -> JsonGenericSerializer.of()
-            .deserialize("first",FIRST_JSON))
             .isInstanceOf(JsonGenericSerializer.UnknownTypeException.class);
     }
 

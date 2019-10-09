@@ -49,7 +49,7 @@ class UserReindexingTaskSerializationTest {
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
     private final String serializedUserReindexingTask = "{\"type\": \"userReIndexing\", \"username\": \"foo@apache.org\"}";
 
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{ \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"userReIndexing\", \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -104,7 +104,7 @@ class UserReindexingTaskSerializationTest {
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
         UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("userReIndexing", SERIALIZED_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

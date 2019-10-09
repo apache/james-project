@@ -54,7 +54,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
         "\"userToRestore\":\"james\"," +
         "\"query\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}" +
         "}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/restore\", \"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE);
 
@@ -92,7 +92,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/restore", SERIALIZED_ADDITIONAL_INFORMATION_TASK))
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION_TASK))
             .isEqualToComparingFieldByField(DETAILS);
     }
 }

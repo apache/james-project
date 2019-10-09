@@ -60,7 +60,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
         "\"userExportFrom\":\"james\"," +
         "\"exportQuery\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}," +
         "\"exportTo\":\"james@apache.org\"}\n";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
 
@@ -104,14 +104,14 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/export", SERIALIZED_ADDITIONAL_INFORMATION_TASK))
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION_TASK))
             .isEqualToComparingFieldByField(details);
     }
 
     @Test
     void additonalInformationWithInvalidMailAddressShouldThrow() throws IOException {
-        String invalidSerializedAdditionalInformationTask = "{\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
-        assertThatCode(() -> JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/export", invalidSerializedAdditionalInformationTask))
+        String invalidSerializedAdditionalInformationTask = "{\"type\":\"deletedMessages/export\",\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
+        assertThatCode(() -> JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(invalidSerializedAdditionalInformationTask))
             .hasCauseInstanceOf(AddressException.class);
     }
 }

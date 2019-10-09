@@ -53,7 +53,7 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
     private static final BlobStoreVaultGarbageCollectionTask TASK = TASK_FACTORY.create();
 
     private static final String SERIALIZED_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\"}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"]}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\", \"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"]}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE);
 
@@ -85,7 +85,7 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize("deletedMessages/blobStoreBasedGarbageCollection", SERIALIZED_ADDITIONAL_INFORMATION_TASK))
+        assertThat(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION_TASK))
             .isEqualToComparingFieldByField(DETAILS);
     }
 }

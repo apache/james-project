@@ -44,7 +44,7 @@ class ClearMailQueueTaskTest {
     private static final long REMAINING_COUNT = 10L;
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
         ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"clear-mail-queue\", \"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10}";
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -92,7 +92,7 @@ class ClearMailQueueTaskTest {
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
         ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("clear-mail-queue", SERIALIZED_TASK_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }

@@ -117,9 +117,9 @@ class DeleteMailsFromMailQueueTaskTest {
 
     private static Stream<Arguments> validAdditionalInformations() throws Exception {
         return Stream.of(
-            Arguments.of(10L, 5L, Optional.of(new MailAddress("a@b.c")), Optional.empty(), Optional.empty(), "{\"queue\": \"anyQueue\", \"sender\": \"a@b.c\", \"initialCount\" : 10, \"remainingCount\":5}"),
-            Arguments.of(1L, 0L, Optional.empty(), Optional.of("name"), Optional.empty(), "{\"queue\": \"anyQueue\", \"name\": \"name\", \"initialCount\" : 1, \"remainingCount\":0}"),
-            Arguments.of(6L, 6L, Optional.empty(), Optional.empty(), Optional.of(new MailAddress("d@e.f")), "{\"queue\": \"anyQueue\", \"recipient\": \"d@e.f\", \"initialCount\" : 6, \"remainingCount\":6}")
+            Arguments.of(10L, 5L, Optional.of(new MailAddress("a@b.c")), Optional.empty(), Optional.empty(), "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a@b.c\", \"initialCount\" : 10, \"remainingCount\":5}"),
+            Arguments.of(1L, 0L, Optional.empty(), Optional.of("name"), Optional.empty(), "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"name\": \"name\", \"initialCount\" : 1, \"remainingCount\":0}"),
+            Arguments.of(6L, 6L, Optional.empty(), Optional.empty(), Optional.of(new MailAddress("d@e.f")), "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"recipient\": \"d@e.f\", \"initialCount\" : 6, \"remainingCount\":6}")
         );
     }
 
@@ -152,7 +152,7 @@ class DeleteMailsFromMailQueueTaskTest {
                                                      String serializedAdditionalInformationJson) throws IOException {
         DeleteMailsFromMailQueueTask.AdditionalInformation details = new DeleteMailsFromMailQueueTask.AdditionalInformation(queueName, initialCount, remainingCount, sender, name, recipient);
 
-        assertThat(jsonAdditionalInformationsSerializer.deserialize("delete-mails-from-mail-queue", serializedAdditionalInformationJson))
+        assertThat(jsonAdditionalInformationsSerializer.deserialize(serializedAdditionalInformationJson))
             .isEqualToComparingFieldByField(details);
     }
 
@@ -163,8 +163,8 @@ class DeleteMailsFromMailQueueTaskTest {
     @Test
     void additionalInformationShouldThrowWhenDeserializeAMalformedMailAddress() throws Exception {
 
-        String serializedJson = "{\"queue\": \"anyQueue\", \"sender\": \"a.b.c\", \"initialCount\" : 10, \"remainingCount\":5}";
-        assertThatThrownBy(() -> jsonAdditionalInformationsSerializer.deserialize("delete-mails-from-mail-queue", serializedJson))
+        String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a.b.c\", \"initialCount\" : 10, \"remainingCount\":5}";
+        assertThatThrownBy(() -> jsonAdditionalInformationsSerializer.deserialize(serializedJson))
             .isInstanceOf(AddressException.class);
     }
 

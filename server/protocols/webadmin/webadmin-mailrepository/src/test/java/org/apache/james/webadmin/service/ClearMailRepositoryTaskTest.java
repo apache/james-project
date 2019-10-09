@@ -37,7 +37,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ClearMailRepositoryTaskTest {
     private static final String SERIALIZED = "{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"a\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clearMailRepository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10}";
     private static final ImmutableList<MailRepository> MAIL_REPOSITORIES = ImmutableList.of();
     private static final MailRepositoryPath MAIL_REPOSITORY_PATH = MailRepositoryPath.from("a");
     private static final ClearMailRepositoryTask TASK = new ClearMailRepositoryTask(MAIL_REPOSITORIES, MAIL_REPOSITORY_PATH);
@@ -45,7 +45,6 @@ class ClearMailRepositoryTaskTest {
     private static final long REMAINING_COUNT = 10L;
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
         ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -79,7 +78,7 @@ class ClearMailRepositoryTaskTest {
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
         ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT);
-        assertThat(jsonAdditionalInformationSerializer.deserialize("clearMailRepository", SERIALIZED_TASK_ADDITIONAL_INFORMATION))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }
 }
