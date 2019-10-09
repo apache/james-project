@@ -32,6 +32,7 @@ public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInf
 
     private static MailboxMergingTaskAdditionalInformationDTO fromDomainObject(MailboxMergingTask.Details details, String type) {
         return new MailboxMergingTaskAdditionalInformationDTO(
+            type,
             details.getOldMailboxId(),
             details.getNewMailboxId(),
             details.getTotalMessageCount(),
@@ -48,17 +49,20 @@ public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInf
             .typeName(MailboxMergingTask.MAILBOX_MERGING.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String oldMailboxId;
     private final String newMailboxId;
     private final long totalMessageCount;
     private final long messageMovedCount;
     private final long messageFailedCount;
 
-    public MailboxMergingTaskAdditionalInformationDTO(@JsonProperty("oldMailboxId") String oldMailboxId,
+    public MailboxMergingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                      @JsonProperty("oldMailboxId") String oldMailboxId,
                                                       @JsonProperty("newMailboxId") String newMailboxId,
                                                       @JsonProperty("totalMessageCount") long totalMessageCount,
                                                       @JsonProperty("messageMovedCount") long messageMovedCount,
                                                       @JsonProperty("messageFailedCount") long messageFailedCount) {
+        this.type = type;
         this.oldMailboxId = oldMailboxId;
         this.newMailboxId = newMailboxId;
         this.totalMessageCount = totalMessageCount;
@@ -84,6 +88,11 @@ public class MailboxMergingTaskAdditionalInformationDTO implements AdditionalInf
 
     public long getMessageFailedCount() {
         return messageFailedCount;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     private MailboxMergingTask.Details toDomainObject() {

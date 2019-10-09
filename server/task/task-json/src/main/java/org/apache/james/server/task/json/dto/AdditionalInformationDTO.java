@@ -21,4 +21,5 @@ package org.apache.james.server.task.json.dto;
 import org.apache.james.json.DTO;
 
 public interface AdditionalInformationDTO extends DTO {
+    String getType();
 }

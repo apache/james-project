@@ -34,6 +34,7 @@ import com.github.steveash.guavate.Guavate;
 public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO implements AdditionalInformationDTO {
     static BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO fromDomainObject(BlobStoreVaultGarbageCollectionTask.AdditionalInformation additionalInformation, String type) {
         return new BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO(
+            type,
             additionalInformation.getBeginningOfRetentionPeriod().toString(),
             additionalInformation.getDeletedBuckets()
         );
@@ -50,9 +51,13 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
 
     private final String beginningOfRetentionPeriod;
     private final Collection<String> deletedBuckets;
+    private final String type;
 
-    BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO(@JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod,
-                                                                @JsonProperty("deletedBuckets") Collection<String> deletedBuckets) {
+    BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO(
+        @JsonProperty("type") String type,
+        @JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod,
+        @JsonProperty("deletedBuckets") Collection<String> deletedBuckets) {
+        this.type = type;
         this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
         this.deletedBuckets = deletedBuckets;
     }
@@ -72,5 +77,10 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
 
     public Collection<String> getDeletedBuckets() {
         return deletedBuckets;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

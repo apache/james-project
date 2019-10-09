@@ -40,6 +40,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 dto.remainingCount
             ))
             .toDTOConverter((details, type) -> new ReprocessingAllMailsTaskAdditionalInformationDTO(
+                type,
                 details.getRepositoryPath(),
                 details.getTargetQueue(),
                 details.getTargetProcessor(),
@@ -48,6 +49,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
             .typeName(ReprocessingAllMailsTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String repositoryPath;
     private final String targetQueue;
     private final Optional<String> targetProcessor;
@@ -55,16 +57,23 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     private final long remainingCount;
 
     public ReprocessingAllMailsTaskAdditionalInformationDTO(
+        @JsonProperty("type") String type,
         @JsonProperty("repositoryPath") String repositoryPath,
         @JsonProperty("targetQueue") String targetQueue,
         @JsonProperty("targetProcessor") Optional<String> targetProcessor,
         @JsonProperty("initialCount") long initialCount,
         @JsonProperty("remainingCount") long remainingCount) {
+        this.type = type;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     public long getInitialCount() {

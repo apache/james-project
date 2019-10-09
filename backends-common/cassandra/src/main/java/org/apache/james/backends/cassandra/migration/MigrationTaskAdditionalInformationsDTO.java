@@ -31,14 +31,21 @@ public class MigrationTaskAdditionalInformationsDTO implements AdditionalInforma
         DTOModule.forDomainObject(MigrationTask.AdditionalInformations.class)
             .convertToDTO(MigrationTaskAdditionalInformationsDTO.class)
             .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformations(new SchemaVersion(dto.getTargetVersion())))
-            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(details.getToVersion()))
+            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(type, details.getToVersion()))
             .typeName(MigrationTask.CASSANDRA_MIGRATION.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final int targetVersion;
 
-    public MigrationTaskAdditionalInformationsDTO(@JsonProperty("targetVersion") int targetVersion) {
+    public MigrationTaskAdditionalInformationsDTO(@JsonProperty("type") String type, @JsonProperty("targetVersion") int targetVersion) {
+        this.type = type;
         this.targetVersion = targetVersion;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     public int getTargetVersion() {

@@ -24,6 +24,7 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationDTO toDTO(EventDeadLettersRedeliverTask.AdditionalInformation domainObject, String typeName) {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationDTO(
+            typeName,
             domainObject.getSuccessfulRedeliveriesCount(),
             domainObject.getFailedRedeliveriesCount(),
             domainObject.getGroup(),
@@ -39,16 +40,19 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
     }
 
 
+    private final String type;
     private final long successfulRedeliveriesCount;
     private final long failedRedeliveriesCount;
     private final Optional<String> group;
     private final Optional<String> insertionId;
 
-    public EventDeadLettersRedeliveryTaskAdditionalInformationDTO(@JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
+    public EventDeadLettersRedeliveryTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                  @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
                                                                   @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
                                                                   @JsonProperty("group") Optional<String> group,
                                                                   @JsonProperty("insertionId") Optional<String> insertionId
     ) {
+        this.type = type;
         this.successfulRedeliveriesCount = successfulRedeliveriesCount;
         this.failedRedeliveriesCount = failedRedeliveriesCount;
         this.group = group;
@@ -70,5 +74,10 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
 
     public Optional<String> getInsertionId() {
         return insertionId;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

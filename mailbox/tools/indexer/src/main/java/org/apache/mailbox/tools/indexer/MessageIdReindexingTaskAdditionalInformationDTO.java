@@ -34,13 +34,15 @@ public class MessageIdReindexingTaskAdditionalInformationDTO implements Addition
             DTOModule.forDomainObject(MessageIdReIndexingTask.AdditionalInformation.class)
                 .convertToDTO(MessageIdReindexingTaskAdditionalInformationDTO.class)
                 .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId())))
-                .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(details.getMessageId()))
+                .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(type, details.getMessageId()))
                 .typeName(MessageIdReIndexingTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String messageId;
 
-    private MessageIdReindexingTaskAdditionalInformationDTO(@JsonProperty("messageId") String messageId) {
+    private MessageIdReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type, @JsonProperty("messageId") String messageId) {
+        this.type = type;
         this.messageId = messageId;
     }
 
@@ -48,7 +50,12 @@ public class MessageIdReindexingTaskAdditionalInformationDTO implements Addition
         return messageId;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
+
     public static MessageIdReindexingTaskAdditionalInformationDTO of(MessageIdReIndexingTask task) {
-        return new MessageIdReindexingTaskAdditionalInformationDTO(task.getMessageId().serialize());
+        return new MessageIdReindexingTaskAdditionalInformationDTO(task.type().asString(), task.getMessageId().serialize());
     }
 }

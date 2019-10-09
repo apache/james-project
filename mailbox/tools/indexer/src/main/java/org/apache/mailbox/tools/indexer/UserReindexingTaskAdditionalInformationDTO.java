@@ -40,7 +40,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
                     dto.getSuccessfullyReprocessedMailCount(),
                     dto.getFailedReprocessedMailCount(),
                     ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
-                .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(details.getUser(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
+                .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(type, details.getUser(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
                     ReprocessingContextInformationDTO.serializeFailures(details.failures())))
                 .typeName(UserReindexingTask.USER_RE_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
@@ -49,14 +49,21 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
     private final String user;
 
     @JsonCreator
-    private UserReindexingTaskAdditionalInformationDTO(@JsonProperty("user") String user,
+    private UserReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                       @JsonProperty("user") String user,
                                                        @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                                        @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                                                        @JsonProperty("failures") List<ReprocessingContextInformationDTO.ReindexingFailureDTO> failures) {
         this.user = user;
         this.reprocessingContextInformationDTO = new ReprocessingContextInformationDTO(
+            type,
             successfullyReprocessedMailCount,
             failedReprocessedMailCount, failures);
+    }
+
+    @Override
+    public String getType() {
+        return reprocessingContextInformationDTO.getType();
     }
 
     public String getUser() {

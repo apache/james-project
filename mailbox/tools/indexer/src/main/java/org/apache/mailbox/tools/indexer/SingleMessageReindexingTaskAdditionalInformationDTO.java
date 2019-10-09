@@ -35,14 +35,18 @@ public class SingleMessageReindexingTaskAdditionalInformationDTO implements Addi
             DTOModule.forDomainObject(SingleMessageReindexingTask.AdditionalInformation.class)
                 .convertToDTO(SingleMessageReindexingTaskAdditionalInformationDTO.class)
                 .toDomainObjectConverter(dto -> new SingleMessageReindexingTask.AdditionalInformation(factory.fromString(dto.mailboxId), MessageUid.of(dto.getUid())))
-                .toDTOConverter((details, type) -> new SingleMessageReindexingTaskAdditionalInformationDTO(details.getMailboxId(), details.getUid()))
+                .toDTOConverter((details, type) -> new SingleMessageReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getUid()))
                 .typeName(SingleMessageReindexingTask.MESSAGE_RE_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String mailboxId;
     private final long uid;
 
-    private SingleMessageReindexingTaskAdditionalInformationDTO(@JsonProperty("mailboxId") String mailboxId, @JsonProperty("uid") long uid) {
+    private SingleMessageReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                @JsonProperty("mailboxId") String mailboxId,
+                                                                @JsonProperty("uid") long uid) {
+        this.type = type;
         this.mailboxId = mailboxId;
         this.uid = uid;
     }
@@ -55,7 +59,12 @@ public class SingleMessageReindexingTaskAdditionalInformationDTO implements Addi
         return uid;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
+
     public static SingleMessageReindexingTaskAdditionalInformationDTO of(SingleMessageReindexingTask task) {
-        return new SingleMessageReindexingTaskAdditionalInformationDTO(task.getMailboxId().serialize(), task.getUid().asLong());
+        return new SingleMessageReindexingTaskAdditionalInformationDTO(task.type().asString(), task.getMailboxId().serialize(), task.getUid().asLong());
     }
 }

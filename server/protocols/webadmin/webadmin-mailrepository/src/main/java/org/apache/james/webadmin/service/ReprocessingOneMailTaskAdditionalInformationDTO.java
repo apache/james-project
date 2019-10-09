@@ -40,6 +40,7 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
                 dto.targetProcessor
             ))
             .toDTOConverter((details, type) -> new ReprocessingOneMailTaskAdditionalInformationDTO(
+                type,
                 details.getRepositoryPath(),
                 details.getTargetQueue(),
                 details.getMailKey(),
@@ -47,19 +48,27 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String repositoryPath;
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
 
-    public ReprocessingOneMailTaskAdditionalInformationDTO(@JsonProperty("repositoryPath") String repositoryPath,
+    public ReprocessingOneMailTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                           @JsonProperty("repositoryPath") String repositoryPath,
                                                            @JsonProperty("targetQueue") String targetQueue,
                                                            @JsonProperty("mailKey") String mailKey,
                                                            @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
+        this.type = type;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     public String getRepositoryPath() {

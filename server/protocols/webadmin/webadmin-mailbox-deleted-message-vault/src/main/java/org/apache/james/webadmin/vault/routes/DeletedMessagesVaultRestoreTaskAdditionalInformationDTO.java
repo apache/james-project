@@ -31,6 +31,7 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
 
     private static DeletedMessagesVaultRestoreTaskAdditionalInformationDTO fromDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation additionalInformation, String type) {
         return new DeletedMessagesVaultRestoreTaskAdditionalInformationDTO(
+            type,
             additionalInformation.getUser(),
             additionalInformation.getSuccessfulRestoreCount(),
             additionalInformation.getErrorRestoreCount()
@@ -46,13 +47,16 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
             .typeName(DeletedMessagesVaultRestoreTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String user;
     private final Long successfulRestoreCount;
     private final Long errorRestoreCount;
 
-    public DeletedMessagesVaultRestoreTaskAdditionalInformationDTO(@JsonProperty("user") String user,
+    public DeletedMessagesVaultRestoreTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                   @JsonProperty("user") String user,
                                                                    @JsonProperty("successfulRestoreCount") Long successfulRestoreCount,
                                                                    @JsonProperty("errorRestoreCount") Long errorRestoreCount) {
+        this.type = type;
         this.user = user;
         this.successfulRestoreCount = successfulRestoreCount;
         this.errorRestoreCount = errorRestoreCount;
@@ -76,5 +80,10 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
             successfulRestoreCount,
             errorRestoreCount
         );
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

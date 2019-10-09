@@ -35,14 +35,18 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
             DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
                 .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
                 .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(User.fromUsername(dto.userName), factory.fromString(dto.getMessageId())))
-                .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(details.getUser(), details.getDeleteMessageId()))
+                .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUser(), details.getDeleteMessageId()))
                 .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String userName;
     private final String messageId;
 
-    public DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(@JsonProperty("userName") String userName, @JsonProperty("messageId") String messageId) {
+    public DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                  @JsonProperty("userName") String userName,
+                                                                  @JsonProperty("messageId") String messageId) {
+        this.type = type;
         this.userName = userName;
         this.messageId = messageId;
     }
@@ -53,5 +57,10 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
 
     public String getUserName() {
         return userName;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

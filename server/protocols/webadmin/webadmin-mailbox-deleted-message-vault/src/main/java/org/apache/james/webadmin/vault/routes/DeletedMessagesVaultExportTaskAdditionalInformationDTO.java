@@ -34,6 +34,7 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
 
     private static DeletedMessagesVaultExportTaskAdditionalInformationDTO fromDomainObject(DeletedMessagesVaultExportTask.AdditionalInformation additionalInformation, String type) {
         return new DeletedMessagesVaultExportTaskAdditionalInformationDTO(
+            type,
             additionalInformation.getUserExportFrom(),
             additionalInformation.getExportTo(),
             additionalInformation.getTotalExportedMessages()
@@ -49,13 +50,16 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
             .typeName(DeletedMessagesVaultExportTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final String userExportFrom;
     private final String exportTo;
     private final Long totalExportedMessages;
 
-    public DeletedMessagesVaultExportTaskAdditionalInformationDTO(@JsonProperty("user") String userExportFrom,
+    public DeletedMessagesVaultExportTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                  @JsonProperty("user") String userExportFrom,
                                                                   @JsonProperty("exportTo") String exportTo,
                                                                   @JsonProperty("errorRestoreCount") Long totalExportedMessages) {
+        this.type = type;
         this.userExportFrom = userExportFrom;
         this.exportTo = exportTo;
         this.totalExportedMessages = totalExportedMessages;
@@ -83,5 +87,10 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
         } catch (AddressException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

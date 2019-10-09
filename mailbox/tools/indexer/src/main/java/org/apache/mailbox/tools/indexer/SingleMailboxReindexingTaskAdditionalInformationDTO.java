@@ -39,7 +39,7 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
                     dto.getSuccessfullyReprocessedMailCount(),
                     dto.getFailedReprocessedMailCount(),
                     ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
-                .toDTOConverter((details, type) -> new SingleMailboxReindexingTaskAdditionalInformationDTO(details.getMailboxId(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
+                .toDTOConverter((details, type) -> new SingleMailboxReindexingTaskAdditionalInformationDTO(type, details.getMailboxId(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
                     ReprocessingContextInformationDTO.serializeFailures(details.failures())))
                 .typeName(SingleMailboxReindexingTask.MAILBOX_RE_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
@@ -48,14 +48,21 @@ public class SingleMailboxReindexingTaskAdditionalInformationDTO implements Addi
     private final String mailboxId;
 
     @JsonCreator
-    private SingleMailboxReindexingTaskAdditionalInformationDTO(@JsonProperty("mailboxId") String mailboxId,
+    private SingleMailboxReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                @JsonProperty("mailboxId") String mailboxId,
                                                                 @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                                                 @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                                                                 @JsonProperty("failures") List<ReprocessingContextInformationDTO.ReindexingFailureDTO> failures) {
         this.mailboxId = mailboxId;
         this.reprocessingContextInformationDTO = new ReprocessingContextInformationDTO(
+            type,
             successfullyReprocessedMailCount,
             failedReprocessedMailCount, failures);
+    }
+
+    @Override
+    public String getType() {
+        return reprocessingContextInformationDTO.getType();
     }
 
     public String getMailboxId() {

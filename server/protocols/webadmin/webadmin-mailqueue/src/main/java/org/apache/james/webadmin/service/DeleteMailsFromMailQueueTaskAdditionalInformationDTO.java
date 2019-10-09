@@ -23,6 +23,7 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
 
     private static DeleteMailsFromMailQueueTaskAdditionalInformationDTO toDTO(DeleteMailsFromMailQueueTask.AdditionalInformation domainObject, String typeName) {
         return new DeleteMailsFromMailQueueTaskAdditionalInformationDTO(
+            typeName,
             domainObject.getMailQueueName(),
             domainObject.getSender(),
             domainObject.getName(),
@@ -43,19 +44,22 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
 
 
     private final String queue;
+    private final String type;
     private final Optional<String> sender;
     private final Optional<String> name;
     private final Optional<String> recipient;
     private final long initialCount;
     private final long remainingCount;
 
-    public DeleteMailsFromMailQueueTaskAdditionalInformationDTO(@JsonProperty("queue") String queue,
+    public DeleteMailsFromMailQueueTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                @JsonProperty("queue") String queue,
                                                                 @JsonProperty("sender") Optional<String> sender,
                                                                 @JsonProperty("name") Optional<String> name,
                                                                 @JsonProperty("recipient") Optional<String> recipient,
                                                                 @JsonProperty("initialCount") long initialCount,
                                                                 @JsonProperty("remainingCount") long remainingCount
     ) {
+        this.type = type;
         this.queue = queue;
         this.sender = sender;
         this.name = name;
@@ -87,5 +91,10 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
 
     public long getRemainingCount() {
         return remainingCount;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

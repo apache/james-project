@@ -30,6 +30,7 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
 
     private static MappingsSourcesMigrationTaskAdditionalInformationDTO fromDomainObject(MappingsSourcesMigration.AdditionalInformation additionalInformation, String type) {
         return new MappingsSourcesMigrationTaskAdditionalInformationDTO(
+            type,
             additionalInformation.getSuccessfulMappingsCount(),
             additionalInformation.getErrorMappingsCount()
         );
@@ -44,10 +45,14 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
             .typeName(MappingsSourcesMigration.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final long successfulMappingsCount;
     private final long errorMappinsCount;
 
-    public MappingsSourcesMigrationTaskAdditionalInformationDTO(@JsonProperty("successfulMappingsCount") long successfulMappingsCount, @JsonProperty("errorMappinsCount") long errorMappinsCount) {
+    public MappingsSourcesMigrationTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                @JsonProperty("successfulMappingsCount") long successfulMappingsCount,
+                                                                @JsonProperty("errorMappinsCount") long errorMappinsCount) {
+        this.type = type;
         this.successfulMappingsCount = successfulMappingsCount;
         this.errorMappinsCount = errorMappinsCount;
     }
@@ -58,6 +63,11 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
 
     public long getErrorMappinsCount() {
         return errorMappinsCount;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     private MappingsSourcesMigration.AdditionalInformation toDomainObject() {

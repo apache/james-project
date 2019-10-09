@@ -63,7 +63,7 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             DTOModule.forDomainObject(ReprocessingContextInformation.class)
                 .convertToDTO(ReprocessingContextInformationDTO.class)
                 .toDomainObjectConverter(dto -> new ReprocessingContextInformation(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(factory, dto.failures)))
-                .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(), serializeFailures(details.failures())))
+                .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(type, details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(), serializeFailures(details.failures())))
                 .typeName(taskType.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
@@ -110,14 +110,17 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             .collect(Guavate.toImmutableList());
     }
 
+    private final String type;
     private final int successfullyReprocessedMailCount;
     private final int failedReprocessedMailCount;
     private final List<ReindexingFailureDTO> failures;
 
 
-    ReprocessingContextInformationDTO(@JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
+    ReprocessingContextInformationDTO(@JsonProperty("type") String type,
+                                      @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                       @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
                                       @JsonProperty("failures") List<ReindexingFailureDTO> failures) {
+        this.type = type;
         this.successfullyReprocessedMailCount = successfullyReprocessedMailCount;
         this.failedReprocessedMailCount = failedReprocessedMailCount;
         this.failures = failures;
@@ -133,5 +136,10 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
 
     public List<ReindexingFailureDTO> getFailures() {
         return failures;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 }

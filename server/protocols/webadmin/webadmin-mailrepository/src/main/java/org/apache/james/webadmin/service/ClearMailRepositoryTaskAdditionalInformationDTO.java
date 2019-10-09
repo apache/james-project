@@ -36,6 +36,7 @@ public class ClearMailRepositoryTaskAdditionalInformationDTO implements Addition
                 dto.remainingCount
             ))
             .toDTOConverter((details, type) -> new ClearMailRepositoryTaskAdditionalInformationDTO(
+                type,
                 details.getRepositoryPath(),
                 details.getInitialCount(),
                 details.getRemainingCount()))
@@ -43,12 +44,15 @@ public class ClearMailRepositoryTaskAdditionalInformationDTO implements Addition
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String mailRepositoryPath;
+    private final String type;
     private final long initialCount;
     private final long remainingCount;
 
-    public ClearMailRepositoryTaskAdditionalInformationDTO(@JsonProperty("mailRepositoryPath") String mailRepositoryPath,
+    public ClearMailRepositoryTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                           @JsonProperty("mailRepositoryPath") String mailRepositoryPath,
                                                            @JsonProperty("initialCount") long initialCount,
                                                            @JsonProperty("remainingCount") long remainingCount) {
+        this.type = type;
         this.mailRepositoryPath = mailRepositoryPath;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
@@ -66,4 +70,8 @@ public class ClearMailRepositoryTaskAdditionalInformationDTO implements Addition
         return remainingCount;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
 }

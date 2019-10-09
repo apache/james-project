@@ -35,6 +35,7 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
                 dto.remainingCount
             ))
             .toDTOConverter((details, type) -> new ClearMailQueueTaskAdditionalInformationDTO(
+                type,
                 details.getMailQueueName(),
                 details.getInitialCount(),
                 details.getRemainingCount()))
@@ -42,12 +43,15 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String mailQueueName;
+    private final String type;
     private final long initialCount;
     private final long remainingCount;
 
-    public ClearMailQueueTaskAdditionalInformationDTO(@JsonProperty("mailQueueName") String mailQueueName,
+    public ClearMailQueueTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                      @JsonProperty("mailQueueName") String mailQueueName,
                                                       @JsonProperty("initialCount") long initialCount,
                                                       @JsonProperty("remainingCount") long remainingCount) {
+        this.type = type;
         this.mailQueueName = mailQueueName;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
@@ -65,4 +69,8 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
         return remainingCount;
     }
 
+    @Override
+    public String getType() {
+        return type;
+    }
 }

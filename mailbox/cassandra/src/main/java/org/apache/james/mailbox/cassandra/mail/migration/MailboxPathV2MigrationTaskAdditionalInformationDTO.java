@@ -30,6 +30,7 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
 
     private static MailboxPathV2MigrationTaskAdditionalInformationDTO fromDomainObject(MailboxPathV2Migration.AdditionalInformation additionalInformation, String type) {
         return new MailboxPathV2MigrationTaskAdditionalInformationDTO(
+            type,
             additionalInformation.getRemainingCount(),
             additionalInformation.getInitialCount()
         );
@@ -44,10 +45,14 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
             .typeName(MailboxPathV2Migration.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
+    private final String type;
     private final long remainingCount;
     private final long initialCount;
 
-    public MailboxPathV2MigrationTaskAdditionalInformationDTO(@JsonProperty("remainingCount") long remainingCount, @JsonProperty("initialCount") long initialCount) {
+    public MailboxPathV2MigrationTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                              @JsonProperty("remainingCount") long remainingCount,
+                                                              @JsonProperty("initialCount") long initialCount) {
+        this.type = type;
         this.remainingCount = remainingCount;
         this.initialCount = initialCount;
     }
@@ -58,6 +63,11 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
 
     public long getInitialCount() {
         return initialCount;
+    }
+
+    @Override
+    public String getType() {
+        return type;
     }
 
     private MailboxPathV2Migration.AdditionalInformation toDomainObject() {
