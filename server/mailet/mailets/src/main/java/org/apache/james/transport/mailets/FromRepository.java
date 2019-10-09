@@ -53,6 +53,8 @@ import org.slf4j.LoggerFactory;
 public class FromRepository extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(FromRepository.class);
 
+    private final MailRepositoryStore mailStore;
+
     /** The repository from where this mailet spools mail. */
     private MailRepository repository;
 
@@ -65,10 +67,8 @@ public class FromRepository extends GenericMailet {
     /** The processor that will handle the re-spooled message(s) */
     private String processor;
 
-    private MailRepositoryStore mailStore;
-
     @Inject
-    public void setStore(MailRepositoryStore mailStore) {
+    public FromRepository(MailRepositoryStore mailStore) {
         this.mailStore = mailStore;
     }
 

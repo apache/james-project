@@ -77,7 +77,7 @@ public class ToSenderDomainRepository extends GenericMailet {
     private boolean allowRepositoryCreation;
 
     @Inject
-    public ToSenderDomainRepository(MailRepositoryStore mailRepositoryStore) {
+    ToSenderDomainRepository(MailRepositoryStore mailRepositoryStore) {
         this.mailRepositoryStore = mailRepositoryStore;
     }
 

@@ -38,16 +38,14 @@ import org.slf4j.LoggerFactory;
 public class ToRepository extends GenericMailet {
     private static final Logger LOGGER = LoggerFactory.getLogger(ToRepository.class);
 
-    private MailRepository repository;
+    private final MailRepositoryStore mailStore;
 
+    private MailRepository repository;
+    private MailRepositoryUrl repositoryPath;
     private boolean passThrough = false;
 
-    private MailRepositoryUrl repositoryPath;
-
-    private MailRepositoryStore mailStore;
-
     @Inject
-    public void setStore(MailRepositoryStore mailStore) {
+    public ToRepository(MailRepositoryStore mailStore) {
         this.mailStore = mailStore;
     }
 

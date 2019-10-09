@@ -50,8 +50,7 @@ public class ToRepositoryTest {
     @Before
     public void setup() throws Exception {
         mailRepositoryStore = mock(MailRepositoryStore.class);
-        mailet = new ToRepository();
-        mailet.setStore(mailRepositoryStore);
+        mailet = new ToRepository(mailRepositoryStore);
         message = MailUtil.createMockMail2Recipients(MailUtil.createMimeMessage());
     }
 

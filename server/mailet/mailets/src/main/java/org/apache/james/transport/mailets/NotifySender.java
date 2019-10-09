@@ -133,7 +133,7 @@ public class NotifySender extends GenericMailet implements RedirectNotify {
     private Optional<String> to = Optional.empty();
 
     @Inject
-    public NotifySender(DNSService dns) {
+    NotifySender(DNSService dns) {
         this.dns = dns;
     }
 

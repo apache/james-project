@@ -102,9 +102,8 @@ public class Forward extends GenericMailet implements RedirectNotify {
     private final DNSService dns;
 
     @Inject
-    public Forward(DNSService dns) {
+    Forward(DNSService dns) {
         this.dns = dns;
-        
     }
 
     @Override

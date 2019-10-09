@@ -44,11 +44,11 @@ public class Sieve extends GenericMailet {
     private SieveExecutor sieveExecutor;
 
     @Inject
-    public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository) throws MessagingException {
+    public Sieve(UsersRepository usersRepository, SieveRepository sieveRepository) {
         this(usersRepository, new ResourceLocator(sieveRepository, usersRepository));
     }
 
-    public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator) throws MessagingException {
+    public Sieve(UsersRepository usersRepository, ResourceLocator resourceLocator) {
         this.usersRepository = usersRepository;
         this.resourceLocator = resourceLocator;
     }

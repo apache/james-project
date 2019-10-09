@@ -310,7 +310,7 @@ public class Redirect extends GenericMailet implements RedirectNotify {
     private final DNSService dns;
 
     @Inject
-    public Redirect(DNSService dns) {
+    Redirect(DNSService dns) {
         this.dns = dns;
     }
 
