@@ -275,6 +275,45 @@ public interface TaskManagerContract {
     }
 
     @Test
+    default void additionalInformationShouldBeUpdatedDuringExecution(CountDownLatch countDownLatch) {
+        TaskManager taskManager = taskManager();
+        TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
+            counter.incrementAndGet();
+            countDownLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
+
+        calmlyAwait.atMost(FIVE_SECONDS).untilAsserted(() ->
+            assertThat(getAdditionalInformation(taskManager, id).getCount()).isEqualTo(1L));
+    }
+
+    @Test
+    default void additionalInformationShouldBeAvailableOnAnyTaskManagerDuringExecution(CountDownLatch countDownLatch) {
+        TaskManager taskManager = taskManager();
+        TaskManager otherTaskManager = taskManager();
+        TaskId id = taskManager.submit(new MemoryReferenceWithCounterTask((counter) -> {
+            counter.incrementAndGet();
+            countDownLatch.await();
+            return Task.Result.COMPLETED;
+        }));
+
+        awaitUntilTaskHasStatus(id, TaskManager.Status.IN_PROGRESS, taskManager);
+
+        calmlyAwait.atMost(FIVE_SECONDS).untilAsserted(() ->
+            assertThat(getAdditionalInformation(taskManager, id).getCount()).isEqualTo(1L));
+        assertThat(getAdditionalInformation(otherTaskManager, id).getCount()).isEqualTo(1L);
+    }
+
+    default MemoryReferenceWithCounterTask.AdditionalInformation getAdditionalInformation(TaskManager taskManager, TaskId id) {
+        return (MemoryReferenceWithCounterTask.AdditionalInformation) taskManager
+            .getExecutionDetails(id)
+            .getAdditionalInformation()
+            .get();
+    }
+
+    @Test
     default void getStatusShouldReturnFailedWhenRunPartially() {
         TaskManager taskManager = taskManager();
         TaskId taskId = taskManager.submit(
