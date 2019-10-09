@@ -45,29 +45,17 @@ import org.apache.mailet.MailetContext;
 public class CamelCompositeProcessor extends AbstractStateCompositeProcessor implements CamelContextAware {
 
     private final MetricFactory metricFactory;
+    private final MailetContext mailetContext;
+    private final MatcherLoader matcherLoader;
+    private final MailetLoader mailetLoader;
     private CamelContext camelContext;
-    private MailetContext mailetContext;
-    private MatcherLoader matcherLoader;
-    private MailetLoader mailetLoader;
 
     @Inject
-    public CamelCompositeProcessor(MetricFactory metricFactory) {
+    CamelCompositeProcessor(MetricFactory metricFactory, MailetContext mailetContext, MatcherLoader matcherLoader, MailetLoader mailetLoader) {
         this.metricFactory = metricFactory;
-    }
-
-    @Inject
-    public void setMatcherLoader(MatcherLoader matcherLoader) {
-        this.matcherLoader = matcherLoader;
-    }
-
-    @Inject
-    public void setMailetLoader(MailetLoader mailetLoader) {
-        this.mailetLoader = mailetLoader;
-    }
-
-    @Inject
-    public void setMailetContext(MailetContext mailetContext) {
         this.mailetContext = mailetContext;
+        this.matcherLoader = matcherLoader;
+        this.mailetLoader = mailetLoader;
     }
 
     @Override

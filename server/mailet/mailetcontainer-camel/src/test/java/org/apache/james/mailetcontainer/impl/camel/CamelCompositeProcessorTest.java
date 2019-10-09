@@ -32,12 +32,12 @@ public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessor
 
     @Override
     protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        CamelCompositeProcessor processor = new CamelCompositeProcessor(new NoopMetricFactory());
+        CamelCompositeProcessor processor = new CamelCompositeProcessor(new NoopMetricFactory(),
+            FakeMailContext.defaultContext(),
+            new MockMatcherLoader(),
+            new MockMailetLoader());
         try {
             processor.setCamelContext(new DefaultCamelContext());
-            processor.setMailetLoader(new MockMailetLoader());
-            processor.setMatcherLoader(new MockMatcherLoader());
-            processor.setMailetContext(FakeMailContext.defaultContext());
             processor.configure(config);
             processor.init();
             return processor;

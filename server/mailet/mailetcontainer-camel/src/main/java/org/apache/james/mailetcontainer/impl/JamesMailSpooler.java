@@ -73,25 +73,17 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
     /**
      * The mail processor
      */
-    private MailProcessor mailProcessor;
+    private final MailProcessor mailProcessor;
 
-    private MailQueueFactory<?> queueFactory;
+    private final MailQueueFactory<?> queueFactory;
     private reactor.core.Disposable disposable;
     private Scheduler spooler;
 
     @Inject
-    public JamesMailSpooler(MetricFactory metricFactory) {
+    public JamesMailSpooler(MetricFactory metricFactory, MailProcessor mailProcessor, MailQueueFactory<?> queueFactory) {
         this.metricFactory = metricFactory;
-    }
-
-    @Inject
-    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
-        this.queueFactory = queueFactory;
-    }
-
-    @Inject
-    public void setMailProcessor(MailProcessor mailProcessor) {
         this.mailProcessor = mailProcessor;
+        this.queueFactory = queueFactory;
     }
 
     @Override

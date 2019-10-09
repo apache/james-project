@@ -109,20 +109,17 @@ public class CamelMailetContainerModule extends AbstractModule {
 
     @Singleton
     public static class SpoolerStarter implements InitialisationOperation {
-        private final CamelCompositeProcessor camelCompositeProcessor;
         private final JamesMailSpooler jamesMailSpooler;
         private final ConfigurationProvider configurationProvider;
 
         @Inject
-        public SpoolerStarter(CamelCompositeProcessor camelCompositeProcessor, JamesMailSpooler jamesMailSpooler, ConfigurationProvider configurationProvider) {
-            this.camelCompositeProcessor = camelCompositeProcessor;
+        public SpoolerStarter(JamesMailSpooler jamesMailSpooler, ConfigurationProvider configurationProvider) {
             this.jamesMailSpooler = jamesMailSpooler;
             this.configurationProvider = configurationProvider;
         }
 
         @Override
         public void initModule() {
-            jamesMailSpooler.setMailProcessor(camelCompositeProcessor);
             jamesMailSpooler.configure(getJamesSpoolerConfiguration());
             jamesMailSpooler.init();
         }
