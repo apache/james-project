@@ -105,6 +105,7 @@ public class CassandraMailboxModule extends AbstractModule {
     protected void configure() {
         install(new DefaultEventModule());
         install(new CassandraQuotaModule());
+        install(new CassandraDeadLetterModule());
 
         bind(CassandraApplicableFlagDAO.class).in(Scopes.SINGLETON);
         bind(CassandraAttachmentDAO.class).in(Scopes.SINGLETON);

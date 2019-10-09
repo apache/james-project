@@ -26,6 +26,7 @@ import org.apache.james.modules.data.SieveJPARepositoryModules;
 import org.apache.james.modules.mailbox.DefaultEventModule;
 import org.apache.james.modules.mailbox.JPAMailboxModule;
 import org.apache.james.modules.mailbox.LuceneSearchMailboxModule;
+import org.apache.james.modules.mailbox.MemoryDeadLetterModule;
 import org.apache.james.modules.protocols.IMAPServerModule;
 import org.apache.james.modules.protocols.LMTPServerModule;
 import org.apache.james.modules.protocols.ManageSieveServerModule;
@@ -85,6 +86,7 @@ public class JPAJamesServerMain {
         new RawPostDequeueDecoratorModule(),
         new SieveJPARepositoryModules(),
         new DefaultEventModule(),
+        new MemoryDeadLetterModule(),
         new SpamAssassinListenerModule());
 
     public static final Module JPA_MODULE_AGGREGATE = Modules.combine(JPA_SERVER_MODULE, PROTOCOLS);

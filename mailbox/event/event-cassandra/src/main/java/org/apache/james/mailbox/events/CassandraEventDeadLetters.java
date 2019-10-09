@@ -32,8 +32,8 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     private final CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO;
 
     @Inject
-    public CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO,
-                                     CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO) {
+    CassandraEventDeadLetters(CassandraEventDeadLettersDAO cassandraEventDeadLettersDAO,
+                              CassandraEventDeadLettersGroupDAO cassandraEventDeadLettersGroupDAO) {
         this.cassandraEventDeadLettersDAO = cassandraEventDeadLettersDAO;
         this.cassandraEventDeadLettersGroupDAO = cassandraEventDeadLettersGroupDAO;
     }
