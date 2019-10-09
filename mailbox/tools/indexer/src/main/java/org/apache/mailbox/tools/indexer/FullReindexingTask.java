@@ -87,6 +87,6 @@ public class FullReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(ReprocessingContextInformation.from(reprocessingContext));
+        return Optional.of(ReprocessingContextInformation.forFullReindexingTask(reprocessingContext));
     }
 }

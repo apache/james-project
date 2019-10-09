@@ -46,6 +46,8 @@ import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskAddi
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultExportTaskDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRestoreTaskDTO;
+import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTask;
+import org.apache.mailbox.tools.indexer.ErrorRecoveryIndexationTaskDTO;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
 import org.apache.mailbox.tools.indexer.MessageIdReindexingTaskAdditionalInformationDTO;
@@ -120,6 +122,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> errorRecoveryIndexationTask(ErrorRecoveryIndexationTask.Factory factory) {
+        return ErrorRecoveryIndexationTaskDTO.module(factory);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
         return MessageIdReindexingTaskDTO.module(factory);
     }
@@ -170,8 +177,13 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+        return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory);
+    }
+
+    @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
-        return ReprocessingContextInformationDTO.serializationModule(FullReindexingTask.FULL_RE_INDEXING, mailboxIdFactory);
+        return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet

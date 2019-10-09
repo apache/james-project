@@ -399,7 +399,6 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    @Ignore("WIP")
     public void errorRecoveryIndexationShouldCompleteWhenNoMail() {
         String taskId = with()
             .post("/mailboxes?task=reIndex")

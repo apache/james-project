@@ -22,14 +22,20 @@ package org.apache.mailbox.tools.indexer;
 import org.apache.james.mailbox.indexer.IndexingDetailInformation;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.TaskExecutionDetails;
+import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
+import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingContextInformation implements TaskExecutionDetails.AdditionalInformation, IndexingDetailInformation {
 
-    public static ReprocessingContextInformation from(ReprocessingContext reprocessingContext) {
-        return new ReprocessingContextInformation(reprocessingContext.successfullyReprocessedMailCount(), reprocessingContext.failedReprocessingMailCount(), reprocessingContext.failures());
+    public static ReprocessingContextInformationForErrorRecoveryIndexationTask forErrorRecoveryIndexationTask(ReprocessingContext reprocessingContext) {
+        return new ReprocessingContextInformationForErrorRecoveryIndexationTask(reprocessingContext.successfullyReprocessedMailCount(), reprocessingContext.failedReprocessingMailCount(), reprocessingContext.failures());
+    }
+
+    public static ReprocessingContextInformationForFullReindexingTask forFullReindexingTask(ReprocessingContext reprocessingContext) {
+        return new ReprocessingContextInformationForFullReindexingTask(reprocessingContext.successfullyReprocessedMailCount(), reprocessingContext.failedReprocessingMailCount(), reprocessingContext.failures());
     }
 
     private final int successfullyReprocessedMailCount;

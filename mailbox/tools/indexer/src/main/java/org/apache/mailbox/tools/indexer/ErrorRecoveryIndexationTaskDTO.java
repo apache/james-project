@@ -36,14 +36,15 @@ import com.google.common.collect.Multimap;
 
 public class ErrorRecoveryIndexationTaskDTO implements TaskDTO {
 
-    public static final Function<ErrorRecoveryIndexationTask.Factory, TaskDTOModule<ErrorRecoveryIndexationTask, ErrorRecoveryIndexationTaskDTO>> MODULE = (factory) ->
-        DTOModule
+    public static TaskDTOModule<ErrorRecoveryIndexationTask, ErrorRecoveryIndexationTaskDTO> module(ErrorRecoveryIndexationTask.Factory factory) {
+        return DTOModule
             .forDomainObject(ErrorRecoveryIndexationTask.class)
             .convertToDTO(ErrorRecoveryIndexationTaskDTO.class)
             .toDomainObjectConverter(factory::create)
             .toDTOConverter(ErrorRecoveryIndexationTaskDTO::of)
             .typeName(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING.asString())
             .withFactory(TaskDTOModule::new);
+    }
 
     public static ErrorRecoveryIndexationTaskDTO of(ErrorRecoveryIndexationTask task, String type) {
         Multimap<MailboxId, ReIndexingExecutionFailures.ReIndexingFailure> failuresByMailboxId = task.getPreviousFailures()

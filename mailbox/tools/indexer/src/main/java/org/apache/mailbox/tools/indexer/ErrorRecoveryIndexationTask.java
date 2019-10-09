@@ -87,6 +87,6 @@ public class ErrorRecoveryIndexationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(ReprocessingContextInformation.from(reprocessingContext));
+        return Optional.of(ReprocessingContextInformation.forErrorRecoveryIndexationTask(reprocessingContext));
     }
 }

@@ -29,7 +29,6 @@ import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
-import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github.steveash.guavate.Guavate;
@@ -57,13 +56,34 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
         }
     }
 
-    public static AdditionalInformationDTOModule<ReprocessingContextInformation, ReprocessingContextInformationDTO> serializationModule(TaskType taskType, MailboxId.Factory mailboxIdFactory) {
-        return DTOModule.forDomainObject(ReprocessingContextInformation.class)
+    public static class ReprocessingContextInformationForErrorRecoveryIndexationTask extends ReprocessingContextInformation {
+        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForErrorRecoveryIndexationTask, ReprocessingContextInformationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+            return DTOModule.forDomainObject(ReprocessingContextInformationForErrorRecoveryIndexationTask.class)
                 .convertToDTO(ReprocessingContextInformationDTO.class)
-                .toDomainObjectConverter(dto -> new ReprocessingContextInformation(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures)))
+                .toDomainObjectConverter(dto -> new ReprocessingContextInformationForErrorRecoveryIndexationTask(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures)))
                 .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(type, details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(), serializeFailures(details.failures())))
-                .typeName(taskType.asString())
+                .typeName(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
+        }
+
+        ReprocessingContextInformationForErrorRecoveryIndexationTask(int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures);
+        }
+    }
+
+    public static class ReprocessingContextInformationForFullReindexingTask extends ReprocessingContextInformation {
+        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, ReprocessingContextInformationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+            return DTOModule.forDomainObject(ReprocessingContextInformationForFullReindexingTask.class)
+                .convertToDTO(ReprocessingContextInformationDTO.class)
+                .toDomainObjectConverter(dto -> new ReprocessingContextInformationForFullReindexingTask(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures)))
+                .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(type, details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(), serializeFailures(details.failures())))
+                .typeName(FullReindexingTask.FULL_RE_INDEXING.asString())
+                .withFactory(AdditionalInformationDTOModule::new);
+        }
+
+        ReprocessingContextInformationForFullReindexingTask(int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures);
+        }
     }
 
     static ReIndexingExecutionFailures deserializeFailures(MailboxId.Factory mailboxIdFactory,

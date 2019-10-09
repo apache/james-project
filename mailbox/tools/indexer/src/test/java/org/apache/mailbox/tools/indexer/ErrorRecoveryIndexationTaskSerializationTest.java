@@ -31,6 +31,8 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
+import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,10 +69,10 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, mailboxIdFactory);
-        taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.MODULE.apply(factory));
+        taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.module(factory));
 
         jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
-            ReprocessingContextInformationDTO.serializationModule(ErrorRecoveryIndexationTask.PREVIOUS_FAILURES_INDEXING, mailboxIdFactory));
+            ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
             new ReIndexingExecutionFailures.ReIndexingFailure(mailboxId, messageUid),
@@ -97,7 +99,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        ReprocessingContextInformation details = new ReprocessingContextInformation(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        ReprocessingContextInformation details = new ReprocessingContextInformationForErrorRecoveryIndexationTask(successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
