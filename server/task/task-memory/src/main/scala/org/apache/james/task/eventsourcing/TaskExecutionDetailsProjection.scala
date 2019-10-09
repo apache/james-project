@@ -40,6 +40,8 @@ trait TaskExecutionDetailsProjection {
       update(failed.aggregateId.taskId)(_.failed(failed.additionalInformation.asJava))
     case canceled: Cancelled =>
       update(canceled.aggregateId.taskId)(_.cancelEffectively(canceled.additionalInformation.asJava))
+    case updated: AdditionalInformationUpdated =>
+      update(updated.aggregateId.taskId)(_.updateInformation(updated.additionalInformation))
   }
 
   private def update(taskId: TaskId)(updater: TaskExecutionDetails => TaskExecutionDetails): Unit =

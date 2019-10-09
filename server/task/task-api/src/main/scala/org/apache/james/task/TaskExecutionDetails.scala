@@ -100,6 +100,12 @@ class TaskExecutionDetails(val taskId: TaskId,
     case _ => this
   }
 
+  def updateInformation(information: AdditionalInformation): TaskExecutionDetails = status match {
+    case IN_PROGRESS => update(information)
+    case CANCEL_REQUESTED => update(information)
+    case _ => this
+  }
+
   def canEqual(other: Any): Boolean = other.isInstanceOf[TaskExecutionDetails]
 
   override def equals(other: Any): Boolean = other match {
@@ -145,6 +151,7 @@ class TaskExecutionDetails(val taskId: TaskId,
     additionalInformation = additionalInformation,
     startedDate = Optional.of(ZonedDateTime.now),
     ranNode = Optional.of(hostname))
+
   private def complete(finalAdditionalInformation: Optional[AdditionalInformation]) = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.COMPLETED,
     submittedDate = submittedDate,
     submittedNode = submittedNode,
@@ -153,6 +160,7 @@ class TaskExecutionDetails(val taskId: TaskId,
     ranNode = ranNode,
     cancelRequestedNode = cancelRequestedNode,
     completedDate = Optional.of(ZonedDateTime.now))
+
   private def fail(finalAdditionalInformation: Optional[AdditionalInformation]) = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.FAILED,
     submittedDate = submittedDate,
     submittedNode = submittedNode,
@@ -161,6 +169,7 @@ class TaskExecutionDetails(val taskId: TaskId,
     ranNode = ranNode,
     cancelRequestedNode = cancelRequestedNode,
     failedDate = Optional.of(ZonedDateTime.now))
+
   private def requestCancel(hostname: Hostname) = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.CANCEL_REQUESTED,
     submittedDate = submittedDate,
     submittedNode = submittedNode,
@@ -169,6 +178,16 @@ class TaskExecutionDetails(val taskId: TaskId,
     ranNode = ranNode,
     cancelRequestedNode = Optional.of(hostname),
     canceledDate = Optional.of(ZonedDateTime.now))
+
+  private def update(updatedInformation: AdditionalInformation) = new TaskExecutionDetails(taskId, `type`, status,
+    submittedDate = submittedDate,
+    submittedNode = submittedNode,
+    additionalInformation = () => Optional.of(updatedInformation),
+    startedDate = startedDate,
+    ranNode = ranNode,
+    cancelRequestedNode = cancelRequestedNode,
+    canceledDate = canceledDate)
+
   private def cancel(finalAdditionalInformation: Optional[AdditionalInformation]) = new TaskExecutionDetails(taskId, `type`, TaskManager.Status.CANCELLED,
     submittedDate = submittedDate,
     submittedNode = submittedNode,
