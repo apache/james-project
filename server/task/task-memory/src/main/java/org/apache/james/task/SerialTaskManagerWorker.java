@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.collect.Sets;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -111,7 +112,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
         return Mono.fromCallable(() -> taskWithId.getTask().details())
-            .delayElement(Duration.ofSeconds(1))
+            .delayElement(Duration.ofSeconds(1), Schedulers.boundedElastic())
             .repeat()
             .flatMap(Mono::justOrEmpty)
             .doOnNext(information -> listener.updated(taskWithId.getId(), information));
