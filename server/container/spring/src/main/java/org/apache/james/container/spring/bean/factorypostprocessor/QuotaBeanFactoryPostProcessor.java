@@ -32,7 +32,6 @@ import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
 
     private static final String IN_MEMORY_IMPLEMENTATION = "inmemory";
-    private static final String CASSANDRA_IMPLEMENTATION = "cassandra";
     private static final String FAKE_IMPLEMENTATION = "fake";
     private static final String MAX_QUOTA_MANAGER = "maxQuotaManager";
     private static final String JPA_IMPLEMENTATION = "jpa";
@@ -96,8 +95,6 @@ public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
             registry.registerAlias("noMaxQuotaManager", MAX_QUOTA_MANAGER);
         } else if (maxQuotaManager.equalsIgnoreCase(IN_MEMORY_IMPLEMENTATION)) {
             registry.registerAlias("inMemoryMaxQuotaManager", MAX_QUOTA_MANAGER);
-        } else if (maxQuotaManager.equalsIgnoreCase(CASSANDRA_IMPLEMENTATION)) {
-            registry.registerAlias("cassandraMaxQuotaManager", MAX_QUOTA_MANAGER);
         } else if (maxQuotaManager.equalsIgnoreCase(JPA_IMPLEMENTATION)) {
             registry.registerAlias("jpaMaxQuotaManager", MAX_QUOTA_MANAGER);
         } else {
@@ -108,9 +105,7 @@ public class QuotaBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     private void registerAliasForCurrentQuotaManager(String currentQuotaManager, BeanDefinitionRegistry registry) {
         if (currentQuotaManager.equalsIgnoreCase(IN_MEMORY_IMPLEMENTATION)) {
             registry.registerAlias("inMemoryCurrentQuotaManager", CURRENT_QUOTA_MANAGER_BEAN);
-        } else if (currentQuotaManager.equalsIgnoreCase(CASSANDRA_IMPLEMENTATION)) {
-            registry.registerAlias("cassandraCurrentQuotaManager", CURRENT_QUOTA_MANAGER_BEAN);
-        }  else if (currentQuotaManager.equalsIgnoreCase(JPA_IMPLEMENTATION)) {
+        } else if (currentQuotaManager.equalsIgnoreCase(JPA_IMPLEMENTATION)) {
             registry.registerAlias("jpaCurrentQuotaManager", CURRENT_QUOTA_MANAGER_BEAN);
         } else if (! currentQuotaManager.equalsIgnoreCase("none")) {
             throw new FatalBeanException("Unreadable value for Current Quota Manager : " + currentQuotaManager);

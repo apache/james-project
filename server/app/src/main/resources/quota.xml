@@ -59,16 +59,11 @@
         Possible value for provider:
          - none: when you use fake as a value for quotaManager's provider
          - inmemory
-         - cassandra
          - jpa
 
         The inmemory implementation:
          - Does not work in a distributed context
         Note that quota need to be (lazy) re-calculated after each starts
-
-        Cassandra implementation.
-        Non existing quota are considered as null. No cache. It needs to be always enabled, or you might get some
-        quota synchronisation issues.
          -->
         <provider>none</provider>
     </currentQuotaManager>
@@ -81,9 +76,6 @@
          - fixed: all QUOTA ROOT get the same upper bound for their quotas.
          - inmemory: allows you to define QUOTA ROOT specific limits, backed with a fixed policy. It does not
          work in a distributed context.
-         - cassandra: Same thing than inmemory but backed on cassandra. Works on a distributed context. Note that using
-         the default* configuration options and the CLI to set default options is dangerous as server startup might override
-         CLI values.
          - jpa: Same thing than inmemory but backed on jpa. Works on a distributed context. Note that using
          the default* configuration options and the CLI to set default options is dangerous as server startup might override
          CLI values.

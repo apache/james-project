@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.container.spring.context.JamesServerApplicationContext;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.lucene.search.LuceneMessageSearchIndex;
+import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.junit.After;
 import org.junit.Before;
@@ -50,6 +51,6 @@ public class JamesSpringContextTest {
         InVMEventBus eventBus = context.getBean(InVMEventBus.class);
 
         assertThat(eventBus.registeredGroups())
-            .containsExactlyInAnyOrder(ListeningCurrentQuotaUpdater.GROUP, LuceneMessageSearchIndex.GROUP);
+            .containsExactlyInAnyOrder(MailboxAnnotationListener.GROUP, LuceneMessageSearchIndex.GROUP, ListeningCurrentQuotaUpdater.GROUP);
     }
 }

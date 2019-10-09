@@ -37,8 +37,7 @@
 
       <dl>
         <dt><strong>provider</strong></dt>
-        <dd>Supported providers are: jpa (default), maildir, memory. Be aware that maildir will only work on unix like operation systems!
-        Cassandra mailbox need to be compiled and run using java 8.</dd>
+        <dd>Supported providers are: jpa (default), maildir, memory. Be aware that maildir will only work on unix like operation systems!</dd>
       </dl>
 
       <p>See <a href="http://james.apache.org/mailbox/index.html">documentation page</a> to learn more about the different back-ends and their capabilities.</p>

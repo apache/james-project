@@ -43,9 +43,8 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
     private static final String JPA_MAILBOXMANAGER = "jpa-mailboxmanager";
     private static final String MEMORY_MAILBOX_MANAGER = "memory-mailboxManager";
     private static final String MAILDIR_MAILBOXMANAGER = "maildir-mailboxmanager";
-    private static final String CASSANDRA_MAILBOXMANAGER = "cassandra-mailboxmanager";
     private static final ImmutableSet<String> MAILBOX_MANAGER_IDS = ImmutableSet.of(JPA_MAILBOXMANAGER, MEMORY_MAILBOX_MANAGER,
-            MAILDIR_MAILBOXMANAGER, CASSANDRA_MAILBOXMANAGER);
+            MAILDIR_MAILBOXMANAGER);
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
@@ -78,12 +77,6 @@ public class MailboxConfigurationBeanFactoryPostProcessor implements BeanFactory
                 messageMapperFactory = "maildir-sessionMapperFactory";
                 mailboxIdDeserializer = "maildir-mailbox-id-deserializer";
                 mailboxIdFactory = "maildir-mailboxIdFactory";
-            } else if (provider.equalsIgnoreCase("cassandra")) {
-                mailbox = CASSANDRA_MAILBOXMANAGER;
-                subscription = "cassandra-subscriptionManager";
-                messageMapperFactory = "cassandra-sessionMapperFactory";
-                mailboxIdDeserializer = "cassandra-mailbox-id-deserializer";
-                mailboxIdFactory = "cassandra-mailboxIdFactory";
             }
 
             if (mailbox == null) {

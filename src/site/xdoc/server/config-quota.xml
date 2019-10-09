@@ -56,11 +56,10 @@
         (depending on the implementation) update these per QUOTA ROOT maximum values. Four implementations are available for now. A NoQuotaManager implementation
         is read only and returns UNLIMITED maximum values. FixedMaxQuotaManager returns one and only one value for all user. You can configure these maximum values
           threw the configuration files. A InMemoryPerUserMaxQuotaManager allows you to configure quota for each QUOTA ROOT. Note that it needs to be done threw
-          configuration to be persistent. We provide some other implementation: A Cassandra implementation allows to store maximum quota values in Cassandra,
-          and a JPA implementation.</li>
+          configuration to be persistent. We provide some other implementation: A JPA implementation allows to store maximum quota values in a SQL database.</li>
         <li>Current Quota Manager: This component can be omitted if you are running a fake QUOTA manager. inmemory implementation is an event updated cache on
-        top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). Cassandra and Jpa implementations
-        are also available.</li>
+        top of a Quota calculator (that fetches every e-mail metadata of every mailboxes belonging to the QUOTA ROOT: it is expensive). Jpa implementation
+        is also available.</li>
         <li>Quota Updater: This components allows to update current quota values. A fake implementation is available. A real, event base solution also exists.</li>
       </ul>
     </p>
@@ -87,7 +86,7 @@
       <ul>
         <li>Threw configuration file. Note that this is required to persist a change made to the inmemory or fixed Max Quota
           Manager. It needs a James reboot to take effect. Finally, using configuration file for setting maximum quota values
-          will override CLI set values. Avoid this option this persistent Max Quota Manager (for instance Cassandra)</li>
+          will override CLI set values. Avoid this option this persistent Max Quota Manager (for instance JPA)</li>
         <li>Threw the CLI: offers immediate configuration changes on quota maximum values. Note that if you are using either a
         fixed or inmemory Max QUota Manager, your changes need to be done to the XML configuration to be persisted.</li>
       </ul>

@@ -38,7 +38,7 @@ public class MailboxAnnotationListener implements MailboxListener.GroupMailboxLi
 
     }
 
-    private static final Group GROUP = new MailboxAnnotationListenerGroup();
+    public static final Group GROUP = new MailboxAnnotationListenerGroup();
 
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final SessionProvider sessionProvider;
