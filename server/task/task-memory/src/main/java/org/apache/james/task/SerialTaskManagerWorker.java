@@ -38,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -89,19 +88,12 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                 CompletableFuture<Task.Result> future = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, listener), taskExecutor);
                 runningTask.set(Tuples.of(taskWithId.getId(), future));
 
-                Disposable informationPolling = pollAdditionalInformation(taskWithId)
-                    .doOnNext(information -> listener.updated(taskWithId.getId(), information))
-                    .subscribe();
-                return Mono.fromFuture(future)
-                        .doOnError(exception -> {
-                            if (exception instanceof CancellationException) {
-                                listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
-                            } else {
-                                listener.failed(taskWithId.getId(), taskWithId.getTask().details(), exception);
-                            }
-                        })
-                        .onErrorReturn(Task.Result.PARTIAL)
-                        .doOnTerminate(informationPolling::dispose);
+                return Mono.using(
+                    () -> pollAdditionalInformation(taskWithId).subscribe(),
+                    ignored -> Mono.fromFuture(future)
+                            .doOnError(exception -> handleExecutionError(taskWithId, listener, exception))
+                            .onErrorReturn(Task.Result.PARTIAL),
+                    polling -> polling.dispose());
             } else {
                 listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
                 return Mono.empty();
@@ -109,11 +101,20 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         };
     }
 
+    private void handleExecutionError(TaskWithId taskWithId, Listener listener, Throwable exception) {
+        if (exception instanceof CancellationException) {
+            listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
+        } else {
+            listener.failed(taskWithId.getId(), taskWithId.getTask().details(), exception);
+        }
+    }
+
     private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
         return Mono.fromCallable(() -> taskWithId.getTask().details())
             .delayElement(Duration.ofSeconds(1))
             .repeat()
-            .flatMap(Mono::justOrEmpty);
+            .flatMap(Mono::justOrEmpty)
+            .doOnNext(information -> listener.updated(taskWithId.getId(), taskWithId.getTask().type(), information));
     }
 
 
