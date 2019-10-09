@@ -114,7 +114,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
             .delayElement(Duration.ofSeconds(1))
             .repeat()
             .flatMap(Mono::justOrEmpty)
-            .doOnNext(information -> listener.updated(taskWithId.getId(), taskWithId.getTask().type(), information));
+            .doOnNext(information -> listener.updated(taskWithId.getId(), information));
     }
 
 

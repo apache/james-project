@@ -21,12 +21,11 @@ package org.apache.james.task.eventsourcing
 
 import java.util.Optional
 
+import com.google.common.base.Throwables
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.task.Task.Result
 import org.apache.james.task.eventsourcing.TaskCommand._
 import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker}
-
-import com.google.common.base.Throwables
 
 import scala.compat.java8.OptionConverters._
 
@@ -49,5 +48,6 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
   override def cancelled(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Unit =
     eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.asScala ))
 
-  override def updated(taskId: TaskId, additionalInformation: TaskExecutionDetails.AdditionalInformation): Unit = ???
+  override def updated(taskId: TaskId, additionalInformation: TaskExecutionDetails.AdditionalInformation): Unit =
+    eventSourcingSystem.dispatch(UpdateAdditionalInformation(taskId, additionalInformation))
 }

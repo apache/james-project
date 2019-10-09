@@ -100,9 +100,8 @@ class SerialTaskManagerWorkerTest {
 
         worker.executeTask(taskWithId).block();
 
-        verify(listener, atMost(2)).updated(eq(taskWithId.getId()), notNull());
+        verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
     }
-
 
     @Test
     void aRunningTaskShouldEmitAtMostOneInformationPerSecond() {
@@ -115,7 +114,7 @@ class SerialTaskManagerWorkerTest {
 
         worker.executeTask(taskWithId).block();
 
-        verify(listener, times(2)).updated(eq(taskWithId.getId()), notNull());
+        verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
     }
 
     @Test

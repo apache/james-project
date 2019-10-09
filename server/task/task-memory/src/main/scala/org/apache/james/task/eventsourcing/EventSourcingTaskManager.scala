@@ -59,7 +59,8 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
       new RequestCancelCommandHandler(loadHistory, hostname),
       new CompleteCommandHandler(loadHistory),
       new CancelCommandHandler(loadHistory),
-      new FailCommandHandler(loadHistory)),
+      new FailCommandHandler(loadHistory),
+      new UpdateCommandHandler(loadHistory)),
     subscribers = Set(
       executionDetailsProjection.asSubscriber(hostname),
       workDispatcher,

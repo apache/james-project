@@ -22,22 +22,23 @@ import org.apache.james.eventsourcing.Event
 import org.apache.james.task.TaskManager.Status
 
 case class DecisionProjection(status: Option[Status]) {
-  val update: Event => DecisionProjection =
-    DecisionProjection.create
+  def update(event: Event): DecisionProjection = {
+    DecisionProjection(
+      event match {
+        case event: Created => Some(Status.WAITING)
+        case event: Started => Some(Status.IN_PROGRESS)
+        case event: CancelRequested => Some(Status.CANCEL_REQUESTED)
+        case event: Cancelled => Some(Status.CANCELLED)
+        case event: Completed => Some(Status.COMPLETED)
+        case event: Failed => Some(Status.FAILED)
+        case event: AdditionalInformationUpdated => status
+      }
+    )
+  }
+
 }
 
 object DecisionProjection {
-  def create(event: Event): DecisionProjection = DecisionProjection(Some(fromEvent(event)))
-
   def empty: DecisionProjection = DecisionProjection(None)
-
-  private def fromEvent(event: Event): Status = event match {
-    case event: Created => Status.WAITING
-    case event: Started => Status.IN_PROGRESS
-    case event: CancelRequested => Status.CANCEL_REQUESTED
-    case event: Cancelled => Status.CANCELLED
-    case event: Completed => Status.COMPLETED
-    case event: Failed => Status.FAILED
-  }
 }
 
