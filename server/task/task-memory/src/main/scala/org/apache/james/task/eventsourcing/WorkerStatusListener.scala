@@ -48,4 +48,6 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
 
   override def cancelled(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Unit =
     eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.asScala ))
+
+  override def updated(taskId: TaskId, additionalInformation: TaskExecutionDetails.AdditionalInformation): Unit = ???
 }

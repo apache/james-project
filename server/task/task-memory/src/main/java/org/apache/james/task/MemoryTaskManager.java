@@ -85,6 +85,12 @@ public class MemoryTaskManager implements TaskManager {
             updaterFactory.apply(taskId)
                 .accept(details -> details.cancelEffectively(additionalInformation));
         }
+
+        @Override
+        public void updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation) {
+            //The memory task manager doesn't use polling to update its additionalInformation.
+            throw new IllegalStateException();
+        }
     }
 
     private static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);

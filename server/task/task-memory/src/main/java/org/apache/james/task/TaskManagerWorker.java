@@ -37,6 +37,8 @@ public interface TaskManagerWorker extends Closeable {
         void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
         void cancelled(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
+
+        void updated(TaskId taskId, TaskExecutionDetails.AdditionalInformation additionalInformation);
     }
 
     Mono<Task.Result> executeTask(TaskWithId taskWithId);

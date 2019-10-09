@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.base.MoreObjects;
 
 /**
  * This class is used for unit testing.
@@ -61,6 +62,13 @@ public class MemoryReferenceWithCounterTask implements Task {
         @Override
         public int hashCode() {
             return Objects.hashCode(this.count);
+        }
+
+        @Override
+        public String toString() {
+            return MoreObjects.toStringHelper(this)
+                .add("count", count)
+                .toString();
         }
     }
 

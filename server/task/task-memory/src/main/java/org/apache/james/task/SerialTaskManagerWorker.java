@@ -19,6 +19,7 @@
 package org.apache.james.task;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -37,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
@@ -86,6 +89,9 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                 CompletableFuture<Task.Result> future = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, listener), taskExecutor);
                 runningTask.set(Tuples.of(taskWithId.getId(), future));
 
+                Disposable informationPolling = pollAdditionalInformation(taskWithId)
+                    .doOnNext(information -> listener.updated(taskWithId.getId(), information))
+                    .subscribe();
                 return Mono.fromFuture(future)
                         .doOnError(exception -> {
                             if (exception instanceof CancellationException) {
@@ -94,13 +100,22 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
                                 listener.failed(taskWithId.getId(), taskWithId.getTask().details(), exception);
                             }
                         })
-                        .onErrorReturn(Task.Result.PARTIAL);
+                        .onErrorReturn(Task.Result.PARTIAL)
+                        .doOnTerminate(informationPolling::dispose);
             } else {
                 listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
                 return Mono.empty();
             }
         };
     }
+
+    private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
+        return Mono.fromCallable(() -> taskWithId.getTask().details())
+            .delayElement(Duration.ofSeconds(1))
+            .repeat()
+            .flatMap(Mono::justOrEmpty);
+    }
+
 
     private Task.Result runWithMdc(TaskWithId taskWithId, Listener listener) {
         return MDCBuilder.withMdc(

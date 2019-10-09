@@ -21,8 +21,11 @@ package org.apache.james.task;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -30,6 +33,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.awaitility.Awaitility;
@@ -67,6 +71,51 @@ class SerialTaskManagerWorkerTest {
         assertThat(result.block()).isEqualTo(Task.Result.COMPLETED);
 
         verify(listener, atLeastOnce()).completed(taskWithId.getId(), Task.Result.COMPLETED, Optional.empty());
+    }
+
+    @Test
+    void aRunningTaskShouldProvideInformationUpdatesDuringExecution() throws InterruptedException {
+        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
+            Mono.fromCallable(counter::incrementAndGet)
+                .delayElement(Duration.ofSeconds(2))
+                .repeat(10)
+                .then(Mono.just(Task.Result.COMPLETED))
+                .block()));
+
+        worker.executeTask(taskWithId).subscribe();
+
+        TimeUnit.SECONDS.sleep(2);
+
+        verify(listener, atLeastOnce()).updated(eq(taskWithId.getId()), notNull());
+    }
+
+    @Test
+    void aRunningTaskShouldHaveAFiniteNumberOfInformation() throws InterruptedException {
+        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
+            Mono.fromCallable(counter::incrementAndGet)
+                .delayElement(Duration.ofSeconds(1))
+                .repeat(2)
+                .then(Mono.just(Task.Result.COMPLETED))
+                .block()));
+
+        worker.executeTask(taskWithId).block();
+
+        verify(listener, atMost(2)).updated(eq(taskWithId.getId()), notNull());
+    }
+
+
+    @Test
+    void aRunningTaskShouldEmitAtMostOneInformationPerSecond() {
+        TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
+            Mono.fromCallable(counter::incrementAndGet)
+                .delayElement(Duration.ofMillis(10))
+                .repeat(200)
+                .then(Mono.just(Task.Result.COMPLETED))
+                .block()));
+
+        worker.executeTask(taskWithId).block();
+
+        verify(listener, times(2)).updated(eq(taskWithId.getId()), notNull());
     }
 
     @Test
