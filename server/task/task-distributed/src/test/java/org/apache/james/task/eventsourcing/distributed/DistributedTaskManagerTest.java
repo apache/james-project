@@ -73,7 +73,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
 
-@ExtendWith(CountDownLatchExtension.class)
 class DistributedTaskManagerTest implements TaskManagerContract {
 
     private static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
@@ -126,6 +125,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     @RegisterExtension
     static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(cassandraCluster, MODULES);
+
+    @RegisterExtension
+    static CountDownLatchExtension countDownLatchExtension = new CountDownLatchExtension();
 
     private final CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
     private final CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), jsonTaskAdditionalInformationsSerializer);
