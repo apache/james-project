@@ -21,8 +21,10 @@
 package org.apache.james.task.eventsourcing;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Duration.ONE_MINUTE;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.eventsourcing.Event;
@@ -31,7 +33,9 @@ import org.apache.james.task.Hostname;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.assertj.core.api.ListAssert;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -97,16 +101,20 @@ public interface TerminationSubscriberContract {
     default void multipleListeningEventsShouldShareEvents() {
         TerminationSubscriber subscriber = subscriber();
 
+        Flux<Event> firstListener = Flux.from(subscriber.listenEvents());
+        Flux<Event> secondListener = Flux.from(subscriber.listenEvents());
+
         sendEvents(subscriber, COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
 
-        List<List<Event>> listenedEvents = Flux.range(0, 2)
-            .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(ignored -> collectEvents(subscriber))
-            .collectList()
-            .block();
-        assertThat(listenedEvents).hasSize(2);
-        assertThat(listenedEvents.get(0)).containsExactly(COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
-        assertThat(listenedEvents.get(1)).isEqualTo(listenedEvents.get(0));
+        List<Event> receivedEventsFirst = new ArrayList<>();
+        firstListener.subscribe(receivedEventsFirst::add);
+        List<Event> receivedEventsSecond = new ArrayList<>();
+        secondListener.subscribe(receivedEventsSecond::add);
+
+        Awaitility.await().atMost(ONE_MINUTE).until(() -> receivedEventsFirst.size() == 3 && receivedEventsSecond.size() == 3);
+
+        assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
+        assertThat(receivedEventsSecond).containsExactly(COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
     }
 
     @Test
@@ -116,19 +124,19 @@ public interface TerminationSubscriberContract {
         sendEvents(subscriber, COMPLETED_EVENT, FAILED_EVENT, CANCELLED_EVENT);
 
         List<Event> listenedEvents = Mono.delay(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(3).dividedBy(2)))
-            .then(Mono.defer(() -> collectEvents(subscriber)))
+            .then(Mono.defer(() -> collectEvents(subscriber.listenEvents())))
             .subscribeOn(Schedulers.boundedElastic())
             .block();
         assertThat(listenedEvents).containsExactly(FAILED_EVENT, CANCELLED_EVENT);
     }
 
     default ListAssert<Event> assertEvents(TerminationSubscriber subscriber) {
-        return assertThat(collectEvents(subscriber)
+        return assertThat(collectEvents(subscriber.listenEvents())
             .block());
     }
 
-    default Mono<List<Event>> collectEvents(TerminationSubscriber subscriber) {
-        return Flux.from(subscriber.listenEvents())
+    default Mono<List<Event>> collectEvents(Publisher<Event> listener) {
+        return Flux.from(listener)
             .subscribeOn(Schedulers.boundedElastic())
             .take(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(7)))
             .collectList();

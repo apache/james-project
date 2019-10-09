@@ -21,7 +21,9 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Duration.ONE_MINUTE;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -32,12 +34,12 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.eventsourcing.TerminationSubscriber;
 import org.apache.james.task.eventsourcing.TerminationSubscriberContract;
-
-import com.github.steveash.guavate.Guavate;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+
+import com.github.steveash.guavate.Guavate;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer();
@@ -59,15 +61,19 @@ class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract
         TerminationSubscriber subscriber1 = subscriber();
         TerminationSubscriber subscriber2 = subscriber();
 
+        Flux<Event> firstListener = Flux.from(subscriber1.listenEvents());
+        Flux<Event> secondListener = Flux.from(subscriber2.listenEvents());
+
         sendEvents(subscriber1, COMPLETED_EVENT);
 
-        List<List<Event>> listenedEvents = Flux.just(subscriber1, subscriber2)
-            .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(this::collectEvents)
-            .collectList()
-            .block();
-        assertThat(listenedEvents).hasSize(2);
-        assertThat(listenedEvents.get(0)).containsExactly(COMPLETED_EVENT);
-        assertThat(listenedEvents.get(1)).containsExactly(COMPLETED_EVENT);
+        List<Event> receivedEventsFirst = new ArrayList<>();
+        firstListener.subscribe(receivedEventsFirst::add);
+        List<Event> receivedEventsSecond = new ArrayList<>();
+        secondListener.subscribe(receivedEventsSecond::add);
+
+        Awaitility.await().atMost(ONE_MINUTE).until(() -> receivedEventsFirst.size() == 1 && receivedEventsSecond.size() == 1);
+
+        assertThat(receivedEventsFirst).containsExactly(COMPLETED_EVENT);
+        assertThat(receivedEventsSecond).containsExactly(COMPLETED_EVENT);
     }
 }

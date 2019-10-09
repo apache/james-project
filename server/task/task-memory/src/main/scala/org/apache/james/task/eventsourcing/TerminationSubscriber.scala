@@ -36,7 +36,7 @@ trait TerminationSubscriber extends Subscriber {
 }
 
 class MemoryTerminationSubscriber extends TerminationSubscriber {
-  private val events = DirectProcessor.create[Event]()
+  private val events: DirectProcessor[Event] = DirectProcessor.create[Event]()
 
   override def addEvent(event: Event): Unit =
     events.onNext(event)
