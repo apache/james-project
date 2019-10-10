@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Changed
+- Multiple changes have been made to enhance ElasticSearch performance:
+  - Use of routing keys to collocate documents per mailbox
+  - Read related [upgrade instructions](upgrade-instructions.md)
+
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
   - SieveDefaultRepository. Please use SieveFileRepository instead.

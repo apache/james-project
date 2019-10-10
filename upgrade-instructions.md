@@ -16,7 +16,30 @@ Changes to apply between 3.4.x and 3.5.x will be reported here.
 
 Change list:
 
+ - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
+ 
+### ElasticSearch performance enhancements
+
+Date 10/10/2019
+
+SHA-1 0d72783ff4
+
+JIRAS:
+ - https://issues.apache.org/jira/browse/JAMES-2917
+
+Concerned product: Guice product relying on ElasticSearch
+
+We significantly improved our usage of ElasticSearch. Underlying changes include:
+
+ - The use of routing to collocate emails of a same mailbox within a same shard. This enables search queries to avoid cluster
+ level synchronisation, and thus enhance throughput, latencies and scalability.
+
+The downside of these changes is that a reindex is needed, implying a downtime on search:
+ - Delete the indexes used by James
+ - Start James in order to create the missing indexes
+ - Trigger a [Full ReIndexing](https://james.apache.org/server/manage-webadmin.html#ReIndexing_all_mails), which can take
+  time to complete.
  
 #### JAMES-2703 Post 3.4.0 release removals
 
