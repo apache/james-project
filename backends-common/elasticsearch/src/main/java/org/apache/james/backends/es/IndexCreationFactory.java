@@ -45,12 +45,14 @@ public class IndexCreationFactory {
     public static class AliasSpecificationStep {
         private final int nbShards;
         private final int nbReplica;
+        private final int waitForActiveShards;
         private final IndexName indexName;
         private final ImmutableList.Builder<AliasName> aliases;
 
-        AliasSpecificationStep(int nbShards, int nbReplica, IndexName indexName) {
+        AliasSpecificationStep(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
+            this.waitForActiveShards = waitForActiveShards;
             this.indexName = indexName;
             this.aliases = ImmutableList.builder();
         }
@@ -62,19 +64,21 @@ public class IndexCreationFactory {
         }
 
         public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
-            return new IndexCreationPerformer(nbShards, nbReplica, indexName, aliases.build()).createIndexAndAliases(client);
+            return new IndexCreationPerformer(nbShards, nbReplica, waitForActiveShards, indexName, aliases.build()).createIndexAndAliases(client);
         }
     }
 
     static class IndexCreationPerformer {
         private final int nbShards;
         private final int nbReplica;
+        private final int waitForActiveShards;
         private final IndexName indexName;
         private final ImmutableList<AliasName> aliases;
 
-        public IndexCreationPerformer(int nbShards, int nbReplica, IndexName indexName, ImmutableList<AliasName> aliases) {
+        public IndexCreationPerformer(int nbShards, int nbReplica, int waitForActiveShards, IndexName indexName, ImmutableList<AliasName> aliases) {
             this.nbShards = nbShards;
             this.nbReplica = nbReplica;
+            this.waitForActiveShards = waitForActiveShards;
             this.indexName = indexName;
             this.aliases = aliases;
         }
@@ -82,7 +86,7 @@ public class IndexCreationFactory {
         public RestHighLevelClient createIndexAndAliases(RestHighLevelClient client) {
             Preconditions.checkNotNull(indexName);
             try {
-                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica));
+                createIndexIfNeeded(client, indexName, generateSetting(nbShards, nbReplica, waitForActiveShards));
                 aliases.forEach(Throwing.<AliasName>consumer(alias -> createAliasIfNeeded(client, indexName, alias))
                     .sneakyThrow());
             } catch (IOException e) {
@@ -123,12 +127,13 @@ public class IndexCreationFactory {
             }
         }
 
-        private XContentBuilder generateSetting(int nbShards, int nbReplica) throws IOException {
+        private XContentBuilder generateSetting(int nbShards, int nbReplica, int waitForActiveShards) throws IOException {
             return jsonBuilder()
                 .startObject()
                     .startObject("settings")
                         .field("number_of_shards", nbShards)
                         .field("number_of_replicas", nbReplica)
+                        .field("index.write.wait_for_active_shards", waitForActiveShards)
                         .startObject("analysis")
                             .startObject("normalizer")
                                 .startObject(CASE_INSENSITIVE)
@@ -175,6 +180,7 @@ public class IndexCreationFactory {
 
     private final int nbShards;
     private final int nbReplica;
+    private final int waitForActiveShards;
 
     public static final String CASE_INSENSITIVE = "case_insensitive";
     public static final String KEEP_MAIL_AND_URL = "keep_mail_and_url";
@@ -185,10 +191,11 @@ public class IndexCreationFactory {
     public IndexCreationFactory(ElasticSearchConfiguration configuration) {
         this.nbShards = configuration.getNbShards();
         this.nbReplica = configuration.getNbReplica();
+        this.waitForActiveShards = configuration.getWaitForActiveShards();
     }
 
     public AliasSpecificationStep useIndex(IndexName indexName) {
         Preconditions.checkNotNull(indexName);
-        return new AliasSpecificationStep(nbShards, nbReplica, indexName);
+        return new AliasSpecificationStep(nbShards, nbReplica, waitForActiveShards, indexName);
     }
 }
