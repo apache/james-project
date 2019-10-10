@@ -67,6 +67,44 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
+    public void getWaitForActiveShardsShouldReturnConfiguredValue() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        int value = 36;
+        configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+            .isEqualTo(value);
+    }
+
+    @Test
+    public void getWaitForActiveShardsShouldReturnConfiguredValueWhenZero() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        int value = 0;
+        configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+            .isEqualTo(value);
+    }
+
+    @Test
+    public void getWaitForActiveShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        int expectedValue = 1;
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getWaitForActiveShards())
+            .isEqualTo(expectedValue);
+    }
+
+    @Test
     public void getNbShardsShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
@@ -257,13 +295,20 @@ public class ElasticSearchConfigurationTest {
             ImmutableList.of("localhost:9200"));
     }
 
-
     @Test
     public void nbReplicaShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
                 ElasticSearchConfiguration.builder()
                         .nbReplica(-1))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void waitForActiveShardsShouldThrowWhenNegative() {
+        assertThatThrownBy(() ->
+            ElasticSearchConfiguration.builder()
+                .waitForActiveShards(-1))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

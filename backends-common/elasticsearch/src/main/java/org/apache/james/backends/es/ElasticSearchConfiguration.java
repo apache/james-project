@@ -37,12 +37,12 @@ import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchConfiguration {
 
-
     public static class Builder {
 
         private final ImmutableList.Builder<Host> hosts;
         private Optional<Integer> nbShards;
         private Optional<Integer> nbReplica;
+        private Optional<Integer> waitForActiveShards;
         private Optional<Integer> minDelay;
         private Optional<Integer> maxRetries;
         private Optional<Duration> requestTimeout;
@@ -51,6 +51,7 @@ public class ElasticSearchConfiguration {
             hosts = ImmutableList.builder();
             nbShards = Optional.empty();
             nbReplica = Optional.empty();
+            waitForActiveShards = Optional.empty();
             minDelay = Optional.empty();
             maxRetries = Optional.empty();
             requestTimeout = Optional.empty();
@@ -78,6 +79,12 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
+        public Builder waitForActiveShards(int waitForActiveShards) {
+            Preconditions.checkArgument(waitForActiveShards >= 0, "You need the number of waitForActiveShards to be positive");
+            this.waitForActiveShards = Optional.of(waitForActiveShards);
+            return this;
+        }
+
         public Builder minDelay(Optional<Integer> minDelay) {
             this.minDelay = minDelay;
             return this;
@@ -100,6 +107,7 @@ public class ElasticSearchConfiguration {
                 hosts,
                 nbShards.orElse(DEFAULT_NB_SHARDS),
                 nbReplica.orElse(DEFAULT_NB_REPLICA),
+                waitForActiveShards.orElse(DEFAULT_WAIT_FOR_ACTIVE_SHARDS),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
                 maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
                 requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT));
@@ -114,6 +122,7 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     public static final String ELASTICSEARCH_NB_REPLICA = "elasticsearch.nb.replica";
+    public static final String WAIT_FOR_ACTIVE_SHARDS = "elasticsearch.index.waitForActiveShards";
     public static final String ELASTICSEARCH_NB_SHARDS = "elasticsearch.nb.shards";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY = "elasticsearch.retryConnection.minDelay";
     public static final String ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES = "elasticsearch.retryConnection.maxRetries";
@@ -123,6 +132,7 @@ public class ElasticSearchConfiguration {
     public static final Duration DEFAULT_REQUEST_TIMEOUT = Duration.ofSeconds(30);
     public static final int DEFAULT_NB_SHARDS = 5;
     public static final int DEFAULT_NB_REPLICA = 1;
+    public static final int DEFAULT_WAIT_FOR_ACTIVE_SHARDS = 1;
     public static final int DEFAULT_PORT = 9200;
     public static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
@@ -136,6 +146,7 @@ public class ElasticSearchConfiguration {
             .addHosts(getHosts(configuration))
             .nbShards(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
             .nbReplica(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
+            .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
             .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .build();
@@ -179,14 +190,16 @@ public class ElasticSearchConfiguration {
     private final ImmutableList<Host> hosts;
     private final int nbShards;
     private final int nbReplica;
+    private final int waitForActiveShards;
     private final int minDelay;
     private final int maxRetries;
     private final Duration requestTimeout;
 
-    private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int minDelay, int maxRetries, Duration requestTimeout) {
+    private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
+        this.waitForActiveShards = waitForActiveShards;
         this.minDelay = minDelay;
         this.maxRetries = maxRetries;
         this.requestTimeout = requestTimeout;
@@ -202,6 +215,10 @@ public class ElasticSearchConfiguration {
 
     public int getNbReplica() {
         return nbReplica;
+    }
+
+    public int getWaitForActiveShards() {
+        return waitForActiveShards;
     }
 
     public int getMinDelay() {
@@ -223,6 +240,7 @@ public class ElasticSearchConfiguration {
 
             return Objects.equals(this.nbShards, that.nbShards)
                 && Objects.equals(this.nbReplica, that.nbReplica)
+                && Objects.equals(this.waitForActiveShards, that.waitForActiveShards)
                 && Objects.equals(this.minDelay, that.minDelay)
                 && Objects.equals(this.maxRetries, that.maxRetries)
                 && Objects.equals(this.hosts, that.hosts)
@@ -233,6 +251,6 @@ public class ElasticSearchConfiguration {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, nbShards, nbReplica, minDelay, maxRetries, requestTimeout);
+        return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout);
     }
 }
