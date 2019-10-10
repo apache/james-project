@@ -82,9 +82,9 @@ public class ElasticSearchSearcher {
             .orElse(pairStream);
     }
 
-    private SearchRequest prepareSearch(Collection<MailboxId> users, SearchQuery query, Optional<Integer> limit) {
+    private SearchRequest prepareSearch(Collection<MailboxId> mailboxIds, SearchQuery query, Optional<Integer> limit) {
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder()
-            .query(queryConverter.from(users, query))
+            .query(queryConverter.from(mailboxIds, query))
             .size(computeRequiredSize(limit))
             .storedFields(STORED_FIELDS);
 
@@ -96,7 +96,12 @@ public class ElasticSearchSearcher {
         return new SearchRequest(aliasName.getValue())
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .scroll(TIMEOUT)
-            .source(searchSourceBuilder);
+            .source(searchSourceBuilder)
+            .routing(toRoutingKeys(mailboxIds));
+    }
+
+    private String[] toRoutingKeys(Collection<MailboxId> mailboxIds) {
+        return mailboxIds.stream().map(MailboxId::serialize).toArray(String[]::new);
     }
 
     private int computeRequiredSize(Optional<Integer> limit) {

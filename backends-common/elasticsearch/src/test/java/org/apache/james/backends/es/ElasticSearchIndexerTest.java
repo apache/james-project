@@ -20,6 +20,7 @@
 package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
@@ -43,6 +44,9 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchIndexerTest {
+    public static RoutingKey useDocumentId(DocumentId documentId) {
+        return RoutingKey.fromString(documentId.asString());
+    }
 
     private static final int MINIMUM_BATCH_SIZE = 1;
     private static final IndexName INDEX_NAME = new IndexName("index_name");
@@ -52,6 +56,8 @@ public class ElasticSearchIndexerTest {
         .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
+    private static final RoutingKey ROUTING = RoutingKey.fromString("routing");
+    private static final DocumentId DOCUMENT_ID = DocumentId.fromString("1");
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -75,10 +81,10 @@ public class ElasticSearchIndexerTest {
 
     @Test
     public void indexMessageShouldWork() throws Exception {
-        String messageId = "1";
+        DocumentId documentId = DocumentId.fromString("1");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
         
-        testee.index(messageId, content);
+        testee.index(documentId, content, useDocumentId(documentId));
         elasticSearch.awaitForElasticSearch();
         
         SearchResponse searchResponse = client.search(
@@ -90,19 +96,18 @@ public class ElasticSearchIndexerTest {
     
     @Test
     public void indexMessageShouldThrowWhenJsonIsNull() {
-        assertThatThrownBy(() -> testee.index("1", null))
+        assertThatThrownBy(() -> testee.index(DOCUMENT_ID, null, ROUTING))
             .isInstanceOf(IllegalArgumentException.class);
     }
     
     @Test
     public void updateMessages() throws Exception {
-        String messageId = "1";
         String content = "{\"message\": \"trying out Elasticsearch\",\"field\":\"Should be unchanged\"}";
 
-        testee.index(messageId, content);
+        testee.index(DOCUMENT_ID, content, useDocumentId(DOCUMENT_ID));
         elasticSearch.awaitForElasticSearch();
 
-        testee.update(ImmutableList.of(new UpdatedRepresentation(messageId, "{\"message\": \"mastering out Elasticsearch\"}")));
+        testee.update(ImmutableList.of(new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), useDocumentId(DOCUMENT_ID));
         elasticSearch.awaitForElasticSearch();
 
 
@@ -121,37 +126,42 @@ public class ElasticSearchIndexerTest {
 
     @Test
     public void updateMessageShouldThrowWhenJsonIsNull() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("1", null))))
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, null)), ROUTING))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void updateMessageShouldThrowWhenIdIsNull() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}"))))
-            .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(null, "{\"message\": \"mastering out Elasticsearch\"}")), ROUTING))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void updateMessageShouldThrowWhenJsonIsEmpty() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("1", ""))))
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "")), ROUTING))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void updateMessageShouldThrowWhenIdIsEmpty() {
-        assertThatThrownBy(() -> testee.update(ImmutableList.of(new UpdatedRepresentation("", "{\"message\": \"mastering out Elasticsearch\"}"))))
-            .isInstanceOf(IllegalArgumentException.class);
+    public void updateMessageShouldThrowWhenRoutingKeyIsNull() {
+        assertThatThrownBy(() -> testee.update(ImmutableList.of(
+                new UpdatedRepresentation(DOCUMENT_ID, "{\"message\": \"mastering out Elasticsearch\"}")), null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void deleteByQueryShouldWorkOnSingleMessage() throws Exception {
-        String messageId = "1:2";
+        DocumentId documentId =  DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
+        RoutingKey routingKey = useDocumentId(documentId);
 
-        testee.index(messageId, content);
+        testee.index(documentId, content, routingKey);
         elasticSearch.awaitForElasticSearch();
         
-        testee.deleteAllMatchingQuery(termQuery("property", "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1"), routingKey);
         elasticSearch.awaitForElasticSearch();
         
         CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
@@ -164,23 +174,23 @@ public class ElasticSearchIndexerTest {
 
     @Test
     public void deleteByQueryShouldWorkWhenMultipleMessages() throws Exception {
-        String messageId = "1:1";
+        DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"property\":\"1\"}";
         
-        testee.index(messageId, content);
-        
-        String messageId2 = "1:2";
+        testee.index(documentId, content, ROUTING);
+
+        DocumentId documentId2 = DocumentId.fromString("1:2");
         String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"property\":\"1\"}";
         
-        testee.index(messageId2, content2);
-        
-        String messageId3 = "2:3";
+        testee.index(documentId2, content2, ROUTING);
+
+        DocumentId documentId3 = DocumentId.fromString("2:3");
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"property\":\"2\"}";
         
-        testee.index(messageId3, content3);
+        testee.index(documentId3, content3, ROUTING);
         elasticSearch.awaitForElasticSearch();
 
-        testee.deleteAllMatchingQuery(termQuery("property", "1"));
+        testee.deleteAllMatchingQuery(termQuery("property", "1"), ROUTING);
         elasticSearch.awaitForElasticSearch();
         
         CALMLY_AWAIT.atMost(Duration.TEN_SECONDS)
@@ -193,13 +203,13 @@ public class ElasticSearchIndexerTest {
     
     @Test
     public void deleteMessage() throws Exception {
-        String messageId = "1:2";
+        DocumentId documentId = DocumentId.fromString("1:2");
         String content = "{\"message\": \"trying out Elasticsearch\"}";
 
-        testee.index(messageId, content);
+        testee.index(documentId, content, useDocumentId(documentId));
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(ImmutableList.of(messageId));
+        testee.delete(ImmutableList.of(documentId), useDocumentId(documentId));
         elasticSearch.awaitForElasticSearch();
         
         SearchResponse searchResponse = client.search(
@@ -211,23 +221,23 @@ public class ElasticSearchIndexerTest {
 
     @Test
     public void deleteShouldWorkWhenMultipleMessages() throws Exception {
-        String messageId = "1:1";
+        DocumentId documentId = DocumentId.fromString("1:1");
         String content = "{\"message\": \"trying out Elasticsearch\", \"mailboxId\":\"1\"}";
 
-        testee.index(messageId, content);
+        testee.index(documentId, content, ROUTING);
 
-        String messageId2 = "1:2";
+        DocumentId documentId2 = DocumentId.fromString("1:2");
         String content2 = "{\"message\": \"trying out Elasticsearch 2\", \"mailboxId\":\"1\"}";
 
-        testee.index(messageId2, content2);
+        testee.index(documentId2, content2, ROUTING);
 
-        String messageId3 = "2:3";
+        DocumentId documentId3 = DocumentId.fromString("2:3");
         String content3 = "{\"message\": \"trying out Elasticsearch 3\", \"mailboxId\":\"2\"}";
 
-        testee.index(messageId3, content3);
+        testee.index(documentId3, content3, ROUTING);
         elasticSearch.awaitForElasticSearch();
 
-        testee.delete(ImmutableList.of(messageId, messageId3));
+        testee.delete(ImmutableList.of(documentId, documentId3), ROUTING);
         elasticSearch.awaitForElasticSearch();
 
         SearchResponse searchResponse = client.search(
@@ -238,12 +248,14 @@ public class ElasticSearchIndexerTest {
     }
     
     @Test
-    public void updateMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.update(ImmutableList.of());
+    public void updateMessagesShouldNotThrowWhenEmptyList() {
+        assertThatCode(() -> testee.update(ImmutableList.of(), ROUTING))
+            .doesNotThrowAnyException();
     }
     
     @Test
-    public void deleteMessagesShouldNotThrowWhenEmptyList() throws Exception {
-        testee.delete(ImmutableList.of());
+    public void deleteMessagesShouldNotThrowWhenEmptyList() {
+        assertThatCode(() -> testee.delete(ImmutableList.of(), ROUTING))
+            .doesNotThrowAnyException();
     }
 }

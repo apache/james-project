@@ -23,7 +23,10 @@ import java.io.IOException;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.james.backends.es.DocumentId;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.RoutingKey;
+import org.apache.james.core.User;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -64,7 +67,17 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
     }
 
     private void handleEvent(QuotaUsageUpdatedEvent event) throws IOException {
-        indexer.index(event.getUser().asString(),
-            quotaRatioToElasticSearchJson.convertToJson(event));
+        User user = event.getUser();
+        indexer.index(toDocumentId(user),
+            quotaRatioToElasticSearchJson.convertToJson(event),
+            toRoutingKey(user));
+    }
+
+    private RoutingKey toRoutingKey(User user) {
+        return RoutingKey.fromString(user.asString());
+    }
+
+    private DocumentId toDocumentId(User user) {
+        return DocumentId.fromString(user.asString());
     }
 }

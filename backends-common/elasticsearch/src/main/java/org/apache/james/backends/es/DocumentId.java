@@ -16,54 +16,44 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.backends.es;
 
 import java.util.Objects;
 
 import org.elasticsearch.common.Strings;
 
-import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
-public class UpdatedRepresentation {
-    private final DocumentId id;
-    private final String updatedDocumentPart;
+public class DocumentId {
 
-    public UpdatedRepresentation(DocumentId id, String updatedDocumentPart) {
-        Preconditions.checkNotNull(id);
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(updatedDocumentPart), "Updated document must be specified");
-        this.id = id;
-        this.updatedDocumentPart = updatedDocumentPart;
+    public static DocumentId fromString(String value) {
+        return new DocumentId(value);
     }
 
-    public DocumentId getId() {
-        return id;
+    private final String value;
+
+    private DocumentId(String value) {
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(value), "DocumentId must be specified");
+        this.value = value;
     }
 
-    public String getUpdatedDocumentPart() {
-        return updatedDocumentPart;
+    public String asString() {
+        return value;
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof UpdatedRepresentation) {
-            UpdatedRepresentation other = (UpdatedRepresentation) o;
-            return Objects.equals(id, other.id)
-                && Objects.equals(updatedDocumentPart, other.updatedDocumentPart);
+        if (o instanceof DocumentId) {
+            DocumentId that = (DocumentId) o;
+
+            return Objects.equals(this.value, that.value);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(id, updatedDocumentPart);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("id", id)
-            .add("updatedDocumentPart", updatedDocumentPart)
-            .toString();
+        return Objects.hash(value);
     }
 }

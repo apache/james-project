@@ -44,23 +44,26 @@ public class DeleteByQueryPerformer {
     private final WriteAliasName aliasName;
 
     @VisibleForTesting
-    public DeleteByQueryPerformer(RestHighLevelClient client, int batchSize, WriteAliasName aliasName) {
+    DeleteByQueryPerformer(RestHighLevelClient client, int batchSize, WriteAliasName aliasName) {
         this.client = client;
         this.batchSize = batchSize;
         this.aliasName = aliasName;
     }
 
-    public Mono<Void> perform(QueryBuilder queryBuilder) {
-        return Flux.fromStream(new ScrolledSearch(client, prepareSearch(queryBuilder)).searchResponses())
-            .flatMap(searchResponse -> deleteRetrievedIds(client, searchResponse))
+    public Mono<Void> perform(QueryBuilder queryBuilder, RoutingKey routingKey) {
+        SearchRequest searchRequest = prepareSearch(queryBuilder, routingKey);
+
+        return Flux.fromStream(new ScrolledSearch(client, searchRequest).searchResponses())
+            .flatMap(searchResponse -> deleteRetrievedIds(client, searchResponse, routingKey))
             .thenEmpty(Mono.empty());
     }
 
-    private SearchRequest prepareSearch(QueryBuilder queryBuilder) {
+    private SearchRequest prepareSearch(QueryBuilder queryBuilder, RoutingKey routingKey) {
         return new SearchRequest(aliasName.getValue())
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .scroll(TIMEOUT)
-            .source(searchSourceBuilder(queryBuilder));
+            .source(searchSourceBuilder(queryBuilder))
+            .routing(routingKey.asString());
     }
 
     private SearchSourceBuilder searchSourceBuilder(QueryBuilder queryBuilder) {
@@ -69,14 +72,15 @@ public class DeleteByQueryPerformer {
             .size(batchSize);
     }
 
-    private Mono<BulkResponse> deleteRetrievedIds(RestHighLevelClient client, SearchResponse searchResponse) {
+    private Mono<BulkResponse> deleteRetrievedIds(RestHighLevelClient client, SearchResponse searchResponse, RoutingKey routingKey) {
         BulkRequest request = new BulkRequest();
 
         for (SearchHit hit : searchResponse.getHits()) {
             request.add(
                 new DeleteRequest(aliasName.getValue())
                     .type(NodeMappingFactory.DEFAULT_MAPPING_NAME)
-                    .id(hit.getId()));
+                    .id(hit.getId())
+                    .routing(routingKey.asString()));
         }
 
         return Mono.fromCallable(() -> client.bulk(request));
