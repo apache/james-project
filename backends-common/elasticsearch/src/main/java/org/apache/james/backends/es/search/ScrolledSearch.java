@@ -32,6 +32,7 @@ import org.elasticsearch.action.search.ClearScrollRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.search.SearchHit;
@@ -46,7 +47,7 @@ public class ScrolledSearch {
         ScrollIterator(RestHighLevelClient client, SearchRequest searchRequest) {
             this.client = client;
             ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
-            client.searchAsync(searchRequest, listener);
+            client.searchAsync(searchRequest, RequestOptions.DEFAULT, listener);
 
             this.searchResponseFuture = listener.getFuture();
         }
@@ -55,7 +56,7 @@ public class ScrolledSearch {
         public void close() throws IOException {
             ClearScrollRequest clearScrollRequest = new ClearScrollRequest();
             clearScrollRequest.addScrollId(searchResponseFuture.join().getScrollId());
-            client.clearScroll(clearScrollRequest);
+            client.clearScroll(clearScrollRequest, RequestOptions.DEFAULT);
         }
 
         @Override
@@ -68,10 +69,11 @@ public class ScrolledSearch {
         public SearchResponse next() {
             SearchResponse result = searchResponseFuture.join();
             ListenerToFuture<SearchResponse> listener = new ListenerToFuture<>();
-            client.searchScrollAsync(
+            client.scrollAsync(
                 new SearchScrollRequest()
                     .scrollId(result.getScrollId())
                     .scroll(TIMEOUT),
+                RequestOptions.DEFAULT,
                 listener);
             searchResponseFuture = listener.getFuture();
             return result;
