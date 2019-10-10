@@ -1115,9 +1115,9 @@ public abstract class AbstractMessageSearchIndexTest {
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsExactly(m5.getUid(), m3.getUid(), m2.getUid(), m4.getUid());
         // 5 : "zzz" <mailet-api@james.apache.org>
-        // 3 : "aaa" <server-dev@james.apache.org>
-        // 2 : "abc" <server-dev@james.apache.org>
-        // 4 : "server" <server-dev@james.apache.org>
+        // 3 : "aaa" <a-server-dev@james.apache.org>
+        // 2 : "abc" <b-server-dev@james.apache.org>
+        // 4 : "server" <c-server-dev@james.apache.org>
     }
 
     @Test

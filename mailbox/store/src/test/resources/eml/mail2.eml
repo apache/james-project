@@ -34,7 +34,7 @@ Received: from arcas.apache.org (HELO arcas.apache.org) (140.211.11.28)
     by apache.org (qpsmtpd/0.29) with ESMTP; Thu, 04 Jun 2015 09:27:38 +0000
 Date: Thu, 4 Jun 2015 09:27:37 +0000 (UTC)
 From: "efij" <jira1@apache.org>
-To: "aaa" <server-dev@james.apache.org>
+To: "aaa" <a-server-dev@james.apache.org>
 Cc: abc@abc.org
 Message-ID: <JIRA.12781874.1426269127000.9353.1433410057953@Atlassian.JIRA>
 In-Reply-To: <JIRA.12781874.1426269127000@Atlassian.JIRA>

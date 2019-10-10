@@ -37,7 +37,7 @@ Received: from arcas.apache.org (HELO arcas.apache.org) (140.211.11.28)
 Date: Tue, 2 Jun 2015 08:16:19 +0000 (UTC)
 From: "abcd" <jira@apache.org>
 Cc: zzz@bcd.org
-To: "server" <server-dev@james.apache.org>
+To: "server" <c-server-dev@james.apache.org>
 Message-ID: <JIRA.12473940.1284322083000.91735.1433232979714@Atlassian.JIRA>
 In-Reply-To: <JIRA.12473940.1284322083000@Atlassian.JIRA>
 References: <JIRA.12473940.1284322083000@Atlassian.JIRA> <JIRA.12473940.1284322083687@arcas>
