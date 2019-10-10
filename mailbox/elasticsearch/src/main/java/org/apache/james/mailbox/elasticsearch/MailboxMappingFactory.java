@@ -32,6 +32,8 @@ import static org.apache.james.backends.es.NodeMappingFactory.NESTED;
 import static org.apache.james.backends.es.NodeMappingFactory.NORMALIZER;
 import static org.apache.james.backends.es.NodeMappingFactory.PROPERTIES;
 import static org.apache.james.backends.es.NodeMappingFactory.RAW;
+import static org.apache.james.backends.es.NodeMappingFactory.REQUIRED;
+import static org.apache.james.backends.es.NodeMappingFactory.ROUTING;
 import static org.apache.james.backends.es.NodeMappingFactory.SEARCH_ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.SNOWBALL;
 import static org.apache.james.backends.es.NodeMappingFactory.SPLIT_EMAIL;
@@ -86,6 +88,10 @@ public class MailboxMappingFactory {
                 .startObject()
 
                     .field("dynamic", "strict")
+
+                    .startObject(ROUTING)
+                        .field(REQUIRED, true)
+                    .endObject()
 
                     .startObject(PROPERTIES)
 

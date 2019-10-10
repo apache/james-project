@@ -41,6 +41,8 @@ public class NodeMappingFactory {
     public static final String TEXT = "text";
     public static final String KEYWORD = "keyword";
     public static final String PROPERTIES = "properties";
+    public static final String ROUTING = "_routing";
+    public static final String REQUIRED = "required";
     public static final String DATE = "date";
     public static final String FORMAT = "format";
     public static final String NESTED = "nested";
