@@ -26,9 +26,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
@@ -58,7 +60,9 @@ class RabbitMQWorkQueueTest {
     private static final TaskWithId TASK_WITH_ID_2 = new TaskWithId(TASK_ID_2, TASK2);
 
     @RegisterExtension
-    static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();
+    RabbitMQExtension rabbitMQExtension = RabbitMQExtension.defaultRabbitMQ()
+        .restartPolicy(RabbitMQExtension.DockerRestartPolicy.PER_TEST);
+
 
     private RabbitMQWorkQueue testee;
     private TaskManagerWorker taskManagerWorker;
@@ -144,5 +148,27 @@ class RabbitMQWorkQueueTest {
 
         testee.submit(TASK_WITH_ID);
         verify(taskManagerWorker, timeout(100)).executeTask(any());
+    }
+
+    @Test
+    void tasksShouldBeConsumedSequentially() {
+        Task task1 = new CompletedTask();
+        TaskId taskId1 = TaskId.fromString("1111d081-aa30-11e9-bf6c-2d3b9e84aafd");
+        TaskWithId taskWithId1 = new TaskWithId(taskId1, task1);
+
+        Task task2 = new CompletedTask();
+        TaskId taskId2 = TaskId.fromString("2222d082-aa30-22e9-bf6c-2d3b9e84aafd");
+        TaskWithId taskWithId2 = new TaskWithId(taskId2, task2);
+
+        when(taskManagerWorker.executeTask(taskWithId1)).then(answer -> {
+            TimeUnit.MINUTES.sleep(2);
+            return Mono.just(Task.Result.COMPLETED);
+        });
+
+        testee.submit(taskWithId1);
+        testee.submit(taskWithId2);
+
+        verify(taskManagerWorker, timeout(100)).executeTask(taskWithId1);
+        verifyNoMoreInteractions(taskManagerWorker);
     }
 }
