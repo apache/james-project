@@ -272,7 +272,6 @@ public interface TaskManagerContract {
 
         assertThat(additionalInformation.getCount())
             .isEqualTo(1);
-        countDownLatch.countDown();
     }
 
     @Test
