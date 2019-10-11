@@ -35,7 +35,7 @@ object TaskCommand {
 
   case class RequestCancel(id: TaskId) extends TaskCommand
 
-  case class Fail(id: TaskId, additionalInformation: Option[AdditionalInformation]) extends TaskCommand
+  case class Fail(id: TaskId, additionalInformation: Option[AdditionalInformation], errorMessage: Option[String], exception: Option[String]) extends TaskCommand
 
   case class Cancel(id: TaskId, additionalInformation: Option[AdditionalInformation]) extends TaskCommand
 

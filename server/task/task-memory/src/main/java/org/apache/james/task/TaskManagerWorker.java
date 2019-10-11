@@ -30,6 +30,8 @@ public interface TaskManagerWorker extends Closeable {
 
         void completed(TaskId taskId, Task.Result result, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
 
+        void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t);
+
         void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t);
 
         void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation);
@@ -41,5 +43,5 @@ public interface TaskManagerWorker extends Closeable {
 
     void cancelTask(TaskId taskId);
 
-    void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable reason);
+    void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason);
 }

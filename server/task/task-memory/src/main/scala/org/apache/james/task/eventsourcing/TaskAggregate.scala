@@ -25,7 +25,7 @@ import org.apache.james.eventsourcing.{Event, EventId}
 import org.apache.james.task.Task.Result
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.TaskManager.Status
-import org.apache.james.task.{Hostname, Task, TaskType}
+import org.apache.james.task.{Hostname, Task}
 
 import scala.collection.JavaConverters._
 
@@ -65,9 +65,9 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     }
   }
 
-  private[eventsourcing] def fail(additionalInformation: Option[AdditionalInformation]): util.List[Event] = {
+  private[eventsourcing] def fail(additionalInformation: Option[AdditionalInformation], errorMessage: Option[String], exception: Option[String]): util.List[Event] = {
     currentStatus match {
-      case Some(status) if !status.isFinished => createEventWithId(Failed(aggregateId, _, additionalInformation))
+      case Some(status) if !status.isFinished => createEventWithId(Failed(aggregateId, _, additionalInformation, errorMessage, exception))
       case _ => Nil.asJava
     }
   }

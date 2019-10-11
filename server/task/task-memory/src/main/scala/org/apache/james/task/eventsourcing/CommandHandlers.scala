@@ -79,6 +79,6 @@ class FailCommandHandler(private val loadHistory: TaskAggregateId => History) ex
   override def handledClass: Class[Fail] = classOf[Fail]
 
   override def handle(command: Fail): util.List[_ <: Event] = {
-    loadAggregate(loadHistory, command.id).fail(command.additionalInformation)
+    loadAggregate(loadHistory, command.id).fail(command.additionalInformation, command.errorMessage, command.exception)
   }
 }

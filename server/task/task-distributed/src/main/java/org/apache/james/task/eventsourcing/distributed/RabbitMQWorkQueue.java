@@ -126,8 +126,9 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private Mono<Task> deserialize(String json, TaskId taskId) {
         return Mono.fromCallable(() -> taskSerializer.deserialize(json))
             .doOnError(error -> {
-                LOGGER.warn("Unable to deserialize submitted Task {}", taskId.asString(), error);
-                worker.fail(taskId, Optional.empty(), error);
+                String errorMessage = String.format("Unable to deserialize submitted Task %s", taskId.asString());
+                LOGGER.warn(errorMessage, error);
+                worker.fail(taskId, Optional.empty(), errorMessage, error);
             })
             .onErrorResume(error -> Mono.empty());
     }
@@ -135,8 +136,9 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private Mono<Task.Result> executeOnWorker(TaskId taskId, Task task) {
         return worker.executeTask(new TaskWithId(taskId, task))
             .doOnError(error -> {
-                LOGGER.warn("Unable to run submitted Task {}", taskId.asString(), error);
-                worker.fail(taskId, task.details(), error);
+                String errorMessage = String.format("Unable to run submitted Task %s", taskId.asString());
+                LOGGER.warn(errorMessage, error);
+                worker.fail(taskId, task.details(), errorMessage, error);
             })
             .onErrorResume(error -> Mono.empty());
     }

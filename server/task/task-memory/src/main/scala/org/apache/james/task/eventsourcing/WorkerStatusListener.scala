@@ -24,7 +24,9 @@ import java.util.Optional
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.task.Task.Result
 import org.apache.james.task.eventsourcing.TaskCommand._
-import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker, TaskType}
+import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker}
+
+import com.google.common.base.Throwables
 
 import scala.compat.java8.OptionConverters._
 
@@ -35,11 +37,14 @@ case class WorkerStatusListener(eventSourcingSystem: EventSourcingSystem) extend
   override def completed(taskId: TaskId, result: Result, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Unit =
     eventSourcingSystem.dispatch(Complete(taskId, result, additionalInformation.asScala))
 
+  override def failed(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation], errorMessage: String, t: Throwable): Unit =
+    eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala, Some(errorMessage), Some(Throwables.getStackTraceAsString(t))))
+
   override def failed(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation], t: Throwable): Unit =
-    eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala))
+    eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala, None, Some(Throwables.getStackTraceAsString(t))))
 
   override def failed(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Unit =
-    eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala))
+    eventSourcingSystem.dispatch(Fail(taskId, additionalInformation.asScala, None, None))
 
   override def cancelled(taskId: TaskId, additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation]): Unit =
     eventSourcingSystem.dispatch(Cancel(taskId, additionalInformation.asScala ))

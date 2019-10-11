@@ -140,8 +140,8 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     }
 
     @Override
-    public void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable reason) {
-        listener.failed(taskId, additionalInformation, reason);
+    public void fail(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable reason) {
+        listener.failed(taskId, additionalInformation, errorMessage, reason);
     }
 
     @Override

@@ -37,6 +37,6 @@ case class CancelRequested(aggregateId: TaskAggregateId, override val eventId: E
 
 case class Completed(aggregateId: TaskAggregateId, override val eventId: EventId, result: Result, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)
 
-case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)
+case class Failed(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation], errorMessage: Option[String], exception: Option[String]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)
 
 case class Cancelled(aggregateId: TaskAggregateId, override val eventId: EventId, additionalInformation: Option[AdditionalInformation]) extends TerminalTaskEvent(aggregateId, eventId, additionalInformation)

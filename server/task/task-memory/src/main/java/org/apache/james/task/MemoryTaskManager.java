@@ -65,9 +65,14 @@ public class MemoryTaskManager implements TaskManager {
         }
 
         @Override
-        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
+        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, String errorMessage, Throwable t) {
             failed(taskId, additionalInformation);
         }
+
+        @Override
+        public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation, Throwable t) {
+            failed(taskId, additionalInformation);
+         }
 
         @Override
         public void failed(TaskId taskId, Optional<TaskExecutionDetails.AdditionalInformation> additionalInformation) {

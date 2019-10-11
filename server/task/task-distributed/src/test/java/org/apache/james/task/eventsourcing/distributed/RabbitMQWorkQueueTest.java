@@ -144,7 +144,7 @@ class RabbitMQWorkQueueTest {
         otherWorkQueue.submit(taskWithId);
 
         verify(taskManagerWorker, new Timeout(100, times(0))).executeTask(any());
-        verify(taskManagerWorker, timeout(100)).fail(eq(taskId), eq(Optional.empty()), any());
+        verify(taskManagerWorker, timeout(100)).fail(eq(taskId), eq(Optional.empty()), any(), any());
 
         testee.submit(TASK_WITH_ID);
         verify(taskManagerWorker, timeout(100)).executeTask(any());

@@ -46,7 +46,7 @@ import scala.Option;
 public interface TerminationSubscriberContract {
 
     Completed COMPLETED_EVENT = new Completed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Task.Result.COMPLETED, Option.empty());
-    Failed FAILED_EVENT = new Failed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty());
+    Failed FAILED_EVENT = new Failed(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty(), Option.empty(), Option.empty());
     Cancelled CANCELLED_EVENT = new Cancelled(new TaskAggregateId(TaskId.generateTaskId()), EventId.fromSerialized(42), Option.empty());
     Duration DELAY_BETWEEN_EVENTS = Duration.ofMillis(50);
     Duration DELAY_BEFORE_PUBLISHING = Duration.ofMillis(50);
