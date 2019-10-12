@@ -36,6 +36,7 @@ import org.apache.james.quota.search.QuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaConfiguration;
 import org.apache.james.quota.search.elasticsearch.ElasticSearchQuotaSearcher;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
+import org.apache.james.quota.search.elasticsearch.UserRoutingKeyFactory;
 import org.apache.james.quota.search.elasticsearch.events.ElasticSearchQuotaMailboxListener;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.apache.james.utils.InitializationOperation;
@@ -111,7 +112,8 @@ public class ElasticSearchQuotaSearcherModule extends AbstractModule {
         return new ElasticSearchQuotaMailboxListener(
             new ElasticSearchIndexer(client,
                 configuration.getWriteAliasQuotaRatioName()),
-                new QuotaRatioToElasticSearchJson());
+                new QuotaRatioToElasticSearchJson(),
+            new UserRoutingKeyFactory());
     }
 
     @ProvidesIntoSet

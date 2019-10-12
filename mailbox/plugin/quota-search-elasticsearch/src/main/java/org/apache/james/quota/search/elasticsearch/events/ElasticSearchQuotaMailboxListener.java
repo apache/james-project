@@ -42,13 +42,15 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
 
     private final ElasticSearchIndexer indexer;
     private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
+    private final RoutingKey.Factory<User> routingKeyFactory;
 
     @Inject
-    public ElasticSearchQuotaMailboxListener(
-        @Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
-        QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson) {
+    public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
+                                             QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson,
+                                             RoutingKey.Factory<User> routingKeyFactory) {
         this.indexer = indexer;
         this.quotaRatioToElasticSearchJson = quotaRatioToElasticSearchJson;
+        this.routingKeyFactory = routingKeyFactory;
     }
 
     @Override
@@ -70,11 +72,7 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
         User user = event.getUser();
         indexer.index(toDocumentId(user),
             quotaRatioToElasticSearchJson.convertToJson(event),
-            toRoutingKey(user));
-    }
-
-    private RoutingKey toRoutingKey(User user) {
-        return RoutingKey.fromString(user.asString());
+            routingKeyFactory.from(user));
     }
 
     private DocumentId toDocumentId(User user) {

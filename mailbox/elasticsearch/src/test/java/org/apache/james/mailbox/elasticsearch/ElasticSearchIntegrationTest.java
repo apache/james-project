@@ -97,6 +97,7 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
             elasticSearch.getDockerElasticSearch().configuration());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
@@ -111,9 +112,9 @@ public class ElasticSearchIntegrationTest extends AbstractMessageSearchIndexTest
                     BATCH_SIZE),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), SEARCH_SIZE,
                     new InMemoryId.Factory(), messageIdFactory,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
                 new MessageToElasticSearchJson(textExtractor, ZoneId.of("Europe/Paris"), IndexAttachments.YES),
-                preInstanciationStage.getSessionProvider()))
+                preInstanciationStage.getSessionProvider(), routingKeyFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();

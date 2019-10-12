@@ -26,6 +26,7 @@ import java.util.stream.Stream;
 import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
+import org.apache.james.backends.es.RoutingKey;
 import org.apache.james.backends.es.search.ScrolledSearch;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.json.JsonMessageConstants;
@@ -59,16 +60,18 @@ public class ElasticSearchSearcher {
     private final MailboxId.Factory mailboxIdFactory;
     private final MessageId.Factory messageIdFactory;
     private final AliasName aliasName;
+    private final RoutingKey.Factory<MailboxId> routingKeyFactory;
 
     public ElasticSearchSearcher(RestHighLevelClient client, QueryConverter queryConverter, int size,
                                  MailboxId.Factory mailboxIdFactory, MessageId.Factory messageIdFactory,
-                                 ReadAliasName aliasName) {
+                                 ReadAliasName aliasName, RoutingKey.Factory<MailboxId> routingKeyFactory) {
         this.client = client;
         this.queryConverter = queryConverter;
         this.size = size;
         this.mailboxIdFactory = mailboxIdFactory;
         this.messageIdFactory = messageIdFactory;
         this.aliasName = aliasName;
+        this.routingKeyFactory = routingKeyFactory;
     }
 
     public Stream<MessageSearchIndex.SearchResult> search(Collection<MailboxId> mailboxIds, SearchQuery query,
@@ -101,7 +104,10 @@ public class ElasticSearchSearcher {
     }
 
     private String[] toRoutingKeys(Collection<MailboxId> mailboxIds) {
-        return mailboxIds.stream().map(MailboxId::serialize).toArray(String[]::new);
+        return mailboxIds.stream()
+            .map(routingKeyFactory::from)
+            .map(RoutingKey::asString)
+            .toArray(String[]::new);
     }
 
     private int computeRequiredSize(Optional<Integer> limit) {

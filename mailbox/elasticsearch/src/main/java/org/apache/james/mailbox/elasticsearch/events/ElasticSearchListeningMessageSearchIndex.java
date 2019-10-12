@@ -75,16 +75,18 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
     private final ElasticSearchIndexer elasticSearchIndexer;
     private final ElasticSearchSearcher searcher;
     private final MessageToElasticSearchJson messageToElasticSearchJson;
+    private final RoutingKey.Factory<MailboxId> routingKeyFactory;
 
     @Inject
     public ElasticSearchListeningMessageSearchIndex(MailboxSessionMapperFactory factory,
                                                     @Named(MailboxElasticSearchConstants.InjectionNames.MAILBOX) ElasticSearchIndexer indexer,
                                                     ElasticSearchSearcher searcher, MessageToElasticSearchJson messageToElasticSearchJson,
-                                                    SessionProvider sessionProvider) {
+                                                    SessionProvider sessionProvider, RoutingKey.Factory<MailboxId> routingKeyFactory) {
         super(factory, sessionProvider);
         this.elasticSearchIndexer = indexer;
         this.messageToElasticSearchJson = messageToElasticSearchJson;
         this.searcher = searcher;
+        this.routingKeyFactory = routingKeyFactory;
     }
 
     @Override
@@ -142,7 +144,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
 
         String jsonContent = generateIndexedJson(mailbox, message, session);
 
-        elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), jsonContent, toRoutingKey(mailbox.getMailboxId()));
+        elasticSearchIndexer.index(indexIdFor(mailbox, message.getUid()), jsonContent, routingKeyFactory.from(mailbox.getMailboxId()));
     }
 
     private String generateIndexedJson(Mailbox mailbox, MailboxMessage message, MailboxSession session) throws JsonProcessingException {
@@ -165,7 +167,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .delete(expungedUids.stream()
                     .map(uid ->  indexIdFor(mailbox, uid))
                     .collect(Guavate.toImmutableList()),
-                    toRoutingKey(mailbox.getMailboxId()));
+                    routingKeyFactory.from(mailbox.getMailboxId()));
     }
 
     @Override
@@ -175,7 +177,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
             mailboxId.serialize());
 
         elasticSearchIndexer
-                .deleteAllMatchingQuery(queryBuilder, toRoutingKey(mailboxId));
+                .deleteAllMatchingQuery(queryBuilder, routingKeyFactory.from(mailboxId));
     }
 
     @Override
@@ -186,7 +188,7 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
                 .sneakyThrow())
             .collect(Guavate.toImmutableList());
 
-        elasticSearchIndexer.update(updates, toRoutingKey(mailbox.getMailboxId()));
+        elasticSearchIndexer.update(updates, routingKeyFactory.from(mailbox.getMailboxId()));
     }
 
     private UpdatedRepresentation createUpdatedDocumentPartFromUpdatedFlags(Mailbox mailbox, UpdatedFlags updatedFlags) throws JsonProcessingException {
@@ -204,9 +206,5 @@ public class ElasticSearchListeningMessageSearchIndex extends ListeningMessageSe
         if (!searchResult.getMessageId().isPresent()) {
             LOGGER.error("No messageUid for {} in mailbox {}", searchResult.getMessageUid(), searchResult.getMailboxId());
         }
-    }
-
-    private RoutingKey toRoutingKey(MailboxId mailboxId) {
-        return RoutingKey.fromString(mailboxId.serialize());
     }
 }

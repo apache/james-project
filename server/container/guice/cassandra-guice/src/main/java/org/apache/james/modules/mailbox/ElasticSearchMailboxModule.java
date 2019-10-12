@@ -32,11 +32,13 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.backends.es.RoutingKey;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.elasticsearch.ElasticSearchMailboxConfiguration;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.query.QueryConverter;
@@ -56,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
@@ -97,6 +100,8 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         bind(MessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
         bind(ListeningMessageSearchIndex.class).to(ElasticSearchListeningMessageSearchIndex.class);
 
+        bind(new TypeLiteral<RoutingKey.Factory<MailboxId>>() {}).to(MailboxIdRoutingKeyFactory.class);
+
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
@@ -122,14 +127,15 @@ public class ElasticSearchMailboxModule extends AbstractModule {
                                                                      QueryConverter queryConverter,
                                                                      MailboxId.Factory mailboxIdFactory,
                                                                      MessageId.Factory messageIdFactory,
-                                                                     ElasticSearchMailboxConfiguration configuration) {
+                                                                     ElasticSearchMailboxConfiguration configuration,
+                                                                     RoutingKey.Factory<MailboxId> routingKeyFactory) {
         return new ElasticSearchSearcher(
             client,
             queryConverter,
             DEFAULT_SEARCH_SIZE,
             mailboxIdFactory,
             messageIdFactory,
-            configuration.getReadAliasMailboxName());
+            configuration.getReadAliasMailboxName(), routingKeyFactory);
     }
 
     @Provides

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
 import org.apache.james.mailbox.elasticsearch.query.CriterionConverter;
@@ -160,7 +161,8 @@ public class ElasticSearchListeningMessageSearchIndexTest {
             ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
             new InMemoryId.Factory(),
             messageIdFactory,
-            MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS);
+            MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS,
+            new MailboxIdRoutingKeyFactory());
 
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
@@ -170,7 +172,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         elasticSearchIndexer = new ElasticSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
-            messageToElasticSearchJson, sessionProvider);
+            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory());
         session = sessionProvider.createSystemSession(USERNAME);
 
         mailbox = new Mailbox(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), MAILBOX_ID.id);
@@ -236,7 +238,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
             IndexAttachments.YES);
 
         testee = new ElasticSearchListeningMessageSearchIndex(mapperFactory, elasticSearchIndexer, elasticSearchSearcher,
-            messageToElasticSearchJson, sessionProvider);
+            messageToElasticSearchJson, sessionProvider, new MailboxIdRoutingKeyFactory());
 
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT);
         elasticSearch.awaitForElasticSearch();

@@ -37,6 +37,7 @@ import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.quota.search.elasticsearch.QuotaRatioElasticSearchConstants;
 import org.apache.james.quota.search.elasticsearch.QuotaSearchIndexCreationUtil;
+import org.apache.james.quota.search.elasticsearch.UserRoutingKeyFactory;
 import org.apache.james.quota.search.elasticsearch.json.QuotaRatioToElasticSearchJson;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
@@ -70,7 +71,8 @@ public class ElasticSearchQuotaMailboxListenerTest {
             new ElasticSearchIndexer(client,
                 QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS,
                 BATCH_SIZE),
-            new QuotaRatioToElasticSearchJson());
+            new QuotaRatioToElasticSearchJson(),
+            new UserRoutingKeyFactory());
     }
 
     @After

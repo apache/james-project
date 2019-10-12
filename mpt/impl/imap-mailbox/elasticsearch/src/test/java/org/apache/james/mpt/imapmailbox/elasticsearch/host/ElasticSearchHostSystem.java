@@ -36,6 +36,7 @@ import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
+import org.apache.james.mailbox.elasticsearch.MailboxIdRoutingKeyFactory;
 import org.apache.james.mailbox.elasticsearch.MailboxIndexCreationUtil;
 import org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex;
 import org.apache.james.mailbox.elasticsearch.json.MessageToElasticSearchJson;
@@ -86,6 +87,7 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                 .build());
 
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
+        MailboxIdRoutingKeyFactory routingKeyFactory = new MailboxIdRoutingKeyFactory();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .authenticator(authenticator)
@@ -99,9 +101,9 @@ public class ElasticSearchHostSystem extends JamesImapHostSystem {
                     MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS),
                 new ElasticSearchSearcher(client, new QueryConverter(new CriterionConverter()), ElasticSearchSearcher.DEFAULT_SEARCH_SIZE,
                     new InMemoryId.Factory(), messageIdFactory,
-                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS),
+                    MailboxElasticSearchConstants.DEFAULT_MAILBOX_READ_ALIAS, routingKeyFactory),
                 new MessageToElasticSearchJson(new DefaultTextExtractor(), ZoneId.of("Europe/Paris"), IndexAttachments.YES),
-                preInstanciationStage.getSessionProvider()))
+                preInstanciationStage.getSessionProvider(), routingKeyFactory))
             .noPreDeletionHooks()
             .storeQuotaManager()
             .build();

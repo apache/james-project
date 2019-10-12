@@ -70,7 +70,8 @@ public class ElasticSearchQuotaSearchTestSystemExtension implements ParameterRes
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
                 new ElasticSearchIndexer(client,
                     QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),
-                new QuotaRatioToElasticSearchJson());
+                new QuotaRatioToElasticSearchJson(),
+                new UserRoutingKeyFactory());
 
             resources.getMailboxManager().getEventBus().register(listener);
 

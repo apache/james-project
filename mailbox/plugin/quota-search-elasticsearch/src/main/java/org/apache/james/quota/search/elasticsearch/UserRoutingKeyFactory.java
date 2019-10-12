@@ -17,47 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es;
+package org.apache.james.quota.search.elasticsearch;
 
-import java.util.Objects;
+import org.apache.james.backends.es.RoutingKey;
+import org.apache.james.core.User;
 
-import org.elasticsearch.common.Strings;
-
-import com.google.common.base.Preconditions;
-
-public class RoutingKey {
-    public interface Factory<T> {
-        RoutingKey from(T t);
-    }
-
-    public static RoutingKey fromString(String value) {
-        return new RoutingKey(value);
-    }
-
-
-    private final String value;
-
-    private RoutingKey(String value) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(value), "RoutingKey must be specified");
-        this.value = value;
-    }
-
-    public String asString() {
-        return value;
-    }
-
+public class UserRoutingKeyFactory implements RoutingKey.Factory<User> {
     @Override
-    public final boolean equals(Object o) {
-        if (o instanceof RoutingKey) {
-            RoutingKey that = (RoutingKey) o;
-
-            return Objects.equals(this.value, that.value);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(value);
+    public RoutingKey from(User user) {
+        return RoutingKey.fromString(user.asString());
     }
 }

@@ -17,47 +17,18 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.backends.es;
+package org.apache.james.mailbox.elasticsearch;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import org.elasticsearch.common.Strings;
+import org.apache.james.backends.es.RoutingKey;
+import org.apache.james.mailbox.model.TestId;
+import org.junit.jupiter.api.Test;
 
-import com.google.common.base.Preconditions;
-
-public class RoutingKey {
-    public interface Factory<T> {
-        RoutingKey from(T t);
-    }
-
-    public static RoutingKey fromString(String value) {
-        return new RoutingKey(value);
-    }
-
-
-    private final String value;
-
-    private RoutingKey(String value) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(value), "RoutingKey must be specified");
-        this.value = value;
-    }
-
-    public String asString() {
-        return value;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof RoutingKey) {
-            RoutingKey that = (RoutingKey) o;
-
-            return Objects.equals(this.value, that.value);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(value);
+class MailboxIdRoutingKeyFactoryTest {
+    @Test
+    void fromShouldRelyOnSerializedMailboxId() {
+        assertThat(new MailboxIdRoutingKeyFactory().from(TestId.of(5)))
+            .isEqualTo(RoutingKey.fromString("5"));
     }
 }
