@@ -52,6 +52,7 @@ import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.OutboundMessage;
 import reactor.rabbitmq.QueueSpecification;
 import reactor.rabbitmq.RabbitFlux;
+import reactor.rabbitmq.Receiver;
 import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
 
@@ -79,6 +80,8 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     private Disposable sendCancelRequestsQueueHandle;
     private Disposable receiverHandle;
     private Disposable cancelRequestListenerHandle;
+    private Sender cancelRequestSender;
+    private Receiver cancelRequestListener;
 
     public RabbitMQWorkQueue(TaskManagerWorker worker, SimpleConnectionPool simpleConnectionPool, JsonTaskSerializer taskSerializer) {
         this.worker = worker;
@@ -140,7 +143,7 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     void listenToCancelRequests() {
-        Sender cancelRequestSender = channelPool.createSender();
+        cancelRequestSender = channelPool.createSender();
         String queueName = CANCEL_REQUESTS_QUEUE_NAME_PREFIX + UUID.randomUUID().toString();
 
         cancelRequestSender.declareExchange(ExchangeSpecification.exchange(CANCEL_REQUESTS_EXCHANGE_NAME)).block();
@@ -156,8 +159,9 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     private void registerCancelRequestsListener(String queueName) {
-        cancelRequestListenerHandle = RabbitFlux
-            .createReceiver(new ReceiverOptions().connectionMono(connectionMono))
+        cancelRequestListener = RabbitFlux
+            .createReceiver(new ReceiverOptions().connectionMono(connectionMono));
+        cancelRequestListenerHandle = cancelRequestListener
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.boundedElastic())
             .map(this::readCancelRequestMessage)
@@ -201,6 +205,9 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
         Optional.ofNullable(receiver).ifPresent(RabbitMQExclusiveConsumer::close);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
+        Optional.ofNullable(sender).ifPresent(Sender::close);
+        Optional.ofNullable(cancelRequestSender).ifPresent(Sender::close);
+        Optional.ofNullable(cancelRequestListener).ifPresent(Receiver::close);
         channelPool.close();
     }
 }

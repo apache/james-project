@@ -71,6 +71,8 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     private DirectProcessor<Event> listener;
     private Disposable sendQueueHandle;
     private Disposable listenQueueHandle;
+    private Receiver listenerReceiver;
+    private Sender sender;
 
     @Inject
     public RabbitMQTerminationSubscriber(SimpleConnectionPool simpleConnectionPool, JsonEventSerializer serializer) {
@@ -81,7 +83,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     }
 
     public void start() {
-        Sender sender = channelPool.createSender();
+        sender = channelPool.createSender();
 
         sender.declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
         sender.declare(QueueSpecification.queue(queueName).durable(false).autoDelete(true)).block();
@@ -92,9 +94,9 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
 
-        Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
+        listenerReceiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(connectionMono));
         listener = DirectProcessor.create();
-        listenQueueHandle = receiver
+        listenQueueHandle = listenerReceiver
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.boundedElastic())
             .concatMap(this::toEvent)
@@ -135,6 +137,8 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
     public void close() {
         Optional.ofNullable(sendQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(listenQueueHandle).ifPresent(Disposable::dispose);
+        Optional.ofNullable(listenerReceiver).ifPresent(Receiver::close);
+        Optional.ofNullable(sender).ifPresent(Sender::close);
         channelPool.close();
     }
 }
