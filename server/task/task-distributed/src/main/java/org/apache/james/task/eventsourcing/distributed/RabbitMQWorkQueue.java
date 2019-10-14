@@ -24,8 +24,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
-import javax.annotation.PreDestroy;
-
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
 import org.apache.james.lifecycle.api.Startable;
@@ -35,7 +33,6 @@ import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.TaskWithId;
 import org.apache.james.task.WorkQueue;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +41,6 @@ import com.google.common.collect.ImmutableMap;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Delivery;
-
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.UnicastProcessor;
@@ -200,9 +196,9 @@ public class RabbitMQWorkQueue implements WorkQueue, Startable {
     }
 
     @Override
-    @PreDestroy
     public void close() {
         Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
+        Optional.ofNullable(receiver).ifPresent(RabbitMQExclusiveConsumer::close);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
         channelPool.close();

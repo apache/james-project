@@ -80,7 +80,7 @@ public class RabbitMQExclusiveConsumer implements Closeable {
 
     public RabbitMQExclusiveConsumer(ReceiverOptions options) {
         this.privateConnectionSubscriptionScheduler = options.getConnectionSubscriptionScheduler() == null;
-        this.connectionSubscriptionScheduler = options.getConnectionSubscriptionScheduler() == null ?
+        this.connectionSubscriptionScheduler = privateConnectionSubscriptionScheduler ?
             createScheduler("rabbitmq-receiver-connection-subscription") : options.getConnectionSubscriptionScheduler();
         hasConnection = new AtomicBoolean(false);
         this.connectionMono = options.getConnectionMono() != null ? options.getConnectionMono() :

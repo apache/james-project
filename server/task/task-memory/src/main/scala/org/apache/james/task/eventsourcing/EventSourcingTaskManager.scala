@@ -23,14 +23,13 @@ import java.time.Duration
 import java.util
 
 import javax.inject.Inject
-
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Subscriber}
 import org.apache.james.task.TaskManager.ReachedTimeoutException
 import org.apache.james.task._
 import org.apache.james.task.eventsourcing.TaskCommand._
-
 import com.google.common.annotations.VisibleForTesting
+import javax.annotation.PreDestroy
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scheduler.Schedulers
 
@@ -117,6 +116,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     }
   }
 
+  @PreDestroy
   override def close(): Unit = {
     workQueue.close()
   }

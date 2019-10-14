@@ -60,6 +60,7 @@ public class DeliveryRunnable implements Disposable {
     private final MailDelivrer mailDelivrer;
     private final Supplier<Date> dateSupplier;
     private Disposable disposable;
+    private Scheduler remoteDeliveryScheduler;
 
     public DeliveryRunnable(MailQueue queue, RemoteDeliveryConfiguration configuration, DNSService dnsServer, MetricFactory metricFactory,
                             MailetContext mailetContext, Bouncer bouncer) {
@@ -81,7 +82,7 @@ public class DeliveryRunnable implements Disposable {
     }
 
     public void start() {
-        Scheduler remoteDeliveryScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery");
+        remoteDeliveryScheduler = Schedulers.newBoundedElastic(Schedulers.DEFAULT_BOUNDED_ELASTIC_SIZE, Schedulers.DEFAULT_BOUNDED_ELASTIC_QUEUESIZE, "RemoteDelivery");
         disposable = Flux.from(queue.deQueue())
             .publishOn(remoteDeliveryScheduler)
             .flatMap(this::runStep)
@@ -177,5 +178,6 @@ public class DeliveryRunnable implements Disposable {
     @Override
     public void dispose() {
         disposable.dispose();
+        remoteDeliveryScheduler.dispose();
     }
 }
