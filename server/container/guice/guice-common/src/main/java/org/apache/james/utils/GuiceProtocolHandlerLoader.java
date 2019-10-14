@@ -48,7 +48,7 @@ public class GuiceProtocolHandlerLoader implements ProtocolHandlerLoader {
     private ProtocolHandler createProtocolHandler(String name) throws LoadingException {
         try {
             ClassName className = new ClassName(name);
-            return genericLoader.instanciate(className);
+            return genericLoader.instantiate(className);
         } catch (Exception e) {
             throw new LoadingException("Can not load " + name, e);
         }

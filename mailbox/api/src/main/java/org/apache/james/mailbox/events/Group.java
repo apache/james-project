@@ -41,13 +41,13 @@ public class Group {
             }
 
             Class<?> groupClass = Class.forName(serializedGroup);
-            return instanciateGroup(groupClass);
+            return instantiateGroup(groupClass);
         } catch (Exception e) {
             throw new GroupDeserializationException(e);
         }
     }
 
-    private static Group instanciateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException {
+    private static Group instantiateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException {
         Preconditions.checkArgument(Group.class.isAssignableFrom(aClass), "The supplied class is not a group: " + aClass.getName());
         return (Group) aClass.newInstance();
     }

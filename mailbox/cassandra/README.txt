@@ -8,7 +8,7 @@ Concurrency is handled by this implementation while performing writes using Ligh
 
 The configuration is achieved through Spring. The file is 'src/main/resources/META-INF/spring/mailbox-cassandra.xml' .
 
-The components are instanciated and wired together.
+The components are instantiated and wired together.
 
 What might interest you the most is the way you want to connect your Cassandra cluster.
 

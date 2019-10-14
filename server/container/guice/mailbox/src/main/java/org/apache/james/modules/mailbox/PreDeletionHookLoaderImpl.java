@@ -40,6 +40,6 @@ public class PreDeletionHookLoaderImpl implements PreDeletionHookLoader {
     public PreDeletionHook createHook(PreDeletionHookConfiguration configuration) throws ClassNotFoundException {
         ClassName hookClass = new ClassName(configuration.getClazz());
         LOGGER.info("Loading user registered mailbox message deletionHook {}", hookClass);
-        return genericLoader.instanciate(hookClass);
+        return genericLoader.instantiate(hookClass);
     }
 }

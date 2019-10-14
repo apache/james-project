@@ -56,7 +56,7 @@ public class GuiceGenericLoader {
             this.childModule = childModule;
         }
 
-        public T instanciate(ClassName className) throws ClassNotFoundException {
+        public T instantiate(ClassName className) throws ClassNotFoundException {
             Class<T> clazz = locateClass(className, namingSheme);
             return injector.createChildInjector(childModule)
                 .getInstance(clazz);
@@ -97,18 +97,18 @@ public class GuiceGenericLoader {
 
         this.additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
             .stream()
-            .map(Throwing.function(this::<Module>instanciateNoChildModule))
+            .map(Throwing.function(this::<Module>instantiateNoChildModule))
             .collect(Guavate.toImmutableList()));
     }
 
-    private  <T> T instanciateNoChildModule(ClassName className) throws ClassNotFoundException {
+    private  <T> T instantiateNoChildModule(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, NO_CHILD_MODULE)
-            .instanciate(className);
+            .instantiate(className);
     }
 
-    public <T> T instanciate(ClassName className) throws ClassNotFoundException {
+    public <T> T instantiate(ClassName className) throws ClassNotFoundException {
         return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, additionalExtensionBindings)
-            .instanciate(className);
+            .instantiate(className);
     }
 
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {

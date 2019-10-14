@@ -43,7 +43,7 @@ public class GuiceMailRepositoryLoader implements MailRepositoryLoader {
             Module urlModule = binder -> binder.bind(MailRepositoryUrl.class).toInstance(url);
 
             return genericLoader.<MailRepository>withChildModule(urlModule)
-                .instanciate(new ClassName(fullyQualifiedClassName));
+                .instantiate(new ClassName(fullyQualifiedClassName));
         } catch (ClassNotFoundException e) {
             throw new MailRepositoryStore.MailRepositoryStoreException("No Mail Repository found with class name " + fullyQualifiedClassName);
         } catch (ClassCastException e) {

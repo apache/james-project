@@ -40,26 +40,26 @@ public interface FilteringManagementContract {
     String BART_SIMPSON_CARTOON = "bart@simpson.cartoon";
     User USER = User.fromUsername(BART_SIMPSON_CARTOON);
 
-    default FilteringManagement instanciateFilteringManagement(EventStore eventStore) {
+    default FilteringManagement instantiateFilteringManagement(EventStore eventStore) {
         return new EventSourcingFilteringManagement(eventStore);
     }
 
     @Test
     default void listingRulesForUnknownUserShouldReturnEmptyList(EventStore eventStore) {
-        assertThat(instanciateFilteringManagement(eventStore).listRulesForUser(USER))
+        assertThat(instantiateFilteringManagement(eventStore).listRulesForUser(USER))
             .isEmpty();
     }
 
     @Test
     default void listingRulesShouldThrowWhenNullUser(EventStore eventStore) {
         User user = null;
-        assertThatThrownBy(() -> instanciateFilteringManagement(eventStore).listRulesForUser(user))
+        assertThatThrownBy(() -> instantiateFilteringManagement(eventStore).listRulesForUser(user))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void listingRulesShouldReturnDefinedRules(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         testee.defineRulesForUser(USER, RULE_1, RULE_2);
 
@@ -69,7 +69,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void listingRulesShouldReturnLastDefinedRules(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         testee.defineRulesForUser(USER, RULE_1, RULE_2);
         testee.defineRulesForUser(USER, RULE_2, RULE_1);
@@ -80,7 +80,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void definingRulesShouldThrowWhenDuplicateRules(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         assertThatThrownBy(() -> testee.defineRulesForUser(USER, RULE_1, RULE_1))
             .isInstanceOf(IllegalArgumentException.class);
@@ -88,7 +88,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void definingRulesShouldThrowWhenNullUser(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         assertThatThrownBy(() -> testee.defineRulesForUser(null, RULE_1, RULE_1))
             .isInstanceOf(NullPointerException.class);
@@ -96,7 +96,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void definingRulesShouldThrowWhenNullRuleList(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         List<Rule> rules = null;
         assertThatThrownBy(() -> testee.defineRulesForUser(USER, rules))
@@ -105,7 +105,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void definingRulesShouldKeepOrdering(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
         testee.defineRulesForUser(USER, RULE_3, RULE_2, RULE_1);
 
         assertThat(testee.listRulesForUser(USER))
@@ -114,7 +114,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void definingEmptyRuleListShouldRemoveExistingRules(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         testee.defineRulesForUser(USER, RULE_3, RULE_2, RULE_1);
         testee.clearRulesForUser(USER);
@@ -124,7 +124,7 @@ public interface FilteringManagementContract {
 
     @Test
     default void allFieldsAndComparatorShouldWellBeStored(EventStore eventStore) {
-        FilteringManagement testee = instanciateFilteringManagement(eventStore);
+        FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         testee.defineRulesForUser(USER, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
 

@@ -53,7 +53,7 @@ public class GuiceMailetLoader implements MailetLoader {
         try {
             ClassName className = new ClassName(config.getMailetName());
             Mailet result = genericLoader.<Mailet>withNamingSheme(MAILET_NAMING_SCHEME)
-                .instanciate(className);
+                .instantiate(className);
             result.init(resolveConfiguration(result, config));
             return result;
         } catch (Exception e) {

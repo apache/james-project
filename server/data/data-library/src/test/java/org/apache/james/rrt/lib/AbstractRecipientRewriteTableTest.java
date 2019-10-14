@@ -38,7 +38,7 @@ import com.github.fge.lambdas.Throwing;
 
 /**
  * The abstract test for the virtual user table. Contains tests related to
- * simple, regexp, wildcard, error,... Extend this and instanciate the needed
+ * simple, regexp, wildcard, error,... Extend this and instantiate the needed
  * virtualUserTable implementation.
  */
 public abstract class AbstractRecipientRewriteTableTest {

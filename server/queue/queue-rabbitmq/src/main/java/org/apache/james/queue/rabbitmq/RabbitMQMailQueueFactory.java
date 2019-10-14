@@ -108,18 +108,18 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
 
     /**
      * RabbitMQMailQueue should have a single instance in a given JVM for a given MailQueueName.
-     * This class helps at keeping track of previously instanciated MailQueues.
+     * This class helps at keeping track of previously instantiated MailQueues.
      */
     private class RabbitMQMailQueueObjectPool {
 
-        private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instanciatedQueues;
+        private final ConcurrentHashMap<MailQueueName, RabbitMQMailQueue> instantiatedQueues;
 
         RabbitMQMailQueueObjectPool() {
-            this.instanciatedQueues = new ConcurrentHashMap<>();
+            this.instantiatedQueues = new ConcurrentHashMap<>();
         }
 
         RabbitMQMailQueue retrieveInstanceFor(MailQueueName name) {
-            return instanciatedQueues.computeIfAbsent(name, privateFactory::create);
+            return instantiatedQueues.computeIfAbsent(name, privateFactory::create);
         }
     }
 

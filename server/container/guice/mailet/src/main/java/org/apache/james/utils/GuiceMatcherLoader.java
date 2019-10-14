@@ -43,7 +43,7 @@ public class GuiceMatcherLoader implements MatcherLoader {
         try {
             ClassName className = new ClassName(config.getMatcherName());
             Matcher result = genericLoader.<Matcher>withNamingSheme(MATCHER_NAMING_SCHEME)
-                .instanciate(className);
+                .instantiate(className);
             result.init(config);
             return result;
         } catch (Exception e) {

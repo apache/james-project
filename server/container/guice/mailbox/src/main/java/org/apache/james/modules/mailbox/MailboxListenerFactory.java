@@ -83,7 +83,7 @@ public class MailboxListenerFactory {
                     .toInstance(configuration.orElse(new BaseHierarchicalConfiguration())));
 
             return genericLoader.<MailboxListener>withChildModule(childModule)
-                .instanciate(clazz.get());
+                .instantiate(clazz.get());
         }
     }
 

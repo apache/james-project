@@ -57,7 +57,7 @@ public class IndexableMessage {
                     Instant.ofEpochMilli(message.getInternalDate().getTime()),
                     zoneId);
         }
-        
+
         private IndexAttachments indexAttachments;
         private MailboxMessage message;
         private TextExtractor textExtractor;
@@ -77,7 +77,7 @@ public class IndexableMessage {
             Preconditions.checkState(!users.isEmpty());
 
             try {
-                return instanciateIndexedMessage();
+                return instantiateIndexedMessage();
             } catch (IOException | MimeException e) {
                 throw new RuntimeException(e);
             }
@@ -114,7 +114,7 @@ public class IndexableMessage {
                     .anyMatch(property -> property.equals(HAS_ATTACHMENT_PROPERTY));
         }
 
-        private IndexableMessage instanciateIndexedMessage() throws IOException, MimeException {
+        private IndexableMessage instantiateIndexedMessage() throws IOException, MimeException {
             String messageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
 
@@ -318,12 +318,12 @@ public class IndexableMessage {
     public List<MimePart> getAttachments() {
         return attachments;
     }
-    
+
     @JsonProperty(JsonMessageConstants.BCC)
     public EMailers getBcc() {
         return bcc;
     }
-    
+
     @JsonProperty(JsonMessageConstants.HTML_BODY)
     public Optional<String> getBodyHtml() {
         return bodyHtml;
