@@ -24,6 +24,18 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.github.fge.lambdas.functions.ThrowingFunction;
 
+/**
+ * This class is used for unit testing.
+ * It enable to wrap a lambda to run as a Task.
+ *
+ * It should be used with `MemoryReferenceTaskStore` which keeps a reference to the Task object and index it with its id.
+ * On deserialization, we can then ask the store to retrieve the Task object and pretend we deserialized it.
+ *
+ * This task is very similar to `MemoryReferenceTask` but it accept an `AtomicLong` as parameter
+ * which will be used for its additional informations.
+ *
+ * This task enable to unit test the update/serialization of the additional information when using the task manager.
+ */
 public class MemoryReferenceWithCounterTask implements Task {
     public static final TaskType TYPE = TaskType.of("memory-reference-task-with-counter");
 

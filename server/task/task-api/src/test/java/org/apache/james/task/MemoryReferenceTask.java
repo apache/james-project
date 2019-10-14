@@ -22,6 +22,12 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.function.ThrowingSupplier;
 
+/**
+ * This class is used for unit testing.
+ * It enable to wrap a lambda to run as a Task.
+ * It should be used with `MemoryReferenceTaskStore` which keeps a reference to the Task object and index it with its id.
+ * On deserialization, we can then ask the store to retrieve the Task object and pretend we deserialized it.
+ */
 public class MemoryReferenceTask implements Task {
     public static final TaskType TYPE = TaskType.of("memory-reference-task");
     private final ThrowingSupplier<Result> task;
