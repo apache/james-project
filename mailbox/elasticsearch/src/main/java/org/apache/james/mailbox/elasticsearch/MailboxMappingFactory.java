@@ -26,7 +26,6 @@ import static org.apache.james.backends.es.NodeMappingFactory.ANALYZER;
 import static org.apache.james.backends.es.NodeMappingFactory.BOOLEAN;
 import static org.apache.james.backends.es.NodeMappingFactory.FIELDS;
 import static org.apache.james.backends.es.NodeMappingFactory.FORMAT;
-import static org.apache.james.backends.es.NodeMappingFactory.IGNORE_ABOVE;
 import static org.apache.james.backends.es.NodeMappingFactory.KEYWORD;
 import static org.apache.james.backends.es.NodeMappingFactory.LONG;
 import static org.apache.james.backends.es.NodeMappingFactory.NESTED;
@@ -305,11 +304,6 @@ public class MailboxMappingFactory {
                                     .field(ANALYZER, STANDARD)
                                     .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
                                 .endObject()
-                                .startObject(RAW)
-                                    .field(TYPE, KEYWORD)
-                                    .field(NORMALIZER, CASE_INSENSITIVE)
-                                    .field(IGNORE_ABOVE, MAXIMUM_TERM_LENGTH)
-                                .endObject()
                             .endObject()
                         .endObject()
 
@@ -321,11 +315,6 @@ public class MailboxMappingFactory {
                                     .field(TYPE, TEXT)
                                     .field(ANALYZER, STANDARD)
                                     .field(SEARCH_ANALYZER, KEEP_MAIL_AND_URL)
-                                .endObject()
-                                .startObject(RAW)
-                                    .field(TYPE, KEYWORD)
-                                    .field(NORMALIZER, CASE_INSENSITIVE)
-                                    .field(IGNORE_ABOVE, MAXIMUM_TERM_LENGTH)
                                 .endObject()
                             .endObject()
                         .endObject()
