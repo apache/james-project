@@ -31,22 +31,21 @@ import scala.collection.JavaConverters._
 
 class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
 
-  history.getEvents.asScala.headOption match {
-    case Some(Created(_, _, _, _)) =>
+  val initialEvent = history.getEvents.asScala.headOption match {
+    case Some(created @ Created(_, _, _, _)) => created
     case _ => throw new IllegalArgumentException("History must start with Created event")
   }
 
-  private val currentStatus: Status = history
+  private val currentDecisionProjection: DecisionProjection = history
     .getEvents
     .asScala
-    .foldLeft(DecisionProjection.empty)((decision, event) => decision.update(event))
-    .status
-    .get
+    .tail
+    .foldLeft(DecisionProjection.initial(initialEvent))((decision, event) => decision.update(event))
 
   private def optionToJavaList[T](element: Option[T]): util.List[T] = element.toList.asJava
 
   private def createEventIfNotFinished(event: EventId => Event): Option[Event] = {
-    if (!currentStatus.isFinished) {
+    if (!currentDecisionProjection.status.isFinished) {
       Some(event(history.getNextEventId))
     } else
       None
@@ -63,11 +62,11 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
     createEventIfNotFinishedAsJavaList(CancelRequested(aggregateId, _, hostname))
 
   private[eventsourcing] def update(additionalInformation: AdditionalInformation): util.List[Event] =
-    (currentStatus match {
-      case Status.IN_PROGRESS => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
-      case Status.CANCEL_REQUESTED => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+    optionToJavaList(currentDecisionProjection.status match {
+      case Status.IN_PROGRESS if currentDecisionProjection.additionalInformationIsOlderThan(additionalInformation.timestamp) => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
+      case Status.CANCEL_REQUESTED if currentDecisionProjection.additionalInformationIsOlderThan(additionalInformation.timestamp) => createEvent(AdditionalInformationUpdated(aggregateId, _, additionalInformation))
       case _ => None
-    }).toList.asJava
+    })
 
   private[eventsourcing] def complete(result: Result, additionalInformation: Option[AdditionalInformation]): util.List[Event] =
     createEventIfNotFinishedAsJavaList(Completed(aggregateId, _, result, additionalInformation))

@@ -66,7 +66,7 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenNoStartedTaskEmitNoEventWhenUpdateAdditionalInformationCommand() {
+    void givenNoStartedTaskShouldEmitNoEventWhenUpdateAdditionalInformationCommand() {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), HOSTNAME)
         );
@@ -75,7 +75,7 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenInProgressTaskEmitEventWhenUpdateAdditionalInformationCommand() {
+    void givenInProgressTaskShouldEmitEventWhenUpdateAdditionalInformationCommand() {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), HOSTNAME),
             eventId -> Started.apply(ID, eventId, HOSTNAME)
@@ -86,7 +86,36 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenCancelRequestedTaskEmitEventWhenUpdateAdditionalInformationCommand() {
+    void givenInProgressTaskWithOneNewerUpdateShouldEmitEventWhenUpdateAdditionalInformationCommand() {
+        History history = buildHistory(
+            eventId -> Created.apply(ID, eventId, new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), HOSTNAME),
+            eventId -> Started.apply(ID, eventId, HOSTNAME),
+            eventId -> AdditionalInformationUpdated.apply(ID, eventId, new MemoryReferenceWithCounterTask.AdditionalInformation(1, timestamp))
+        );
+        TaskAggregate aggregate = TaskAggregate.fromHistory(ID, history);
+        Instant newEventTime = TaskAggregateTest.timestamp.plusSeconds(3);
+        MemoryReferenceWithCounterTask.AdditionalInformation youngerAdditionalInformation = new MemoryReferenceWithCounterTask.AdditionalInformation(3, newEventTime);
+        assertThat(aggregate.update(youngerAdditionalInformation))
+            .isNotEmpty()
+            .anySatisfy(event -> assertThat(event)
+                .isInstanceOfSatisfying(AdditionalInformationUpdated.class,
+                    additionalInformationUpdated -> assertThat(additionalInformationUpdated.additionalInformation().timestamp()).isEqualTo(newEventTime)));
+    }
+
+    @Test
+    void givenInProgressTaskWithOneStalledUpdateShouldEmitEventWhenUpdateAdditionalInformationCommand() {
+        History history = buildHistory(
+            eventId -> Created.apply(ID, eventId, new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), HOSTNAME),
+            eventId -> Started.apply(ID, eventId, HOSTNAME),
+            eventId -> AdditionalInformationUpdated.apply(ID, eventId, new MemoryReferenceWithCounterTask.AdditionalInformation(1, timestamp))
+        );
+        TaskAggregate aggregate = TaskAggregate.fromHistory(ID, history);
+        MemoryReferenceWithCounterTask.AdditionalInformation olderAdditionalInformation = new MemoryReferenceWithCounterTask.AdditionalInformation(3, timestamp.minusSeconds(3));
+        assertThat(aggregate.update(olderAdditionalInformation)).isEmpty();
+    }
+
+    @Test
+    void givenCancelRequestedTaskShouldEmitEventWhenUpdateAdditionalInformationCommand() {
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED), HOSTNAME),
             eventId -> Started.apply(ID, eventId, HOSTNAME),
@@ -98,7 +127,7 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenCompletedTaskEmitNoEventWhenUpdateAdditionalInformationCommand() {
+    void givenCompletedTaskShouldEmitNoEventWhenUpdateAdditionalInformationCommand() {
         MemoryReferenceWithCounterTask task = new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED);
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),
@@ -110,7 +139,7 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenFailedTaskEmitNoEventWhenUpdateAdditionalInformationCommand() {
+    void givenFailedTaskShouldEmitNoEventWhenUpdateAdditionalInformationCommand() {
         MemoryReferenceWithCounterTask task = new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED);
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),
@@ -122,7 +151,7 @@ class TaskAggregateTest {
     }
 
     @Test
-    void givenCancelTaskEmitNoEventWhenUpdateAdditionalInformationCommand() {
+    void givenCancelTaskShouldEmitNoEventWhenUpdateAdditionalInformationCommand() {
         MemoryReferenceWithCounterTask task = new MemoryReferenceWithCounterTask((counter) -> Task.Result.COMPLETED);
         History history = buildHistory(
             eventId -> Created.apply(ID, eventId, task, HOSTNAME),

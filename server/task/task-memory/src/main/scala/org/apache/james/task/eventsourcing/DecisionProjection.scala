@@ -18,27 +18,29 @@
   * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
+import java.time.Instant
+
 import org.apache.james.eventsourcing.Event
 import org.apache.james.task.TaskManager.Status
 
-case class DecisionProjection(status: Option[Status]) {
+case class DecisionProjection(status: Status, latestUpdateAdditionalInformationUpdate : Option[Instant]) {
   def update(event: Event): DecisionProjection = {
-    DecisionProjection(
       event match {
-        case event: Created => Some(Status.WAITING)
-        case event: Started => Some(Status.IN_PROGRESS)
-        case event: CancelRequested => Some(Status.CANCEL_REQUESTED)
-        case event: Cancelled => Some(Status.CANCELLED)
-        case event: Completed => Some(Status.COMPLETED)
-        case event: Failed => Some(Status.FAILED)
-        case event: AdditionalInformationUpdated => status
+        case _: Created => this
+        case _: Started => DecisionProjection(Status.IN_PROGRESS, None)
+        case _: CancelRequested => DecisionProjection(Status.CANCEL_REQUESTED,latestUpdateAdditionalInformationUpdate)
+        case event: Cancelled => DecisionProjection(Status.CANCELLED, event.additionalInformation.map(_.timestamp))
+        case event: Completed => DecisionProjection(Status.COMPLETED, event.additionalInformation.map(_.timestamp))
+        case event: Failed => DecisionProjection(Status.FAILED, event.additionalInformation.map(_.timestamp))
+        case event: AdditionalInformationUpdated => DecisionProjection(status, Some(event.additionalInformation.timestamp))
       }
-    )
   }
+
+  def additionalInformationIsOlderThan(timestamp: Instant) : Boolean = latestUpdateAdditionalInformationUpdate.forall(timestamp.isAfter)
 
 }
 
 object DecisionProjection {
-  def empty: DecisionProjection = DecisionProjection(None)
+  def initial(created : Created): DecisionProjection = DecisionProjection(Status.WAITING, None)
 }
 
