@@ -21,3 +21,11 @@ Each ADR will be discussed on the Apache James' developers mailing-list before b
 ## Consequences
 
 See Michael Nygard's article, linked above. For a lightweight ADR toolset, see Nat Pryce's [adr-tools](https://github.com/npryce/adr-tools).
+
+We should provide in a mutable `References` section links to related JIRA meta-ticket (not necessarily to all related sub-tickets) as well as a link to the mail archive discussion thread.
+
+JIRA tickets implementing that architecture decision should also link the related Architecture Decision Record.
+
+## References
+
+ * [JAMES-2909](https://jira.apache.org/jira/browse/JAMES-2909)
