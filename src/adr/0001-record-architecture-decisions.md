@@ -18,6 +18,13 @@ We will use Architecture Decision Records, as [described by Michael Nygard](http
 
 Each ADR will be discussed on the Apache James' developers mailing-list before being accepted.
 
+Following [Apache Decision Making process](https://community.apache.org/committers/decisionMaking.html), we provide the following possible status, with their associated meaning:
+ - `Proposed`: The decision is being discussed on the mailing list.
+ - `Accepted (lazy consensus)` : the architecture decision was proposed on the mailing list, and a consensus emerged from people involved in the discussion on the mailing list.
+ - `Accepted (voted)` : the architecture undergo a voting process.
+ - `Rejected` : Consensus built up against that proposal.
+
+
 ## Consequences
 
 See Michael Nygard's article, linked above. For a lightweight ADR toolset, see Nat Pryce's [adr-tools](https://github.com/npryce/adr-tools).
