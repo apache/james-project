@@ -27,13 +27,13 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class MigrationTaskAdditionalInformationsDTO implements AdditionalInformationDTO {
+public class MigrationTaskAdditionalInformationDTO implements AdditionalInformationDTO {
 
-    public static final AdditionalInformationDTOModule<MigrationTask.AdditionalInformations, MigrationTaskAdditionalInformationsDTO> serializationModule() {
-        return DTOModule.forDomainObject(MigrationTask.AdditionalInformations.class)
-            .convertToDTO(MigrationTaskAdditionalInformationsDTO.class)
-            .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformations(new SchemaVersion(dto.getTargetVersion()), dto.timestamp))
-            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(type, details.getToVersion(), details.timestamp()))
+    public static final AdditionalInformationDTOModule<MigrationTask.AdditionalInformation, MigrationTaskAdditionalInformationDTO> serializationModule() {
+        return DTOModule.forDomainObject(MigrationTask.AdditionalInformation.class)
+            .convertToDTO(MigrationTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformation(new SchemaVersion(dto.getTargetVersion()), dto.timestamp))
+            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationDTO(type, details.getToVersion(), details.timestamp()))
             .typeName(MigrationTask.CASSANDRA_MIGRATION.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
@@ -42,7 +42,7 @@ public class MigrationTaskAdditionalInformationsDTO implements AdditionalInforma
     private final int targetVersion;
     private final Instant timestamp;
 
-    public MigrationTaskAdditionalInformationsDTO(@JsonProperty("type") String type,
+    public MigrationTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                   @JsonProperty("targetVersion") int targetVersion,
                                                   @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;

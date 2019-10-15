@@ -27,7 +27,7 @@ import java.time.Instant;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +44,7 @@ class MigrationTaskSerializationTest {
     private final CassandraSchemaTransitions transitions = mock(CassandraSchemaTransitions.class);
     private final MigrationTask.Factory factory = target -> new MigrationTask(cassandraSchemaVersionDAO, transitions, target);
     private final JsonTaskSerializer taskSerializer = new JsonTaskSerializer(MigrationTaskDTO.module(factory));
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(MigrationTaskAdditionalInformationsDTO.serializationModule());
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(MigrationTaskAdditionalInformationDTO.serializationModule());
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -61,13 +61,13 @@ class MigrationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
+        MigrationTask.AdditionalInformation details = new MigrationTask.AdditionalInformation(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
-    void additonalInformationShouldBeDeserializable() throws IOException {
-        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
+    void additionalInformationShouldBeDeserializable() throws IOException {
+        MigrationTask.AdditionalInformation details = new MigrationTask.AdditionalInformation(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

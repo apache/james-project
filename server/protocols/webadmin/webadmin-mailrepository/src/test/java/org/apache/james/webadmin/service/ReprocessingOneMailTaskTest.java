@@ -33,7 +33,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -55,7 +55,7 @@ class ReprocessingOneMailTaskTest {
     private static final String TARGET_QUEUE = "queue";
     private static final MailKey MAIL_KEY = new MailKey("myMail");
     private static final Optional<String> TARGET_PROCESSOR = Optional.of("targetProcessor");
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     @ParameterizedTest
     @MethodSource

@@ -298,7 +298,7 @@
              -->
      
             <!-- This MessageHandler could be used to extract domain out of the message and check -->
-            <!-- this domains against uriRbllists. See http://www.surbl.org for more informations. -->
+            <!-- this domains against uriRbllists. See http://www.surbl.org for more information. -->
             <!-- The message get rejected if a domain matched . -->
             <!--
             <handler class="org.apache.james.smtpserver.fastfail.URIRBLHandler">

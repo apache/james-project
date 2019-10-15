@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.GenericGroup;
 import org.apache.james.mailbox.events.Group;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll;
@@ -63,7 +63,7 @@ class EventDeadLettersRedeliverTaskTest {
         EventDeadLettersRedeliverGroupTaskDTO.module(SERVICE),
         EventDeadLettersRedeliverOneTaskDTO.module(SERVICE));
 
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
         EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE,
         EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE,
         EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE);

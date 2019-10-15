@@ -26,7 +26,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjectionContract;
@@ -34,8 +34,6 @@ import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjectionContrac
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraTaskExecutionDetailsProjectionTest implements TaskExecutionDetailsProjectionContract {
@@ -43,13 +41,13 @@ class CassandraTaskExecutionDetailsProjectionTest implements TaskExecutionDetail
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
             CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE, CassandraZonedDateTimeModule.MODULE, CassandraTaskExecutionDetailsProjectionModule.MODULE()));
-    private static final JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     private Supplier<CassandraTaskExecutionDetailsProjection> testeeSupplier;
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
-        CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), jsonTaskAdditionalInformationsSerializer);
+        CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
         testeeSupplier = () -> new CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO);
     }
 

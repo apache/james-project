@@ -35,7 +35,7 @@ import com.google.common.base.MoreObjects;
  * On deserialization, we can then ask the store to retrieve the Task object and pretend we deserialized it.
  *
  * This task is very similar to `MemoryReferenceTask` but it accepts an `AtomicLong` as parameter
- * which will be used for its additional informations.
+ * which will be used for its additional information.
  *
  * This task enables to unit test the update/serialization of the additional information when using the task manager.
  */

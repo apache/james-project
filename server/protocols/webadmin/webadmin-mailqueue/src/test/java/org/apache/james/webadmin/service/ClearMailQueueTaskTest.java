@@ -30,7 +30,7 @@ import java.util.Optional;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 
@@ -44,7 +44,7 @@ class ClearMailQueueTaskTest {
     private static final String QUEUE_NAME = "anyQueue";
     private static final long INITIAL_COUNT = 0L;
     private static final long REMAINING_COUNT = 10L;
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
         ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"clear-mail-queue\", \"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 

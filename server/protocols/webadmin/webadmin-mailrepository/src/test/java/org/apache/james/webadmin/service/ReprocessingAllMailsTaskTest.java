@@ -31,7 +31,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,7 +44,7 @@ class ReprocessingAllMailsTaskTest {
 
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final ReprocessingService REPROCESSING_SERVICE = mock(ReprocessingService.class);
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     private static final long REPOSITORY_SIZE = 5L;
     private static final MailRepositoryPath REPOSITORY_PATH = MailRepositoryPath.from("a");
     private static final String TARGET_QUEUE = "queue";
@@ -107,7 +107,7 @@ class ReprocessingAllMailsTaskTest {
             .isInstanceOf(ReprocessingAllMailsTask.InvalidMailRepositoryPathDeserializationException.class);
     }
 
-    private static Stream<Arguments> allAdditionalInformations() {
+    private static Stream<Arguments> allAdditionalInformation() {
         return Stream.of(
             Arguments.of(REPOSITORY_PATH, TARGET_QUEUE, SOME_TARGET_PROCESSOR, REPOSITORY_SIZE, REMAINING_COUNT, SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITH_TARGET_PROCESSOR),
             Arguments.of(REPOSITORY_PATH, TARGET_QUEUE, Optional.empty(), REPOSITORY_SIZE, REMAINING_COUNT, SERIALIZED_TASK_ADDITIONAL_INFORMATION_WITHOUT_TARGET_PROCESSOR)
@@ -128,7 +128,7 @@ class ReprocessingAllMailsTaskTest {
     }
 
     private static Stream<Arguments> additionalInformationShouldBeSerializable() {
-        return allAdditionalInformations();
+        return allAdditionalInformation();
     }
 
     @ParameterizedTest
@@ -145,6 +145,6 @@ class ReprocessingAllMailsTaskTest {
     }
 
     private static Stream<Arguments> additionalInformationShouldBeDeserializable() {
-        return allAdditionalInformations();
+        return allAdditionalInformation();
     }
 }

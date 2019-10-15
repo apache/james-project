@@ -41,7 +41,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreEx
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
@@ -104,11 +104,11 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())
         );
 
-    private static final JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     private static final Hostname HOSTNAME = new Hostname("foo");
     private static final Hostname HOSTNAME_2 = new Hostname("bar");
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, jsonTaskAdditionalInformationsSerializer).stream().collect(Guavate.toImmutableSet());
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER).stream().collect(Guavate.toImmutableSet());
     private static final JsonEventSerializer EVENT_SERIALIZER = new JsonEventSerializer(MODULES);
 
 
@@ -129,7 +129,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     static CountDownLatchExtension countDownLatchExtension = new CountDownLatchExtension();
 
     private final CassandraCluster cassandra = cassandraCluster.getCassandraCluster();
-    private final CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), jsonTaskAdditionalInformationsSerializer);
+    private final CassandraTaskExecutionDetailsProjectionDAO cassandraTaskExecutionDetailsProjectionDAO = new CassandraTaskExecutionDetailsProjectionDAO(cassandra.getConf(), cassandra.getTypesProvider(), JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER);
     private final TaskExecutionDetailsProjection executionDetailsProjection = new CassandraTaskExecutionDetailsProjection(cassandraTaskExecutionDetailsProjectionDAO);
 
     private TrackedRabbitMQWorkQueueSupplier workQueueSupplier;

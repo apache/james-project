@@ -1917,7 +1917,7 @@ If the Accept header in the request is "application/json", then the response loo
 ```
 If the Accept header in the request is "message/rfc822", then the response will be the _eml_ file itself.
 
-Additional query parameter `additionalFields` add the existing informations to the response for the supported values:
+Additional query parameter `additionalFields` add the existing information to the response for the supported values:
  - attributes
  - headers
  - textBody

@@ -34,7 +34,7 @@ import javax.mail.internet.AddressException;
 import org.apache.james.core.MailAddress;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class DeleteMailsFromMailQueueTaskTest {
     private MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private ManageableMailQueue mockedQueue;
     private final static String queueName = "anyQueue";
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationsSerializer = new JsonTaskAdditionalInformationsSerializer(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE);
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE);
 
     @BeforeEach
     private void setUp() {
@@ -117,7 +117,7 @@ class DeleteMailsFromMailQueueTaskTest {
             .isInstanceOf(AddressException.class);
     }
 
-    private static Stream<Arguments> validAdditionalInformations() throws Exception {
+    private static Stream<Arguments> validAdditionalInformation() throws Exception {
         return Stream.of(
             Arguments.of(10L, 5L, Optional.of(new MailAddress("a@b.c")), Optional.empty(), Optional.empty(), "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a@b.c\", \"initialCount\" : 10, \"remainingCount\":5, \"timestamp\": \"2018-11-13T12:00:55Z\"}"),
             Arguments.of(1L, 0L, Optional.empty(), Optional.of("name"), Optional.empty(), "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"name\": \"name\", \"initialCount\" : 1, \"remainingCount\":0, \"timestamp\": \"2018-11-13T12:00:55Z\"}"),
@@ -137,11 +137,11 @@ class DeleteMailsFromMailQueueTaskTest {
         ManageableMailQueue queue = mailQueueFactory.getQueue(queueName).get();
         DeleteMailsFromMailQueueTask.AdditionalInformation details = new DeleteMailsFromMailQueueTask.AdditionalInformation(queue.getName(), initialCount, remainingCount, sender, name, recipient, TIMESTAMP);
 
-        assertThatJson(jsonAdditionalInformationsSerializer.serialize(details)).isEqualTo(serializedAdditionalInformationJson);
+        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(serializedAdditionalInformationJson);
     }
 
     private static Stream<Arguments> additionalInformationShouldBeSerializable() throws Exception {
-        return validAdditionalInformations();
+        return validAdditionalInformation();
     }
 
     @ParameterizedTest
@@ -154,19 +154,19 @@ class DeleteMailsFromMailQueueTaskTest {
                                                      String serializedAdditionalInformationJson) throws IOException {
         DeleteMailsFromMailQueueTask.AdditionalInformation details = new DeleteMailsFromMailQueueTask.AdditionalInformation(queueName, initialCount, remainingCount, sender, name, recipient, TIMESTAMP);
 
-        assertThat(jsonAdditionalInformationsSerializer.deserialize(serializedAdditionalInformationJson))
+        assertThat(jsonAdditionalInformationSerializer.deserialize(serializedAdditionalInformationJson))
             .isEqualToComparingFieldByField(details);
     }
 
     private static Stream<Arguments> additionalInformationShouldBeDeserializable() throws Exception {
-        return validAdditionalInformations();
+        return validAdditionalInformation();
     }
 
     @Test
     void additionalInformationShouldThrowWhenDeserializeAMalformedMailAddress() throws Exception {
 
         String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a.b.c\", \"initialCount\" : 10, \"remainingCount\":5}";
-        assertThatThrownBy(() -> jsonAdditionalInformationsSerializer.deserialize(serializedJson))
+        assertThatThrownBy(() -> jsonAdditionalInformationSerializer.deserialize(serializedJson))
             .isInstanceOf(AddressException.class);
     }
 

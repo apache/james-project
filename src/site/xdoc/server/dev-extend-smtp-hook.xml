@@ -42,7 +42,7 @@
     <subsection name="Things to Remember ">
 
       <p>Be aware that your implementation needs to be thread-safe as it will get used as singleton. 
-         If you need to store temporary informations within the SMTP Transaction/Session you should
+         If you need to store temporary information within the SMTP Transaction/Session you should
          use the <code>SMTPSession.getState().put(...)</code> 
          and <code>SMTPSession.getConnectionState().put(...)</code> methods.</p>
  

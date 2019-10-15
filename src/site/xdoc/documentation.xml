@@ -106,7 +106,7 @@
                The jSPF library is pure Java SPF implementation. It was designed to match the current SPF-Specs of 2006-2009 (See RFC section).
                SPF is also knows as Sender Policy Framework. It was designed to detect email spoofing
                This is the solution if you ever was tired of getting spam from yourself.
-               For more informations see <abbr title='Sender Policy Framework'> <a href='http://www.openspf.org/'>openspf website</a></abbr>.
+               For more information see <abbr title='Sender Policy Framework'> <a href='http://www.openspf.org/'>openspf website</a></abbr>.
                </p>
 
             <p><a href='http://james.apache.org/jsieve'>Apache James jSieve</a> is a Java implementation of

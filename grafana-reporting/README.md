@@ -30,7 +30,7 @@ Note that you need to run a guice version of James.
  - Statistics about Mailet / Matcher execution times
  - Statistics about Mail queues
  - Statistics about DNS calls
- - Some other, diverse informations on the James server internals
+ - Some other, diverse information on the James server internals
  - Cassandra driver statistics
  - Tika HTTP client statistics
  - SpamAssassin TCP client statistics

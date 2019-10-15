@@ -27,7 +27,7 @@ import java.time.Instant;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,12 +44,12 @@ class MessageIdReindexingTaskSerializationTest {
     private final String serializedMessageIdReIndexingTask = "{\"type\": \"MessageIdReIndexingTask\", \"messageId\": \"1\"}";
     private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"MessageIdReIndexingTask\", \"messageId\": \"1\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
     @BeforeEach
     void setUp() {
         messageIdFactory = new TestMessageId.Factory();
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
             MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         MessageIdReIndexingTask.Factory factory = new MessageIdReIndexingTask.Factory(reIndexerPerformer, messageIdFactory);

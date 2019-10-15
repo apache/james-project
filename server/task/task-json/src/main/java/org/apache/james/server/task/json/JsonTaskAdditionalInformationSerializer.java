@@ -31,10 +31,10 @@ import org.apache.james.task.TaskExecutionDetails;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 
-public class JsonTaskAdditionalInformationsSerializer {
+public class JsonTaskAdditionalInformationSerializer {
 
-    public static class InvalidAdditionalInformationsException extends RuntimeException {
-        public InvalidAdditionalInformationsException(JsonGenericSerializer.InvalidTypeException original) {
+    public static class InvalidAdditionalInformationException extends RuntimeException {
+        public InvalidAdditionalInformationException(JsonGenericSerializer.InvalidTypeException original) {
             super(original);
         }
     }
@@ -48,11 +48,11 @@ public class JsonTaskAdditionalInformationsSerializer {
     private JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> jsonGenericSerializer;
 
     @Inject
-    public JsonTaskAdditionalInformationsSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
+    public JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
         jsonGenericSerializer = new JsonGenericSerializer(modules);
     }
 
-    public JsonTaskAdditionalInformationsSerializer(@SuppressWarnings("rawtypes") AdditionalInformationDTOModule... modules) {
+    public JsonTaskAdditionalInformationSerializer(@SuppressWarnings("rawtypes") AdditionalInformationDTOModule... modules) {
         this(ImmutableSet.copyOf(modules));
     }
 
@@ -70,7 +70,7 @@ public class JsonTaskAdditionalInformationsSerializer {
         } catch (JsonGenericSerializer.UnknownTypeException e) {
             throw new UnknownAdditionalInformationException(e);
         } catch (JsonGenericSerializer.InvalidTypeException e) {
-            throw new InvalidAdditionalInformationsException(e);
+            throw new InvalidAdditionalInformationException(e);
         }
     }
 }

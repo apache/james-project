@@ -78,7 +78,7 @@ final class MessageInputStream extends InputStream {
      * @throws IOException
      *             get thrown if an IO error detected
      * @throws MessagingException
-     *             get thrown if an error detected while reading informations of
+     *             get thrown if an error detected while reading information of
      *             the mail
      */
     public MessageInputStream(Mail mc, StreamRepository srep, int sizeLimit, final boolean update) throws IOException, MessagingException {
@@ -142,7 +142,7 @@ final class MessageInputStream extends InputStream {
      * @throws IOException
      *             get thrown if an IO error detected
      * @throws MessagingException
-     *             get thrown if an error detected while reading informations of
+     *             get thrown if an error detected while reading information of
      *             the mail
      */
     private void writeStream(Mail mail, OutputStream out, boolean update) throws IOException, MessagingException {

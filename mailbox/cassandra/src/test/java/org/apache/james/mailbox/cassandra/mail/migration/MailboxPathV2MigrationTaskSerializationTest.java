@@ -27,7 +27,7 @@ import static org.mockito.Mockito.mock;
 import java.io.IOException;
 import java.time.Instant;
 
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.TaskExecutionDetails;
 
@@ -43,7 +43,7 @@ class MailboxPathV2MigrationTaskSerializationTest {
     private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"Cassandra_mailboxPathV2Migration\", \"remainingCount\":42,\"initialCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
-    private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -59,12 +59,12 @@ class MailboxPathV2MigrationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        assertThatJson(JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.serialize(DETAILS)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
+        assertThatJson(JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER.serialize(DETAILS)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        TaskExecutionDetails.AdditionalInformation deserialized = JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION);
+        TaskExecutionDetails.AdditionalInformation deserialized = JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION);
         assertThat(deserialized).isInstanceOf(MailboxPathV2Migration.AdditionalInformation.class);
 
         MailboxPathV2Migration.AdditionalInformation additionalInformation = (MailboxPathV2Migration.AdditionalInformation) deserialized;

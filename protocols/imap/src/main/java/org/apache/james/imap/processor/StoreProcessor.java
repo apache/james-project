@@ -312,7 +312,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 }
                
                 final FetchResponse response;
-                // For more informations related to the FETCH response see
+                // For more information related to the FETCH response see
                 //
                 // RFC4551 3.2. STORE and UID STORE Commands
                 if (silent && (unchangedSince != -1 || qresyncEnabled || condstoreEnabled)) {

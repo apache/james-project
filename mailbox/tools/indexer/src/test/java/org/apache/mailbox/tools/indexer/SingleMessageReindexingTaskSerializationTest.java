@@ -27,7 +27,7 @@ import java.time.Instant;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +45,7 @@ class SingleMessageReindexingTaskSerializationTest {
     private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
         SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory));
 
     @BeforeEach

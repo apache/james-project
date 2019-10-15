@@ -34,7 +34,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 /**
  * <p>
- * Used to get specific informations about a Message without dealing with a
+ * Used to get specific information about a Message without dealing with a
  * MimeMessage instance. Demanded information can be requested by binary
  * combining the constants.
  * </p>

@@ -67,12 +67,12 @@ public class MigrationTask implements Task {
 
     public static final TaskType CASSANDRA_MIGRATION = TaskType.of("CassandraMigration");
 
-    public static class AdditionalInformations implements TaskExecutionDetails.AdditionalInformation {
+    public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
         private final SchemaVersion toVersion;
         private final Instant timestamp;
 
-        public AdditionalInformations(SchemaVersion toVersion, Instant timestamp) {
+        public AdditionalInformation(SchemaVersion toVersion, Instant timestamp) {
             this.toVersion = toVersion;
             this.timestamp = timestamp;
         }
@@ -157,7 +157,7 @@ public class MigrationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformations(target, Clock.systemUTC().instant()));
+        return Optional.of(new AdditionalInformation(target, Clock.systemUTC().instant()));
     }
 
 }

@@ -29,7 +29,7 @@ import java.util.List;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class SingleMailboxReindexingTaskSerializationTest {
 
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
@@ -67,7 +67,7 @@ class SingleMailboxReindexingTaskSerializationTest {
         SingleMailboxReindexingTask.Factory factory = new SingleMailboxReindexingTask.Factory(reIndexerPerformer, new TestId.Factory());
         taskSerializer = new JsonTaskSerializer(SingleMailboxReindexingTaskDTO.module(factory));
 
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
             SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(new TestId.Factory()));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(

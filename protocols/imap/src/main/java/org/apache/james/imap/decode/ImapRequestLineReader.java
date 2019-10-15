@@ -264,7 +264,7 @@ public abstract class ImapRequestLineReader {
      * variants of ;; INBOX (e.g. "iNbOx") MUST be interpreted as INBOX ;; not
      * as an astring.
      * 
-     * Be aware that mailbox names are encoded via a modified UTF7. For more informations RFC3501
+     * Be aware that mailbox names are encoded via a modified UTF7. For more information RFC3501
      * 
      * 
      * 

@@ -28,7 +28,7 @@ import java.time.Instant;
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.vault.DeletedMessageVault;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,14 +51,14 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     private final String serializedDeleteMessagesVaultDeleteTask = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
     private final String serializedAdditionalInformation = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
     @BeforeEach
     void setUp() {
         deletedMessageVault = mock(DeletedMessageVault.class);
         DeletedMessagesVaultDeleteTask.Factory factory = new DeletedMessagesVaultDeleteTask.Factory(deletedMessageVault, messageIdFactory);
         taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultDeleteTaskDTO.module(factory));
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
     }
 
     @Test

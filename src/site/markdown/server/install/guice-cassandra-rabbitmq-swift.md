@@ -76,7 +76,7 @@ To use Scality S3 server you have to launch it instead of swift container:
 $ docker run -d -p 8080:8000 --name=s3 scality/s3server:6018536a
 ```
 
-More informations about available options [here](https://hub.docker.com/r/scality/s3server).
+More information about available options [here](https://hub.docker.com/r/scality/s3server).
 
 ## Guice-cassandra-rabbitmq-ldap
 

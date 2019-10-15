@@ -29,7 +29,7 @@ import java.util.List;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
@@ -46,7 +46,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     private final TestId.Factory mailboxIdFactory = new TestId.Factory();
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
@@ -73,7 +73,7 @@ class ErrorRecoveryIndexationTaskSerializationTest {
         ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, mailboxIdFactory);
         taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.module(factory));
 
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
             ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(

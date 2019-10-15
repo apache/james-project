@@ -21,7 +21,7 @@ package org.apache.james.modules;
 import java.time.Clock;
 
 import org.apache.james.backends.cassandra.migration.MigrationTask;
-import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationsDTO;
+import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationDTO;
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskAdditionalInformationDTO;
@@ -34,7 +34,7 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigrationTaskAdditionalInformationDTO;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -91,33 +91,33 @@ import com.google.inject.multibindings.ProvidesIntoSet;
 public class TaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCreatedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.CREATED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskCreatedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.CREATED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskStartedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.STARTED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskStartedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.STARTED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCancelRequestedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.CANCEL_REQUESTED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskCancelRequestedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.CANCEL_REQUESTED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCancelledSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.CANCELLED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskCancelledSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.CANCELLED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCompletedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.COMPLETED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskCompletedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.COMPLETED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskFailedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationsSerializer jsonTaskAdditionalInformationsSerializer) {
-        return TasksSerializationModule.FAILED.create(jsonTaskSerializer, jsonTaskAdditionalInformationsSerializer);
+    public EventDTOModule<?, ?> taskFailedSerialization(JsonTaskSerializer jsonTaskSerializer, JsonTaskAdditionalInformationSerializer jsonTaskAdditionalInformationSerializer) {
+        return TasksSerializationModule.FAILED.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer);
     }
 
     @ProvidesIntoSet
@@ -302,7 +302,7 @@ public class TaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> migrationTaskAdditionalInformation() {
-        return MigrationTaskAdditionalInformationsDTO.serializationModule();
+        return MigrationTaskAdditionalInformationDTO.serializationModule();
     }
 
     @ProvidesIntoSet

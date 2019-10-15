@@ -6,7 +6,7 @@ categories: james update
 ---
 
 James PMC is proud to announce the [availability][availability] of the long awaited final release of James Server 2.3.0.
-More informations on what's new can be found in the [changelog][changelog] .
+More information on what's new can be found in the [changelog][changelog] .
 
 [availability]: download.cgi
 [changelog]: /server/2.3.0/changelog.html

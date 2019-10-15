@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Extract domains from message and check against URIRBLServer. For more
- * informations see <a href="http://www.surbl.org">www.surbl.org</a>
+ * information see <a href="http://www.surbl.org">www.surbl.org</a>
  */
 public class URIRBLHandler implements JamesMessageHook, ProtocolHandler {
 

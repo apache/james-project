@@ -28,7 +28,7 @@ import java.time.Instant;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
+import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask;
 
@@ -44,7 +44,7 @@ class FullReindexingTaskSerializationTest {
 
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
-    private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
     private final TestId mailboxId2 = TestId.of(2L);
     private final MessageUid messageUid2 = MessageUid.of(20L);
@@ -63,7 +63,7 @@ class FullReindexingTaskSerializationTest {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         taskSerializer = new JsonTaskSerializer(FullReindexingTask.module(reIndexerPerformer));
 
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
+        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
             ReprocessingContextInformationForFullReindexingTask.serializationModule(new TestId.Factory()));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(

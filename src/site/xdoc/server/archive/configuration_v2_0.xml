@@ -182,7 +182,7 @@
         <tr>
             <td> repository </td>
             <td> file://var/users/ </td>
-            <td> The path where local mail account informations are stored. </td>
+            <td> The path where local mail account information are stored. </td>
         </tr>
     </table>
   </subsection>
