@@ -118,10 +118,10 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     }
 
     @Override
-    public void afterEach(ExtensionContext context) {
+    public void afterEach(ExtensionContext context) throws Exception {
         simpleChannelPool.close();
         connectionPool.close();
-
+        rabbitMQ.reset();
         dockerRestartPolicy.afterEach(rabbitMQ);
     }
 
