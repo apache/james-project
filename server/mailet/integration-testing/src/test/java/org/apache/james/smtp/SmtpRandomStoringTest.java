@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.MemoryJamesServerMain;
@@ -51,7 +52,6 @@ import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.mailet.Mail;
-
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.After;
@@ -186,13 +186,8 @@ public class SmtpRandomStoringTest {
 
     private Long numberOfMessagesInMailbox(IMAPMessageReader imapMessageReader, String mailbox) {
         try {
-            long numberOfMails = imapMessageReader
+            return imapMessageReader
                 .getMessageCount(mailbox);
-
-            assertThat(numberOfMails)
-                .isGreaterThan(0);
-
-            return numberOfMails;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
