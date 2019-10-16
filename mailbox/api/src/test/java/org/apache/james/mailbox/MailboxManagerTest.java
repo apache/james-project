@@ -894,6 +894,34 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void searchShouldReturnACL() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Namespace));
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.ACL));
+            session = mailboxManager.createSystemSession(USER_1);
+            Optional<MailboxId> inboxId = mailboxManager.createMailbox(MailboxPath.inbox(session), session);
+
+            MailboxACL acl = MailboxACL.EMPTY.apply(MailboxACL.command()
+                .forUser(USER_2)
+                .rights(MailboxACL.Right.Read, MailboxACL.Right.Lookup)
+                .asAddition());
+            mailboxManager.setRights(inboxId.get(), acl, session);
+
+            List<MailboxMetaData> metaDatas = mailboxManager.search(
+                MailboxQuery.privateMailboxesBuilder(session)
+                    .matchesAllMailboxNames()
+                    .build(),
+                session);
+            assertThat(metaDatas)
+                .hasSize(1)
+                .first()
+                .extracting(MailboxMetaData::getResolvedAcls)
+                .isEqualTo(acl.apply(MailboxACL.command()
+                    .forOwner()
+                    .rights(MailboxACL.Rfc4314Rights.allExcept())
+                    .asAddition()));
+        }
+
+        @Test
         void searchShouldNotReturnResultsFromOtherUsers() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             MailboxSession session2 = mailboxManager.createSystemSession(USER_2);

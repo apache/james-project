@@ -61,7 +61,7 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
     }
 
     public static MailboxMetaData unselectableMailbox(MailboxPath path, MailboxId mailboxId, char delimiter) {
-        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE);
+        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE, new MailboxACL());
     }
 
     public static  final Comparator<MailboxMetaData> COMPARATOR = Comparator
@@ -73,15 +73,20 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
     private final Children inferiors;
     private final Selectability selectability;
     private final MailboxId mailboxId;
+    private final MailboxACL resolvedAcls;
 
-    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability) {
+    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability, MailboxACL resolvedAcls) {
         this.path = path;
         this.mailboxId = mailboxId;
         this.delimiter = delimiter;
         this.inferiors = inferiors;
         this.selectability = selectability;
+        this.resolvedAcls = resolvedAcls;
     }
 
+    public MailboxACL getResolvedAcls() {
+        return resolvedAcls;
+    }
 
     /**
      * Gets the inferiors status of this mailbox.
