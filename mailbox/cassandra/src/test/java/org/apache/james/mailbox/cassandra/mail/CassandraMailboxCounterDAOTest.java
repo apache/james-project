@@ -88,6 +88,7 @@ class CassandraMailboxCounterDAOTest {
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
             .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
                 .count(0L)
                 .unseen(1L)
                 .build());
@@ -99,6 +100,7 @@ class CassandraMailboxCounterDAOTest {
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
             .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
                 .count(1L)
                 .unseen(0L)
                 .build());
@@ -111,6 +113,7 @@ class CassandraMailboxCounterDAOTest {
 
         assertThat(testee.retrieveMailboxCounters(MAILBOX_ID).block())
             .isEqualTo(MailboxCounters.builder()
+                .mailboxId(MAILBOX_ID)
                 .count(1L)
                 .unseen(1L)
                 .build());

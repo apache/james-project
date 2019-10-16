@@ -29,6 +29,12 @@ public class MailboxCounters {
     public static class Builder {
         private Optional<Long> count = Optional.empty();
         private Optional<Long> unseen = Optional.empty();
+        private Optional<MailboxId> mailboxId = Optional.empty();
+
+        public Builder mailboxId(MailboxId mailboxId) {
+            this.mailboxId = Optional.of(mailboxId);
+            return this;
+        }
 
         public Builder count(long count) {
             this.count = Optional.of(count);
@@ -43,7 +49,8 @@ public class MailboxCounters {
         public MailboxCounters build() {
             Preconditions.checkState(count.isPresent(), "count is compulsory");
             Preconditions.checkState(unseen.isPresent(), "unseen is compulsory");
-            return new MailboxCounters(count.get(), unseen.get());
+            Preconditions.checkState(mailboxId.isPresent(), "mailboxId is compulsory");
+            return new MailboxCounters(mailboxId.get(), count.get(), unseen.get());
         }
     }
 
@@ -51,12 +58,18 @@ public class MailboxCounters {
         return new Builder();
     }
 
+    private final MailboxId mailboxId;
     private final long count;
     private final long unseen;
 
-    private MailboxCounters(long count, long unseen) {
+    private MailboxCounters(MailboxId mailboxId, long count, long unseen) {
+        this.mailboxId = mailboxId;
         this.count = count;
         this.unseen = unseen;
+    }
+
+    public MailboxId getMailboxId() {
+        return mailboxId;
     }
 
     public long getCount() {
@@ -73,13 +86,14 @@ public class MailboxCounters {
             MailboxCounters that = (MailboxCounters) o;
 
             return Objects.equal(this.count, that.count)
-                && Objects.equal(this.unseen, that.unseen);
+                && Objects.equal(this.unseen, that.unseen)
+                && Objects.equal(this.mailboxId, that.mailboxId);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hashCode(count, unseen);
+        return Objects.hashCode(count, unseen, mailboxId);
     }
 }

@@ -65,10 +65,6 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class CassandraMessageMapper implements MessageMapper {
-    public static final MailboxCounters INITIAL_COUNTERS =  MailboxCounters.builder()
-        .count(0L)
-        .unseen(0L)
-        .build();
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
 
     private final CassandraModSeqProvider modSeqProvider;
@@ -134,11 +130,6 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public MailboxCounters getMailboxCounters(Mailbox mailbox) throws MailboxException {
-<<<<<<< HEAD
-        return mailboxCounterDAO.retrieveMailboxCounters(mailbox)
-                .defaultIfEmpty(INITIAL_COUNTERS)
-                .block();
-=======
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return getMailboxCounters(mailboxId)
                 .block();
@@ -161,7 +152,6 @@ public class CassandraMessageMapper implements MessageMapper {
             .concatMap(this::getMailboxCounters)
             .toStream()
             .collect(Guavate.toImmutableList());
->>>>>>> f4ef8da35d... JAMES-2632 Allow bulk mailbox counter retrieval
     }
 
     @Override
