@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -150,5 +152,10 @@ public class TransactionalMessageMapper implements MessageMapper {
     @Override
     public Flags getApplicableFlag(Mailbox mailbox) throws MailboxException {
         return messageMapper.getApplicableFlag(mailbox);
+    }
+
+    @Override
+    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) throws MailboxException {
+        throw new NotImplementedException("not implemented");
     }
 }

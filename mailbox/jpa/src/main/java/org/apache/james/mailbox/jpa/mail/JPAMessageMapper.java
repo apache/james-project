@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -41,6 +42,7 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -55,6 +57,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.utils.ApplicableFlagCalculator;
 import org.apache.openjpa.persistence.ArgumentException;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
@@ -121,24 +124,46 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        return countMessagesInMailbox(mailboxId);
+    }
+
+    private long countMessagesInMailbox(JPAId mailboxId) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             return (Long) getEntityManager().createNamedQuery("countMessagesInMailbox")
                     .setParameter("idParam", mailboxId.getRawId()).getSingleResult();
         } catch (PersistenceException e) {
-            throw new MailboxException("Count of messages failed in mailbox " + mailbox, e);
+            throw new MailboxException("Count of messages failed in mailbox " + mailboxId, e);
         }
     }
 
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) throws MailboxException {
+        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        return countUnseenMessagesInMailbox(mailboxId);
+    }
+
+    private long countUnseenMessagesInMailbox(JPAId mailboxId) throws MailboxException {
         try {
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             return (Long) getEntityManager().createNamedQuery("countUnseenMessagesInMailbox")
                     .setParameter("idParam", mailboxId.getRawId()).getSingleResult();
         } catch (PersistenceException e) {
-            throw new MailboxException("Count of useen messages failed in mailbox " + mailbox, e);
+            throw new MailboxException("Count of useen messages failed in mailbox " + mailboxId, e);
         }
+    }
+
+    @Override
+    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) throws MailboxException {
+        return mailboxIds.stream()
+            .map(id -> (JPAId) id)
+            .map(Throwing.<JPAId, MailboxCounters>function(
+                id -> MailboxCounters.builder()
+                    .mailboxId(id)
+                    .count(countMessagesInMailbox(id))
+                    .unseen(countUnseenMessagesInMailbox(id))
+                    .build())
+                .sneakyThrow())
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

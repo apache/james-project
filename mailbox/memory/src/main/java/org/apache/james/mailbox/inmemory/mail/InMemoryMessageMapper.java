@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +35,8 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.Mailbox;
+import org.apache.james.mailbox.model.MailboxCounters;
+import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.mail.AbstractMessageMapper;
@@ -56,7 +59,11 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     private Map<MessageUid, MailboxMessage> getMembershipByUidForMailbox(Mailbox mailbox) {
-        return getMembershipByUidForId((InMemoryId) mailbox.getMailboxId());
+        return getMembershipByUidForMailbox(mailbox.getMailboxId());
+    }
+
+    private Map<MessageUid, MailboxMessage> getMembershipByUidForMailbox(MailboxId mailboxId) {
+        return getMembershipByUidForId((InMemoryId) mailboxId);
     }
 
     private Map<MessageUid, MailboxMessage> getMembershipByUidForId(InMemoryId id) {
@@ -70,15 +77,36 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
 
     @Override
     public long countMessagesInMailbox(Mailbox mailbox) {
-        return getMembershipByUidForMailbox(mailbox).size();
+        MailboxId mailboxId = mailbox.getMailboxId();
+        return countMessagesInMailbox(mailboxId);
+    }
+
+    private int countMessagesInMailbox(MailboxId mailboxId) {
+        return getMembershipByUidForMailbox(mailboxId).size();
     }
 
     @Override
     public long countUnseenMessagesInMailbox(Mailbox mailbox) {
-        return getMembershipByUidForMailbox(mailbox).values()
+        MailboxId mailboxId = mailbox.getMailboxId();
+        return countUnseenMessagesInMailbox(mailboxId);
+    }
+
+    private long countUnseenMessagesInMailbox(MailboxId mailboxId) {
+        return getMembershipByUidForMailbox(mailboxId).values()
             .stream()
             .filter(member -> !member.isSeen())
             .count();
+    }
+
+    @Override
+    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) {
+        return mailboxIds.stream()
+            .map(id -> MailboxCounters.builder()
+                .mailboxId(id)
+                .count(countMessagesInMailbox(id))
+                .unseen(countUnseenMessagesInMailbox(id))
+                .build())
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
