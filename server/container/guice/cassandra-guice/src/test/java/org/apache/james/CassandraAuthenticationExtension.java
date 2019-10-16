@@ -22,7 +22,6 @@ package org.apache.james;
 import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.server.CassandraTruncateTableTask;
-import org.junit.jupiter.api.extension.ExtensionContext;
 
 import com.google.inject.Module;
 import com.google.inject.multibindings.Multibinder;
@@ -57,16 +56,6 @@ public class CassandraAuthenticationExtension implements GuiceModuleTestExtensio
 
     private CassandraAuthenticationExtension(ClusterConfiguration.Builder configurationBuilder) {
         this.configurationBuilder = configurationBuilder;
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) {
-        authenticatedCassandra.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        authenticatedCassandra.stop();
     }
 
     @Override
