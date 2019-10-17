@@ -12,7 +12,7 @@ JMAP messages have a handy preview property displaying the firsts 256 characters
 
 This property is often displayed for message listing in JMAP clients, thus it is queried a lot.
 
-Currently, to get the preview, James retrieves the full message body, parse it using MIME persers, removes HTML and keep meaningful text. This process is expensive, especially for clients relying on polling.
+Currently, to get the preview, James retrieves the full message body, parse it using MIME parsers, removes HTML and keep meaningful text. This process is expensive, especially for clients relying on polling.
 
 ## Decision
 
