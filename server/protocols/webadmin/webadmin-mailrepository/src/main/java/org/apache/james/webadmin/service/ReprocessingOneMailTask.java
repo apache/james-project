@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
@@ -39,12 +41,14 @@ public class ReprocessingOneMailTask implements Task {
         private final String targetQueue;
         private final MailKey mailKey;
         private final Optional<String> targetProcessor;
+        private final Instant timestamp;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, MailKey mailKey, Optional<String> targetProcessor, Instant timestamp) {
             this.repositoryPath = repositoryPath;
             this.targetQueue = targetQueue;
             this.mailKey = mailKey;
             this.targetProcessor = targetProcessor;
+            this.timestamp = timestamp;
         }
 
         public String getMailKey() {
@@ -61,6 +65,11 @@ public class ReprocessingOneMailTask implements Task {
 
         public String getRepositoryPath() {
             return repositoryPath.asString();
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -86,13 +95,17 @@ public class ReprocessingOneMailTask implements Task {
     private final AdditionalInformation additionalInformation;
 
     public ReprocessingOneMailTask(ReprocessingService reprocessingService,
-                                   MailRepositoryPath repositoryPath, String targetQueue, MailKey mailKey, Optional<String> targetProcessor) {
+                                   MailRepositoryPath repositoryPath,
+                                   String targetQueue,
+                                   MailKey mailKey,
+                                   Optional<String> targetProcessor,
+                                   Clock clock) {
         this.reprocessingService = reprocessingService;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
-        this.additionalInformation = new AdditionalInformation(repositoryPath, targetQueue, mailKey, targetProcessor);
+        this.additionalInformation = new AdditionalInformation(repositoryPath, targetQueue, mailKey, targetProcessor, clock.instant());
     }
 
     @Override

@@ -20,6 +20,7 @@
 
 package org.apache.james.vault.blob;
 
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 
@@ -36,7 +37,8 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
         return new BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO(
             type,
             additionalInformation.getBeginningOfRetentionPeriod().toString(),
-            additionalInformation.getDeletedBuckets()
+            additionalInformation.getDeletedBuckets(),
+            additionalInformation.timestamp()
         );
     }
 
@@ -52,14 +54,17 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
     private final String beginningOfRetentionPeriod;
     private final Collection<String> deletedBuckets;
     private final String type;
+    private final Instant timestamp;
 
     BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO(
         @JsonProperty("type") String type,
         @JsonProperty("beginningOfRetentionPeriod") String beginningOfRetentionPeriod,
-        @JsonProperty("deletedBuckets") Collection<String> deletedBuckets) {
+        @JsonProperty("deletedBuckets") Collection<String> deletedBuckets,
+        @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
         this.deletedBuckets = deletedBuckets;
+        this.timestamp = timestamp;
     }
 
     BlobStoreVaultGarbageCollectionTask.AdditionalInformation toDomainObject() {
@@ -68,7 +73,8 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
             deletedBuckets
                 .stream()
                 .map(BucketName::of)
-                .collect(Guavate.toImmutableList()));
+                .collect(Guavate.toImmutableList()),
+            timestamp);
     }
 
     public String getBeginningOfRetentionPeriod() {
@@ -82,5 +88,10 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 }

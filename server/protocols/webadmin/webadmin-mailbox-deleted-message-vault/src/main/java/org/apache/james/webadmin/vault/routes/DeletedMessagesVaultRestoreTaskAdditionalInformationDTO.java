@@ -20,6 +20,8 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import java.time.Instant;
+
 import org.apache.james.core.User;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -34,7 +36,8 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
             type,
             additionalInformation.getUser(),
             additionalInformation.getSuccessfulRestoreCount(),
-            additionalInformation.getErrorRestoreCount()
+            additionalInformation.getErrorRestoreCount(),
+            additionalInformation.timestamp()
         );
     }
 
@@ -51,15 +54,18 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
     private final String user;
     private final Long successfulRestoreCount;
     private final Long errorRestoreCount;
+    private final Instant timestamp;
 
     public DeletedMessagesVaultRestoreTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                    @JsonProperty("user") String user,
                                                                    @JsonProperty("successfulRestoreCount") Long successfulRestoreCount,
-                                                                   @JsonProperty("errorRestoreCount") Long errorRestoreCount) {
+                                                                   @JsonProperty("errorRestoreCount") Long errorRestoreCount,
+                                                                   @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.user = user;
         this.successfulRestoreCount = successfulRestoreCount;
         this.errorRestoreCount = errorRestoreCount;
+        this.timestamp = timestamp;
     }
 
     public String getUser() {
@@ -78,8 +84,14 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
         return new DeletedMessagesVaultRestoreTask.AdditionalInformation(
             User.fromUsername(user),
             successfulRestoreCount,
-            errorRestoreCount
+            errorRestoreCount,
+            timestamp
         );
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override

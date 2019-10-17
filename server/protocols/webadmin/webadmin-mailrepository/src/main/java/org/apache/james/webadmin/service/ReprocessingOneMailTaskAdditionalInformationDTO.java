@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
@@ -37,14 +38,16 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
                 MailRepositoryPath.from(dto.repositoryPath),
                 dto.targetQueue,
                 new MailKey(dto.mailKey),
-                dto.targetProcessor
+                dto.targetProcessor,
+                dto.timestamp
             ))
             .toDTOConverter((details, type) -> new ReprocessingOneMailTaskAdditionalInformationDTO(
                 type,
                 details.getRepositoryPath(),
                 details.getTargetQueue(),
                 details.getMailKey(),
-                details.getTargetProcessor()))
+                details.getTargetProcessor(),
+                details.timestamp()))
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
@@ -53,17 +56,20 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
     private final String targetQueue;
     private final String mailKey;
     private final Optional<String> targetProcessor;
+    private final Instant timestamp;
 
     public ReprocessingOneMailTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                            @JsonProperty("repositoryPath") String repositoryPath,
                                                            @JsonProperty("targetQueue") String targetQueue,
                                                            @JsonProperty("mailKey") String mailKey,
-                                                           @JsonProperty("targetProcessor") Optional<String> targetProcessor) {
+                                                           @JsonProperty("targetProcessor") Optional<String> targetProcessor,
+                                                           @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.mailKey = mailKey;
         this.targetProcessor = targetProcessor;
+        this.timestamp = timestamp;
     }
 
     @Override
@@ -81,6 +87,10 @@ public class ReprocessingOneMailTaskAdditionalInformationDTO implements Addition
 
     public String getMailKey() {
         return mailKey;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     public Optional<String> getTargetProcessor() {

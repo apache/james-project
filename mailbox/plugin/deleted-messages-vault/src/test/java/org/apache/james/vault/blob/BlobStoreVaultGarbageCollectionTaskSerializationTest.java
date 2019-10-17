@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 
 import org.apache.james.blob.api.BucketName;
@@ -49,11 +50,12 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
     private static final ZonedDateTime BEGINNING_OF_RETENTION_PERIOD = ZonedDateTime.parse("2019-09-03T15:26:13.356+02:00[Europe/Paris]");
     private static final ImmutableList<BucketName> BUCKET_IDS = ImmutableList.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
     private static final Flux<BucketName> RETENTION_OPERATION = Flux.fromIterable(BUCKET_IDS);
-    private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS);
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+    private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS, TIMESTAMP);
     private static final BlobStoreVaultGarbageCollectionTask TASK = TASK_FACTORY.create();
 
     private static final String SERIALIZED_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\"}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\", \"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"]}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\", \"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"], \"timestamp\": \"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE);
 

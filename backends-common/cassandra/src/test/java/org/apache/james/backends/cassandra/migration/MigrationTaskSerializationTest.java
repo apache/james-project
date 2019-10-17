@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
@@ -36,7 +37,8 @@ class MigrationTaskSerializationTest {
 
     private static final int SCHEMA_VERSION = 12;
     private static final String SERIALIZED_TASK = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12, \"timestamp\": \"2018-11-13T12:00:55Z\"}";
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO = mock(CassandraSchemaVersionDAO.class);
     private final CassandraSchemaTransitions transitions = mock(CassandraSchemaTransitions.class);
@@ -59,13 +61,13 @@ class MigrationTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION));
+        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION));
+        MigrationTask.AdditionalInformations details = new MigrationTask.AdditionalInformations(new SchemaVersion(SCHEMA_VERSION), TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

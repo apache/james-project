@@ -20,6 +20,8 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import java.time.Instant;
+
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
@@ -37,7 +39,8 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
             type,
             additionalInformation.getUserExportFrom(),
             additionalInformation.getExportTo(),
-            additionalInformation.getTotalExportedMessages()
+            additionalInformation.getTotalExportedMessages(),
+            additionalInformation.timestamp()
         );
     }
 
@@ -54,15 +57,18 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
     private final String userExportFrom;
     private final String exportTo;
     private final Long totalExportedMessages;
+    private final Instant timestamp;
 
     public DeletedMessagesVaultExportTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                   @JsonProperty("user") String userExportFrom,
                                                                   @JsonProperty("exportTo") String exportTo,
-                                                                  @JsonProperty("errorRestoreCount") Long totalExportedMessages) {
+                                                                  @JsonProperty("errorRestoreCount") Long totalExportedMessages,
+                                                                  @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.userExportFrom = userExportFrom;
         this.exportTo = exportTo;
         this.totalExportedMessages = totalExportedMessages;
+        this.timestamp = timestamp;
     }
 
     public String getUserExportFrom() {
@@ -82,7 +88,8 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
             return new DeletedMessagesVaultExportTask.AdditionalInformation(
                 User.fromUsername(userExportFrom),
                 new MailAddress(exportTo),
-                totalExportedMessages
+                totalExportedMessages,
+                timestamp
             );
         } catch (AddressException e) {
             throw new RuntimeException(e);
@@ -92,5 +99,10 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 }

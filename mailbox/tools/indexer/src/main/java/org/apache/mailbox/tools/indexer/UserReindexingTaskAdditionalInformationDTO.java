@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
+import java.time.Instant;
 import java.util.List;
 
 import org.apache.james.core.User;
@@ -37,9 +38,15 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
             .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(User.fromUsername(dto.getUser()),
                 dto.getSuccessfullyReprocessedMailCount(),
                 dto.getFailedReprocessedMailCount(),
-                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures())))
-            .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(type, details.getUser(), details.getSuccessfullyReprocessedMailCount(), details.getFailedReprocessedMailCount(),
-                ReprocessingContextInformationDTO.serializeFailures(details.failures())))
+                ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures()),
+                dto.getTimestamp()))
+            .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(
+                type,
+                details.getUser(),
+                details.getSuccessfullyReprocessedMailCount(),
+                details.getFailedReprocessedMailCount(),
+                ReprocessingContextInformationDTO.serializeFailures(details.failures()),
+                details.timestamp()))
             .typeName(UserReindexingTask.USER_RE_INDEXING.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
@@ -52,17 +59,22 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
                                                        @JsonProperty("user") String user,
                                                        @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
                                                        @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
-                                                       @JsonProperty("failures") List<ReprocessingContextInformationDTO.ReindexingFailureDTO> failures) {
+                                                       @JsonProperty("failures") List<ReprocessingContextInformationDTO.ReindexingFailureDTO> failures,
+                                                       @JsonProperty("timestamp") Instant timestamp) {
         this.user = user;
         this.reprocessingContextInformationDTO = new ReprocessingContextInformationDTO(
             type,
             successfullyReprocessedMailCount,
-            failedReprocessedMailCount, failures);
+            failedReprocessedMailCount, failures, timestamp);
     }
 
     @Override
     public String getType() {
         return reprocessingContextInformationDTO.getType();
+    }
+
+    public Instant getTimestamp() {
+        return reprocessingContextInformationDTO.getTimestamp();
     }
 
     public String getUser() {

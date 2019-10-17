@@ -1,5 +1,6 @@
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
@@ -23,8 +24,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                 .withFactory(AdditionalInformationDTOModule::new);
 
 
-        EventDeadLettersRedeliveryTaskAdditionalInformationForAll(long successfulRedeliveriesCount, long failedRedeliveriesCount) {
-            super(successfulRedeliveriesCount, failedRedeliveriesCount, Optional.empty(), Optional.empty());
+        EventDeadLettersRedeliveryTaskAdditionalInformationForAll(long successfulRedeliveriesCount, long failedRedeliveriesCount, Instant timestamp) {
+            super(successfulRedeliveriesCount, failedRedeliveriesCount, Optional.empty(), Optional.empty(), timestamp);
         }
     }
 
@@ -39,8 +40,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                 .withFactory(AdditionalInformationDTOModule::new);
 
 
-        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group) {
-            super(successfulRedeliveriesCount, failedRedeliveriesCount, group, Optional.empty());
+        EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group, Instant timestamp) {
+            super(successfulRedeliveriesCount, failedRedeliveriesCount, group, Optional.empty(), timestamp);
         }
     }
 
@@ -55,8 +56,13 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
                 .withFactory(AdditionalInformationDTOModule::new);
 
 
-        EventDeadLettersRedeliveryTaskAdditionalInformationForOne(long successfulRedeliveriesCount, long failedRedeliveriesCount, Optional<Group> group, Optional<EventDeadLetters.InsertionId> insertionId) {
-            super(successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId);
+        EventDeadLettersRedeliveryTaskAdditionalInformationForOne(
+            long successfulRedeliveriesCount,
+            long failedRedeliveriesCount,
+            Optional<Group> group,
+            Optional<EventDeadLetters.InsertionId> insertionId,
+            Instant timestamp) {
+            super(successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId, timestamp);
         }
     }
 
@@ -66,20 +72,23 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             domainObject.getSuccessfulRedeliveriesCount(),
             domainObject.getFailedRedeliveriesCount(),
             domainObject.getGroup(),
-            domainObject.getInsertionId());
+            domainObject.getInsertionId(),
+            domainObject.timestamp());
     }
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationForAll fromAll(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(
             dto.successfulRedeliveriesCount,
-            dto.failedRedeliveriesCount);
+            dto.failedRedeliveriesCount,
+            dto.timestamp);
     }
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationForGroup fromGroup(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
             dto.successfulRedeliveriesCount,
             dto.failedRedeliveriesCount,
-            dto.group.map(Throwing.function(Group::deserialize).sneakyThrow()));
+            dto.group.map(Throwing.function(Group::deserialize).sneakyThrow()),
+            dto.timestamp);
     }
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationForOne fromOne(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {
@@ -87,7 +96,8 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             dto.successfulRedeliveriesCount,
             dto.failedRedeliveriesCount,
             dto.group.map(Throwing.function(Group::deserialize).sneakyThrow()),
-            dto.insertionId.map(EventDeadLetters.InsertionId::of));
+            dto.insertionId.map(EventDeadLetters.InsertionId::of),
+            dto.timestamp);
     }
 
     private final String type;
@@ -95,18 +105,21 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
     private final long failedRedeliveriesCount;
     private final Optional<String> group;
     private final Optional<String> insertionId;
+    private final Instant timestamp;
 
     public EventDeadLettersRedeliveryTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                   @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
                                                                   @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
                                                                   @JsonProperty("group") Optional<String> group,
-                                                                  @JsonProperty("insertionId") Optional<String> insertionId
+                                                                  @JsonProperty("insertionId") Optional<String> insertionId,
+                                                                  @JsonProperty("timestamp") Instant timestamp
     ) {
         this.type = type;
         this.successfulRedeliveriesCount = successfulRedeliveriesCount;
         this.failedRedeliveriesCount = failedRedeliveriesCount;
         this.group = group;
         this.insertionId = insertionId;
+        this.timestamp = timestamp;
     }
 
 
@@ -124,6 +137,11 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
 
     public Optional<String> getInsertionId() {
         return insertionId;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override

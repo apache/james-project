@@ -20,6 +20,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import java.time.Instant;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -32,7 +34,8 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
         return new MailboxPathV2MigrationTaskAdditionalInformationDTO(
             type,
             additionalInformation.getRemainingCount(),
-            additionalInformation.getInitialCount()
+            additionalInformation.getInitialCount(),
+            additionalInformation.timestamp()
         );
     }
 
@@ -48,13 +51,16 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
     private final String type;
     private final long remainingCount;
     private final long initialCount;
+    private final Instant timestamp;
 
     public MailboxPathV2MigrationTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                               @JsonProperty("remainingCount") long remainingCount,
-                                                              @JsonProperty("initialCount") long initialCount) {
+                                                              @JsonProperty("initialCount") long initialCount,
+                                                              @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.remainingCount = remainingCount;
         this.initialCount = initialCount;
+        this.timestamp = timestamp;
     }
 
     public long getRemainingCount() {
@@ -66,6 +72,11 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
     }
 
     @Override
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
+    @Override
     public String getType() {
         return type;
     }
@@ -73,7 +84,8 @@ public class MailboxPathV2MigrationTaskAdditionalInformationDTO implements Addit
     private MailboxPathV2Migration.AdditionalInformation toDomainObject() {
         return new MailboxPathV2Migration.AdditionalInformation(
             remainingCount,
-            initialCount
+            initialCount,
+            timestamp
         );
     }
 }

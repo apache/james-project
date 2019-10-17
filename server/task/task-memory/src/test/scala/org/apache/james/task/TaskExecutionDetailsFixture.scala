@@ -18,7 +18,7 @@
  * ***************************************************************/
 package org.apache.james.task
 
-import java.time.{LocalDateTime, ZoneId, ZonedDateTime}
+import java.time.{Clock, Instant, LocalDateTime, ZoneId, ZonedDateTime}
 import java.util.Optional
 
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
@@ -37,10 +37,12 @@ object TaskExecutionDetailsFixture {
   val TASK_EXECUTION_DETAILS_2 = new TaskExecutionDetails(TASK_ID_2, TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE, SUBMITTED_NODE, EMPTY_ADDITIONAL_INFORMATION)
   val TASK_EXECUTION_DETAILS_UPDATED = new TaskExecutionDetails(TASK_ID, TYPE, TaskManager.Status.FAILED, SUBMITTED_DATE, SUBMITTED_NODE, EMPTY_ADDITIONAL_INFORMATION)
 
+  val DATE: Instant = Instant.parse("2007-07-03T10:15:30.00Z")
+  val CLOCK: Clock = Clock.fixed(DATE, ZoneId.of("UTC"))
 
-  val ADDITIONAL_INFORMATION: () => Optional[AdditionalInformation] = () => Optional.of(new MemoryReferenceWithCounterTask.AdditionalInformation(5))
+  val ADDITIONAL_INFORMATION: () => Optional[AdditionalInformation] = () => Optional.of(new MemoryReferenceWithCounterTask.AdditionalInformation(5, CLOCK.instant()))
   val TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION = new TaskExecutionDetails(TASK_ID, MemoryReferenceWithCounterTask.TYPE, TaskManager.Status.COMPLETED, SUBMITTED_DATE_2, SUBMITTED_NODE_2, ADDITIONAL_INFORMATION)
 
 }
 
-case class CustomAdditionalInformation(value: String) extends AdditionalInformation
+case class CustomAdditionalInformation(value: String, timestamp: Instant) extends AdditionalInformation

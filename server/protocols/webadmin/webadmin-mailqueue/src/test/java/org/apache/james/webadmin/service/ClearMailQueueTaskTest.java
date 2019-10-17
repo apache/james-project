@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.queue.api.MailQueueFactory;
@@ -38,13 +39,14 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ClearMailQueueTaskTest {
 
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final String SERIALIZED = "{\"type\": \"clear-mail-queue\", \"queue\": \"anyQueue\"}";
     private static final String QUEUE_NAME = "anyQueue";
     private static final long INITIAL_COUNT = 0L;
     private static final long REMAINING_COUNT = 10L;
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
         ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"clear-mail-queue\", \"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\": \"clear-mail-queue\", \"mailQueueName\":\"anyQueue\",\"initialCount\":0,\"remainingCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     @Test
     void taskShouldBeSerializable() throws Exception {
@@ -85,13 +87,13 @@ class ClearMailQueueTaskTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT);
+        ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_TASK_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
-        ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT);
+        ClearMailQueueTask.AdditionalInformation details = new ClearMailQueueTask.AdditionalInformation(QUEUE_NAME, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

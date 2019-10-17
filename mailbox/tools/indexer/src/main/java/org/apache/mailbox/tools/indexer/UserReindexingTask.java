@@ -19,6 +19,8 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -37,8 +39,8 @@ public class UserReindexingTask implements Task {
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final User user;
 
-        AdditionalInformation(User user, int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures) {
-            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures);
+        AdditionalInformation(User user, int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures, Instant timestamp) {
+            super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
             this.user = user;
         }
 
@@ -97,7 +99,8 @@ public class UserReindexingTask implements Task {
         return Optional.of(new UserReindexingTask.AdditionalInformation(user,
             reprocessingContext.successfullyReprocessedMailCount(),
             reprocessingContext.failedReprocessingMailCount(),
-            reprocessingContext.failures())
+            reprocessingContext.failures(),
+            Clock.systemUTC().instant())
         );
     }
 }

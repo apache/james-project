@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.task.TaskExecutionDetails;
-
 import org.junit.jupiter.api.Test;
 
 import scala.collection.JavaConverters;

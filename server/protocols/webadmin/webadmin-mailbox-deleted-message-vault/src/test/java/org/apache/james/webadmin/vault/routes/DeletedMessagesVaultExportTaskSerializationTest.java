@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import javax.mail.internet.AddressException;
 
@@ -44,6 +45,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 class DeletedMessagesVaultExportTaskSerializationTest {
 
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
     private ExportService exportService;
     private final TestId.Factory mailboxIdFactory = new TestId.Factory();
     private final QueryTranslator queryTranslator = new QueryTranslator(mailboxIdFactory);
@@ -60,14 +63,14 @@ class DeletedMessagesVaultExportTaskSerializationTest {
         "\"userExportFrom\":\"james\"," +
         "\"exportQuery\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}," +
         "\"exportTo\":\"james@apache.org\"}\n";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
 
     @BeforeAll
     static void init() throws AddressException {
         exportTo = new MailAddress("james@apache.org");
-        details = new DeletedMessagesVaultExportTask.AdditionalInformation(USER_EXPORT_FROM, exportTo, 42);
+        details = new DeletedMessagesVaultExportTask.AdditionalInformation(USER_EXPORT_FROM, exportTo, 42, TIMESTAMP);
     }
 
     @BeforeEach

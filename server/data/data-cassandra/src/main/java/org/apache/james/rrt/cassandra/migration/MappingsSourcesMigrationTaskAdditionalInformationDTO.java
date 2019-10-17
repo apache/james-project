@@ -20,6 +20,8 @@
 
 package org.apache.james.rrt.cassandra.migration;
 
+import java.time.Instant;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -33,7 +35,8 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
         return new MappingsSourcesMigrationTaskAdditionalInformationDTO(
             type,
             additionalInformation.getSuccessfulMappingsCount(),
-            additionalInformation.getErrorMappingsCount()
+            additionalInformation.getErrorMappingsCount(),
+            additionalInformation.timestamp()
         );
     }
 
@@ -49,22 +52,25 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
 
     private final String type;
     private final long successfulMappingsCount;
-    private final long errorMappinsCount;
+    private final long errorMappingsCount;
+    private final Instant timestamp;
 
     public MappingsSourcesMigrationTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                 @JsonProperty("successfulMappingsCount") long successfulMappingsCount,
-                                                                @JsonProperty("errorMappinsCount") long errorMappinsCount) {
+                                                                @JsonProperty("errorMappingsCount") long errorMappingsCount,
+                                                                @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.successfulMappingsCount = successfulMappingsCount;
-        this.errorMappinsCount = errorMappinsCount;
+        this.errorMappingsCount = errorMappingsCount;
+        this.timestamp = timestamp;
     }
 
     public long getSuccessfulMappingsCount() {
         return successfulMappingsCount;
     }
 
-    public long getErrorMappinsCount() {
-        return errorMappinsCount;
+    public long getErrorMappingsCount() {
+        return errorMappingsCount;
     }
 
     @Override
@@ -72,10 +78,15 @@ public class MappingsSourcesMigrationTaskAdditionalInformationDTO implements Add
         return type;
     }
 
+    public Instant getTimestamp() {
+        return timestamp;
+    }
+
     private MappingsSourcesMigration.AdditionalInformation toDomainObject() {
         return new MappingsSourcesMigration.AdditionalInformation(
             successfulMappingsCount,
-            errorMappinsCount
+            errorMappingsCount,
+            timestamp
         );
     }
 }

@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
+import java.time.Clock;
+import java.time.Instant;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -30,22 +33,30 @@ public class MessageIdReindexingTaskAdditionalInformationDTO implements Addition
     public static AdditionalInformationDTOModule<MessageIdReIndexingTask.AdditionalInformation, MessageIdReindexingTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
         return DTOModule.forDomainObject(MessageIdReIndexingTask.AdditionalInformation.class)
             .convertToDTO(MessageIdReindexingTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId())))
-            .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(type, details.getMessageId()))
+            .toDomainObjectConverter(dto -> new MessageIdReIndexingTask.AdditionalInformation(factory.fromString(dto.getMessageId()), dto.timestamp))
+            .toDTOConverter((details, type) -> new MessageIdReindexingTaskAdditionalInformationDTO(type, details.getMessageId(), details.timestamp()))
             .typeName(MessageIdReIndexingTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
     private final String type;
     private final String messageId;
+    private final Instant timestamp;
 
-    private MessageIdReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type, @JsonProperty("messageId") String messageId) {
+    private MessageIdReindexingTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                            @JsonProperty("messageId") String messageId,
+                                                            @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.messageId = messageId;
+        this.timestamp = timestamp;
     }
 
     public String getMessageId() {
         return messageId;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override
@@ -54,6 +65,9 @@ public class MessageIdReindexingTaskAdditionalInformationDTO implements Addition
     }
 
     public static MessageIdReindexingTaskAdditionalInformationDTO of(MessageIdReIndexingTask task) {
-        return new MessageIdReindexingTaskAdditionalInformationDTO(task.type().asString(), task.getMessageId().serialize());
+        return new MessageIdReindexingTaskAdditionalInformationDTO(
+            task.type().asString(),
+            task.getMessageId().serialize(),
+            Clock.systemUTC().instant());
     }
 }

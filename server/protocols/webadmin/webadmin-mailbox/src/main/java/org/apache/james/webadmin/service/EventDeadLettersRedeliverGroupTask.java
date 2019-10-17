@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -89,6 +90,7 @@ public class EventDeadLettersRedeliverGroupTask implements Task {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
-            eventRetriever.forGroup());
+            eventRetriever.forGroup(),
+            Clock.systemUTC().instant());
     }
 }

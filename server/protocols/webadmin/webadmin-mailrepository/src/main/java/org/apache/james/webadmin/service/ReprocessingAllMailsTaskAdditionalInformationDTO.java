@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
@@ -37,7 +38,8 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 dto.targetQueue,
                 dto.targetProcessor,
                 dto.initialCount,
-                dto.remainingCount
+                dto.remainingCount,
+                dto.timestamp
             ))
             .toDTOConverter((details, type) -> new ReprocessingAllMailsTaskAdditionalInformationDTO(
                 type,
@@ -45,7 +47,8 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
                 details.getTargetQueue(),
                 details.getTargetProcessor(),
                 details.getInitialCount(),
-                details.getRemainingCount()))
+                details.getRemainingCount(),
+                details.timestamp()))
             .typeName(ReprocessingAllMailsTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
@@ -55,6 +58,7 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
     private final Optional<String> targetProcessor;
     private final long initialCount;
     private final long remainingCount;
+    private final Instant timestamp;
 
     public ReprocessingAllMailsTaskAdditionalInformationDTO(
         @JsonProperty("type") String type,
@@ -62,13 +66,15 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
         @JsonProperty("targetQueue") String targetQueue,
         @JsonProperty("targetProcessor") Optional<String> targetProcessor,
         @JsonProperty("initialCount") long initialCount,
-        @JsonProperty("remainingCount") long remainingCount) {
+        @JsonProperty("remainingCount") long remainingCount,
+        @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.repositoryPath = repositoryPath;
         this.targetQueue = targetQueue;
         this.targetProcessor = targetProcessor;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
+        this.timestamp = timestamp;
     }
 
     @Override
@@ -90,6 +96,10 @@ public class ReprocessingAllMailsTaskAdditionalInformationDTO implements Additio
 
     public String getTargetQueue() {
         return targetQueue;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     public Optional<String> getTargetProcessor() {

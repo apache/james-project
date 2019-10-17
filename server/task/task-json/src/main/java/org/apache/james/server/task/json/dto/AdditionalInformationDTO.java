@@ -18,8 +18,12 @@
  ****************************************************************/
 package org.apache.james.server.task.json.dto;
 
+import java.time.Instant;
+
 import org.apache.james.json.DTO;
 
 public interface AdditionalInformationDTO extends DTO {
     String getType();
+
+    Instant getTimestamp();
 }

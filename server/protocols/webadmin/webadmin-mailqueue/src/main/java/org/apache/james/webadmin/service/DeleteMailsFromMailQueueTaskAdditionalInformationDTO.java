@@ -1,5 +1,6 @@
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
@@ -29,7 +30,8 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
             domainObject.getName(),
             domainObject.getRecipient(),
             domainObject.getInitialCount(),
-            domainObject.getRemainingCount());
+            domainObject.getRemainingCount(),
+            domainObject.timestamp());
     }
 
     private static DeleteMailsFromMailQueueTask.AdditionalInformation fromDTO(DeleteMailsFromMailQueueTaskAdditionalInformationDTO dto) {
@@ -39,7 +41,8 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
             dto.getRemainingCount(),
             dto.sender.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()),
             dto.name,
-            dto.recipient.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()));
+            dto.recipient.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()),
+            dto.timestamp);
     }
 
 
@@ -50,6 +53,7 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
     private final Optional<String> recipient;
     private final long initialCount;
     private final long remainingCount;
+    private final Instant timestamp;
 
     public DeleteMailsFromMailQueueTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                 @JsonProperty("queue") String queue,
@@ -57,7 +61,8 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
                                                                 @JsonProperty("name") Optional<String> name,
                                                                 @JsonProperty("recipient") Optional<String> recipient,
                                                                 @JsonProperty("initialCount") long initialCount,
-                                                                @JsonProperty("remainingCount") long remainingCount
+                                                                @JsonProperty("remainingCount") long remainingCount,
+                                                                @JsonProperty("timestamp") Instant timestamp
     ) {
         this.type = type;
         this.queue = queue;
@@ -66,6 +71,7 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
         this.recipient = recipient;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
+        this.timestamp = timestamp;
     }
 
 
@@ -91,6 +97,11 @@ public class DeleteMailsFromMailQueueTaskAdditionalInformationDTO implements Add
 
     public long getRemainingCount() {
         return remainingCount;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override

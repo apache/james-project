@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -32,13 +34,15 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
             .toDomainObjectConverter(dto -> new ClearMailQueueTask.AdditionalInformation(
                 dto.mailQueueName,
                 dto.initialCount,
-                dto.remainingCount
+                dto.remainingCount,
+                dto.timestamp
             ))
             .toDTOConverter((details, type) -> new ClearMailQueueTaskAdditionalInformationDTO(
                 type,
                 details.getMailQueueName(),
                 details.getInitialCount(),
-                details.getRemainingCount()))
+                details.getRemainingCount(),
+                details.timestamp()))
             .typeName(ClearMailQueueTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
@@ -46,15 +50,18 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
     private final String type;
     private final long initialCount;
     private final long remainingCount;
+    private final Instant timestamp;
 
     public ClearMailQueueTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                       @JsonProperty("mailQueueName") String mailQueueName,
                                                       @JsonProperty("initialCount") long initialCount,
-                                                      @JsonProperty("remainingCount") long remainingCount) {
+                                                      @JsonProperty("remainingCount") long remainingCount,
+                                                      @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.mailQueueName = mailQueueName;
         this.initialCount = initialCount;
         this.remainingCount = remainingCount;
+        this.timestamp = timestamp;
     }
 
     public String getMailQueueName() {
@@ -72,5 +79,10 @@ public class ClearMailQueueTaskAdditionalInformationDTO implements AdditionalInf
     @Override
     public String getType() {
         return type;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.server.task.json.dto;
 
+import java.time.Instant;
+
 import org.apache.james.json.DTOModule;
 import org.apache.james.task.MemoryReferenceWithCounterTask;
 
@@ -30,23 +32,32 @@ public class MemoryReferenceWithCounterTaskAdditionalInformationDTO implements A
         DTOModule.forDomainObject(MemoryReferenceWithCounterTask.AdditionalInformation.class)
             .convertToDTO(MemoryReferenceWithCounterTaskAdditionalInformationDTO.class)
             .toDomainObjectConverter(dto -> new MemoryReferenceWithCounterTask.AdditionalInformation(
-                dto.count
+                dto.count, dto.timestamp
             ))
             .toDTOConverter((details, type) -> new MemoryReferenceWithCounterTaskAdditionalInformationDTO(
-                type, details.getCount()))
+                type, details.getCount(), details.timestamp()))
             .typeName(MemoryReferenceWithCounterTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String type;
     private final long count;
+    private final Instant timestamp;
 
-    public MemoryReferenceWithCounterTaskAdditionalInformationDTO(@JsonProperty("type") String type, @JsonProperty("count") long count) {
+    public MemoryReferenceWithCounterTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                                  @JsonProperty("count") long count,
+                                                                  @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.count = count;
+        this.timestamp = timestamp;
     }
 
     public long getCount() {
         return count;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override

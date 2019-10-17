@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.TestId;
@@ -35,11 +36,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 class SingleMessageReindexingTaskSerializationTest {
 
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
     private final TestId.Factory mailboxIdFactory = new TestId.Factory();
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
     private final String serializedMessageReindexingTask = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageReIndexing\", \"mailboxId\": \"1\", \"uid\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationsSerializer(
@@ -70,13 +73,13 @@ class SingleMessageReindexingTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid);
+        SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid);
+        SingleMessageReindexingTask.AdditionalInformation details = new SingleMessageReindexingTask.AdditionalInformation(mailboxId, messageUid, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

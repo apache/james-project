@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import org.apache.james.core.User;
 import org.apache.james.mailbox.model.TestId;
@@ -39,6 +40,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 class DeletedMessagesVaultRestoreTaskSerializationTest {
 
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
     private RestoreService exportService;
     private final TestId.Factory mailboxIdFactory = new TestId.Factory();
     private final QueryTranslator queryTranslator = new QueryTranslator(mailboxIdFactory);
@@ -48,13 +51,13 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
     private static final String USERNAME = "james";
     private static final User USER_TO_RESTORE = User.fromUsername(USERNAME);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
-    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE,42, 10);
+    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE,42, 10, TIMESTAMP);
 
     private static final String SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK = "{\"type\":\"deletedMessages/restore\"," +
         "\"userToRestore\":\"james\"," +
         "\"query\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}" +
         "}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/restore\", \"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/restore\", \"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE);
 

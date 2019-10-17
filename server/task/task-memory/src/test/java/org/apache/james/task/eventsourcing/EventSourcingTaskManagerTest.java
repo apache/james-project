@@ -48,6 +48,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
         .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
         .await();
 
+
     private static final Hostname HOSTNAME = new Hostname("foo");
     private EventSourcingTaskManager taskManager;
     private EventStore eventStore;

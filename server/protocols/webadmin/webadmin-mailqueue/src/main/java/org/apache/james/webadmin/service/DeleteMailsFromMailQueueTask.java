@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
@@ -42,10 +44,11 @@ public class DeleteMailsFromMailQueueTask implements Task {
         private final Optional<String> sender;
         private final Optional<String> name;
         private final Optional<String> recipient;
+        private final Instant timestamp;
 
         public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount,
                                      Optional<MailAddress> maybeSender, Optional<String> maybeName,
-                                     Optional<MailAddress> maybeRecipient) {
+                                     Optional<MailAddress> maybeRecipient, Instant timestamp) {
             this.mailQueueName = mailQueueName;
             this.initialCount = initialCount;
             this.remainingCount = remainingCount;
@@ -53,6 +56,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
             sender = maybeSender.map(MailAddress::asString);
             name = maybeName;
             recipient = maybeRecipient.map(MailAddress::asString);
+            this.timestamp = timestamp;
         }
 
         public String getMailQueueName() {
@@ -77,6 +81,11 @@ public class DeleteMailsFromMailQueueTask implements Task {
 
         public Optional<String> getRecipient() {
             return recipient;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -146,7 +155,7 @@ public class DeleteMailsFromMailQueueTask implements Task {
         return Optional.of(new AdditionalInformation(queue.getName(),
             initialCount,
             getRemainingSize(), maybeSender,
-            maybeName, maybeRecipient));
+            maybeName, maybeRecipient, Clock.systemUTC().instant()));
     }
 
     public long getRemainingSize() {

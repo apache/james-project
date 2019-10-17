@@ -19,6 +19,8 @@
 
 package org.apache.james.vault.blob;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Collection;
 import java.util.List;
@@ -42,10 +44,12 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
         private final ZonedDateTime beginningOfRetentionPeriod;
         private final Collection<BucketName> deletedBuckets;
+        private final Instant timestamp;
 
-        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, Collection<BucketName> deletedBuckets) {
+        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, Collection<BucketName> deletedBuckets, Instant timestamp) {
             this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
             this.deletedBuckets = deletedBuckets;
+            this.timestamp = timestamp;
         }
 
         public ZonedDateTime getBeginningOfRetentionPeriod() {
@@ -56,6 +60,11 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
             return deletedBuckets.stream()
                 .map(BucketName::asString)
                 .collect(Guavate.toImmutableList());
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -102,7 +111,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, deletedBuckets));
+        return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, deletedBuckets, Clock.systemUTC().instant()));
     }
 
     ZonedDateTime getBeginningOfRetentionPeriod() {

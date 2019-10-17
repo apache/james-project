@@ -19,6 +19,8 @@
 
 package org.apache.mailbox.tools.indexer;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -40,10 +42,12 @@ public class SingleMessageReindexingTask implements Task {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailboxId mailboxId;
         private final MessageUid uid;
+        private final Instant timestamp;
 
-        AdditionalInformation(MailboxId mailboxId, MessageUid uid) {
+        AdditionalInformation(MailboxId mailboxId, MessageUid uid, Instant timestamp) {
             this.mailboxId = mailboxId;
             this.uid = uid;
+            this.timestamp = timestamp;
         }
 
         public String getMailboxId() {
@@ -52,6 +56,11 @@ public class SingleMessageReindexingTask implements Task {
 
         public long getUid() {
             return uid.asLong();
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -83,7 +92,7 @@ public class SingleMessageReindexingTask implements Task {
         this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxId = mailboxId;
         this.uid = uid;
-        this.additionalInformation = new AdditionalInformation(mailboxId, uid);
+        this.additionalInformation = new AdditionalInformation(mailboxId, uid, Clock.systemUTC().instant());
     }
 
     @Override

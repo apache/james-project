@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -499,7 +500,7 @@ public class MailRepositoriesRoutes implements Routes {
         Optional<String> targetProcessor = Optional.ofNullable(request.queryParams("processor"));
         String targetQueue = Optional.ofNullable(request.queryParams("queue")).orElse(MailQueueFactory.SPOOL);
 
-        return new ReprocessingOneMailTask(reprocessingService, path, targetQueue, key, targetProcessor);
+        return new ReprocessingOneMailTask(reprocessingService, path, targetQueue, key, targetProcessor, Clock.systemUTC());
     }
 
     private void enforceActionParameter(Request request) {

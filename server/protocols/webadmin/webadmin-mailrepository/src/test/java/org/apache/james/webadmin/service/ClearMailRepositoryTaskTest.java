@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
@@ -38,8 +39,11 @@ import com.google.common.collect.ImmutableList;
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ClearMailRepositoryTaskTest {
+
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
     private static final String SERIALIZED = "{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"a\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clearMailRepository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clearMailRepository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private static final ClearMailRepositoryTask.Factory FACTORY = new ClearMailRepositoryTask.Factory(mock(MailRepositoryStore.class));
     private static final ImmutableList<MailRepository> MAIL_REPOSITORIES = ImmutableList.of();
     private static final MailRepositoryPath MAIL_REPOSITORY_PATH = MailRepositoryPath.from("a");
@@ -74,13 +78,13 @@ class ClearMailRepositoryTaskTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT);
+        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_TASK_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
-        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT);
+        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

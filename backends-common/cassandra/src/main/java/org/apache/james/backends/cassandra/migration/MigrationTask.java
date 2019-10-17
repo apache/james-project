@@ -21,6 +21,8 @@ package org.apache.james.backends.cassandra.migration;
 
 import static org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager.DEFAULT_VERSION;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -68,13 +70,20 @@ public class MigrationTask implements Task {
     public static class AdditionalInformations implements TaskExecutionDetails.AdditionalInformation {
 
         private final SchemaVersion toVersion;
+        private final Instant timestamp;
 
-        public AdditionalInformations(SchemaVersion toVersion) {
+        public AdditionalInformations(SchemaVersion toVersion, Instant timestamp) {
             this.toVersion = toVersion;
+            this.timestamp = timestamp;
         }
 
         public int getToVersion() {
             return toVersion.getValue();
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -148,7 +157,7 @@ public class MigrationTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformations(target));
+        return Optional.of(new AdditionalInformations(target, Clock.systemUTC().instant()));
     }
 
 }

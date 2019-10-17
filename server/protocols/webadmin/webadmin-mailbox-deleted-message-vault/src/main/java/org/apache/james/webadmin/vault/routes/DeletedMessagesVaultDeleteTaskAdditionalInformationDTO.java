@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.webadmin.vault.routes;
 
+import java.time.Instant;
+
 import org.apache.james.core.User;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MessageId;
@@ -31,8 +33,8 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
     public static AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
         return DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
             .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(User.fromUsername(dto.userName), factory.fromString(dto.getMessageId())))
-            .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUser(), details.getDeleteMessageId()))
+            .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(User.fromUsername(dto.userName), factory.fromString(dto.getMessageId()), dto.getTimestamp()))
+            .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUser(), details.getDeleteMessageId(), details.timestamp()))
             .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
@@ -40,13 +42,16 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
     private final String type;
     private final String userName;
     private final String messageId;
+    private final Instant timestamp;
 
     public DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(@JsonProperty("type") String type,
                                                                   @JsonProperty("userName") String userName,
-                                                                  @JsonProperty("messageId") String messageId) {
+                                                                  @JsonProperty("messageId") String messageId,
+                                                                  @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.userName = userName;
         this.messageId = messageId;
+        this.timestamp = timestamp;
     }
 
     public String getMessageId() {
@@ -55,6 +60,11 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
 
     public String getUserName() {
         return userName;
+    }
+
+    @Override
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     @Override

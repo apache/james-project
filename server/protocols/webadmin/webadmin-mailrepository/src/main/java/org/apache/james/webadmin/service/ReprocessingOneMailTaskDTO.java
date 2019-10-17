@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
 import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
@@ -30,11 +31,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ReprocessingOneMailTaskDTO implements TaskDTO {
 
-    public static final TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO> module(ReprocessingService reprocessingService) {
+    public static TaskDTOModule<ReprocessingOneMailTask, ReprocessingOneMailTaskDTO> module(Clock clock, ReprocessingService reprocessingService) {
         return DTOModule
             .forDomainObject(ReprocessingOneMailTask.class)
             .convertToDTO(ReprocessingOneMailTaskDTO.class)
-            .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService))
+            .toDomainObjectConverter(dto -> dto.fromDTO(reprocessingService, clock))
             .toDTOConverter(ReprocessingOneMailTaskDTO::toDTO)
             .typeName(ReprocessingOneMailTask.TYPE.asString())
             .withFactory(TaskDTOModule::new);
@@ -72,13 +73,14 @@ public class ReprocessingOneMailTaskDTO implements TaskDTO {
         this.targetProcessor = targetProcessor;
     }
 
-    public ReprocessingOneMailTask fromDTO(ReprocessingService reprocessingService) {
+    public ReprocessingOneMailTask fromDTO(ReprocessingService reprocessingService, Clock clock) {
         return new ReprocessingOneMailTask(
             reprocessingService,
             getMailRepositoryPath(),
             targetQueue,
             new MailKey(mailKey),
-            targetProcessor
+            targetProcessor,
+            clock
         );
     }
 

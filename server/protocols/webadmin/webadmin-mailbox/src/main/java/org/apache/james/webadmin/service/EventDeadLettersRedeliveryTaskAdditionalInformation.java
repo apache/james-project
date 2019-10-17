@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.webadmin.service;
 
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.mailbox.events.EventDeadLetters;
@@ -31,13 +32,18 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformation implements Task
     private final long failedRedeliveriesCount;
     private final Optional<Group> group;
     private final Optional<EventDeadLetters.InsertionId> insertionId;
+    private final Instant timestamp;
 
-    EventDeadLettersRedeliveryTaskAdditionalInformation(long successfulRedeliveriesCount, long failedRedeliveriesCount,
-                                                        Optional<Group> group, Optional<EventDeadLetters.InsertionId> insertionId) {
+    EventDeadLettersRedeliveryTaskAdditionalInformation(long successfulRedeliveriesCount,
+                                                        long failedRedeliveriesCount,
+                                                        Optional<Group> group,
+                                                        Optional<EventDeadLetters.InsertionId> insertionId,
+                                                        Instant timestamp) {
         this.successfulRedeliveriesCount = successfulRedeliveriesCount;
         this.failedRedeliveriesCount = failedRedeliveriesCount;
         this.group = group;
         this.insertionId = insertionId;
+        this.timestamp = timestamp;
     }
 
     public long getSuccessfulRedeliveriesCount() {
@@ -56,5 +62,10 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformation implements Task
     @JsonInclude(JsonInclude.Include.NON_ABSENT)
     public Optional<String> getInsertionId() {
         return insertionId.map(insertionId -> insertionId.getId().toString());
+    }
+
+    @Override
+    public Instant timestamp() {
+        return timestamp;
     }
 }

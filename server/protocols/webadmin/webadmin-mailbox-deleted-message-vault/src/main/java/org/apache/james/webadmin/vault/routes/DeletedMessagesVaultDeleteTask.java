@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -58,10 +60,12 @@ public class DeletedMessagesVaultDeleteTask implements Task {
 
         private final User user;
         private final MessageId deleteMessageId;
+        private final Instant timestamp;
 
-        AdditionalInformation(User user, MessageId deleteMessageId) {
+        AdditionalInformation(User user, MessageId deleteMessageId, Instant timestamp) {
             this.user = user;
             this.deleteMessageId = deleteMessageId;
+            this.timestamp = timestamp;
         }
 
         public String getUser() {
@@ -70,6 +74,11 @@ public class DeletedMessagesVaultDeleteTask implements Task {
 
         public String getDeleteMessageId() {
             return deleteMessageId.serialize();
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -107,7 +116,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(user, messageId));
+        return Optional.of(new AdditionalInformation(user, messageId, Clock.systemUTC().instant()));
     }
 
 }

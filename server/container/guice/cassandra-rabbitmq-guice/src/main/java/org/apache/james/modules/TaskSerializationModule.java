@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules;
 
+import java.time.Clock;
+
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationsDTO;
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
@@ -205,7 +207,7 @@ public class TaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public TaskDTOModule<?, ?> reprocessingOneMailsTask(ReprocessingService reprocessingService) {
-        return ReprocessingOneMailTaskDTO.module(reprocessingService);
+        return ReprocessingOneMailTaskDTO.module(Clock.systemUTC(), reprocessingService);
     }
 
     @ProvidesIntoSet

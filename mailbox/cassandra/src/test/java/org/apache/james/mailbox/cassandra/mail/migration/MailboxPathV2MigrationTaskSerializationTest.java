@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationsSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -34,11 +35,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 
 class MailboxPathV2MigrationTaskSerializationTest {
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final MailboxPathV2Migration MIGRATION = mock(MailboxPathV2Migration.class);
     private static final MailboxPathV2Migration.MailboxPathV2MigrationTask TASK = new MailboxPathV2Migration.MailboxPathV2MigrationTask(MIGRATION);
     private static final String SERIALIZED_TASK = "{\"type\": \"Cassandra_mailboxPathV2Migration\"}";
-    private static final MailboxPathV2Migration.AdditionalInformation DETAILS = new MailboxPathV2Migration.AdditionalInformation(42L, 10);
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"Cassandra_mailboxPathV2Migration\", \"remainingCount\":42,\"initialCount\":10}";
+    private static final MailboxPathV2Migration.AdditionalInformation DETAILS = new MailboxPathV2Migration.AdditionalInformation(42L, 10, TIMESTAMP);
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"Cassandra_mailboxPathV2Migration\", \"remainingCount\":42,\"initialCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
     private static final JsonTaskAdditionalInformationsSerializer JSON_TASK_ADDITIONAL_INFORMATIONS_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);

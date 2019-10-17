@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.backends.cassandra.migration;
 
+import java.time.Instant;
+
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -30,23 +32,31 @@ public class MigrationTaskAdditionalInformationsDTO implements AdditionalInforma
     public static final AdditionalInformationDTOModule<MigrationTask.AdditionalInformations, MigrationTaskAdditionalInformationsDTO> serializationModule() {
         return DTOModule.forDomainObject(MigrationTask.AdditionalInformations.class)
             .convertToDTO(MigrationTaskAdditionalInformationsDTO.class)
-            .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformations(new SchemaVersion(dto.getTargetVersion())))
-            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(type, details.getToVersion()))
+            .toDomainObjectConverter(dto -> new MigrationTask.AdditionalInformations(new SchemaVersion(dto.getTargetVersion()), dto.timestamp))
+            .toDTOConverter((details, type) -> new MigrationTaskAdditionalInformationsDTO(type, details.getToVersion(), details.timestamp()))
             .typeName(MigrationTask.CASSANDRA_MIGRATION.asString())
             .withFactory(AdditionalInformationDTOModule::new);
     }
 
     private final String type;
     private final int targetVersion;
+    private final Instant timestamp;
 
-    public MigrationTaskAdditionalInformationsDTO(@JsonProperty("type") String type, @JsonProperty("targetVersion") int targetVersion) {
+    public MigrationTaskAdditionalInformationsDTO(@JsonProperty("type") String type,
+                                                  @JsonProperty("targetVersion") int targetVersion,
+                                                  @JsonProperty("timestamp") Instant timestamp) {
         this.type = type;
         this.targetVersion = targetVersion;
+        this.timestamp = timestamp;
     }
 
     @Override
     public String getType() {
         return type;
+    }
+
+    public Instant getTimestamp() {
+        return timestamp;
     }
 
     public int getTargetVersion() {

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.task;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -36,14 +38,16 @@ public class MailboxMergingTask implements Task {
         private final long totalMessageCount;
         private final long messageMovedCount;
         private final long messageFailedCount;
+        private final Instant timestamp;
 
 
-        public Details(CassandraId oldId, CassandraId newId, long totalMessageCount, long messageMovedCount, long messageFailedCount) {
+        public Details(CassandraId oldId, CassandraId newId, long totalMessageCount, long messageMovedCount, long messageFailedCount, Instant timestamp) {
             this.oldMailboxId = oldId;
             this.newMailboxId = newId;
             this.totalMessageCount = totalMessageCount;
             this.messageMovedCount = messageMovedCount;
             this.messageFailedCount = messageFailedCount;
+            this.timestamp = timestamp;
         }
 
         public String getOldMailboxId() {
@@ -64,6 +68,11 @@ public class MailboxMergingTask implements Task {
 
         public long getMessageFailedCount() {
             return messageFailedCount;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -126,7 +135,8 @@ public class MailboxMergingTask implements Task {
         return Optional.of(new Details(oldMailboxId, newMailboxId,
             context.getTotalMessageCount(),
             context.getMessageMovedCount(),
-            context.getMessageFailedCount()));
+            context.getMessageFailedCount(),
+            Clock.systemUTC().instant()));
     }
 
     Context getContext() {

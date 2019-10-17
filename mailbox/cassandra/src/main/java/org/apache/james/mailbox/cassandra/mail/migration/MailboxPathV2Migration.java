@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -63,10 +65,12 @@ public class MailboxPathV2Migration implements Migration {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long remainingCount;
         private final long initialCount;
+        private final Instant timestamp;
 
-        public AdditionalInformation(long remainingCount, long initialCount) {
+        public AdditionalInformation(long remainingCount, long initialCount, Instant timestamp) {
             this.remainingCount = remainingCount;
             this.initialCount = initialCount;
+            this.timestamp = timestamp;
         }
 
         public long getRemainingCount() {
@@ -75,6 +79,11 @@ public class MailboxPathV2Migration implements Migration {
 
         public long getInitialCount() {
             return initialCount;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -117,7 +126,7 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     AdditionalInformation getAdditionalInformation() {
-        return new AdditionalInformation(getCurrentCount(), initialCount);
+        return new AdditionalInformation(getCurrentCount(), initialCount, Clock.systemUTC().instant());
     }
 
     private Long getCurrentCount() {

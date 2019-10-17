@@ -19,6 +19,8 @@
 
 package org.apache.james.rrt.cassandra.migration;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -71,10 +73,12 @@ public class MappingsSourcesMigration implements Migration {
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long successfulMappingsCount;
         private final long errorMappingsCount;
+        private final Instant timestamp;
 
-        AdditionalInformation(long successfulMappingsCount, long errorMappingsCount) {
+        AdditionalInformation(long successfulMappingsCount, long errorMappingsCount, Instant timestamp) {
             this.successfulMappingsCount = successfulMappingsCount;
             this.errorMappingsCount = errorMappingsCount;
+            this.timestamp = timestamp;
         }
 
         public long getSuccessfulMappingsCount() {
@@ -83,6 +87,11 @@ public class MappingsSourcesMigration implements Migration {
 
         public long getErrorMappingsCount() {
             return errorMappingsCount;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -133,6 +142,7 @@ public class MappingsSourcesMigration implements Migration {
     AdditionalInformation createAdditionalInformation() {
         return new AdditionalInformation(
             successfulMappingsCount.get(),
-            errorMappingsCount.get());
+            errorMappingsCount.get(),
+            Clock.systemUTC().instant());
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -41,13 +43,15 @@ public class ReprocessingAllMailsTask implements Task {
         private final Optional<String> targetProcessor;
         private final long initialCount;
         private final long remainingCount;
+        private final Instant timestamp;
 
-        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor, long initialCount, long remainingCount) {
+        public AdditionalInformation(MailRepositoryPath repositoryPath, String targetQueue, Optional<String> targetProcessor, long initialCount, long remainingCount, Instant timestamp) {
             this.repositoryPath = repositoryPath;
             this.targetQueue = targetQueue;
             this.targetProcessor = targetProcessor;
             this.initialCount = initialCount;
             this.remainingCount = remainingCount;
+            this.timestamp = timestamp;
         }
 
         public String getTargetQueue() {
@@ -70,6 +74,10 @@ public class ReprocessingAllMailsTask implements Task {
             return initialCount;
         }
 
+        @Override
+        public Instant timestamp() {
+            return timestamp;
+        }
     }
 
     public static class UrlEncodingFailureSerializationException extends RuntimeException {
@@ -142,7 +150,8 @@ public class ReprocessingAllMailsTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(new AdditionalInformation(
-            repositoryPath, targetQueue, targetProcessor, repositorySize, repositorySize - processedCount.get()));
+            repositoryPath, targetQueue, targetProcessor, repositorySize, repositorySize - processedCount.get(),
+            Clock.systemUTC().instant()));
     }
 
 }

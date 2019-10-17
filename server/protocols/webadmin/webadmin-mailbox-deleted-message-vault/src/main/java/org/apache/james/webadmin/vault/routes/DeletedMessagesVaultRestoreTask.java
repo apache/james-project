@@ -21,6 +21,8 @@ package org.apache.james.webadmin.vault.routes;
 
 import static org.apache.james.webadmin.vault.routes.RestoreService.RestoreResult.RESTORE_SUCCEED;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -43,11 +45,13 @@ public class DeletedMessagesVaultRestoreTask implements Task {
         private final User user;
         private final long successfulRestoreCount;
         private final long errorRestoreCount;
+        private final Instant timestamp;
 
-        AdditionalInformation(User user, long successfulRestoreCount, long errorRestoreCount) {
+        AdditionalInformation(User user, long successfulRestoreCount, long errorRestoreCount, Instant timestamp) {
             this.user = user;
             this.successfulRestoreCount = successfulRestoreCount;
             this.errorRestoreCount = errorRestoreCount;
+            this.timestamp = timestamp;
         }
 
         public long getSuccessfulRestoreCount() {
@@ -60,6 +64,11 @@ public class DeletedMessagesVaultRestoreTask implements Task {
 
         public String getUser() {
             return user.asString();
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -127,7 +136,7 @@ public class DeletedMessagesVaultRestoreTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(userToRestore, successfulRestoreCount.get(), errorRestoreCount.get()));
+        return Optional.of(new AdditionalInformation(userToRestore, successfulRestoreCount.get(), errorRestoreCount.get(), Clock.systemUTC().instant()));
     }
 
     User getUserToRestore() {

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.task;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,9 +44,11 @@ public class MemoryReferenceWithCounterTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long count;
+        private final Instant timestamp;
 
-        public AdditionalInformation(long count) {
+        public AdditionalInformation(long count, Instant timestamp) {
             this.count = count;
+            this.timestamp = timestamp;
         }
 
         public long getCount() {
@@ -52,22 +56,29 @@ public class MemoryReferenceWithCounterTask implements Task {
         }
 
         @Override
+        public Instant timestamp() {
+            return timestamp;
+        }
+
+        @Override
         public boolean equals(Object that) {
             if(that instanceof MemoryReferenceWithCounterTask.AdditionalInformation) {
-                return Objects.equals(this.count, ((AdditionalInformation) that).getCount());
+                return Objects.equals(this.count, ((AdditionalInformation) that).getCount()) &&
+                    Objects.equals(this.timestamp, ((AdditionalInformation) that).timestamp);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hashCode(this.count);
+            return Objects.hash(this.count, this.timestamp);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
                 .add("count", count)
+                .add("timestamp", timestamp)
                 .toString();
         }
     }
@@ -95,6 +106,6 @@ public class MemoryReferenceWithCounterTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new MemoryReferenceWithCounterTask.AdditionalInformation(counter.get()));
+        return Optional.of(new MemoryReferenceWithCounterTask.AdditionalInformation(counter.get(), Clock.systemUTC().instant()));
     }
 }

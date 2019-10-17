@@ -21,6 +21,7 @@ package org.apache.james.task.eventsourcing.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -54,6 +55,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import scala.Option;
 
 class TaskEventsSerializationTest {
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE,
         TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore()));
     private static final JsonTaskAdditionalInformationsSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationsSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
@@ -63,7 +65,7 @@ class TaskEventsSerializationTest {
     private static final EventId EVENT_ID = EventId.fromSerialized(42);
     private static final Task TASK = new CompletedTask();
     private static final Hostname HOSTNAME = new Hostname("foo");
-    private static final MemoryReferenceWithCounterTask.AdditionalInformation counterAdditionalInformation = new MemoryReferenceWithCounterTask.AdditionalInformation(3);
+    private static final MemoryReferenceWithCounterTask.AdditionalInformation counterAdditionalInformation = new MemoryReferenceWithCounterTask.AdditionalInformation(3, TIMESTAMP);
 
     @ParameterizedTest
     @MethodSource
@@ -95,10 +97,10 @@ class TaskEventsSerializationTest {
             Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.empty(), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\"}"),
             Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.empty(), Option.apply("contextual message"), Option.apply("my exception")), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\", \"errorMessage\": \"contextual message\", \"exception\": \"my exception\"}"),
             Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\"}"),
-            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED, Option.apply(counterAdditionalInformation)), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3}\"}"),
-            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.PARTIAL, Option.apply(counterAdditionalInformation)), "{\"result\":\"PARTIAL\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3}\"}"),
-            Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3}\"}"),
-            Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation)), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3}\"}")
+            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED, Option.apply(counterAdditionalInformation)), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.PARTIAL, Option.apply(counterAdditionalInformation)), "{\"result\":\"PARTIAL\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation)), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}")
         );
     }
 

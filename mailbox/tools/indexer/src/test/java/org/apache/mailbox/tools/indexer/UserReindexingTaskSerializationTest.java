@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.List;
 
 import org.apache.james.core.User;
@@ -39,6 +40,8 @@ import com.google.common.collect.ImmutableList;
 
 class UserReindexingTaskSerializationTest {
 
+    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
     private ReIndexerPerformer reIndexerPerformer;
     private JsonTaskSerializer taskSerializer;
     private JsonTaskAdditionalInformationsSerializer jsonAdditionalInformationSerializer;
@@ -49,7 +52,7 @@ class UserReindexingTaskSerializationTest {
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
     private final String serializedUserReindexingTask = "{\"type\": \"userReIndexing\", \"username\": \"foo@apache.org\"}";
 
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"userReIndexing\", \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}]}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"userReIndexing\", \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);
@@ -95,13 +98,13 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
-        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures);
+        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

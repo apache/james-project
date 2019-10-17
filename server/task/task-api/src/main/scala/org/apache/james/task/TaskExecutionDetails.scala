@@ -19,7 +19,7 @@
 
 package org.apache.james.task
 
-import java.time.ZonedDateTime
+import java.time.{Instant, ZonedDateTime}
 import java.util.{Objects, Optional}
 
 import com.google.common.base.MoreObjects
@@ -28,7 +28,9 @@ import org.apache.james.task.TaskManager.Status._
 
 object TaskExecutionDetails {
 
-  trait AdditionalInformation {}
+  trait AdditionalInformation {
+    def timestamp: Instant
+  }
 
   def from(task: Task, id: TaskId, hostname: Hostname) = new TaskExecutionDetails(id, task.`type`, WAITING, submittedDate = ZonedDateTime.now, submittedNode = hostname, () => task.details)
 }

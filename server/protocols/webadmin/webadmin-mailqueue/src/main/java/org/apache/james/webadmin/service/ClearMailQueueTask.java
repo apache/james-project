@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.james.queue.api.MailQueue;
@@ -35,11 +37,13 @@ public class ClearMailQueueTask implements Task {
         private final String mailQueueName;
         private final long initialCount;
         private final long remainingCount;
+        private final Instant timestamp;
 
-        public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount) {
+        public AdditionalInformation(String mailQueueName, long initialCount, long remainingCount, Instant timestamp) {
             this.mailQueueName = mailQueueName;
             this.initialCount = initialCount;
             this.remainingCount = remainingCount;
+            this.timestamp = timestamp;
         }
 
         public String getMailQueueName() {
@@ -52,6 +56,11 @@ public class ClearMailQueueTask implements Task {
 
         public long getRemainingCount() {
             return remainingCount;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -91,7 +100,7 @@ public class ClearMailQueueTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(queue.getName(), initialCount, getRemainingSize()));
+        return Optional.of(new AdditionalInformation(queue.getName(), initialCount, getRemainingSize(), Clock.systemUTC().instant()));
     }
 
     ManageableMailQueue getQueue() {

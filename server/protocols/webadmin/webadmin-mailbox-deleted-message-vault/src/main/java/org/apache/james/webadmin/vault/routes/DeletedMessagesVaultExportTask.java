@@ -20,6 +20,8 @@
 package org.apache.james.webadmin.vault.routes;
 
 import java.io.IOException;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -29,7 +31,6 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 import org.apache.james.vault.search.Query;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,11 +45,13 @@ public class DeletedMessagesVaultExportTask implements Task {
         private final User userExportFrom;
         private final MailAddress exportTo;
         private final long totalExportedMessages;
+        private final Instant timestamp;
 
-        public AdditionalInformation(User userExportFrom, MailAddress exportTo, long totalExportedMessages) {
+        public AdditionalInformation(User userExportFrom, MailAddress exportTo, long totalExportedMessages, Instant timestamp) {
             this.userExportFrom = userExportFrom;
             this.exportTo = exportTo;
             this.totalExportedMessages = totalExportedMessages;
+            this.timestamp = timestamp;
         }
 
         public String getUserExportFrom() {
@@ -61,6 +64,11 @@ public class DeletedMessagesVaultExportTask implements Task {
 
         public long getTotalExportedMessages() {
             return totalExportedMessages;
+        }
+
+        @Override
+        public Instant timestamp() {
+            return timestamp;
         }
     }
 
@@ -100,7 +108,7 @@ public class DeletedMessagesVaultExportTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(userExportFrom, exportTo, totalExportedMessages.get()));
+        return Optional.of(new AdditionalInformation(userExportFrom, exportTo, totalExportedMessages.get(), Clock.systemUTC().instant()));
     }
 
     User getUserExportFrom() {

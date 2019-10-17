@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.service;
 
+import java.time.Clock;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -27,7 +28,6 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne;
 
 public class EventDeadLettersRedeliverOneTask implements Task {
     public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverOneTask");
@@ -93,10 +93,11 @@ public class EventDeadLettersRedeliverOneTask implements Task {
     }
 
     EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
-        return new EventDeadLettersRedeliveryTaskAdditionalInformationForOne(
+        return new EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
             eventRetriever.forGroup(),
-            eventRetriever.forEvent());
+            eventRetriever.forEvent(),
+            Clock.systemUTC().instant());
     }
 }
