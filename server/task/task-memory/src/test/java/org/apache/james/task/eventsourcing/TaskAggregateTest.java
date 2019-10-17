@@ -24,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.james.eventsourcing.Event;
@@ -36,6 +35,7 @@ import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.junit.jupiter.api.Test;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.Streams;
 import scala.Option;
 
@@ -51,7 +51,7 @@ class TaskAggregateTest {
                     Stream.iterate(EventId.first(), EventId::next),
                     Arrays.stream(events),
                     (id, event) -> event.apply(id))
-                .collect(Collectors.toList()));
+                .collect(Guavate.toImmutableList()));
     }
 
     @Test
