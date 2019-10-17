@@ -1,4 +1,4 @@
-# 11. Disable ElasticSearch dynamic mapping
+# 11. Disable ElasticSearch source
 
 Date: 2019-10-17
 
@@ -18,7 +18,7 @@ Disable _source for ELasticSearch indexed documents.
 
 ## Consequences
 
-We notice a 20% space reduction of data stored on ElasticSearch.
+Given a dataset composed of small text/plain messages, we notice a 20% space reduction of data stored on ElasticSearch.
 
 However, patch updates can no longer be performed upon flags updates. Upon flag update we need to fully read the mail 
 content, then mime-parse it, potentially html parse it, extract attachment content again and finally index again the full 
