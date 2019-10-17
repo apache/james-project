@@ -46,7 +46,7 @@ import reactor.core.publisher.Flux;
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer();
     private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer();
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER).stream().collect(Guavate.toImmutableSet());
     private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(MODULES);
 
     @RegisterExtension
