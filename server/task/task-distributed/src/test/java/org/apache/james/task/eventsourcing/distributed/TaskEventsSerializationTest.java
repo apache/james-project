@@ -22,12 +22,10 @@ package org.apache.james.task.eventsourcing.distributed;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
-import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
@@ -50,44 +48,47 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.github.steveash.guavate.Guavate;
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import scala.Option;
 
 class TaskEventsSerializationTest {
-    private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE,
-        TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore()));
-    private static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, TASK_ADDITIONNAL_INFORMATION_SERIALIZER);
-    private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(MODULES.stream().collect(Guavate.toImmutableSet()));
-    private static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
-    private static final EventId EVENT_ID = EventId.fromSerialized(42);
-    private static final Task TASK = new CompletedTask();
-    private static final Hostname HOSTNAME = new Hostname("foo");
-    private static final MemoryReferenceWithCounterTask.AdditionalInformation counterAdditionalInformation = new MemoryReferenceWithCounterTask.AdditionalInformation(3, TIMESTAMP);
+    static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+    static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
+    static final EventId EVENT_ID = EventId.fromSerialized(42);
+    static final Task TASK = new CompletedTask();
+    static final Hostname HOSTNAME = new Hostname("foo");
+    static final MemoryReferenceWithCounterTask.AdditionalInformation COUNTER_ADDITIONAL_INFORMATION = new MemoryReferenceWithCounterTask.AdditionalInformation(3, TIMESTAMP);
+
+    JsonEventSerializer serializer =
+        new JsonEventSerializer(
+            TasksSerializationModule.list(
+                new JsonTaskSerializer(
+                    TestTaskDTOModules.COMPLETED_TASK_MODULE,
+                    TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())),
+                TASK_ADDITIONNAL_INFORMATION_SERIALIZER));
 
     @ParameterizedTest
     @MethodSource
     void taskShouldBeSerializable(TaskEvent event, String serializedJson) throws Exception {
-        JsonAssertions.assertThatJson(SERIALIZER.serialize(event)).isEqualTo(serializedJson);
+        JsonAssertions.assertThatJson(serializer.serialize(event)).isEqualTo(serializedJson);
     }
 
-    private static Stream<Arguments> taskShouldBeSerializable() throws Exception {
+    static Stream<Arguments> taskShouldBeSerializable() throws Exception {
         return validTasks();
     }
 
     @ParameterizedTest
     @MethodSource
     void taskShouldBeDeserializable(TaskEvent event, String serializedJson) throws Exception {
-        assertThat(SERIALIZER.deserialize(serializedJson)).isEqualToComparingFieldByFieldRecursively(event);
+        assertThat(serializer.deserialize(serializedJson)).isEqualToComparingFieldByFieldRecursively(event);
     }
 
-    private static Stream<Arguments> taskShouldBeDeserializable() throws Exception {
+    static Stream<Arguments> taskShouldBeDeserializable() throws Exception {
         return validTasks();
     }
 
-    private static Stream<Arguments> validTasks() throws Exception {
+    static Stream<Arguments> validTasks() throws Exception {
         return Stream.of(
             Arguments.of(new Created(AGGREGATE_ID, EVENT_ID, TASK, HOSTNAME), "{\"task\":\"{\\\"type\\\":\\\"completed-task\\\"}\",\"type\":\"task-manager-created\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"hostname\":\"foo\"}\n"),
             Arguments.of(new Started(AGGREGATE_ID, EVENT_ID, HOSTNAME), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-started\",\"hostname\":\"foo\"}"),
@@ -97,10 +98,10 @@ class TaskEventsSerializationTest {
             Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.empty(), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\"}"),
             Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.empty(), Option.apply("contextual message"), Option.apply("my exception")), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\", \"errorMessage\": \"contextual message\", \"exception\": \"my exception\"}"),
             Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\"}"),
-            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED, Option.apply(counterAdditionalInformation)), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
-            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.PARTIAL, Option.apply(counterAdditionalInformation)), "{\"result\":\"PARTIAL\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
-            Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
-            Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.apply(counterAdditionalInformation)), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}")
+            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED, Option.apply(COUNTER_ADDITIONAL_INFORMATION)), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.PARTIAL, Option.apply(COUNTER_ADDITIONAL_INFORMATION)), "{\"result\":\"PARTIAL\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Failed(AGGREGATE_ID, EVENT_ID, Option.apply(COUNTER_ADDITIONAL_INFORMATION), Option.empty(), Option.empty()), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-failed\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}"),
+            Arguments.of(new Cancelled(AGGREGATE_ID, EVENT_ID, Option.apply(COUNTER_ADDITIONAL_INFORMATION)), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-cancelled\",\"additionalInformation\":\"{\\\"type\\\":\\\"memory-reference-task-with-counter\\\",\\\"count\\\":3,\\\"timestamp\\\":\\\"2018-11-13T12:00:55Z\\\"}\"}")
         );
     }
 
