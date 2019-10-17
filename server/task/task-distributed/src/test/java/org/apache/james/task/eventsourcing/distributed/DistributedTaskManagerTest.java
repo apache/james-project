@@ -68,7 +68,6 @@ import org.awaitility.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.github.steveash.guavate.Guavate;
@@ -86,7 +85,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
         @Override
         public WorkQueue apply(EventSourcingSystem eventSourcingSystem) {
-            RabbitMQWorkQueue workQueue = supplier.apply(eventSourcingSystem);
+            RabbitMQWorkQueue workQueue = supplier.apply(eventSourcingSystem, UPDATE_INFORMATION_POLLING_INTERVAL);
             workQueues.add(workQueue);
             return workQueue;
         }

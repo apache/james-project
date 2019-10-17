@@ -18,8 +18,10 @@
  * ***************************************************************/
 package org.apache.james.task.eventsourcing.distributed
 
-import javax.inject.Inject
+import java.time.Duration
 
+import com.google.common.annotations.VisibleForTesting
+import javax.inject.Inject
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool
 import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer
@@ -28,9 +30,16 @@ import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListe
 
 class RabbitMQWorkQueueSupplier @Inject()(private val rabbitMQConnectionPool: SimpleConnectionPool,
                                 private val jsonTaskSerializer: JsonTaskSerializer) extends WorkQueueSupplier {
+
+  val DEFAULT_ADDITIONAL_INFORMATION_POLLING_INTERVAL =  Duration.ofSeconds(30)
   override def apply(eventSourcingSystem: EventSourcingSystem): RabbitMQWorkQueue = {
+     apply(eventSourcingSystem, DEFAULT_ADDITIONAL_INFORMATION_POLLING_INTERVAL)
+  }
+
+  @VisibleForTesting
+  def apply(eventSourcingSystem: EventSourcingSystem, additionalInformationPollingInterval: Duration): RabbitMQWorkQueue = {
     val listener = WorkerStatusListener(eventSourcingSystem)
-    val worker = new SerialTaskManagerWorker(listener)
+    val worker = new SerialTaskManagerWorker(listener, additionalInformationPollingInterval)
     val rabbitMQWorkQueue = new RabbitMQWorkQueue(worker, rabbitMQConnectionPool, jsonTaskSerializer)
     rabbitMQWorkQueue.start()
     rabbitMQWorkQueue

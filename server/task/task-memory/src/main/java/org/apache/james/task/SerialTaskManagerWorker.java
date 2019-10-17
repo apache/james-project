@@ -52,8 +52,10 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     private final AtomicReference<Tuple2<TaskId, Future<?>>> runningTask;
     private final Semaphore semaphore;
     private final Set<TaskId> cancelledTasks;
+    private final Duration pollingInterval;
 
-    public SerialTaskManagerWorker(Listener listener) {
+    public SerialTaskManagerWorker(Listener listener, Duration pollingInterval) {
+        this.pollingInterval = pollingInterval;
         this.taskExecutor = Executors.newSingleThreadExecutor(NamedThreadFactory.withName("task executor"));
         this.listener = listener;
         this.cancelledTasks = Sets.newConcurrentHashSet();
@@ -112,7 +114,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
 
     private Flux<TaskExecutionDetails.AdditionalInformation> pollAdditionalInformation(TaskWithId taskWithId) {
         return Mono.fromCallable(() -> taskWithId.getTask().details())
-            .delayElement(Duration.ofSeconds(1), Schedulers.boundedElastic())
+            .delayElement(pollingInterval, Schedulers.boundedElastic())
             .repeat()
             .flatMap(Mono::justOrEmpty)
             .doOnNext(information -> listener.updated(taskWithId.getId(), information));

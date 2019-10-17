@@ -44,6 +44,8 @@ import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 
 class SerialTaskManagerWorkerTest {
+    private  static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofSeconds(1);
+
     private TaskManagerWorker.Listener listener;
     private SerialTaskManagerWorker worker;
 
@@ -54,7 +56,7 @@ class SerialTaskManagerWorkerTest {
     @BeforeEach
     void beforeEach() {
         listener = mock(TaskManagerWorker.Listener.class);
-        worker = new SerialTaskManagerWorker(listener);
+        worker = new SerialTaskManagerWorker(listener, UPDATE_INFORMATION_POLLING_DURATION);
     }
 
     @AfterEach
@@ -94,13 +96,13 @@ class SerialTaskManagerWorkerTest {
         TaskWithId taskWithId = new TaskWithId(TaskId.generateTaskId(), new MemoryReferenceWithCounterTask((counter) ->
             Mono.fromCallable(counter::incrementAndGet)
                 .delayElement(Duration.ofSeconds(1))
-                .repeat(2)
+                .repeat(3)
                 .then(Mono.just(Task.Result.COMPLETED))
                 .block()));
 
         worker.executeTask(taskWithId).block();
 
-        verify(listener, atMost(3)).updated(eq(taskWithId.getId()), notNull());
+        verify(listener, atMost(4)).updated(eq(taskWithId.getId()), notNull());
     }
 
     @Test

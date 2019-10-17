@@ -38,7 +38,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 
 public interface TaskManagerContract {
-
+    java.time.Duration UPDATE_INFORMATION_POLLING_INTERVAL = java.time.Duration.ofSeconds(1);
     Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)

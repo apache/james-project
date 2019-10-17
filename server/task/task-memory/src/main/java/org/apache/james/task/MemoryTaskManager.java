@@ -93,6 +93,7 @@ public class MemoryTaskManager implements TaskManager {
         }
     }
 
+    private static final Duration UPDATE_INFORMATION_POLLING_DURATION = Duration.ofSeconds(5);
     private static final Duration AWAIT_POLLING_DURATION = Duration.ofMillis(500);
     public static final Duration NOW = Duration.ZERO;
 
@@ -105,7 +106,7 @@ public class MemoryTaskManager implements TaskManager {
     public MemoryTaskManager(Hostname hostname) {
         this.hostname = hostname;
         this.idToExecutionDetails = new ConcurrentHashMap<>();
-        this.worker = new SerialTaskManagerWorker(updater());
+        this.worker = new SerialTaskManagerWorker(updater(), UPDATE_INFORMATION_POLLING_DURATION);
         workQueue = new MemoryWorkQueue(worker);
     }
 
