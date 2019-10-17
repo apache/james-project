@@ -14,7 +14,7 @@ Though very handy to have around, the source field does incur storage overhead w
 
 ## Decision
 
-Disable _source for ELasticSearch indexed documents.
+Disable \_source for ELasticSearch indexed documents.
 
 ## Consequences
 
