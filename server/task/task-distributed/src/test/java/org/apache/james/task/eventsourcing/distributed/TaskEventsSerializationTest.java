@@ -22,7 +22,7 @@ package org.apache.james.task.eventsourcing.distributed;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.james.eventsourcing.EventId;
@@ -59,7 +59,7 @@ class TaskEventsSerializationTest {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE,
         TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore()));
     private static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    private static final List<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, TASK_ADDITIONNAL_INFORMATION_SERIALIZER);
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.MODULES.apply(TASK_SERIALIZER, TASK_ADDITIONNAL_INFORMATION_SERIALIZER);
     private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(MODULES.stream().collect(Guavate.toImmutableSet()));
     private static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
     private static final EventId EVENT_ID = EventId.fromSerialized(42);

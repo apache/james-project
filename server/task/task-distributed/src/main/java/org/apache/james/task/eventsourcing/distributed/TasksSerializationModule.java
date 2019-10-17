@@ -19,7 +19,7 @@
 
 package org.apache.james.task.eventsourcing.distributed;
 
-import java.util.List;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -99,8 +99,8 @@ public interface TasksSerializationModule {
         .typeName("task-manager-updated")
         .withFactory(EventDTOModule::new);
 
-    BiFunction<JsonTaskSerializer, JsonTaskAdditionalInformationSerializer, List<EventDTOModule<?, ?>>> MODULES = (jsonTaskSerializer, jsonTaskAdditionalInformationSerializer) -> Stream
+    BiFunction<JsonTaskSerializer, JsonTaskAdditionalInformationSerializer, Set<EventDTOModule<?, ?>>> MODULES = (jsonTaskSerializer, jsonTaskAdditionalInformationSerializer) -> Stream
         .of(CREATED, STARTED, CANCEL_REQUESTED, CANCELLED, COMPLETED, FAILED, UPDATED)
         .map(moduleFactory -> moduleFactory.create(jsonTaskSerializer, jsonTaskAdditionalInformationSerializer))
-        .collect(Guavate.toImmutableList());
+        .collect(Guavate.toImmutableSet());
 }
