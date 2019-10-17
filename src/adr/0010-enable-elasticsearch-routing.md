@@ -1,4 +1,4 @@
-# 10 Disable ElasticSearch dynamic mapping
+# 10 Enable ElasticSearch routing
 
 Date: 2019-10-17
 
@@ -10,9 +10,9 @@ Additional performance testing is required for adoption.
 
 ## Context
 
-Our queries are mostly bounded to a mailbox or an user. We can easily
+Our queries are mostly bounded to a mailbox or a user. We can easily
 limit the number of ElasticSearch nodes involved in a given query by
-grouping the underlying documents on the same node using a routingKey.
+grouping the underlying documents on the same node using a routing key.
 
 Without routing key, each shard needs to execute the query. The coordinator
 needs also to be waiting for the slowest shard.
@@ -23,7 +23,7 @@ This allows to be more linearly scalable.
 
 ## Decision
 
-Enable ELasticSearch routing.
+Enable ElasticSearch routing.
 
 Messages should be indexed by mailbox.
 
