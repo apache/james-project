@@ -40,6 +40,32 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonGenericSerializer<T, U extends DTO> {
 
+    private static class DTOConverter<T, U extends DTO> {
+
+        private final Map<String, DTOModule<T, U>> typeToModule;
+        private final Map<Class<? extends T>, DTOModule<T, U>> domainClassToModule;
+
+        public DTOConverter(Set<DTOModule<T, U>> modules) {
+            typeToModule = modules.stream()
+                .collect(Guavate.toImmutableMap(
+                    DTOModule::getDomainObjectType,
+                    Function.identity()));
+
+            domainClassToModule = modules.stream()
+                .collect(Guavate.toImmutableMap(
+                    DTOModule::getDomainObjectClass,
+                    Function.identity()));
+        }
+
+        public Optional<DTOModule<T, U>> findModule(T domainObject) {
+            return Optional.ofNullable(domainClassToModule.get(domainObject.getClass()));
+        }
+
+        public Optional<DTOModule<T, U>> findModule(String type) {
+            return Optional.ofNullable(typeToModule.get(type));
+        }
+    }
+
     public static class InvalidTypeException extends RuntimeException {
         public InvalidTypeException(String message) {
             super(message);
@@ -56,9 +82,8 @@ public class JsonGenericSerializer<T, U extends DTO> {
         }
     }
 
-    private final Map<Class<? extends T>, DTOModule<T, U>> domainClassToModule;
-    private final Map<String, DTOModule<T, U>> typeToModule;
     private final ObjectMapper objectMapper;
+    private final DTOConverter<T, U> dtoConverter;
 
     @SafeVarargs
     public static <T, U extends DTO> JsonGenericSerializer<T, U> of(DTOModule<T, U>... modules) {
@@ -73,23 +98,16 @@ public class JsonGenericSerializer<T, U extends DTO> {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
-        typeToModule = modules.stream()
-            .collect(Guavate.toImmutableMap(
-                DTOModule::getDomainObjectType,
-                Function.identity()));
-
-        domainClassToModule = modules.stream()
-            .collect(Guavate.toImmutableMap(
-                DTOModule::getDomainObjectClass,
-                Function.identity()));
+        dtoConverter = new DTOConverter<>(modules);
     }
 
     public String serialize(T domainObject) throws JsonProcessingException {
-        U dto = Optional.ofNullable(domainClassToModule.get(domainObject.getClass()))
-            .orElseThrow(() -> new UnknownTypeException("unknown type " + domainObject.getClass()))
-            .toDTO(domainObject);
+        U dto = dtoConverter.findModule(domainObject)
+            .map(module -> module.toDTO(domainObject))
+            .orElseThrow(() -> new UnknownTypeException("unknown type " + domainObject.getClass()));
         return objectMapper.writeValueAsString(dto);
     }
+
 
     public T deserialize(String value) throws IOException {
         try {
@@ -101,7 +119,9 @@ public class JsonGenericSerializer<T, U extends DTO> {
                 throw new InvalidTypeException("No \"type\" property found in the json document");
             }
 
-            DTOModule<T, U> dtoModule = retrieveModuleForType(typeNode.asText());
+            String type = typeNode.asText();
+            DTOModule<T, U> dtoModule = dtoConverter.findModule(type)
+                .orElseThrow(() -> new UnknownTypeException("unknown type " + type));
             U dto = objectMapper.readValue(objectMapper.treeAsTokens(jsonNode), dtoModule.getDTOClass());
             return dtoModule.getToDomainObjectConverter().convert(dto);
         } catch (MismatchedInputException e) {
@@ -109,8 +129,4 @@ public class JsonGenericSerializer<T, U extends DTO> {
         }
     }
 
-    private DTOModule<T, U> retrieveModuleForType(String type) {
-        return Optional.ofNullable(typeToModule.get(type))
-            .orElseThrow(() -> new UnknownTypeException("unknown type " + type));
-    }
 }
