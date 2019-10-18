@@ -98,6 +98,7 @@ public class GuiceGenericLoader {
         this.additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
             .stream()
             .map(Throwing.function(this::<Module>instantiateNoChildModule))
+            .peek(module -> LOGGER.info("Enabling injects contained in " + module.getClass().getCanonicalName()))
             .collect(Guavate.toImmutableList()));
     }
 
