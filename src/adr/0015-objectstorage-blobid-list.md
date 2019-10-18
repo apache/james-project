@@ -44,7 +44,7 @@ We expect to reduce the amount of writes to the object storage. This is expected
 
 Inconsistencies in StoredBlobIdsList will lead to duplicated saved blobs, which is the current behaviour.
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'accepted but inconclusive'.
+In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
 ## Reference
 

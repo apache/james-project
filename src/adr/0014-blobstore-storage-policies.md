@@ -45,7 +45,7 @@ Some performance tests will be run in order to evaluate the improvements.
 
 We expect small frequently accessed blobs to be located in Cassandra, allowing ObjectStorage to be used mainly for large costly blobs.
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'accepted but inconclusive'.
+In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
 ## References
 
