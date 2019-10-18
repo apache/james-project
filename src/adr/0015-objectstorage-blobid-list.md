@@ -31,7 +31,7 @@ Rely on a StoredBlobIdsList API to know which blob is persisted or not in object
  - When saving a blob with precomputed blobId, we can check the existance of the blob in storage, avoiding possibly the expensive "save".
  - When saving a blob too big to precompute its blobId, once the blob had been stream using a temporary random blobId, copy operation can be avoided and the temporary blob could be directly removed.
 
-Cassandra is faster doing "write every time" rather than "read before write" so we should not use the storedblob projection for it
+Cassandra is faster doing "write every time" rather than "read before write" so we should not use the stored blob projection for it
 
 Some performance tests will be run in order to evaluate the improvements.
 
@@ -39,7 +39,7 @@ Some performance tests will be run in order to evaluate the improvements.
 
 We expect to reduce the amount of writes to the object storage. This is expected to improve:
  - operational costs on cloud providers
- - performance improvment
+ - performance improvement
  - latency reduction under load
 
 Inconsistencies in StoredBlobIdsList will lead to duplicated saved blobs, which is the current behaviour.

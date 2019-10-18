@@ -21,7 +21,7 @@ As an example:
 Also, the capabilities of the various implementations of BlobStore have different strengths:
 
  - CassandraBlobStore is efficient for small blobs and offer low latency. However it is known to be expensive for big blobs. Cassandra storage is expensive.
- - Object Storage blob store is good at storing big blobs, but it induces higher latencies than Cassandra for small blobs for a cost gain that doesn't worth it.
+ - Object Storage blob store is good at storing big blobs, but it induces higher latencies than Cassandra for small blobs for a cost gain that isn't worth it.
 
 Thus, significant performance could be unlocked by using the right blob store for the right blob.
 
@@ -29,7 +29,7 @@ Thus, significant performance could be unlocked by using the right blob store fo
 
 Introduce StoragePolicies at the level of the BlobStore API.
 
-The proposed policies includes:
+The proposed policies include:
 
  - SizeBasedStoragePolicy: The blob underlying storage medium will be chosen depending of its size.
  - LowCostStoragePolicy: The blob is expected to be saved in low cost storage. Access is expected to be unfrequent.
