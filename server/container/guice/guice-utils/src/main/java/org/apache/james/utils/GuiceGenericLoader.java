@@ -113,10 +113,10 @@ public class GuiceGenericLoader {
     }
 
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, namingSheme, additionalExtensionBindings);
+        return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme, additionalExtensionBindings);
     }
 
     public <T> InvocationPerformer<T> withChildModule(Module childModule) {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, Modules.combine(additionalExtensionBindings, childModule));
+        return new InvocationPerformer<>(injector, extendedClassLoader, NamingScheme.IDENTITY, Modules.combine(additionalExtensionBindings, childModule));
     }
 }
