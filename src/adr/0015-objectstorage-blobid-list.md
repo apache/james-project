@@ -22,14 +22,14 @@ However writing in Object storage:
 
 Thus choosing a right strategy to avoid writing blob twice is desirable.
 
-However, ObjectStorage (OpenStack Swift) exist method was not efficient enough to be a real cost and performance saver.
+However, ObjectStorage (OpenStack Swift) `exist` method was not efficient enough to be a real cost and performance saver.
 
 ## Decision
 
 Rely on a StoredBlobIdsList API to know which blob is persisted or not in object storage. Provide a Cassandra implementation of it. Located in blob-api for convenience, this it not a top level API. It is intended to be used by some blobStore implementations (here only ObjectStorage).
 
- - When saving a blob with precomputed blobId, we can check the existance of the blob in storage, avoiding possibly the expensive "save".
- - When saving a blob too big to precompute its blobId, once the blob had been stream using a temporary random blobId, copy operation can be avoided and the temporary blob could be directly removed.
+ - When saving a blob with precomputed blobId, we can check the existence of the blob in storage, avoiding possibly the expensive "save".
+ - When saving a blob too big to precompute its blobId, once the blob had been streamed using a temporary random blobId, copy operation can be avoided and the temporary blob could be directly removed.
 
 Cassandra is faster doing "write every time" rather than "read before write" so we should not use the stored blob projection for it
 
