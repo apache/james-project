@@ -36,7 +36,7 @@ We expect a huge performance enhancement for JMAP clients relying on preview for
 
 Messages whose preview is not yet computed will still require live preview computation as a fallback mechanism.
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'accepted but inconclusive'.
+In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
 ## References
 
