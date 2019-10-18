@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class TaskDeserializerTest {
 
     private static final String TASK_AS_STRING = "{" +
-        "\"type\": \"testTask\"," +
+        "\"type\": \"test-task\"," +
         "\"parameter\": 1" +
         "}";
 
@@ -39,7 +39,7 @@ class TaskDeserializerTest {
         "}";
 
     private static final String TWO_TYPES_TASK_AS_STRING = "{" +
-        "\"type\": \"testTask\"," +
+        "\"type\": \"test-task\"," +
         "\"type\": \"unknown\"," +
         "\"parameter\": 1" +
         "}";

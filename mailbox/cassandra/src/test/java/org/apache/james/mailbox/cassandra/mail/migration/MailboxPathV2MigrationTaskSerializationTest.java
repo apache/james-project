@@ -38,9 +38,9 @@ class MailboxPathV2MigrationTaskSerializationTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final MailboxPathV2Migration MIGRATION = mock(MailboxPathV2Migration.class);
     private static final MailboxPathV2Migration.MailboxPathV2MigrationTask TASK = new MailboxPathV2Migration.MailboxPathV2MigrationTask(MIGRATION);
-    private static final String SERIALIZED_TASK = "{\"type\": \"Cassandra_mailboxPathV2Migration\"}";
+    private static final String SERIALIZED_TASK = "{\"type\": \"cassandra-mailbox-path-v2-migration\"}";
     private static final MailboxPathV2Migration.AdditionalInformation DETAILS = new MailboxPathV2Migration.AdditionalInformation(42L, 10, TIMESTAMP);
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"Cassandra_mailboxPathV2Migration\", \"remainingCount\":42,\"initialCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"cassandra-mailbox-path-v2-migration\", \"remainingCount\":42,\"initialCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
     private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);

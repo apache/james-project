@@ -34,7 +34,7 @@ import org.slf4j.LoggerFactory;
 public class MessageIdReIndexingTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageIdReIndexingTask.class);
 
-    public static final TaskType TYPE = TaskType.of("MessageIdReIndexingTask");
+    public static final TaskType TYPE = TaskType.of("messageId-reindexing");
 
     public static class Factory {
         private ReIndexerPerformer reIndexerPerformer;

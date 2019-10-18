@@ -50,9 +50,9 @@ class UserReindexingTaskSerializationTest {
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
-    private final String serializedUserReindexingTask = "{\"type\": \"userReIndexing\", \"username\": \"foo@apache.org\"}";
+    private final String serializedUserReindexingTask = "{\"type\": \"user-reindexing\", \"username\": \"foo@apache.org\"}";
 
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"userReIndexing\", \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"user-reindexing\", \"user\": \"foo@apache.org\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);

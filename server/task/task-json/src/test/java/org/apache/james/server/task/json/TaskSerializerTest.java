@@ -24,7 +24,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 class TaskSerializerTest {
 
     private static final String TASK_AS_STRING = "{" +
-        "\"type\": \"testTask\"," +
+        "\"type\": \"test-task\"," +
         "\"parameter\": 1" +
         "}";
 

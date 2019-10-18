@@ -29,7 +29,7 @@ import org.apache.james.task.TaskType;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll;
 
 public class EventDeadLettersRedeliverAllTask implements Task {
-    public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverAllTask");
+    public static final TaskType TYPE = TaskType.of("event-dead-letters-redeliver-all");
 
     private final EventDeadLettersRedeliverService service;
     private final EventRetriever eventRetriever;

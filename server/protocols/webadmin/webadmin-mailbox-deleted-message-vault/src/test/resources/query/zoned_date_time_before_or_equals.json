@@ -1,5 +1,5 @@
 {
-  "type": "deletedMessages/restore",
+  "type": "deleted-messages-restore",
   "userToRestore": "james",
   "query": {
     "combinator": "and",

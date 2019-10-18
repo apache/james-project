@@ -36,8 +36,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 class MigrationTaskSerializationTest {
 
     private static final int SCHEMA_VERSION = 12;
-    private static final String SERIALIZED_TASK = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"CassandraMigration\", \"targetVersion\": 12, \"timestamp\": \"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_TASK = "{\"type\": \"cassandra-migration\", \"targetVersion\": 12}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"cassandra-migration\", \"targetVersion\": 12, \"timestamp\": \"2018-11-13T12:00:55Z\"}";
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
     private final CassandraSchemaVersionDAO cassandraSchemaVersionDAO = mock(CassandraSchemaVersionDAO.class);

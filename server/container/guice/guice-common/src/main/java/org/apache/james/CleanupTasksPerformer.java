@@ -35,7 +35,7 @@ public class CleanupTasksPerformer {
 
     public interface CleanupTask extends Task {
         default TaskType type() {
-            return TaskType.of("cleanup_task");
+            return TaskType.of("cleanup-task");
         }
     }
 

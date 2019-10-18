@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class FullReindexingTask implements Task {
 
-    public static final TaskType FULL_RE_INDEXING = TaskType.of("FullReIndexing");
+    public static final TaskType FULL_RE_INDEXING = TaskType.of("full-reindexing");
 
     private final ReIndexerPerformer reIndexerPerformer;
     private final ReprocessingContext reprocessingContext;

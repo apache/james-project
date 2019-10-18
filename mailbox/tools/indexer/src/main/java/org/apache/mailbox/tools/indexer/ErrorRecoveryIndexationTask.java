@@ -34,7 +34,7 @@ import org.apache.james.task.TaskType;
 import com.github.steveash.guavate.Guavate;
 
 public class ErrorRecoveryIndexationTask implements Task {
-    public static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("ErrorRecoveryIndexation");
+    public static final TaskType PREVIOUS_FAILURES_INDEXING = TaskType.of("error-recovery-indexation");
 
     public static class Factory {
 

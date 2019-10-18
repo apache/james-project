@@ -33,7 +33,7 @@ import org.apache.james.task.TaskType;
 
 public class SingleMailboxReindexingTask implements Task {
 
-    public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailboxReIndexing");
+    public static final TaskType MAILBOX_RE_INDEXING = TaskType.of("mailbox-reindexing");
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final MailboxId mailboxId;

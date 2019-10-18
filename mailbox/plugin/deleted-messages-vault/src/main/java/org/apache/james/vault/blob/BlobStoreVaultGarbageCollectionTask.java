@@ -68,7 +68,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
         }
     }
 
-    static final TaskType TYPE = TaskType.of("deletedMessages/blobStoreBasedGarbageCollection");
+    static final TaskType TYPE = TaskType.of("deleted-messages-blob-store-based-garbage-collection");
 
     private final Flux<BucketName> retentionOperation;
     private final ZonedDateTime beginningOfRetentionPeriod;

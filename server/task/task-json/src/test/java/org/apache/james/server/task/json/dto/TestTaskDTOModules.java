@@ -38,7 +38,7 @@ public interface TestTaskDTOModules {
         .toDTOConverter((task, typeName) -> new TestTaskDTO(
             typeName,
             task.getParameter()))
-        .typeName("testTask")
+        .typeName("test-task")
         .withFactory(TaskDTOModule::new);
 
     TaskDTOModule<FailedTask, FailedTaskDTO> FAILED_TASK_MODULE = DTOModule

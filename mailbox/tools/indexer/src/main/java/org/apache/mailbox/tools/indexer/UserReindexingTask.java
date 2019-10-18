@@ -34,7 +34,7 @@ import org.apache.james.task.TaskType;
 
 public class UserReindexingTask implements Task {
 
-    public static final TaskType USER_RE_INDEXING = TaskType.of("userReIndexing");
+    public static final TaskType USER_RE_INDEXING = TaskType.of("user-reindexing");
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
         private final User user;

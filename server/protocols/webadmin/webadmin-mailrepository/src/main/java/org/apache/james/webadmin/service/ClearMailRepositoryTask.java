@@ -39,7 +39,7 @@ import com.github.steveash.guavate.Guavate;
 
 public class ClearMailRepositoryTask implements Task {
 
-    public static final TaskType TYPE = TaskType.of("clearMailRepository");
+    public static final TaskType TYPE = TaskType.of("clear-mail-repository");
 
     public static class Factory {
         private final MailRepositoryStore mailRepositoryStore;

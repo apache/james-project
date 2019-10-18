@@ -30,7 +30,7 @@ import org.apache.james.task.TaskType;
 import org.apache.james.webadmin.service.EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup;
 
 public class EventDeadLettersRedeliverGroupTask implements Task {
-    public static final TaskType TYPE = TaskType.of("eventDeadLettersRedeliverGroupTask");
+    public static final TaskType TYPE = TaskType.of("event-dead-letters-redeliver-group");
 
     private final EventDeadLettersRedeliverService service;
     private final EventRetriever eventRetriever;

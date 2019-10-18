@@ -34,7 +34,7 @@ import org.apache.james.task.TaskType;
 
 public class ReprocessingOneMailTask implements Task {
 
-    public static final TaskType TYPE = TaskType.of("reprocessingOneTask");
+    public static final TaskType TYPE = TaskType.of("reprocessing-one");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;

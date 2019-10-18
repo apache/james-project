@@ -35,7 +35,7 @@ import org.apache.james.task.TaskType;
 
 public class ReprocessingAllMailsTask implements Task {
 
-    public static final TaskType TYPE = TaskType.of("reprocessingAllTask");
+    public static final TaskType TYPE = TaskType.of("reprocessing-all");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailRepositoryPath repositoryPath;

@@ -48,12 +48,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class EventDeadLettersRedeliverTaskTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
-    private static final String SERIALIZED_ALL = "{\"type\":\"eventDeadLettersRedeliverAllTask\"}";
-    private static final String SERIALIZED_GROUP = "{\"type\":\"eventDeadLettersRedeliverGroupTask\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\"}";
-    private static final String SERIALIZED_ONE = "{\"type\":\"eventDeadLettersRedeliverOneTask\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\",\"insertionId\":\"fcbc3c92-e9a0-4ece-94ed-6e6b45045258\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ALL = "{\"type\":\"eventDeadLettersRedeliverAllTask\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_GROUP = "{\"type\":\"eventDeadLettersRedeliverGroupTask\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ONE = "{\"type\":\"eventDeadLettersRedeliverOneTask\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\",\"insertionId\":\"53db3dd9-80eb-476f-b25a-722ad364905a\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_ALL = "{\"type\":\"event-dead-letters-redeliver-all\"}";
+    private static final String SERIALIZED_GROUP = "{\"type\":\"event-dead-letters-redeliver-group\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\"}";
+    private static final String SERIALIZED_ONE = "{\"type\":\"event-dead-letters-redeliver-one\",\"group\":\"org.apache.james.mailbox.events.GenericGroup-abc\",\"insertionId\":\"fcbc3c92-e9a0-4ece-94ed-6e6b45045258\"}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ALL = "{\"type\":\"event-dead-letters-redeliver-all\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_GROUP = "{\"type\":\"event-dead-letters-redeliver-group\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION_ONE = "{\"type\":\"event-dead-letters-redeliver-one\",\"successfulRedeliveriesCount\":10,\"failedRedeliveriesCount\":4,\"group\":\"org.apache.james.mailbox.events.GenericGroup-foo\",\"insertionId\":\"53db3dd9-80eb-476f-b25a-722ad364905a\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private static final EventDeadLettersRedeliverService SERVICE = mock(EventDeadLettersRedeliverService.class);
     private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE);
     private static final EventDeadLettersRedeliverGroupTask TASK_GROUP = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"));
