@@ -31,7 +31,7 @@ Some performance tests will be run in order to evaluate the improvements.
 
 Fields that were previously returned in Messages might not be returned anymore if not explicitly asked by the client.
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'accepted but inconclusive'.
+In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
 ## References
 
