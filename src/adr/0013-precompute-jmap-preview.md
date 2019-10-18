@@ -12,7 +12,7 @@ JMAP messages have a handy preview property displaying the firsts 256 characters
 
 This property is often displayed for message listing in JMAP clients, thus it is queried a lot.
 
-Currently, to get the preview, James retrieves the full message body, parse it using MIME parsers, removes HTML and keep meaningful text. This process is expensive, especially for clients relying on polling.
+Currently, to get the preview, James retrieves the full message body, parse it using MIME parsers, removes HTML and keep meaningful text.
 
 ## Decision
 
@@ -23,6 +23,8 @@ A MailboxListener will compute the preview and store it in a MessagePreviewStore
 We should have a Cassandra and memory implementation.
 
 When the preview is precomputed then for these messages we can consider the "preview" property as a metadata.
+
+When the preview is not precomputed then we should compute the preview for these messages, and save the result for later.
 
 We should provide a webAdmin task allowing to rebuild the projection.
 
