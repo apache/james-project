@@ -73,6 +73,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import com.google.common.collect.ImmutableBiMap;
+
 class DistributedTaskManagerTest implements TaskManagerContract {
 
     static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
@@ -304,5 +306,42 @@ class DistributedTaskManagerTest implements TaskManagerContract {
                         .containsExactlyInAnyOrder(taskId1, taskId2);
                 });
         }
+    }
+
+    @Test
+    void givenTwoTaskManagerIfTheFirstOneIsDownTheSecondOneShouldBeAbleToRunTheRemainingTasks(CountDownLatch countDownLatch) throws Exception {
+        try (EventSourcingTaskManager taskManager1 = taskManager();
+             EventSourcingTaskManager taskManager2 = taskManager(HOSTNAME_2)) {
+            ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager = ImmutableBiMap.of(taskManager1, HOSTNAME, taskManager2, HOSTNAME_2);
+            TaskId firstTask = taskManager1.submit(new MemoryReferenceTask(() -> {
+                countDownLatch.await();
+                return Task.Result.COMPLETED;
+            }));
+
+            awaitUntilTaskHasStatus(firstTask, TaskManager.Status.IN_PROGRESS, taskManager1);
+
+            Hostname nodeRunningFirstTask = taskManager1.getExecutionDetails(firstTask).getRanNode().get();
+            Hostname otherNode = getOtherNode(hostNameByTaskManager, nodeRunningFirstTask);
+            EventSourcingTaskManager taskManagerRunningFirstTask = hostNameByTaskManager.inverse().get(nodeRunningFirstTask);
+            EventSourcingTaskManager otherTaskManager = hostNameByTaskManager.inverse().get(otherNode);
+
+            TaskId taskToExecuteAfterFirstNodeIsDown = taskManagerRunningFirstTask.submit(new CompletedTask());
+            taskManagerRunningFirstTask.close();
+
+            awaitAtMostFiveSeconds.untilAsserted(() ->
+                assertThat(otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown).getStatus())
+                    .isEqualTo(TaskManager.Status.COMPLETED));
+            TaskExecutionDetails detailsSecondTask = otherTaskManager.getExecutionDetails(taskToExecuteAfterFirstNodeIsDown);
+            assertThat(detailsSecondTask.getRanNode()).contains(otherNode);
+        }
+    }
+
+    private Hostname getOtherNode(ImmutableBiMap<EventSourcingTaskManager, Hostname> hostNameByTaskManager, Hostname node) {
+        return hostNameByTaskManager
+            .values()
+            .stream()
+            .filter(hostname -> !hostname.equals(node))
+            .findFirst()
+            .get();
     }
 }
