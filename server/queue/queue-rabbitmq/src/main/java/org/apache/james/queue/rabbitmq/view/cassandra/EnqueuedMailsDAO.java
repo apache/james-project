@@ -47,12 +47,14 @@ import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUti
 import static org.apache.james.queue.rabbitmq.view.cassandra.EnqueuedMailsDaoUtil.toTupleList;
 
 import java.util.Date;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.mail.MimeMessagePartsId;
+import org.apache.james.core.MailAddress;
 import org.apache.james.queue.rabbitmq.EnqueuedItem;
 import org.apache.james.queue.rabbitmq.MailQueueName;
 import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.BucketId;
@@ -60,10 +62,10 @@ import org.apache.james.queue.rabbitmq.view.cassandra.model.BucketedSlices.Slice
 import org.apache.james.queue.rabbitmq.view.cassandra.model.EnqueuedItemWithSlicingContext;
 import org.apache.mailet.Mail;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.TupleType;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -120,7 +122,7 @@ public class EnqueuedMailsDAO {
         Mail mail = enqueuedItem.getMail();
         MimeMessagePartsId mimeMessagePartsId = enqueuedItem.getPartsId();
 
-        return executor.executeVoid(insert.bind()
+        BoundStatement statement = insert.bind()
             .setString(QUEUE_NAME, enqueuedItem.getMailQueueName().asString())
             .setTimestamp(TIME_RANGE_START, Date.from(slicingContext.getTimeRangeStart()))
             .setInt(BUCKET_ID, slicingContext.getBucketId().getValue())
@@ -130,14 +132,23 @@ public class EnqueuedMailsDAO {
             .setString(HEADER_BLOB_ID, mimeMessagePartsId.getHeaderBlobId().asString())
             .setString(BODY_BLOB_ID, mimeMessagePartsId.getBodyBlobId().asString())
             .setString(STATE, mail.getState())
-            .setString(SENDER, mail.getMaybeSender().asString(null))
             .setList(RECIPIENTS, asStringList(mail.getRecipients()))
-            .setString(ERROR_MESSAGE, mail.getErrorMessage())
+
             .setString(REMOTE_ADDR, mail.getRemoteAddr())
             .setString(REMOTE_HOST, mail.getRemoteHost())
             .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
             .setMap(ATTRIBUTES, toRawAttributeMap(mail))
-            .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(userHeaderNameHeaderValueTriple, mail.getPerRecipientSpecificHeaders())));
+            .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(userHeaderNameHeaderValueTriple, mail.getPerRecipientSpecificHeaders()));
+
+        Optional.ofNullable(mail.getErrorMessage())
+            .ifPresent(errorMessage -> statement.setString(ERROR_MESSAGE, mail.getErrorMessage()));
+
+        mail.getMaybeSender()
+            .asOptional()
+            .map(MailAddress::asString)
+            .ifPresent(mailAddress -> statement.setString(SENDER, mailAddress));
+
+        return executor.executeVoid(statement);
     }
 
     Flux<EnqueuedItemWithSlicingContext> selectEnqueuedMails(
