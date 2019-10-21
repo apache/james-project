@@ -104,7 +104,7 @@ public class RabbitMQWorkQueue implements WorkQueue {
         receiver = new Receiver(new ReceiverOptions().connectionMono(channelPool.getConnectionMono()));
         receiverHandle = receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions())
             .subscribeOn(Schedulers.boundedElastic())
-            .flatMap(this::executeTask)
+            .concatMap(this::executeTask)
             .subscribe();
     }
 

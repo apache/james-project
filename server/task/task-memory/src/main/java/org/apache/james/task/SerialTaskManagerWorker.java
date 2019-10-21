@@ -22,15 +22,12 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
 import org.apache.james.util.MDCBuilder;
 import org.apache.james.util.concurrent.NamedThreadFactory;
@@ -38,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -50,7 +48,6 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
     private final ExecutorService taskExecutor;
     private final Listener listener;
     private final AtomicReference<Tuple2<TaskId, Future<?>>> runningTask;
-    private final Semaphore semaphore;
     private final Set<TaskId> cancelledTasks;
     private final Duration pollingInterval;
 
@@ -60,48 +57,24 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         this.listener = listener;
         this.cancelledTasks = Sets.newConcurrentHashSet();
         this.runningTask = new AtomicReference<>();
-        this.semaphore = new Semaphore(1);
     }
 
     @Override
     public Mono<Task.Result> executeTask(TaskWithId taskWithId) {
-        return Mono
-            .using(
-                acquireSemaphore(taskWithId, listener),
-                executeWithSemaphore(taskWithId, listener),
-                Semaphore::release);
+        if (!cancelledTasks.remove(taskWithId.getId())) {
+            CompletableFuture<Task.Result> future = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, listener), taskExecutor);
+            runningTask.set(Tuples.of(taskWithId.getId(), future));
 
-    }
-
-    private Callable<Semaphore> acquireSemaphore(TaskWithId taskWithId, Listener listener) {
-        return () -> {
-                try {
-                    semaphore.acquire();
-                    return semaphore;
-                } catch (InterruptedException e) {
-                    listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
-                    throw e;
-                }
-            };
-    }
-
-    private Function<Semaphore, Mono<Task.Result>> executeWithSemaphore(TaskWithId taskWithId, Listener listener) {
-        return semaphore -> {
-            if (!cancelledTasks.remove(taskWithId.getId())) {
-                CompletableFuture<Task.Result> future = CompletableFuture.supplyAsync(() -> runWithMdc(taskWithId, listener), taskExecutor);
-                runningTask.set(Tuples.of(taskWithId.getId(), future));
-
-                return Mono.using(
-                    () -> pollAdditionalInformation(taskWithId).subscribe(),
-                    ignored -> Mono.fromFuture(future)
-                            .doOnError(exception -> handleExecutionError(taskWithId, listener, exception))
-                            .onErrorReturn(Task.Result.PARTIAL),
-                    polling -> polling.dispose());
-            } else {
-                listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
-                return Mono.empty();
-            }
-        };
+            return Mono.using(
+                () -> pollAdditionalInformation(taskWithId).subscribe(),
+                ignored -> Mono.fromFuture(future)
+                    .doOnError(exception -> handleExecutionError(taskWithId, listener, exception))
+                    .onErrorReturn(Task.Result.PARTIAL),
+                Disposable::dispose);
+        } else {
+            listener.cancelled(taskWithId.getId(), taskWithId.getTask().details());
+            return Mono.empty();
+        }
     }
 
     private void handleExecutionError(TaskWithId taskWithId, Listener listener, Throwable exception) {

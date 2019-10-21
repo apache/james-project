@@ -20,30 +20,34 @@
 package org.apache.james.task.eventsourcing.distributed;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.awaitility.Duration.FIVE_HUNDRED_MILLISECONDS;
+import static org.awaitility.Duration.TWO_SECONDS;
 import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.timeout;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.TestTask;
+import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
+import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManagerWorker;
 import org.apache.james.task.TaskWithId;
+import org.awaitility.core.ConditionTimeoutException;
+import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -100,7 +104,7 @@ class RabbitMQWorkQueueTest {
     @BeforeEach
     void setUp() {
         worker = spy(new ImmediateWorker());
-        serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE);
+        serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE, TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()));
         testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getRabbitChannelPool(), serializer);
         testee.start();
     }
@@ -169,23 +173,30 @@ class RabbitMQWorkQueueTest {
 
     @Test
     void tasksShouldBeConsumedSequentially() {
-        Task task1 = new CompletedTask();
+        AtomicLong counter = new AtomicLong(0L);
+
+        Task task1 = new MemoryReferenceTask(() -> {
+            counter.addAndGet(1);
+            Thread.sleep(1000);
+            return Task.Result.COMPLETED;
+        });
         TaskId taskId1 = TaskId.fromString("1111d081-aa30-11e9-bf6c-2d3b9e84aafd");
         TaskWithId taskWithId1 = new TaskWithId(taskId1, task1);
 
-        Task task2 = new CompletedTask();
+        Task task2 =  new MemoryReferenceTask(() -> {
+            counter.addAndGet(2);
+            return Task.Result.COMPLETED;
+        });
+
         TaskId taskId2 = TaskId.fromString("2222d082-aa30-22e9-bf6c-2d3b9e84aafd");
         TaskWithId taskWithId2 = new TaskWithId(taskId2, task2);
-
-        when(worker.executeTask(taskWithId1)).then(answer -> {
-            TimeUnit.MINUTES.sleep(2);
-            return Mono.just(Task.Result.COMPLETED);
-        });
 
         testee.submit(taskWithId1);
         testee.submit(taskWithId2);
 
-        verify(worker, timeout(100)).executeTask(taskWithId1);
-        verifyNoMoreInteractions(worker);
+        assertThatThrownBy(() -> await().atMost(FIVE_HUNDRED_MILLISECONDS).untilAtomic(counter, CoreMatchers.equalTo(3L))).isInstanceOf(ConditionTimeoutException.class);
+        assertThatCode(() -> await().atMost(TWO_SECONDS).untilAtomic(counter, CoreMatchers.equalTo(3L))).doesNotThrowAnyException();
+
     }
+
 }
