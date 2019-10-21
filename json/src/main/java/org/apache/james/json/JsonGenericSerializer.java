@@ -20,10 +20,7 @@
 package org.apache.james.json;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,39 +34,9 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 
 public class JsonGenericSerializer<T, U extends DTO> {
-
-    private static class DTOConverter<T, U extends DTO> {
-
-        private final Map<String, DTOModule<T, U>> typeToModule;
-        private final Map<Class<? extends T>, DTOModule<T, U>> domainClassToModule;
-
-        public DTOConverter(Set<DTOModule<T, U>> modules) {
-            typeToModule = modules.stream()
-                .collect(Guavate.toImmutableMap(
-                    DTOModule::getDomainObjectType,
-                    Function.identity()));
-
-            domainClassToModule = modules.stream()
-                .collect(Guavate.toImmutableMap(
-                    DTOModule::getDomainObjectClass,
-                    Function.identity()));
-        }
-
-        public Optional<U> convert(T domainObject) {
-            return Optional.ofNullable(domainClassToModule.get(domainObject.getClass()))
-                .map(module -> module.toDTO(domainObject));
-        }
-
-        public Optional<T> convert(U dto) {
-            String type = dto.getType();
-            return Optional.ofNullable(typeToModule.get(type))
-                .map(module -> module.getToDomainObjectConverter().convert(dto));
-        }
-    }
 
     public static class InvalidTypeException extends RuntimeException {
         public InvalidTypeException(String message) {
@@ -92,21 +59,26 @@ public class JsonGenericSerializer<T, U extends DTO> {
 
     @SafeVarargs
     public static <T, U extends DTO> JsonGenericSerializer<T, U> of(DTOModule<T, U>... modules) {
-        return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules));
+        return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules), DTOConverter.of(modules));
     }
 
-    public JsonGenericSerializer(Set<DTOModule<T, U>> modules) {
-        objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new Jdk8Module());
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.registerModule(new GuavaModule());
-        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
+    public JsonGenericSerializer(Set<DTOModule<T, U>> modules, DTOConverter<T, U> converter) {
+        this.dtoConverter = converter;
+        this.objectMapper = buildObjectMapper(modules);
+    }
+
+    private ObjectMapper buildObjectMapper(Set<DTOModule<T, U>> modules) {
+        ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new Jdk8Module())
+            .registerModule(new JavaTimeModule())
+            .registerModule(new GuavaModule())
+            .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+            .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
         modules.stream()
             .map(module -> new NamedType(module.getDTOClass(), module.getDomainObjectType()))
             .forEach(objectMapper::registerSubtypes);
-        dtoConverter = new DTOConverter<>(modules);
+        return objectMapper;
     }
 
     public String serialize(T domainObject) throws JsonProcessingException {
@@ -122,7 +94,7 @@ public class JsonGenericSerializer<T, U extends DTO> {
             .orElseThrow(() -> new UnknownTypeException("unknown type " + dto.getType()));
     }
 
-    public U jsonToDTO(String value) throws IOException {
+    private U jsonToDTO(String value) throws IOException {
         try {
             JsonNode jsonTree = detectDuplicateProperty(value);
             return parseAsPolymorphicDTO(jsonTree);

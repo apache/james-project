@@ -50,7 +50,8 @@ public class JsonTaskSerializer {
 
     @Inject
     public JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
-        jsonGenericSerializer = new JsonGenericSerializer(modules);
+        //FIXME
+        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
     }
 
     public JsonTaskSerializer(@SuppressWarnings("rawtypes") TaskDTOModule... modules) {

@@ -49,7 +49,8 @@ public class JsonTaskAdditionalInformationSerializer {
 
     @Inject
     public JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
-        jsonGenericSerializer = new JsonGenericSerializer(modules);
+        //FIXME
+        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
     }
 
     public JsonTaskAdditionalInformationSerializer(@SuppressWarnings("rawtypes") AdditionalInformationDTOModule... modules) {

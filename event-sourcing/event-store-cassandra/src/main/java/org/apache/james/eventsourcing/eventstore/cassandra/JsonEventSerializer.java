@@ -50,7 +50,8 @@ public class JsonEventSerializer {
 
     @Inject
     public JsonEventSerializer(Set<EventDTOModule<?, ?>> modules) {
-        jsonGenericSerializer = new JsonGenericSerializer(modules);
+        //FIXME
+        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
     }
     
     public JsonEventSerializer(EventDTOModule<?, ?>... modules) {
