@@ -23,9 +23,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.base.MoreObjects;
-
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
@@ -81,6 +82,90 @@ public interface RabbitMQManagementAPI {
 
         public Map<String, String> getArguments() {
             return arguments;
+        }
+    }
+
+    class MessageQueueDetails {
+        @JsonProperty("name")
+        String name;
+
+        @JsonProperty("vhost")
+        String vhost;
+
+        @JsonProperty("auto_delete")
+        boolean autoDelete;
+
+        @JsonProperty("durable")
+        boolean durable;
+
+        @JsonProperty("exclusive")
+        boolean exclusive;
+
+        @JsonProperty("arguments")
+        Map<String, String> arguments;
+
+        @JsonProperty("consumer_details")
+        List<ConsumerDetails> consumerDetails;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getVhost() {
+            return vhost;
+        }
+
+        public boolean isAutoDelete() {
+            return autoDelete;
+        }
+
+        public boolean isDurable() {
+            return durable;
+        }
+
+        public boolean isExclusive() {
+            return exclusive;
+        }
+
+        public Map<String, String> getArguments() {
+            return arguments;
+        }
+
+        public List<ConsumerDetails> getConsumerDetails() {
+            return consumerDetails;
+        }
+    }
+
+    class ConsumerDetails {
+        @JsonProperty("consumer_tag")
+        String tag;
+
+        @JsonProperty("activity_status")
+        ActivityStatus status;
+
+        public ActivityStatus getStatus() {
+            return this.status;
+        }
+
+        public String getTag() {
+            return this.tag;
+        }
+    }
+
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    enum ActivityStatus {
+        Waiting("waiting"),
+        SingleActive("single_active");
+
+        private final String value;
+
+        ActivityStatus(String value) {
+            this.value = value;
+        }
+
+        @JsonValue
+        String getValue() {
+            return value;
         }
     }
 
@@ -163,6 +248,9 @@ public interface RabbitMQManagementAPI {
 
     @RequestLine("GET /api/queues")
     List<MessageQueue> listQueues();
+
+    @RequestLine(value = "GET /api/queues/{vhost}/{name}", decodeSlash = false)
+    MessageQueueDetails queueDetails(@Param("vhost") String vhost, @Param("name") String name);
 
     @RequestLine(value = "DELETE /api/queues/{vhost}/{name}", decodeSlash = false)
     void deleteQueue(@Param("vhost") String vhost, @Param("name") String name);
