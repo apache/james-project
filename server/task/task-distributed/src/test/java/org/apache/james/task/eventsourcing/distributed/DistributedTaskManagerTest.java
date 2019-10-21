@@ -41,8 +41,10 @@ import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreEx
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskStore;
@@ -70,7 +72,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
 
@@ -98,11 +100,13 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> DTO_CONVERTER = DTOConverter.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     static final Hostname HOSTNAME = new Hostname("foo");
     static final Hostname HOSTNAME_2 = new Hostname("bar");
 
     @RegisterExtension
     static final RabbitMQExtension RABBIT_MQ_EXTENSION = RabbitMQExtension.singletonRabbitMQ();
+
 
     @RegisterExtension
     static final CassandraClusterExtension CASSANDRA_CLUSTER = new CassandraClusterExtension(
@@ -119,7 +123,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()),
         TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore()));
 
-    Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER).stream().collect(Guavate.toImmutableSet());
+    Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, DTO_CONVERTER);
 
     @RegisterExtension
     CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(CASSANDRA_CLUSTER, eventDtoModule);
@@ -141,7 +145,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         this.workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(RABBIT_MQ_EXTENSION.getRabbitChannelPool(), taskSerializer);
         this.eventStore = eventStore;
         this.terminationSubscribers = new ArrayList<>();
-        this.eventSerializer = new JsonEventSerializer(eventDtoModule);
+        this.eventSerializer = new JsonEventSerializer(new DTOConverter<>(eventDtoModule), eventDtoModule, ImmutableSet.of());
     }
 
     @AfterEach

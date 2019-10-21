@@ -29,15 +29,15 @@ import com.google.common.collect.ImmutableSet;
 
 public class DTOConverter<T, U extends DTO> {
 
-    private final Map<String, DTOModule<T, U>> typeToModule;
-    private final Map<Class<? extends T>, DTOModule<T, U>> domainClassToModule;
+    private final Map<String, DTOModule<? extends T, ? extends U>> typeToModule;
+    private final Map<Class<? extends T>, DTOModule<? extends T, ? extends U>> domainClassToModule;
 
     @SafeVarargs
-    public static <T, U extends DTO> DTOConverter<T, U> of(DTOModule<T, U>... modules) {
+    public static <T, U extends DTO> DTOConverter<T, U> of(DTOModule<? extends T, ? extends U>... modules) {
         return new DTOConverter<>(ImmutableSet.copyOf(modules));
     }
 
-    public DTOConverter(Set<DTOModule<T, U>> modules) {
+    public DTOConverter(Set<? extends DTOModule<? extends T, ? extends U>> modules) {
         typeToModule = modules.stream()
             .collect(Guavate.toImmutableMap(
                 DTOModule::getDomainObjectType,
@@ -49,16 +49,20 @@ public class DTOConverter<T, U extends DTO> {
                 Function.identity()));
     }
 
+    @SuppressWarnings("unchecked")
     public Optional<U> convert(T domainObject) {
         return Optional
             .ofNullable(domainClassToModule.get(domainObject.getClass()))
+            .map(module -> (DTOModule<T, U>) module)
             .map(module -> module.toDTO(domainObject));
     }
 
+    @SuppressWarnings("unchecked")
     public Optional<T> convert(U dto) {
         String type = dto.getType();
         return Optional
             .ofNullable(typeToModule.get(type))
+            .map(module -> (DTOModule<T, U>) module)
             .map(DTOModule::getToDomainObjectConverter)
             .map(convert -> convert.convert(dto));
     }

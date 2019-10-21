@@ -31,7 +31,7 @@ import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.eventsourcing.TerminationSubscriber;
 import org.apache.james.task.eventsourcing.TerminationSubscriberContract;
@@ -39,15 +39,13 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.github.steveash.guavate.Guavate;
-
+import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
     private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer();
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer();
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER).stream().collect(Guavate.toImmutableSet());
-    private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(MODULES);
+    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, DTOConverter.of());
+    private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(new DTOConverter<>(MODULES), MODULES, ImmutableSet.of());
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();

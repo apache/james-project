@@ -54,7 +54,7 @@ public class CassandraMailQueueViewTestFactory {
 
 
         EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session,
-            new JsonEventSerializer(ImmutableSet.of(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION)))));
+            new JsonEventSerializer(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION))));
 
         return new CassandraMailQueueView.Factory(
             cassandraMailQueueMailStore,

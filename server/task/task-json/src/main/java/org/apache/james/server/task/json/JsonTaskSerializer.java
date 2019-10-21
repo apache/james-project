@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -49,13 +50,12 @@ public class JsonTaskSerializer {
     private JsonGenericSerializer<Task, TaskDTO> jsonGenericSerializer;
 
     @Inject
-    public JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
-        //FIXME
-        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
+    public JsonTaskSerializer(DTOConverter<Task, TaskDTO> converter, Set<TaskDTOModule<?, ?>> modules) {
+        jsonGenericSerializer = new JsonGenericSerializer(modules, ImmutableSet.of(), converter);
     }
 
     public JsonTaskSerializer(@SuppressWarnings("rawtypes") TaskDTOModule... modules) {
-        this(ImmutableSet.copyOf(modules));
+        this(DTOConverter.of(modules), ImmutableSet.copyOf(modules));
     }
 
     public String serialize(Task task) throws JsonProcessingException {

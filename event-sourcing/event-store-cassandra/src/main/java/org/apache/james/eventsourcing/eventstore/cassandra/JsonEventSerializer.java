@@ -27,6 +27,8 @@ import javax.inject.Inject;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.json.DTOConverter;
+import org.apache.james.json.DTOModule;
 import org.apache.james.json.JsonGenericSerializer;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -49,13 +51,12 @@ public class JsonEventSerializer {
     private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
     @Inject
-    public JsonEventSerializer(Set<EventDTOModule<?, ?>> modules) {
-        //FIXME
-        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
+    public JsonEventSerializer(DTOConverter<Event, EventDTO> converter, Set<EventDTOModule<?, ?>> modules, Set<DTOModule<?, ?>> nestedTypesModules) {
+        jsonGenericSerializer = new JsonGenericSerializer<>(modules, nestedTypesModules, converter);
     }
     
     public JsonEventSerializer(EventDTOModule<?, ?>... modules) {
-        this(ImmutableSet.copyOf(modules));
+        this(new DTOConverter<>(ImmutableSet.copyOf(modules)), ImmutableSet.copyOf(modules), ImmutableSet.of());
     }
 
     public String serialize(Event event) throws JsonProcessingException {

@@ -35,6 +35,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public class JsonGenericSerializer<T, U extends DTO> {
 
@@ -59,15 +60,15 @@ public class JsonGenericSerializer<T, U extends DTO> {
 
     @SafeVarargs
     public static <T, U extends DTO> JsonGenericSerializer<T, U> of(DTOModule<T, U>... modules) {
-        return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules), DTOConverter.of(modules));
+        return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules), ImmutableSet.of(), DTOConverter.of(modules));
     }
 
-    public JsonGenericSerializer(Set<DTOModule<T, U>> modules, DTOConverter<T, U> converter) {
+    public JsonGenericSerializer(Set<? extends DTOModule<? extends T, ? extends U>> modules, Set<? extends DTOModule<?, ?>> nestedTypesModules, DTOConverter<T, U> converter) {
         this.dtoConverter = converter;
-        this.objectMapper = buildObjectMapper(modules);
+        this.objectMapper = buildObjectMapper(Sets.union(modules, nestedTypesModules));
     }
 
-    private ObjectMapper buildObjectMapper(Set<DTOModule<T, U>> modules) {
+    private ObjectMapper buildObjectMapper(Set<? extends DTOModule<?, ?>> modules) {
         ObjectMapper objectMapper = new ObjectMapper()
             .registerModule(new Jdk8Module())
             .registerModule(new JavaTimeModule())

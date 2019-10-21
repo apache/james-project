@@ -28,6 +28,7 @@ import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.OtherEvent;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
+import org.apache.james.json.DTOModule;
 import org.junit.jupiter.api.Test;
 
 class JsonEventSerializerTest {

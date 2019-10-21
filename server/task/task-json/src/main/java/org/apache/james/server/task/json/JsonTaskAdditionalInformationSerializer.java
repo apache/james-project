@@ -23,6 +23,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.json.DTOConverter;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -49,8 +50,7 @@ public class JsonTaskAdditionalInformationSerializer {
 
     @Inject
     public JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
-        //FIXME
-        jsonGenericSerializer = new JsonGenericSerializer(modules, null);
+        jsonGenericSerializer = new JsonGenericSerializer(modules, ImmutableSet.of(), new DTOConverter<>(modules));
     }
 
     public JsonTaskAdditionalInformationSerializer(@SuppressWarnings("rawtypes") AdditionalInformationDTOModule... modules) {
@@ -74,4 +74,5 @@ public class JsonTaskAdditionalInformationSerializer {
             throw new InvalidAdditionalInformationException(e);
         }
     }
+
 }

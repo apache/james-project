@@ -19,12 +19,12 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
-import java.util.Arrays;
 import java.util.Set;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
+import org.apache.james.json.DTOConverter;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -63,7 +63,7 @@ public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAll
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules);
+        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules.toArray(new EventDTOModule[0]));
 
         eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), jsonEventSerializer);
     }
