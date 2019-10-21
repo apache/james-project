@@ -19,6 +19,8 @@
 
 package org.apache.james.transport.mailets;
 
+import java.util.Objects;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -36,5 +38,20 @@ public class MyGenericMailet extends GenericMailet {
     @Override
     public void service(Mail mail) throws MessagingException {
         myInterface.doSomething();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MyGenericMailet) {
+            MyGenericMailet that = (MyGenericMailet) o;
+
+            return Objects.equals(this.myInterface, that.myInterface);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(myInterface);
     }
 }

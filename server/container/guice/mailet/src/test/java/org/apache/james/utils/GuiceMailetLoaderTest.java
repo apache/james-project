@@ -33,6 +33,7 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -182,5 +183,26 @@ public class GuiceMailetLoaderTest {
             .build());
 
         assertThatCode(() -> mailet.service(FakeMail.defaultFakeMail())).doesNotThrowAnyException();
+    }
+
+    @Ignore("JAMES-2866 singleton are not shared between extensions")
+    @Test
+    public void allMailetsShouldShareTheSameSingleton() throws Exception {
+        GuiceGenericLoader genericLoader = new GuiceGenericLoader(
+            Guice.createInjector(),
+            new ExtendedClassLoader(RECURSIVE_CLASSPATH_FILE_SYSTEM),
+            new ExtensionConfiguration(ImmutableList.of(new ClassName("org.apache.james.transport.mailets.MyExtensionModule"))));
+        GuiceMailetLoader guiceMailetLoader = new GuiceMailetLoader(genericLoader, NO_MAILET_CONFIG_OVERRIDES);
+
+        Mailet mailet1 = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
+            .mailetName("MyGenericMailet")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+        Mailet mailet2 = guiceMailetLoader.getMailet(FakeMailetConfig.builder()
+            .mailetName("MyGenericMailet")
+            .mailetContext(FakeMailContext.defaultContext())
+            .build());
+
+        assertThat(mailet1).isEqualTo(mailet2);
     }
 }
