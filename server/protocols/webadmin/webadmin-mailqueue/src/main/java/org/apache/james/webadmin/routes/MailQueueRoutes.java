@@ -90,16 +90,16 @@ public class MailQueueRoutes implements Routes {
     private static final String NAME_QUERY_PARAM = "name";
     private static final String RECIPIENT_QUERY_PARAM = "recipient";
     
-    private final MailQueueFactory<ManageableMailQueue> mailQueueFactory;
+    private final MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<ForceDelivery> jsonExtractor;
     private final TaskManager taskManager;
 
     @Inject
     @SuppressWarnings("unchecked")
-    @VisibleForTesting MailQueueRoutes(MailQueueFactory<?> mailQueueFactory, JsonTransformer jsonTransformer,
+    @VisibleForTesting MailQueueRoutes(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory, JsonTransformer jsonTransformer,
                                        TaskManager taskManager) {
-        this.mailQueueFactory = (MailQueueFactory<ManageableMailQueue>) mailQueueFactory;
+        this.mailQueueFactory = mailQueueFactory;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(ForceDelivery.class);
         this.taskManager = taskManager;

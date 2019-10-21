@@ -28,7 +28,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ClearMailQueueTaskDTO implements TaskDTO {
 
-    public static TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO> module(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+    public static TaskDTOModule<ClearMailQueueTask, ClearMailQueueTaskDTO> module(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return DTOModule
             .forDomainObject(ClearMailQueueTask.class)
             .convertToDTO(ClearMailQueueTaskDTO.class)
@@ -50,7 +50,7 @@ public class ClearMailQueueTaskDTO implements TaskDTO {
         this.queue = queue;
     }
 
-    public ClearMailQueueTask fromDTO(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+    public ClearMailQueueTask fromDTO(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return new ClearMailQueueTask(mailQueueFactory.getQueue(queue).orElseThrow(() -> new ClearMailQueueTask.UnknownSerializedQueue(queue)));
     }
 

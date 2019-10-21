@@ -14,7 +14,7 @@ import com.github.fge.lambdas.Throwing;
 
 public class DeleteMailsFromMailQueueTaskDTO implements TaskDTO {
 
-    public static TaskDTOModule<DeleteMailsFromMailQueueTask, DeleteMailsFromMailQueueTaskDTO> module(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+    public static TaskDTOModule<DeleteMailsFromMailQueueTask, DeleteMailsFromMailQueueTaskDTO> module(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return DTOModule
             .forDomainObject(DeleteMailsFromMailQueueTask.class)
             .convertToDTO(DeleteMailsFromMailQueueTaskDTO.class)
@@ -52,7 +52,7 @@ public class DeleteMailsFromMailQueueTaskDTO implements TaskDTO {
         this.recipient = recipient;
     }
 
-    public DeleteMailsFromMailQueueTask fromDTO(MailQueueFactory<ManageableMailQueue> mailQueueFactory) {
+    public DeleteMailsFromMailQueueTask fromDTO(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return new DeleteMailsFromMailQueueTask(
             mailQueueFactory.getQueue(queue).orElseThrow(() -> new DeleteMailsFromMailQueueTask.UnknownSerializedQueue(queue)),
             sender.map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()),

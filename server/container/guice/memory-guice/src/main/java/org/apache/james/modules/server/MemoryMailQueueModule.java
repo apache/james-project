@@ -20,6 +20,7 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 
 import com.google.inject.AbstractModule;
@@ -35,7 +36,13 @@ public class MemoryMailQueueModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public MailQueueFactory<?> createActiveMailQueueFactory(MemoryMailQueueFactory memoryMailQueueFactory) {
+    public MailQueueFactory<? extends ManageableMailQueue> provideManageableMailQueueFactory(MemoryMailQueueFactory memoryMailQueueFactory) {
+        return memoryMailQueueFactory;
+    }
+
+    @Provides
+    @Singleton
+    public MailQueueFactory<?> provideMailQueueFactory(MemoryMailQueueFactory memoryMailQueueFactory) {
         return memoryMailQueueFactory;
     }
 }

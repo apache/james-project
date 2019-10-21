@@ -131,8 +131,8 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> clearMailQueueTask(MailQueueFactory<?> mailQueueFactory) {
-        return ClearMailQueueTaskDTO.module((MailQueueFactory<ManageableMailQueue>) mailQueueFactory);
+    public TaskDTOModule<?, ?> clearMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
+        return ClearMailQueueTaskDTO.module(mailQueueFactory);
     }
 
     @ProvidesIntoSet
@@ -141,8 +141,8 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<?> mailQueueFactory) {
-        return DeleteMailsFromMailQueueTaskDTO.module((MailQueueFactory<ManageableMailQueue>) mailQueueFactory);
+    public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
+        return DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory);
     }
 
     @ProvidesIntoSet
