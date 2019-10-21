@@ -36,7 +36,6 @@ import com.google.inject.util.Modules;
 
 public class GuiceGenericLoader {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceGenericLoader.class);
-    private static final Module NO_CHILD_MODULE = binder -> { };
 
     @VisibleForTesting
     public static GuiceGenericLoader forTesting(ExtendedClassLoader extendedClassLoader) {
@@ -47,19 +46,16 @@ public class GuiceGenericLoader {
         private final Injector injector;
         private final ExtendedClassLoader extendedClassLoader;
         private final NamingScheme namingSheme;
-        private final Module childModule;
 
-        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingSheme, Module childModule) {
+        private InvocationPerformer(Injector injector, ExtendedClassLoader extendedClassLoader, NamingScheme namingSheme) {
             this.injector = injector;
             this.extendedClassLoader = extendedClassLoader;
             this.namingSheme = namingSheme;
-            this.childModule = childModule;
         }
 
         public T instantiate(ClassName className) throws ClassNotFoundException {
             Class<T> clazz = locateClass(className, namingSheme);
-            return injector.createChildInjector(childModule)
-                .getInstance(clazz);
+            return injector.getInstance(clazz);
         }
 
         private Class<T> locateClass(ClassName className, NamingScheme namingScheme) throws ClassNotFoundException {
@@ -88,35 +84,35 @@ public class GuiceGenericLoader {
 
     private final Injector injector;
     private final ExtendedClassLoader extendedClassLoader;
-    private final Module additionalExtensionBindings;
 
     @Inject
     public GuiceGenericLoader(Injector injector, ExtendedClassLoader extendedClassLoader, ExtensionConfiguration extensionConfiguration) {
-        this.injector = injector;
+
         this.extendedClassLoader = extendedClassLoader;
 
-        this.additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
+        Module additionalExtensionBindings = Modules.combine(extensionConfiguration.getAdditionalGuiceModulesForExtensions()
             .stream()
-            .map(Throwing.function(this::<Module>instantiateNoChildModule))
+            .map(Throwing.<ClassName, Module>function(className -> instantiateNoChildModule(injector, className)))
             .peek(module -> LOGGER.info("Enabling injects contained in " + module.getClass().getCanonicalName()))
             .collect(Guavate.toImmutableList()));
+        this.injector = injector.createChildInjector(additionalExtensionBindings);
     }
 
-    private  <T> T instantiateNoChildModule(ClassName className) throws ClassNotFoundException {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, NO_CHILD_MODULE)
+    private <T> T instantiateNoChildModule(Injector injector, ClassName className) throws ClassNotFoundException {
+        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
             .instantiate(className);
     }
 
     public <T> T instantiate(ClassName className) throws ClassNotFoundException {
-        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY, additionalExtensionBindings)
+        return new InvocationPerformer<T>(injector, extendedClassLoader, NamingScheme.IDENTITY)
             .instantiate(className);
     }
 
     public <T> InvocationPerformer<T> withNamingSheme(NamingScheme namingSheme) {
-        return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme, additionalExtensionBindings);
+        return new InvocationPerformer<>(injector, extendedClassLoader, namingSheme);
     }
 
     public <T> InvocationPerformer<T> withChildModule(Module childModule) {
-        return new InvocationPerformer<>(injector, extendedClassLoader, NamingScheme.IDENTITY, Modules.combine(additionalExtensionBindings, childModule));
+        return new InvocationPerformer<>(injector.createChildInjector(childModule), extendedClassLoader, NamingScheme.IDENTITY);
     }
 }

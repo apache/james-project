@@ -33,7 +33,6 @@ import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
 import org.apache.mailet.base.test.FakeMailetConfig;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -185,7 +184,6 @@ public class GuiceMailetLoaderTest {
         assertThatCode(() -> mailet.service(FakeMail.defaultFakeMail())).doesNotThrowAnyException();
     }
 
-    @Ignore("JAMES-2866 singleton are not shared between extensions")
     @Test
     public void allMailetsShouldShareTheSameSingleton() throws Exception {
         GuiceGenericLoader genericLoader = new GuiceGenericLoader(
