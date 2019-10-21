@@ -24,6 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.apache.james.backends.rabbitmq.Constants;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
@@ -70,7 +71,8 @@ public class RabbitMQWorkQueue implements WorkQueue {
     private final TaskManagerWorker worker;
     private final ReactorRabbitMQChannelPool channelPool;
     private final JsonTaskSerializer taskSerializer;
-    private RabbitMQExclusiveConsumer receiver;
+    private Sender sender;
+    private Receiver receiver;
     private UnicastProcessor<TaskId> sendCancelRequestsQueue;
     private Disposable sendCancelRequestsQueueHandle;
     private Disposable receiverHandle;
@@ -92,15 +94,15 @@ public class RabbitMQWorkQueue implements WorkQueue {
 
     private void startWorkqueue() {
         channelPool.getSender().declareExchange(ExchangeSpecification.exchange(EXCHANGE_NAME)).block();
-        channelPool.getSender().declare(QueueSpecification.queue(QUEUE_NAME).durable(true)).block();
+        channelPool.getSender().declare(QueueSpecification.queue(QUEUE_NAME).durable(true).arguments(Constants.WITH_SINGLE_ACTIVE_CONSUMER)).block();
         channelPool.getSender().bind(BindingSpecification.binding(EXCHANGE_NAME, ROUTING_KEY, QUEUE_NAME)).block();
 
         consumeWorkqueue();
     }
 
     private void consumeWorkqueue() {
-        receiver = new RabbitMQExclusiveConsumer(new ReceiverOptions().connectionMono(channelPool.getConnectionMono()));
-        receiverHandle = receiver.consumeExclusiveManualAck(QUEUE_NAME, new ConsumeOptions())
+        receiver = new Receiver(new ReceiverOptions().connectionMono(channelPool.getConnectionMono()));
+        receiverHandle = receiver.consumeManualAck(QUEUE_NAME, new ConsumeOptions())
             .subscribeOn(Schedulers.boundedElastic())
             .flatMap(this::executeTask)
             .subscribe();
@@ -195,10 +197,9 @@ public class RabbitMQWorkQueue implements WorkQueue {
     @Override
     public void close() {
         Optional.ofNullable(receiverHandle).ifPresent(Disposable::dispose);
-        Optional.ofNullable(receiver).ifPresent(RabbitMQExclusiveConsumer::close);
+        Optional.ofNullable(receiver).ifPresent(Receiver::close);
         Optional.ofNullable(sendCancelRequestsQueueHandle).ifPresent(Disposable::dispose);
         Optional.ofNullable(cancelRequestListenerHandle).ifPresent(Disposable::dispose);
-        Optional.ofNullable(cancelRequestSender).ifPresent(Sender::close);
         Optional.ofNullable(cancelRequestListener).ifPresent(Receiver::close);
     }
 }
