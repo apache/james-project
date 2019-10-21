@@ -213,12 +213,15 @@ public class CassandraMessageDAO {
     }
 
     private UDTValue toUDT(MessageAttachment messageAttachment) {
-        return typesProvider.getDefinedUserType(ATTACHMENTS)
+        UDTValue result = typesProvider.getDefinedUserType(ATTACHMENTS)
             .newValue()
             .setString(Attachments.ID, messageAttachment.getAttachmentId().getId())
-            .setString(Attachments.NAME, messageAttachment.getName().orElse(null))
-            .setString(Attachments.CID, messageAttachment.getCid().map(Cid::getValue).orElse(null))
             .setBool(Attachments.IS_INLINE, messageAttachment.isInline());
+        messageAttachment.getName()
+            .ifPresent(name -> result.setString(Attachments.NAME, name));
+        messageAttachment.getCid()
+            .ifPresent(cid -> result.setString(Attachments.CID, cid.getValue()));
+        return result;
     }
 
     private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
