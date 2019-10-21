@@ -19,9 +19,11 @@
 
 package org.apache.dto;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.james.json.DTO;
+import org.apache.james.json.DTOConverter;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -31,15 +33,18 @@ public class SecondDTO implements DTO {
     private final String type;
     private final String id;
     private final String payload;
+    private final Optional<DTO> child;
 
     @JsonCreator
     public SecondDTO(
             @JsonProperty("type") String type,
             @JsonProperty("id") String id,
-            @JsonProperty("payload") String payload) {
+            @JsonProperty("payload") String payload,
+            @JsonProperty("child") Optional<DTO> child) {
         this.type = type;
         this.id = id;
         this.payload = payload;
+        this.child = child;
     }
 
     public String getType() {
@@ -54,8 +59,12 @@ public class SecondDTO implements DTO {
         return payload;
     }
 
+    public Optional<DTO> getChild() {
+        return child;
+    }
+
     @JsonIgnore
-    public SecondDomainObject toDomainObject() {
-        return new SecondDomainObject(UUID.fromString(id), payload);
+    public SecondDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
+        return new SecondDomainObject(UUID.fromString(id), payload, child.flatMap(converter::convert));
     }
 }

@@ -19,45 +19,34 @@
 
 package org.apache.dto;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import org.apache.james.json.DTO;
 
-public class SecondDomainObject implements BaseType {
-    private final UUID id;
-    private final String payload;
-    private final Optional<NestedType> child;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-    public SecondDomainObject(UUID id, String payload, Optional<NestedType> child) {
-        this.id = id;
-        this.payload = payload;
-        this.child = child;
+public class SecondNestedDTO implements DTO {
+    private final String bar;
+    private final String type;
+
+    @JsonCreator
+    public SecondNestedDTO(@JsonProperty("bar") String bar,
+                           @JsonProperty("type") String type) {
+        this.bar = bar;
+        this.type = type;
     }
 
-    public UUID getId() {
-        return id;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Optional<NestedType> getChild() {
-        return child;
+    public String getBar() {
+        return bar;
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SecondDomainObject that = (SecondDomainObject) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(child, that.child) &&
-                Objects.equals(payload, that.payload);
+    public String getType() {
+        return type;
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, child, payload);
+    @JsonIgnore
+    public SecondNestedType toDomainObject() {
+        return new SecondNestedType(bar);
     }
 }

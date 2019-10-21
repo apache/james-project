@@ -23,6 +23,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.json.DTO;
+import org.apache.james.json.DTOConverter;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -33,17 +34,20 @@ public class FirstDTO implements DTO {
     private final Optional<Long> id;
     private final String time;
     private final String payload;
+    private final Optional<DTO> child;
 
     @JsonCreator
     public FirstDTO(
             @JsonProperty("type") String type,
             @JsonProperty("id") Optional<Long> id,
             @JsonProperty("time") String time,
-            @JsonProperty("payload") String payload) {
+            @JsonProperty("payload") String payload,
+            @JsonProperty("child") Optional<DTO> child) {
         this.type = type;
         this.id = id;
         this.time = time;
         this.payload = payload;
+        this.child = child;
     }
 
     public String getType() {
@@ -62,8 +66,12 @@ public class FirstDTO implements DTO {
         return payload;
     }
 
+    public Optional<DTO> getChild() {
+        return child;
+    }
+
     @JsonIgnore
-    public FirstDomainObject toDomainObject() {
-        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload);
+    public FirstDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
+        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload, child.flatMap(converter::convert));
     }
 }

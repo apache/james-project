@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.apache.dto.BaseType;
 import org.apache.dto.FirstDTO;
 import org.apache.dto.FirstDomainObject;
+import org.apache.dto.NestedType;
 import org.apache.dto.SecondDTO;
 import org.apache.dto.SecondDomainObject;
 import org.apache.dto.TestModules;
@@ -40,10 +41,12 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class DTOConverterTest {
-    private static final FirstDomainObject FIRST = new FirstDomainObject(Optional.of(1L), ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"), "first payload");
-    private static final FirstDTO FIRST_DTO = new FirstDTO("first", Optional.of(1L), "2016-04-03T02:01+07:00[Asia/Vientiane]", "first payload");
-    private static final SecondDomainObject SECOND = new SecondDomainObject(UUID.fromString("4a2c853f-7ffc-4ce3-9410-a47e85b3b741"), "second payload");
-    private static final SecondDTO SECOND_DTO = new SecondDTO("second", "4a2c853f-7ffc-4ce3-9410-a47e85b3b741", "second payload");
+    private static final Optional<NestedType> NO_CHILD = Optional.empty();
+    private static final Optional<DTO> NO_CHILD_DTO = Optional.empty();
+    private static final FirstDomainObject FIRST = new FirstDomainObject(Optional.of(1L), ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"), "first payload", NO_CHILD);
+    private static final FirstDTO FIRST_DTO = new FirstDTO("first", Optional.of(1L), "2016-04-03T02:01+07:00[Asia/Vientiane]", "first payload", NO_CHILD_DTO);
+    private static final SecondDomainObject SECOND = new SecondDomainObject(UUID.fromString("4a2c853f-7ffc-4ce3-9410-a47e85b3b741"), "second payload", NO_CHILD);
+    private static final SecondDTO SECOND_DTO = new SecondDTO("second", "4a2c853f-7ffc-4ce3-9410-a47e85b3b741", "second payload", NO_CHILD_DTO);
 
     @SuppressWarnings("unchecked")
     @Test

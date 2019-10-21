@@ -19,20 +19,44 @@
 
 package org.apache.dto;
 
+import org.apache.james.json.DTO;
+import org.apache.james.json.DTOConverter;
 import org.apache.james.json.DTOModule;
 
 public interface TestModules {
+    TestNestedModule FIRST_NESTED = DTOModule
+        .forDomainObject(FirstNestedType.class)
+        .convertToDTO(FirstNestedDTO.class)
+        .toDomainObjectConverter(FirstNestedDTO::toDomainObject)
+        .toDTOConverter((domainObject, typeName) -> new FirstNestedDTO(
+            domainObject.getFoo(),
+            typeName))
+            .typeName("first-nested")
+        .withFactory(TestNestedModule::new);
+
+    TestNestedModule SECOND_NESTED = DTOModule
+        .forDomainObject(SecondNestedType.class)
+        .convertToDTO(SecondNestedDTO.class)
+        .toDomainObjectConverter(SecondNestedDTO::toDomainObject)
+        .toDTOConverter((domainObject, typeName) -> new SecondNestedDTO(
+            domainObject.getBar(),
+            typeName))
+        .typeName("second-nested")
+        .withFactory(TestNestedModule::new);
+
+    DTOConverter NESTED_CONVERTERS = DTOConverter.of(FIRST_NESTED, SECOND_NESTED);
 
     @SuppressWarnings("rawtypes")
     TestModule FIRST_TYPE = DTOModule
         .forDomainObject(FirstDomainObject.class)
         .convertToDTO(FirstDTO.class)
-        .toDomainObjectConverter(FirstDTO::toDomainObject)
+        .toDomainObjectConverter(dto -> dto.toDomainObject(NESTED_CONVERTERS))
         .toDTOConverter((domainObject, typeName) -> new FirstDTO(
             typeName,
             domainObject.getId(),
             domainObject.getTime().toString(),
-            domainObject.getPayload()))
+            domainObject.getPayload(),
+            NESTED_CONVERTERS.convert(domainObject.getChild())))
         .typeName("first")
         .withFactory(TestModule::new);
 
@@ -40,11 +64,12 @@ public interface TestModules {
     TestModule SECOND_TYPE = DTOModule
         .forDomainObject(SecondDomainObject.class)
         .convertToDTO(SecondDTO.class)
-        .toDomainObjectConverter(SecondDTO::toDomainObject)
+        .toDomainObjectConverter(dto -> dto.toDomainObject(NESTED_CONVERTERS))
         .toDTOConverter((domainObject, typeName) -> new SecondDTO(
             typeName,
             domainObject.getId().toString(),
-            domainObject.getPayload()))
+            domainObject.getPayload(),
+            NESTED_CONVERTERS.convert(domainObject.getChild())))
         .typeName("second")
         .withFactory(TestModule::new);
 

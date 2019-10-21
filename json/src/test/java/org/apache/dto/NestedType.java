@@ -19,45 +19,5 @@
 
 package org.apache.dto;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-
-public class SecondDomainObject implements BaseType {
-    private final UUID id;
-    private final String payload;
-    private final Optional<NestedType> child;
-
-    public SecondDomainObject(UUID id, String payload, Optional<NestedType> child) {
-        this.id = id;
-        this.payload = payload;
-        this.child = child;
-    }
-
-    public UUID getId() {
-        return id;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Optional<NestedType> getChild() {
-        return child;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SecondDomainObject that = (SecondDomainObject) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(child, that.child) &&
-                Objects.equals(payload, that.payload);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, child, payload);
-    }
+public interface NestedType {
 }

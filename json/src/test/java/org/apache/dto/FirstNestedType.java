@@ -19,52 +19,29 @@
 
 package org.apache.dto;
 
-import java.time.ZonedDateTime;
 import java.util.Objects;
-import java.util.Optional;
 
-public class FirstDomainObject implements BaseType {
-    private final Optional<Long> id;
-    private final ZonedDateTime time;
-    private final String payload;
-    private final Optional<NestedType> child;
+public class FirstNestedType implements NestedType{
+    final int foo;
 
-    public FirstDomainObject(Optional<Long> id, ZonedDateTime time, String payload, Optional<NestedType> child) {
-        this.id = id;
-        this.time = time;
-        this.payload = payload;
-        this.child = child;
+    public FirstNestedType(int foo) {
+        this.foo = foo;
     }
 
-    public Optional<Long> getId() {
-        return id;
-    }
-
-    public ZonedDateTime getTime() {
-        return time;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Optional<NestedType> getChild() {
-        return child;
+    public int getFoo() {
+        return foo;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FirstDomainObject that = (FirstDomainObject) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(time, that.time) &&
-                Objects.equals(child, that.child) &&
-                Objects.equals(payload, that.payload);
+        FirstNestedType that = (FirstNestedType) o;
+        return foo == that.foo;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, time, child, payload);
+        return Objects.hash(foo);
     }
 }
