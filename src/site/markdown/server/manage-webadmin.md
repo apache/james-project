@@ -1125,7 +1125,7 @@ Note that several calls to this endpoint will be run in a sequential pattern.
 If the server restarts during the migration, the migration is silently aborted.
 
 
-The scheduled task will have the following type `CassandraMigration` and the following `additionalInformation`:
+The scheduled task will have the following type `cassandra-migration` and the following `additionalInformation`:
 
 ```
 {"toVersion":3}
@@ -1160,7 +1160,7 @@ Note that several calls to this endpoint will be run in a sequential pattern.
 
 If the server restarts during the migration, the migration is silently aborted.
 
-The scheduled task will have the following type `CassandraMigration` and the following `additionalInformation`:
+The scheduled task will have the following type `cassandra-migration` and the following `additionalInformation`:
 
 ```
 {"toVersion":2}
@@ -1201,7 +1201,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Unable to parse the body.
 
-The scheduled task will have the following type `mailboxMerging` and the following `additionalInformation`:
+The scheduled task will have the following type `mailbox-merging` and the following `additionalInformation`:
 
 ```
 {
@@ -2027,7 +2027,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
-The scheduled task will have the following type `clearMailRepository` and the following `additionalInformation`:
+The scheduled task will have the following type `clear-mail-repository` and the following `additionalInformation`:
 
 ```
 {
@@ -2088,7 +2088,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
-The scheduled task will have the following type `reprocessingAllTask` and the following `additionalInformation`:
+The scheduled task will have the following type `reprocessing-all` and the following `additionalInformation`:
 
 ```
 {
@@ -2149,7 +2149,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
-The scheduled task will have the following type `reprocessingOneTask` and the following `additionalInformation`:
+The scheduled task will have the following type `reprocessing-one` and the following `additionalInformation`:
 
 ```
 {
@@ -2255,7 +2255,7 @@ Response codes:
  - 400: Invalid request
  - 404: The mail queue does not exist
 
-The scheduled task will have the following type `deleteMailsFromMailQueue` and the following `additionalInformation`:
+The scheduled task will have the following type `delete-mails-from-mail-queue` and the following `additionalInformation`:
 
 ```
 {
@@ -2283,7 +2283,7 @@ Response codes:
  - 400: Invalid request
  - 404: The mail queue does not exist
 
-The scheduled task will have the following type `clearMailQueue` and the following `additionalInformation`:
+The scheduled task will have the following type `clear-mail-queue` and the following `additionalInformation`:
 
 ```
 {
@@ -2601,7 +2601,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `FullReIndexing` and the following `additionalInformation`:
+The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
 
 ```
 {
@@ -2648,7 +2648,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `userReIndexing` and the following `additionalInformation`:
+The scheduled task will have the following type `user-reindexing` and the following `additionalInformation`:
 
 ```
 {
@@ -2698,7 +2698,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `mailboxReIndexing` and the following `additionalInformation`:
+The scheduled task will have the following type `mailbox-reindexing` and the following `additionalInformation`:
 
 ```
 {
@@ -2748,7 +2748,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `ReIndexPreviousFailures` and the following `additionalInformation`:
+The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
 
 ```
 {
@@ -2790,7 +2790,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `messageReIndexing` and the following `additionalInformation`:
+The scheduled task will have the following type `message-reindexing` and the following `additionalInformation`:
 
 ```
 {
@@ -2832,7 +2832,7 @@ Response codes:
  - 201: Success. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
-The scheduled task will have the following type `MessageIdReIndexingTask` and the following `additionalInformation`:
+The scheduled task will have the following type `messageId-reindexing` and the following `additionalInformation`:
 
 ```
 {
@@ -3108,7 +3108,7 @@ Response code:
    - Json query object values violate parsing rules 
  - 404: User not found
 
-The scheduled task will have the following type `deletedMessages/restore` and the following `additionalInformation`:
+The scheduled task will have the following type `deleted-messages-restore` and the following `additionalInformation`:
 
 ```
 {
@@ -3148,7 +3148,7 @@ Response code:
    - Json query object values violate parsing rules 
  - 404: User not found
 
-The scheduled task will have the following type `deletedMessages/export` and the following `additionalInformation`:
+The scheduled task will have the following type `deleted-messages-export` and the following `additionalInformation`:
 
 ```
 {
@@ -3198,7 +3198,7 @@ Response code:
    - messageId parameter is invalid
  - 404: User not found
  
- The scheduled task will have the following type `deletedMessages/delete` and the following `additionalInformation`:
+ The scheduled task will have the following type `deleted-messages-delete` and the following `additionalInformation`:
  
  ```
  {
@@ -3240,7 +3240,7 @@ An Execution Report will be returned:
     "taskId": "3294a976-ce63-491e-bd52-1b6f465ed7a2",
     "additionalInformation": {},
     "status": "completed",
-    "type": "typeOfTheTask"
+    "type": "type-of-the-task"
 }
 ```
 

@@ -65,7 +65,7 @@ public class MigrationTask implements Task {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTask.class);
 
-    public static final TaskType CASSANDRA_MIGRATION = TaskType.of("CassandraMigration");
+    public static final TaskType CASSANDRA_MIGRATION = TaskType.of("cassandra-migration");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 

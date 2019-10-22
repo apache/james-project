@@ -49,9 +49,9 @@ class SingleMailboxReindexingTaskSerializationTest {
     private final int failedReprocessedMailCount = 2;
     private  ReIndexingExecutionFailures reIndexingExecutionFailures;
 
-    private final String serializedMailboxReindexingTask = "{\"type\": \"mailboxReIndexing\", \"mailboxId\": \"1\"}";
+    private final String serializedMailboxReindexingTask = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\"}";
 
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mailboxReIndexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mailbox-reindexing\", \"mailboxId\": \"1\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10, 20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private final TestId mailboxId = TestId.of(1L);
     private final MessageUid messageUid = MessageUid.of(10L);

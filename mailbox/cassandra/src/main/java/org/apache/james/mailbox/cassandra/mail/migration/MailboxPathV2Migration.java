@@ -88,7 +88,7 @@ public class MailboxPathV2Migration implements Migration {
     }
 
     public static final Logger LOGGER = LoggerFactory.getLogger(MailboxPathV2Migration.class);
-    public static final TaskType TYPE = TaskType.of("Cassandra_mailboxPathV2Migration");
+    public static final TaskType TYPE = TaskType.of("cassandra-mailbox-path-v2-migration");
     private final CassandraMailboxPathDAOImpl daoV1;
     private final CassandraMailboxPathV2DAO daoV2;
     private final long initialCount;

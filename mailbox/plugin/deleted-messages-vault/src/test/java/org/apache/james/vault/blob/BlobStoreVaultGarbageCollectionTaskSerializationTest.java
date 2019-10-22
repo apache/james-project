@@ -54,8 +54,8 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
     private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS, TIMESTAMP);
     private static final BlobStoreVaultGarbageCollectionTask TASK = TASK_FACTORY.create();
 
-    private static final String SERIALIZED_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\"}";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/blobStoreBasedGarbageCollection\", \"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"], \"timestamp\": \"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_TASK = "{\"type\":\"deleted-messages-blob-store-based-garbage-collection\"}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deleted-messages-blob-store-based-garbage-collection\", \"beginningOfRetentionPeriod\":\"2019-09-03T15:26:13.356+02:00[Europe/Paris]\",\"deletedBuckets\":[\"1\", \"2\", \"3\"], \"timestamp\": \"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE);
 

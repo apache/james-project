@@ -41,7 +41,7 @@ public class TestTask implements Task {
 
     @Override
     public TaskType type() {
-        return TaskType.of("testTask");
+        return TaskType.of("test-task");
     }
 
     @Override

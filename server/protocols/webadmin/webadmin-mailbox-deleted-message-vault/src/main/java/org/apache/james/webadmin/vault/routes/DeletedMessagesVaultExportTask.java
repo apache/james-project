@@ -38,7 +38,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 public class DeletedMessagesVaultExportTask implements Task {
 
-    static final TaskType TYPE = TaskType.of("deletedMessages/export");
+    static final TaskType TYPE = TaskType.of("deleted-messages-export");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 

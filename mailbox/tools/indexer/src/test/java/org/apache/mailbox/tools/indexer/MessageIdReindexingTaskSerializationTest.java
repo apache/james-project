@@ -41,8 +41,8 @@ class MessageIdReindexingTaskSerializationTest {
     private ReIndexerPerformer reIndexerPerformer;
     private MessageId.Factory messageIdFactory;
     private JsonTaskSerializer taskSerializer;
-    private final String serializedMessageIdReIndexingTask = "{\"type\": \"MessageIdReIndexingTask\", \"messageId\": \"1\"}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"MessageIdReIndexingTask\", \"messageId\": \"1\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedMessageIdReIndexingTask = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\"}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 

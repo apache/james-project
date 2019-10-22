@@ -134,7 +134,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is("FullReIndexing"))
+            .body("type", is("full-reindexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.failures", is(anEmptyMap()));
@@ -207,7 +207,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is("reprocessingAllTask"))
+            .body("type", is("reprocessing-all"))
             .body("additionalInformation.repositoryPath", is(notNullValue()))
             .body("additionalInformation.targetQueue", is(notNullValue()))
             .body("additionalInformation.targetProcessor", is(nullValue()))
@@ -245,7 +245,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(notNullValue()))
-            .body("type", is("reprocessingOneTask"))
+            .body("type", is("reprocessing-one"))
             .body("additionalInformation.repositoryPath", is(mailRepositoryUrl.asString()))
             .body("additionalInformation.targetQueue", is(notNullValue()))
             .body("additionalInformation.mailKey", is(mailKey))
@@ -276,7 +276,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("messageReIndexing"))
+            .body("type", is("message-reindexing"))
             .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
             .body("additionalInformation.uid", is(Math.toIntExact(composedMessageId.getUid().asLong())));
     }
@@ -304,7 +304,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("MessageIdReIndexingTask"))
+            .body("type", is("messageId-reindexing"))
             .body("additionalInformation.messageId", is(composedMessageId.getMessageId().serialize()));
     }
 
@@ -324,7 +324,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("userReIndexing"))
+            .body("type", is("user-reindexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.user", is(USERNAME))
@@ -357,7 +357,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("deletedMessages/restore"))
+            .body("type", is("deleted-messages-restore"))
             .body("additionalInformation.user", is(USERNAME))
             .body("additionalInformation.successfulRestoreCount", is(0))
             .body("additionalInformation.errorRestoreCount", is(0));
@@ -391,7 +391,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("deletedMessages/export"))
+            .body("type", is("deleted-messages-export"))
             .body("additionalInformation.userExportFrom", is(USERNAME))
             .body("additionalInformation.exportTo", is(exportTo))
             .body("additionalInformation.totalExportedMessages", is(0));
@@ -425,7 +425,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("ErrorRecoveryIndexation"))
+            .body("type", is("error-recovery-indexation"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.failures", is(anEmptyMap()));
@@ -449,7 +449,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverAllTask"))
+            .body("type", is("event-dead-letters-redeliver-all"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0));
 
@@ -491,7 +491,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverGroupTask"))
+            .body("type", is("event-dead-letters-redeliver-group"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()));
@@ -533,7 +533,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("failed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("eventDeadLettersRedeliverOneTask"))
+            .body("type", is("event-dead-letters-redeliver-one"))
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()))
@@ -589,7 +589,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is("deletedMessages/blobStoreBasedGarbageCollection"))
+            .body("type", is("deleted-messages-blob-store-based-garbage-collection"))
             .body("additionalInformation.beginningOfRetentionPeriod", is(notNullValue()))
             .body("additionalInformation.deletedBuckets", is(empty()));
     }
@@ -620,7 +620,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is("clearMailRepository"))
+            .body("type", is("clear-mail-repository"))
             .body("additionalInformation.repositoryPath", is(notNullValue()))
             .body("additionalInformation.initialCount", is(0))
             .body("additionalInformation.remainingCount", is(0));
@@ -647,7 +647,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is(TaskManager.Status.COMPLETED.getValue()))
             .body("taskId", is(taskId))
-            .body("type", is("mailboxMerging"))
+            .body("type", is("mailbox-merging"))
             .body("additionalInformation.oldMailboxId", is(origin.serialize()))
             .body("additionalInformation.newMailboxId", is(destination.serialize()))
             .body("additionalInformation.totalMessageCount", is(0))
@@ -671,7 +671,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
-            .body("type", is("mailboxReIndexing"))
+            .body("type", is("mailbox-reindexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
             .body("additionalInformation.mailboxId", is(mailboxId.serialize()))
@@ -704,7 +704,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is("deletedMessages/delete"))
+            .body("type", is("deleted-messages-delete"))
             .body("additionalInformation.user", is(USERNAME))
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
     }
@@ -725,7 +725,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is("CassandraMigration"))
+            .body("type", is("cassandra-migration"))
             .body("additionalInformation.toVersion", is(toVersion.getValue()));
     }
 
@@ -745,7 +745,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         .then()
             .body("status", is("completed"))
             .body("taskId", is(taskId))
-            .body("type", is("cassandraMappingsSolveInconsistencies"))
+            .body("type", is("cassandra-mappings-solve-inconsistencies"))
             .body("additionalInformation.successfulMappingsCount", is(0))
             .body("additionalInformation.errorMappingsCount", is(0));
     }

@@ -33,7 +33,7 @@ import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.junit.jupiter.api.Test;
 
 class CassandraMappingsSolveInconsistenciesTaskTest {
-    private static final String SERIALIZED = "{\"type\":\"cassandraMappingsSolveInconsistencies\"}";
+    private static final String SERIALIZED = "{\"type\":\"cassandra-mappings-solve-inconsistencies\"}";
     private static final MappingsSourcesMigration MAPPINGS_SOURCES_MIGRATION = mock(MappingsSourcesMigration.class);
     private static final CassandraMappingsSourcesDAO CASSANDRA_MAPPINGS_SOURCES_DAO = mock(CassandraMappingsSourcesDAO.class);
     private static final CassandraMappingsSolveInconsistenciesTask TASK = new CassandraMappingsSolveInconsistenciesTask(MAPPINGS_SOURCES_MIGRATION, CASSANDRA_MAPPINGS_SOURCES_DAO);

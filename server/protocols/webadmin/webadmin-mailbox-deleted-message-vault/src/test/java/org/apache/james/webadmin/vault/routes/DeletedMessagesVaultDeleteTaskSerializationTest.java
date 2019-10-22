@@ -48,8 +48,8 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
     private final TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
     private final MessageId messageId = messageIdFactory.generate();
 
-    private final String serializedDeleteMessagesVaultDeleteTask = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
-    private final String serializedAdditionalInformation = "{\"type\": \"deletedMessages/delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedDeleteMessagesVaultDeleteTask = "{\"type\": \"deleted-messages-delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\"}";
+    private final String serializedAdditionalInformation = "{\"type\": \"deleted-messages-delete\", \"userName\":\"james\", \"messageId\": \"" + messageId.serialize() + "\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 

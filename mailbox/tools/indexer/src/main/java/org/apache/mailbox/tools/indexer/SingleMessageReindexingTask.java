@@ -37,7 +37,7 @@ import org.slf4j.LoggerFactory;
 public class SingleMessageReindexingTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(SingleMessageReindexingTask.class);
 
-    public static final TaskType MESSAGE_RE_INDEXING = TaskType.of("messageReIndexing");
+    public static final TaskType MESSAGE_RE_INDEXING = TaskType.of("message-reindexing");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final MailboxId mailboxId;

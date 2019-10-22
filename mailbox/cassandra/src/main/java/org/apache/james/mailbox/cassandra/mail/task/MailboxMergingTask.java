@@ -30,7 +30,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 public class MailboxMergingTask implements Task {
-    public static final TaskType MAILBOX_MERGING = TaskType.of("mailboxMerging");
+    public static final TaskType MAILBOX_MERGING = TaskType.of("mailbox-merging");
 
     public static class Details implements TaskExecutionDetails.AdditionalInformation {
         private final CassandraId oldMailboxId;

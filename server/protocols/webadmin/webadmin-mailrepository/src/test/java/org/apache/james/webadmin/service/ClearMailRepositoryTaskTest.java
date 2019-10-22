@@ -42,8 +42,8 @@ class ClearMailRepositoryTaskTest {
 
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
 
-    private static final String SERIALIZED = "{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"a\"}";
-    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clearMailRepository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED = "{\"type\":\"clear-mail-repository\",\"mailRepositoryPath\":\"a\"}";
+    private static final String SERIALIZED_TASK_ADDITIONAL_INFORMATION = "{\"type\":\"clear-mail-repository\", \"mailRepositoryPath\":\"a\", \"initialCount\": 0, \"remainingCount\": 10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
     private static final ClearMailRepositoryTask.Factory FACTORY = new ClearMailRepositoryTask.Factory(mock(MailRepositoryStore.class));
     private static final ImmutableList<MailRepository> MAIL_REPOSITORIES = ImmutableList.of();
     private static final MailRepositoryPath MAIL_REPOSITORY_PATH = MailRepositoryPath.from("a");
@@ -72,7 +72,7 @@ class ClearMailRepositoryTaskTest {
     void taskShouldThrowOnDeserializationUrlDecodingError() {
         JsonTaskSerializer testee = new JsonTaskSerializer(ClearMailRepositoryTaskDTO.module(FACTORY));
 
-        assertThatThrownBy(() -> testee.deserialize("{\"type\":\"clearMailRepository\",\"mailRepositoryPath\":\"%\"}"))
+        assertThatThrownBy(() -> testee.deserialize("{\"type\":\"clear-mail-repository\",\"mailRepositoryPath\":\"%\"}"))
             .isInstanceOf(ClearMailRepositoryTask.InvalidMailRepositoryPathDeserializationException.class);
     }
 

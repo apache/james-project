@@ -59,11 +59,11 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     private static MailAddress exportTo;
     private static DeletedMessagesVaultExportTask.AdditionalInformation details;
 
-    private static final String serializedDeleteMessagesVaultExportTask = "{\"type\":\"deletedMessages/export\"," +
+    private static final String serializedDeleteMessagesVaultExportTask = "{\"type\":\"deleted-messages-export\"," +
         "\"userExportFrom\":\"james\"," +
         "\"exportQuery\":{\"combinator\":\"and\",\"criteria\":[{\"fieldName\":\"hasAttachment\",\"operator\":\"equals\",\"value\":\"true\"}]}," +
         "\"exportTo\":\"james@apache.org\"}\n";
-    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deletedMessages/export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deleted-messages-export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
 
@@ -106,14 +106,14 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     }
 
     @Test
-    void additonalInformationShouldBeDeserializable() throws IOException {
+    void additionalInformationShouldBeDeserializable() throws IOException {
         assertThat(JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION_TASK))
             .isEqualToComparingFieldByField(details);
     }
 
     @Test
-    void additonalInformationWithInvalidMailAddressShouldThrow() throws IOException {
-        String invalidSerializedAdditionalInformationTask = "{\"type\":\"deletedMessages/export\",\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
+    void additionalInformationWithInvalidMailAddressShouldThrow() throws IOException {
+        String invalidSerializedAdditionalInformationTask = "{\"type\":\"deleted-messages-export\",\"exportTo\":\"invalid\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42}";;
         assertThatCode(() -> JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER.deserialize(invalidSerializedAdditionalInformationTask))
             .hasCauseInstanceOf(AddressException.class);
     }

@@ -68,7 +68,7 @@ public class MappingsSourcesMigration implements Migration {
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MappingsSourcesMigration.class);
-    public static final TaskType TYPE = TaskType.of("mappingsSourcesMigration");
+    public static final TaskType TYPE = TaskType.of("mappings-sources-migration");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private final long successfulMappingsCount;

@@ -55,8 +55,8 @@ class FullReindexingTaskSerializationTest {
     private final int failedReprocessedMailCount = 2;
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
 
-    private final String serializedFullReindexingTask = "{\"type\": \"FullReIndexing\"}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"FullReIndexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
+    private final String serializedFullReindexingTask = "{\"type\": \"full-reindexing\"}";
+    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"full-reindexing\", \"successfullyReprocessedMailCount\":42,\"failedReprocessedMailCount\":2,\"failures\":[{\"mailboxId\":\"1\",\"uids\":[10]},{\"mailboxId\":\"2\",\"uids\":[20]}], \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     @BeforeEach
     void setUp() {
