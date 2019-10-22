@@ -74,11 +74,11 @@ public interface TestTaskDTOModules {
         .typeName(MemoryReferenceTask.TYPE.asString())
         .withFactory(TaskDTOModule::new);
 
-    Function<MemoryReferenceWithCounterTaskStore, TaskDTOModule<MemoryReferenceWithCounterTask, MemoryReferenceTaskDTO>> MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE = store -> DTOModule
+    Function<MemoryReferenceWithCounterTaskStore, TaskDTOModule<MemoryReferenceWithCounterTask, MemoryReferenceWithCounterTaskDTO>> MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE = store -> DTOModule
         .forDomainObject(MemoryReferenceWithCounterTask.class)
-        .convertToDTO(MemoryReferenceTaskDTO.class)
+        .convertToDTO(MemoryReferenceWithCounterTaskDTO.class)
         .toDomainObjectConverter(dto -> store.get(dto.getReference()))
-        .toDTOConverter((task, typeName) -> new MemoryReferenceTaskDTO(typeName, store.add(task)))
+        .toDTOConverter((task, typeName) -> new MemoryReferenceWithCounterTaskDTO(typeName, store.add(task)))
         .typeName(MemoryReferenceWithCounterTask.TYPE.asString())
         .withFactory(TaskDTOModule::new);
 
