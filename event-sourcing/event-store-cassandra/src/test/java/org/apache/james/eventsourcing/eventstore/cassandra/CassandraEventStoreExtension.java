@@ -19,12 +19,8 @@
 
 package org.apache.james.eventsourcing.eventstore.cassandra;
 
-import java.util.Set;
-
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-import org.apache.james.json.DTOConverter;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -34,21 +30,19 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-import com.google.common.collect.ImmutableSet;
-
 public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-    private final Set<EventDTOModule<?, ?>> modules;
     private CassandraClusterExtension cassandra;
+    private final JsonEventSerializer eventSerializer;
     private EventStoreDao eventStoreDao;
 
-    public CassandraEventStoreExtension(@SuppressWarnings("rawtypes") EventDTOModule... modules) {
-        this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), ImmutableSet.copyOf(modules));
+    public CassandraEventStoreExtension(JsonEventSerializer eventSerializer) {
+        this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), eventSerializer);
     }
 
-    public CassandraEventStoreExtension(CassandraClusterExtension cassandra, Set<EventDTOModule<?, ?>> module) {
+    public CassandraEventStoreExtension(CassandraClusterExtension cassandra, JsonEventSerializer eventSerializer) {
         this.cassandra = cassandra;
-        this.modules = module;
+        this.eventSerializer = eventSerializer;
     }
 
     @Override
@@ -63,9 +57,7 @@ public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAll
 
     @Override
     public void beforeEach(ExtensionContext context) {
-        JsonEventSerializer jsonEventSerializer = new JsonEventSerializer(modules.toArray(new EventDTOModule[0]));
-
-        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), jsonEventSerializer);
+        eventStoreDao = new EventStoreDao(cassandra.getCassandraCluster().getConf(), eventSerializer);
     }
 
     @Override

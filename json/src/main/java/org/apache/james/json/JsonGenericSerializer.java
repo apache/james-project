@@ -20,6 +20,8 @@
 package org.apache.james.json;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -34,10 +36,39 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
 public class JsonGenericSerializer<T, U extends DTO> {
+
+    public static <T, U extends DTO> RequireNestedConfiguration<T, U> forModules(Set<? extends DTOModule<? extends T, ? extends U>> modules) {
+        return nestedTypesModules -> {
+            ImmutableSet<DTOModule<? extends T, ? extends U>> dtoModules = ImmutableSet.copyOf(modules);
+            return new JsonGenericSerializer<>(dtoModules, ImmutableSet.copyOf(nestedTypesModules), new DTOConverter<>(dtoModules));
+        };
+    }
+
+    @SafeVarargs
+    public static <T, U extends DTO> RequireNestedConfiguration<T, U> forModules(DTOModule<? extends T, ? extends U>... modules) {
+        return forModules(ImmutableSet.copyOf(modules));
+    }
+
+    public interface RequireNestedConfiguration<T, U extends DTO> {
+        JsonGenericSerializer<T, U> withNestedTypeModules(Set<DTOModule<?, ?>> modules);
+
+        default JsonGenericSerializer<T, U> withNestedTypeModules(DTOModule<?, ?>... modules) {
+            return withNestedTypeModules(ImmutableSet.copyOf(modules));
+        }
+
+        default JsonGenericSerializer<T, U> withNestedTypeModules(Set<DTOModule<?, ?>>... modules) {
+            return withNestedTypeModules(Arrays.stream(modules).flatMap(Collection::stream).collect(Guavate.toImmutableSet()));
+        }
+
+        default JsonGenericSerializer<T, U> withoutNestedType() {
+            return withNestedTypeModules(ImmutableSet.of());
+        }
+    }
 
     public static class InvalidTypeException extends RuntimeException {
         public InvalidTypeException(String message) {
@@ -58,12 +89,7 @@ public class JsonGenericSerializer<T, U extends DTO> {
     private final ObjectMapper objectMapper;
     private final DTOConverter<T, U> dtoConverter;
 
-    @SafeVarargs
-    public static <T, U extends DTO> JsonGenericSerializer<T, U> of(DTOModule<T, U>... modules) {
-        return new JsonGenericSerializer<>(ImmutableSet.copyOf(modules), ImmutableSet.of(), DTOConverter.of(modules));
-    }
-
-    public JsonGenericSerializer(Set<? extends DTOModule<? extends T, ? extends U>> modules, Set<? extends DTOModule<?, ?>> nestedTypesModules, DTOConverter<T, U> converter) {
+    private JsonGenericSerializer(Set<? extends DTOModule<? extends T, ? extends U>> modules, Set<? extends DTOModule<?, ?>> nestedTypesModules, DTOConverter<T, U> converter) {
         this.dtoConverter = converter;
         this.objectMapper = buildObjectMapper(Sets.union(modules, nestedTypesModules));
     }
@@ -76,9 +102,10 @@ public class JsonGenericSerializer<T, U extends DTO> {
             .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
             .enable(DeserializationFeature.FAIL_ON_READING_DUP_TREE_KEY);
-        modules.stream()
+        NamedType[] namedTypes = modules.stream()
             .map(module -> new NamedType(module.getDTOClass(), module.getDomainObjectType()))
-            .forEach(objectMapper::registerSubtypes);
+            .toArray(NamedType[]::new);
+        objectMapper.registerSubtypes(namedTypes);
         return objectMapper;
     }
 

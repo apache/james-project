@@ -24,20 +24,20 @@ import static org.mockito.Mockito.mock;
 
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.migration.MappingsSourcesMigration;
 import org.apache.james.server.task.json.JsonTaskSerializer;
-
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.junit.jupiter.api.Test;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class CassandraMappingsSolveInconsistenciesTaskTest {
     private static final String SERIALIZED = "{\"type\":\"cassandra-mappings-solve-inconsistencies\"}";
     private static final MappingsSourcesMigration MAPPINGS_SOURCES_MIGRATION = mock(MappingsSourcesMigration.class);
     private static final CassandraMappingsSourcesDAO CASSANDRA_MAPPINGS_SOURCES_DAO = mock(CassandraMappingsSourcesDAO.class);
     private static final CassandraMappingsSolveInconsistenciesTask TASK = new CassandraMappingsSolveInconsistenciesTask(MAPPINGS_SOURCES_MIGRATION, CASSANDRA_MAPPINGS_SOURCES_DAO);
-    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(CassandraMappingsSolveInconsistenciesTask.module(MAPPINGS_SOURCES_MIGRATION, CASSANDRA_MAPPINGS_SOURCES_DAO));
+    private static final JsonTaskSerializer TESTEE = JsonTaskSerializer.of(CassandraMappingsSolveInconsistenciesTask.module(MAPPINGS_SOURCES_MIGRATION, CASSANDRA_MAPPINGS_SOURCES_DAO));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {

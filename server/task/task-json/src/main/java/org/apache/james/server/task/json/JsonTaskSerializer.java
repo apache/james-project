@@ -24,7 +24,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.json.DTOConverter;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -34,6 +33,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 
 public class JsonTaskSerializer {
+
+    public static JsonTaskSerializer of(TaskDTOModule<?, ?>... modules) {
+        return new JsonTaskSerializer(ImmutableSet.copyOf(modules));
+    }
 
     public static class InvalidTaskException  extends RuntimeException {
         public InvalidTaskException(JsonGenericSerializer.InvalidTypeException original) {
@@ -50,12 +53,8 @@ public class JsonTaskSerializer {
     private JsonGenericSerializer<Task, TaskDTO> jsonGenericSerializer;
 
     @Inject
-    public JsonTaskSerializer(DTOConverter<Task, TaskDTO> converter, Set<TaskDTOModule<?, ?>> modules) {
-        jsonGenericSerializer = new JsonGenericSerializer(modules, ImmutableSet.of(), converter);
-    }
-
-    public JsonTaskSerializer(@SuppressWarnings("rawtypes") TaskDTOModule... modules) {
-        this(DTOConverter.of(modules), ImmutableSet.copyOf(modules));
+    private JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
+        jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 
     public String serialize(Task task) throws JsonProcessingException {

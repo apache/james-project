@@ -59,13 +59,13 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
         "}";
     private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deleted-messages-restore\", \"user\":\"james\",\"successfulRestoreCount\":42,\"errorRestoreCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE);
 
     @BeforeEach
     void setUp() {
         exportService = mock(RestoreService.class);
         DeletedMessagesVaultRestoreTaskDTO.Factory factory = new DeletedMessagesVaultRestoreTaskDTO.Factory(exportService, queryTranslator);
-        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultRestoreTaskDTO.module(factory));
+        taskSerializer = JsonTaskSerializer.of(DeletedMessagesVaultRestoreTaskDTO.module(factory));
     }
 
     @Test

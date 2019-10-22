@@ -23,7 +23,6 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.apache.james.json.DTOConverter;
 import org.apache.james.json.JsonGenericSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -33,6 +32,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableSet;
 
 public class JsonTaskAdditionalInformationSerializer {
+
+    public static JsonTaskAdditionalInformationSerializer of(AdditionalInformationDTOModule<?, ?>... modules) {
+        return new JsonTaskAdditionalInformationSerializer(ImmutableSet.copyOf(modules));
+    }
 
     public static class InvalidAdditionalInformationException extends RuntimeException {
         public InvalidAdditionalInformationException(JsonGenericSerializer.InvalidTypeException original) {
@@ -49,12 +52,8 @@ public class JsonTaskAdditionalInformationSerializer {
     private JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> jsonGenericSerializer;
 
     @Inject
-    public JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
-        jsonGenericSerializer = new JsonGenericSerializer(modules, ImmutableSet.of(), new DTOConverter<>(modules));
-    }
-
-    public JsonTaskAdditionalInformationSerializer(@SuppressWarnings("rawtypes") AdditionalInformationDTOModule... modules) {
-        this(ImmutableSet.copyOf(modules));
+    private JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
+        jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 
     public String serialize(TaskExecutionDetails.AdditionalInformation additionalInformation) throws JsonProcessingException {

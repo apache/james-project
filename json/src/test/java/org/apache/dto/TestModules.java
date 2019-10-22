@@ -24,7 +24,7 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.json.DTOModule;
 
 public interface TestModules {
-    TestNestedModule FIRST_NESTED = DTOModule
+    TestNestedModule<?, ?> FIRST_NESTED = DTOModule
         .forDomainObject(FirstNestedType.class)
         .convertToDTO(FirstNestedDTO.class)
         .toDomainObjectConverter(FirstNestedDTO::toDomainObject)
@@ -34,7 +34,7 @@ public interface TestModules {
             .typeName("first-nested")
         .withFactory(TestNestedModule::new);
 
-    TestNestedModule SECOND_NESTED = DTOModule
+    TestNestedModule<?, ?> SECOND_NESTED = DTOModule
         .forDomainObject(SecondNestedType.class)
         .convertToDTO(SecondNestedDTO.class)
         .toDomainObjectConverter(SecondNestedDTO::toDomainObject)
@@ -44,10 +44,9 @@ public interface TestModules {
         .typeName("second-nested")
         .withFactory(TestNestedModule::new);
 
-    DTOConverter NESTED_CONVERTERS = DTOConverter.of(FIRST_NESTED, SECOND_NESTED);
+    DTOConverter<NestedType, DTO> NESTED_CONVERTERS = DTOConverter.of(FIRST_NESTED, SECOND_NESTED);
 
-    @SuppressWarnings("rawtypes")
-    TestModule FIRST_TYPE = DTOModule
+    TestModule<?, ?> FIRST_TYPE = DTOModule
         .forDomainObject(FirstDomainObject.class)
         .convertToDTO(FirstDTO.class)
         .toDomainObjectConverter(dto -> dto.toDomainObject(NESTED_CONVERTERS))
@@ -56,12 +55,11 @@ public interface TestModules {
             domainObject.getId(),
             domainObject.getTime().toString(),
             domainObject.getPayload(),
-            NESTED_CONVERTERS.convert(domainObject.getChild())))
+            domainObject.getChild().flatMap(NESTED_CONVERTERS::convert)))
         .typeName("first")
         .withFactory(TestModule::new);
 
-    @SuppressWarnings("rawtypes")
-    TestModule SECOND_TYPE = DTOModule
+    TestModule<?, ?> SECOND_TYPE = DTOModule
         .forDomainObject(SecondDomainObject.class)
         .convertToDTO(SecondDTO.class)
         .toDomainObjectConverter(dto -> dto.toDomainObject(NESTED_CONVERTERS))
@@ -69,7 +67,7 @@ public interface TestModules {
             typeName,
             domainObject.getId().toString(),
             domainObject.getPayload(),
-            NESTED_CONVERTERS.convert(domainObject.getChild())))
+            domainObject.getChild().flatMap(NESTED_CONVERTERS::convert)))
         .typeName("second")
         .withFactory(TestModule::new);
 

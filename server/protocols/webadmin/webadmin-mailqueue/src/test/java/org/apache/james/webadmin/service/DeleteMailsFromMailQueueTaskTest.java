@@ -50,7 +50,7 @@ class DeleteMailsFromMailQueueTaskTest {
     private MailQueueFactory<ManageableMailQueue> mailQueueFactory;
     private ManageableMailQueue mockedQueue;
     private final static String queueName = "anyQueue";
-    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE);
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE);
 
     @BeforeEach
     private void setUp() {
@@ -64,7 +64,7 @@ class DeleteMailsFromMailQueueTaskTest {
     @MethodSource
     void taskShouldBeSerializable(Optional<MailAddress> sender, Optional<String> name, Optional<MailAddress> recipient, String serializedJson) throws Exception {
 
-        JsonTaskSerializer testee = new JsonTaskSerializer(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
 
         ManageableMailQueue queue = mailQueueFactory.getQueue(queueName).get();
         DeleteMailsFromMailQueueTask task = new DeleteMailsFromMailQueueTask(queue, sender, name, recipient);
@@ -78,7 +78,7 @@ class DeleteMailsFromMailQueueTaskTest {
     @ParameterizedTest
     @MethodSource
     void taskShouldBeDeserializable(Optional<MailAddress> sender, Optional<String> name, Optional<MailAddress> recipient, String serializedJson) throws Exception {
-        JsonTaskSerializer testee = new JsonTaskSerializer(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
 
         ManageableMailQueue queue = mailQueueFactory.getQueue(queueName).get();
         DeleteMailsFromMailQueueTask task = new DeleteMailsFromMailQueueTask(queue, sender, name, recipient);
@@ -101,7 +101,7 @@ class DeleteMailsFromMailQueueTaskTest {
     void taskShouldThrowWhenDeserializeAnUnknownQueue() throws Exception {
         MailQueueFactory<ManageableMailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         when(mailQueueFactory.getQueue(anyString())).thenReturn(Optional.empty());
-        JsonTaskSerializer testee = new JsonTaskSerializer(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"anyQueue\", \"sender\": \"a@b.c\"}";
         assertThatThrownBy(() -> testee.deserialize(serializedJson))
@@ -110,7 +110,7 @@ class DeleteMailsFromMailQueueTaskTest {
 
     @Test
     void taskShouldThrowWhenDeserializeAMalformedMailAddress() throws Exception {
-        JsonTaskSerializer testee = new JsonTaskSerializer(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory));
 
         String serializedJson = "{\"type\": \"delete-mails-from-mail-queue\", \"queue\": \"" + queueName + "\", \"sender\": \"a.b.c\"}";
         assertThatThrownBy(() -> testee.deserialize(serializedJson))

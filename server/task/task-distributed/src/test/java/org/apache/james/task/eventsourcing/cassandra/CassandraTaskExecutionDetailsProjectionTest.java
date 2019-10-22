@@ -30,9 +30,6 @@ import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection;
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjectionContract;
-
-import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjection;
-import org.apache.james.task.eventsourcing.cassandra.CassandraTaskExecutionDetailsProjectionDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -41,7 +38,7 @@ class CassandraTaskExecutionDetailsProjectionTest implements TaskExecutionDetail
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(
             CassandraModule.aggregateModules(CassandraSchemaVersionModule.MODULE, CassandraZonedDateTimeModule.MODULE, CassandraTaskExecutionDetailsProjectionModule.MODULE()));
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     private Supplier<CassandraTaskExecutionDetailsProjection> testeeSupplier;
 

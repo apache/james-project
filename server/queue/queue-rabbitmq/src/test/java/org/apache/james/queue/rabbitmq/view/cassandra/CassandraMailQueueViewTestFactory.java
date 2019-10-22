@@ -33,8 +33,6 @@ import org.apache.james.queue.rabbitmq.view.cassandra.configuration.CassandraMai
 import org.apache.james.queue.rabbitmq.view.cassandra.configuration.EventsourcingConfigurationManagement;
 
 import com.datastax.driver.core.Session;
-import com.google.common.collect.ImmutableSet;
-
 import reactor.core.publisher.Mono;
 
 public class CassandraMailQueueViewTestFactory {
@@ -54,7 +52,7 @@ public class CassandraMailQueueViewTestFactory {
 
 
         EventsourcingConfigurationManagement eventsourcingConfigurationManagement = new EventsourcingConfigurationManagement(new CassandraEventStore(new EventStoreDao(session,
-            new JsonEventSerializer(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION))));
+            JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType())));
 
         return new CassandraMailQueueView.Factory(
             cassandraMailQueueMailStore,

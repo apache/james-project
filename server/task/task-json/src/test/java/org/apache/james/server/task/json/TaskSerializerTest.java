@@ -30,7 +30,7 @@ class TaskSerializerTest {
 
     @Test
     void shouldSerializeTaskWithItsType() throws Exception {
-        JsonTaskSerializer testee = new JsonTaskSerializer(TestTaskDTOModules.TEST_TYPE);
+        JsonTaskSerializer testee = JsonTaskSerializer.of(TestTaskDTOModules.TEST_TYPE);
         long parameter = 1L;
         TestTask task = new TestTask(parameter);
         JsonAssertions.assertThatJson(testee.serialize(task)).isEqualTo(TASK_AS_STRING);

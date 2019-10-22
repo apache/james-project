@@ -58,12 +58,12 @@ class EventDeadLettersRedeliverTaskTest {
     private static final EventDeadLettersRedeliverAllTask TASK_ALL = new EventDeadLettersRedeliverAllTask(SERVICE);
     private static final EventDeadLettersRedeliverGroupTask TASK_GROUP = new EventDeadLettersRedeliverGroupTask(SERVICE, new GenericGroup("abc"));
     private static final EventDeadLettersRedeliverOneTask TASK_ONE = new EventDeadLettersRedeliverOneTask(SERVICE, new GenericGroup("abc"), EventDeadLetters.InsertionId.of("fcbc3c92-e9a0-4ece-94ed-6e6b45045258"));
-    private static final JsonTaskSerializer TESTEE = new JsonTaskSerializer(
+    private static final JsonTaskSerializer TESTEE = JsonTaskSerializer.of(
         EventDeadLettersRedeliverAllTaskDTO.module(SERVICE),
         EventDeadLettersRedeliverGroupTaskDTO.module(SERVICE),
         EventDeadLettersRedeliverOneTaskDTO.module(SERVICE));
 
-    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(
         EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE,
         EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE,
         EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE);

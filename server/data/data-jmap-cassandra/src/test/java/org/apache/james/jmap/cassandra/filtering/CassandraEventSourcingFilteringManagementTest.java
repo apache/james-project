@@ -20,10 +20,12 @@
 package org.apache.james.jmap.cassandra.filtering;
 
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.jmap.api.filtering.FilteringManagementContract;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventSourcingFilteringManagementTest implements FilteringManagementContract {
     @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);
+    static CassandraEventStoreExtension eventStoreExtension =
+        new CassandraEventStoreExtension(JsonEventSerializer.forModules(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED).withoutNestedType());
 }

@@ -39,13 +39,12 @@ import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.collect.ImmutableSet;
 import reactor.core.publisher.Flux;
 
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer();
+    private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of();
     private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, DTOConverter.of());
-    private static final JsonEventSerializer SERIALIZER = new JsonEventSerializer(new DTOConverter<>(MODULES), MODULES, ImmutableSet.of());
+    private static final JsonEventSerializer SERIALIZER = JsonEventSerializer.forModules(MODULES).withoutNestedType();
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();

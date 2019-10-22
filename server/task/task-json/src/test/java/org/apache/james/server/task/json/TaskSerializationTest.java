@@ -51,7 +51,7 @@ class TaskSerializationTest {
     @ParameterizedTest
     @MethodSource
     void taskShouldBeSerializable(Task task, TaskDTOModule<?, ?> module, String expectedJson) throws Exception {
-        String actual = new JsonTaskSerializer(module).serialize(task);
+        String actual = JsonTaskSerializer.of(module).serialize(task);
         assertThatJson(actual).isEqualTo(expectedJson);
     }
 
@@ -62,7 +62,7 @@ class TaskSerializationTest {
     @ParameterizedTest
     @MethodSource
     void taskShouldBeDeserializable(Task task, TaskDTOModule<?, ?> module, String serializedJson) throws Exception {
-        assertThat(new JsonTaskSerializer(module).deserialize(serializedJson))
+        assertThat(JsonTaskSerializer.of(module).deserialize(serializedJson))
             .isInstanceOf(task.getClass());
     }
 
@@ -82,7 +82,7 @@ class TaskSerializationTest {
     void memoryReferenceTaskShouldSerialize() throws JsonProcessingException {
         MemoryReferenceTask memoryReferenceTask = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
 
-        String actual = new JsonTaskSerializer(MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore())).serialize(memoryReferenceTask);
+        String actual = JsonTaskSerializer.of(MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore())).serialize(memoryReferenceTask);
         assertThatJson(actual).isEqualTo(SERIALIZED_MEMORY_REFERENCE_TASK);
     }
 
@@ -92,7 +92,7 @@ class TaskSerializationTest {
         MemoryReferenceTask memoryReferenceTask = new MemoryReferenceTask(() -> Task.Result.COMPLETED);
         memoryReferenceTaskStore.add(memoryReferenceTask);
 
-        Task task = new JsonTaskSerializer(MEMORY_REFERENCE_TASK_MODULE.apply(memoryReferenceTaskStore)).deserialize(SERIALIZED_MEMORY_REFERENCE_TASK);
+        Task task = JsonTaskSerializer.of(MEMORY_REFERENCE_TASK_MODULE.apply(memoryReferenceTaskStore)).deserialize(SERIALIZED_MEMORY_REFERENCE_TASK);
         assertThat(task).isInstanceOf(MemoryReferenceTask.class);
     }
 }

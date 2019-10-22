@@ -29,9 +29,9 @@ import java.time.Instant;
 
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.jupiter.api.Test;
 
 class MappingsSourcesMigrationTaskSerializationTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
@@ -41,8 +41,8 @@ class MappingsSourcesMigrationTaskSerializationTest {
     private static final MappingsSourcesMigration.AdditionalInformation DETAILS = new MappingsSourcesMigration.AdditionalInformation(42L, 10, TIMESTAMP);
     private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"mappings-sources-migration\", \"successfulMappingsCount\":42,\"errorMappingsCount\":10,\"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MappingsSourcesMigrationTaskDTO.MODULE.apply(MIGRATION));
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(MappingsSourcesMigration.TYPE));
+    private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of(MappingsSourcesMigrationTaskDTO.MODULE.apply(MIGRATION));
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(MappingsSourcesMigration.TYPE));
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {

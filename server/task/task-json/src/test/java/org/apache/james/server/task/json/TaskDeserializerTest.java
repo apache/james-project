@@ -52,7 +52,7 @@ class TaskDeserializerTest {
 
     @BeforeEach
     void setUp() {
-        testee = new JsonTaskSerializer(TestTaskDTOModules.TEST_TYPE);
+        testee = JsonTaskSerializer.of(TestTaskDTOModules.TEST_TYPE);
     }
 
     @Test

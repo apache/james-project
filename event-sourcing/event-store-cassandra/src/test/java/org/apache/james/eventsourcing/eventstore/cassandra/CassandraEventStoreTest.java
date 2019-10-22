@@ -25,5 +25,5 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraEventStoreTest implements EventStoreTest {
     @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(TestEventDTOModules.TEST_TYPE);
+    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE).withoutNestedType());
 }

@@ -55,7 +55,7 @@ class ReprocessingOneMailTaskTest {
     private static final String TARGET_QUEUE = "queue";
     private static final MailKey MAIL_KEY = new MailKey("myMail");
     private static final Optional<String> TARGET_PROCESSOR = Optional.of("targetProcessor");
-    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     @ParameterizedTest
     @MethodSource
@@ -64,7 +64,7 @@ class ReprocessingOneMailTaskTest {
                                   MailKey mailKey,
                                   Optional<String> targetProcessor,
                                   String serialized) throws JsonProcessingException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
         ReprocessingOneMailTask task = new ReprocessingOneMailTask(REPROCESSING_SERVICE, repositoryPath, targetQueue, mailKey, targetProcessor, CLOCK);
         JsonAssertions.assertThatJson(testee.serialize(task))
             .isEqualTo(serialized);
@@ -81,7 +81,7 @@ class ReprocessingOneMailTaskTest {
                                     MailKey mailKey,
                                     Optional<String> targetProcessor,
                                     String serialized) throws IOException {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
         ReprocessingOneMailTask task = new ReprocessingOneMailTask(REPROCESSING_SERVICE, repositoryPath, targetQueue, mailKey, targetProcessor, CLOCK);
 
         assertThat(testee.deserialize(serialized))
@@ -102,7 +102,7 @@ class ReprocessingOneMailTaskTest {
     @ParameterizedTest
     @ValueSource(strings = {"{\"type\":\"reprocessing-one\",\"repositoryPath\":\"%\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\",\"targetProcessor\":\"targetProcessor\"}", "{\"type\":\"reprocessing-one\",\"repositoryPath\":\"%\",\"targetQueue\":\"queue\",\"mailKey\": \"myMail\"}"})
     void taskShouldThrowOnDeserializationUrlDecodingError(String serialized) {
-        JsonTaskSerializer testee = new JsonTaskSerializer(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
+        JsonTaskSerializer testee = JsonTaskSerializer.of(ReprocessingOneMailTaskDTO.module(CLOCK, REPROCESSING_SERVICE));
 
         assertThatThrownBy(() -> testee.deserialize(serialized))
             .isInstanceOf(ReprocessingOneMailTask.InvalidMailRepositoryPathDeserializationException.class);

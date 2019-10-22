@@ -29,14 +29,16 @@ import java.util.List;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
+import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class EventsourcingConfigurationManagementTest {
 
     @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(
-        CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION);
+    static CassandraEventStoreExtension eventStoreExtension =
+        new CassandraEventStoreExtension(
+            JsonEventSerializer.forModules(CassandraMailQueueViewConfigurationModule.MAIL_QUEUE_VIEW_CONFIGURATION).withoutNestedType());
 
     private static final int DEFAULT_BUCKET_COUNT = 10;
     private static final int DEFAULT_UPDATE_PACE = 100;

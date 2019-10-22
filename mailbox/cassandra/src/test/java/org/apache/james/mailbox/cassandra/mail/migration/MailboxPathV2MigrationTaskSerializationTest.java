@@ -30,9 +30,9 @@ import java.time.Instant;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.TaskExecutionDetails;
+import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.jupiter.api.Test;
 
 class MailboxPathV2MigrationTaskSerializationTest {
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
@@ -42,8 +42,8 @@ class MailboxPathV2MigrationTaskSerializationTest {
     private static final MailboxPathV2Migration.AdditionalInformation DETAILS = new MailboxPathV2Migration.AdditionalInformation(42L, 10, TIMESTAMP);
     private static final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"cassandra-mailbox-path-v2-migration\", \"remainingCount\":42,\"initialCount\":10, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private static final JsonTaskSerializer TASK_SERIALIZER = new JsonTaskSerializer(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);
+    private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of(MailboxPathV2MigrationTaskDTO.MODULE.apply(MIGRATION));
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MailboxPathV2MigrationTaskAdditionalInformationDTO.MODULE);
 
     @Test
     void taskShouldBeSerializable() throws JsonProcessingException {
@@ -63,12 +63,13 @@ class MailboxPathV2MigrationTaskSerializationTest {
     }
 
     @Test
-    void additonalInformationShouldBeDeserializable() throws IOException {
+    void additionalInformationShouldBeDeserializable() throws IOException {
         TaskExecutionDetails.AdditionalInformation deserialized = JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER.deserialize(SERIALIZED_ADDITIONAL_INFORMATION);
-        assertThat(deserialized).isInstanceOf(MailboxPathV2Migration.AdditionalInformation.class);
-
-        MailboxPathV2Migration.AdditionalInformation additionalInformation = (MailboxPathV2Migration.AdditionalInformation) deserialized;
-        assertThat(additionalInformation.getRemainingCount()).isEqualTo(DETAILS.getRemainingCount());
-        assertThat(additionalInformation.getInitialCount()).isEqualTo(DETAILS.getInitialCount());
+        assertThat(deserialized).isInstanceOfSatisfying(MailboxPathV2Migration.AdditionalInformation.class,
+            additionalInformation -> {
+                assertThat(additionalInformation.getRemainingCount()).isEqualTo(DETAILS.getRemainingCount());
+                assertThat(additionalInformation.getInitialCount()).isEqualTo(DETAILS.getInitialCount());
+            }
+        );
     }
 }

@@ -53,14 +53,13 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import com.google.common.collect.ImmutableSet;
 import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import scala.Option;
 
 class TaskEventsSerializationTest {
     static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> ADDITIONAL_INFORMATION_CONVERTER = DTOConverter.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
     static final EventId EVENT_ID = EventId.fromSerialized(42);
     static final Task TASK = new CompletedTask();
@@ -68,12 +67,14 @@ class TaskEventsSerializationTest {
     static final MemoryReferenceWithCounterTask.AdditionalInformation COUNTER_ADDITIONAL_INFORMATION = new MemoryReferenceWithCounterTask.AdditionalInformation(3, TIMESTAMP);
 
     private final Set<EventDTOModule<?, ?>> list = TasksSerializationModule.list(
-        new JsonTaskSerializer(
+        JsonTaskSerializer.of(
             TestTaskDTOModules.COMPLETED_TASK_MODULE,
             TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())),
         ADDITIONAL_INFORMATION_CONVERTER);
 
-    JsonEventSerializer serializer = new JsonEventSerializer(new DTOConverter<>(list), list, ImmutableSet.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE));
+    JsonEventSerializer serializer = JsonEventSerializer
+        .forModules(list)
+        .withNestedTypeModules(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     @ParameterizedTest
     @MethodSource

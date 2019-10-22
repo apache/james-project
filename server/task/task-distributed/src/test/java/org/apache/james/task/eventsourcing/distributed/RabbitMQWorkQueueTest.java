@@ -100,7 +100,7 @@ class RabbitMQWorkQueueTest {
     @BeforeEach
     void setUp() {
         worker = spy(new ImmediateWorker());
-        serializer = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE);
+        serializer = JsonTaskSerializer.of(TestTaskDTOModules.COMPLETED_TASK_MODULE);
         testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getRabbitChannelPool(), serializer);
         testee.start();
     }
@@ -150,7 +150,7 @@ class RabbitMQWorkQueueTest {
         TaskWithId taskWithId = new TaskWithId(taskId, task);
 
         ImmediateWorker otherTaskManagerWorker = new ImmediateWorker();
-        JsonTaskSerializer otherTaskSerializer = new JsonTaskSerializer(TestTaskDTOModules.TEST_TYPE);
+        JsonTaskSerializer otherTaskSerializer = JsonTaskSerializer.of(TestTaskDTOModules.TEST_TYPE);
         try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getRabbitChannelPool(), otherTaskSerializer)) {
             //wait to be sur that the first workqueue has subscribed as an exclusive consumer of the RabbitMQ queue.
             Thread.sleep(200);

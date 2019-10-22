@@ -49,11 +49,11 @@ class MessageIdReindexingTaskSerializationTest {
     @BeforeEach
     void setUp() {
         messageIdFactory = new TestMessageId.Factory();
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
+        jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(
             MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         MessageIdReIndexingTask.Factory factory = new MessageIdReIndexingTask.Factory(reIndexerPerformer, messageIdFactory);
-        taskSerializer = new JsonTaskSerializer(MessageIdReindexingTaskDTO.module(factory));
+        taskSerializer = JsonTaskSerializer.of(MessageIdReindexingTaskDTO.module(factory));
     }
 
     @Test

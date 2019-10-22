@@ -45,6 +45,7 @@ import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
+import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskStore;
@@ -72,8 +73,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-import com.google.common.collect.ImmutableSet;
-
 class DistributedTaskManagerTest implements TaskManagerContract {
 
     static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
@@ -99,8 +98,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         }
     }
 
-    static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
-    static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> DTO_CONVERTER = DTOConverter.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    public static final AdditionalInformationDTOModule<?, ?> ADDITIONAL_INFORMATION_MODULE = MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(ADDITIONAL_INFORMATION_MODULE);
+    static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> DTO_CONVERTER = DTOConverter.of(ADDITIONAL_INFORMATION_MODULE);
     static final Hostname HOSTNAME = new Hostname("foo");
     static final Hostname HOSTNAME_2 = new Hostname("bar");
 
@@ -116,7 +116,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             CassandraZonedDateTimeModule.MODULE,
             CassandraTaskExecutionDetailsProjectionModule.MODULE()));
 
-    JsonTaskSerializer taskSerializer = new JsonTaskSerializer(
+    JsonTaskSerializer taskSerializer = JsonTaskSerializer.of(
         TestTaskDTOModules.COMPLETED_TASK_MODULE,
         TestTaskDTOModules.FAILED_TASK_MODULE,
         TestTaskDTOModules.THROWING_TASK_MODULE,
@@ -126,7 +126,8 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, DTO_CONVERTER);
 
     @RegisterExtension
-    CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(CASSANDRA_CLUSTER, eventDtoModule);
+    CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(CASSANDRA_CLUSTER,
+        JsonEventSerializer.forModules(eventDtoModule).withNestedTypeModules(ADDITIONAL_INFORMATION_MODULE));
 
     @RegisterExtension
     CountDownLatchExtension countDownLatchExtension = new CountDownLatchExtension();
@@ -145,7 +146,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
         this.workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(RABBIT_MQ_EXTENSION.getRabbitChannelPool(), taskSerializer);
         this.eventStore = eventStore;
         this.terminationSubscribers = new ArrayList<>();
-        this.eventSerializer = new JsonEventSerializer(new DTOConverter<>(eventDtoModule), eventDtoModule, ImmutableSet.of());
+        this.eventSerializer = JsonEventSerializer.forModules(eventDtoModule).withoutNestedType();
     }
 
     @AfterEach

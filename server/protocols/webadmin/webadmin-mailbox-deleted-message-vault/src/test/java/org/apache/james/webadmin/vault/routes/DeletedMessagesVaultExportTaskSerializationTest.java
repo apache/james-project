@@ -65,7 +65,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
         "\"exportTo\":\"james@apache.org\"}\n";
     private static final String SERIALIZED_ADDITIONAL_INFORMATION_TASK = "{\"type\":\"deleted-messages-export\", \"exportTo\":\"james@apache.org\",\"userExportFrom\":\"james\",\"totalExportedMessages\":42, \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
-    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = new JsonTaskAdditionalInformationSerializer(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
+    private static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE);
 
     @BeforeAll
     static void init() throws AddressException {
@@ -77,7 +77,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     void setUp() {
         exportService = mock(ExportService.class);
         DeletedMessagesVaultExportTaskDTO.Factory factory = new DeletedMessagesVaultExportTaskDTO.Factory(exportService, queryTranslator);
-        taskSerializer = new JsonTaskSerializer(DeletedMessagesVaultExportTaskDTO.module(factory));
+        taskSerializer = JsonTaskSerializer.of(DeletedMessagesVaultExportTaskDTO.module(factory));
     }
 
     @Test

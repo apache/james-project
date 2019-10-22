@@ -33,7 +33,6 @@ import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.task.Task;
 import org.apache.mailbox.tools.indexer.ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,9 +70,9 @@ class ErrorRecoveryIndexationTaskSerializationTest {
     void setUp() {
         reIndexerPerformer = mock(ReIndexerPerformer.class);
         ErrorRecoveryIndexationTask.Factory factory = new ErrorRecoveryIndexationTask.Factory(reIndexerPerformer, mailboxIdFactory);
-        taskSerializer = new JsonTaskSerializer(ErrorRecoveryIndexationTaskDTO.module(factory));
+        taskSerializer = JsonTaskSerializer.of(ErrorRecoveryIndexationTaskDTO.module(factory));
 
-        jsonAdditionalInformationSerializer = new JsonTaskAdditionalInformationSerializer(
+        jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(
             ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory));
 
         reIndexingExecutionFailures = new ReIndexingExecutionFailures(ImmutableList.of(
