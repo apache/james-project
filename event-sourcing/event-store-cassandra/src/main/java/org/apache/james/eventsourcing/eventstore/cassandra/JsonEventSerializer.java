@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
@@ -81,7 +82,7 @@ public class JsonEventSerializer {
     private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
     @Inject
-    private JsonEventSerializer(Set<EventDTOModule<?, ?>> modules, Set<DTOModule<?, ?>> nestedTypesModules) {
+    private JsonEventSerializer(Set<EventDTOModule<?, ?>> modules, @Named("EventNestedTypes") Set<DTOModule<?, ?>> nestedTypesModules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withNestedTypeModules(nestedTypesModules);
     }
     

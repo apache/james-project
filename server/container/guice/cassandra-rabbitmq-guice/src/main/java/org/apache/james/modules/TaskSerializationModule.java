@@ -19,12 +19,16 @@
 package org.apache.james.modules;
 
 import java.time.Clock;
+import java.util.Set;
+
+import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationDTO;
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
+import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
@@ -87,10 +91,19 @@ import org.apache.mailbox.tools.indexer.UserReindexingTask;
 import org.apache.mailbox.tools.indexer.UserReindexingTaskAdditionalInformationDTO;
 import org.apache.mailbox.tools.indexer.UserReindexingTaskDTO;
 
+import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class TaskSerializationModule extends AbstractModule {
+
+    @Provides
+    @Singleton
+    public DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter(Set<AdditionalInformationDTOModule<?, ?>> modules) {
+        return new DTOConverter<>(modules);
+    }
 
     @ProvidesIntoSet
     public EventDTOModule<?, ?> taskCreatedSerialization(JsonTaskSerializer jsonTaskSerializer, DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter) {
@@ -330,5 +343,12 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return UserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
+    }
+
+    @Named("EventNestedTypes")
+    @Provides
+    public Set<DTOModule<?, ?>> eventNestedTypes(Set<AdditionalInformationDTOModule<?, ?>> additionalInformationDTOModules,
+                                            Set<TaskDTOModule<?, ?>> taskDTOModules) {
+        return Sets.union(additionalInformationDTOModules, taskDTOModules);
     }
 }
