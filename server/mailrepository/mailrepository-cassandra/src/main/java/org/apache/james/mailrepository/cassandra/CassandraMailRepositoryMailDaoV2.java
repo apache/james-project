@@ -68,6 +68,7 @@ import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.PerRecipientHeaders.Header;
 
+import com.datastax.driver.core.BoundStatement;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -135,21 +136,30 @@ public class CassandraMailRepositoryMailDaoV2 implements CassandraMailRepository
     }
 
     public Mono<Void> store(MailRepositoryUrl url, Mail mail, BlobId headerId, BlobId bodyId) {
-        return Mono.fromCallable(() ->
-            insertMail.bind()
+        return Mono.fromCallable(() -> {
+            BoundStatement boundStatement = insertMail.bind()
                 .setString(REPOSITORY_NAME, url.asString())
                 .setString(MAIL_KEY, mail.getName())
                 .setString(HEADER_BLOB_ID, headerId.asString())
                 .setString(BODY_BLOB_ID, bodyId.asString())
                 .setString(STATE, mail.getState())
-                .setString(SENDER, mail.getMaybeSender().asString(null))
                 .setList(RECIPIENTS, asStringList(mail.getRecipients()))
-                .setString(ERROR_MESSAGE, mail.getErrorMessage())
                 .setString(REMOTE_ADDR, mail.getRemoteAddr())
                 .setString(REMOTE_HOST, mail.getRemoteHost())
                 .setTimestamp(LAST_UPDATED, mail.getLastUpdated())
                 .setMap(ATTRIBUTES, toRawAttributeMap(mail))
-                .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(mail.getPerRecipientSpecificHeaders())))
+                .setList(PER_RECIPIENT_SPECIFIC_HEADERS, toTupleList(mail.getPerRecipientSpecificHeaders()));
+
+            Optional.ofNullable(mail.getErrorMessage())
+                .ifPresent(errorMessage -> boundStatement.setString(MailRepositoryTable.ERROR_MESSAGE, mail.getErrorMessage()));
+
+            mail.getMaybeSender()
+                .asOptional()
+                .map(MailAddress::asString)
+                .ifPresent(mailAddress -> boundStatement.setString(MailRepositoryTable.SENDER, mailAddress));
+
+            return boundStatement;
+        })
             .flatMap(executor::executeVoid);
     }
 
