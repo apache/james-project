@@ -597,7 +597,7 @@
         <javax.activation.groupId>javax.activation</javax.activation.groupId>
         <javax.activation.artifactId>activation</javax.activation.artifactId>
         <jsieve.version>0.7</jsieve.version>
-        <spring.version>3.2.18.RELEASE</spring.version>
+        <spring.version>4.3.25.RELEASE</spring.version>
         <activmq-artemis.version>2.9.0</activmq-artemis.version>
         <apache-jspf-resolver.version>1.0.1</apache-jspf-resolver.version>
         <javamail.version>1.5.4</javamail.version>
