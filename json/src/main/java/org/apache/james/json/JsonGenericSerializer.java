@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -37,6 +38,7 @@ import com.fasterxml.jackson.datatype.guava.GuavaModule;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -90,8 +92,16 @@ public class JsonGenericSerializer<T, U extends DTO> {
     private final DTOConverter<T, U> dtoConverter;
 
     private JsonGenericSerializer(Set<? extends DTOModule<? extends T, ? extends U>> modules, Set<? extends DTOModule<?, ?>> nestedTypesModules, DTOConverter<T, U> converter) {
+        Preconditions.checkArgument(!hasDuplicateTypeIds(modules, nestedTypesModules));
         this.dtoConverter = converter;
         this.objectMapper = buildObjectMapper(Sets.union(modules, nestedTypesModules));
+    }
+
+    private boolean hasDuplicateTypeIds(Set<? extends DTOModule<?, ?>> modules, Set<? extends DTOModule<?, ?>> nestedTypesModules) {
+        return Sets.intersection(
+                modules.stream().map(DTOModule::getDomainObjectType).collect(Collectors.toSet()),
+                nestedTypesModules.stream().map(DTOModule::getDomainObjectType).collect(Collectors.toSet()))
+            .size() > 0;
     }
 
     private ObjectMapper buildObjectMapper(Set<? extends DTOModule<?, ?>> modules) {

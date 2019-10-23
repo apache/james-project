@@ -158,4 +158,12 @@ class JsonGenericSerializerTest {
             .isInstanceOf(JsonGenericSerializer.UnknownTypeException.class);
     }
 
+    @Test
+    void shouldThrowWhenRegisteringDuplicateTypeIds() {
+        assertThatThrownBy(() -> JsonGenericSerializer
+            .forModules(TestModules.FIRST_NESTED)
+            .withNestedTypeModules(TestModules.FIRST_NESTED))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
 }
