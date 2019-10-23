@@ -14,12 +14,29 @@ import com.github.fge.lambdas.Throwing;
 
 public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements AdditionalInformationDTO {
     public static class EventDeadLettersRedeliveryTaskAdditionalInformationForAll extends EventDeadLettersRedeliveryTaskAdditionalInformation {
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForAll, EventDeadLettersRedeliveryTaskAdditionalInformationDTO> MODULE =
+
+        public static class DTO extends EventDeadLettersRedeliveryTaskAdditionalInformationDTO {
+            public DTO(@JsonProperty("type") String type,
+                       @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
+                       @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
+                       @JsonProperty("group") Optional<String> group,
+                       @JsonProperty("insertionId") Optional<String> insertionId,
+                       @JsonProperty("timestamp") Instant timestamp) {
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+            }
+        }
+
+        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForAll, DTO> MODULE =
             DTOModule
                 .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForAll.class)
-                .convertToDTO(EventDeadLettersRedeliveryTaskAdditionalInformationDTO.class)
+                .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromAll)
-                .toDTOConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::toDTO)
+                .toDTOConverter((domainObject, typeName) -> new DTO(typeName,
+                    domainObject.getSuccessfulRedeliveriesCount(),
+                    domainObject.getFailedRedeliveriesCount(),
+                    domainObject.getGroup(),
+                    domainObject.getInsertionId(),
+                    domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverAllTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
@@ -30,12 +47,29 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
     }
 
     public static class EventDeadLettersRedeliveryTaskAdditionalInformationForGroup extends EventDeadLettersRedeliveryTaskAdditionalInformation {
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForGroup, EventDeadLettersRedeliveryTaskAdditionalInformationDTO> MODULE =
+
+        public static class DTO extends EventDeadLettersRedeliveryTaskAdditionalInformationDTO {
+            public DTO(@JsonProperty("type") String type,
+                       @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
+                       @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
+                       @JsonProperty("group") Optional<String> group,
+                       @JsonProperty("insertionId") Optional<String> insertionId,
+                       @JsonProperty("timestamp") Instant timestamp) {
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+            }
+        }
+
+        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForGroup, DTO> MODULE =
             DTOModule
                 .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.class)
-                .convertToDTO(EventDeadLettersRedeliveryTaskAdditionalInformationDTO.class)
+                .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromGroup)
-                .toDTOConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::toDTO)
+                .toDTOConverter((domainObject, typeName) -> new DTO(typeName,
+                    domainObject.getSuccessfulRedeliveriesCount(),
+                    domainObject.getFailedRedeliveriesCount(),
+                    domainObject.getGroup(),
+                    domainObject.getInsertionId(),
+                    domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverGroupTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
@@ -46,12 +80,28 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
     }
 
     public static class EventDeadLettersRedeliveryTaskAdditionalInformationForOne extends EventDeadLettersRedeliveryTaskAdditionalInformation {
-        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForOne, EventDeadLettersRedeliveryTaskAdditionalInformationDTO> MODULE =
+        public static class DTO extends EventDeadLettersRedeliveryTaskAdditionalInformationDTO {
+            public DTO(@JsonProperty("type") String type,
+                       @JsonProperty("successfulRedeliveriesCount") long successfulRedeliveriesCount,
+                       @JsonProperty("failedRedeliveriesCount") long failedRedeliveriesCount,
+                       @JsonProperty("group") Optional<String> group,
+                       @JsonProperty("insertionId") Optional<String> insertionId,
+                       @JsonProperty("timestamp") Instant timestamp) {
+                super(type, successfulRedeliveriesCount, failedRedeliveriesCount, group,insertionId, timestamp);
+            }
+        }
+
+        public static final AdditionalInformationDTOModule<EventDeadLettersRedeliveryTaskAdditionalInformationForOne, DTO> MODULE =
             DTOModule
                 .forDomainObject(EventDeadLettersRedeliveryTaskAdditionalInformationForOne.class)
-                .convertToDTO(EventDeadLettersRedeliveryTaskAdditionalInformationDTO.class)
+                .convertToDTO(DTO.class)
                 .toDomainObjectConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::fromOne)
-                .toDTOConverter(EventDeadLettersRedeliveryTaskAdditionalInformationDTO::toDTO)
+                .toDTOConverter((domainObject, typeName) -> new DTO(typeName,
+                    domainObject.getSuccessfulRedeliveriesCount(),
+                    domainObject.getFailedRedeliveriesCount(),
+                    domainObject.getGroup(),
+                    domainObject.getInsertionId(),
+                    domainObject.timestamp()))
                 .typeName(EventDeadLettersRedeliverOneTask.TYPE.asString())
                 .withFactory(AdditionalInformationDTOModule::new);
 
@@ -64,16 +114,6 @@ public class EventDeadLettersRedeliveryTaskAdditionalInformationDTO implements A
             Instant timestamp) {
             super(successfulRedeliveriesCount, failedRedeliveriesCount, group, insertionId, timestamp);
         }
-    }
-
-    private static EventDeadLettersRedeliveryTaskAdditionalInformationDTO toDTO(EventDeadLettersRedeliveryTaskAdditionalInformation domainObject, String typeName) {
-        return new EventDeadLettersRedeliveryTaskAdditionalInformationDTO(
-            typeName,
-            domainObject.getSuccessfulRedeliveriesCount(),
-            domainObject.getFailedRedeliveriesCount(),
-            domainObject.getGroup(),
-            domainObject.getInsertionId(),
-            domainObject.timestamp());
     }
 
     private static EventDeadLettersRedeliveryTaskAdditionalInformationForAll fromAll(EventDeadLettersRedeliveryTaskAdditionalInformationDTO dto) {

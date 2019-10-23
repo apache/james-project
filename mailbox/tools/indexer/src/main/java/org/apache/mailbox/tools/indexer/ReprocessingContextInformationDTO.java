@@ -58,15 +58,27 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
     }
 
     public static class ReprocessingContextInformationForErrorRecoveryIndexationTask extends ReprocessingContextInformation {
-        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForErrorRecoveryIndexationTask, ReprocessingContextInformationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+
+        public static class DTO extends ReprocessingContextInformationDTO {
+
+            DTO(@JsonProperty("type") String type,
+                @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
+                @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
+                @JsonProperty("failures") List<ReindexingFailureDTO> failures,
+                @JsonProperty("timestamp") Instant timestamp) {
+                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+            }
+        }
+
+        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForErrorRecoveryIndexationTask, DTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
             return DTOModule.forDomainObject(ReprocessingContextInformationForErrorRecoveryIndexationTask.class)
-                .convertToDTO(ReprocessingContextInformationDTO.class)
+                .convertToDTO(DTO.class)
                 .toDomainObjectConverter(dto -> new ReprocessingContextInformationForErrorRecoveryIndexationTask(
                     dto.successfullyReprocessedMailCount,
                     dto.failedReprocessedMailCount,
                     deserializeFailures(mailboxIdFactory, dto.failures),
                     dto.getTimestamp()))
-                .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(
+                .toDTOConverter((details, type) -> new DTO(
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
@@ -82,11 +94,23 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
     }
 
     public static class ReprocessingContextInformationForFullReindexingTask extends ReprocessingContextInformation {
-        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, ReprocessingContextInformationDTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
+
+        public static class DTO extends ReprocessingContextInformationDTO {
+
+            DTO(@JsonProperty("type") String type,
+                @JsonProperty("successfullyReprocessedMailCount") int successfullyReprocessedMailCount,
+                @JsonProperty("failedReprocessedMailCount") int failedReprocessedMailCount,
+                @JsonProperty("failures") List<ReindexingFailureDTO> failures,
+                @JsonProperty("timestamp") Instant timestamp) {
+                super(type, successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
+            }
+        }
+
+        public static final AdditionalInformationDTOModule<ReprocessingContextInformationForFullReindexingTask, DTO> serializationModule(MailboxId.Factory mailboxIdFactory) {
             return DTOModule.forDomainObject(ReprocessingContextInformationForFullReindexingTask.class)
-                .convertToDTO(ReprocessingContextInformationDTO.class)
+                .convertToDTO(DTO.class)
                 .toDomainObjectConverter(dto -> new ReprocessingContextInformationForFullReindexingTask(dto.successfullyReprocessedMailCount, dto.failedReprocessedMailCount, deserializeFailures(mailboxIdFactory, dto.failures), dto.getTimestamp()))
-                .toDTOConverter((details, type) -> new ReprocessingContextInformationDTO(
+                .toDTOConverter((details, type) -> new DTO(
                     type,
                     details.getSuccessfullyReprocessedMailCount(),
                     details.getFailedReprocessedMailCount(),
@@ -144,11 +168,11 @@ public class ReprocessingContextInformationDTO implements AdditionalInformationD
             .collect(Guavate.toImmutableList());
     }
 
-    private final String type;
-    private final int successfullyReprocessedMailCount;
-    private final int failedReprocessedMailCount;
-    private final List<ReindexingFailureDTO> failures;
-    private final Instant timestamp;
+    protected final String type;
+    protected final int successfullyReprocessedMailCount;
+    protected final int failedReprocessedMailCount;
+    protected final List<ReindexingFailureDTO> failures;
+    protected final Instant timestamp;
 
 
     ReprocessingContextInformationDTO(@JsonProperty("type") String type,
