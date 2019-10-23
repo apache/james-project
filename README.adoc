@@ -44,7 +44,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  * https://github.com/apache/james-project/#how-to-release-via-maven-release-plugin[How to release via maven release plugin]
  * https://github.com/apache/james-project/#how-to-check-the-compilation[How to check the compilation]
  * https://github.com/apache/james-project/#how-to-run-james-in-docker[How to run James in Docker]
- ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra-rabbitmq-swift-elasticsearch[Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
+ ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra--rabbitmq--swift--elasticsearch[Run James with Java 8 + Guice + Cassandra + RabbitMQ + Swift + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--cassandra--elasticsearch[Run James with Java 8 + Guice + Cassandra + ElasticSearch]
  ** https://github.com/apache/james-project/#run-james-with-java-8--guice--jpa--lucene[Run James with Java 8 + Guice + JPA + Lucene]
  ** https://github.com/apache/james-project/#run-james-with-java-8--spring--jpa[Run James with Java 8 + Spring + JPA]
@@ -53,9 +53,11 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** https://github.com/apache/james-project/#how-to-add-a-user-[How to add a user?]
  ** https://github.com/apache/james-project/#how-to-manage-sieve-scripts-[How to manage SIEVE scripts?]
  ** https://github.com/apache/james-project/#how-to-retrieve-users-and-password-from-my-previous-container[How to retrieve users and password from my previous container?]
+ * https://github.com/apache/james-project/#develop-on-james[Develop on James]
  ** https://github.com/apache/james-project/#how-to-run-deployment-tests[How to run deployment Tests]
+ ** https://github.com/apache/james-project#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * https://github.com/apache/james-project/#generating-a-package-for-james[Generating a package for James]
- * https://github.com/apache/james-project/#know-more-about-james[Know more about James]
+ ** https://github.com/apache/james-project/#know-more-about-james-design[Know more about James design]
 
 == How to try James
 
@@ -483,6 +485,10 @@ Where :
 
 Beware : you will have concurrency issues if multiple containers are running on this single volume.
 
+== Develop on James
+
+James requires at least JDK 11 and maven 3.6.0 to build.
+
 === How to run deployment Tests
 
 We wrote some MPT (James' Mail Protocols Tests subproject) deployment tests to validate a James
@@ -564,6 +570,6 @@ Once installed, try:
 
 By default James is configured without LDAP support.
 
-= Know more about James
+== Know more about James design
 
 James comes with a https://james.apache.org/documentation.html[Documentation] and https://github.com/linagora/james-project/tree/master/src/adr[Architectural Decision Records].
