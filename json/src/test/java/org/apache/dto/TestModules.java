@@ -55,7 +55,7 @@ public interface TestModules {
             domainObject.getId(),
             domainObject.getTime().toString(),
             domainObject.getPayload(),
-            domainObject.getChild().flatMap(NESTED_CONVERTERS::convert)))
+            domainObject.getChild().flatMap(NESTED_CONVERTERS::toDTO)))
         .typeName("first")
         .withFactory(TestModule::new);
 
@@ -67,7 +67,7 @@ public interface TestModules {
             typeName,
             domainObject.getId().toString(),
             domainObject.getPayload(),
-            domainObject.getChild().flatMap(NESTED_CONVERTERS::convert)))
+            domainObject.getChild().flatMap(NESTED_CONVERTERS::toDTO)))
         .typeName("second")
         .withFactory(TestModule::new);
 

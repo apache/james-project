@@ -53,14 +53,14 @@ class DTOConverterTest {
     void shouldConvertFromKnownDTO() throws Exception {
         assertThat(DTOConverter
             .<BaseType, DTO>of(TestModules.FIRST_TYPE)
-            .convert(FIRST_DTO))
+            .toDomainObject(FIRST_DTO))
             .contains(FIRST);
     }
 
     @Test
     void shouldReturnEmptyWhenConvertingFromUnknownDTO() {
         assertThat(DTOConverter.of()
-            .convert(FIRST_DTO))
+            .toDomainObject(FIRST_DTO))
             .isEmpty();
     }
 
@@ -72,7 +72,7 @@ class DTOConverterTest {
                 TestModules.FIRST_TYPE,
                 TestModules.SECOND_TYPE);
 
-        assertThat(serializer.convert(domainObject))
+        assertThat(serializer.toDTO(domainObject))
             .hasValueSatisfying(result -> assertThat(result).isInstanceOf(dto.getClass()).isEqualToComparingFieldByField(dto));
     }
 
@@ -88,7 +88,7 @@ class DTOConverterTest {
                 TestModules.FIRST_TYPE,
                 TestModules.SECOND_TYPE);
 
-        assertThat(serializer.convert(dto))
+        assertThat(serializer.toDomainObject(dto))
             .hasValueSatisfying(result -> assertThat(result).isInstanceOf(domainObject.getClass()).isEqualToComparingFieldByField(domainObject));
     }
 
@@ -107,13 +107,13 @@ class DTOConverterTest {
     @Test
     void shouldConvertFromKnownDomainObject() throws Exception {
         assertThat(DTOConverter.<BaseType, DTO>of(TestModules.FIRST_TYPE)
-            .convert(FIRST))
+            .toDTO(FIRST))
             .hasValueSatisfying(result -> assertThat(result).isInstanceOf(FirstDTO.class).isEqualToComparingFieldByField(FIRST_DTO));
     }
 
     @Test
     void shouldReturnEmptyWhenConvertUnknownDomainObject() {
-        assertThat(DTOConverter.of().convert(FIRST))
+        assertThat(DTOConverter.of().toDTO(FIRST))
             .isEmpty();
     }
 }

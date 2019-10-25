@@ -91,7 +91,7 @@ case class CompletedDTO(@JsonProperty("type") typeName: String,
                         @JsonProperty("additionalInformation") getAdditionalInformation: Optional[AdditionalInformationDTO])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Completed = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.convert(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
     Completed(domainAggregateId, domainEventId, domainResult, additionalInformation.asScala)
   }
   private def domainResult: Task.Result = getResult match {
@@ -102,7 +102,7 @@ case class CompletedDTO(@JsonProperty("type") typeName: String,
 
 object CompletedDTO {
   def fromDomainObject(dtoConverter: AdditionalInformationConverter)(event: Completed, typeName: String): CompletedDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.convert(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.toDTO(_).orElseThrow())
     CompletedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), resultToString(event.result), additionalInformationDTO)
   }
 
@@ -120,14 +120,14 @@ case class FailedDTO(@JsonProperty("type") typeName: String,
                      @JsonProperty("exception") getException: Optional[String])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Failed = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.convert(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
     Failed(domainAggregateId, domainEventId, additionalInformation.asScala, getErrorMessage.asScala, getException.asScala)
   }
 }
 
 object FailedDTO {
   def fromDomainObject(dtoConverter: AdditionalInformationConverter)(event: Failed, typeName: String): FailedDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.convert(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.toDTO(_).orElseThrow())
     FailedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO, event.errorMessage.asJava, event.exception.asJava)
   }
 }
@@ -138,14 +138,14 @@ case class CancelledDTO(@JsonProperty("type") typeName: String,
                         @JsonProperty("additionalInformation") getAdditionalInformation: Optional[AdditionalInformationDTO])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Cancelled = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.convert(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
     Cancelled(domainAggregateId, domainEventId, additionalInformation.asScala)
   }
 }
 
 object CancelledDTO {
   def fromDomainObject(additionalInformationConverter: AdditionalInformationConverter)(event: Cancelled, typeName: String): CancelledDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(additionalInformationConverter.convert(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(additionalInformationConverter.toDTO(_).orElseThrow())
     CancelledDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
   }
 }
@@ -156,7 +156,7 @@ case class AdditionalInformationUpdatedDTO(@JsonProperty("type") typeName: Strin
                      @JsonProperty("additionalInformation") getAdditionalInformation: AdditionalInformationDTO)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): AdditionalInformationUpdated = {
-    val additionalInformation = additionalInformationConverter.convert(getAdditionalInformation)
+    val additionalInformation = additionalInformationConverter.toDomainObject(getAdditionalInformation)
         .orElseThrow()
     AdditionalInformationUpdated(domainAggregateId, domainEventId, additionalInformation)
   }
@@ -164,7 +164,7 @@ case class AdditionalInformationUpdatedDTO(@JsonProperty("type") typeName: Strin
 
 object AdditionalInformationUpdatedDTO {
   def fromDomainObject(additionalInformationConverter: AdditionalInformationConverter)(event: AdditionalInformationUpdated, typeName: String): AdditionalInformationUpdatedDTO = {
-    val additionalInformationDTO = additionalInformationConverter.convert(event.additionalInformation)
+    val additionalInformationDTO = additionalInformationConverter.toDTO(event.additionalInformation)
         .orElseThrow()
     AdditionalInformationUpdatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
   }

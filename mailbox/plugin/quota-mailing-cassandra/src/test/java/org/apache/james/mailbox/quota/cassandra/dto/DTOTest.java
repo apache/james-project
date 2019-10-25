@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 class DTOTest {
@@ -104,6 +105,7 @@ class DTOTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
+        objectMapper.registerSubtypes(new NamedType(QuotaThresholdChangedEventDTO.class, "quota-threshold-change"));
     }
 
     @Test

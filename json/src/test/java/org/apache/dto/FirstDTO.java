@@ -72,6 +72,6 @@ public class FirstDTO implements DTO {
 
     @JsonIgnore
     public FirstDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
-        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload, child.flatMap(converter::convert));
+        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload, child.flatMap(converter::toDomainObject));
     }
 }

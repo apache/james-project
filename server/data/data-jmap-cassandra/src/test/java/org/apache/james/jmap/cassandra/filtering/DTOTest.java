@@ -33,6 +33,8 @@ import org.apache.james.eventsourcing.EventId;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
 import org.apache.james.util.ClassLoaderUtils;
+
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -68,6 +70,9 @@ public class DTOTest {
         objectMapper = new ObjectMapper();
         objectMapper.registerModule(new Jdk8Module());
         objectMapper.registerModule(new GuavaModule());
+        objectMapper.registerSubtypes(
+            new NamedType(FilteringRuleSetDefinedDTO.class, "filtering-rule-set-defined"));
+
     }
 
     @Test

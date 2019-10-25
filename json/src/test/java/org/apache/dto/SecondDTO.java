@@ -65,6 +65,6 @@ public class SecondDTO implements DTO {
 
     @JsonIgnore
     public SecondDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
-        return new SecondDomainObject(UUID.fromString(id), payload, child.flatMap(converter::convert));
+        return new SecondDomainObject(UUID.fromString(id), payload, child.flatMap(converter::toDomainObject));
     }
 }
