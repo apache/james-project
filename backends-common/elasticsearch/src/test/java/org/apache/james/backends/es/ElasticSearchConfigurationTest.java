@@ -27,7 +27,10 @@ import java.util.Optional;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.es.ElasticSearchConfiguration.Credential;
+import org.apache.james.backends.es.ElasticSearchConfiguration.HostScheme;
 import org.apache.james.util.Host;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -35,6 +38,26 @@ import com.google.common.collect.ImmutableList;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class ElasticSearchConfigurationTest {
+
+    @Nested
+    class HostSchemeTest {
+
+        @Test
+        void shouldMatchBeanContact() {
+            EqualsVerifier.forClass(HostScheme.class)
+                .verify();
+        }
+    }
+
+    @Nested
+    class CredentialTest {
+
+        @Test
+        void shouldMatchBeanContact() {
+            EqualsVerifier.forClass(Credential.class)
+                .verify();
+        }
+    }
 
     @Test
     void elasticSearchConfigurationShouldRespectBeanContract() {
@@ -325,5 +348,105 @@ class ElasticSearchConfigurationTest {
                 ElasticSearchConfiguration.builder()
                         .nbShards(0))
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getCredentialShouldReturnConfiguredValue() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        String user = "johndoe";
+        String password = "secret";
+        configuration.addProperty("elasticsearch.user", user);
+        configuration.addProperty("elasticsearch.password", password);
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getCredential())
+            .contains(Credential.of(user, password));
+    }
+
+    @Test
+    void getCredentialShouldReturnEmptyWhenNotConfigured() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getCredential())
+            .isEmpty();
+    }
+
+    @Test
+    void fromPropertiesShouldThrowWhenOnlyUsername() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        configuration.addProperty("elasticsearch.user", "username");
+
+        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("password cannot be null when username is specified");
+    }
+
+    @Test
+    void fromPropertiesShouldThrowWhenOnlyPassword() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        configuration.addProperty("elasticsearch.password", "password");
+
+        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+            .isInstanceOf(NullPointerException.class)
+            .hasMessage("username cannot be null when password is specified");
+    }
+
+    @Test
+    void getHostSchemeShouldReturnConfiguredValue() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        configuration.addProperty("elasticsearch.hostScheme", "https");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getHostScheme())
+            .isEqualTo(HostScheme.HTTPS);
+    }
+
+    @Test
+    void getHostSchemeShouldBeCaseInsensitive() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        configuration.addProperty("elasticsearch.hostScheme", "HTTPs");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getHostScheme())
+            .isEqualTo(HostScheme.HTTPS);
+    }
+
+    @Test
+    void getHostSchemeShouldReturnHttpWhenNotConfigured() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        ElasticSearchConfiguration elasticSearchConfiguration = ElasticSearchConfiguration.fromProperties(configuration);
+
+        assertThat(elasticSearchConfiguration.getHostScheme())
+            .isEqualTo(HostScheme.HTTP);
+    }
+
+    @Test
+    void fromPropertiesShouldThrowWhenInvalidValue() throws Exception {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+        configuration.addProperty("elasticsearch.hostScheme", "invalid-protocol");
+
+        assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unknown HostScheme 'invalid-protocol'");
     }
 }

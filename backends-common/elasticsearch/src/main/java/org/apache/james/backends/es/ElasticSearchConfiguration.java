@@ -37,6 +37,67 @@ import com.google.common.collect.ImmutableList;
 
 public class ElasticSearchConfiguration {
 
+    public enum HostScheme {
+        HTTP("http"),
+        HTTPS("https");
+
+        public static HostScheme of(String schemeValue) {
+            return Arrays.stream(values())
+                .filter(hostScheme -> hostScheme.value.equalsIgnoreCase(schemeValue))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException(
+                    String.format("Unknown HostScheme '%s'", schemeValue)));
+        }
+
+        private final String value;
+
+        HostScheme(String value) {
+            this.value = value;
+        }
+    }
+
+    public static class Credential {
+
+        public static Credential of(String username, String password) {
+            return new Credential(username, password);
+        }
+
+        private final String username;
+        private final String password;
+
+        private Credential(String username, String password) {
+            Preconditions.checkNotNull(username, "username cannot be null when password is specified");
+            Preconditions.checkNotNull(password, "password cannot be null when username is specified");
+
+            this.username = username;
+            this.password = password;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        public String getPassword() {
+            return password;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Credential) {
+                Credential that = (Credential) o;
+
+                return Objects.equals(this.username, that.username)
+                    && Objects.equals(this.password, that.password);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(username, password);
+        }
+    }
+
     public static class Builder {
 
         private final ImmutableList.Builder<Host> hosts;
@@ -46,6 +107,8 @@ public class ElasticSearchConfiguration {
         private Optional<Integer> minDelay;
         private Optional<Integer> maxRetries;
         private Optional<Duration> requestTimeout;
+        private Optional<HostScheme> hostScheme;
+        private Optional<Credential> credential;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -55,6 +118,8 @@ public class ElasticSearchConfiguration {
             minDelay = Optional.empty();
             maxRetries = Optional.empty();
             requestTimeout = Optional.empty();
+            hostScheme = Optional.empty();
+            credential = Optional.empty();
         }
 
         public Builder addHost(Host host) {
@@ -100,6 +165,16 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
+        public Builder hostScheme(Optional<HostScheme> hostScheme) {
+            this.hostScheme = hostScheme;
+            return this;
+        }
+
+        public Builder credential(Optional<Credential> credential) {
+            this.credential = credential;
+            return this;
+        }
+
         public ElasticSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
             Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
@@ -110,7 +185,9 @@ public class ElasticSearchConfiguration {
                 waitForActiveShards.orElse(DEFAULT_WAIT_FOR_ACTIVE_SHARDS),
                 minDelay.orElse(DEFAULT_CONNECTION_MIN_DELAY),
                 maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
-                requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT));
+                requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT),
+                hostScheme.orElse(DEFAULT_SCHEME),
+                credential);
         }
     }
 
@@ -121,6 +198,9 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_HOSTS = "elasticsearch.hosts";
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
+    public static final String ELASTICSEARCH_HOST_SCHEME = "elasticsearch.hostScheme";
+    public static final String ELASTICSEARCH_USER = "elasticsearch.user";
+    public static final String ELASTICSEARCH_PASSWORD = "elasticsearch.password";
     public static final String ELASTICSEARCH_NB_REPLICA = "elasticsearch.nb.replica";
     public static final String WAIT_FOR_ACTIVE_SHARDS = "elasticsearch.index.waitForActiveShards";
     public static final String ELASTICSEARCH_NB_SHARDS = "elasticsearch.nb.shards";
@@ -136,6 +216,7 @@ public class ElasticSearchConfiguration {
     public static final int DEFAULT_PORT = 9200;
     public static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
+    public static final HostScheme DEFAULT_SCHEME = HostScheme.HTTP;
 
     public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = builder()
         .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
@@ -144,12 +225,30 @@ public class ElasticSearchConfiguration {
     public static ElasticSearchConfiguration fromProperties(Configuration configuration) throws ConfigurationException {
         return builder()
             .addHosts(getHosts(configuration))
+            .hostScheme(getHostScheme(configuration))
+            .credential(getCredential(configuration))
             .nbShards(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
             .nbReplica(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
             .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
             .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .build();
+    }
+
+    private static Optional<HostScheme> getHostScheme(Configuration configuration) {
+        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_HOST_SCHEME))
+            .map(HostScheme::of);
+    }
+
+    private static Optional<Credential> getCredential(Configuration configuration) {
+        String username = configuration.getString(ELASTICSEARCH_USER);
+        String password = configuration.getString(ELASTICSEARCH_PASSWORD);
+
+        if (username == null && password == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(Credential.of(username, password));
     }
 
     private static ImmutableList<Host> getHosts(Configuration propertiesReader) throws ConfigurationException {
@@ -194,8 +293,11 @@ public class ElasticSearchConfiguration {
     private final int minDelay;
     private final int maxRetries;
     private final Duration requestTimeout;
+    private final HostScheme hostScheme;
+    private final Optional<Credential> credential;
 
-    private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout) {
+    private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
+                                       HostScheme hostScheme, Optional<Credential> credential) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -203,6 +305,8 @@ public class ElasticSearchConfiguration {
         this.minDelay = minDelay;
         this.maxRetries = maxRetries;
         this.requestTimeout = requestTimeout;
+        this.hostScheme = hostScheme;
+        this.credential = credential;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -233,6 +337,14 @@ public class ElasticSearchConfiguration {
         return requestTimeout;
     }
 
+    public HostScheme getHostScheme() {
+        return hostScheme;
+    }
+
+    public Optional<Credential> getCredential() {
+        return credential;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ElasticSearchConfiguration) {
@@ -244,13 +356,15 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.minDelay, that.minDelay)
                 && Objects.equals(this.maxRetries, that.maxRetries)
                 && Objects.equals(this.hosts, that.hosts)
-                && Objects.equals(this.requestTimeout, that.requestTimeout);
+                && Objects.equals(this.requestTimeout, that.requestTimeout)
+                && Objects.equals(this.hostScheme, that.hostScheme)
+                && Objects.equals(this.credential, that.credential);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout);
+        return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout, hostScheme, credential);
     }
 }

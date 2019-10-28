@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.es.ElasticSearchConfiguration;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.elasticsearch.Version;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +50,7 @@ public class ElasticSearchStartUpCheck implements StartUpCheck {
     @Override
     public CheckResult check() {
         try {
-            Version esVersion = client.info()
+            Version esVersion = client.info(RequestOptions.DEFAULT)
                 .getVersion();
             if (esVersion.isCompatible(RECOMMENDED_ES_VERSION)) {
                 return CheckResult.builder()

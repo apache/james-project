@@ -21,6 +21,7 @@ package org.apache.james.backends.es;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
@@ -28,7 +29,12 @@ import javax.inject.Provider;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +47,6 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProvider.class);
 
-    private static final String HTTP_HOST_SCHEME = "http";
     private final ElasticSearchConfiguration configuration;
     private final RestHighLevelClient client;
 
@@ -67,14 +72,30 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
 
     private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) throws IOException {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
+        Optional<CredentialsProvider> credentials = credentials(configuration);
+        RestClientBuilder restClientBuilder = RestClient.builder(hostsToHttpHosts());
+        credentials.ifPresent(provider -> restClientBuilder
+            .setHttpClientConfigCallback(httpClientBuilder -> {
+                return httpClientBuilder.setDefaultCredentialsProvider(provider);
+            }));
+
         return new RestHighLevelClient(
-            RestClient.builder(hostsToHttpHosts())
+            restClientBuilder
                 .setMaxRetryTimeoutMillis(Math.toIntExact(configuration.getRequestTimeout().toMillis())));
+    }
+
+    private Optional<CredentialsProvider> credentials(ElasticSearchConfiguration configuration) {
+        if (configuration.getUser().isPresent() && configuration.getPassword().isPresent()) {
+            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(configuration.getUser().get(), configuration.getPassword().get()));
+            return Optional.of(credentialsProvider);
+        }
+        return Optional.empty();
     }
 
     private HttpHost[] hostsToHttpHosts() {
         return configuration.getHosts().stream()
-            .map(host -> new HttpHost(host.getHostName(), host.getPort(), HTTP_HOST_SCHEME))
+            .map(host -> new HttpHost(host.getHostName(), host.getPort(), configuration.getHostScheme().name()))
             .toArray(HttpHost[]::new);
     }
 
