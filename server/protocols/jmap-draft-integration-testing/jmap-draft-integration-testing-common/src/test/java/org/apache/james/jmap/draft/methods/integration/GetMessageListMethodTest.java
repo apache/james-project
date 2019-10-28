@@ -50,7 +50,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.mail.Flags;
 
@@ -62,12 +66,14 @@ import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
@@ -83,6 +89,8 @@ import org.apache.james.util.date.ImapDateTimeFormatter;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+
+import com.github.fge.lambdas.Throwing;
 import org.awaitility.Duration;
 import org.hamcrest.Matchers;
 import org.junit.After;
@@ -91,6 +99,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
+import scala.collection.immutable.Stream;
 
 public abstract class GetMessageListMethodTest {
     public static final int LIMIT_TO_3_MESSAGES = 3;
@@ -887,6 +896,31 @@ public abstract class GetMessageListMethodTest {
             .statusCode(200)
             .body(NAME, equalTo("messageList"))
             .body(ARGUMENTS + ".messageIds", contains(message.getMessageId().serialize()));
+    }
+
+    @Category(BasicFeature.class)
+    @Test
+    public void getMessageListShouldNotExcludeMessagesWhenInMailboxesFilterMatchesMailboxAndText() throws Exception {
+        MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "mailbox");
+        List<String> messageIds = IntStream.range(0, 3)
+            .boxed()
+            .map(Throwing.function((ignored) -> mailboxProbe.appendMessage(ALICE, MailboxPath.forUser(ALICE, "mailbox"),
+                    new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()), new Date(), false, new Flags())).sneakyThrow())
+            .map(ComposedMessageId::getMessageId)
+            .map(MessageId::serialize)
+            .collect(Collectors.toList());
+
+        await();
+
+        given()
+            .header("Authorization", aliceAccessToken.serialize())
+            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId.serialize() + "\"],\"text\":\"test\"}}, \"#0\"]]")
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("messageList"))
+            .body(ARGUMENTS + ".messageIds", equalTo(messageIds));
     }
 
     @Test
