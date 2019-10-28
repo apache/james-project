@@ -438,22 +438,25 @@ public class StoreMailboxManager implements MailboxManager {
             return m;
         });
 
-
     }
 
     @Override
     public void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
         LOGGER.debug("renameMailbox {} to {}", from, to);
-        if (mailboxExists(to, session)) {
-            throw new MailboxExistsException(to.toString());
+        MailboxPath sanitizedMailboxPath = to.sanitize(session.getPathDelimiter());
+        if (mailboxExists(sanitizedMailboxPath, session)) {
+            throw new MailboxExistsException(sanitizedMailboxPath.toString());
         }
-        if (isMailboxNameTooLong(to)) {
+        if (isMailboxNameTooLong(sanitizedMailboxPath)) {
             throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
+        }
+        if (sanitizedMailboxPath.hasEmptyNameInHierarchy(session.getPathDelimiter())) {
+            throw new HasEmptyMailboxNameInHierarchyException(to.asString());
         }
 
         assertIsOwner(session, from);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, to, session, mapper)));
+        mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, sanitizedMailboxPath, session, mapper)));
     }
 
     private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
