@@ -126,6 +126,62 @@ public class MailboxPathTest {
     }
 
     @Test
+    public void hasEmptyNameInHierarchyShouldBeFalseIfSingleLevelPath() {
+        assertThat(MailboxPath.forUser("user", "a")
+            .hasEmptyNameInHierarchy('.'))
+            .isFalse();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeFalseIfNestedLevelWithNonEmptyNames() {
+        assertThat(MailboxPath.forUser("user", "a.b.c")
+            .hasEmptyNameInHierarchy('.'))
+            .isFalse();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfEmptyPath() {
+        assertThat(MailboxPath.forUser("user", "")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTwoEmptyNames() {
+        assertThat(MailboxPath.forUser("user", ".")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithAnEmptyNameBetweenTwoNames() {
+        assertThat(MailboxPath.forUser("user", "a..b")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithHeadingEmptyNames() {
+        assertThat(MailboxPath.forUser("user", "..a")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithATrailingEmptyName() {
+        assertThat(MailboxPath.forUser("user", "a.")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
+    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTrailingEmptyNames() {
+        assertThat(MailboxPath.forUser("user", "a..")
+            .hasEmptyNameInHierarchy('.'))
+            .isTrue();
+    }
+
+    @Test
     public void isInboxShouldReturnTrueWhenINBOX() {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", DefaultMailboxes.INBOX);
         assertThat(mailboxPath.isInbox()).isTrue();

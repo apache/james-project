@@ -147,6 +147,13 @@ public class MailboxPath {
         return this;
     }
 
+    public boolean hasEmptyNameInHierarchy(char pathDelimiter) {
+        String delimiterString = String.valueOf(pathDelimiter);
+        return this.name.isEmpty()
+            || this.name.contains(delimiterString + delimiterString)
+            || this.name.startsWith(delimiterString)
+            || this.name.endsWith(delimiterString);
+    }
 
     public String asString() {
         return namespace + ":" + user + ":" + name;
