@@ -43,6 +43,7 @@ import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
+import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -333,42 +334,53 @@ public class StoreMailboxManager implements MailboxManager {
             if (isMailboxNameTooLong(mailboxPath)) {
                 throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
             }
+
             if (mailboxExists(sanitizedMailboxPath, mailboxSession)) {
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
             }
-            // Create parents first
-            // If any creation fails then the mailbox will not be created
-            // TODO: transaction
-            List<MailboxId> mailboxIds = new ArrayList<>();
-            for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter())) {
-                locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
-                    if (!mailboxExists(mailbox, mailboxSession)) {
-                        Mailbox m = doCreateMailbox(mailbox);
-                        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-                        try {
-                            mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
-                            // notify listeners
-                            eventBus.dispatch(EventFactory.mailboxAdded()
-                                .randomEventId()
-                                .mailboxSession(mailboxSession)
-                                .mailbox(m)
-                                .build(),
-                                new MailboxIdRegistrationKey(m.getMailboxId()))
-                                .block();
-                        } catch (MailboxExistsException e) {
-                            LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
-                        }
-                    }
-                    return null;
 
-                }, true);
+            if (sanitizedMailboxPath.hasEmptyNameInHierarchy(mailboxSession.getPathDelimiter())) {
+                throw new HasEmptyMailboxNameInHierarchyException(sanitizedMailboxPath.asString());
             }
+
+            List<MailboxId> mailboxIds = createMailboxesForPath(mailboxSession, sanitizedMailboxPath);
 
             if (!mailboxIds.isEmpty()) {
                 return Optional.ofNullable(Iterables.getLast(mailboxIds));
             }
         }
         return Optional.empty();
+    }
+
+    private List<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) throws MailboxException {
+        // Create parents first
+        // If any creation fails then the mailbox will not be created
+        // TODO: transaction
+        List<MailboxId> mailboxIds = new ArrayList<>();
+        for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter())) {
+            locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
+                if (!mailboxExists(mailbox, mailboxSession)) {
+                    Mailbox m = doCreateMailbox(mailbox);
+                    MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+                    try {
+                        mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
+                        // notify listeners
+                        eventBus.dispatch(EventFactory.mailboxAdded()
+                            .randomEventId()
+                            .mailboxSession(mailboxSession)
+                            .mailbox(m)
+                            .build(),
+                            new MailboxIdRegistrationKey(m.getMailboxId()))
+                            .block();
+                    } catch (MailboxExistsException e) {
+                        LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
+                    }
+                }
+                return null;
+
+            }, true);
+        }
+        return mailboxIds;
     }
 
     private void assertMailboxPathBelongToUser(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {

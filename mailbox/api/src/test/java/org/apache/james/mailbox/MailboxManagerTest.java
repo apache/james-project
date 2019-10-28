@@ -48,6 +48,7 @@ import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.AnnotationException;
+import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
@@ -82,7 +83,6 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import reactor.core.publisher.Mono;
 
 /**
@@ -211,6 +211,56 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
                 .isInstanceOf(TooLongMailboxNameException.class);
         }
+
+        @Test
+        void creatingMailboxShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a.b.c";
+
+            assertThatCode(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session)).doesNotThrowAnyException();
+        }
+
+        @Test
+        void creatingMailboxShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a.b.";
+
+            assertThatCode(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
+        void creatingMailboxShouldThrowWhenNameWithMoreThanOneTrailingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a..";
+
+            assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
+        @Test
+        void creatingMailboxShouldThrowWhenNameWithHeadingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  ".a";
+
+            assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
+        @Test
+        void creatingMailboxShouldThrowWhenNameWithEmptyHierarchicalLevel() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a..b";
+
+            assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
     }
 
     @Nested
