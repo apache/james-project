@@ -2055,7 +2055,7 @@ For instance:
 curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=reprocess
 ```
 
-Additional query paramaters are supported:
+Additional query parameters are supported:
  - `queue` allow you to target the mail queue you want to enqueue the mails in.
  - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
 
@@ -2116,7 +2116,7 @@ For instance:
 curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?action=reprocess
 ```
 
-Additional query paramaters are supported:
+Additional query parameters are supported:
  - `queue` allow you to target the mail queue you want to enqueue the mails in.
  - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
 
