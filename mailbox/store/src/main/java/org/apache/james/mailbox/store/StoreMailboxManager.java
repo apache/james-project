@@ -44,6 +44,7 @@ import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
+import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -352,34 +353,64 @@ public class StoreMailboxManager implements MailboxManager {
         return Optional.empty();
     }
 
-    private List<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) throws MailboxException {
+    private List<MailboxId> createMailboxesForPath(MailboxSession mailboxSession, MailboxPath sanitizedMailboxPath) {
         // Create parents first
         // If any creation fails then the mailbox will not be created
         // TODO: transaction
-        List<MailboxId> mailboxIds = new ArrayList<>();
-        for (MailboxPath mailbox : sanitizedMailboxPath.getHierarchyLevels(getDelimiter())) {
-            locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
-                if (!mailboxExists(mailbox, mailboxSession)) {
-                    Mailbox m = doCreateMailbox(mailbox);
-                    MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
-                    try {
-                        mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
-                        // notify listeners
-                        eventBus.dispatch(EventFactory.mailboxAdded()
-                            .randomEventId()
-                            .mailboxSession(mailboxSession)
-                            .mailbox(m)
-                            .build(),
-                            new MailboxIdRegistrationKey(m.getMailboxId()))
-                            .block();
-                    } catch (MailboxExistsException e) {
-                        LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
-                    }
-                }
-                return null;
+        List<MailboxPath> intermediatePaths = sanitizedMailboxPath.getHierarchyLevels(getDelimiter());
+        boolean isRootPath = intermediatePaths.size() == 1;
 
-            }, true);
+        return intermediatePaths
+            .stream()
+            .flatMap(Throwing.<MailboxPath, Stream<MailboxId>>function(mailbox -> manageMailboxCreation(mailboxSession, isRootPath, mailbox)).sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
+
+    private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailbox) throws MailboxException {
+        if (mailbox.isInbox()) {
+            if (hasInbox(mailboxSession)) {
+                return duplicatedINBOXCreation(isRootPath, mailbox);
+            }
+
+            return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession)).stream();
         }
+
+        return performConcurrentMailboxCreation(mailboxSession, mailbox).stream();
+    }
+
+
+    private Stream<MailboxId> duplicatedINBOXCreation(boolean isRootPath, MailboxPath mailbox) throws InboxAlreadyCreated {
+        if (isRootPath) {
+            throw new InboxAlreadyCreated(mailbox.getName());
+        }
+
+        return Stream.empty();
+    }
+
+    private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailbox) throws MailboxException {
+        List<MailboxId> mailboxIds = new ArrayList<>();
+        locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
+            if (!mailboxExists(mailbox, mailboxSession)) {
+                Mailbox m = doCreateMailbox(mailbox);
+                MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
+                try {
+                    mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
+                    // notify listeners
+                    eventBus.dispatch(EventFactory.mailboxAdded()
+                        .randomEventId()
+                        .mailboxSession(mailboxSession)
+                        .mailbox(m)
+                        .build(),
+                        new MailboxIdRegistrationKey(m.getMailboxId()))
+                        .block();
+                } catch (MailboxExistsException e) {
+                    LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
+                }
+            }
+            return null;
+
+        }, true);
+
         return mailboxIds;
     }
 
@@ -645,7 +676,6 @@ public class StoreMailboxManager implements MailboxManager {
         } catch (MailboxNotFoundException e) {
             return false;
         }
-
     }
 
     /**

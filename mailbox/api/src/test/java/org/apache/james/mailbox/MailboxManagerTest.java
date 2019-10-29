@@ -49,7 +49,10 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
+import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.exception.MailboxExistsException;
+import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.mock.DataProvisioner;
@@ -162,6 +165,66 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         assertThat(mailboxId.isPresent()).isTrue();
         assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+    }
+
+    @Nested
+    class MailboxCreationTests {
+        @Test
+        void hasInboxShouldBeFalseWhenINBOXIsNotCreated() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            assertThat(mailboxManager.hasInbox(session)).isFalse();
+        }
+
+        @Test
+        void hasInboxShouldBeTrueWhenINBOXIsCreated() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+            MessageManager retrievedMailbox = mailboxManager.getMailbox(mailboxPath, session);
+
+            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+        }
+
+        @Test
+        void creatingMixedCaseINBOXShouldCreateItAsINBOX() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx"), session);
+            MessageManager retrievedMailbox = mailboxManager.getMailbox(MailboxPath.inbox(session), session);
+
+            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
+        }
+
+        @Test
+        void creatingMixedCaseINBOXShouldNotBeRetrievableAsIt() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            MailboxPath mailboxPath = MailboxPath.forUser(USER_1, "iNbOx");
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath, session);
+            assertThat(mailboxId).isPresent();
+
+            assertThatThrownBy(() -> mailboxManager.getMailbox(mailboxPath, session))
+                .isInstanceOf(MailboxNotFoundException.class);
+        }
+
+        @Test
+        void creatingMixedCaseINBOXWhenItHasAlreadyBeenCreatedShouldThrow() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            mailboxManager.createMailbox(MailboxPath.inbox(session), session);
+
+            assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx"), session))
+                .isInstanceOf(InboxAlreadyCreated.class);
+        }
     }
 
     @Nested

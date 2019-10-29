@@ -275,6 +275,38 @@ public abstract class SetMailboxesMethodTest {
         assertThat(mailboxProbe.listSubscriptions(username)).contains("foo");
     }
 
+    @Category(BasicFeature.class)
+    @Test
+    public void userShouldGetAnErrorWhenNotBeAbleToCreateACaseVariationOfINBOX() throws Exception {
+        String requestBody =
+            "[" +
+                "  [ \"setMailboxes\"," +
+                "    {" +
+                "      \"create\": {" +
+                "        \"create-id01\" : {" +
+                "          \"name\" : \"iNbOx\"" +
+                "        }" +
+                "      }" +
+                "    }," +
+                "    \"#0\"" +
+                "  ]" +
+                "]";
+
+        given()
+            .header("Authorization", accessToken.serialize())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .statusCode(200)
+            .body(NAME, equalTo("mailboxesSet"))
+            .body(ARGUMENTS + ".notCreated", hasKey("create-id01"))
+            .body(ARGUMENTS + ".notCreated.create-id01.type", equalTo("invalidArguments"))
+            .body(ARGUMENTS + ".notCreated.create-id01.description", equalTo("The mailbox 'iNbOx' already exists as 'INBOX'"));
+
+        assertThat(mailboxProbe.listUserMailboxes(username)).doesNotContain("iNbOx");
+    }
+
     @Test
     public void userShouldBeSubscribedOnCreatedMailboxWhenCreateChildOfInboxMailbox() throws Exception {
         MailboxId inboxId = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, username, MailboxConstants.INBOX);

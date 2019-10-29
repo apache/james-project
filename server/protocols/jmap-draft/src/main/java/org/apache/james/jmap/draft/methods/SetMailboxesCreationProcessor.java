@@ -41,6 +41,7 @@ import org.apache.james.jmap.draft.utils.SortingHierarchicalCollections;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNameException;
@@ -153,13 +154,20 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                     .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(message)
                     .build());
+        } catch (InboxAlreadyCreated e) {
+            String message = String.format("The mailbox '%s' already exists as 'INBOX'", e.getMailboxName());
+            LOGGER.error(message, e);
+            builder.notCreated(mailboxCreationId, SetError.builder()
+                .type(SetError.Type.INVALID_ARGUMENTS)
+                .description(message)
+                .build());
         } catch (MailboxException e) {
             String message = String.format("An error occurred when creating the mailbox '%s'", mailboxCreationId.getCreationId());
             LOGGER.error(message, e);
             builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type(SetError.Type.ERROR)
-                    .description(message)
-                    .build());
+                .type(SetError.Type.ERROR)
+                .description(message)
+                .build());
         }
     }
 

@@ -28,10 +28,14 @@ C: a001 STATUS INBOX (MESSAGES)
 S: \* STATUS \"INBOX\" \(MESSAGES \d+\)
 S: a001 OK STATUS completed.
 
-# Case-insensitive inbox
+# Case-insensitive INBOX
 C: a001 STATUS InBoX (MESSAGES)
 S: \* STATUS \"INBOX\" \(MESSAGES \d+\)
 S: a001 OK STATUS completed.
+
+# Case-insensitive INBOX creation check
+C: a1 CREATE "iNbOx"
+S: a1 NO CREATE failed. Mailbox already exists.
 
 # Tests with an atomic mailbox name.
 C: a1 CREATE atomMailbox

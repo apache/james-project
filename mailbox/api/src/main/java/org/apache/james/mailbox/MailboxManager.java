@@ -256,6 +256,19 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
     /**
+     * Does the user INBOX exist?
+     *
+     * @param session
+     *            the context for this call, not null
+     * @return true when the INBOX exists and is accessible for the given
+     *         user, false otherwise
+     * @throws MailboxException
+     */
+    default boolean hasInbox(MailboxSession session) throws MailboxException {
+        return mailboxExists(MailboxPath.inbox(session), session);
+    }
+
+    /**
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
      * Use {@link #login(String, String)} when accessing this API from a
