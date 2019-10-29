@@ -10,7 +10,9 @@ RUN apt-get update \
 RUN gem install \
   github-pages \
   jekyll \
+  jekyll-feed \
   jekyll-redirect-from \
+  jekyll-seo-tag \
   kramdown \
   rdiscount \
   rouge
