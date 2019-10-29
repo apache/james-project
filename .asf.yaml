@@ -4,6 +4,6 @@ github:
   labels:
     - mail
     - server
-    - IMAP
-    - SMTP
-    - JMAP
+    - imap
+    - smtp
+    - jmap
