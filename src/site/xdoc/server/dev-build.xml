@@ -65,11 +65,11 @@
 
     <p>To run the build you need two third-party tools.</p>
     <ol>
-      <li>Java Development Kit - You must have a JDK of Java version 1.6 or higher installed to build the
-          James distribution.  The exact JDKs available depend on the platform.  A JDK must be downloaded and
+      <li>Java Development Kit - You must have a JDK of Java version 1.11 or higher installed to build the
+          James distribution.  The exact JDKs available depend on the platform. A JDK must be downloaded and
           installed before the build can run.</li>
-      <li>Maven 3.0.2 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.0.2+) in order
-          to build James. You can get maven 3.0.2 from <a href="http://maven.apache.org/download.html">here</a>.
+      <li>Maven 3.3.9 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.3.9+) in order
+          to build James. We recommend you to use maven 3.6.2. You can get maven from <a href="http://maven.apache.org/download.html">here</a>.
           Installation instructions for maven are also available on the same page <a href="http://maven.apache.org/download.html">http://maven.apache.org/download.html</a>.</li>
     </ol>
     <p>Set (on windows) or export (on Unix) MAVEN_OPTS to tune the memory needed by maven with "MAVEN_OPTS=-Xmx1024m -XX:MaxPermSize=128m"</p>
@@ -84,27 +84,24 @@
       <li>compile - compiles the source code.</li>
       <li>test - run unit tests for James.</li>
       <li><b>package - generates all the James distributions, packed.
-      From the root directory, cd to 'server/container/spring/target' to have the build distribution.
-      Notice, for the latest trunk(revision 1430655+), or on master, a specific profile argument need to be set: '-Pwith-assembly'.
-      The location of final distributions is also changed to 'JAMES_SRC_HOME/server/app/target'.</b></li>
+      From the root directory, cd to 'server/app/target' to have the build distribution.</b></li>
       <li>javadocs:javadocs - builds the James javadocs.</li>
       <li>site - builds the entirety of the James website.</li>
     </ul>
     </p>
     <p>For example, invoke <code>mvn package</code> to get a zip/tar of James distribution.</p>
-    <p>All built products are output in the <code>server/container/spring/target</code>
+    <p>All built products are output in the <code>server/app/target</code>
       subdirectory of the James source directory.
       This directory will be deleted if you run build with the clean argument.</p>
     <p><strong>Warning!</strong> Any changes you've made in the 'dist' directory
-      will be lost after a recompilation. If you are running James for this directory
-      we recommend you backup to avoid losing work. </p>
+      will be lost after a recompilation. You should not run James from this directory.</p>
     <p>You can also invoke the command line from a shell. Go to the server project cli folder and type mvn exec:java -Dexec.args="-h localhost -p 9999 help"</p>
 
   </section>
 
   <section name="Build James Source from Eclipse">
 
-    <p>Upon the following documentation, an interessting resource 
+    <p>Upon the following documentation, an interesting resource
        <a href="http://blog.bonnydoonmedia.com/post.cfm/walkthrough-tutorials-compiling-apache-james-v3-with-eclipse">
        can be found here</a>
     </p>
@@ -165,7 +162,7 @@
 
       <p>If you change a JPA Entity class, your will need to run 'mvn package'
           or add the following option to the VM argument of your run configuration
-          '-javaagent:my_home_folder/.m2/repository/org/apache/openjpa/openjpa/2.2.1/openjpa-2.2.1.jar'
+          '-javaagent:my_home_folder/.m2/repository/org/apache/openjpa/openjpa/3.1.0/openjpa-3.1.0.jar'
       </p>
 
     </subsection>
@@ -220,9 +217,9 @@
       </p>
 
       <subsection name="Getting the sources from the repository">
-          <p>To download the source code, you can use the Subversion support that comes with IntelliJ IDEA following the next steps:</p>
+          <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
 
-          <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Subversion</strong>.</p>
+          <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
           <img src="./images/intellij-idea/intellij-new-project.png"/>
           <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
           <img src="./images/intellij-idea/intellij-svn-repo.png"/>            <br/>
