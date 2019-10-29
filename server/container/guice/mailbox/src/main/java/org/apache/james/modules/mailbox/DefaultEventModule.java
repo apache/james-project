@@ -19,10 +19,7 @@
 
 package org.apache.james.modules.mailbox;
 
-import javax.inject.Inject;
-
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -33,18 +30,18 @@ import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class DefaultEventModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(ListenerRegistrationPerformer.class);
-
         bind(MailboxListenerFactory.class).in(Scopes.SINGLETON);
         bind(MailboxListenersLoaderImpl.class).in(Scopes.SINGLETON);
         bind(InVmEventDelivery.class).in(Scopes.SINGLETON);
@@ -66,25 +63,10 @@ public class DefaultEventModule extends AbstractModule {
         return ListenersConfiguration.from(configurationProvider.getConfiguration("listeners"));
     }
 
-    @Singleton
-    public static class ListenerRegistrationPerformer implements InitializationOperation {
-        private final MailboxListenersLoaderImpl listeners;
-        private final ListenersConfiguration configuration;
-
-        @Inject
-        public ListenerRegistrationPerformer(MailboxListenersLoaderImpl listeners, ListenersConfiguration configuration) {
-            this.listeners = listeners;
-            this.configuration = configuration;
-        }
-
-        @Override
-        public void initModule() {
-            listeners.configure(configuration);
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return MailboxListenersLoaderImpl.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation registerListeners(MailboxListenersLoaderImpl listeners, ListenersConfiguration configuration) {
+        return InitilizationOperationBuilder
+            .forClass(MailboxListenersLoaderImpl.class)
+            .init(() -> listeners.configure(configuration));
     }
 }

@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.managesieve.api.commands.CoreCommands;
 import org.apache.james.managesieve.core.CoreProcessor;
 import org.apache.james.managesieveserver.netty.ManageSieveServerFactory;
@@ -26,11 +25,11 @@ import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class ManageSieveServerModule extends AbstractModule {
 
@@ -38,30 +37,16 @@ public class ManageSieveServerModule extends AbstractModule {
     protected void configure() {
         install(new SieveModule());
         bind(CoreCommands.class).to(CoreProcessor.class);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(ManageSieveModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SieveProbeImpl.class);
     }
 
-    @Singleton
-    public static class ManageSieveModuleInitializationOperation implements InitializationOperation {
-        private final ConfigurationProvider configurationProvider;
-        private final ManageSieveServerFactory manageSieveServerFactory;
-
-        @Inject
-        public ManageSieveModuleInitializationOperation(ConfigurationProvider configurationProvider, ManageSieveServerFactory manageSieveServerFactory) {
-            this.configurationProvider = configurationProvider;
-            this.manageSieveServerFactory = manageSieveServerFactory;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
-            manageSieveServerFactory.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return ManageSieveServerFactory.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureManageSieve(ConfigurationProvider configurationProvider, ManageSieveServerFactory manageSieveServerFactory) {
+        return InitilizationOperationBuilder
+            .forClass(ManageSieveServerFactory.class)
+            .init(() -> {
+                manageSieveServerFactory.configure(configurationProvider.getConfiguration("managesieveserver", LoggingLevel.INFO));
+                manageSieveServerFactory.init();
+            });
     }
 }

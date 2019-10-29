@@ -33,7 +33,6 @@ import org.apache.james.adapter.mailbox.ReIndexerManagement;
 import org.apache.james.adapter.mailbox.ReIndexerManagementMBean;
 import org.apache.james.domainlist.api.DomainListManagementMBean;
 import org.apache.james.domainlist.lib.DomainListManagement;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.tools.copier.MailboxCopierImpl;
@@ -47,17 +46,17 @@ import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.apache.james.utils.GuiceMailboxManagerResolver;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 import com.google.inject.name.Names;
 
 public class JMXServerModule extends AbstractModule {
@@ -96,8 +95,6 @@ public class JMXServerModule extends AbstractModule {
         bind(ReIndexerManagementMBean.class).to(ReIndexerManagement.class);
         bind(QuotaManagementMBean.class).to(QuotaManagement.class);
         bind(SieveRepositoryManagementMBean.class).to(SieveRepositoryManagement.class);
-        Multibinder<InitializationOperation> configurationMultibinder = Multibinder.newSetBinder(binder(), InitializationOperation.class);
-        configurationMultibinder.addBinding().to(JMXModuleInitializationOperation.class);
     }
 
     @Provides
@@ -111,57 +108,28 @@ public class JMXServerModule extends AbstractModule {
         }
     }
 
-    @Singleton
-    public static class JMXModuleInitializationOperation implements InitializationOperation {
-
-        private final JMXServer jmxServer;
-        private final DomainListManagementMBean domainListManagementMBean;
-        private final UsersRepositoryManagementMBean usersRepositoryManagementMBean;
-        private final RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean;
-        private final MailboxManagerManagementMBean mailboxManagerManagementMBean;
-        private final MailboxCopierManagementMBean mailboxCopierManagementMBean;
-        private final ReIndexerManagementMBean reIndexerManagementMBean;
-        private final QuotaManagementMBean quotaManagementMBean;
-        private final SieveRepositoryManagementMBean sieveRepositoryManagementMBean;
-
-        @Inject
-        public JMXModuleInitializationOperation(JMXServer jmxServer,
-                                                DomainListManagementMBean domainListManagementMBean,
-                                                UsersRepositoryManagementMBean usersRepositoryManagementMBean,
-                                                RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
-                                                MailboxManagerManagementMBean mailboxManagerManagementMBean,
-                                                MailboxCopierManagementMBean mailboxCopierManagementMBean,
-                                                ReIndexerManagementMBean reIndexerManagementMBean,
-                                                QuotaManagementMBean quotaManagementMBean,
-                                                SieveRepositoryManagementMBean sieveRepositoryManagementMBean) {
-            this.jmxServer = jmxServer;
-            this.domainListManagementMBean = domainListManagementMBean;
-            this.usersRepositoryManagementMBean = usersRepositoryManagementMBean;
-            this.recipientRewriteTableManagementMBean = recipientRewriteTableManagementMBean;
-            this.mailboxManagerManagementMBean = mailboxManagerManagementMBean;
-            this.mailboxCopierManagementMBean = mailboxCopierManagementMBean;
-            this.reIndexerManagementMBean = reIndexerManagementMBean;
-            this.quotaManagementMBean = quotaManagementMBean;
-            this.sieveRepositoryManagementMBean = sieveRepositoryManagementMBean;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            jmxServer.start();
-            jmxServer.register(JMX_COMPONENT_DOMAINLIST, domainListManagementMBean);
-            jmxServer.register(JMX_COMPONENT_USERS_REPOSITORY, usersRepositoryManagementMBean);
-            jmxServer.register(JMX_COMPONENT_RECIPIENTREWRITETABLE, recipientRewriteTableManagementMBean);
-            jmxServer.register(JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN, mailboxManagerManagementMBean);
-            jmxServer.register(JMX_COMPONENT_MAILBOXCOPIER, mailboxCopierManagementMBean);
-            jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
-            jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
-            jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return JMXServer.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation startJmxServer(JMXServer jmxServer,
+                                        DomainListManagementMBean domainListManagementMBean,
+                                        UsersRepositoryManagementMBean usersRepositoryManagementMBean,
+                                        RecipientRewriteTableManagementMBean recipientRewriteTableManagementMBean,
+                                        MailboxManagerManagementMBean mailboxManagerManagementMBean,
+                                        MailboxCopierManagementMBean mailboxCopierManagementMBean,
+                                        ReIndexerManagementMBean reIndexerManagementMBean,
+                                        QuotaManagementMBean quotaManagementMBean,
+                                        SieveRepositoryManagementMBean sieveRepositoryManagementMBean) {
+        return InitilizationOperationBuilder
+            .forClass(JMXServer.class)
+            .init(() -> {
+                jmxServer.start();
+                jmxServer.register(JMX_COMPONENT_DOMAINLIST, domainListManagementMBean);
+                jmxServer.register(JMX_COMPONENT_USERS_REPOSITORY, usersRepositoryManagementMBean);
+                jmxServer.register(JMX_COMPONENT_RECIPIENTREWRITETABLE, recipientRewriteTableManagementMBean);
+                jmxServer.register(JMX_COMPONENT_NAME_MAILBOXMANAGERBEAN, mailboxManagerManagementMBean);
+                jmxServer.register(JMX_COMPONENT_MAILBOXCOPIER, mailboxCopierManagementMBean);
+                jmxServer.register(JMX_COMPONENT_REINDEXER, reIndexerManagementMBean);
+                jmxServer.register(JMX_COMPONENT_QUOTA, quotaManagementMBean);
+                jmxServer.register(JMX_COMPONENT_SIEVE, sieveRepositoryManagementMBean);
+            });
     }
-
 }

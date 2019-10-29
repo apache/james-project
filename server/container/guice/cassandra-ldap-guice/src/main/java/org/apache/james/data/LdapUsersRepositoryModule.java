@@ -19,28 +19,24 @@
 package org.apache.james.data;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.ldap.LdapRepositoryConfiguration;
 import org.apache.james.user.ldap.ReadOnlyUsersLDAPRepository;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class LdapUsersRepositoryModule extends AbstractModule {
-
     @Override
     public void configure() {
         bind(ReadOnlyUsersLDAPRepository.class).in(Scopes.SINGLETON);
         bind(UsersRepository.class).to(ReadOnlyUsersLDAPRepository.class);
-
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(LdapUsersRepositoryInitializationOperation.class);
     }
 
     @Provides
@@ -50,26 +46,13 @@ public class LdapUsersRepositoryModule extends AbstractModule {
             configurationProvider.getConfiguration("usersrepository"));
     }
 
-    @Singleton
-    public static class LdapUsersRepositoryInitializationOperation implements InitializationOperation {
-        private final LdapRepositoryConfiguration configuration;
-        private final ReadOnlyUsersLDAPRepository usersRepository;
-
-        @Inject
-        public LdapUsersRepositoryInitializationOperation(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
-            this.configuration = configuration;
-            this.usersRepository = usersRepository;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            usersRepository.configure(configuration);
-            usersRepository.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return ReadOnlyUsersLDAPRepository.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureLdap(LdapRepositoryConfiguration configuration, ReadOnlyUsersLDAPRepository usersRepository) {
+        return InitilizationOperationBuilder
+            .forClass(ReadOnlyUsersLDAPRepository.class)
+            .init(() -> {
+                usersRepository.configure(configuration);
+                usersRepository.init();
+            });
     }
 }

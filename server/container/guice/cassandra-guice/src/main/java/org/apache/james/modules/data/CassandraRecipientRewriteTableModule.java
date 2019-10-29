@@ -19,7 +19,6 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
@@ -27,15 +26,14 @@ import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class CassandraRecipientRewriteTableModule extends AbstractModule {
-
     @Override
     public void configure() {
         bind(CassandraRecipientRewriteTable.class).in(Scopes.SINGLETON);
@@ -44,29 +42,12 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(CassandraRecipientRewriteTablePerformer.class);
     }
 
-    @Singleton
-    public static class CassandraRecipientRewriteTablePerformer implements InitializationOperation {
-        private final ConfigurationProvider configurationProvider;
-        private final CassandraRecipientRewriteTable recipientRewriteTable;
-
-        @Inject
-        public CassandraRecipientRewriteTablePerformer(ConfigurationProvider configurationProvider, CassandraRecipientRewriteTable recipientRewriteTable) {
-            this.configurationProvider = configurationProvider;
-            this.recipientRewriteTable = recipientRewriteTable;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return CassandraRecipientRewriteTable.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureRecipientRewriteTable(ConfigurationProvider configurationProvider, CassandraRecipientRewriteTable recipientRewriteTable) {
+        return InitilizationOperationBuilder
+            .forClass(CassandraRecipientRewriteTable.class)
+            .init(() -> recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable")));
     }
-
 }

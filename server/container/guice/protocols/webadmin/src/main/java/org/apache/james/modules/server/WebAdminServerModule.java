@@ -30,11 +30,11 @@ import javax.inject.Named;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.james.jwt.JwtTokenVerifier;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.ClassName;
 import org.apache.james.utils.GuiceGenericLoader;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.NamingScheme;
 import org.apache.james.utils.PropertiesProvider;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -55,11 +55,11 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class WebAdminServerModule extends AbstractModule {
 
@@ -82,7 +82,6 @@ public class WebAdminServerModule extends AbstractModule {
         bind(JsonTransformer.class).in(Scopes.SINGLETON);
         bind(WebAdminServer.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(WebAdminServerModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(WebAdminGuiceProbe.class);
         Multibinder.newSetBinder(binder(), JsonTransformerModule.class);
     }
@@ -157,24 +156,10 @@ public class WebAdminServerModule extends AbstractModule {
         return Optional.empty();
     }
 
-    @Singleton
-    public static class WebAdminServerModuleInitializationOperation implements InitializationOperation {
-        private final WebAdminServer webAdminServer;
-
-        @Inject
-        public WebAdminServerModuleInitializationOperation(WebAdminServer webAdminServer) {
-            this.webAdminServer = webAdminServer;
-        }
-
-        @Override
-        public void initModule() {
-            webAdminServer.start();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return WebAdminServer.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation workQueue(WebAdminServer instance) {
+        return InitilizationOperationBuilder
+            .forClass(WebAdminServer.class)
+            .init(instance::start);
     }
-
 }

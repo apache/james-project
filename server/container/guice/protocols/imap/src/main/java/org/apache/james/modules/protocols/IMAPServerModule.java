@@ -26,7 +26,6 @@ import org.apache.james.imap.main.DefaultImapDecoderFactory;
 import org.apache.james.imap.processor.main.DefaultImapProcessorFactory;
 import org.apache.james.imapserver.netty.IMAPServerFactory;
 import org.apache.james.imapserver.netty.OioIMAPServerFactory;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.events.EventBus;
@@ -36,13 +35,14 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class IMAPServerModule extends AbstractModule {
 
@@ -51,7 +51,6 @@ public class IMAPServerModule extends AbstractModule {
         bind(IMAPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioIMAPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(IMAPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(ImapGuiceProbe.class);
     }
 
@@ -85,27 +84,13 @@ public class IMAPServerModule extends AbstractModule {
         return new DefaultImapEncoderFactory().buildImapEncoder();
     }
 
-    @Singleton
-    public static class IMAPModuleInitializationOperation implements InitializationOperation {
-
-        private final ConfigurationProvider configurationProvider;
-        private final IMAPServerFactory imapServerFactory;
-
-        @Inject
-        public IMAPModuleInitializationOperation(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
-            this.configurationProvider = configurationProvider;
-            this.imapServerFactory = imapServerFactory;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
-            imapServerFactory.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return IMAPServerFactory.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureImap(ConfigurationProvider configurationProvider, IMAPServerFactory imapServerFactory) {
+        return InitilizationOperationBuilder
+            .forClass(IMAPServerFactory.class)
+            .init(() -> {
+                imapServerFactory.configure(configurationProvider.getConfiguration("imapserver"));
+                imapServerFactory.init();
+            });
     }
 }

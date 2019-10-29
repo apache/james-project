@@ -19,53 +19,35 @@
 
 package org.apache.james.modules.protocols;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.lmtpserver.netty.LMTPServerFactory;
 import org.apache.james.lmtpserver.netty.OioLMTPServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.util.LoggingLevel;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class LMTPServerModule extends AbstractModule {
-
     @Override
     protected void configure() {
         bind(LMTPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioLMTPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(LMTPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(LmtpGuiceProbe.class);
     }
 
-    @Singleton
-    public static class LMTPModuleInitializationOperation implements InitializationOperation {
-
-        private final ConfigurationProvider configurationProvider;
-        private final LMTPServerFactory lmtpServerFactory;
-
-        @Inject
-        public LMTPModuleInitializationOperation(ConfigurationProvider configurationProvider, LMTPServerFactory lmtpServerFactory) {
-            this.configurationProvider = configurationProvider;
-            this.lmtpServerFactory = lmtpServerFactory;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
-            lmtpServerFactory.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return LMTPServerFactory.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureLmtp(ConfigurationProvider configurationProvider, LMTPServerFactory lmtpServerFactory) {
+        return InitilizationOperationBuilder
+            .forClass(LMTPServerFactory.class)
+            .init(() -> {
+                lmtpServerFactory.configure(configurationProvider.getConfiguration("lmtpserver", LoggingLevel.INFO));
+                lmtpServerFactory.init();
+            });
     }
-
 }

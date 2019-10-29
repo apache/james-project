@@ -20,18 +20,18 @@
 package org.apache.james.modules.event;
 
 import org.apache.james.event.json.EventSerializer;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.RabbitMQEventBus;
 import org.apache.james.mailbox.events.RegistrationKey;
 import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class RabbitMQEventBusModule extends AbstractModule {
 
@@ -45,28 +45,13 @@ public class RabbitMQEventBusModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), RegistrationKey.Factory.class)
             .addBinding().to(MailboxIdRegistrationKey.Factory.class);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class)
-            .addBinding().to(RabbitMQEventBusInitializer.class);
-
         bind(RetryBackoffConfiguration.class).toInstance(RetryBackoffConfiguration.DEFAULT);
     }
 
-    static class RabbitMQEventBusInitializer implements InitializationOperation {
-        private final RabbitMQEventBus rabbitMQEventBus;
-
-        @Inject
-        RabbitMQEventBusInitializer(RabbitMQEventBus rabbitMQEventBus) {
-            this.rabbitMQEventBus = rabbitMQEventBus;
-        }
-
-        @Override
-        public void initModule() {
-            rabbitMQEventBus.start();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return RabbitMQEventBus.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation workQueue(RabbitMQEventBus instance) {
+        return InitilizationOperationBuilder
+            .forClass(RabbitMQEventBus.class)
+            .init(instance::start);
     }
 }

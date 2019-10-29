@@ -23,6 +23,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -30,7 +31,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
 
-public class DropWizardMetricFactory implements MetricFactory {
+public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     private final MetricRegistry metricRegistry;
     private final JmxReporter jmxReporter;

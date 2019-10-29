@@ -22,24 +22,21 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.jpa.JPADomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class JPADomainListModule extends AbstractModule {
-
     @Override
     public void configure() {
         bind(JPADomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(JPADomainList.class);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(JPADomainListInitializationOperation.class);
     }
 
     @Provides
@@ -51,26 +48,11 @@ public class JPADomainListModule extends AbstractModule {
             throw new RuntimeException(e);
         }
     }
-    
-    @Singleton
-    public static class JPADomainListInitializationOperation implements InitializationOperation {
-        private final DomainListConfiguration configuration;
-        private final JPADomainList jpaDomainList;
 
-        @Inject
-        public JPADomainListInitializationOperation(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
-            this.configuration = configuration;
-            this.jpaDomainList = jpaDomainList;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            jpaDomainList.configure(configuration);
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return JPADomainList.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureDomainList(DomainListConfiguration configuration, JPADomainList jpaDomainList) {
+        return InitilizationOperationBuilder
+            .forClass(JPADomainList.class)
+            .init(() -> jpaDomainList.configure(configuration));
     }
 }

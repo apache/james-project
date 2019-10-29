@@ -18,47 +18,27 @@
  ****************************************************************/
 package org.apache.james.modules.data;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.jpa.JPARecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class JPARecipientRewriteTableModule extends AbstractModule {
-
     @Override
     public void configure() {
         bind(JPARecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(JPARecipientRewriteTable.class);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(JPARecipientRewriteTablePerformer.class);
     }
 
-    @Singleton
-    public static class JPARecipientRewriteTablePerformer implements InitializationOperation {
-        private final ConfigurationProvider configurationProvider;
-        private final JPARecipientRewriteTable recipientRewriteTable;
-
-        @Inject
-        public JPARecipientRewriteTablePerformer(ConfigurationProvider configurationProvider, JPARecipientRewriteTable recipientRewriteTable) {
-            this.configurationProvider = configurationProvider;
-            this.recipientRewriteTable = recipientRewriteTable;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable"));
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return JPARecipientRewriteTable.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureRRT(ConfigurationProvider configurationProvider, JPARecipientRewriteTable recipientRewriteTable) {
+        return InitilizationOperationBuilder
+            .forClass(JPARecipientRewriteTable.class)
+            .init(() -> recipientRewriteTable.configure(configurationProvider.getConfiguration("recipientrewritetable")));
     }
-
 }

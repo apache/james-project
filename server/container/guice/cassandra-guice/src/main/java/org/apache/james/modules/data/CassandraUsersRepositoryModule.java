@@ -19,17 +19,16 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.cassandra.CassandraUsersRepository;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class CassandraUsersRepositoryModule extends AbstractModule {
     @Override
@@ -38,31 +37,12 @@ public class CassandraUsersRepositoryModule extends AbstractModule {
         bind(UsersRepository.class).to(CassandraUsersRepository.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(org.apache.james.user.cassandra.CassandraUsersRepositoryModule.MODULE);
-
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(CassandraUsersRepositoryInitializationOperation.class);
     }
 
-    @Singleton
-    public static class CassandraUsersRepositoryInitializationOperation implements InitializationOperation {
-
-        private final ConfigurationProvider configurationProvider;
-        private final CassandraUsersRepository usersRepository;
-
-        @Inject
-        public CassandraUsersRepositoryInitializationOperation(ConfigurationProvider configurationProvider, CassandraUsersRepository usersRepository) {
-            this.configurationProvider = configurationProvider;
-            this.usersRepository = usersRepository;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            usersRepository.configure(configurationProvider.getConfiguration("usersrepository"));
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return CassandraUsersRepository.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureUsersRepository(ConfigurationProvider configurationProvider, CassandraUsersRepository usersRepository) {
+        return InitilizationOperationBuilder
+            .forClass(CassandraUsersRepository.class)
+            .init(() -> usersRepository.configure(configurationProvider.getConfiguration("usersrepository")));
     }
-
 }

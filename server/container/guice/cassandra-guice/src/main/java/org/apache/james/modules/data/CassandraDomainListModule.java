@@ -23,16 +23,16 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.cassandra.CassandraDomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class CassandraDomainListModule extends AbstractModule {
 
@@ -41,7 +41,6 @@ public class CassandraDomainListModule extends AbstractModule {
         bind(CassandraDomainList.class).in(Scopes.SINGLETON);
         bind(DomainList.class).to(CassandraDomainList.class);
         Multibinder.newSetBinder(binder(), CassandraModule.class).addBinding().toInstance(org.apache.james.domainlist.cassandra.CassandraDomainListModule.MODULE);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(CassandraDomainListInitializationOperation.class);
     }
 
     @Provides
@@ -53,26 +52,11 @@ public class CassandraDomainListModule extends AbstractModule {
             throw new RuntimeException(e);
         }
     }
-    
-    @Singleton
-    public static class CassandraDomainListInitializationOperation implements InitializationOperation {
-        private final DomainListConfiguration configuration;
-        private final CassandraDomainList cassandraDomainList;
 
-        @Inject
-        public CassandraDomainListInitializationOperation(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
-            this.configuration = configuration;
-            this.cassandraDomainList = cassandraDomainList;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            cassandraDomainList.configure(configuration);
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return CassandraDomainList.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureDomainList(DomainListConfiguration configuration, CassandraDomainList cassandraDomainList) {
+        return InitilizationOperationBuilder
+            .forClass(CassandraDomainList.class)
+            .init(() -> cassandraDomainList.configure(configuration));
     }
 }

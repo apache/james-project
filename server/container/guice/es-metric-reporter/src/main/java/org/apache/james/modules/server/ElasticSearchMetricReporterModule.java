@@ -23,19 +23,18 @@ import java.io.FileNotFoundException;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.es.ESMetricReporter;
 import org.apache.james.metrics.es.ESReporterConfiguration;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class ElasticSearchMetricReporterModule extends AbstractModule {
     private static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
@@ -45,11 +44,6 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
 
     public static final boolean DEFAULT_DISABLE = false;
     public static final int DEFAULT_ES_HTTP_PORT = 9200;
-
-    @Override
-    protected void configure() {
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(ESMetricReporterStarter.class);
-    }
 
     @Provides
     @Singleton
@@ -83,24 +77,10 @@ public class ElasticSearchMetricReporterModule extends AbstractModule {
         return propertiesReader.getBoolean("elasticsearch.metrics.reports.enabled", DEFAULT_DISABLE);
     }
 
-    @Singleton
-    public static class ESMetricReporterStarter implements InitializationOperation {
-        private final ESMetricReporter esMetricReporter;
-
-        @Inject
-        public ESMetricReporterStarter(ESMetricReporter esMetricReporter) {
-            this.esMetricReporter = esMetricReporter;
-        }
-
-        @Override
-        public void initModule() {
-            esMetricReporter.start();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return ESMetricReporter.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation startReporter(ESMetricReporter instance) {
+        return InitilizationOperationBuilder
+            .forClass(ESMetricReporter.class)
+            .init(instance::start);
     }
-
 }

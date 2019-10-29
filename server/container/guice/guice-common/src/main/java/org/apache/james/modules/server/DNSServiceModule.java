@@ -20,46 +20,28 @@ package org.apache.james.modules.server;
 
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.dnsjava.DNSJavaService;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class DNSServiceModule extends AbstractModule {
-
     @Override
     protected void configure() {
         bind(DNSJavaService.class).in(Scopes.SINGLETON);
         bind(DNSService.class).to(DNSJavaService.class);
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(DNSServiceInitializationOperation.class);
     }
 
-    @Singleton
-    public static class DNSServiceInitializationOperation implements InitializationOperation {
-        private final ConfigurationProvider configurationProvider;
-        private final DNSJavaService dnsService;
-
-        @Inject
-        public DNSServiceInitializationOperation(ConfigurationProvider configurationProvider,
-                                                 DNSJavaService dnsService) {
-            this.configurationProvider = configurationProvider;
-            this.dnsService = dnsService;
-        }
-
-        @Override
-        public void initModule()  throws Exception {
-            dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
-            dnsService.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return DNSJavaService.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configureDNS(ConfigurationProvider configurationProvider, DNSJavaService dnsService) {
+        return InitilizationOperationBuilder
+            .forClass(DNSJavaService.class)
+            .init(() -> {
+                dnsService.configure(configurationProvider.getConfiguration("dnsservice"));
+                dnsService.init();
+            });
     }
 }

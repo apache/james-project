@@ -19,20 +19,18 @@
 
 package org.apache.james.modules.server;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.GaugeRegistry;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.dropwizard.DropWizardGaugeRegistry;
 import org.apache.james.metrics.dropwizard.DropWizardJVMMetrics;
 import org.apache.james.metrics.dropwizard.DropWizardMetricFactory;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class DropWizardMetricsModule extends AbstractModule {
 
@@ -45,30 +43,19 @@ public class DropWizardMetricsModule extends AbstractModule {
         bind(MetricFactory.class).to(DropWizardMetricFactory.class);
 
         bind(GaugeRegistry.class).to(DropWizardGaugeRegistry.class);
-
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(DropWizardInitializationOperation.class);
     }
 
-    @Singleton
-    public static class DropWizardInitializationOperation implements InitializationOperation, Startable {
-        private final DropWizardMetricFactory dropWizardMetricFactory;
-        private final DropWizardJVMMetrics dropWizardJVMMetrics;
+    @ProvidesIntoSet
+    InitializationOperation startMetricFactory(DropWizardMetricFactory instance) {
+        return InitilizationOperationBuilder
+            .forClass(DropWizardMetricFactory.class)
+            .init(instance::start);
+    }
 
-        @Inject
-        public DropWizardInitializationOperation(DropWizardMetricFactory dropWizardMetricFactory, DropWizardJVMMetrics dropWizardJVMMetrics) {
-            this.dropWizardMetricFactory = dropWizardMetricFactory;
-            this.dropWizardJVMMetrics = dropWizardJVMMetrics;
-        }
-
-        @Override
-        public void initModule() {
-            dropWizardMetricFactory.start();
-            dropWizardJVMMetrics.start();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return DropWizardInitializationOperation.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation startJVMMetrics(DropWizardJVMMetrics instance) {
+        return InitilizationOperationBuilder
+            .forClass(DropWizardJVMMetrics.class)
+            .init(instance::start);
     }
 }

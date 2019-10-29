@@ -19,59 +19,40 @@
 
 package org.apache.james.modules.protocols;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.smtpserver.SendMailHandler;
 import org.apache.james.smtpserver.netty.OioSMTPServerFactory;
 import org.apache.james.smtpserver.netty.SMTPServerFactory;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class SMTPServerModule extends AbstractModule {
-
     @Override
     protected void configure() {
         install(new JSPFModule());
         bind(SMTPServerFactory.class).in(Scopes.SINGLETON);
         bind(OioSMTPServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(SMTPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(SmtpGuiceProbe.class);
     }
 
-    @Singleton
-    public static class SMTPModuleInitializationOperation implements InitializationOperation {
-
-        private final ConfigurationProvider configurationProvider;
-        private final SMTPServerFactory smtpServerFactory;
-        private final SendMailHandler sendMailHandler;
-
-        @Inject
-        public SMTPModuleInitializationOperation(ConfigurationProvider configurationProvider,
-                                                 SMTPServerFactory smtpServerFactory,
-                                                 SendMailHandler sendMailHandler) {
-            this.configurationProvider = configurationProvider;
-            this.smtpServerFactory = smtpServerFactory;
-            this.sendMailHandler = sendMailHandler;
-        }
-
-        @Override
-        public void initModule() throws Exception {
+    @ProvidesIntoSet
+    InitializationOperation configureSmtp(ConfigurationProvider configurationProvider,
+                                        SMTPServerFactory smtpServerFactory,
+                                        SendMailHandler sendMailHandler) {
+        return InitilizationOperationBuilder
+            .forClass(SMTPServerFactory.class)
+            .init(() -> {
                 smtpServerFactory.configure(configurationProvider.getConfiguration("smtpserver"));
                 smtpServerFactory.init();
                 sendMailHandler.init(null);
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return SMTPServerFactory.class;
-        }
+            });
     }
 
 }

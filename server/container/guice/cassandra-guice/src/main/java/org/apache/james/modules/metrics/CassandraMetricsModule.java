@@ -21,48 +21,32 @@ package org.apache.james.modules.metrics;
 
 import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.codahale.metrics.MetricRegistry;
 import com.datastax.driver.core.Session;
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class CassandraMetricsModule extends AbstractModule {
-
     @Override
     protected void configure() {
         bind(CassandraMetricsInjector.class)
             .in(Scopes.SINGLETON);
-
-        Multibinder.newSetBinder(binder(), InitializationOperation.class)
-            .addBinding()
-            .to(CassandraMetricsInjector.class);
     }
 
-    public static class CassandraMetricsInjector implements InitializationOperation, Startable {
-
-        private final MetricRegistry metricRegistry;
-        private final Session session;
-
-        @Inject
-        public CassandraMetricsInjector(MetricRegistry metricRegistry, Session session) {
-            this.metricRegistry = metricRegistry;
-            this.session = session;
-        }
-
-        @Override
-        public void initModule() {
-            metricRegistry.registerAll(
+    @ProvidesIntoSet
+    InitializationOperation injectMetrics(MetricRegistry metricRegistry, Session session) {
+        return InitilizationOperationBuilder
+            .forClass(CassandraMetricsInjector.class)
+            .init(() -> metricRegistry.registerAll(
                 session.getCluster()
                     .getMetrics()
-                    .getRegistry());
-        }
+                    .getRegistry()));
+    }
 
-        @Override
-        public Class<? extends Startable> forClass() {
-            return CassandraMetricsInjector.class;
-        }
+    public static class CassandraMetricsInjector implements Startable {
+
     }
 }

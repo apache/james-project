@@ -21,6 +21,8 @@ package org.apache.james.metrics.dropwizard;
 
 import javax.inject.Inject;
 
+import org.apache.james.lifecycle.api.Startable;
+
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jvm.ClassLoadingGaugeSet;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
@@ -28,7 +30,7 @@ import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
 import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
 
-public class DropWizardJVMMetrics {
+public class DropWizardJVMMetrics implements Startable {
 
     private final MetricRegistry metricRegistry;
 

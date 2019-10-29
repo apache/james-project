@@ -27,56 +27,39 @@ import org.apache.james.jmap.draft.JMAPServer;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.MessageIdProbe;
 import org.apache.james.jmap.draft.crypto.JamesSignatureHandler;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class JMAPDraftServerModule extends AbstractModule {
 
     @Override
     protected void configure() {
         install(new JMAPModule());
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(JMAPModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(JmapGuiceProbe.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MessageIdProbe.class);
     }
 
-    @Singleton
-    public static class JMAPModuleInitializationOperation implements InitializationOperation {
-        private final JMAPServer server;
-        private final JamesSignatureHandler signatureHandler;
-        private final JMAPConfiguration jmapConfiguration;
 
-        @Inject
-        public JMAPModuleInitializationOperation(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
-            this.server = server;
-            this.signatureHandler = signatureHandler;
-            this.jmapConfiguration = jmapConfiguration;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            if (jmapConfiguration.isEnabled()) {
-                signatureHandler.init();
-                server.start();
-                registerPEMWithSecurityProvider();
-            }
-        }
-
-        private void registerPEMWithSecurityProvider() {
-            Security.addProvider(new BouncyCastleProvider());
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return JMAPServer.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation startJmap(JMAPServer server, JamesSignatureHandler signatureHandler, JMAPConfiguration jmapConfiguration) {
+        return InitilizationOperationBuilder
+            .forClass(JMAPServer.class)
+            .init(() -> {
+                if (jmapConfiguration.isEnabled()) {
+                    signatureHandler.init();
+                    server.start();
+                    registerPEMWithSecurityProvider();
+                }
+            });
     }
 
+    private void registerPEMWithSecurityProvider() {
+        Security.addProvider(new BouncyCastleProvider());
+    }
 }

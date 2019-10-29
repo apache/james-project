@@ -47,6 +47,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.PropertiesProvider;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
@@ -56,6 +57,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class ElasticSearchMailboxModule extends AbstractModule {
 
@@ -83,25 +85,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         }
     }
 
-    static class ElasticSearchMailboxIndexCreationPerformer implements InitializationOperation {
-        private final MailboxIndexCreator mailboxIndexCreator;
-
-        @Inject
-        ElasticSearchMailboxIndexCreationPerformer(MailboxIndexCreator mailboxIndexCreator) {
-            this.mailboxIndexCreator = mailboxIndexCreator;
-        }
-
-        @Override
-        public void initModule()  throws Exception {
-            mailboxIndexCreator.createIndex();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return MailboxIndexCreator.class;
-        }
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchMailboxModule.class);
 
     public static final String ELASTICSEARCH_CONFIGURATION_NAME = "elasticsearch";
@@ -117,10 +100,6 @@ public class ElasticSearchMailboxModule extends AbstractModule {
         Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
             .addBinding()
             .to(ElasticSearchListeningMessageSearchIndex.class);
-
-        Multibinder.newSetBinder(binder(), InitializationOperation.class)
-            .addBinding()
-            .to(ElasticSearchMailboxIndexCreationPerformer.class);
 
         Multibinder.newSetBinder(binder(), StartUpCheck.class)
             .addBinding()
@@ -182,6 +161,13 @@ public class ElasticSearchMailboxModule extends AbstractModule {
     @Singleton
     public IndexAttachments provideIndexAttachments(ElasticSearchMailboxConfiguration configuration) {
         return configuration.getIndexAttachment();
+    }
+
+    @ProvidesIntoSet
+    InitializationOperation createIndex(MailboxIndexCreator instance) {
+        return InitilizationOperationBuilder
+            .forClass(MailboxIndexCreator.class)
+            .init(instance::createIndex);
     }
 
 }

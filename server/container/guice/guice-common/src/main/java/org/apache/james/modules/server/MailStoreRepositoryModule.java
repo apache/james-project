@@ -24,7 +24,6 @@ import java.util.function.Supplier;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.memory.MailRepositoryLoader;
 import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
@@ -32,19 +31,19 @@ import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class MailStoreRepositoryModule extends AbstractModule {
-
     public static final Logger LOGGER = LoggerFactory.getLogger(MailStoreRepositoryModule.class);
 
     public interface DefaultItemSupplier extends Supplier<MailRepositoryStoreConfiguration.Item> {}
@@ -57,7 +56,6 @@ public class MailStoreRepositoryModule extends AbstractModule {
         bind(GuiceMailRepositoryLoader.class).in(Scopes.SINGLETON);
         bind(MailRepositoryLoader.class).to(GuiceMailRepositoryLoader.class);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(MailRepositoryStoreModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(MailRepositoryProbeImpl.class);
     }
 
@@ -73,24 +71,10 @@ public class MailStoreRepositoryModule extends AbstractModule {
         return MailRepositoryStoreConfiguration.forItems(defaultItemSupplier.get());
     }
 
-    @Singleton
-    public static class MailRepositoryStoreModuleInitializationOperation implements InitializationOperation {
-        private final MemoryMailRepositoryStore javaMailRepositoryStore;
-
-        @Inject
-        public MailRepositoryStoreModuleInitializationOperation(MemoryMailRepositoryStore javaMailRepositoryStore) {
-            this.javaMailRepositoryStore = javaMailRepositoryStore;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            javaMailRepositoryStore.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return MemoryMailRepositoryStore.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation startMailStore(MemoryMailRepositoryStore instance) {
+        return InitilizationOperationBuilder
+            .forClass(MemoryMailRepositoryStore.class)
+            .init(instance::init);
     }
-
 }

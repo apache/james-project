@@ -19,51 +19,34 @@
 
 package org.apache.james.modules.protocols;
 
-import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.pop3server.netty.OioPOP3ServerFactory;
 import org.apache.james.pop3server.netty.POP3ServerFactory;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.InitializationOperation;
+import org.apache.james.utils.InitilizationOperationBuilder;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
 import com.google.inject.Scopes;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.ProvidesIntoSet;
 
 public class POP3ServerModule extends AbstractModule {
-
     @Override
     protected void configure() {
         bind(POP3ServerFactory.class).in(Scopes.SINGLETON);
         bind(OioPOP3ServerFactory.class).in(Scopes.SINGLETON);
 
-        Multibinder.newSetBinder(binder(), InitializationOperation.class).addBinding().to(POP3ModuleInitializationOperation.class);
         Multibinder.newSetBinder(binder(), GuiceProbe.class).addBinding().to(Pop3GuiceProbe.class);
     }
 
-    @Singleton
-    public static class POP3ModuleInitializationOperation implements InitializationOperation {
-        private final ConfigurationProvider configurationProvider;
-        private final POP3ServerFactory pop3ServerFactory;
-
-        @Inject
-        public POP3ModuleInitializationOperation(ConfigurationProvider configurationProvider, POP3ServerFactory pop3ServerFactory) {
-            this.configurationProvider = configurationProvider;
-            this.pop3ServerFactory = pop3ServerFactory;
-        }
-
-        @Override
-        public void initModule() throws Exception {
-            pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
-            pop3ServerFactory.init();
-        }
-
-        @Override
-        public Class<? extends Startable> forClass() {
-            return POP3ServerFactory.class;
-        }
+    @ProvidesIntoSet
+    InitializationOperation configurePop3(ConfigurationProvider configurationProvider, POP3ServerFactory pop3ServerFactory) {
+        return InitilizationOperationBuilder
+            .forClass(POP3ServerFactory.class)
+            .init(() -> {
+                pop3ServerFactory.configure(configurationProvider.getConfiguration("pop3server"));
+                pop3ServerFactory.init();
+            });
     }
-
 }
