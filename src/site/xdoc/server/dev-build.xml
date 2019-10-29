@@ -222,10 +222,7 @@
           <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
           <img src="./images/intellij-idea/intellij-new-project.png"/>
           <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
-          <img src="./images/intellij-idea/intellij-svn-repo.png"/>            <br/>
-          <img src="./images/intellij-idea/intellij-svn-repo-add-repo.png"/>        <br/>
-          <p>Then, choose the location for the project.</p>
-          <img src="./images/intellij-idea/intellij-svn-repo-checkout-choose-folder.png"/>
+          <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
 
           <p>When this process is done, the project should look like this. <br/></p>
           <img src="./images/intellij-idea/intellij-james-project.png"/>
