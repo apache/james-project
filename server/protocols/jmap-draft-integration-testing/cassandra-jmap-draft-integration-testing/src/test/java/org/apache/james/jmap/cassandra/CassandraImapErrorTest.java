@@ -40,7 +40,6 @@ import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import io.restassured.RestAssured;
@@ -75,7 +74,6 @@ class CassandraImapErrorTest {
     }
 
     @Test
-    @Disabled
     void causingMajorIssueDuringIMAPSessionShouldEndWithNo(GuiceJamesServer server) throws Exception {
         IMAPClient imapClient = new IMAPClient();
         try {
@@ -87,7 +85,9 @@ class CassandraImapErrorTest {
 
             boolean isSelected = imapClient.select("INBOX");
             assertThat(isSelected).isFalse();
-            assertThat(imapClient.getReplyString()).startsWith("NO ");
+            String[] replyChunks = imapClient.getReplyString().split(" ");
+            assertThat(replyChunks).hasSizeGreaterThanOrEqualTo(2);
+            assertThat(replyChunks[1]).isEqualTo("NO");
         } finally {
             imapClient.disconnect();
             cassandraExtension.unpause();

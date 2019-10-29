@@ -115,6 +115,9 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             }
         } catch (DeniedAccessOnSharedMailboxException e) {
             no(command, tag, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+        } catch (Exception unexpectedException) {
+            LOGGER.error("Unexpected error during IMAP processing", unexpectedException);
+            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
