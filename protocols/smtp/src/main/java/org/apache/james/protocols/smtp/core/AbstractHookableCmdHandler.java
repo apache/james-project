@@ -99,7 +99,7 @@ public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.
      * @param command
      *            the command
      * @param parameters
-     *            the paramaters
+     *            the parameters
      * @return SMTPResponse
      */
     private Response processHooks(SMTPSession session, String command,
