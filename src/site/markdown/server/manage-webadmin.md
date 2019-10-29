@@ -2120,6 +2120,8 @@ Additional query parameters are supported:
  - `queue` allow you to target the mail queue you want to enqueue the mails in.
  - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
 
+While `processor` being an optional parameter, not specifying it will result reprocessing the mails in their current state ([see documentation about processors and state](https://james.apache.org/server/feature-mailetcontainer.html#Processors)).
+Consequently, only few cases will give a different result, definitively storing them out of the mail repository.
 
 For instance:
 
@@ -2130,7 +2132,7 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?a
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
 
 
-The response to that request will be the scheduled `taskId` :
+The response to that request will be the scheduled `taskId`:
 
 ```
 {"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
