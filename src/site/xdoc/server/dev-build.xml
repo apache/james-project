@@ -65,7 +65,7 @@
 
     <p>To run the build you need two third-party tools.</p>
     <ol>
-      <li>Java Development Kit - You must have a JDK of Java version 1.11 or higher installed to build the
+      <li>Java Development Kit - You must have a JDK of Java version 11 or higher installed to build the
           James distribution.  The exact JDKs available depend on the platform. A JDK must be downloaded and
           installed before the build can run.</li>
       <li>Maven 3.3.9 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.3.9+) in order
@@ -90,7 +90,7 @@
     </ul>
     </p>
     <p>For example, invoke <code>mvn package</code> to get a zip/tar of James distribution.</p>
-    <p>All built products are output in the <code>server/app/target</code>
+    <p>Spring product is output in the <code>server/app/target</code>
       subdirectory of the James source directory.
       This directory will be deleted if you run build with the clean argument.</p>
     <p><strong>Warning!</strong> Any changes you've made in the 'dist' directory
@@ -100,6 +100,9 @@
   </section>
 
   <section name="Build James Source from Eclipse">
+
+    <p>Warning: due to bad scala support in eclipse, we are not able to compile James with Eclipse. Contributions to
+    enhance the current situation are more than welcome.</p>
 
     <p>Upon the following documentation, an interesting resource
        <a href="http://blog.bonnydoonmedia.com/post.cfm/walkthrough-tutorials-compiling-apache-james-v3-with-eclipse">
@@ -155,6 +158,34 @@
 
     </subsection>
 
+    <section name="Build James from IntelliJ IDEA">
+
+          <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the master version of the server
+              from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
+          </p>
+
+          <subsection name="Getting the sources from the repository">
+              <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
+
+              <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
+              <img src="./images/intellij-idea/intellij-new-project.png"/>
+              <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
+              <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
+
+              <p>When this process is done, the project should look like this. <br/></p>
+              <img src="./images/intellij-idea/intellij-james-project.png"/>
+
+          </subsection>
+
+          <subsection name="Building the project">
+              <p> To build the project, you must open the <strong>Maven Projects</strong> panel. Then double click on the install goal to run this goal.<br/></p>
+              <img src="./images/intellij-idea/intellij-mvn.png"/>
+              <p>Then you will find the James server zip in the <strong>server/app/target</strong> folder.<br/></p>
+              <img src="./images/intellij-idea/intellij-james-zip.png"/>
+              <p>Note that tests can be long and can be skept by toggling <i>skip test</i></p>
+          </subsection>
+    </section>
+
     <subsection name="Run James from Eclipse">
 
       <p>That's it. Run or Debug James in Eclipse (right-click on the Main class) and Have Fun!.</p>
@@ -208,33 +239,6 @@
         <img src="./images/netbeans/james-build-dir.png"/>
       </subsection>
 
-  </section>
-
-  <section name="Build James from IntelliJ IDEA">
-
-      <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the master version of the server
-          from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
-      </p>
-
-      <subsection name="Getting the sources from the repository">
-          <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
-
-          <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
-          <img src="./images/intellij-idea/intellij-new-project.png"/>
-          <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
-          <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
-
-          <p>When this process is done, the project should look like this. <br/></p>
-          <img src="./images/intellij-idea/intellij-james-project.png"/>
-
-      </subsection>
-
-    <subsection name="Building the project">
-        <p> To build the project, you must open the <strong>Maven Projects</strong> panel. Then double click on the install goal to run this goal.<br/></p>
-        <img src="./images/intellij-idea/intellij-mvn.png"/>
-        <p>Then you will find the James server zip in the <strong>app/target</strong> folder.<br/></p>
-        <img src="./images/intellij-idea/intellij-james-zip.png"/>
-    </subsection>
   </section>
 
 
