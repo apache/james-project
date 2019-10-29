@@ -312,6 +312,12 @@
             <groupId>${james.groupId}</groupId>
             <artifactId>james-server-mailet-dkim</artifactId>
             <scope>runtime</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.geronimo.javamail</groupId>
+                    <artifactId>geronimo-javamail_1.4_mail</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
