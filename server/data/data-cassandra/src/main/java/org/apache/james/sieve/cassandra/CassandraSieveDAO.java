@@ -36,7 +36,7 @@ import static org.apache.james.sieve.cassandra.tables.CassandraSieveTable.USER_N
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -95,35 +95,35 @@ public class CassandraSieveDAO {
             .where(eq(USER_NAME, bindMarker(USER_NAME)));
     }
 
-    public Mono<Void> insertScript(User user, Script script) {
+    public Mono<Void> insertScript(Username username, Script script) {
         return cassandraAsyncExecutor.executeVoid(
             insertScriptStatement.bind()
-                .setString(USER_NAME, user.asString())
+                .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, script.getName().getValue())
                 .setString(SCRIPT_CONTENT, script.getContent().getValue())
                 .setBool(IS_ACTIVE, script.isActive())
                 .setLong(SIZE, script.getSize()));
     }
 
-    public Flux<ScriptSummary> listScripts(User user) {
+    public Flux<ScriptSummary> listScripts(Username username) {
         return cassandraAsyncExecutor.executeRows(
                 selectScriptsStatement.bind()
-                    .setString(USER_NAME, user.asString()))
+                    .setString(USER_NAME, username.asString()))
             .map(row -> new ScriptSummary(
                     new ScriptName(row.getString(SCRIPT_NAME)),
                     row.getBool(IS_ACTIVE)));
     }
 
-    public Mono<Boolean> updateScriptActivation(User user, ScriptName scriptName, boolean active) {
+    public Mono<Boolean> updateScriptActivation(Username username, ScriptName scriptName, boolean active) {
         return cassandraAsyncExecutor.executeReturnApplied(
             updateScriptActivationStatement.bind()
-                .setString(USER_NAME, user.asString())
+                .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, scriptName.getValue())
                 .setBool(IS_ACTIVE, active));
     }
 
-    public Mono<Script> getScript(User user, ScriptName name) {
-        return getScriptRow(user, name).map(row -> Script.builder()
+    public Mono<Script> getScript(Username username, ScriptName name) {
+        return getScriptRow(username, name).map(row -> Script.builder()
                 .content(row.getString(SCRIPT_CONTENT))
                 .isActive(row.getBool(IS_ACTIVE))
                 .name(name)
@@ -131,17 +131,17 @@ public class CassandraSieveDAO {
                 .build());
     }
 
-    public Mono<Boolean> deleteScriptInCassandra(User user, ScriptName name) {
+    public Mono<Boolean> deleteScriptInCassandra(Username username, ScriptName name) {
         return cassandraAsyncExecutor.executeReturnApplied(
             deleteScriptStatement.bind()
-                .setString(USER_NAME, user.asString())
+                .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, name.getValue()));
     }
 
-    private Mono<Row> getScriptRow(User user, ScriptName name) {
+    private Mono<Row> getScriptRow(Username username, ScriptName name) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectScriptStatement.bind()
-                .setString(USER_NAME, user.asString())
+                .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, name.getValue()));
     }
 

@@ -40,7 +40,7 @@ public class DefineRulesCommandHandler implements CommandHandler<DefineRulesComm
 
     @Override
     public List<? extends Event> handle(DefineRulesCommand storeCommand) {
-        FilteringAggregateId aggregateId = new FilteringAggregateId(storeCommand.getUser());
+        FilteringAggregateId aggregateId = new FilteringAggregateId(storeCommand.getUsername());
 
         return FilteringAggregate
             .load(

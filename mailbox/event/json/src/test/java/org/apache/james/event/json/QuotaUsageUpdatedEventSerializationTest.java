@@ -29,7 +29,7 @@ import java.time.Instant;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -50,7 +50,7 @@ class QuotaUsageUpdatedEventSerializationTest {
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
     private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
         EVENT_ID,
-        User.fromUsername("onlyUsername"),
+        Username.fromUsername("onlyUsername"),
         QUOTA_ROOT,
         QUOTA_COUNT,
         QUOTA_SIZE,

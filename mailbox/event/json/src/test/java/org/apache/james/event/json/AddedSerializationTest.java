@@ -32,7 +32,7 @@ import java.util.SortedMap;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableSortedMap;
 
 class AddedSerializationTest {
 
-    private static final User USER = User.fromUsername("user");
+    private static final Username USERNAME = Username.fromUsername("user");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final String MAILBOX_NAME = "mailboxName";
@@ -67,7 +67,7 @@ class AddedSerializationTest {
     private static final SortedMap<MessageUid, MessageMetaData> ADDED = ImmutableSortedMap.of(
         MESSAGE_UID, new MessageMetaData(MESSAGE_UID, MOD_SEQ, FLAGS, SIZE, Date.from(INSTANT), MESSAGE_ID));
 
-    private static final MailboxListener.Added DEFAULT_ADDED_EVENT = new MailboxListener.Added(SESSION_ID, USER,
+    private static final MailboxListener.Added DEFAULT_ADDED_EVENT = new MailboxListener.Added(SESSION_ID, USERNAME,
         MAILBOX_PATH, MAILBOX_ID, ADDED, EVENT_ID);
     private static final String DEFAULT_ADDED_EVENT_JSON = 
         "{" +
@@ -111,7 +111,7 @@ class AddedSerializationTest {
     @Nested
     class WithEmptyAddedMap {
 
-        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USER, MAILBOX_PATH,
+        private final MailboxListener.Added emptyAddedEvent = new MailboxListener.Added(SESSION_ID, USERNAME, MAILBOX_PATH,
             MAILBOX_ID, ImmutableSortedMap.of(), EVENT_ID);
         private final String emptyAddedEventJson =
             "{" +

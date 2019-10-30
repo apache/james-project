@@ -24,7 +24,7 @@ import java.io.InputStream;
 import java.time.ZonedDateTime;
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.exception.DuplicateException;
 import org.apache.james.sieverepository.api.exception.IsActiveException;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
@@ -39,33 +39,33 @@ public interface SieveRepository extends SieveQuotaRepository {
 
     ScriptName NO_SCRIPT_NAME = new ScriptName("");
 
-    void haveSpace(User user, ScriptName name, long size) throws QuotaExceededException, StorageException;
+    void haveSpace(Username username, ScriptName name, long size) throws QuotaExceededException, StorageException;
     
     /**
      * PutScript.
      *
      * <p><strong>Note:</strong> It is the responsibility of the caller to validate the script to be put.
      *
-     * @param user
+     * @param username
      * @param name
      * @param content
      * @throws StorageException
      * @throws QuotaExceededException
      */
-    void putScript(User user, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException;
+    void putScript(Username username, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException;
     
-    List<ScriptSummary> listScripts(User user) throws StorageException;
+    List<ScriptSummary> listScripts(Username username) throws StorageException;
 
-    ZonedDateTime getActivationDateForActiveScript(User user) throws StorageException, ScriptNotFoundException;
+    ZonedDateTime getActivationDateForActiveScript(Username username) throws StorageException, ScriptNotFoundException;
 
-    InputStream getActive(User user) throws ScriptNotFoundException, StorageException;
+    InputStream getActive(Username username) throws ScriptNotFoundException, StorageException;
     
-    void setActive(User user, ScriptName name) throws ScriptNotFoundException, StorageException;
+    void setActive(Username username, ScriptName name) throws ScriptNotFoundException, StorageException;
     
-    InputStream getScript(User user, ScriptName name) throws ScriptNotFoundException, StorageException;
+    InputStream getScript(Username username, ScriptName name) throws ScriptNotFoundException, StorageException;
     
-    void deleteScript(User user, ScriptName name) throws ScriptNotFoundException, IsActiveException, StorageException;
+    void deleteScript(Username username, ScriptName name) throws ScriptNotFoundException, IsActiveException, StorageException;
     
-    void renameScript(User user, ScriptName oldName, ScriptName newName) throws ScriptNotFoundException, DuplicateException, StorageException;
+    void renameScript(Username username, ScriptName oldName, ScriptName newName) throws ScriptNotFoundException, DuplicateException, StorageException;
 
 }

@@ -92,7 +92,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
         eventBus.dispatch(
             EventFactory.quotaUpdated()
                 .randomEventId()
-                .user(expunged.getUser())
+                .user(expunged.getUsername())
                 .quotaRoot(quotaRoot)
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))
@@ -111,7 +111,7 @@ public class ListeningCurrentQuotaUpdater implements MailboxListener.GroupMailbo
         eventBus.dispatch(
             EventFactory.quotaUpdated()
                 .randomEventId()
-                .user(added.getUser())
+                .user(added.getUsername())
                 .quotaRoot(quotaRoot)
                 .quotaCount(quotaManager.getMessageQuota(quotaRoot))
                 .quotaSize(quotaManager.getStorageQuota(quotaRoot))

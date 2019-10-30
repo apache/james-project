@@ -31,10 +31,10 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
-public class User {
+public class Username {
     public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
 
-    public static User fromUsername(String username) {
+    public static Username fromUsername(String username) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH);
 
@@ -48,37 +48,37 @@ public class User {
         throw new IllegalArgumentException("The username should not contain multiple domain delimiter.");
     }
 
-    public static User fromLocalPartWithDomain(String localPart, String domain) {
+    public static Username fromLocalPartWithDomain(String localPart, String domain) {
         Preconditions.checkNotNull(domain);
 
         return fromLocalPartWithDomain(localPart, Domain.of(domain));
     }
 
-    public static User fromLocalPartWithDomain(String localPart, Domain domain) {
+    public static Username fromLocalPartWithDomain(String localPart, Domain domain) {
         Preconditions.checkNotNull(domain);
 
-        return new User(localPart, Optional.of(domain));
+        return new Username(localPart, Optional.of(domain));
     }
 
-    public static User fromMailAddress(MailAddress address) {
+    public static Username fromMailAddress(MailAddress address) {
         Preconditions.checkNotNull(address);
 
-        return new User(address.getLocalPart(), Optional.of(address.getDomain()));
+        return new Username(address.getLocalPart(), Optional.of(address.getDomain()));
     }
 
-    public static User fromLocalPartWithoutDomain(String localPart) {
+    public static Username fromLocalPartWithoutDomain(String localPart) {
         return from(localPart,
             Optional.empty());
     }
 
-    public static User from(String localPart, Optional<String> domain) {
-       return new User(localPart, domain.map(Domain::of));
+    public static Username from(String localPart, Optional<String> domain) {
+       return new Username(localPart, domain.map(Domain::of));
     }
 
     private final String localPart;
     private final Optional<Domain> domainPart;
 
-    private User(String localPart, Optional<Domain> domainPart) {
+    private Username(String localPart, Optional<Domain> domainPart) {
         Preconditions.checkNotNull(localPart);
         Preconditions.checkArgument(!localPart.isEmpty(), "username should not be empty");
         Preconditions.checkArgument(!localPart.contains("@"), "username can not contain domain delimiter");
@@ -99,18 +99,18 @@ public class User {
         return domainPart.isPresent();
     }
 
-    public User withDefaultDomain(Optional<Domain> defaultDomain) {
+    public Username withDefaultDomain(Optional<Domain> defaultDomain) {
         if (hasDomainPart()) {
             return this;
         }
-        return new User(localPart, defaultDomain);
+        return new Username(localPart, defaultDomain);
     }
 
-    public User withDefaultDomain(Domain defaultDomain) {
+    public Username withDefaultDomain(Domain defaultDomain) {
         return withDefaultDomain(Optional.of(defaultDomain));
     }
 
-    public User withDefaultDomainFromUser(User other) {
+    public Username withDefaultDomainFromUser(Username other) {
         return withDefaultDomain(other.domainPart);
     }
 
@@ -126,11 +126,11 @@ public class User {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof User) {
-            User user = (User) o;
+        if (o instanceof Username) {
+            Username username = (Username) o;
 
-            return Objects.equals(this.localPart, user.localPart)
-                && Objects.equals(this.domainPart, user.domainPart);
+            return Objects.equals(this.localPart, username.localPart)
+                && Objects.equals(this.domainPart, username.domainPart);
         }
         return false;
     }

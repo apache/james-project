@@ -29,7 +29,7 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_3;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT3;
@@ -46,7 +46,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.vault.search.CriterionFactory;
@@ -511,7 +511,7 @@ public interface DeletedMessageVaultSearchContract {
             DeletedMessage message2 = storeDeletedMessage(DELETED_MESSAGE_2);
             storeDeletedMessage(DELETED_MESSAGE_OTHER_USER);
 
-            assertThat(search(USER, Query.ALL))
+            assertThat(search(USERNAME, Query.ALL))
                 .containsOnly(message1, message2);
         }
     }
@@ -535,11 +535,11 @@ public interface DeletedMessageVaultSearchContract {
     AtomicLong MESSAGE_ID_GENERATOR = new AtomicLong(0);
 
     default List<DeletedMessage> search(Query query) {
-        return search(USER, query);
+        return search(USERNAME, query);
     }
 
-    default List<DeletedMessage> search(User user, Query query) {
-        return Flux.from(getVault().search(user, query)).collectList().block();
+    default List<DeletedMessage> search(Username username, Query query) {
+        return Flux.from(getVault().search(username, query)).collectList().block();
     }
 
     default DeletedMessage storeMessageWithDeliveryDate(ZonedDateTime deliveryDate) {
@@ -560,7 +560,7 @@ public interface DeletedMessageVaultSearchContract {
         DeletedMessage deletedMessage = DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(MaybeSender.of(SENDER))
@@ -576,7 +576,7 @@ public interface DeletedMessageVaultSearchContract {
         DeletedMessage deletedMessage = DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(sender)
@@ -592,7 +592,7 @@ public interface DeletedMessageVaultSearchContract {
         DeletedMessage deletedMessage = DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(MaybeSender.of(SENDER))
@@ -608,7 +608,7 @@ public interface DeletedMessageVaultSearchContract {
         DeletedMessage deletedMessage = DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(originMailboxIds)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(MaybeSender.of(SENDER))
@@ -653,7 +653,7 @@ public interface DeletedMessageVaultSearchContract {
         return DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(deliveryDate)
             .deletionDate(deletionDate)
             .sender(MaybeSender.of(SENDER))

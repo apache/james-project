@@ -24,7 +24,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -47,9 +47,9 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         @Override
         public QuotaRoot fromString(String serializedQuotaRoot) throws MailboxException {
             List<String> parts = toParts(serializedQuotaRoot);
-            User user = User.fromUsername(parts.get(1));
+            Username username = Username.fromUsername(parts.get(1));
 
-            return QuotaRoot.quotaRoot(serializedQuotaRoot, user.getDomainPart());
+            return QuotaRoot.quotaRoot(serializedQuotaRoot, username.getDomainPart());
         }
 
         private List<String> toParts(String serializedQuotaRoot) throws MailboxException {
@@ -74,9 +74,9 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
-    public QuotaRoot forUser(User user) {
-        return QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + user.asString(),
-            user.getDomainPart());
+    public QuotaRoot forUser(Username username) {
+        return QuotaRoot.quotaRoot(MailboxConstants.USER_NAMESPACE + SEPARATOR + username.asString(),
+            username.getDomainPart());
     }
 
     @Override
@@ -85,7 +85,7 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         return Optional.ofNullable(mailboxPath.getUser())
                 .map(user -> {
                     Preconditions.checkArgument(!mailboxPath.getUser().contains(SEPARATOR), "Username should not contain " + SEPARATOR);
-                    return User.fromUsername(mailboxPath.getUser());
+                    return Username.fromUsername(mailboxPath.getUser());
                 })
                 .map(user -> QuotaRoot.quotaRoot(mailboxPath.getNamespace() + SEPARATOR + user.asString(), user.getDomainPart()))
                 .orElseGet(() -> QuotaRoot.quotaRoot(mailboxPath.getNamespace(), Optional.empty()));
@@ -94,13 +94,13 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     @Override
     public QuotaRoot getQuotaRoot(MailboxId mailboxId) throws MailboxException {
         MailboxSession session = sessionProvider.createSystemSession("DefaultUserQuotaRootResolver");
-        User user = User.fromUsername(
+        Username username = Username.fromUsername(
             factory.getMailboxMapper(session)
                 .findMailboxById(mailboxId)
                 .generateAssociatedPath()
                 .getUser());
 
-        return forUser(user);
+        return forUser(username);
     }
 
     @Override

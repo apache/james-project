@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -85,7 +86,7 @@ public class UserService {
 
     private void usernamePreconditions(String username) {
         try {
-            org.apache.james.core.User.fromUsername(username);
+            Username.fromUsername(username);
         } catch (IllegalArgumentException e) {
             throw new InvalidUsername(e);
         }

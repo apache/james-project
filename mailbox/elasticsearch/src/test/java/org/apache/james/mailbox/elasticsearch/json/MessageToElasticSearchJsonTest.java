@@ -31,7 +31,7 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
@@ -63,8 +63,7 @@ public class MessageToElasticSearchJsonTest {
     private static final MessageId MESSAGE_ID = TestMessageId.of(184L);
     private static final long MOD_SEQ = 42L;
     private static final MessageUid UID = MessageUid.of(25);
-    private static final String USERNAME = "username";
-    private static final User USER = User.fromUsername(USERNAME);
+    private static final Username USERNAME = Username.fromUsername("username");
 
     private TextExtractor textExtractor;
 
@@ -105,7 +104,7 @@ public class MessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
-        assertThatJson(messageToElasticSearchJson.convertToJson(spamMail, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(spamMail, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/spamMail.json"));
     }
@@ -125,7 +124,7 @@ public class MessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         htmlMail.setModSeq(MOD_SEQ);
         htmlMail.setUid(UID);
-        assertThatJson(messageToElasticSearchJson.convertToJson(htmlMail, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(htmlMail, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/htmlMail.json"));
     }
@@ -145,7 +144,7 @@ public class MessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         pgpSignedMail.setModSeq(MOD_SEQ);
         pgpSignedMail.setUid(UID);
-        assertThatJson(messageToElasticSearchJson.convertToJson(pgpSignedMail, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(pgpSignedMail, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/pgpSignedMail.json"));
     }
@@ -166,7 +165,7 @@ public class MessageToElasticSearchJsonTest {
         mail.setModSeq(MOD_SEQ);
         mail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(mail,
-                ImmutableList.of(User.fromUsername("user1"), User.fromUsername("user2"))))
+                ImmutableList.of(Username.fromUsername("user1"), Username.fromUsername("user2"))))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/mail.json"));
     }
@@ -186,7 +185,7 @@ public class MessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         recursiveMail.setModSeq(MOD_SEQ);
         recursiveMail.setUid(UID);
-        assertThatJson(messageToElasticSearchJson.convertToJson(recursiveMail, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(recursiveMail, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/recursiveMail.json"));
     }
@@ -206,7 +205,7 @@ public class MessageToElasticSearchJsonTest {
                 MAILBOX_ID);
         mailWithNoInternalDate.setModSeq(MOD_SEQ);
         mailWithNoInternalDate.setUid(UID);
-        assertThatJson(messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER)
             .when(IGNORING_VALUES)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/recursiveMail.json"));
@@ -231,7 +230,7 @@ public class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
             IndexAttachments.YES);
-        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USER));
+        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USERNAME));
 
         // Then
         assertThatJson(convertToJson)
@@ -259,7 +258,7 @@ public class MessageToElasticSearchJsonTest {
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
             IndexAttachments.NO);
-        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USER));
+        String convertToJson = messageToElasticSearchJson.convertToJson(mailWithNoInternalDate, ImmutableList.of(USERNAME));
 
         // Then
         assertThatJson(convertToJson)
@@ -284,7 +283,7 @@ public class MessageToElasticSearchJsonTest {
         mailWithNoMailboxId.setUid(UID);
 
         assertThatThrownBy(() ->
-            messageToElasticSearchJson.convertToJson(mailWithNoMailboxId, ImmutableList.of(USER)))
+            messageToElasticSearchJson.convertToJson(mailWithNoMailboxId, ImmutableList.of(USERNAME)))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -333,7 +332,7 @@ public class MessageToElasticSearchJsonTest {
         spamMail.setUid(UID);
         spamMail.setModSeq(MOD_SEQ);
 
-        assertThatJson(messageToElasticSearchJson.convertToJson(spamMail, ImmutableList.of(USER)))
+        assertThatJson(messageToElasticSearchJson.convertToJson(spamMail, ImmutableList.of(USERNAME)))
             .when(IGNORING_ARRAY_ORDER)
             .isEqualTo(
                 ClassLoaderUtils.getSystemResourceAsString("eml/nonTextual.json", StandardCharsets.UTF_8));
@@ -358,7 +357,7 @@ public class MessageToElasticSearchJsonTest {
                 new DefaultTextExtractor(),
                 ZoneId.of("Europe/Paris"),
                 IndexAttachments.NO);
-        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(USER));
+        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(USERNAME));
 
         // Then
         assertThatJson(convertToJsonWithoutAttachment)
@@ -386,7 +385,7 @@ public class MessageToElasticSearchJsonTest {
                 new JsoupTextExtractor(),
                 ZoneId.of("Europe/Paris"),
                 IndexAttachments.NO);
-        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(USER));
+        String convertToJsonWithoutAttachment = messageToElasticSearchJson.convertToJsonWithoutAttachment(message, ImmutableList.of(USERNAME));
 
         System.out.println(convertToJsonWithoutAttachment);
 

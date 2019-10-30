@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.eventsourcing.AggregateId;
@@ -62,30 +62,30 @@ public class UserQuotaThresholds {
             if (keyParts.size() != 3 || !keyParts.get(PREFIX_INDEX).equals(PREFIX)) {
                 throw new IllegalArgumentException();
             }
-            return new Id(User.fromUsername(keyParts.get(USER_INDEX)), keyParts.get(NAME_INDEX));
+            return new Id(Username.fromUsername(keyParts.get(USER_INDEX)), keyParts.get(NAME_INDEX));
         }
 
-        public static Id from(User user, String name) {
-            return new Id(user, name);
+        public static Id from(Username username, String name) {
+            return new Id(username, name);
         }
 
-        private final User user;
+        private final Username username;
         private final String name;
 
-        private Id(User user, String name) {
-            Preconditions.checkArgument(!user.asString().contains(SEPARATOR));
+        private Id(Username username, String name) {
+            Preconditions.checkArgument(!username.asString().contains(SEPARATOR));
             Preconditions.checkArgument(!name.contains(SEPARATOR));
-            this.user = user;
+            this.username = username;
             this.name = name;
         }
 
-        public User getUser() {
-            return user;
+        public Username getUsername() {
+            return username;
         }
 
         @Override
         public String asAggregateKey() {
-            return Joiner.on(SEPARATOR).join(PREFIX, name, user.asString());
+            return Joiner.on(SEPARATOR).join(PREFIX, name, username.asString());
         }
 
         @Override
@@ -93,7 +93,7 @@ public class UserQuotaThresholds {
             if (o instanceof Id) {
                 Id id = (Id) o;
 
-                return Objects.equals(this.user, id.user)
+                return Objects.equals(this.username, id.username)
                     && Objects.equals(this.name, id.name);
             }
             return false;
@@ -101,13 +101,13 @@ public class UserQuotaThresholds {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(user, name);
+            return Objects.hash(username, name);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("user", user)
+                .add("user", username)
                 .add("name", name)
                 .toString();
         }

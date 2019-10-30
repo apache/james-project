@@ -33,7 +33,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -148,7 +148,7 @@ public class AliasRoutes implements Routes {
         MailAddress aliasSourceAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_SOURCE_ADDRESS), ADDRESS_TYPE);
         ensureUserDoesNotExist(aliasSourceAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(ALIAS_DESTINATION_ADDRESS), ADDRESS_TYPE);
-        MappingSource source = MappingSource.fromUser(User.fromMailAddress(aliasSourceAddress));
+        MappingSource source = MappingSource.fromUser(Username.fromMailAddress(aliasSourceAddress));
         addAlias(source, destinationAddress);
         return halt(HttpStatus.NO_CONTENT_204);
     }

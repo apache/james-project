@@ -29,7 +29,7 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage;
@@ -64,7 +64,7 @@ public class DeletedMessageWithStorageInformationConverter {
         return DeletedMessage.builder()
             .messageId(messageIdFactory.fromString(deletedMessageDTO.getMessageId()))
             .originMailboxes(deserializeOriginMailboxes(deletedMessageDTO.getOriginMailboxes()))
-            .user(User.fromUsername(deletedMessageDTO.getOwner()))
+            .user(Username.fromUsername(deletedMessageDTO.getOwner()))
             .deliveryDate(ZonedDateTime.parse(deletedMessageDTO.getDeliveryDate()))
             .deletionDate(ZonedDateTime.parse(deletedMessageDTO.getDeletionDate()))
             .sender(MaybeSender.getMailSender(deletedMessageDTO.getSender()))

@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.model.AuthenticatedRequest;
 import org.apache.james.jmap.draft.model.InvocationResponse;
@@ -59,7 +59,7 @@ public class RequestHandler {
         Optional<MailboxSession> mailboxSession = Optional.ofNullable(request.getMailboxSession());
         try (Closeable closeable =
                  MDCBuilder.create()
-                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(User::asString))
+                     .addContext(MDCBuilder.USER, mailboxSession.map(MailboxSession::getUser).map(Username::asString))
                      .addContext(MDCBuilder.SESSION_ID, mailboxSession.map(MailboxSession::getSessionId))
                      .addContext(MDCBuilder.ACTION, request.getMethodName().getName())
                      .build()) {

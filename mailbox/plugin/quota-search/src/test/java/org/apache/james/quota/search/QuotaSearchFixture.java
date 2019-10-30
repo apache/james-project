@@ -22,14 +22,14 @@ package org.apache.james.quota.search;
 import java.time.Instant;
 import java.util.Optional;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.QuotaRoot;
 
 public interface QuotaSearchFixture {
 
     interface TestConstants {
         String BOB = "bob@domain";
-        User BOB_USER = User.fromUsername(BOB);
+        Username BOB_USERNAME = Username.fromUsername(BOB);
         Instant NOW = Instant.now();
         QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("any", Optional.empty());
     }

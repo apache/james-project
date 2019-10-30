@@ -23,7 +23,7 @@ import java.util.List;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.eventsourcing.eventstore.EventStore;
@@ -50,15 +50,15 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
     }
 
     @Override
-    public void defineRulesForUser(User user, List<Rule> rules) {
-        eventSourcingSystem.dispatch(new DefineRulesCommand(user, rules));
+    public void defineRulesForUser(Username username, List<Rule> rules) {
+        eventSourcingSystem.dispatch(new DefineRulesCommand(username, rules));
     }
 
     @Override
-    public List<Rule> listRulesForUser(User user) {
-        Preconditions.checkNotNull(user);
+    public List<Rule> listRulesForUser(Username username) {
+        Preconditions.checkNotNull(username);
 
-        FilteringAggregateId aggregateId = new FilteringAggregateId(user);
+        FilteringAggregateId aggregateId = new FilteringAggregateId(username);
 
         return FilteringAggregate
             .load(

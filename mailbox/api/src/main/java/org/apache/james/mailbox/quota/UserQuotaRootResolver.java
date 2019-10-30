@@ -18,12 +18,11 @@
  ****************************************************************/
 package org.apache.james.mailbox.quota;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 public interface UserQuotaRootResolver extends QuotaRootResolver {
 
-    QuotaRoot forUser(User user);
+    QuotaRoot forUser(Username username);
 
 }

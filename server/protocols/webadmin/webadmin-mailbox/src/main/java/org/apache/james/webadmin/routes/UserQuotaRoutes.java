@@ -34,7 +34,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.quota.search.Limit;
@@ -131,9 +131,9 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
-            User user = checkUserExist(request);
+            Username username = checkUserExist(request);
             QuotaDTO quotaDTO = parseQuotaDTO(request);
-            userQuotaService.defineQuota(user, quotaDTO);
+            userQuotaService.defineQuota(username, quotaDTO);
             return Responses.returnNoContent(response);
         }));
     }
@@ -150,8 +150,8 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuota() {
         service.get(QUOTA_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
-            return userQuotaService.getQuota(user);
+            Username username = checkUserExist(request);
+            return userQuotaService.getQuota(username);
         }, jsonTransformer);
     }
 
@@ -247,8 +247,8 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaSize() {
         service.delete(SIZE_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
-            userQuotaService.deleteMaxSizeQuota(user);
+            Username username = checkUserExist(request);
+            userQuotaService.deleteMaxSizeQuota(username);
             return Responses.returnNoContent(response);
         });
     }
@@ -267,9 +267,9 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
+            Username username = checkUserExist(request);
             QuotaSize quotaSize = Quotas.quotaSize(request.body());
-            userQuotaService.defineMaxSizeQuota(user, quotaSize);
+            userQuotaService.defineMaxSizeQuota(username, quotaSize);
             return Responses.returnNoContent(response);
         });
     }
@@ -285,8 +285,8 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
-            Optional<QuotaSize> maxSizeQuota = userQuotaService.getMaxSizeQuota(user);
+            Username username = checkUserExist(request);
+            Optional<QuotaSize> maxSizeQuota = userQuotaService.getMaxSizeQuota(username);
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
             }
@@ -304,8 +304,8 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineDeleteQuotaCount() {
         service.delete(COUNT_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
-            userQuotaService.deleteMaxCountQuota(user);
+            Username username = checkUserExist(request);
+            userQuotaService.deleteMaxCountQuota(username);
             return Responses.returnNoContent(response);
         });
     }
@@ -324,9 +324,9 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
+            Username username = checkUserExist(request);
             QuotaCount quotaCount = Quotas.quotaCount(request.body());
-            userQuotaService.defineMaxCountQuota(user, quotaCount);
+            userQuotaService.defineMaxCountQuota(username, quotaCount);
             return Responses.returnNoContent(response);
         });
     }
@@ -342,8 +342,8 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
-            User user = checkUserExist(request);
-            Optional<QuotaCount> maxCountQuota = userQuotaService.getMaxCountQuota(user);
+            Username username = checkUserExist(request);
+            Optional<QuotaCount> maxCountQuota = userQuotaService.getMaxCountQuota(username);
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
             }
@@ -351,7 +351,7 @@ public class UserQuotaRoutes implements Routes {
         }, jsonTransformer);
     }
 
-    private User checkUserExist(Request request) throws UsersRepositoryException, UnsupportedEncodingException {
+    private Username checkUserExist(Request request) throws UsersRepositoryException, UnsupportedEncodingException {
         String user = URLDecoder.decode(request.params(USER),
             StandardCharsets.UTF_8.displayName());
 
@@ -362,7 +362,7 @@ public class UserQuotaRoutes implements Routes {
                 .message("User not found")
                 .haltError();
         }
-        return User.fromUsername(user);
+        return Username.fromUsername(user);
     }
 
     private QuotaDTO parseQuotaDTO(Request request) {

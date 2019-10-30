@@ -32,7 +32,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -153,7 +153,7 @@ public class ForwardRoutes implements Routes {
         MailAddress forwardBaseAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_BASE_ADDRESS), FORWARD_BASE_ADDRESS_TYPE);
         ensureUserExist(forwardBaseAddress);
         MailAddress destinationAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS), FORWARD_DESTINATION_ADDRESS_TYPE);
-        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain()));
+        MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(forwardBaseAddress.getLocalPart(), forwardBaseAddress.getDomain()));
         addForward(source, destinationAddress);
         return halt(HttpStatus.NO_CONTENT_204);
     }
@@ -200,7 +200,7 @@ public class ForwardRoutes implements Routes {
     public HaltException removeFromForwardDestination(Request request, Response response) throws RecipientRewriteTableException {
         MailAddress baseAddress = MailAddressParser.parseMailAddress(request.params(FORWARD_BASE_ADDRESS), FORWARD_BASE_ADDRESS_TYPE);
         MailAddress destinationAddressToBeRemoved = MailAddressParser.parseMailAddress(request.params(FORWARD_DESTINATION_ADDRESS), FORWARD_DESTINATION_ADDRESS_TYPE);
-        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(baseAddress.getLocalPart(), baseAddress.getDomain()));
+        MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(baseAddress.getLocalPart(), baseAddress.getDomain()));
         recipientRewriteTable.removeForwardMapping(source, destinationAddressToBeRemoved.asString());
         return halt(HttpStatus.NO_CONTENT_204);
     }

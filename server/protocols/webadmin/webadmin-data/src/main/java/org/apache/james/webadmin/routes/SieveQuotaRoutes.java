@@ -28,7 +28,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
@@ -156,9 +156,9 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineGetPerUserSieveQuota(Service service) {
         service.get(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = getUser(request.params(USER_ID));
+            Username usernameId = getUsername(request.params(USER_ID));
             try {
-                QuotaSize userQuota = sieveQuotaRepository.getQuota(userId);
+                QuotaSize userQuota = sieveQuotaRepository.getQuota(usernameId);
                 response.status(HttpStatus.OK_200);
                 return userQuota.asLong();
             } catch (QuotaNotFoundException e) {
@@ -181,7 +181,7 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = getUser(request.params(USER_ID));
+            Username userId = getUsername(request.params(USER_ID));
             QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
             sieveQuotaRepository.setQuota(userId, requestedSize);
             return Responses.returnNoContent(response);
@@ -200,9 +200,9 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineRemovePerUserSieveQuota(Service service) {
         service.delete(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = getUser(request.params(USER_ID));
+            Username usernameId = getUsername(request.params(USER_ID));
             try {
-                sieveQuotaRepository.removeQuota(userId);
+                sieveQuotaRepository.removeQuota(usernameId);
             } catch (QuotaNotFoundException e) {
                 // Do nothing
             }
@@ -235,7 +235,7 @@ public class SieveQuotaRoutes implements Routes {
         }
     }
 
-    private User getUser(String username) throws UsersRepositoryException {
+    private Username getUsername(String username) throws UsersRepositoryException {
         if (!usersRepository.contains(username)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
@@ -243,6 +243,6 @@ public class SieveQuotaRoutes implements Routes {
                 .message("User " + username + " does not exist")
                 .haltError();
         }
-        return User.fromUsername(username);
+        return Username.fromUsername(username);
     }
 }

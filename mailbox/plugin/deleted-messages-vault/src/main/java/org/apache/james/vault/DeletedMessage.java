@@ -27,7 +27,7 @@ import java.util.Optional;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.DeletedMessage.Builder.FinalStage;
@@ -46,7 +46,7 @@ public class DeletedMessage {
 
         @FunctionalInterface
         public interface RequireUser<T> {
-            T user(User user);
+            T user(Username username);
         }
 
         @FunctionalInterface
@@ -113,7 +113,7 @@ public class DeletedMessage {
         public static class FinalStage {
             private final MessageId messageId;
             private final List<MailboxId> originMailboxes;
-            private final User owner;
+            private final Username owner;
             private final ZonedDateTime deliveryDate;
             private final ZonedDateTime deletionDate;
             private final MaybeSender sender;
@@ -122,7 +122,7 @@ public class DeletedMessage {
             private final long size;
             private Optional<String> subject;
 
-            FinalStage(MessageId messageId, List<MailboxId> originMailboxes, User owner, ZonedDateTime deliveryDate,
+            FinalStage(MessageId messageId, List<MailboxId> originMailboxes, Username owner, ZonedDateTime deliveryDate,
                        ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients, boolean hasAttachment, long size) {
                 this.messageId = messageId;
                 this.originMailboxes = originMailboxes;
@@ -160,7 +160,7 @@ public class DeletedMessage {
 
     private final MessageId messageId;
     private final List<MailboxId> originMailboxes;
-    private final User owner;
+    private final Username owner;
     private final ZonedDateTime deliveryDate;
     private final ZonedDateTime deletionDate;
     private final MaybeSender sender;
@@ -169,7 +169,7 @@ public class DeletedMessage {
     private final boolean hasAttachment;
     private final long size;
 
-    public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, User owner,
+    public DeletedMessage(MessageId messageId, List<MailboxId> originMailboxes, Username owner,
                           ZonedDateTime deliveryDate, ZonedDateTime deletionDate, MaybeSender sender, List<MailAddress> recipients,
                           Optional<String> subject, boolean hasAttachment, long size) {
         Preconditions.checkArgument(size > 0, "'size' is required to be a strictly positive number");
@@ -194,7 +194,7 @@ public class DeletedMessage {
         return originMailboxes;
     }
 
-    public User getOwner() {
+    public Username getOwner() {
         return owner;
     }
 

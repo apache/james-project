@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -60,9 +60,9 @@ public class UserQuotaService {
         this.quotaSearcher = quotaSearcher;
     }
 
-    public void defineQuota(User user, QuotaDTO quota) {
+    public void defineQuota(Username username, QuotaDTO quota) {
         try {
-            QuotaRoot quotaRoot = userQuotaRootResolver.forUser(user);
+            QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
             if (quota.getCount().isPresent()) {
                 maxQuotaManager.setMaxMessage(quotaRoot, quota.getCount().get());
             } else {
@@ -79,8 +79,8 @@ public class UserQuotaService {
         }
     }
 
-    public QuotaDetailsDTO getQuota(User user) throws MailboxException {
-        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(user);
+    public QuotaDetailsDTO getQuota(Username username) throws MailboxException {
+        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
         QuotaDetailsDTO.Builder quotaDetails = QuotaDetailsDTO.builder()
             .occupation(quotaManager.getStorageQuota(quotaRoot),
                 quotaManager.getMessageQuota(quotaRoot));
@@ -114,28 +114,28 @@ public class UserQuotaService {
     }
 
 
-    public Optional<QuotaSize> getMaxSizeQuota(User user) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(user));
+    public Optional<QuotaSize> getMaxSizeQuota(Username username) throws MailboxException {
+        return maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(username));
     }
 
-    public void defineMaxSizeQuota(User user, QuotaSize quotaSize) throws MailboxException {
-        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(user), quotaSize);
+    public void defineMaxSizeQuota(Username username, QuotaSize quotaSize) throws MailboxException {
+        maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(username), quotaSize);
     }
 
-    public void deleteMaxSizeQuota(User user) throws MailboxException {
-        maxQuotaManager.removeMaxStorage(userQuotaRootResolver.forUser(user));
+    public void deleteMaxSizeQuota(Username username) throws MailboxException {
+        maxQuotaManager.removeMaxStorage(userQuotaRootResolver.forUser(username));
     }
 
-    public Optional<QuotaCount> getMaxCountQuota(User user) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(user));
+    public Optional<QuotaCount> getMaxCountQuota(Username username) throws MailboxException {
+        return maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(username));
     }
 
-    public void defineMaxCountQuota(User user, QuotaCount quotaCount) throws MailboxException {
-        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(user), quotaCount);
+    public void defineMaxCountQuota(Username username, QuotaCount quotaCount) throws MailboxException {
+        maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(username), quotaCount);
     }
 
-    public void deleteMaxCountQuota(User user) throws MailboxException {
-        maxQuotaManager.removeMaxMessage(userQuotaRootResolver.forUser(user));
+    public void deleteMaxCountQuota(Username username) throws MailboxException {
+        maxQuotaManager.removeMaxMessage(userQuotaRootResolver.forUser(username));
     }
 
     public List<UsersQuotaDetailsDTO> getUsersQuota(QuotaQuery quotaQuery) {

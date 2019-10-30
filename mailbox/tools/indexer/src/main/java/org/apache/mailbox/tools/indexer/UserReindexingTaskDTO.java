@@ -37,7 +37,7 @@ public class UserReindexingTaskDTO implements TaskDTO {
     }
 
     public static UserReindexingTaskDTO of(UserReindexingTask task, String type) {
-        return new UserReindexingTaskDTO(type, task.getUser().asString());
+        return new UserReindexingTaskDTO(type, task.getUsername().asString());
     }
 
     private final String type;

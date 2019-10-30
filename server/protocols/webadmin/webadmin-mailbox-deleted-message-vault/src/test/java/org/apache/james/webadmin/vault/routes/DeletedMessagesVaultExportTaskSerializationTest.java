@@ -29,7 +29,7 @@ import java.time.Instant;
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -54,7 +54,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
 
     private static final String username = "james";
-    private static final User USER_EXPORT_FROM = User.fromUsername(username);
+    private static final Username USERNAME_EXPORT_FROM = Username.fromUsername(username);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
     private static MailAddress exportTo;
     private static DeletedMessagesVaultExportTask.AdditionalInformation details;
@@ -70,7 +70,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     @BeforeAll
     static void init() throws AddressException {
         exportTo = new MailAddress("james@apache.org");
-        details = new DeletedMessagesVaultExportTask.AdditionalInformation(USER_EXPORT_FROM, exportTo, 42, TIMESTAMP);
+        details = new DeletedMessagesVaultExportTask.AdditionalInformation(USERNAME_EXPORT_FROM, exportTo, 42, TIMESTAMP);
     }
 
     @BeforeEach
@@ -82,7 +82,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultExportTaskShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USER_EXPORT_FROM, QUERY, exportTo);
+        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USERNAME_EXPORT_FROM, QUERY, exportTo);
 
         assertThatJson(taskSerializer.serialize(task))
             .isEqualTo(serializedDeleteMessagesVaultExportTask);
@@ -90,7 +90,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultExportTaskShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USER_EXPORT_FROM, QUERY, exportTo);
+        DeletedMessagesVaultExportTask task = new DeletedMessagesVaultExportTask(exportService, USERNAME_EXPORT_FROM, QUERY, exportTo);
 
         Task deserializedTask = taskSerializer.deserialize(serializedDeleteMessagesVaultExportTask);
         assertThat(deserializedTask)

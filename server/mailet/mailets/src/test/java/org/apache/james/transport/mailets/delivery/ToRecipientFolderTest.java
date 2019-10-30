@@ -32,7 +32,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -86,7 +86,7 @@ public class ToRecipientFolderTest {
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }
-        when(session.getUser()).thenReturn(User.fromUsername(USER));
+        when(session.getUser()).thenReturn(Username.fromUsername(USER));
     }
 
     @Test
@@ -164,7 +164,7 @@ public class ToRecipientFolderTest {
         when(usersRepository.getUser(new MailAddress(USER_LOCAL_PART + "@localhost"))).thenReturn(USER_LOCAL_PART);
         when(usersRepository.getUser(new MailAddress(USER))).thenReturn(USER_LOCAL_PART);
         when(mailboxManager.getMailbox(eq(JUNK), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getUser()).thenReturn(User.fromUsername(USER_LOCAL_PART));
+        when(session.getUser()).thenReturn(Username.fromUsername(USER_LOCAL_PART));
 
         testee.init(FakeMailetConfig.builder()
             .mailetName(MAILET_NAME)

@@ -21,10 +21,10 @@ package org.apache.james.mailbox.backup;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
 public interface MailArchiveRestorer {
 
-    void restore(User user, InputStream source) throws MailboxException, IOException;
+    void restore(Username username, InputStream source) throws MailboxException, IOException;
 }

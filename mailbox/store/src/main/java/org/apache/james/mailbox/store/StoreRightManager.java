@@ -26,7 +26,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -101,12 +101,12 @@ public class StoreRightManager implements RightManager {
     }
 
     public Rfc4314Rights myRights(Mailbox mailbox, MailboxSession session) throws UnsupportedRightException {
-        User user = session.getUser();
+        Username username = session.getUser();
 
-        return Optional.ofNullable(user)
+        return Optional.ofNullable(username)
             .map(Throwing.function(value ->
                 aclResolver.resolveRights(
-                    user.asString(),
+                    username.asString(),
                     groupMembershipResolver,
                     mailbox.getACL(),
                     mailbox.getUser(),
@@ -217,8 +217,8 @@ public class StoreRightManager implements RightManager {
 
     @VisibleForTesting
     boolean areDomainsDifferent(String user, String otherUser) {
-        Optional<Domain> domain = User.fromUsername(user).getDomainPart();
-        Optional<Domain> otherDomain = User.fromUsername(otherUser).getDomainPart();
+        Optional<Domain> domain = Username.fromUsername(user).getDomainPart();
+        Optional<Domain> otherDomain = Username.fromUsername(otherUser).getDomainPart();
         return !domain.equals(otherDomain);
     }
 

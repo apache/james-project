@@ -27,7 +27,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,7 +49,7 @@ public class MappingSource implements Serializable {
     }
 
     public static MappingSource fromMailAddress(MailAddress address) {
-        return fromUser(User.fromMailAddress(address));
+        return fromUser(Username.fromMailAddress(address));
     }
 
     public static MappingSource fromUser(String localPart, String domain) {
@@ -57,15 +57,15 @@ public class MappingSource implements Serializable {
     }
 
     public static MappingSource fromUser(String localPart, Domain domain) {
-        User user = User.fromLocalPartWithDomain(localPart, domain);
-        return fromUser(user);
+        Username username = Username.fromLocalPartWithDomain(localPart, domain);
+        return fromUser(username);
     }
 
-    public static MappingSource fromUser(User user) {
-        if (user.getLocalPart().equals(WILDCARD)) {
-            return MappingSource.fromDomain(user.getDomainPart().get());
+    public static MappingSource fromUser(Username username) {
+        if (username.getLocalPart().equals(WILDCARD)) {
+            return MappingSource.fromDomain(username.getDomainPart().get());
         }
-        return new MappingSource(Optional.empty(), Optional.of(user), Optional.empty());
+        return new MappingSource(Optional.empty(), Optional.of(username), Optional.empty());
     }
 
     public static MappingSource wildCard() {
@@ -80,15 +80,15 @@ public class MappingSource implements Serializable {
                 if (mappingSource.startsWith(WILDCARD + "@")) {
                     return fromDomain(Domain.of(mappingSource.substring(2, mappingSource.length())));
                 }
-                return fromUser(User.fromUsername(mappingSource));
+                return fromUser(Username.fromUsername(mappingSource));
         }
     }
 
     private final Optional<Domain> domain;
-    private final Optional<User> user;
+    private final Optional<Username> user;
     private final Optional<WildCard> wildcard;
 
-    private MappingSource(Optional<Domain> domain, Optional<User> user, Optional<WildCard> wildcard) {
+    private MappingSource(Optional<Domain> domain, Optional<Username> user, Optional<WildCard> wildcard) {
         this.domain = domain;
         this.user = user;
         this.wildcard = wildcard;
@@ -112,13 +112,13 @@ public class MappingSource implements Serializable {
     public String asString() {
         return OptionalUtils.orSuppliers(
                 () -> wildcard.map(x -> "*"),
-                () -> user.map(User::asString),
+                () -> user.map(Username::asString),
                 () -> domain.map(Domain::asString))
             .orElseThrow(IllegalStateException::new);
     }
 
     public String getFixedUser() {
-        return user.map(User::getLocalPart)
+        return user.map(Username::getLocalPart)
             .orElse(WILDCARD);
     }
 
@@ -130,7 +130,7 @@ public class MappingSource implements Serializable {
 
     public Optional<Domain> availableDomain() {
         return OptionalUtils.or(
-            user.flatMap(User::getDomainPart),
+            user.flatMap(Username::getDomainPart),
             domain);
     }
 

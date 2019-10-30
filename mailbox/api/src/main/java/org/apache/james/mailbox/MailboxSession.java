@@ -27,7 +27,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
 
 import com.google.common.base.MoreObjects;
@@ -166,8 +166,8 @@ public class MailboxSession {
      * 
      * @return not null
      */
-    public User getUser() {
-        return User.fromUsername(userName);
+    public Username getUser() {
+        return Username.fromUsername(userName);
     }
 
     /**

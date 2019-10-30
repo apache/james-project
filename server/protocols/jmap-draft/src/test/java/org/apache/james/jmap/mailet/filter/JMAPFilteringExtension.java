@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
@@ -112,7 +112,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                     .build())
                 .collect(ImmutableList.toImmutableList());
 
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME), rules);
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME), rules);
         }
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {

@@ -27,7 +27,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.sieverepository.api.exception.ScriptNotFoundException;
 import org.apache.james.transport.mailets.jsieve.ResourceLocator;
@@ -38,7 +38,7 @@ import org.junit.Test;
 public class ResourceLocatorTest {
 
     public static final String RECEIVER_LOCALHOST = "receiver@localhost";
-    public static final User USER = User.fromUsername(RECEIVER_LOCALHOST);
+    public static final Username USERNAME = Username.fromUsername(RECEIVER_LOCALHOST);
     private SieveRepository sieveRepository;
     private ResourceLocator resourceLocator;
     private MailAddress mailAddress;
@@ -54,7 +54,7 @@ public class ResourceLocatorTest {
 
     @Test(expected = ScriptNotFoundException.class)
     public void resourceLocatorImplShouldPropagateScriptNotFound() throws Exception {
-        when(sieveRepository.getActive(USER)).thenThrow(new ScriptNotFoundException());
+        when(sieveRepository.getActive(USERNAME)).thenThrow(new ScriptNotFoundException());
         when(usersRepository.getUser(mailAddress)).thenReturn(RECEIVER_LOCALHOST);
 
         resourceLocator.get(mailAddress);
@@ -63,7 +63,7 @@ public class ResourceLocatorTest {
     @Test
     public void resourceLocatorImplShouldWork() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(new byte[0]);
-        when(sieveRepository.getActive(USER)).thenReturn(inputStream);
+        when(sieveRepository.getActive(USERNAME)).thenReturn(inputStream);
         when(usersRepository.getUser(mailAddress)).thenReturn(RECEIVER_LOCALHOST);
 
         assertThat(resourceLocator.get(mailAddress).getScriptContent()).isEqualTo(inputStream);

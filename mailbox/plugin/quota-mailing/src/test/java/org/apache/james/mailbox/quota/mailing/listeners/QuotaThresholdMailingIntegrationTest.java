@@ -19,7 +19,7 @@
 
 package org.apache.james.mailbox.quota.mailing.listeners;
 
-import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.BOB_USER;
+import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.BOB_USERNAME;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.DEFAULT_CONFIGURATION;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.GRACE_PERIOD;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture.TestConstants.NOW;
@@ -53,7 +53,7 @@ public interface QuotaThresholdMailingIntegrationTest {
     static EventFactory.RequireQuotaCount<EventFactory.RequireQuotaSize<EventFactory.RequireInstant<EventFactory.QuotaUsageUpdatedFinalStage>>> eventBase() {
         return EventFactory.quotaUpdated()
             .eventId(EVENT_ID)
-            .user(BOB_USER)
+            .user(BOB_USERNAME)
             .quotaRoot(QUOTAROOT);
     }
 

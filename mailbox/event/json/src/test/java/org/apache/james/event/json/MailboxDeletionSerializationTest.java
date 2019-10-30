@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
@@ -45,15 +45,15 @@ import org.junit.jupiter.api.Test;
 class MailboxDeletionSerializationTest {
 
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(3652);
-    private static final User USER = User.fromUsername("user");
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, USER.asString(), "mailboxName");
+    private static final Username USERNAME = Username.fromUsername("user");
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, USERNAME.asString(), "mailboxName");
     private static final MailboxId MAILBOX_ID = TestId.of(789);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&user@domain", Optional.of(Domain.of("domain")));
     private static final QuotaCount DELETED_MESSAGE_COUNT = QuotaCount.count(60);
     private static final QuotaSize TOTAL_DELETED_SIZE = QuotaSize.size(100);
     private static final MailboxListener.MailboxDeletion DEFAULT_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
         SESSION_ID,
-        USER,
+        USERNAME,
         MAILBOX_PATH,
         QUOTA_ROOT,
         DELETED_MESSAGE_COUNT,

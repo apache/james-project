@@ -93,7 +93,7 @@ public class InVmEventDelivery implements EventDelivery {
         return MDCBuilder.create()
             .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addContext(EventBus.StructuredLoggingFields.USER, event.getUsername())
             .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass())
             .build();
     }
@@ -102,7 +102,7 @@ public class InVmEventDelivery implements EventDelivery {
         return MDCStructuredLogger.forLogger(LOGGER)
             .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
             .addField(EventBus.StructuredLoggingFields.LISTENER_CLASS, mailboxListener.getClass());
     }
 }

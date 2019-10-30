@@ -30,7 +30,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.AuthenticationRequiredException;
@@ -131,7 +131,7 @@ public class CoreProcessor implements CoreCommands {
     public String deleteScript(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.deleteScript(User.fromUsername(session.getUser()), new ScriptName(name));
+            sieveRepository.deleteScript(Username.fromUsername(session.getUser()), new ScriptName(name));
             return "OK";
         }, session);
     }
@@ -140,7 +140,7 @@ public class CoreProcessor implements CoreCommands {
     public String getScript(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            String scriptContent = IOUtils.toString(sieveRepository.getScript(User.fromUsername(session.getUser()), new ScriptName(name)), StandardCharsets.UTF_8);
+            String scriptContent = IOUtils.toString(sieveRepository.getScript(Username.fromUsername(session.getUser()), new ScriptName(name)), StandardCharsets.UTF_8);
             return "{" + scriptContent.length() + "}" + "\r\n" + scriptContent + "\r\nOK";
         }, session);
     }
@@ -149,7 +149,7 @@ public class CoreProcessor implements CoreCommands {
     public String haveSpace(Session session, String name, long size) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.haveSpace(User.fromUsername(session.getUser()), new ScriptName(name), size);
+            sieveRepository.haveSpace(Username.fromUsername(session.getUser()), new ScriptName(name), size);
             return "OK";
         }, session);
     }
@@ -162,7 +162,7 @@ public class CoreProcessor implements CoreCommands {
     private String listScriptsInternals(Session session) throws AuthenticationRequiredException, StorageException {
         authenticationCheck(session);
         String list = Joiner.on("\r\n").join(
-            Iterables.transform(sieveRepository.listScripts(User.fromUsername(session.getUser())),
+            Iterables.transform(sieveRepository.listScripts(Username.fromUsername(session.getUser())),
                 scriptSummary -> '"' + scriptSummary.getName().getValue() + '"' + (scriptSummary.isActive() ? " ACTIVE" : "")));
         if (Strings.isNullOrEmpty(list)) {
             return "OK";
@@ -175,7 +175,7 @@ public class CoreProcessor implements CoreCommands {
     public String putScript(Session session, String name, String content) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.putScript(User.fromUsername(session.getUser()), new ScriptName(name), new ScriptContent(content));
+            sieveRepository.putScript(Username.fromUsername(session.getUser()), new ScriptName(name), new ScriptContent(content));
             return manageWarnings(parser.parse(content));
         }, session);
     }
@@ -184,7 +184,7 @@ public class CoreProcessor implements CoreCommands {
     public String renameScript(Session session, String oldName, String newName) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.renameScript(User.fromUsername(session.getUser()), new ScriptName(oldName), new ScriptName(newName));
+            sieveRepository.renameScript(Username.fromUsername(session.getUser()), new ScriptName(oldName), new ScriptName(newName));
             return "OK";
         }, session);
     }
@@ -193,7 +193,7 @@ public class CoreProcessor implements CoreCommands {
     public String setActive(Session session, String name) {
         return handleCommandExecution(() -> {
             authenticationCheck(session);
-            sieveRepository.setActive(User.fromUsername(session.getUser()), new ScriptName(name));
+            sieveRepository.setActive(Username.fromUsername(session.getUser()), new ScriptName(name));
             return "OK";
         }, session);
     }

@@ -19,7 +19,7 @@
 
 package org.apache.mailbox.tools.indexer;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
@@ -45,7 +45,7 @@ public class ThrowsReIndexer implements ReIndexer {
     }
 
     @Override
-    public Task reIndex(User user) throws MailboxException {
+    public Task reIndex(Username username) throws MailboxException {
         throw new MailboxException("Not implemented");
     }
 

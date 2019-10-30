@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
@@ -47,18 +47,18 @@ public class ScanningQuotaSearcher implements QuotaSearcher {
     }
 
     @Override
-    public List<User> search(QuotaQuery query) {
-        Stream<User> results = Iterators.toStream(listUsers())
-            .map(User::fromUsername)
+    public List<Username> search(QuotaQuery query) {
+        Stream<Username> results = Iterators.toStream(listUsers())
+            .map(Username::fromUsername)
             .filter(clauseConverter.andToPredicate(query.getClause()))
-            .sorted(Comparator.comparing(User::asString))
+            .sorted(Comparator.comparing(Username::asString))
             .skip(query.getOffset().getValue());
 
         return limit(results, query.getLimit())
             .collect(Guavate.toImmutableList());
     }
 
-    private Stream<User> limit(Stream<User> results, Limit limit) {
+    private Stream<Username> limit(Stream<Username> results, Limit limit) {
         return limit.getValue()
             .map(results::limit)
             .orElse(results);

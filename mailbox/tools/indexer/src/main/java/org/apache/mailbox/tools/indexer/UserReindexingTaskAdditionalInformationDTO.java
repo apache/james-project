@@ -21,7 +21,7 @@ package org.apache.mailbox.tools.indexer;
 import java.time.Instant;
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
@@ -35,14 +35,14 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
     public static AdditionalInformationDTOModule<UserReindexingTask.AdditionalInformation, UserReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
         return DTOModule.forDomainObject(UserReindexingTask.AdditionalInformation.class)
             .convertToDTO(UserReindexingTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(User.fromUsername(dto.getUser()),
+            .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(Username.fromUsername(dto.getUser()),
                 dto.getSuccessfullyReprocessedMailCount(),
                 dto.getFailedReprocessedMailCount(),
                 ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures()),
                 dto.getTimestamp()))
             .toDTOConverter((details, type) -> new UserReindexingTaskAdditionalInformationDTO(
                 type,
-                details.getUser(),
+                details.getUsername(),
                 details.getSuccessfullyReprocessedMailCount(),
                 details.getFailedReprocessedMailCount(),
                 ReprocessingContextInformationDTO.serializeFailures(details.failures()),

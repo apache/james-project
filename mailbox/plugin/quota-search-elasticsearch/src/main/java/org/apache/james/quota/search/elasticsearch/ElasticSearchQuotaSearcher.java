@@ -30,7 +30,7 @@ import org.apache.james.backends.es.AliasName;
 import org.apache.james.backends.es.NodeMappingFactory;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.search.ScrolledSearch;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
 import org.elasticsearch.action.search.SearchRequest;
@@ -58,12 +58,12 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
     }
 
     @Override
-    public List<User> search(QuotaQuery query) {
+    public List<Username> search(QuotaQuery query) {
         try {
             try (Stream<SearchHit> searchHits = searchHits(query)) {
                 return searchHits
                     .map(SearchHit::getId)
-                    .map(User::fromUsername)
+                    .map(Username::fromUsername)
                     .collect(Guavate.toImmutableList());
             }
         } catch (IOException e) {

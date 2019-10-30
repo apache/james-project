@@ -23,7 +23,7 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_1;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_2;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -46,7 +46,7 @@ class DefineRulesCommandTest {
 
     @Test
     void constructorShouldThrowWhenNullRuleList() {
-        assertThatThrownBy(() -> new DefineRulesCommand(User.fromUsername("adam@james.org"), null))
+        assertThatThrownBy(() -> new DefineRulesCommand(Username.fromUsername("adam@james.org"), null))
             .isInstanceOf(NullPointerException.class);
     }
 }

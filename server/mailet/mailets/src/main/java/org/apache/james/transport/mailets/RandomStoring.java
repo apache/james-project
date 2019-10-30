@@ -30,7 +30,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.transport.mailets.delivery.MailStore;
@@ -104,20 +104,20 @@ public class RandomStoring extends GenericMailet {
 
     private List<ReroutingInfos> retrieveReroutingInfos() throws UsersRepositoryException {
         return Streams.stream(usersRepository.list())
-            .map(User::fromUsername)
+            .map(Username::fromUsername)
             .flatMap(this::buildReRoutingInfos)
             .collect(Guavate.toImmutableList());
     }
 
-    private Stream<ReroutingInfos> buildReRoutingInfos(User user) {
+    private Stream<ReroutingInfos> buildReRoutingInfos(Username username) {
         try {
-            MailAddress mailAddress = usersRepository.getMailAddressFor(user);
+            MailAddress mailAddress = usersRepository.getMailAddressFor(username);
 
-            MailboxSession session = mailboxManager.createSystemSession(user.asString());
+            MailboxSession session = mailboxManager.createSystemSession(username.asString());
             return mailboxManager
                 .list(session)
                 .stream()
-                .map(mailboxPath -> new ReroutingInfos(mailAddress, mailboxPath.getName(), user.asString()));
+                .map(mailboxPath -> new ReroutingInfos(mailAddress, mailboxPath.getName(), username.asString()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

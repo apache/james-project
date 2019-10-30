@@ -19,13 +19,13 @@
 
 package org.apache.james.vault;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
 public class DeletedMessageContentNotFoundException extends RuntimeException {
 
-    public DeletedMessageContentNotFoundException(User user, MessageId messageId) {
-        this("cannot find mime message associated with id " + messageId.serialize() + " and user " + user.asString());
+    public DeletedMessageContentNotFoundException(Username username, MessageId messageId) {
+        this("cannot find mime message associated with id " + messageId.serialize() + " and user " + username.asString());
     }
 
     public DeletedMessageContentNotFoundException(String message) {

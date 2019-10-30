@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.IntStream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
@@ -44,7 +44,7 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
 
         IntStream.range(0, userCount)
             .boxed()
-            .map(i -> User.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
             .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
@@ -64,7 +64,7 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
 
         IntStream.range(0, userCount)
             .boxed()
-            .map(i -> User.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
+            .map(i -> Username.fromLocalPartWithDomain("user" + i, SIMPSON_COM))
             .forEach(user -> provisionUser(testSystem, user));
         testSystem.await();
 
@@ -77,10 +77,10 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
             .hasSize(userCount - 1);
     }
 
-    private void provisionUser(QuotaSearchTestSystem testSystem, User user) {
+    private void provisionUser(QuotaSearchTestSystem testSystem, Username username) {
         try {
-            testSystem.getUsersRepository().addUser(user.asString(), PASSWORD);
-            appendMessage(testSystem, user, withSize(49));
+            testSystem.getUsersRepository().addUser(username.asString(), PASSWORD);
+            appendMessage(testSystem, username, withSize(49));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

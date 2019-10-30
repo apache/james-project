@@ -24,7 +24,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -286,9 +286,9 @@ public class ReindexingRoutes implements Routes {
         }
     }
 
-    private User extractUser(Request request) {
+    private Username extractUser(Request request) {
         try {
-            return User.fromUsername(request.queryParams(USER_QUERY_PARAM));
+            return Username.fromUsername(request.queryParams(USER_QUERY_PARAM));
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

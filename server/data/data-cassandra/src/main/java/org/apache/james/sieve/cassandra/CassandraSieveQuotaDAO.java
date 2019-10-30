@@ -32,7 +32,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
@@ -99,19 +99,19 @@ public class CassandraSieveQuotaDAO {
                 .where(eq(CassandraSieveQuotaTable.USER_NAME, bindMarker(CassandraSieveQuotaTable.USER_NAME))));
     }
 
-    public Mono<Long> spaceUsedBy(User user) {
+    public Mono<Long> spaceUsedBy(Username username) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             selectSpaceUsedByUserStatement.bind()
-                .setString(CassandraSieveSpaceTable.USER_NAME, user.asString()))
+                .setString(CassandraSieveSpaceTable.USER_NAME, username.asString()))
             .map(optional -> optional.map(row -> row.getLong(CassandraSieveSpaceTable.SPACE_USED))
                 .orElse(0L));
     }
 
-    public Mono<Void> updateSpaceUsed(User user, long spaceUsed) {
+    public Mono<Void> updateSpaceUsed(Username username, long spaceUsed) {
         return cassandraAsyncExecutor.executeVoid(
             updateSpaceUsedStatement.bind()
                 .setLong(CassandraSieveSpaceTable.SPACE_USED, spaceUsed)
-                .setString(CassandraSieveSpaceTable.USER_NAME, user.asString()));
+                .setString(CassandraSieveSpaceTable.USER_NAME, username.asString()));
     }
 
     public Mono<Optional<QuotaSize>> getQuota() {
@@ -135,25 +135,25 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
 
-    public Mono<Optional<QuotaSize>> getQuota(User user) {
+    public Mono<Optional<QuotaSize>> getQuota(Username username) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             selectUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()))
+                .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()))
             .map(optional -> optional.map(row ->
                 QuotaSize.size(row.getLong(CassandraSieveQuotaTable.QUOTA))));
     }
 
-    public Mono<Void> setQuota(User user, QuotaSize quota) {
+    public Mono<Void> setQuota(Username username, QuotaSize quota) {
         return cassandraAsyncExecutor.executeVoid(
             updateUserQuotaStatement.bind()
                 .setLong(CassandraSieveQuotaTable.QUOTA, quota.asLong())
-                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()));
+                .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()));
     }
 
-    public Mono<Void> removeQuota(User user)  {
+    public Mono<Void> removeQuota(Username username)  {
         return cassandraAsyncExecutor.executeVoid(
             deleteUserQuotaStatement.bind()
-                .setString(CassandraSieveQuotaTable.USER_NAME, user.asString()));
+                .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()));
     }
 
 }

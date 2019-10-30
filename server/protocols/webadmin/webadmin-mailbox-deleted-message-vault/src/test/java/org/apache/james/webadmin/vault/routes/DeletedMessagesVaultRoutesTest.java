@@ -33,8 +33,8 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_3;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.DeletedMessageFixture.USER_2;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME_2;
 import static org.apache.james.vault.DeletedMessageVaultSearchContract.MESSAGE_ID_GENERATOR;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes.MESSAGE_PATH_PARAM;
@@ -80,7 +80,7 @@ import org.apache.james.blob.memory.MemoryBlobStore;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -155,7 +155,7 @@ class DeletedMessagesVaultRoutesTest {
         "\"criteria\": []" +
         "}";
     private static final Domain DOMAIN = Domain.of("apache.org");
-    private static final String BOB_PATH = USERS + SEPARATOR + USER.asString();
+    private static final String BOB_PATH = USERS + SEPARATOR + USERNAME.asString();
     private static final String DELETED_MESSAGE_PARAM_PATH = MESSAGE_PATH_PARAM + SEPARATOR + MESSAGE_ID.serialize();
     private static final String BOB_DELETE_PATH = BOB_PATH + SEPARATOR + DELETED_MESSAGE_PARAM_PATH;
 
@@ -214,7 +214,7 @@ class DeletedMessagesVaultRoutesTest {
         usersRepository.setDomainList(domainList);
         usersRepository.configure(new BaseHierarchicalConfiguration());
 
-        usersRepository.addUser(USER.asString(), "userPassword");
+        usersRepository.addUser(USERNAME.asString(), "userPassword");
 
         return usersRepository;
     }
@@ -357,7 +357,7 @@ class DeletedMessagesVaultRoutesTest {
             given()
                 .queryParam("action", action)
             .when()
-                .post(USERS + SEPARATOR + USER_2.asString())
+                .post(USERS + SEPARATOR + USERNAME_2.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .body("statusCode", is(404))
@@ -597,7 +597,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -631,7 +631,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
 
                 @Test
@@ -663,7 +663,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -697,7 +697,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
 
                 @Test
@@ -729,7 +729,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -763,7 +763,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
 
                 @Test
@@ -795,7 +795,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -829,7 +829,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -863,7 +863,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -895,7 +895,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
 
                 @Test
@@ -925,7 +925,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -957,7 +957,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -991,7 +991,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1023,7 +1023,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
 
                 @Test
@@ -1053,7 +1053,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1085,7 +1085,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -1119,7 +1119,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1151,7 +1151,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -1184,7 +1184,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1216,7 +1216,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -1254,7 +1254,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1290,7 +1290,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1326,7 +1326,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -1360,7 +1360,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(1)
                         .hasOnlyOneElementSatisfying(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1392,7 +1392,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
 
@@ -1447,7 +1447,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(restoreMessageContents(USER))
+                    assertThat(restoreMessageContents(USERNAME))
                         .hasSize(2)
                         .allSatisfy(messageIS -> assertThat(messageIS).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
                 }
@@ -1500,7 +1500,7 @@ class DeletedMessagesVaultRoutesTest {
                     .then()
                         .body("status", is("completed"));
 
-                    assertThat(hasAnyMail(USER)).isFalse();
+                    assertThat(hasAnyMail(USERNAME)).isFalse();
                 }
             }
         }
@@ -1537,7 +1537,7 @@ class DeletedMessagesVaultRoutesTest {
                     .body("type", is(DeletedMessagesVaultRestoreTask.TYPE.asString()))
                     .body("additionalInformation.successfulRestoreCount", is(0))
                     .body("additionalInformation.errorRestoreCount", is(0))
-                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("additionalInformation.username", is(USERNAME.asString()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -1575,7 +1575,7 @@ class DeletedMessagesVaultRoutesTest {
                     .body("type", is(DeletedMessagesVaultRestoreTask.TYPE.asString()))
                     .body("additionalInformation.successfulRestoreCount", is(0))
                     .body("additionalInformation.errorRestoreCount", is(2))
-                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("additionalInformation.username", is(USERNAME.asString()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -1608,7 +1608,7 @@ class DeletedMessagesVaultRoutesTest {
                     .body("type", is(DeletedMessagesVaultRestoreTask.TYPE.asString()))
                     .body("additionalInformation.successfulRestoreCount", is(0))
                     .body("additionalInformation.errorRestoreCount", is(0))
-                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("additionalInformation.username", is(USERNAME.asString()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()));
             }
@@ -1650,7 +1650,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("type", is(DeletedMessagesVaultRestoreTask.TYPE.asString()))
                 .body("additionalInformation.successfulRestoreCount", is(2))
                 .body("additionalInformation.errorRestoreCount", is(0))
-                .body("additionalInformation.user", is(USER.asString()))
+                .body("additionalInformation.username", is(USERNAME.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
                 .body("completedDate", is(notNullValue()));
@@ -1677,14 +1677,14 @@ class DeletedMessagesVaultRoutesTest {
             .then()
                 .body("status", is("completed"));
 
-            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
                 .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
         }
 
         @Test
         void restoreShouldNotDeleteExistingMessagesInTheUserMailbox() throws Exception {
-            MailboxSession session = mailboxManager.createSystemSession(USER.asString());
-            MailboxPath restoreMailboxPath = MailboxPath.forUser(USER.asString(), DefaultMailboxes.RESTORED_MESSAGES);
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME.asString());
+            MailboxPath restoreMailboxPath = MailboxPath.forUser(USERNAME.asString(), DefaultMailboxes.RESTORED_MESSAGES);
             mailboxManager.createMailbox(restoreMailboxPath, session);
             MessageManager messageManager = mailboxManager.getMailbox(restoreMailboxPath, session);
             messageManager.appendMessage(
@@ -1710,7 +1710,7 @@ class DeletedMessagesVaultRoutesTest {
             .then()
                 .body("status", is("completed"));
 
-            assertThat(restoreMailboxMessages(USER))
+            assertThat(restoreMailboxMessages(USERNAME))
                 .hasSize(3);
         }
 
@@ -1735,7 +1735,7 @@ class DeletedMessagesVaultRoutesTest {
             .then()
                 .body("status", is("completed"));
 
-            assertThat(restoreMailboxMessages(USER))
+            assertThat(restoreMailboxMessages(USERNAME))
                 .hasSize(2)
                 .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)))
                 .anySatisfy(messageResult -> assertThat(fullContent(messageResult)).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
@@ -1762,7 +1762,7 @@ class DeletedMessagesVaultRoutesTest {
             .then()
                 .body("status", is("completed"));
 
-            assertThat(hasAnyMail(USER_2))
+            assertThat(hasAnyMail(USERNAME_2))
                 .isFalse();
         }
 
@@ -1829,7 +1829,7 @@ class DeletedMessagesVaultRoutesTest {
                 String taskId =
                     with()
                         .queryParam("action", "export")
-                        .queryParam("exportTo", USER_2.asString())
+                        .queryParam("exportTo", USERNAME_2.asString())
                         .body(MATCH_ALL_QUERY)
                         .post(BOB_PATH)
                     .jsonPath()
@@ -1843,8 +1843,8 @@ class DeletedMessagesVaultRoutesTest {
                     .body("status", is("completed"))
                     .body("taskId", is(taskId))
                     .body("type", is(DeletedMessagesVaultExportTask.TYPE.asString()))
-                    .body("additionalInformation.userExportFrom", is(USER.asString()))
-                    .body("additionalInformation.exportTo", is(USER_2.asString()))
+                    .body("additionalInformation.userExportFrom", is(USERNAME.asString()))
+                    .body("additionalInformation.exportTo", is(USERNAME_2.asString()))
                     .body("additionalInformation.totalExportedMessages", is(2))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
@@ -1860,7 +1860,7 @@ class DeletedMessagesVaultRoutesTest {
             String taskId =
                 with()
                     .queryParam("action", "export")
-                    .queryParam("exportTo", USER_2.asString())
+                    .queryParam("exportTo", USERNAME_2.asString())
                     .body(MATCH_ALL_QUERY)
                     .post(BOB_PATH)
                 .jsonPath()
@@ -1871,7 +1871,7 @@ class DeletedMessagesVaultRoutesTest {
                 .get(taskId + "/await");
 
             verify(blobExporting, times(1))
-                .export(eq(USER_2.asMailAddress()), any());
+                .export(eq(USERNAME_2.asMailAddress()), any());
         }
 
         @Test
@@ -1891,7 +1891,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
                 .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
         }
 
@@ -1903,7 +1903,7 @@ class DeletedMessagesVaultRoutesTest {
             String taskId =
                 with()
                     .queryParam("action", "export")
-                    .queryParam("exportTo", USER_2.asString())
+                    .queryParam("exportTo", USERNAME_2.asString())
                     .body(MATCH_ALL_QUERY)
                     .post(BOB_PATH)
                 .jsonPath()
@@ -1976,7 +1976,7 @@ class DeletedMessagesVaultRoutesTest {
             DeletedMessage notExpiredMessage = DeletedMessage.builder()
                 .messageId(InMemoryMessageId.of(46))
                 .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-                .user(USER)
+                .user(USERNAME)
                 .deliveryDate(DELIVERY_DATE)
                 .deletionDate(ZonedDateTime.ofInstant(clock.instant(), ZoneOffset.UTC))
                 .sender(MaybeSender.of(SENDER))
@@ -2003,7 +2003,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
                 .containsOnly(notExpiredMessage);
         }
 
@@ -2023,7 +2023,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(hasAnyMail(USER))
+            assertThat(hasAnyMail(USERNAME))
                 .isFalse();
         }
 
@@ -2092,7 +2092,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("status", is("completed"))
                 .body("taskId", is(taskId))
                 .body("type", is(DeletedMessagesVaultDeleteTask.TYPE.asString()))
-                .body("additionalInformation.user", is(USER.asString()))
+                .body("additionalInformation.username", is(USERNAME.asString()))
                 .body("additionalInformation.deleteMessageId", is(MESSAGE_ID.serialize()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -2118,7 +2118,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("status", is("completed"))
                 .body("taskId", is(taskId))
                 .body("type", is(DeletedMessagesVaultDeleteTask.TYPE.asString()))
-                .body("additionalInformation.user", is(USER.asString()))
+                .body("additionalInformation.username", is(USERNAME.asString()))
                 .body("additionalInformation.deleteMessageId", is(MESSAGE_ID.serialize()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -2140,7 +2140,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(hasAnyMail(USER))
+            assertThat(hasAnyMail(USERNAME))
                 .isFalse();
         }
 
@@ -2158,7 +2158,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
                 .isEmpty();
         }
 
@@ -2176,7 +2176,7 @@ class DeletedMessagesVaultRoutesTest {
                 .basePath(TasksRoutes.BASE)
                 .get(taskId + "/await");
 
-            assertThat(Flux.from(vault.search(USER, Query.ALL)).toStream())
+            assertThat(Flux.from(vault.search(USERNAME, Query.ALL)).toStream())
                 .contains(DELETED_MESSAGE_2);
         }
 
@@ -2203,7 +2203,7 @@ class DeletedMessagesVaultRoutesTest {
                     .body("status", is("failed"))
                     .body("taskId", is(taskId))
                     .body("type", is(DeletedMessagesVaultDeleteTask.TYPE.asString()))
-                    .body("additionalInformation.user", is(USER.asString()))
+                    .body("additionalInformation.username", is(USERNAME.asString()))
                     .body("additionalInformation.deleteMessageId", is(MESSAGE_ID.serialize()))
                     .body("startedDate", is(notNullValue()))
                     .body("submitDate", is(notNullValue()))
@@ -2225,7 +2225,7 @@ class DeletedMessagesVaultRoutesTest {
             @Test
             void deleteShouldReturnNotFoundWhenUserIsNotFoundInSystem() {
                 when()
-                    .delete(USERS + SEPARATOR + USER_2.asString() + SEPARATOR + DELETED_MESSAGE_PARAM_PATH)
+                    .delete(USERS + SEPARATOR + USERNAME_2.asString() + SEPARATOR + DELETED_MESSAGE_PARAM_PATH)
                 .then()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .body("statusCode", is(404))
@@ -2246,8 +2246,8 @@ class DeletedMessagesVaultRoutesTest {
         }
     }
 
-    private boolean hasAnyMail(User user) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+    private boolean hasAnyMail(Username username) throws MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
         int limitToOneMessage = 1;
 
         return !mailboxManager.search(MultimailboxesSearchQuery.from(new SearchQuery()).build(), session, limitToOneMessage)
@@ -2262,14 +2262,14 @@ class DeletedMessagesVaultRoutesTest {
         }
     }
 
-    private Stream<InputStream> restoreMessageContents(User user) throws Exception {
-        return restoreMailboxMessages(user).stream()
+    private Stream<InputStream> restoreMessageContents(Username username) throws Exception {
+        return restoreMailboxMessages(username).stream()
             .map(this::fullContent);
     }
 
-    private List<MessageResult> restoreMailboxMessages(User user) throws Exception {
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
-        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(user.asString(), DefaultMailboxes.RESTORED_MESSAGES), session);
+    private List<MessageResult> restoreMailboxMessages(Username username) throws Exception {
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
+        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username.asString(), DefaultMailboxes.RESTORED_MESSAGES), session);
         return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session));
     }
 
@@ -2277,7 +2277,7 @@ class DeletedMessagesVaultRoutesTest {
         return DeletedMessage.builder()
             .messageId(InMemoryMessageId.of(MESSAGE_ID_GENERATOR.incrementAndGet()))
             .originMailboxes(MAILBOX_ID_1)
-            .user(USER)
+            .user(USERNAME)
             .deliveryDate(DELIVERY_DATE)
             .deletionDate(DELETION_DATE)
             .sender(MaybeSender.of(SENDER))

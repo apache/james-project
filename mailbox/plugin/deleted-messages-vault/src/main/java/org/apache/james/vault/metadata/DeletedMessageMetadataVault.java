@@ -20,7 +20,7 @@
 package org.apache.james.vault.metadata;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
@@ -29,11 +29,11 @@ public interface DeletedMessageMetadataVault {
 
     Publisher<Void> removeMetadataRelatedToBucket(BucketName bucketName);
 
-    Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId);
+    Publisher<Void> remove(BucketName bucketName, Username username, MessageId messageId);
 
-    Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId);
+    Publisher<StorageInformation> retrieveStorageInformation(Username username, MessageId messageId);
 
-    Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user);
+    Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, Username username);
 
     Publisher<BucketName> listRelatedBuckets();
 }

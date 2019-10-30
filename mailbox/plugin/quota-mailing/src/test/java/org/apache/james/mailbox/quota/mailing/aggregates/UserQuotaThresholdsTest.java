@@ -22,14 +22,14 @@ package org.apache.james.mailbox.quota.mailing.aggregates;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class UserQuotaThresholdsTest {
 
-    public static final User BOB = User.fromUsername("bob@domain");
+    public static final Username BOB = Username.fromUsername("bob@domain");
 
     @Test
     public void aggregateShouldMatchBeanContract() {
@@ -46,13 +46,13 @@ public class UserQuotaThresholdsTest {
 
     @Test
     public void fromShouldThrowWhenUserWithSlash() {
-        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(User.fromUsername("foo/bar@domain"), "listenerName"))
+        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.fromUsername("foo/bar@domain"), "listenerName"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenDomainWithSlash() {
-        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(User.fromUsername("foo.bar@dom/ain"), "listenerName"))
+        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.fromUsername("foo.bar@dom/ain"), "listenerName"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

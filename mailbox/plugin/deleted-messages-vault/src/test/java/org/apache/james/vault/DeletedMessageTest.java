@@ -29,7 +29,7 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.SIZE_STAGE;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
@@ -55,7 +55,7 @@ class DeletedMessageTest {
             soft -> {
                 soft.assertThat(DELETED_MESSAGE.getMessageId()).isEqualTo(MESSAGE_ID);
                 soft.assertThat(DELETED_MESSAGE.getOriginMailboxes()).containsOnly(MAILBOX_ID_1, MAILBOX_ID_2);
-                soft.assertThat(DELETED_MESSAGE.getOwner()).isEqualTo(USER);
+                soft.assertThat(DELETED_MESSAGE.getOwner()).isEqualTo(USERNAME);
                 soft.assertThat(DELETED_MESSAGE.getDeliveryDate()).isEqualTo(DELIVERY_DATE);
                 soft.assertThat(DELETED_MESSAGE.getDeletionDate()).isEqualTo(DELETION_DATE);
                 soft.assertThat(DELETED_MESSAGE.getSender()).isEqualTo(MaybeSender.of(SENDER));

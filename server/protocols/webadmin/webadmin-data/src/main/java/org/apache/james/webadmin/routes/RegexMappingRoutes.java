@@ -31,7 +31,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.InvalidRegexException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -131,7 +131,7 @@ public class RegexMappingRoutes implements Routes {
     private MappingSource extractMappingSource(Request request) {
         try {
             return MappingSource
-                .fromUser(User.fromUsername(request.params(MAPPING_SOURCE_PARAM)));
+                .fromUser(Username.fromUsername(request.params(MAPPING_SOURCE_PARAM)));
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -58,8 +58,7 @@ import com.google.common.collect.Lists;
 
 public class CopyProcessorTest {
     public static final String TAG = "TAG";
-    private static final String USERNAME = "username";
-    private static final User USER = User.fromUsername(USERNAME);
+    private static final Username USERNAME = Username.fromUsername("username");
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;
@@ -76,7 +75,7 @@ public class CopyProcessorTest {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
-        mailboxSession = MailboxSessionUtil.create(USER.asString());
+        mailboxSession = MailboxSessionUtil.create(USERNAME.asString());
 
         testee = new CopyProcessor(mockNextProcessor, mockMailboxManager, mockStatusResponseFactory, new NoopMetricFactory());
     }

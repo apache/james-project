@@ -30,7 +30,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 
@@ -41,8 +41,8 @@ public interface DeletedMessageFixture {
     InMemoryId MAILBOX_ID_1 = InMemoryId.of(43);
     InMemoryId MAILBOX_ID_2 = InMemoryId.of(44);
     InMemoryId MAILBOX_ID_3 = InMemoryId.of(45);
-    User USER = User.fromUsername("bob@apache.org");
-    User USER_2 = User.fromUsername("dimitri@apache.org");
+    Username USERNAME = Username.fromUsername("bob@apache.org");
+    Username USERNAME_2 = Username.fromUsername("dimitri@apache.org");
     ZonedDateTime DELIVERY_DATE = ZonedDateTime.parse("2014-10-30T14:12:00Z");
     ZonedDateTime DELETION_DATE = ZonedDateTime.parse("2015-10-30T14:12:00Z");
     ZonedDateTime NOW = ZonedDateTime.parse("2015-10-30T16:12:00Z");
@@ -55,7 +55,7 @@ public interface DeletedMessageFixture {
     Function<Long, DeletedMessage> DELETED_MESSAGE_GENERATOR = i -> DeletedMessage.builder()
         .messageId(InMemoryMessageId.of(i))
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-        .user(USER)
+        .user(USERNAME)
         .deliveryDate(DELIVERY_DATE)
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
@@ -66,7 +66,7 @@ public interface DeletedMessageFixture {
     DeletedMessage.Builder.RequireSize<DeletedMessage.Builder.FinalStage> SIZE_STAGE = DeletedMessage.builder()
         .messageId(MESSAGE_ID)
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-        .user(USER)
+        .user(USERNAME)
         .deliveryDate(DELIVERY_DATE)
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
@@ -81,7 +81,7 @@ public interface DeletedMessageFixture {
     DeletedMessage OLD_DELETED_MESSAGE = DeletedMessage.builder()
         .messageId(OLD_MESSAGE_ID)
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-        .user(USER)
+        .user(USERNAME)
         .deliveryDate(OLD_DELIVERY_DATE)
         .deletionDate(OLD_DELETION_DATE)
         .sender(MaybeSender.of(SENDER))
@@ -94,7 +94,7 @@ public interface DeletedMessageFixture {
     DeletedMessage DELETED_MESSAGE_OTHER_USER = DeletedMessage.builder()
         .messageId(InMemoryMessageId.of(48))
         .originMailboxes(MAILBOX_ID_1, MAILBOX_ID_2)
-        .user(USER_2)
+        .user(USERNAME_2)
         .deliveryDate(DELIVERY_DATE)
         .deletionDate(DELETION_DATE)
         .sender(MaybeSender.of(SENDER))

@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import java.io.IOException;
 import java.time.Instant;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -49,9 +49,9 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
 
     private static final String USERNAME = "james";
-    private static final User USER_TO_RESTORE = User.fromUsername(USERNAME);
+    private static final Username USERNAME_TO_RESTORE = Username.fromUsername(USERNAME);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
-    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USER_TO_RESTORE,42, 10, TIMESTAMP);
+    private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USERNAME_TO_RESTORE,42, 10, TIMESTAMP);
 
     private static final String SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK = "{\"type\":\"deleted-messages-restore\"," +
         "\"userToRestore\":\"james\"," +
@@ -70,7 +70,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultRestoreTaskShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USER_TO_RESTORE, QUERY);
+        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USERNAME_TO_RESTORE, QUERY);
 
         assertThatJson(taskSerializer.serialize(task))
             .isEqualTo(SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK);
@@ -78,7 +78,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultRestoreTaskShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USER_TO_RESTORE, QUERY);
+        DeletedMessagesVaultRestoreTask task = new DeletedMessagesVaultRestoreTask(exportService, USERNAME_TO_RESTORE, QUERY);
 
         Task deserializedTask = taskSerializer.deserialize(SERIALIZED_DELETE_MESSAGES_VAULT_RESTORE_TASK);
         assertThat(deserializedTask)

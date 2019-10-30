@@ -28,6 +28,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;
@@ -103,7 +104,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public boolean test(String name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(org.apache.james.core.User.fromUsername(name).asString()))
+        return Optional.ofNullable(userByName.get(Username.fromUsername(name).asString()))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }

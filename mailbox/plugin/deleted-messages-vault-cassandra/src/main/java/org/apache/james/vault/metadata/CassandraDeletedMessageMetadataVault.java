@@ -22,7 +22,7 @@ package org.apache.james.vault.metadata;
 import javax.inject.Inject;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
@@ -41,7 +41,7 @@ public class CassandraDeletedMessageMetadataVault implements DeletedMessageMetad
     @Override
     public Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage) {
         BucketName bucketName = deletedMessage.getStorageInformation().getBucketName();
-        User owner = deletedMessage.getDeletedMessage().getOwner();
+        Username owner = deletedMessage.getDeletedMessage().getOwner();
         MessageId messageId = deletedMessage.getDeletedMessage().getMessageId();
         return storageInformationDAO.referenceStorageInformation(owner, messageId, deletedMessage.getStorageInformation())
             .then(metadataDAO.store(deletedMessage))
@@ -61,19 +61,19 @@ public class CassandraDeletedMessageMetadataVault implements DeletedMessageMetad
     }
 
     @Override
-    public Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId) {
-        return storageInformationDAO.deleteStorageInformation(user, messageId)
-            .then(metadataDAO.deleteMessage(bucketName, user, messageId));
+    public Publisher<Void> remove(BucketName bucketName, Username username, MessageId messageId) {
+        return storageInformationDAO.deleteStorageInformation(username, messageId)
+            .then(metadataDAO.deleteMessage(bucketName, username, messageId));
     }
 
     @Override
-    public Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId) {
-        return storageInformationDAO.retrieveStorageInformation(user, messageId);
+    public Publisher<StorageInformation> retrieveStorageInformation(Username username, MessageId messageId) {
+        return storageInformationDAO.retrieveStorageInformation(username, messageId);
     }
 
     @Override
-    public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user) {
-        return metadataDAO.retrieveMetadata(bucketName, user);
+    public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, Username username) {
+        return metadataDAO.retrieveMetadata(bucketName, username);
     }
 
     @Override

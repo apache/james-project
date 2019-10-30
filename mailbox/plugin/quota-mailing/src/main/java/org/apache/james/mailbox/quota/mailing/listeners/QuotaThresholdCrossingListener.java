@@ -23,7 +23,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
@@ -73,12 +73,12 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
     @Override
     public void event(Event event) {
         if (event instanceof QuotaUsageUpdatedEvent) {
-            handleEvent(event.getUser(), (QuotaUsageUpdatedEvent) event);
+            handleEvent(event.getUsername(), (QuotaUsageUpdatedEvent) event);
         }
     }
 
-    private void handleEvent(User user, QuotaUsageUpdatedEvent event) {
+    private void handleEvent(Username username, QuotaUsageUpdatedEvent event) {
         eventSourcingSystem.dispatch(
-            new DetectThresholdCrossing(user, event.getCountQuota(), event.getSizeQuota(), event.getInstant()));
+            new DetectThresholdCrossing(username, event.getCountQuota(), event.getSizeQuota(), event.getInstant()));
     }
 }

@@ -22,13 +22,14 @@ package org.apache.james.quota.search.elasticsearch;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
+
 import org.junit.jupiter.api.Test;
 
 class UserRoutingKeyFactoryTest {
     @Test
     void fromShouldRelyOnUsername() {
-        assertThat(new UserRoutingKeyFactory().from(User.fromUsername("bob")))
+        assertThat(new UserRoutingKeyFactory().from(Username.fromUsername("bob")))
             .isEqualTo(RoutingKey.fromString("bob"));
     }
 }

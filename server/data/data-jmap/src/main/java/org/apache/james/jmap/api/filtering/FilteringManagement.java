@@ -22,22 +22,22 @@ package org.apache.james.jmap.api.filtering;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 import com.google.common.collect.ImmutableList;
 
 public interface FilteringManagement {
 
-    void defineRulesForUser(User user, List<Rule> rules);
+    void defineRulesForUser(Username username, List<Rule> rules);
 
-    default void defineRulesForUser(User user, Rule... rules) {
-        defineRulesForUser(user, Arrays.asList(rules));
+    default void defineRulesForUser(Username username, Rule... rules) {
+        defineRulesForUser(username, Arrays.asList(rules));
     }
 
-    default void clearRulesForUser(User user) {
-        defineRulesForUser(user, ImmutableList.of());
+    default void clearRulesForUser(Username username) {
+        defineRulesForUser(username, ImmutableList.of());
     }
 
-    List<Rule> listRulesForUser(User user);
+    List<Rule> listRulesForUser(Username username);
 
 }

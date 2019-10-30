@@ -20,7 +20,7 @@
 package org.apache.james.vault.metadata;
 
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.metadata.DeletedMessageMetadataModule.MODULE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE;
@@ -57,7 +57,7 @@ class MetadataDAOTest {
 
     @Test
     void retrieveMessageIdsShouldReturnEmptyWhenNone() {
-        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USER).toStream();
+        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 
@@ -65,7 +65,7 @@ class MetadataDAOTest {
     void retrieveMessageIdsShouldReturnStoredMessageId() {
         testee.store(DELETED_MESSAGE).block();
 
-        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USER).toStream();
+        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).containsExactly(DELETED_MESSAGE.getDeletedMessage().getMessageId());
     }
 
@@ -73,9 +73,9 @@ class MetadataDAOTest {
     void retrieveMessageIdsShouldNotReturnDeletedMessages() {
         testee.store(DELETED_MESSAGE).block();
 
-        testee.deleteInBucket(BUCKET_NAME, USER).block();
+        testee.deleteInBucket(BUCKET_NAME, USERNAME).block();
 
-        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USER).toStream();
+        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 
@@ -84,9 +84,9 @@ class MetadataDAOTest {
         testee.store(DELETED_MESSAGE).block();
         testee.store(DELETED_MESSAGE_2).block();
 
-        testee.deleteInBucket(BUCKET_NAME, USER).block();
+        testee.deleteInBucket(BUCKET_NAME, USERNAME).block();
 
-        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USER).toStream();
+        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 
@@ -95,7 +95,7 @@ class MetadataDAOTest {
         testee.store(DELETED_MESSAGE).block();
         testee.store(DELETED_MESSAGE_2).block();
 
-        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USER).toStream();
+        Stream<MessageId> messageIds = testee.retrieveMessageIds(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).containsExactlyInAnyOrder(
             DELETED_MESSAGE.getDeletedMessage().getMessageId(),
             DELETED_MESSAGE_2.getDeletedMessage().getMessageId());
@@ -103,7 +103,7 @@ class MetadataDAOTest {
 
     @Test
     void retrieveMetadataShouldReturnEmptyWhenNone() {
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 
@@ -111,7 +111,7 @@ class MetadataDAOTest {
     void retrieveMetadataShouldReturnStoredMetadata() {
         testee.store(DELETED_MESSAGE).block();
 
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).containsExactly(DELETED_MESSAGE);
     }
 
@@ -119,9 +119,9 @@ class MetadataDAOTest {
     void retrieveMetadataShouldNotReturnDeletedMessages() {
         testee.store(DELETED_MESSAGE).block();
 
-        testee.deleteInBucket(BUCKET_NAME, USER).block();
+        testee.deleteInBucket(BUCKET_NAME, USERNAME).block();
 
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 
@@ -130,7 +130,7 @@ class MetadataDAOTest {
         testee.store(DELETED_MESSAGE).block();
         testee.store(DELETED_MESSAGE_2).block();
 
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).containsExactlyInAnyOrder(DELETED_MESSAGE, DELETED_MESSAGE_2);
     }
 
@@ -139,9 +139,9 @@ class MetadataDAOTest {
         testee.store(DELETED_MESSAGE).block();
         testee.store(DELETED_MESSAGE_2).block();
 
-        testee.deleteMessage(BUCKET_NAME, USER, MESSAGE_ID).block();
+        testee.deleteMessage(BUCKET_NAME, USERNAME, MESSAGE_ID).block();
 
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).containsExactlyInAnyOrder(DELETED_MESSAGE_2);
     }
 
@@ -149,9 +149,9 @@ class MetadataDAOTest {
     void retrieveMetadataShouldNotReturnDeletedMetadata() {
         testee.store(DELETED_MESSAGE).block();
 
-        testee.deleteMessage(BUCKET_NAME, USER, MESSAGE_ID).block();
+        testee.deleteMessage(BUCKET_NAME, USERNAME, MESSAGE_ID).block();
 
-        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USER).toStream();
+        Stream<DeletedMessageWithStorageInformation> messageIds = testee.retrieveMetadata(BUCKET_NAME, USERNAME).toStream();
         assertThat(messageIds).isEmpty();
     }
 }

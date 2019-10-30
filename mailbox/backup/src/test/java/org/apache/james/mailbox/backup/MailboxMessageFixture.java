@@ -28,7 +28,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -50,8 +50,8 @@ public interface MailboxMessageFixture {
     String USER = "user";
     String OTHER_USER = "otherUser";
 
-    User USER1 = User.fromUsername(USER);
-    User USER2 = User.fromUsername(OTHER_USER);
+    Username USERNAME_1 = Username.fromUsername(USER);
+    Username USERNAME_2 = Username.fromUsername(OTHER_USER);
 
     String DATE_STRING_1 = "2018-02-15T15:54:02Z";
     String DATE_STRING_2 = "2018-03-15T15:54:02Z";

@@ -25,7 +25,7 @@ import java.nio.charset.StandardCharsets;
 
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinExtension.SpamAssassin;
 import org.apache.james.util.MimeMessageUtil;
@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(SpamAssassinExtension.class)
 public class SpamAssassinInvokerTest {
 
-    public static final User USER = User.fromUsername("any@james");
+    public static final Username USERNAME = Username.fromUsername("any@james");
     private SpamAssassin spamAssassin;
     private SpamAssassinInvoker testee;
 
@@ -53,7 +53,7 @@ public class SpamAssassinInvokerTest {
     public void scanMailShouldModifyHitsField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHits()).isNotEqualTo(SpamAssassinResult.NO_RESULT);
     }
@@ -62,7 +62,7 @@ public class SpamAssassinInvokerTest {
     public void scanMailShouldModifyRequiredHitsField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getRequiredHits()).isEqualTo("5.0");
     }
@@ -71,7 +71,7 @@ public class SpamAssassinInvokerTest {
     public void scanMailShouldModifyHeadersField() throws Exception {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("eml/spam.eml"));
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHeadersAsAttributes()).isNotEmpty();
     }
@@ -84,7 +84,7 @@ public class SpamAssassinInvokerTest {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam1"));
 
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")));
     }
@@ -94,7 +94,7 @@ public class SpamAssassinInvokerTest {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
                 ClassLoader.getSystemResourceAsStream("spamassassin_db/spam/spam2"));
 
-        boolean result = testee.learnAsSpam(mimeMessage.getInputStream(), USER);
+        boolean result = testee.learnAsSpam(mimeMessage.getInputStream(), USERNAME);
 
         assertThat(result).isTrue();
     }
@@ -106,9 +106,9 @@ public class SpamAssassinInvokerTest {
 
         byte[] messageAsBytes = MimeMessageUtil.asString(mimeMessage).getBytes(StandardCharsets.UTF_8);
 
-        testee.learnAsSpam(new ByteArrayInputStream(messageAsBytes), USER);
+        testee.learnAsSpam(new ByteArrayInputStream(messageAsBytes), USERNAME);
 
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("YES")));
     }
@@ -118,7 +118,7 @@ public class SpamAssassinInvokerTest {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
             ClassLoader.getSystemResourceAsStream("spamassassin_db/ham/ham2"));
 
-        boolean result = testee.learnAsHam(mimeMessage.getInputStream(), USER);
+        boolean result = testee.learnAsHam(mimeMessage.getInputStream(), USERNAME);
 
         assertThat(result).isTrue();
     }
@@ -128,9 +128,9 @@ public class SpamAssassinInvokerTest {
         MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
             ClassLoader.getSystemResourceAsStream("spamassassin_db/ham/ham1"));
 
-        testee.learnAsHam(mimeMessage.getInputStream(), USER);
+        testee.learnAsHam(mimeMessage.getInputStream(), USERNAME);
 
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO")));
     }
@@ -142,10 +142,10 @@ public class SpamAssassinInvokerTest {
 
         byte[] messageAsBytes = MimeMessageUtil.asString(mimeMessage).getBytes(StandardCharsets.UTF_8);
 
-        testee.learnAsSpam(new ByteArrayInputStream(messageAsBytes), USER);
-        testee.learnAsHam(new ByteArrayInputStream(messageAsBytes), USER);
+        testee.learnAsSpam(new ByteArrayInputStream(messageAsBytes), USERNAME);
+        testee.learnAsHam(new ByteArrayInputStream(messageAsBytes), USERNAME);
 
-        SpamAssassinResult result = testee.scanMail(mimeMessage, USER);
+        SpamAssassinResult result = testee.scanMail(mimeMessage, USERNAME);
 
         assertThat(result.getHeadersAsAttributes()).contains(new Attribute(SpamAssassinResult.FLAG_MAIL, AttributeValue.of("NO")));
     }

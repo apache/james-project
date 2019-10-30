@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.mailbox.model.TestId;
@@ -46,7 +46,7 @@ class UserReindexingTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
     private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
-    private final User user = User.fromUsername("foo@apache.org");
+    private final Username username = Username.fromUsername("foo@apache.org");
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
@@ -79,8 +79,8 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void userReindexingShouldBeSerializable() throws JsonProcessingException {
-        User user = User.fromUsername("foo@apache.org");
-        UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, user);
+        Username username = Username.fromUsername("foo@apache.org");
+        UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, username);
 
         assertThatJson(taskSerializer.serialize(task))
             .isEqualTo(serializedUserReindexingTask);
@@ -88,8 +88,8 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void userReindexingShouldBeDeserializable() throws IOException {
-        User user = User.fromUsername("foo@apache.org");
-        UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, user);
+        Username username = Username.fromUsername("foo@apache.org");
+        UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, username);
 
         assertThat(taskSerializer.deserialize(serializedUserReindexingTask))
             .isEqualToComparingOnlyGivenFields(task, "reIndexerPerformer");
@@ -98,13 +98,13 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
+        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(username, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
     }
 
     @Test
     void additionalInformationShouldBeDeserializable() throws IOException {
-        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(user, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
+        UserReindexingTask.AdditionalInformation details = new UserReindexingTask.AdditionalInformation(username, successfullyReprocessedMailCount, failedReprocessedMailCount, reIndexingExecutionFailures, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
             .isEqualToComparingFieldByField(details);
     }

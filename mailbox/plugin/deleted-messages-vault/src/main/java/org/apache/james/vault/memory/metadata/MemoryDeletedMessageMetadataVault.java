@@ -24,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.vault.metadata.DeletedMessageMetadataVault;
 import org.apache.james.vault.metadata.DeletedMessageWithStorageInformation;
@@ -40,7 +40,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadataVault {
-    private final Table<BucketName, User, Map<MessageId, DeletedMessageWithStorageInformation>> table;
+    private final Table<BucketName, Username, Map<MessageId, DeletedMessageWithStorageInformation>> table;
 
     public MemoryDeletedMessageMetadataVault() {
         table = HashBasedTable.create();
@@ -49,7 +49,7 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
     @Override
     public Publisher<Void> store(DeletedMessageWithStorageInformation deletedMessage) {
         BucketName bucketName = deletedMessage.getStorageInformation().getBucketName();
-        User owner = deletedMessage.getDeletedMessage().getOwner();
+        Username owner = deletedMessage.getDeletedMessage().getOwner();
         MessageId messageId = deletedMessage.getDeletedMessage().getMessageId();
 
         return Mono.fromRunnable(() -> {
@@ -71,20 +71,20 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
     }
 
     @Override
-    public Publisher<Void> remove(BucketName bucketName, User user, MessageId messageId) {
+    public Publisher<Void> remove(BucketName bucketName, Username username, MessageId messageId) {
         return Mono.fromRunnable(() -> {
             synchronized (table) {
-                userVault(bucketName, user).remove(messageId);
+                userVault(bucketName, username).remove(messageId);
             }
         });
     }
 
     @Override
-    public Publisher<StorageInformation> retrieveStorageInformation(User user, MessageId messageId) {
+    public Publisher<StorageInformation> retrieveStorageInformation(Username username, MessageId messageId) {
         return Flux.from(listRelatedBuckets())
             .concatMap(bucket -> {
                 synchronized (table) {
-                    return Mono.justOrEmpty(userVault(bucket, user).get(messageId));
+                    return Mono.justOrEmpty(userVault(bucket, username).get(messageId));
                 }
             })
             .map(DeletedMessageWithStorageInformation::getStorageInformation)
@@ -92,9 +92,9 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
     }
 
     @Override
-    public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, User user) {
+    public Publisher<DeletedMessageWithStorageInformation> listMessages(BucketName bucketName, Username username) {
         synchronized (table) {
-            return Flux.fromIterable(Optional.ofNullable(table.get(bucketName, user))
+            return Flux.fromIterable(Optional.ofNullable(table.get(bucketName, username))
                 .map(Map::values)
                 .map(ImmutableList::copyOf)
                 .orElse(ImmutableList.of()));
@@ -108,7 +108,7 @@ public class MemoryDeletedMessageMetadataVault implements DeletedMessageMetadata
         }
     }
 
-    private Map<MessageId, DeletedMessageWithStorageInformation> userVault(BucketName bucketName, User owner) {
+    private Map<MessageId, DeletedMessageWithStorageInformation> userVault(BucketName bucketName, Username owner) {
         return Optional.ofNullable(table.get(bucketName, owner))
             .orElse(new HashMap<>());
     }

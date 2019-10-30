@@ -19,7 +19,7 @@
 
 package org.apache.james.vault.metadata;
 
-import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.BUCKET_NAME;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE;
 import static org.apache.james.vault.metadata.DeletedMessageVaultMetadataFixture.DELETED_MESSAGE_2;
@@ -43,7 +43,7 @@ public interface DeletedMessageMetadataVaultContract {
 
     @Test
     default void listMessagesShouldBeEmptyWhenNoMessageInserted() {
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).isEmpty();
     }
 
@@ -51,7 +51,7 @@ public interface DeletedMessageMetadataVaultContract {
     default void listMessagesShouldContainPreviouslyInsertedMessage() {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).containsOnly(DELETED_MESSAGE);
     }
 
@@ -60,7 +60,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
     }
 
@@ -69,7 +69,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2_OTHER_BUCKET)).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).containsOnly(DELETED_MESSAGE);
     }
 
@@ -126,7 +126,7 @@ public interface DeletedMessageMetadataVaultContract {
 
         Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(OTHER_BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(OTHER_BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).containsOnly(DELETED_MESSAGE_2_OTHER_BUCKET);
     }
 
@@ -137,7 +137,7 @@ public interface DeletedMessageMetadataVaultContract {
 
         Mono.from(metadataVault().removeMetadataRelatedToBucket(BUCKET_NAME)).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).isEmpty();
     }
 
@@ -146,9 +146,9 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
-        Mono.from(metadataVault().remove(BUCKET_NAME, USER, DELETED_MESSAGE.getDeletedMessage().getMessageId())).block();
+        Mono.from(metadataVault().remove(BUCKET_NAME, USERNAME, DELETED_MESSAGE.getDeletedMessage().getMessageId())).block();
 
-        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USER)).toStream();
+        Stream<DeletedMessageWithStorageInformation> messages = Flux.from(metadataVault().listMessages(BUCKET_NAME, USERNAME)).toStream();
         assertThat(messages).containsExactly(DELETED_MESSAGE_2);
     }
 
@@ -157,7 +157,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
         assertThatCode(() -> Mono.from(metadataVault()
-                .remove(BUCKET_NAME, USER, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
+                .remove(BUCKET_NAME, USERNAME, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
                 .block())
             .doesNotThrowAnyException();
     }
@@ -167,7 +167,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE)).block();
 
         StorageInformation storageInformation = Mono.from(metadataVault()
-            .retrieveStorageInformation(USER, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
+            .retrieveStorageInformation(USERNAME, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
             .block();
 
         assertThat(storageInformation).isEqualTo(DELETED_MESSAGE.getStorageInformation());
@@ -178,7 +178,7 @@ public interface DeletedMessageMetadataVaultContract {
         Mono.from(metadataVault().store(DELETED_MESSAGE_2)).block();
 
         Optional<StorageInformation> storageInformation = Mono.from(metadataVault()
-            .retrieveStorageInformation(USER, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
+            .retrieveStorageInformation(USERNAME, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
             .blockOptional();
 
         assertThat(storageInformation).isEmpty();
@@ -187,7 +187,7 @@ public interface DeletedMessageMetadataVaultContract {
     @Test
     default void retrieveStorageInformationShouldReturnEmptyWhenUserVaultIsEmpty() {
         Optional<StorageInformation> storageInformation = Mono.from(metadataVault()
-            .retrieveStorageInformation(USER, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
+            .retrieveStorageInformation(USERNAME, DELETED_MESSAGE.getDeletedMessage().getMessageId()))
             .blockOptional();
 
         assertThat(storageInformation).isEmpty();

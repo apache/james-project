@@ -28,7 +28,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -52,7 +52,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class MailboxListenerTest {
     private static final MailboxPath PATH = MailboxPath.forUser("bob", "mailbox");
     private static final MailboxPath OTHER_PATH = MailboxPath.forUser("bob", "mailbox.other");
-    private static final User BOB = User.fromUsername("bob");
+    private static final Username BOB = Username.fromUsername("bob");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final TestId MAILBOX_ID = TestId.of(18);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("bob", Optional.empty());

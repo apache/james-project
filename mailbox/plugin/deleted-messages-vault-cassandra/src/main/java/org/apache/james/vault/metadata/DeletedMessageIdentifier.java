@@ -21,19 +21,19 @@ package org.apache.james.vault.metadata;
 
 import java.util.Objects;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
 public class DeletedMessageIdentifier {
-    private final User owner;
+    private final Username owner;
     private final MessageId messageId;
 
-    public DeletedMessageIdentifier(User owner, MessageId messageId) {
+    public DeletedMessageIdentifier(Username owner, MessageId messageId) {
         this.owner = owner;
         this.messageId = messageId;
     }
 
-    public User getOwner() {
+    public Username getOwner() {
         return owner;
     }
 

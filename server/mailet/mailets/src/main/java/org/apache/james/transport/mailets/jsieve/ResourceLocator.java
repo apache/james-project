@@ -22,7 +22,7 @@ import java.io.InputStream;
 import java.time.ZonedDateTime;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.SieveRepository;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -62,15 +62,15 @@ public class ResourceLocator {
     }
 
     public UserSieveInformation get(MailAddress mailAddress) throws Exception {
-        User username = retrieveUsername(mailAddress);
+        Username username = retrieveUsername(mailAddress);
         return new UserSieveInformation(sieveRepository.getActivationDateForActiveScript(username), ZonedDateTime.now(), sieveRepository.getActive(username));
     }
 
-    private User retrieveUsername(MailAddress mailAddress) {
+    private Username retrieveUsername(MailAddress mailAddress) {
         try {
-            return User.fromUsername(usersRepository.getUser(mailAddress));
+            return Username.fromUsername(usersRepository.getUser(mailAddress));
         } catch (UsersRepositoryException e) {
-            return User.fromMailAddress(mailAddress);
+            return Username.fromMailAddress(mailAddress);
         }
     }
 

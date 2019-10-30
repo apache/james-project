@@ -28,7 +28,7 @@ import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_SUBJECT;
 import static org.apache.james.jmap.api.filtering.RuleFixture.RULE_TO;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.apache.james.jmap.api.filtering.impl.RuleSetDefined;
@@ -47,17 +47,17 @@ public class DTOTest {
     static final String EVENT_COMPLEX_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex.json");
     static final FilteringRuleSetDefinedDTO SIMPLE_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(User.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.fromUsername("Bart")),
                     EventId.first(),
                     ImmutableList.of(RULE_1, RULE_2)));
     static final FilteringRuleSetDefinedDTO EMPTY_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(User.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.fromUsername("Bart")),
                     EventId.first(),
                     ImmutableList.of()));
     static final FilteringRuleSetDefinedDTO COMPLEX_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(User.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.fromUsername("Bart")),
                     EventId.first(),
                     ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO)));
 

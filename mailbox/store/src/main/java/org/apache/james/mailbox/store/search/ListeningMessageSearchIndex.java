@@ -70,7 +70,7 @@ public abstract class ListeningMessageSearchIndex implements MessageSearchIndex,
     @Override
     public void event(Event event) throws Exception {
         handleMailboxEvent(event,
-            sessionProvider.createSystemSession(event.getUser().asString()),
+            sessionProvider.createSystemSession(event.getUsername().asString()),
             (MailboxEvent) event);
     }
 

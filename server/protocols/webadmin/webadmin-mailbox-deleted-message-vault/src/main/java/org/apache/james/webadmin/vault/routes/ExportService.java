@@ -31,7 +31,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.vault.DeletedMessage;
 import org.apache.james.vault.DeletedMessageContentNotFoundException;
 import org.apache.james.vault.DeletedMessageVault;
@@ -67,42 +67,42 @@ class ExportService {
         this.vault = vault;
     }
 
-    void export(User user, Query exportQuery, MailAddress exportToAddress, Runnable messageToExportCallback) throws IOException {
-        Flux<DeletedMessage> matchedMessages = Flux.from(vault.search(user, exportQuery))
+    void export(Username username, Query exportQuery, MailAddress exportToAddress, Runnable messageToExportCallback) throws IOException {
+        Flux<DeletedMessage> matchedMessages = Flux.from(vault.search(username, exportQuery))
             .doOnNext(any -> messageToExportCallback.run());
 
-        BlobId blobId = zipToBlob(user, matchedMessages);
+        BlobId blobId = zipToBlob(username, matchedMessages);
 
         blobExport.blobId(blobId)
             .with(exportToAddress)
-            .explanation(exportMessage(user))
-            .filePrefix(Optional.of("deleted-message-of-" + user.asString() + "_"))
+            .explanation(exportMessage(username))
+            .filePrefix(Optional.of("deleted-message-of-" + username.asString() + "_"))
             .fileExtension(FileExtension.ZIP)
             .export();
     }
 
-    private BlobId zipToBlob(User user, Flux<DeletedMessage> messages) throws IOException {
+    private BlobId zipToBlob(Username username, Flux<DeletedMessage> messages) throws IOException {
         try (FileBackedOutputStream fileOutputStream = new FileBackedOutputStream(FileUtils.ONE_MB_BI.intValue())) {
-            zipper.zip(contentLoader(user), messages.toStream(), fileOutputStream);
+            zipper.zip(contentLoader(username), messages.toStream(), fileOutputStream);
             ByteSource byteSource = fileOutputStream.asByteSource();
             return blobStore.save(blobStore.getDefaultBucketName(), byteSource.openStream()).block();
         }
     }
 
-    private DeletedMessageZipper.DeletedMessageContentLoader contentLoader(User user) {
-        return message -> Mono.from(vault.loadMimeMessage(user, message.getMessageId()))
+    private DeletedMessageZipper.DeletedMessageContentLoader contentLoader(Username username) {
+        return message -> Mono.from(vault.loadMimeMessage(username, message.getMessageId()))
             .onErrorResume(CONTENT_NOT_FOUND_PREDICATE, throwable -> {
                 LOGGER.info(
                     "Error happened when loading mime message associated with id {} of user {} in the vault",
                     message.getMessageId().serialize(),
-                    user.asString(),
+                    username.asString(),
                     throwable);
                 return Mono.empty();
             })
             .blockOptional();
     }
 
-    private String exportMessage(User user) {
-        return String.format("Some deleted messages from user %s has been shared to you", user.asString());
+    private String exportMessage(Username username) {
+        return String.format("Some deleted messages from user %s has been shared to you", username.asString());
     }
 }

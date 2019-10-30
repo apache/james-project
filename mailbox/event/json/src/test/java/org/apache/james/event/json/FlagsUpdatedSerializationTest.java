@@ -30,7 +30,7 @@ import java.util.NoSuchElementException;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -49,7 +49,7 @@ import net.javacrumbs.jsonunit.core.Option;
 
 class FlagsUpdatedSerializationTest {
 
-    private static final User USER = User.fromUsername("user");
+    private static final Username USERNAME = Username.fromUsername("user");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final String MAILBOX_NAME = "mailboxName";
@@ -91,7 +91,7 @@ class FlagsUpdatedSerializationTest {
 
     private static List<UpdatedFlags> UPDATED_FLAGS_LIST = ImmutableList.of(UPDATED_FLAG_1, UPDATED_FLAG_2);
 
-    private static final MailboxListener.FlagsUpdated DEFAULT_EVENT = new MailboxListener.FlagsUpdated(SESSION_ID, USER,
+    private static final MailboxListener.FlagsUpdated DEFAULT_EVENT = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME,
         MAILBOX_PATH, MAILBOX_ID, UPDATED_FLAGS_LIST, EVENT_ID);
     private static final String DEFAULT_EVENT_JSON =
         "{" +
@@ -138,7 +138,7 @@ class FlagsUpdatedSerializationTest {
     @Nested
     class WithEmptyUpdatedFlags {
         private final List<UpdatedFlags> emptyUpdatedFlags = ImmutableList.of();
-        private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USER, MAILBOX_PATH,
+        private final MailboxListener.FlagsUpdated emptyUpdatedFlagsEvent = new MailboxListener.FlagsUpdated(SESSION_ID, USERNAME, MAILBOX_PATH,
             MAILBOX_ID, emptyUpdatedFlags, EVENT_ID);
 
         private static final String EVENT_JSON_WITH_EMPTY_UPDATED_FLAGS =

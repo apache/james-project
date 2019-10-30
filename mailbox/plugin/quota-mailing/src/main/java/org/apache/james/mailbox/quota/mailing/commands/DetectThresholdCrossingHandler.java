@@ -47,7 +47,7 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
     }
 
     private UserQuotaThresholds loadAggregate(DetectThresholdCrossing command) {
-        UserQuotaThresholds.Id aggregateId = UserQuotaThresholds.Id.from(command.getUser(), listenerName);
+        UserQuotaThresholds.Id aggregateId = UserQuotaThresholds.Id.from(command.getUsername(), listenerName);
         History history = eventStore.getEventsOfAggregate(aggregateId);
         return UserQuotaThresholds.fromEvents(aggregateId, history);
     }

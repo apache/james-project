@@ -28,7 +28,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
@@ -70,7 +70,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     }
 
     protected void isValidUsername(String username) throws UsersRepositoryException {
-        User user = User.fromUsername(username);
+        Username user = Username.fromUsername(username);
         if (supportVirtualHosting()) {
             // need a @ in the username
             if (!user.hasDomainPart()) {
@@ -147,12 +147,12 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     }
 
     @Override
-    public MailAddress getMailAddressFor(User user) throws UsersRepositoryException {
+    public MailAddress getMailAddressFor(Username username) throws UsersRepositoryException {
         try {
             if (supportVirtualHosting()) {
-                return new MailAddress(user.asString());
+                return new MailAddress(username.asString());
             }
-            return new MailAddress(user.getLocalPart(), domainList.getDefaultDomain());
+            return new MailAddress(username.getLocalPart(), domainList.getDefaultDomain());
         } catch (Exception e) {
             throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
         }

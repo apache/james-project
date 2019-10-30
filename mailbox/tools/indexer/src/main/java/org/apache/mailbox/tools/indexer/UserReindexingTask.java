@@ -25,7 +25,7 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexingExecutionFailures;
 import org.apache.james.task.Task;
@@ -37,27 +37,27 @@ public class UserReindexingTask implements Task {
     public static final TaskType USER_RE_INDEXING = TaskType.of("user-reindexing");
 
     public static class AdditionalInformation extends ReprocessingContextInformation {
-        private final User user;
+        private final Username username;
 
-        AdditionalInformation(User user, int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures, Instant timestamp) {
+        AdditionalInformation(Username username, int successfullyReprocessedMailCount, int failedReprocessedMailCount, ReIndexingExecutionFailures failures, Instant timestamp) {
             super(successfullyReprocessedMailCount, failedReprocessedMailCount, failures, timestamp);
-            this.user = user;
+            this.username = username;
         }
 
-        public String getUser() {
-            return user.asString();
+        public String getUsername() {
+            return username.asString();
         }
 
     }
 
     private final ReIndexerPerformer reIndexerPerformer;
-    private final User user;
+    private final Username username;
     private final ReprocessingContext reprocessingContext;
 
     @Inject
-    public UserReindexingTask(ReIndexerPerformer reIndexerPerformer, User user) {
+    public UserReindexingTask(ReIndexerPerformer reIndexerPerformer, Username username) {
         this.reIndexerPerformer = reIndexerPerformer;
-        this.user = user;
+        this.username = username;
         this.reprocessingContext = new ReprocessingContext();
     }
 
@@ -71,22 +71,22 @@ public class UserReindexingTask implements Task {
         }
 
         public UserReindexingTask create(UserReindexingTaskDTO dto) {
-            User user = User.fromUsername(dto.getUsername());
-            return new UserReindexingTask(reIndexerPerformer, user);
+            Username username = Username.fromUsername(dto.getUsername());
+            return new UserReindexingTask(reIndexerPerformer, username);
         }
     }
 
     @Override
     public Result run() {
         try {
-            return reIndexerPerformer.reIndex(user, reprocessingContext);
+            return reIndexerPerformer.reIndex(username, reprocessingContext);
         } catch (MailboxException e) {
             return Result.PARTIAL;
         }
     }
 
-    public User getUser() {
-        return user;
+    public Username getUsername() {
+        return username;
     }
 
     @Override
@@ -96,7 +96,7 @@ public class UserReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new UserReindexingTask.AdditionalInformation(user,
+        return Optional.of(new UserReindexingTask.AdditionalInformation(username,
             reprocessingContext.successfullyReprocessedMailCount(),
             reprocessingContext.failedReprocessingMailCount(),
             reprocessingContext.failures(),

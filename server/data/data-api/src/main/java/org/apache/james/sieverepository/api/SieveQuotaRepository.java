@@ -20,7 +20,7 @@
 
 package org.apache.james.sieverepository.api;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
@@ -38,11 +38,11 @@ public interface SieveQuotaRepository {
 
     void removeQuota() throws QuotaNotFoundException, StorageException;
 
-    boolean hasQuota(User user) throws StorageException;
+    boolean hasQuota(Username username) throws StorageException;
 
-    QuotaSize getQuota(User user) throws QuotaNotFoundException, StorageException;
+    QuotaSize getQuota(Username username) throws QuotaNotFoundException, StorageException;
 
-    void setQuota(User user, QuotaSize quota) throws StorageException;
+    void setQuota(Username username, QuotaSize quota) throws StorageException;
 
-    void removeQuota(User user) throws QuotaNotFoundException, StorageException;
+    void removeQuota(Username username) throws QuotaNotFoundException, StorageException;
 }

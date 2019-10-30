@@ -34,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.domainlist.api.DomainList;
@@ -67,11 +67,11 @@ class UserQuotaRoutesTest {
     private static final String QUOTA_USERS = "/quota/users";
     private static final String PERDU_COM = "perdu.com";
     private static final String STRANGE_ORG = "strange.org";
-    private static final User BOB = User.fromUsername("bob@" + PERDU_COM);
-    private static final User ESCAPED_BOB = User.fromUsername("bob%40" + PERDU_COM);
-    private static final User JOE = User.fromUsername("joe@" + PERDU_COM);
-    private static final User JACK = User.fromUsername("jack@" + PERDU_COM);
-    private static final User GUY_WITH_STRANGE_DOMAIN = User.fromUsername("guy@" + STRANGE_ORG);
+    private static final Username BOB = Username.fromUsername("bob@" + PERDU_COM);
+    private static final Username ESCAPED_BOB = Username.fromUsername("bob%40" + PERDU_COM);
+    private static final Username JOE = Username.fromUsername("joe@" + PERDU_COM);
+    private static final Username JACK = Username.fromUsername("jack@" + PERDU_COM);
+    private static final Username GUY_WITH_STRANGE_DOMAIN = Username.fromUsername("guy@" + STRANGE_ORG);
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
     private static final String SIZE = "size";
@@ -434,9 +434,9 @@ class UserQuotaRoutesTest {
         }
 
 
-        default void appendMessage(QuotaSearchTestSystem testSystem, User user, MessageManager.AppendCommand appendCommand) throws MailboxException {
+        default void appendMessage(QuotaSearchTestSystem testSystem, Username username, MessageManager.AppendCommand appendCommand) throws MailboxException {
             MailboxManager mailboxManager = testSystem.getMailboxManager();
-            MailboxSession session = mailboxManager.createSystemSession(user.asString());
+            MailboxSession session = mailboxManager.createSystemSession(username.asString());
 
             MailboxPath mailboxPath = MailboxPath.inbox(session);
             mailboxManager.createMailbox(mailboxPath, session);

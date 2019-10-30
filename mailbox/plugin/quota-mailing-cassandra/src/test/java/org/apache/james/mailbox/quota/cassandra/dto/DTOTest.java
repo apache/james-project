@@ -26,7 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.eventsourcing.EventId;
@@ -56,14 +56,14 @@ class DTOTest {
         HistoryEvolution.noChanges(),
         SIZE_QUOTA,
         COUNT_QUOTA,
-        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
+        UserQuotaThresholds.Id.from(Username.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
     static final QuotaThresholdChangedEvent EVENT_2 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
         HistoryEvolution.noChanges(),
         SIZE_QUOTA,
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
-        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
+        UserQuotaThresholds.Id.from(Username.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
     static final QuotaThresholdChangedEvent EVENT_3 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
@@ -71,7 +71,7 @@ class DTOTest {
             HistoryEvolution.HighestThresholdRecentness.NotAlreadyReachedDuringGracePeriod),
         SIZE_QUOTA,
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
-        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
+        UserQuotaThresholds.Id.from(Username.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
     static final QuotaThresholdChangedEvent EVENT_4 = new QuotaThresholdChangedEvent(
         EventId.first(),
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
@@ -79,7 +79,7 @@ class DTOTest {
             HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod),
         SIZE_QUOTA,
         Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
-        UserQuotaThresholds.Id.from(User.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
+        UserQuotaThresholds.Id.from(Username.fromUsername("foo@bar.com"), DEFAULT_LISTENER_NAME));
 
     static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");
     static final String EVENT_JSON_2 = ClassLoaderUtils.getSystemResourceAsString("json/event2.json");

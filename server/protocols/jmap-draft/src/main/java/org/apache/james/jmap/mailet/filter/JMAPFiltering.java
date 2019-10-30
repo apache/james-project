@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.user.api.UsersRepository;
@@ -71,24 +71,24 @@ public class JMAPFiltering extends GenericMailet {
     }
 
     private void filteringForRecipient(Mail mail, MailAddress recipient) {
-        Optional<User> maybeUser = retrieveUser(recipient);
+        Optional<Username> maybeUser = retrieveUser(recipient);
         maybeUser
             .ifPresent(user -> findFirstApplicableRule(user, mail));
     }
 
-    private void findFirstApplicableRule(User user, Mail mail) {
-        List<Rule> filteringRules = filteringManagement.listRulesForUser(user);
+    private void findFirstApplicableRule(Username username, Mail mail) {
+        List<Rule> filteringRules = filteringManagement.listRulesForUser(username);
         RuleMatcher ruleMatcher = new RuleMatcher(filteringRules);
         Stream<Rule> matchingRules = ruleMatcher.findApplicableRules(mail);
 
         actionApplierFactory.forMail(mail)
-            .forUser(user)
+            .forUser(username)
             .apply(matchingRules.map(Rule::getAction));
     }
 
-    private Optional<User> retrieveUser(MailAddress recipient) {
+    private Optional<Username> retrieveUser(MailAddress recipient) {
         try {
-            return Optional.ofNullable(User.fromUsername(usersRepository.getUser(recipient)));
+            return Optional.ofNullable(Username.fromUsername(usersRepository.getUser(recipient)));
         } catch (UsersRepositoryException e) {
             logger.error("cannot retrieve user " + recipient.asString(), e);
             return Optional.empty();

@@ -21,7 +21,7 @@ package org.apache.mailbox.tools.indexer;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -77,8 +77,8 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     @Override
-    public Task reIndex(User user) {
-        return new UserReindexingTask(reIndexerPerformer, user);
+    public Task reIndex(Username username) {
+        return new UserReindexingTask(reIndexerPerformer, username);
     }
 
     @Override

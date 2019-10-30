@@ -25,7 +25,7 @@ import static org.hamcrest.core.Is.is;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -79,7 +79,7 @@ class RegexMappingRoutesTest {
             .contentType(ContentType.JSON);
 
         assertThat(memoryRecipientRewriteTable
-            .getStoredMappings(MappingSource.fromUser(User.fromUsername("james@domain.tld"))))
+            .getStoredMappings(MappingSource.fromUser(Username.fromUsername("james@domain.tld"))))
             .containsOnly(Mapping.regex("bis.*@apache.org"));
     }
 
@@ -92,7 +92,7 @@ class RegexMappingRoutesTest {
             .contentType(ContentType.JSON);
 
         assertThat(memoryRecipientRewriteTable
-            .getStoredMappings(MappingSource.fromUser(User.fromUsername("jamesdomaintld"))))
+            .getStoredMappings(MappingSource.fromUser(Username.fromUsername("jamesdomaintld"))))
             .containsOnly(Mapping.regex("bis.*@apache.org"));
     }
 
@@ -153,13 +153,13 @@ class RegexMappingRoutesTest {
             .contentType(ContentType.JSON);
 
         assertThat(memoryRecipientRewriteTable
-            .getStoredMappings(MappingSource.fromUser(User.fromUsername("james@domain.tld"))))
+            .getStoredMappings(MappingSource.fromUser(Username.fromUsername("james@domain.tld"))))
             .containsOnly(Mapping.regex("^[aei?ou].*james@domain.tld"));
     }
 
     @Test
     void removeRegexMappingShouldReturnNoContentWhenSuccess() throws Exception {
-        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername("abc@domain.tld"));
         memoryRecipientRewriteTable
             .addRegexMapping(mappingSource, "valar.*@apache.org");
 
@@ -175,7 +175,7 @@ class RegexMappingRoutesTest {
 
     @Test
     void removeRegexMappingShouldAllowUserWithoutDomain() throws Exception {
-        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abcdomaintld"));
+        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername("abcdomaintld"));
         memoryRecipientRewriteTable
             .addRegexMapping(mappingSource, "valar.*@apache.org");
 
@@ -227,7 +227,7 @@ class RegexMappingRoutesTest {
 
     @Test
     void removeRegexMappingShouldReturnNoContentWhenTwoSameRequestArrive() throws Exception {
-        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername("abc@domain.tld"));
         memoryRecipientRewriteTable
             .addRegexMapping(mappingSource, "valar.*@apache.org");
 
@@ -255,7 +255,7 @@ class RegexMappingRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204)
             .contentType(ContentType.JSON);
 
-        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername("abc@domain.tld"));
+        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername("abc@domain.tld"));
         memoryRecipientRewriteTable
             .addRegexMapping(mappingSource, "valar.*@apache.org");
     }

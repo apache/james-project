@@ -21,7 +21,7 @@ package org.apache.james.jmap.api.filtering.impl;
 
 import java.util.Objects;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.AggregateId;
 
 import com.google.common.base.MoreObjects;
@@ -33,20 +33,20 @@ public class FilteringAggregateId implements AggregateId {
 
     public static final FilteringAggregateId parse(String rawString) {
         Preconditions.checkArgument(rawString.startsWith(PREFIX + SEPARATOR));
-        return new FilteringAggregateId(User.fromUsername(rawString.substring(PREFIX.length() + SEPARATOR.length())));
+        return new FilteringAggregateId(Username.fromUsername(rawString.substring(PREFIX.length() + SEPARATOR.length())));
     }
 
-    private final User user;
+    private final Username username;
 
-    public FilteringAggregateId(User user) {
-        Preconditions.checkNotNull(user);
+    public FilteringAggregateId(Username username) {
+        Preconditions.checkNotNull(username);
 
-        this.user = user;
+        this.username = username;
     }
 
     @Override
     public String asAggregateKey() {
-        return PREFIX + SEPARATOR + user.asString();
+        return PREFIX + SEPARATOR + username.asString();
     }
 
     @Override
@@ -54,20 +54,20 @@ public class FilteringAggregateId implements AggregateId {
         if (o instanceof FilteringAggregateId) {
             FilteringAggregateId that = (FilteringAggregateId) o;
 
-            return Objects.equals(this.user, that.user);
+            return Objects.equals(this.username, that.username);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(user);
+        return Objects.hash(username);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("user", user)
+            .add("user", username)
             .toString();
     }
 }

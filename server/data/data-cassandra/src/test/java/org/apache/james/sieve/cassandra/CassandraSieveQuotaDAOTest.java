@@ -23,14 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveQuotaDAOTest {
-    private static final User USER = User.fromUsername("user");
+    private static final Username USERNAME = Username.fromUsername("user");
     private static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
 
     @RegisterExtension
@@ -51,7 +51,7 @@ class CassandraSieveQuotaDAOTest {
 
     @Test
     void getQuotaUserShouldReturnEmptyByDefault() {
-        assertThat(sieveQuotaDAO.getQuota(USER).block())
+        assertThat(sieveQuotaDAO.getQuota(USERNAME).block())
             .isEmpty();
     }
 
@@ -65,9 +65,9 @@ class CassandraSieveQuotaDAOTest {
 
     @Test
     void getQuotaUserShouldReturnStoredValue() {
-        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).block();
+        sieveQuotaDAO.setQuota(USERNAME, QUOTA_SIZE).block();
 
-        assertThat(sieveQuotaDAO.getQuota(USER).block())
+        assertThat(sieveQuotaDAO.getQuota(USERNAME).block())
             .contains(QUOTA_SIZE);
     }
 
@@ -83,11 +83,11 @@ class CassandraSieveQuotaDAOTest {
 
     @Test
     void removeQuotaUserShouldDeleteQuotaUser() {
-        sieveQuotaDAO.setQuota(USER, QUOTA_SIZE).block();
+        sieveQuotaDAO.setQuota(USERNAME, QUOTA_SIZE).block();
 
-        sieveQuotaDAO.removeQuota(USER).block();
+        sieveQuotaDAO.removeQuota(USERNAME).block();
 
-        assertThat(sieveQuotaDAO.getQuota(USER).block())
+        assertThat(sieveQuotaDAO.getQuota(USERNAME).block())
             .isEmpty();
     }
 
@@ -101,43 +101,43 @@ class CassandraSieveQuotaDAOTest {
 
     @Test
     void removeQuotaUserShouldWorkWhenNoneStore() {
-        sieveQuotaDAO.removeQuota(USER).block();
+        sieveQuotaDAO.removeQuota(USERNAME).block();
 
-        assertThat(sieveQuotaDAO.getQuota(USER).block())
+        assertThat(sieveQuotaDAO.getQuota(USERNAME).block())
             .isEmpty();
     }
 
     @Test
     void spaceUsedByShouldReturnZeroByDefault() {
-        assertThat(sieveQuotaDAO.spaceUsedBy(USER).block()).isEqualTo(0);
+        assertThat(sieveQuotaDAO.spaceUsedBy(USERNAME).block()).isEqualTo(0);
     }
 
     @Test
     void spaceUsedByShouldReturnStoredValue() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USERNAME, spaceUsed).block();
 
-        assertThat(sieveQuotaDAO.spaceUsedBy(USER).block()).isEqualTo(spaceUsed);
+        assertThat(sieveQuotaDAO.spaceUsedBy(USERNAME).block()).isEqualTo(spaceUsed);
     }
 
     @Test
     void updateSpaceUsedShouldBeAdditive() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USERNAME, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USERNAME, spaceUsed).block();
 
-        assertThat(sieveQuotaDAO.spaceUsedBy(USER).block()).isEqualTo(2 * spaceUsed);
+        assertThat(sieveQuotaDAO.spaceUsedBy(USERNAME).block()).isEqualTo(2 * spaceUsed);
     }
 
     @Test
     void updateSpaceUsedShouldWorkWithNegativeValues() {
         long spaceUsed = 18L;
 
-        sieveQuotaDAO.updateSpaceUsed(USER, spaceUsed).block();
-        sieveQuotaDAO.updateSpaceUsed(USER, -1 * spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USERNAME, spaceUsed).block();
+        sieveQuotaDAO.updateSpaceUsed(USERNAME, -1 * spaceUsed).block();
 
-        assertThat(sieveQuotaDAO.spaceUsedBy(USER).block()).isEqualTo(0L);
+        assertThat(sieveQuotaDAO.spaceUsedBy(USERNAME).block()).isEqualTo(0L);
     }
 }

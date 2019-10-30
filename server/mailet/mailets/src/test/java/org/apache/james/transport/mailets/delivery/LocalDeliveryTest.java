@@ -31,7 +31,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -87,7 +87,7 @@ public class LocalDeliveryTest {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUser(new MailAddress(username))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getUser()).thenReturn(User.fromUsername(username));
+        when(session.getUser()).thenReturn(Username.fromUsername(username));
 
         // When
         Mail mail = createMail();
@@ -108,7 +108,7 @@ public class LocalDeliveryTest {
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
         when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getUser()).thenReturn(User.fromUsername(username));
+        when(session.getUser()).thenReturn(Username.fromUsername(username));
 
         // When
         Mail mail = createMail();

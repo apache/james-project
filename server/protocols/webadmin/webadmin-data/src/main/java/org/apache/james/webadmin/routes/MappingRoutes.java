@@ -27,7 +27,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.MappingSource;
@@ -111,9 +111,9 @@ public class MappingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid user parameter values.")
     })
     private List<MappingValueDTO> getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
-        User user = User.fromUsername(request.params(USER).toLowerCase());
+        Username username = Username.fromUsername(request.params(USER).toLowerCase());
 
-        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(user))
+        return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
             .asStream()
             .map(mapping -> MappingValueDTO.fromMapping(mapping))
             .collect(Guavate.toImmutableList());

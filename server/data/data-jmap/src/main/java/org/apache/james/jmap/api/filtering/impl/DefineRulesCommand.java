@@ -22,7 +22,7 @@ package org.apache.james.jmap.api.filtering.impl;
 import java.util.List;
 import java.util.Objects;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Command;
 import org.apache.james.jmap.api.filtering.Rule;
 
@@ -31,14 +31,14 @@ import com.google.common.base.Preconditions;
 
 public class DefineRulesCommand implements Command {
 
-    private final User user;
+    private final Username username;
     private final List<Rule> rules;
 
-    public DefineRulesCommand(User user, List<Rule> rules) {
-        Preconditions.checkNotNull(user);
+    public DefineRulesCommand(Username username, List<Rule> rules) {
+        Preconditions.checkNotNull(username);
         Preconditions.checkNotNull(rules);
 
-        this.user = user;
+        this.username = username;
         this.rules = rules;
     }
 
@@ -46,8 +46,8 @@ public class DefineRulesCommand implements Command {
         return rules;
     }
 
-    public User getUser() {
-        return user;
+    public Username getUsername() {
+        return username;
     }
 
     @Override
@@ -55,7 +55,7 @@ public class DefineRulesCommand implements Command {
         if (o instanceof DefineRulesCommand) {
             DefineRulesCommand that = (DefineRulesCommand) o;
 
-            return Objects.equals(this.user, that.user)
+            return Objects.equals(this.username, that.username)
                 && Objects.equals(this.rules, that.rules);
         }
         return false;
@@ -63,13 +63,13 @@ public class DefineRulesCommand implements Command {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(user, rules);
+        return Objects.hash(username, rules);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("user", user)
+            .add("user", username)
             .add("rules", rules)
             .toString();
     }

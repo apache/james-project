@@ -26,6 +26,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
@@ -373,7 +374,7 @@ public abstract class AbstractUsersRepositoryTest {
         Assume.assumeTrue(usersRepository.supportVirtualHosting());
 
         String username = "user@domain";
-        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+        assertThat(usersRepository.getMailAddressFor(Username.fromUsername(username)))
             .isEqualTo(username);
     }
 
@@ -386,7 +387,7 @@ public abstract class AbstractUsersRepositoryTest {
         Assume.assumeFalse(usersRepository.supportVirtualHosting());
 
         String username = "user";
-        assertThat(usersRepository.getMailAddressFor(org.apache.james.core.User.fromUsername(username)))
+        assertThat(usersRepository.getMailAddressFor(Username.fromUsername(username)))
             .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
     }
 }

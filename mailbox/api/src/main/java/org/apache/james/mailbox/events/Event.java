@@ -21,7 +21,7 @@ package org.apache.james.mailbox.events;
 import java.util.Objects;
 import java.util.UUID;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -75,7 +75,7 @@ public interface Event {
         }
     }
 
-    User getUser();
+    Username getUsername();
 
     boolean isNoop();
 

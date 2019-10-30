@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
@@ -81,15 +81,15 @@ public interface MailboxListener {
 
     class QuotaUsageUpdatedEvent implements QuotaEvent {
         private final EventId eventId;
-        private final User user;
+        private final Username username;
         private final QuotaRoot quotaRoot;
         private final Quota<QuotaCount> countQuota;
         private final Quota<QuotaSize> sizeQuota;
         private final Instant instant;
 
-        public QuotaUsageUpdatedEvent(EventId eventId, User user, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
+        public QuotaUsageUpdatedEvent(EventId eventId, Username username, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
             this.eventId = eventId;
-            this.user = user;
+            this.username = username;
             this.quotaRoot = quotaRoot;
             this.countQuota = countQuota;
             this.sizeQuota = sizeQuota;
@@ -102,8 +102,8 @@ public interface MailboxListener {
         }
 
         @Override
-        public User getUser() {
-            return user;
+        public Username getUsername() {
+            return username;
         }
 
         public Quota<QuotaCount> getCountQuota() {
@@ -134,7 +134,7 @@ public interface MailboxListener {
                 QuotaUsageUpdatedEvent that = (QuotaUsageUpdatedEvent) o;
 
                 return Objects.equals(this.eventId, that.eventId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.quotaRoot, that.quotaRoot)
                     && Objects.equals(this.countQuota, that.countQuota)
                     && Objects.equals(this.sizeQuota, that.sizeQuota)
@@ -145,7 +145,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, user, quotaRoot, countQuota, sizeQuota, instant);
+            return Objects.hash(eventId, username, quotaRoot, countQuota, sizeQuota, instant);
         }
 
     }
@@ -156,12 +156,12 @@ public interface MailboxListener {
     abstract class MailboxEvent implements Event {
         protected final MailboxPath path;
         protected final MailboxId mailboxId;
-        protected final User user;
+        protected final Username username;
         protected final MailboxSession.SessionId sessionId;
         protected final EventId eventId;
 
-        public MailboxEvent(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, EventId eventId) {
-            this.user = user;
+        public MailboxEvent(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            this.username = username;
             this.path = path;
             this.mailboxId = mailboxId;
             this.sessionId = sessionId;
@@ -169,14 +169,14 @@ public interface MailboxListener {
         }
 
         /**
-         * Gets the {@link User} in which's context the {@link MailboxEvent}
+         * Gets the {@link Username} in which's context the {@link MailboxEvent}
          * happened
          *
          * @return user
          */
         @Override
-        public User getUser() {
-            return user;
+        public Username getUsername() {
+            return username;
         }
 
         @Override
@@ -221,9 +221,9 @@ public interface MailboxListener {
         private final QuotaCount deletedMessageCount;
         private final QuotaSize totalDeletedSize;
 
-        public MailboxDeletion(MailboxSession.SessionId sessionId, User user, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize,
+        public MailboxDeletion(MailboxSession.SessionId sessionId, Username username, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize,
                                MailboxId mailboxId, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+            super(sessionId, username, path, mailboxId, eventId);
             this.quotaRoot = quotaRoot;
             this.deletedMessageCount = deletedMessageCount;
             this.totalDeletedSize = totalDeletedSize;
@@ -253,7 +253,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.quotaRoot, that.quotaRoot)
@@ -265,7 +265,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId, quotaRoot, deletedMessageCount, totalDeletedSize);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, quotaRoot, deletedMessageCount, totalDeletedSize);
         }
     }
 
@@ -274,8 +274,8 @@ public interface MailboxListener {
      */
     class MailboxAdded extends MailboxEvent {
 
-        public MailboxAdded(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public MailboxAdded(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
         }
 
         @Override
@@ -290,7 +290,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId);
             }
@@ -299,7 +299,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId);
         }
     }
 
@@ -309,8 +309,8 @@ public interface MailboxListener {
     class MailboxRenamed extends MailboxEvent {
         private final MailboxPath newPath;
 
-        public MailboxRenamed(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, MailboxPath newPath, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public MailboxRenamed(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, MailboxPath newPath, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
             this.newPath = newPath;
         }
 
@@ -335,7 +335,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.newPath, that.newPath);
@@ -345,7 +345,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId, newPath);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, newPath);
         }
     }
 
@@ -356,8 +356,8 @@ public interface MailboxListener {
     class MailboxACLUpdated extends MailboxEvent {
         private final ACLDiff aclDiff;
 
-        public MailboxACLUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public MailboxACLUpdated(MailboxSession.SessionId sessionId, Username username, MailboxPath path, ACLDiff aclDiff, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
             this.aclDiff = aclDiff;
         }
 
@@ -377,7 +377,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.aclDiff, that.aclDiff)
                     && Objects.equals(this.mailboxId, that.mailboxId);
@@ -387,7 +387,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, aclDiff, mailboxId);
+            return Objects.hash(eventId, sessionId, username, path, aclDiff, mailboxId);
         }
 
     }
@@ -397,8 +397,8 @@ public interface MailboxListener {
      */
     abstract class MessageEvent extends MailboxEvent {
 
-        public MessageEvent(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public MessageEvent(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
         }
 
         /**
@@ -411,8 +411,8 @@ public interface MailboxListener {
 
     abstract class MetaDataHoldingEvent extends MessageEvent {
 
-        public MetaDataHoldingEvent(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public MetaDataHoldingEvent(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
         }
 
         /**
@@ -427,8 +427,8 @@ public interface MailboxListener {
     class Expunged extends MetaDataHoldingEvent {
         private final Map<MessageUid, MessageMetaData> expunged;
 
-        public Expunged(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+        public Expunged(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, Map<MessageUid, MessageMetaData> uids, EventId eventId) {
+            super(sessionId, username, path, mailboxId, eventId);
             this.expunged = ImmutableMap.copyOf(uids);
         }
 
@@ -463,7 +463,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.expunged, that.expunged);
@@ -473,7 +473,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId, expunged);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, expunged);
         }
     }
 
@@ -484,9 +484,9 @@ public interface MailboxListener {
         private final List<MessageUid> uids;
         private final List<UpdatedFlags> updatedFlags;
 
-        public FlagsUpdated(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId, List<UpdatedFlags> updatedFlags,
+        public FlagsUpdated(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId, List<UpdatedFlags> updatedFlags,
                             EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+            super(sessionId, username, path, mailboxId, eventId);
             this.updatedFlags = ImmutableList.copyOf(updatedFlags);
             this.uids = updatedFlags.stream()
                 .map(UpdatedFlags::getUid)
@@ -514,7 +514,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.uids, that.uids)
@@ -525,7 +525,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId, uids, updatedFlags);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, uids, updatedFlags);
         }
     }
 
@@ -535,9 +535,9 @@ public interface MailboxListener {
     class Added extends MetaDataHoldingEvent {
         private final Map<MessageUid, MessageMetaData> added;
 
-        public Added(MailboxSession.SessionId sessionId, User user, MailboxPath path, MailboxId mailboxId,
+        public Added(MailboxSession.SessionId sessionId, Username username, MailboxPath path, MailboxId mailboxId,
                      SortedMap<MessageUid, MessageMetaData> uids, EventId eventId) {
-            super(sessionId, user, path, mailboxId, eventId);
+            super(sessionId, username, path, mailboxId, eventId);
             this.added = ImmutableMap.copyOf(uids);
         }
 
@@ -571,7 +571,7 @@ public interface MailboxListener {
 
                 return Objects.equals(this.eventId, that.eventId)
                     && Objects.equals(this.sessionId, that.sessionId)
-                    && Objects.equals(this.user, that.user)
+                    && Objects.equals(this.username, that.username)
                     && Objects.equals(this.path, that.path)
                     && Objects.equals(this.mailboxId, that.mailboxId)
                     && Objects.equals(this.added, that.added);
@@ -581,7 +581,7 @@ public interface MailboxListener {
 
         @Override
         public final int hashCode() {
-            return Objects.hash(eventId, sessionId, user, path, mailboxId, added);
+            return Objects.hash(eventId, sessionId, username, path, mailboxId, added);
         }
     }
 

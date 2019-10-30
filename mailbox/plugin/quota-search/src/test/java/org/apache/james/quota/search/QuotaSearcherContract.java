@@ -31,7 +31,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.CoreFixture.Users.Alphabet;
 import org.apache.james.core.CoreFixture.Users.Simpson;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MailboxManager;
@@ -264,9 +264,9 @@ public interface QuotaSearcherContract {
             .containsExactly(Alphabet.ABA, Alphabet.ABB);
     }
 
-    default void appendMessage(QuotaSearchTestSystem testSystem, User user, MessageManager.AppendCommand appendCommand) throws MailboxException, UsersRepositoryException, DomainListException {
+    default void appendMessage(QuotaSearchTestSystem testSystem, Username username, MessageManager.AppendCommand appendCommand) throws MailboxException, UsersRepositoryException, DomainListException {
         MailboxManager mailboxManager = testSystem.getMailboxManager();
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
 
         MailboxPath mailboxPath = MailboxPath.inbox(session);
         mailboxManager.createMailbox(mailboxPath, session);

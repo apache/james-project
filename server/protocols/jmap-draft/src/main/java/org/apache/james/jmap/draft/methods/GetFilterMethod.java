@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.draft.model.GetFilterRequest;
@@ -89,8 +89,8 @@ public class GetFilterMethod implements Method {
         }
     }
 
-    private Stream<JmapResponse> retrieveFilter(MethodCallId methodCallId, User user) {
-        List<Rule> rules = filteringManagement.listRulesForUser(user);
+    private Stream<JmapResponse> retrieveFilter(MethodCallId methodCallId, Username username) {
+        List<Rule> rules = filteringManagement.listRulesForUser(username);
 
         GetFilterResponse getFilterResponse = GetFilterResponse.builder()
             .rules(rules)

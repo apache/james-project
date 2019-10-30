@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.probe.SieveProbe;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -59,24 +59,24 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public long getSieveQuota(String user) throws Exception {
-        return sieveRepository.getQuota(User.fromUsername(user)).asLong();
+        return sieveRepository.getQuota(Username.fromUsername(user)).asLong();
     }
 
     @Override
     public void setSieveQuota(String user, long quota) throws Exception {
-        sieveRepository.setQuota(User.fromUsername(user), QuotaSize.size(quota));
+        sieveRepository.setQuota(Username.fromUsername(user), QuotaSize.size(quota));
     }
 
     @Override
     public void removeSieveQuota(String user) throws Exception {
-        sieveRepository.removeQuota(User.fromUsername(user));
+        sieveRepository.removeQuota(Username.fromUsername(user));
     }
 
     @Override
     public void addActiveSieveScript(String userName, String name, String script) throws Exception {
-        User user = User.fromUsername(userName);
-        sieveRepository.putScript(user, new ScriptName(name), new ScriptContent(script));
-        sieveRepository.setActive(user, new ScriptName(name));
+        Username username = Username.fromUsername(userName);
+        sieveRepository.putScript(username, new ScriptName(name), new ScriptContent(script));
+        sieveRepository.setActive(username, new ScriptName(name));
     }
 
     @Override

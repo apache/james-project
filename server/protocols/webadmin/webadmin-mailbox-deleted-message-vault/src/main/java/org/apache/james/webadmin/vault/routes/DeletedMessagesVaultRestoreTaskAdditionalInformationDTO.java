@@ -22,7 +22,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import java.time.Instant;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
@@ -34,7 +34,7 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
     private static DeletedMessagesVaultRestoreTaskAdditionalInformationDTO fromDomainObject(DeletedMessagesVaultRestoreTask.AdditionalInformation additionalInformation, String type) {
         return new DeletedMessagesVaultRestoreTaskAdditionalInformationDTO(
             type,
-            additionalInformation.getUser(),
+            additionalInformation.getUsername(),
             additionalInformation.getSuccessfulRestoreCount(),
             additionalInformation.getErrorRestoreCount(),
             additionalInformation.timestamp()
@@ -82,7 +82,7 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
 
     DeletedMessagesVaultRestoreTask.AdditionalInformation toDomainObject() {
         return new DeletedMessagesVaultRestoreTask.AdditionalInformation(
-            User.fromUsername(user),
+            Username.fromUsername(user),
             successfulRestoreCount,
             errorRestoreCount,
             timestamp

@@ -29,7 +29,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -66,10 +66,10 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
         }
 
         private final MessageId messageId;
-        private final User owner;
+        private final Username owner;
         private final List<MailboxId> ownerMailboxes;
 
-        DeletedMessageMailboxContext(MessageId messageId, User owner, List<MailboxId> ownerMailboxes) {
+        DeletedMessageMailboxContext(MessageId messageId, Username owner, List<MailboxId> ownerMailboxes) {
             this.messageId = messageId;
             this.owner = owner;
             this.ownerMailboxes = ownerMailboxes;
@@ -79,7 +79,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
             return messageId;
         }
 
-        User getOwner() {
+        Username getOwner() {
             return owner;
         }
 
@@ -155,16 +155,16 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     }
 
     private Publisher<DeletedMessageMailboxContext> addOwnerToMetadata(GroupedFlux<MailboxId, MetadataWithMailboxId> groupedFlux) throws MailboxException {
-        User owner = retrieveMailboxUser(groupedFlux.key());
+        Username owner = retrieveMailboxUser(groupedFlux.key());
         return groupedFlux.map(metadata -> new DeletedMessageMailboxContext(metadata.getMessageMetaData().getMessageId(), owner, ImmutableList.of(metadata.getMailboxId())));
     }
 
-    private Pair<MessageId, User> toMessageIdUserPair(DeletedMessageMailboxContext deletedMessageMetadata) {
+    private Pair<MessageId, Username> toMessageIdUserPair(DeletedMessageMailboxContext deletedMessageMetadata) {
         return Pair.of(deletedMessageMetadata.getMessageId(), deletedMessageMetadata.getOwner());
     }
 
-    private User retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
-        return User.fromUsername(mapperFactory.getMailboxMapper(session)
+    private Username retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
+        return Username.fromUsername(mapperFactory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
             .getUser());
     }

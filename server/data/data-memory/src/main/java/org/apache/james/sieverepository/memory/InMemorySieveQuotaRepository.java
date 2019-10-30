@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
@@ -32,7 +32,7 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
 
     private Optional<QuotaSize> globalQuota = Optional.empty();
 
-    private Map<User, QuotaSize> userQuota = new ConcurrentHashMap<>();
+    private Map<Username, QuotaSize> userQuota = new ConcurrentHashMap<>();
 
     @Override
     public synchronized boolean hasDefaultQuota() {
@@ -58,27 +58,27 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public synchronized boolean hasQuota(User user) {
-        return userQuota.containsKey(user);
+    public synchronized boolean hasQuota(Username username) {
+        return userQuota.containsKey(username);
     }
 
     @Override
-    public QuotaSize getQuota(User user) throws QuotaNotFoundException {
-        return Optional.ofNullable(userQuota.get(user))
+    public QuotaSize getQuota(Username username) throws QuotaNotFoundException {
+        return Optional.ofNullable(userQuota.get(username))
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public synchronized void setQuota(User user, QuotaSize quota) {
-        userQuota.put(user, quota);
+    public synchronized void setQuota(Username username, QuotaSize quota) {
+        userQuota.put(username, quota);
     }
 
     @Override
-    public synchronized void removeQuota(User user) throws QuotaNotFoundException {
-        Optional<QuotaSize> quotaValue = Optional.ofNullable(userQuota.get(user));
+    public synchronized void removeQuota(Username username) throws QuotaNotFoundException {
+        Optional<QuotaSize> quotaValue = Optional.ofNullable(userQuota.get(username));
         if (!quotaValue.isPresent()) {
             throw new QuotaNotFoundException();
         }
-        userQuota.remove(user);
+        userQuota.remove(username);
     }
 }

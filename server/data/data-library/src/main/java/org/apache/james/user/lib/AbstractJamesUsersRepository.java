@@ -27,6 +27,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.lib.Mapping;
@@ -192,7 +193,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                         domain = Domain.LOCALHOST;
                     }
                     try {
-                        MappingSource source = MappingSource.fromUser(org.apache.james.core.User.fromUsername(user));
+                        MappingSource source = MappingSource.fromUser(Username.fromUsername(user));
                         mappings.put(source, getResolvedMappings(username, domain));
                     } catch (ErrorMappingException e) {
                         // shold never happen here

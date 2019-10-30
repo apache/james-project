@@ -75,7 +75,7 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
     @Test
     void mailAccountIteratorFromEmptyArchiveShouldThrowNoSuchElementException() throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        backup.backupAccount(USER1, destination);
+        backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
         MailArchiveIterator mailArchiveIterator = archiveLoader.load(source);
@@ -87,7 +87,7 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
     @Test
     void callingNextSeveralTimeOnAnEmptyIteratorShouldThrowNoSuchElementException()  throws Exception {
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        backup.backupAccount(USER1, destination);
+        backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
         MailArchiveIterator mailArchiveIterator = archiveLoader.load(source);
@@ -103,7 +103,7 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
         createMailBoxWithMessage(MAILBOX_PATH_USER1_MAILBOX1);
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        backup.backupAccount(USER1, destination);
+        backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
         MailArchiveIterator mailArchiveIterator = archiveLoader.load(source);
@@ -120,7 +120,7 @@ public class ZipArchivesLoaderTest implements MailboxMessageFixture {
         createMailBoxWithMessage(MAILBOX_PATH_USER1_MAILBOX2);
 
         ByteArrayOutputStream destination = new ByteArrayOutputStream(BUFFER_SIZE);
-        backup.backupAccount(USER1, destination);
+        backup.backupAccount(USERNAME_1, destination);
 
         InputStream source = new ByteArrayInputStream(destination.toByteArray());
         MailArchiveIterator mailArchiveIterator = archiveLoader.load(source);

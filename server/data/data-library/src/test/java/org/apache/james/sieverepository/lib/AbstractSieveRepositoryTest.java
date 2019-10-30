@@ -28,7 +28,7 @@ import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -43,7 +43,7 @@ import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
 
-    protected static final User USER = User.fromUsername("test");
+    protected static final Username USERNAME = Username.fromUsername("test");
     protected static final ScriptName SCRIPT_NAME = new ScriptName("script");
     protected static final ScriptContent SCRIPT_CONTENT = new ScriptContent("Hello World");
 
@@ -60,206 +60,206 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = ScriptNotFoundException.class)
     public void getScriptShouldThrowIfUnableToFindScript() throws Exception {
-        sieveRepository.getScript(USER, SCRIPT_NAME);
+        sieveRepository.getScript(USERNAME, SCRIPT_NAME);
     }
 
     @Test
     public void getScriptShouldReturnCorrectContent() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        assertThat(getScriptContent(sieveRepository.getScript(USER, SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        assertThat(getScriptContent(sieveRepository.getScript(USERNAME, SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test
     public void getActivationDateForActiveScriptShouldReturnNonNullAndNonZeroResult() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotNull();
-        assertThat(sieveRepository.getActivationDateForActiveScript(USER)).isNotEqualTo(ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC));
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        assertThat(sieveRepository.getActivationDateForActiveScript(USERNAME)).isNotNull();
+        assertThat(sieveRepository.getActivationDateForActiveScript(USERNAME)).isNotEqualTo(ZonedDateTime.ofInstant(Instant.ofEpochMilli(0L), ZoneOffset.UTC));
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void getActivationDateForActiveScriptShouldThrowOnMissingActiveScript() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.getActivationDateForActiveScript(USER);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.getActivationDateForActiveScript(USERNAME);
     }
 
     @Test
     public void haveSpaceShouldNotThrowWhenUserDoesNotHaveQuota() throws Exception {
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1L);
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1L);
     }
 
     @Test
     public void haveSpaceShouldNotThrowWhenQuotaIsNotReached() throws Exception {
         sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong());
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, DEFAULT_QUOTA.asLong());
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldThrowWhenQuotaIsExceed() throws Exception {
         sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1);
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, DEFAULT_QUOTA.asLong() + 1);
     }
 
     @Test
     public void haveSpaceShouldNotThrowWhenAttemptToReplaceOtherScript() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong());
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, USER_QUOTA.asLong());
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldThrowWhenAttemptToReplaceOtherScriptWithTooLargeScript() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong() + 1);
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, USER_QUOTA.asLong() + 1);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void haveSpaceShouldTakeAlreadyExistingScriptsIntoAccount() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.haveSpace(USER, OTHER_SCRIPT_NAME, USER_QUOTA.asLong() - 1);
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.haveSpace(USERNAME, OTHER_SCRIPT_NAME, USER_QUOTA.asLong() - 1);
     }
 
     @Test
     public void haveSpaceShouldNotThrowAfterActivatingAScript() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.haveSpace(USER, SCRIPT_NAME, USER_QUOTA.asLong());
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.haveSpace(USERNAME, SCRIPT_NAME, USER_QUOTA.asLong());
     }
 
     @Test
     public void listScriptsShouldThrowIfUserNotFound() throws Exception {
-        assertThat(sieveRepository.listScripts(USER)).isEmpty();
+        assertThat(sieveRepository.listScripts(USERNAME)).isEmpty();
     }
 
     @Test
     public void listScriptsShouldReturnEmptyListWhenThereIsNoScript() throws Exception {
-        assertThat(sieveRepository.listScripts(USER)).isEmpty();
+        assertThat(sieveRepository.listScripts(USERNAME)).isEmpty();
     }
 
     @Test
     public void putScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        assertThat(sieveRepository.listScripts(USER)).containsOnly(new ScriptSummary(SCRIPT_NAME, false));
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        assertThat(sieveRepository.listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, false));
     }
 
     @Test
     public void setActiveShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        assertThat(sieveRepository.listScripts(USER)).containsOnly(new ScriptSummary(SCRIPT_NAME, true));
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        assertThat(sieveRepository.listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true));
     }
 
     @Test
     public void listScriptShouldCombineActiveAndPassiveScripts() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.putScript(USER, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
-        assertThat(sieveRepository.listScripts(USER)).containsOnly(new ScriptSummary(SCRIPT_NAME, true), new ScriptSummary(OTHER_SCRIPT_NAME, false));
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
+        assertThat(sieveRepository.listScripts(USERNAME)).containsOnly(new ScriptSummary(SCRIPT_NAME, true), new ScriptSummary(OTHER_SCRIPT_NAME, false));
     }
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenScriptTooBig() throws Exception {
         sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenQuotaChangedInBetween() throws Exception {
         sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length()));
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
         sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void setActiveScriptShouldThrowOnNonExistentScript() throws Exception {
-        sieveRepository.setActive(USER, SCRIPT_NAME);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
     }
 
     @Test
     public void setActiveScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        assertThat(getScriptContent(sieveRepository.getActive(USERNAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test
     public void setActiveSwitchScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.putScript(USER, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, OTHER_SCRIPT_NAME);
-        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(OTHER_SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, OTHER_SCRIPT_NAME);
+        assertThat(getScriptContent(sieveRepository.getActive(USERNAME))).isEqualTo(OTHER_SCRIPT_CONTENT);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void switchOffActiveScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.setActive(USER, SieveRepository.NO_SCRIPT_NAME);
-        sieveRepository.getActive(USER);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.setActive(USERNAME, SieveRepository.NO_SCRIPT_NAME);
+        sieveRepository.getActive(USERNAME);
     }
 
     @Test
     public void switchOffActiveScriptShouldNotThrow() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.setActive(USER, SieveRepository.NO_SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.setActive(USERNAME, SieveRepository.NO_SCRIPT_NAME);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void getActiveShouldThrowWhenNoActiveScript() throws Exception {
-        sieveRepository.getActive(USER);
+        sieveRepository.getActive(USERNAME);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void deleteActiveScriptShouldThrowIfScriptDoNotExist() throws Exception {
-        sieveRepository.deleteScript(USER, SCRIPT_NAME);
+        sieveRepository.deleteScript(USERNAME, SCRIPT_NAME);
     }
 
     @Test(expected = IsActiveException.class)
     public void deleteActiveScriptShouldThrow() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.deleteScript(USER, SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.deleteScript(USERNAME, SCRIPT_NAME);
     }
 
     @Test(expected = IsActiveException.class)
     public void deleteScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.deleteScript(USER, SCRIPT_NAME);
-        sieveRepository.getScript(USER, SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.deleteScript(USERNAME, SCRIPT_NAME);
+        sieveRepository.getScript(USERNAME, SCRIPT_NAME);
     }
 
     @Test(expected = ScriptNotFoundException.class)
     public void renameScriptShouldThrowIfScriptNotFound() throws Exception {
-        sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
+        sieveRepository.renameScript(USERNAME, SCRIPT_NAME, OTHER_SCRIPT_NAME);
     }
 
     @Test
     public void renameScriptShouldWork() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
-        assertThat(getScriptContent(sieveRepository.getScript(USER, OTHER_SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.renameScript(USERNAME, SCRIPT_NAME, OTHER_SCRIPT_NAME);
+        assertThat(getScriptContent(sieveRepository.getScript(USERNAME, OTHER_SCRIPT_NAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test
     public void renameScriptShouldPropagateActiveScript() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setActive(USER, SCRIPT_NAME);
-        sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
-        assertThat(getScriptContent(sieveRepository.getActive(USER))).isEqualTo(SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.setActive(USERNAME, SCRIPT_NAME);
+        sieveRepository.renameScript(USERNAME, SCRIPT_NAME, OTHER_SCRIPT_NAME);
+        assertThat(getScriptContent(sieveRepository.getActive(USERNAME))).isEqualTo(SCRIPT_CONTENT);
     }
 
     @Test(expected = DuplicateException.class)
     public void renameScriptShouldNotOverwriteExistingScript() throws Exception {
-        sieveRepository.putScript(USER, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.putScript(USER, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
-        sieveRepository.renameScript(USER, SCRIPT_NAME, OTHER_SCRIPT_NAME);
+        sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
+        sieveRepository.putScript(USERNAME, OTHER_SCRIPT_NAME, OTHER_SCRIPT_CONTENT);
+        sieveRepository.renameScript(USERNAME, SCRIPT_NAME, OTHER_SCRIPT_NAME);
     }
 
     @Test(expected = QuotaNotFoundException.class)
@@ -275,8 +275,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void getQuotaShouldWorkOnUsers() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        assertThat(sieveRepository.getQuota(USER)).isEqualTo(USER_QUOTA);
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        assertThat(sieveRepository.getQuota(USERNAME)).isEqualTo(USER_QUOTA);
     }
 
     @Test
@@ -297,8 +297,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void hasQuotaShouldReturnTrueWhenUserHaveQuota() throws Exception {
-        sieveRepository.setQuota(USER, DEFAULT_QUOTA);
-        assertThat(sieveRepository.hasQuota(USER)).isTrue();
+        sieveRepository.setQuota(USERNAME, DEFAULT_QUOTA);
+        assertThat(sieveRepository.hasQuota(USERNAME)).isTrue();
     }
 
     @Test
@@ -308,7 +308,7 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void removeUserQuotaShouldNotThrowWhenAbsent() throws Exception {
-        sieveRepository.removeQuota(USER);
+        sieveRepository.removeQuota(USERNAME);
     }
 
     @Test
@@ -320,17 +320,17 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void removeQuotaShouldWorkOnUsers() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.removeQuota(USER);
-        assertThat(sieveRepository.hasQuota(USER)).isFalse();
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.removeQuota(USERNAME);
+        assertThat(sieveRepository.hasQuota(USERNAME)).isFalse();
     }
 
     @Test(expected = QuotaNotFoundException.class)
     public void removeQuotaShouldWorkOnUsersWithGlobalQuota() throws Exception {
         sieveRepository.setDefaultQuota(DEFAULT_QUOTA);
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.removeQuota(USER);
-        sieveRepository.getQuota(USER);
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.removeQuota(USERNAME);
+        sieveRepository.getQuota(USERNAME);
     }
 
     @Test
@@ -341,15 +341,15 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test
     public void setQuotaShouldWorkOnUsers() throws Exception {
-        sieveRepository.setQuota(USER, DEFAULT_QUOTA);
-        assertThat(sieveRepository.getQuota(USER)).isEqualTo(DEFAULT_QUOTA);
+        sieveRepository.setQuota(USERNAME, DEFAULT_QUOTA);
+        assertThat(sieveRepository.getQuota(USERNAME)).isEqualTo(DEFAULT_QUOTA);
     }
 
     @Test
     public void setQuotaShouldOverrideExistingQuota() throws Exception {
-        sieveRepository.setQuota(USER, USER_QUOTA);
-        sieveRepository.setQuota(USER, QuotaSize.size(USER_QUOTA.asLong() - 1));
-        assertThat(sieveRepository.getQuota(USER)).isEqualTo(QuotaSize.size(USER_QUOTA.asLong() - 1));
+        sieveRepository.setQuota(USERNAME, USER_QUOTA);
+        sieveRepository.setQuota(USERNAME, QuotaSize.size(USER_QUOTA.asLong() - 1));
+        assertThat(sieveRepository.getQuota(USERNAME)).isEqualTo(QuotaSize.size(USER_QUOTA.asLong() - 1));
     }
 
     protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {

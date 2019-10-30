@@ -26,7 +26,8 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,8 +35,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class UserPerBucketDAOTest {
     private static final BucketName BUCKET_NAME = BucketName.of("deletedMessages-2019-06-01");
     private static final BucketName BUCKET_NAME_2 = BucketName.of("deletedMessages-2019-07-01");
-    private static final User OWNER = User.fromUsername("owner");
-    private static final User OWNER_2 = User.fromUsername("owner2");
+    private static final Username OWNER = Username.fromUsername("owner");
+    private static final Username OWNER_2 = Username.fromUsername("owner2");
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULE);

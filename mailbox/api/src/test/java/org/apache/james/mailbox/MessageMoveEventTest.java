@@ -21,7 +21,7 @@ package org.apache.james.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestId;
@@ -102,7 +102,7 @@ public class MessageMoveEventTest {
             .messageId(messageId)
             .build();
 
-        softly.assertThat(event.getUser()).isEqualTo(User.fromUsername(username));
+        softly.assertThat(event.getUsername()).isEqualTo(Username.fromUsername(username));
         softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
         softly.assertThat(event.getMessageIds()).containsExactly(messageId);
     }

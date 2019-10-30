@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -127,7 +127,7 @@ class GroupsRoutesTest {
         void getShouldNotResolveRecurseGroups() throws Exception {
             when().put(GROUP1 + SEPARATOR + USER_A);
 
-            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(User.fromUsername(USER_A)),
+            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(Username.fromUsername(USER_A)),
                 "b@" + DOMAIN.name());
 
             List<String> addresses =

@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -63,7 +64,7 @@ class MappingSourceTest {
 
     @Test
     void asMailAddressStringShouldSerializeUserWithoutDomain() {
-        MappingSource mappingSource = MappingSource.fromUser(User.fromUsername(USER));
+        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername(USER));
 
         assertThat(mappingSource.asMailAddressString()).isEqualTo(USER + "@*");
     }

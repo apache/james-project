@@ -77,7 +77,7 @@ class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener
 
     private void setBigMessageFlag(Added addedEvent, MessageUid messageUid) {
         try {
-            MailboxSession session = mailboxManager.createSystemSession(addedEvent.getUser().asString());
+            MailboxSession session = mailboxManager.createSystemSession(addedEvent.getUsername().asString());
             MessageManager messageManager = mailboxManager.getMailbox(addedEvent.getMailboxId(), session);
 
             messageManager.setFlags(
@@ -87,7 +87,7 @@ class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener
                 session);
         } catch (MailboxException e) {
             LOGGER.error("error happens when adding '{}' flag to the message with uid {} in mailbox {} of user {}",
-                BIG_MESSAGE, messageUid.asLong(), addedEvent.getMailboxId(), addedEvent.getUser().asString(), e);
+                BIG_MESSAGE, messageUid.asLong(), addedEvent.getMailboxId(), addedEvent.getUsername().asString(), e);
         }
     }
 

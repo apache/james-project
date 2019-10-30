@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -63,8 +63,8 @@ public class ActionApplier {
                 this.mail = mail;
             }
 
-            public ActionApplier forUser(User user) {
-                return new ActionApplier(mailboxManager, mailboxIdFactory, mail, user);
+            public ActionApplier forUser(Username username) {
+                return new ActionApplier(mailboxManager, mailboxIdFactory, mail, username);
             }
         }
     }
@@ -72,18 +72,18 @@ public class ActionApplier {
     private final MailboxManager mailboxManager;
     private final MailboxId.Factory mailboxIdFactory;
     private final Mail mail;
-    private final User user;
+    private final Username username;
 
     @VisibleForTesting
     public static Factory factory(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory) {
         return new Factory(mailboxManager, mailboxIdFactory);
     }
 
-    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, Mail mail, User user) {
+    private ActionApplier(MailboxManager mailboxManager, MailboxId.Factory mailboxIdFactory, Mail mail, Username username) {
         this.mailboxManager = mailboxManager;
         this.mailboxIdFactory = mailboxIdFactory;
         this.mail = mail;
-        this.user = user;
+        this.username = username;
     }
 
     public void apply(Stream<Rule.Action> actions) {
@@ -94,11 +94,11 @@ public class ActionApplier {
 
     private void addStorageDirective(MailboxId mailboxId) {
         try {
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username.asString());
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
 
             String mailboxName = messageManager.getMailboxPath().getName();
-            String attributeNameForUser = DELIVERY_PATH_PREFIX + user.asString();
+            String attributeNameForUser = DELIVERY_PATH_PREFIX + username.asString();
             mail.setAttribute(Attribute.convertToAttribute(attributeNameForUser, mailboxName));
         } catch (MailboxNotFoundException e) {
             LOGGER.info("Mailbox {} does not exist, but it was mentioned in a JMAP filtering rule", mailboxId, e);

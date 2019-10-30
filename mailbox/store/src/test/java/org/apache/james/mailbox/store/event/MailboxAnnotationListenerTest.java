@@ -91,7 +91,7 @@ public class MailboxAnnotationListenerTest {
             .quotaSize(QuotaSize.size(456))
             .build();
 
-        when(sessionProvider.createSystemSession(deleteEvent.getUser().asString()))
+        when(sessionProvider.createSystemSession(deleteEvent.getUsername().asString()))
             .thenReturn(mailboxSession);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(mailboxSession))).thenReturn(annotationMapper);
     }

@@ -27,7 +27,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -93,14 +93,14 @@ public interface EventBusTestFixture {
     }
 
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
-    User USER = User.fromUsername("user");
+    Username USERNAME = Username.fromUsername("user");
     MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName");
     TestId TEST_ID = TestId.of(18);
     Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");
-    MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID);
-    MailboxListener.MailboxEvent EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
-    MailboxListener.MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxListener.MailboxRenamed(SESSION_ID, USER, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
+    MailboxListener.MailboxEvent EVENT = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID);
+    MailboxListener.MailboxEvent EVENT_2 = new MailboxListener.MailboxAdded(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, EVENT_ID_2);
+    MailboxListener.MailboxRenamed EVENT_UNSUPPORTED_BY_LISTENER = new MailboxListener.MailboxRenamed(SESSION_ID, USERNAME, MAILBOX_PATH, TEST_ID, MAILBOX_PATH, EVENT_ID_2);
 
     java.time.Duration ONE_SECOND = java.time.Duration.ofSeconds(1);
     java.time.Duration THIRTY_SECONDS = java.time.Duration.ofSeconds(30);

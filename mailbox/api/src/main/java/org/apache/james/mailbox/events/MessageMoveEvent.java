@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -40,7 +40,7 @@ public class MessageMoveEvent implements Event {
 
     public static class Builder {
         private ImmutableList.Builder<MessageId> messageIds;
-        private User user;
+        private Username username;
         private MessageMoves messageMoves;
         private Optional<EventId> eventId;
 
@@ -50,12 +50,12 @@ public class MessageMoveEvent implements Event {
         }
 
         public Builder session(MailboxSession session) {
-            this.user = session.getUser();
+            this.username = session.getUser();
             return this;
         }
 
-        public Builder user(User user) {
-            this.user = user;
+        public Builder user(Username username) {
+            this.username = username;
             return this;
         }
 
@@ -80,22 +80,22 @@ public class MessageMoveEvent implements Event {
         }
 
         public MessageMoveEvent build() {
-            Preconditions.checkNotNull(user, "'user' is mandatory");
+            Preconditions.checkNotNull(username, "'user' is mandatory");
             Preconditions.checkNotNull(messageMoves, "'messageMoves' is mandatory");
 
-            return new MessageMoveEvent(eventId.orElse(EventId.random()), user, messageMoves, messageIds.build());
+            return new MessageMoveEvent(eventId.orElse(EventId.random()), username, messageMoves, messageIds.build());
         }
     }
 
     private final EventId eventId;
-    private final User user;
+    private final Username username;
     private final MessageMoves messageMoves;
     private final Collection<MessageId> messageIds;
 
     @VisibleForTesting
-    MessageMoveEvent(EventId eventId, User user, MessageMoves messageMoves, Collection<MessageId> messageIds) {
+    MessageMoveEvent(EventId eventId, Username username, MessageMoves messageMoves, Collection<MessageId> messageIds) {
         this.eventId = eventId;
-        this.user = user;
+        this.username = username;
         this.messageMoves = messageMoves;
         this.messageIds = messageIds;
     }
@@ -115,8 +115,8 @@ public class MessageMoveEvent implements Event {
     }
 
     @Override
-    public User getUser() {
-        return user;
+    public Username getUsername() {
+        return username;
     }
 
     public MessageMoves getMessageMoves() {
@@ -139,7 +139,7 @@ public class MessageMoveEvent implements Event {
             MessageMoveEvent that = (MessageMoveEvent) o;
 
             return Objects.equals(this.eventId, that.eventId)
-                && Objects.equals(this.user, that.user)
+                && Objects.equals(this.username, that.username)
                 && Objects.equals(this.messageMoves, that.messageMoves)
                 && Objects.equals(this.messageIds, that.messageIds);
         }
@@ -148,6 +148,6 @@ public class MessageMoveEvent implements Event {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(eventId, user, messageMoves, messageIds);
+        return Objects.hash(eventId, username, messageMoves, messageIds);
     }
 }

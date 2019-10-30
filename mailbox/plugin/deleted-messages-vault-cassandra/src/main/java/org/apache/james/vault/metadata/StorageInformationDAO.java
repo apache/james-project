@@ -35,7 +35,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -80,23 +80,23 @@ public class StorageInformationDAO {
             .value(BLOB_ID, bindMarker(BLOB_ID)));
     }
 
-    Mono<Void> referenceStorageInformation(User user, MessageId messageId, StorageInformation storageInformation) {
+    Mono<Void> referenceStorageInformation(Username username, MessageId messageId, StorageInformation storageInformation) {
         return cassandraAsyncExecutor.executeVoid(addStatement.bind()
-            .setString(OWNER, user.asString())
+            .setString(OWNER, username.asString())
             .setString(MESSAGE_ID, messageId.serialize())
             .setString(BUCKET_NAME, storageInformation.getBucketName().asString())
             .setString(BLOB_ID, storageInformation.getBlobId().asString()));
     }
 
-    Mono<Void> deleteStorageInformation(User user, MessageId messageId) {
+    Mono<Void> deleteStorageInformation(Username username, MessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(removeStatement.bind()
-            .setString(OWNER, user.asString())
+            .setString(OWNER, username.asString())
             .setString(MESSAGE_ID, messageId.serialize()));
     }
 
-    Mono<StorageInformation> retrieveStorageInformation(User user, MessageId messageId) {
+    Mono<StorageInformation> retrieveStorageInformation(Username username, MessageId messageId) {
         return cassandraAsyncExecutor.executeSingleRow(readStatement.bind()
-            .setString(OWNER, user.asString())
+            .setString(OWNER, username.asString())
             .setString(MESSAGE_ID, messageId.serialize()))
             .map(row -> StorageInformation.builder()
                     .bucketName(BucketName.of(row.getString(BUCKET_NAME)))

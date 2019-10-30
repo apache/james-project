@@ -28,7 +28,7 @@ import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_1;
 import static org.apache.james.vault.DeletedMessageFixture.MAILBOX_ID_2;
 import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT1;
 import static org.apache.mailet.base.MailAddressFixture.RECIPIENT2;
 import static org.apache.mailet.base.MailAddressFixture.SENDER;
@@ -41,7 +41,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -65,10 +65,10 @@ class DeletedMessageConverterTest {
     private static final List<MailboxId> ORIGIN_MAILBOXES = ImmutableList.of(MAILBOX_ID_1, MAILBOX_ID_2);
     private static final DeletedMessageVaultHook.DeletedMessageMailboxContext DELETED_MESSAGE_MAILBOX_CONTEXT = new DeletedMessageVaultHook.DeletedMessageMailboxContext(
         DeletedMessageFixture.MESSAGE_ID,
-        USER,
+        USERNAME,
         ORIGIN_MAILBOXES);
 
-    private static final User EMPTY_OWNER = null;
+    private static final Username EMPTY_OWNER = null;
 
     private static final Collection<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
     private static final Collection<MessageAttachment> ATTACHMENTS = ImmutableList.of(MessageAttachment.builder()

@@ -49,7 +49,7 @@ public class MailboxListenerExecutor {
         return mdcBuilder
             .addContext(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addContext(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addContext(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addContext(EventBus.StructuredLoggingFields.USER, event.getUsername())
             .addContext(EventBus.StructuredLoggingFields.LISTENER_CLASS, listener.getClass())
             .build();
     }

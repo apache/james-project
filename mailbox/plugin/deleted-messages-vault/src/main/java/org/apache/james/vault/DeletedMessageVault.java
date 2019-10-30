@@ -21,7 +21,7 @@ package org.apache.james.vault;
 
 import java.io.InputStream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.vault.search.Query;
@@ -30,11 +30,11 @@ import org.reactivestreams.Publisher;
 public interface DeletedMessageVault {
     Publisher<Void> append(DeletedMessage deletedMessage, InputStream mimeMessage);
 
-    Publisher<InputStream> loadMimeMessage(User user, MessageId messageId);
+    Publisher<InputStream> loadMimeMessage(Username username, MessageId messageId);
 
-    Publisher<Void> delete(User user, MessageId messageId);
+    Publisher<Void> delete(Username username, MessageId messageId);
 
-    Publisher<DeletedMessage> search(User user, Query query);
+    Publisher<DeletedMessage> search(Username username, Query query);
 
     Task deleteExpiredMessagesTask();
 }

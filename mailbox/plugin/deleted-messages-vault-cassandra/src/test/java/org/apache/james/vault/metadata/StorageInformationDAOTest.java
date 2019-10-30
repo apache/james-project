@@ -30,7 +30,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +40,7 @@ class StorageInformationDAOTest {
     private static final BucketName BUCKET_NAME = BucketName.of("deletedMessages-2019-06-01");
     private static final BucketName BUCKET_NAME_2 = BucketName.of("deletedMessages-2019-07-01");
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-    private static final User OWNER = User.fromUsername("owner");
+    private static final Username OWNER = Username.fromUsername("owner");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(36);
     private static final BlobId BLOB_ID = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d23");
     private static final BlobId BLOB_ID_2 = new HashBlobId.Factory().from("05dcb33b-8382-4744-923a-bc593ad84d24");

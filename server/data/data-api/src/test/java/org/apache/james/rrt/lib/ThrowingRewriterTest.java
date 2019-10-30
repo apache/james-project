@@ -21,7 +21,7 @@ package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ public class ThrowingRewriterTest {
         assertThatThrownBy(() ->
             new UserRewritter.ThrowingRewriter()
                 .generateUserRewriter("any")
-                .rewrite(User.fromUsername("any")))
+                .rewrite(Username.fromUsername("any")))
             .isInstanceOf(RecipientRewriteTable.ErrorMappingException.class);
     }
 }

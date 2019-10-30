@@ -19,6 +19,8 @@
 
 package org.apache.james.user.api.model;
 
+import org.apache.james.core.Username;
+
 /**
  * Interface for objects representing users.
  */
@@ -51,9 +53,9 @@ public interface User {
     boolean setPassword(String newPass);
 
     default boolean hasUsername(String username) {
-        org.apache.james.core.User thisUser = org.apache.james.core.User.fromUsername(getUserName());
-        org.apache.james.core.User thatUser = org.apache.james.core.User.fromUsername(username);
+        Username thisUsername = Username.fromUsername(getUserName());
+        Username thatUsername = Username.fromUsername(username);
 
-        return thisUser.equals(thatUser);
+        return thisUsername.equals(thatUsername);
     }
 }

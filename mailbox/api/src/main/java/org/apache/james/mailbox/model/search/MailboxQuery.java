@@ -21,7 +21,7 @@ package org.apache.james.mailbox.model.search;
 
 import java.util.Optional;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -76,8 +76,8 @@ public final class MailboxQuery {
             return this;
         }
 
-        public Builder user(User user) {
-            this.username(user.asString());
+        public Builder user(Username username) {
+            this.username(username.asString());
             return this;
         }
 
@@ -143,9 +143,9 @@ public final class MailboxQuery {
     }
 
     public boolean isPrivateMailboxes(MailboxSession session) {
-        User sessionUser = session.getUser();
+        Username sessionUsername = session.getUser();
         return namespace.map(MailboxConstants.USER_NAMESPACE::equals).orElse(false)
-            && user.map(User::fromUsername).map(sessionUser::equals).orElse(false);
+            && user.map(Username::fromUsername).map(sessionUsername::equals).orElse(false);
     }
 
     @VisibleForTesting

@@ -32,7 +32,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
@@ -76,11 +76,11 @@ public class UserPerBucketDAO {
         return session.prepare(select(BUCKET_NAME).from(TABLE).perPartitionLimit(1));
     }
 
-    Flux<User> retrieveUsers(BucketName bucketName) {
+    Flux<Username> retrieveUsers(BucketName bucketName) {
         return cassandraAsyncExecutor.executeRows(listStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString()))
             .map(row -> row.getString(USER))
-            .map(User::fromUsername);
+            .map(Username::fromUsername);
     }
 
     Flux<BucketName> retrieveBuckets() {
@@ -89,10 +89,10 @@ public class UserPerBucketDAO {
             .map(BucketName::of);
     }
 
-    Mono<Void> addUser(BucketName bucketName, User user) {
+    Mono<Void> addUser(BucketName bucketName, Username username) {
         return cassandraAsyncExecutor.executeVoid(addStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString())
-            .setString(USER, user.asString()));
+            .setString(USER, username.asString()));
     }
 
     Mono<Void> deleteBucket(BucketName bucketName) {

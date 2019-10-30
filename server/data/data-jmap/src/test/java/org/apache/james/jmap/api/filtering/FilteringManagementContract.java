@@ -30,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.junit.jupiter.api.Test;
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 public interface FilteringManagementContract {
 
     String BART_SIMPSON_CARTOON = "bart@simpson.cartoon";
-    User USER = User.fromUsername(BART_SIMPSON_CARTOON);
+    Username USERNAME = Username.fromUsername(BART_SIMPSON_CARTOON);
 
     default FilteringManagement instantiateFilteringManagement(EventStore eventStore) {
         return new EventSourcingFilteringManagement(eventStore);
@@ -46,14 +46,14 @@ public interface FilteringManagementContract {
 
     @Test
     default void listingRulesForUnknownUserShouldReturnEmptyList(EventStore eventStore) {
-        assertThat(instantiateFilteringManagement(eventStore).listRulesForUser(USER))
+        assertThat(instantiateFilteringManagement(eventStore).listRulesForUser(USERNAME))
             .isEmpty();
     }
 
     @Test
     default void listingRulesShouldThrowWhenNullUser(EventStore eventStore) {
-        User user = null;
-        assertThatThrownBy(() -> instantiateFilteringManagement(eventStore).listRulesForUser(user))
+        Username username = null;
+        assertThatThrownBy(() -> instantiateFilteringManagement(eventStore).listRulesForUser(username))
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -61,9 +61,9 @@ public interface FilteringManagementContract {
     default void listingRulesShouldReturnDefinedRules(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
-        testee.defineRulesForUser(USER, RULE_1, RULE_2);
+        testee.defineRulesForUser(USERNAME, RULE_1, RULE_2);
 
-        assertThat(testee.listRulesForUser(USER))
+        assertThat(testee.listRulesForUser(USERNAME))
             .containsExactly(RULE_1, RULE_2);
     }
 
@@ -71,10 +71,10 @@ public interface FilteringManagementContract {
     default void listingRulesShouldReturnLastDefinedRules(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
-        testee.defineRulesForUser(USER, RULE_1, RULE_2);
-        testee.defineRulesForUser(USER, RULE_2, RULE_1);
+        testee.defineRulesForUser(USERNAME, RULE_1, RULE_2);
+        testee.defineRulesForUser(USERNAME, RULE_2, RULE_1);
 
-        assertThat(testee.listRulesForUser(USER))
+        assertThat(testee.listRulesForUser(USERNAME))
             .containsExactly(RULE_2, RULE_1);
     }
 
@@ -82,7 +82,7 @@ public interface FilteringManagementContract {
     default void definingRulesShouldThrowWhenDuplicateRules(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
-        assertThatThrownBy(() -> testee.defineRulesForUser(USER, RULE_1, RULE_1))
+        assertThatThrownBy(() -> testee.defineRulesForUser(USERNAME, RULE_1, RULE_1))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -99,16 +99,16 @@ public interface FilteringManagementContract {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
         List<Rule> rules = null;
-        assertThatThrownBy(() -> testee.defineRulesForUser(USER, rules))
+        assertThatThrownBy(() -> testee.defineRulesForUser(USERNAME, rules))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void definingRulesShouldKeepOrdering(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
-        testee.defineRulesForUser(USER, RULE_3, RULE_2, RULE_1);
+        testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1);
 
-        assertThat(testee.listRulesForUser(USER))
+        assertThat(testee.listRulesForUser(USERNAME))
             .containsExactly(RULE_3, RULE_2, RULE_1);
     }
 
@@ -116,19 +116,19 @@ public interface FilteringManagementContract {
     default void definingEmptyRuleListShouldRemoveExistingRules(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
-        testee.defineRulesForUser(USER, RULE_3, RULE_2, RULE_1);
-        testee.clearRulesForUser(USER);
+        testee.defineRulesForUser(USERNAME, RULE_3, RULE_2, RULE_1);
+        testee.clearRulesForUser(USERNAME);
 
-        assertThat(testee.listRulesForUser(USER)).isEmpty();
+        assertThat(testee.listRulesForUser(USERNAME)).isEmpty();
     }
 
     @Test
     default void allFieldsAndComparatorShouldWellBeStored(EventStore eventStore) {
         FilteringManagement testee = instantiateFilteringManagement(eventStore);
 
-        testee.defineRulesForUser(USER, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
+        testee.defineRulesForUser(USERNAME, RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
 
-        assertThat(testee.listRulesForUser(USER))
+        assertThat(testee.listRulesForUser(USERNAME))
             .containsExactly(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO, RULE_1);
     }
 

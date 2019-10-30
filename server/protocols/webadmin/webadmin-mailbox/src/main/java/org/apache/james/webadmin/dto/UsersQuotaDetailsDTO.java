@@ -20,7 +20,7 @@
 
 package org.apache.james.webadmin.dto;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
@@ -35,14 +35,14 @@ public class UsersQuotaDetailsDTO {
     }
 
     public static class Builder {
-        private User user;
+        private Username username;
         private QuotaDetailsDTO detail;
         
         private Builder() {
         }
 
-        public Builder user(User user) {
-            this.user = user;
+        public Builder user(Username username) {
+            this.username = username;
             return this;
         }
 
@@ -52,23 +52,23 @@ public class UsersQuotaDetailsDTO {
         }
 
         public UsersQuotaDetailsDTO build() {
-            Preconditions.checkNotNull(user);
+            Preconditions.checkNotNull(username);
             Preconditions.checkNotNull(detail);
-            return new UsersQuotaDetailsDTO(user, detail);
+            return new UsersQuotaDetailsDTO(username, detail);
         }
     }
 
-    private final User user;
+    private final Username username;
     private final QuotaDetailsDTO detail;
 
-    @VisibleForTesting UsersQuotaDetailsDTO(User user, QuotaDetailsDTO detail) {
-        this.user = user;
+    @VisibleForTesting UsersQuotaDetailsDTO(Username username, QuotaDetailsDTO detail) {
+        this.username = username;
         this.detail = detail;
     }
 
     @JsonProperty(USERNAME)
-    public String getUser() {
-        return user.asString();
+    public String getUsername() {
+        return username.asString();
     }
 
     public QuotaDetailsDTO getDetail() {

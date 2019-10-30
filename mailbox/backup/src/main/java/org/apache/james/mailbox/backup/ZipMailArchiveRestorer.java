@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -53,8 +53,8 @@ public class ZipMailArchiveRestorer implements MailArchiveRestorer {
         this.archiveLoader = archiveLoader;
     }
 
-    public void restore(User user, InputStream source) throws MailboxException, IOException {
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+    public void restore(Username username, InputStream source) throws MailboxException, IOException {
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
         restoreEntries(source, session);
     }
 

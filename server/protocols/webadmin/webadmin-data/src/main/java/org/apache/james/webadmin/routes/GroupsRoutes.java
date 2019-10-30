@@ -33,7 +33,7 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.MappingAlreadyExistsException;
 import org.apache.james.rrt.api.RecipientRewriteTable;
@@ -148,7 +148,7 @@ public class GroupsRoutes implements Routes {
         Domain domain = groupAddress.getDomain();
         ensureNotShadowingAnotherAddress(groupAddress);
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);
-        MappingSource source = MappingSource.fromUser(User.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
+        MappingSource source = MappingSource.fromUser(Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), domain));
         addGroupMember(source, userAddress);
         return halt(HttpStatus.NO_CONTENT_204);
     }
@@ -197,7 +197,7 @@ public class GroupsRoutes implements Routes {
         MailAddress userAddress = MailAddressParser.parseMailAddress(request.params(USER_ADDRESS), USER_ADDRESS_TYPE);
         MappingSource source = MappingSource
             .fromUser(
-                User.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
+                Username.fromLocalPartWithDomain(groupAddress.getLocalPart(), groupAddress.getDomain()));
         recipientRewriteTable.removeGroupMapping(source, userAddress.asString());
         return halt(HttpStatus.NO_CONTENT_204);
     }

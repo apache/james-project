@@ -20,11 +20,11 @@
 package org.apache.james.quota.search.elasticsearch;
 
 import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
-public class UserRoutingKeyFactory implements RoutingKey.Factory<User> {
+public class UserRoutingKeyFactory implements RoutingKey.Factory<Username> {
     @Override
-    public RoutingKey from(User user) {
+    public RoutingKey from(Username user) {
         return RoutingKey.fromString(user.asString());
     }
 }

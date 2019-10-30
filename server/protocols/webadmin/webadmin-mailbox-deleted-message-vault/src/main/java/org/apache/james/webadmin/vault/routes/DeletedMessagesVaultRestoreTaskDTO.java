@@ -22,7 +22,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
@@ -46,9 +46,9 @@ public class DeletedMessagesVaultRestoreTaskDTO implements TaskDTO {
         }
 
         public DeletedMessagesVaultRestoreTask create(DeletedMessagesVaultRestoreTaskDTO dto) {
-            User userToRestore = User.fromUsername(dto.userToRestore);
+            Username usernameToRestore = Username.fromUsername(dto.userToRestore);
             Query query = queryTranslator.translate(dto.query);
-            return new DeletedMessagesVaultRestoreTask(restoreService, userToRestore, query);
+            return new DeletedMessagesVaultRestoreTask(restoreService, usernameToRestore, query);
         }
 
         public DeletedMessagesVaultRestoreTaskDTO createDTO(DeletedMessagesVaultRestoreTask task, String type) {

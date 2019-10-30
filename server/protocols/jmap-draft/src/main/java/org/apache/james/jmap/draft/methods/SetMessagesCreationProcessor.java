@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.draft.exceptions.InvalidDraftKeywordsException;
 import org.apache.james.jmap.draft.exceptions.InvalidMailboxForCreationException;
@@ -285,7 +285,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void assertUserIsSender(MailboxSession session, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
         if (!from.flatMap(DraftEmailer::getEmail)
-                .filter(email -> session.getUser().equals(User.fromUsername(email)))
+                .filter(email -> session.getUser().equals(Username.fromUsername(email)))
                 .isPresent()) {
             String allowedSender = session.getUser().asString();
             throw new MailboxSendingNotAllowedException(allowedSender);

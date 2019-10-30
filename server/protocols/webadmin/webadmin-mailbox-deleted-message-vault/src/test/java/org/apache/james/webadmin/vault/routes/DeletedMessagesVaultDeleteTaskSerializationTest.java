@@ -25,7 +25,7 @@ import static org.mockito.Mockito.mock;
 import java.io.IOException;
 import java.time.Instant;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
@@ -42,8 +42,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
 
     private DeletedMessageVault deletedMessageVault;
     private JsonTaskSerializer taskSerializer;
-    private final String username = "james";
-    private final User user = User.fromUsername(username);
+    private final Username username = Username.fromUsername("james");
 
     private final TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
     private final MessageId messageId = messageIdFactory.generate();
@@ -63,7 +62,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultDeleteTaskShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultDeleteTask task = new DeletedMessagesVaultDeleteTask(deletedMessageVault, user, messageId);
+        DeletedMessagesVaultDeleteTask task = new DeletedMessagesVaultDeleteTask(deletedMessageVault, username, messageId);
 
         assertThatJson(taskSerializer.serialize(task))
             .isEqualTo(serializedDeleteMessagesVaultDeleteTask);
@@ -71,22 +70,22 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
 
     @Test
     void deleteMessagesVaultDeleteTaskShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultDeleteTask task = new DeletedMessagesVaultDeleteTask(deletedMessageVault, user, messageId);
+        DeletedMessagesVaultDeleteTask task = new DeletedMessagesVaultDeleteTask(deletedMessageVault, username, messageId);
 
         assertThat(taskSerializer.deserialize(serializedDeleteMessagesVaultDeleteTask))
-            .isEqualToComparingOnlyGivenFields(task, "user", "messageId");
+            .isEqualToComparingOnlyGivenFields(task, "username", "messageId");
     }
 
 
     @Test
     void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(user, messageId, TIMESTAMP);
+        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(username, messageId, TIMESTAMP);
         assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(serializedAdditionalInformation);
     }
 
     @Test
     void additonalInformationShouldBeDeserializable() throws IOException {
-        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(user, messageId, TIMESTAMP);
+        DeletedMessagesVaultDeleteTask.AdditionalInformation details = new DeletedMessagesVaultDeleteTask.AdditionalInformation(username, messageId, TIMESTAMP);
         assertThat(jsonAdditionalInformationSerializer.deserialize(serializedAdditionalInformation))
             .isEqualToComparingFieldByField(details);
     }

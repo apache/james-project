@@ -57,7 +57,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.api.filtering.Rule.Condition.Field;
@@ -692,7 +692,7 @@ class JMAPFilteringTest {
             MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -729,7 +729,7 @@ class JMAPFilteringTest {
             MailboxId mailbox2Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_2");
             MailboxId mailbox3Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_3");
 
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -753,7 +753,7 @@ class JMAPFilteringTest {
         void rulesWithEmptyMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
             MailboxId mailbox1Id = testSystem.createMailbox(RECIPIENT_1_USERNAME, "RECIPIENT_1_MAILBOX_1");
 
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -822,7 +822,7 @@ class JMAPFilteringTest {
         @Test
         void serviceShouldNotThrowWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -840,7 +840,7 @@ class JMAPFilteringTest {
         @Test
         void mailDirectiveShouldNotBeSetWhenUnknownMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -860,7 +860,7 @@ class JMAPFilteringTest {
         @Test
         void rulesWithInvalidMailboxIdsShouldBeSkept(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")
@@ -888,7 +888,7 @@ class JMAPFilteringTest {
         void rulesWithMultipleMailboxIdsShouldFallbackWhenInvalidFirstMailboxId(JMAPFilteringTestSystem testSystem) throws Exception {
             String unknownMailboxId = "4242";
 
-            testSystem.getFilteringManagement().defineRulesForUser(User.fromUsername(RECIPIENT_1_USERNAME),
+            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME),
                 Rule.builder()
                     .id(Rule.Id.of("1"))
                     .name("rule 1")

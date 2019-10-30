@@ -36,7 +36,7 @@ import javax.ws.rs.Produces;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
@@ -278,11 +278,11 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private TaskIdDto deleteMessage(Request request, Response response) {
-        User user = extractUser(request);
-        validateUserExist(user);
+        Username username = extractUser(request);
+        validateUserExist(username);
         MessageId messageId = parseMessageId(request);
 
-        TaskId taskId = taskManager.submit(new DeletedMessagesVaultDeleteTask(deletedMessageVault, user, messageId));
+        TaskId taskId = taskManager.submit(new DeletedMessagesVaultDeleteTask(deletedMessageVault, username, messageId));
         return TaskIdDto.respond(response, taskId);
     }
 
@@ -301,27 +301,27 @@ public class DeletedMessagesVaultRoutes implements Routes {
     }
 
     private Task generateUserTask(VaultAction requestedAction, Request request) throws JsonExtractException {
-        User user = extractUser(request);
-        validateUserExist(user);
+        Username username = extractUser(request);
+        validateUserExist(username);
         Query query = translate(jsonExtractor.parse(request.body()));
 
         switch (requestedAction) {
             case RESTORE:
-                return new DeletedMessagesVaultRestoreTask(vaultRestore, user, query);
+                return new DeletedMessagesVaultRestoreTask(vaultRestore, username, query);
             case EXPORT:
-                return new DeletedMessagesVaultExportTask(vaultExport, user, query, extractMailAddress(request));
+                return new DeletedMessagesVaultExportTask(vaultExport, username, query, extractMailAddress(request));
             default:
                 throw new NotImplementedException(requestedAction + " is not yet handled.");
         }
     }
 
-    private void validateUserExist(User user) {
+    private void validateUserExist(Username username) {
         try {
-            if (!usersRepository.contains(user.asString())) {
+            if (!usersRepository.contains(username.asString())) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .message("User '" + user.asString() + "' does not exist in the system")
+                    .message("User '" + username.asString() + "' does not exist in the system")
                     .haltError();
             }
         } catch (UsersRepositoryException e) {
@@ -371,9 +371,9 @@ public class DeletedMessagesVaultRoutes implements Routes {
         }
     }
 
-    private User extractUser(Request request) {
+    private Username extractUser(Request request) {
         try {
-            return User.fromUsername(request.params(USER_PATH_PARAM));
+            return Username.fromUsername(request.params(USER_PATH_PARAM));
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

@@ -34,7 +34,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -103,34 +103,34 @@ public class MetadataDAO {
                 .setString(PAYLOAD, payload)));
     }
 
-    Flux<DeletedMessageWithStorageInformation> retrieveMetadata(BucketName bucketName, User user) {
+    Flux<DeletedMessageWithStorageInformation> retrieveMetadata(BucketName bucketName, Username username) {
         return cassandraAsyncExecutor.executeRows(
             readStatement.bind()
                 .setString(BUCKET_NAME, bucketName.asString())
-                .setString(OWNER, user.asString()))
+                .setString(OWNER, username.asString()))
             .map(row -> row.getString(PAYLOAD))
             .flatMap(metadataSerializer::deserialize);
     }
 
-    Flux<MessageId> retrieveMessageIds(BucketName bucketName, User user) {
+    Flux<MessageId> retrieveMessageIds(BucketName bucketName, Username username) {
         return cassandraAsyncExecutor.executeRows(
             readMessageIdStatement.bind()
                 .setString(BUCKET_NAME, bucketName.asString())
-                .setString(OWNER, user.asString()))
+                .setString(OWNER, username.asString()))
             .map(row -> row.getString(MESSAGE_ID))
             .map(messageIdFactory::fromString);
     }
 
-    Mono<Void> deleteMessage(BucketName bucketName, User user, MessageId messageId) {
+    Mono<Void> deleteMessage(BucketName bucketName, Username username, MessageId messageId) {
         return cassandraAsyncExecutor.executeVoid(removeStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString())
-            .setString(OWNER, user.asString())
+            .setString(OWNER, username.asString())
             .setString(MESSAGE_ID, messageId.serialize()));
     }
 
-    Mono<Void> deleteInBucket(BucketName bucketName, User user) {
+    Mono<Void> deleteInBucket(BucketName bucketName, Username username) {
         return cassandraAsyncExecutor.executeVoid(removeAllStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString())
-            .setString(OWNER, user.asString()));
+            .setString(OWNER, username.asString()));
     }
 }

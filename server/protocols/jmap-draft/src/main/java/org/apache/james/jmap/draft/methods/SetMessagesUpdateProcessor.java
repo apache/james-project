@@ -36,7 +36,7 @@ import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.draft.exceptions.InvalidOutboxMoveException;
 import org.apache.james.jmap.draft.model.Keyword;
@@ -191,7 +191,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     }
 
     private void assertUserIsSender(MailboxSession session, Optional<MailAddress> sender) throws MailboxSendingNotAllowedException {
-        boolean userIsSender = sender.map(address -> session.getUser().equals(User.fromMailAddress(address)))
+        boolean userIsSender = sender.map(address -> session.getUser().equals(Username.fromMailAddress(address)))
             .orElse(false);
 
         if (!userIsSender) {

@@ -35,7 +35,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
@@ -82,7 +82,7 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
-    private static final User ROBERT = User.fromUsername("robert");
+    private static final Username ROBERT = Username.fromUsername("robert");
 
     private MessageIdManager messageIdManager;
     private org.apache.james.mime4j.dom.Message messageContent1;

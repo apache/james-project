@@ -25,7 +25,7 @@ import java.util.Optional;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.Subscriber;
 import org.apache.james.filesystem.api.FileSystem;
@@ -67,12 +67,12 @@ public class QuotaThresholdMailer implements Subscriber {
             .withConfiguration(configuration)
             .build();
 
-        maybeNotice.ifPresent(Throwing.consumer(notice -> sendNotice(notice, event.getAggregateId().getUser())));
+        maybeNotice.ifPresent(Throwing.consumer(notice -> sendNotice(notice, event.getAggregateId().getUsername())));
     }
 
-    private void sendNotice(QuotaThresholdNotice notice, User user) throws UsersRepositoryException, MessagingException, IOException {
+    private void sendNotice(QuotaThresholdNotice notice, Username username) throws UsersRepositoryException, MessagingException, IOException {
         MailAddress sender = mailetContext.getPostmaster();
-        MailAddress recipient = usersRepository.getMailAddressFor(user);
+        MailAddress recipient = usersRepository.getMailAddressFor(username);
 
         mailetContext.sendMail(sender, ImmutableList.of(recipient),
             notice.generateMimeMessage(fileSystem)

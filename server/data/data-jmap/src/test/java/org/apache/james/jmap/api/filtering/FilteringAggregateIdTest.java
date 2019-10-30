@@ -21,7 +21,7 @@ package org.apache.james.jmap.api.filtering;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 import org.apache.james.jmap.api.filtering.impl.FilteringAggregateId;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class FilteringAggregateIdTest {
 
     @Test
     void asAggregateKeyShouldReturnAStringContainingThePrefixAndTheDomain() {
-        assertThat(new FilteringAggregateId(User.fromUsername("foo@bar.space")).asAggregateKey())
+        assertThat(new FilteringAggregateId(Username.fromUsername("foo@bar.space")).asAggregateKey())
             .isEqualTo("FilteringRule/foo@bar.space");
     }
 

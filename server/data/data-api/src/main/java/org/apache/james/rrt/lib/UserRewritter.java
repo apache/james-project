@@ -31,7 +31,7 @@ import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +43,7 @@ import com.google.common.collect.ImmutableList;
 @FunctionalInterface
 public interface UserRewritter extends Serializable {
 
-    Optional<User> rewrite(User user) throws AddressException, RecipientRewriteTable.ErrorMappingException;
+    Optional<Username> rewrite(Username username) throws AddressException, RecipientRewriteTable.ErrorMappingException;
 
     interface MappingUserRewriter {
         UserRewritter generateUserRewriter(String mapping);
@@ -54,7 +54,7 @@ public interface UserRewritter extends Serializable {
         public UserRewritter generateUserRewriter(String mapping) {
             Domain newDomain = Domain.of(mapping);
             return oldUser -> Optional.of(
-                User.fromLocalPartWithDomain(
+                Username.fromLocalPartWithDomain(
                     oldUser.getLocalPart(),
                     newDomain));
         }
@@ -63,7 +63,7 @@ public interface UserRewritter extends Serializable {
     class ReplaceRewriter implements MappingUserRewriter {
         @Override
         public UserRewritter generateUserRewriter(String mapping) {
-            return oldUser -> Optional.of(User.fromUsername(mapping));
+            return oldUser -> Optional.of(Username.fromUsername(mapping));
         }
     }
 
@@ -87,10 +87,10 @@ public interface UserRewritter extends Serializable {
             return oldUser -> {
                 try {
                     return regexMap(oldUser.asMailAddress(), mapping)
-                        .map(User::fromUsername);
+                        .map(Username::fromUsername);
                 } catch (PatternSyntaxException e) {
                     LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.of(User.fromUsername(Mapping.Type.Regex.asPrefix() + mapping));
+                    return Optional.of(Username.fromUsername(Mapping.Type.Regex.asPrefix() + mapping));
                 }
             };
         }

@@ -36,7 +36,7 @@ import java.util.Date;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
 import org.apache.james.sieverepository.api.ScriptName;
 
@@ -65,25 +65,25 @@ public class CassandraActiveScriptDAO {
             .where(eq(USER_NAME, bindMarker(USER_NAME))));
     }
 
-    public Mono<ActiveScriptInfo> getActiveSctiptInfo(User user) {
+    public Mono<ActiveScriptInfo> getActiveSctiptInfo(Username username) {
         return cassandraAsyncExecutor.executeSingleRow(
             selectActiveName.bind()
-                .setString(USER_NAME, user.asString()))
+                .setString(USER_NAME, username.asString()))
             .map(row -> new ActiveScriptInfo(
                 new ScriptName(row.getString(SCRIPT_NAME)),
                 ZonedDateTime.ofInstant(row.getTimestamp(DATE).toInstant(), ZoneOffset.UTC)));
     }
 
-    public Mono<Void> unactivate(User user) {
+    public Mono<Void> unactivate(Username username) {
         return cassandraAsyncExecutor.executeVoid(
             deleteActive.bind()
-                .setString(USER_NAME, user.asString()));
+                .setString(USER_NAME, username.asString()));
     }
 
-    public Mono<Void> activate(User user, ScriptName scriptName) {
+    public Mono<Void> activate(Username username, ScriptName scriptName) {
         return cassandraAsyncExecutor.executeVoid(
             insertActive.bind()
-                .setString(USER_NAME, user.asString())
+                .setString(USER_NAME, username.asString())
                 .setString(SCRIPT_NAME, scriptName.getValue())
                 .setTimestamp(DATE, new Date()));
     }

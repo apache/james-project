@@ -20,12 +20,12 @@ package org.apache.james.quota.search;
 
 import java.util.List;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 
 public interface QuotaSearcher {
-    List<User> search(QuotaQuery query);
+    List<Username> search(QuotaQuery query);
 
-    default List<User> search(QuotaQuery.Builder query) {
+    default List<Username> search(QuotaQuery.Builder query) {
         return search(query.build());
     }
 }

@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.Event;
@@ -83,14 +83,14 @@ class EventDeadLettersRoutesTest {
     private static final EventDeadLetters.InsertionId INSERTION_ID_3 = EventDeadLetters.InsertionId.of(INSERTION_UUID_3);
     private static final MailboxListener.MailboxAdded EVENT_1 = EventFactory.mailboxAdded()
         .eventId(Event.EventId.of(UUID_1))
-        .user(User.fromUsername(BOB))
+        .user(Username.fromUsername(BOB))
         .sessionId(MailboxSession.SessionId.of(452))
         .mailboxId(InMemoryId.of(453))
         .mailboxPath(MailboxPath.forUser(BOB, "Important-mailbox"))
         .build();
     private static final MailboxListener.MailboxAdded EVENT_2 = EventFactory.mailboxAdded()
         .eventId(Event.EventId.of(UUID_2))
-        .user(User.fromUsername(BOB))
+        .user(Username.fromUsername(BOB))
         .sessionId(MailboxSession.SessionId.of(455))
         .mailboxId(InMemoryId.of(456))
         .mailboxPath(MailboxPath.forUser(BOB, "project-3"))

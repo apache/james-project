@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -121,9 +121,9 @@ public class ReIndexerPerformer {
         }
     }
 
-    Task.Result reIndex(User user, ReprocessingContext reprocessingContext) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(user.asString());
-        LOGGER.info("Starting a reindex for user {}", user.asString());
+    Task.Result reIndex(Username username, ReprocessingContext reprocessingContext) throws MailboxException {
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username.asString());
+        LOGGER.info("Starting a reindex for user {}", username.asString());
 
         Stream<MailboxId> mailboxIds = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxSession).build(), mailboxSession)
             .stream()
@@ -132,7 +132,7 @@ public class ReIndexerPerformer {
         try {
             return reIndex(mailboxIds, reprocessingContext);
         } finally {
-            LOGGER.info("User {} reindex finished", user.asString());
+            LOGGER.info("User {} reindex finished", username.asString());
         }
     }
 

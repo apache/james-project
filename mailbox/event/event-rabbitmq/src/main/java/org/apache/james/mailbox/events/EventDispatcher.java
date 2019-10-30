@@ -115,7 +115,7 @@ class EventDispatcher {
         return MDCStructuredLogger.forLogger(LOGGER)
             .addField(EventBus.StructuredLoggingFields.EVENT_ID, event.getEventId())
             .addField(EventBus.StructuredLoggingFields.EVENT_CLASS, event.getClass())
-            .addField(EventBus.StructuredLoggingFields.USER, event.getUser())
+            .addField(EventBus.StructuredLoggingFields.USER, event.getUsername())
             .addField(EventBus.StructuredLoggingFields.REGISTRATION_KEYS, keys);
     }
 

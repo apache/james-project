@@ -28,219 +28,219 @@ import org.apache.commons.lang3.StringUtils;
 
 import org.junit.Test;
 
-public class UserTest {
+public class UsernameTest {
 
     @Test
     public void fromShouldThrowOnEmptyLocalPart() {
-        assertThatThrownBy(() -> User.from("", Optional.empty()))
+        assertThatThrownBy(() -> Username.from("", Optional.empty()))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowOnNullDomainPart() {
-        assertThatThrownBy(() -> User.from(null, Optional.empty()))
+        assertThatThrownBy(() -> Username.from(null, Optional.empty()))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void fromShouldThrowOnLocalPartWithDomainDelimiter() {
-        assertThatThrownBy(() -> User.from("aa@bb", Optional.empty()))
+        assertThatThrownBy(() -> Username.from("aa@bb", Optional.empty()))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowOnEmptyDomain() {
-        assertThatThrownBy(() -> User.from("aa", Optional.of("")))
+        assertThatThrownBy(() -> Username.from("aa", Optional.of("")))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenDomainContainsDomainDelimiter() {
-        assertThatThrownBy(() -> User.from("aa", Optional.of("bb@cc")))
+        assertThatThrownBy(() -> Username.from("aa", Optional.of("bb@cc")))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnNullLocalPart() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain(null, "domain"))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain(null, "domain"))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnEmptyLocalPart() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("", "domain"))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("", "domain"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnLocalPartThatContainsDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("aa@bb", "domain"))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("aa@bb", "domain"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnNullDomainPart() {
         String domain = null;
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("local", domain))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("local", domain))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnEmptyDomainPart() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("local", ""))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("local", ""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithDomainStringVersionShouldThrowOnDomainPartThatContainsDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromLocalPartWithDomain("local", "aa@bb"))
+        assertThatThrownBy(() -> Username.fromLocalPartWithDomain("local", "aa@bb"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithoutDomainShouldThrowOnEmpty() {
-        assertThatThrownBy(() -> User.fromLocalPartWithoutDomain(""))
+        assertThatThrownBy(() -> Username.fromLocalPartWithoutDomain(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromLocalPartWithoutDomainShouldThrowOnNull() {
-        assertThatThrownBy(() -> User.fromLocalPartWithoutDomain(null))
+        assertThatThrownBy(() -> Username.fromLocalPartWithoutDomain(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void fromLocalPartWithoutDomainShouldThrowOnUsernameThatContainsDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromLocalPartWithoutDomain("aa@bb"))
+        assertThatThrownBy(() -> Username.fromLocalPartWithoutDomain("aa@bb"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowOnNull() {
-        assertThatThrownBy(() -> User.fromUsername(null))
+        assertThatThrownBy(() -> Username.fromUsername(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowOnEmpty() {
-        assertThatThrownBy(() -> User.fromUsername(""))
+        assertThatThrownBy(() -> Username.fromUsername(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldAllow255LongUsername() {
         String tail = "@a";
-        assertThat(User.fromUsername(StringUtils.repeat('j', 255 - tail.length()) + tail).asString())
+        assertThat(Username.fromUsername(StringUtils.repeat('j', 255 - tail.length()) + tail).asString())
             .hasSize(255);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenTooLong() {
         String tail = "@a";
-        assertThatThrownBy(() -> User.fromUsername(StringUtils.repeat('j', 255 - tail.length() + 1) + tail))
+        assertThatThrownBy(() -> Username.fromUsername(StringUtils.repeat('j', 255 - tail.length() + 1) + tail))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenMultipleDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromUsername("aa@aa@aa"))
+        assertThatThrownBy(() -> Username.fromUsername("aa@aa@aa"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenEndsWithDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromUsername("aa@"))
+        assertThatThrownBy(() -> Username.fromUsername("aa@"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenStartsWithDomainDelimiter() {
-        assertThatThrownBy(() -> User.fromUsername("@aa"))
+        assertThatThrownBy(() -> Username.fromUsername("@aa"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldParseUsernameWithDomain() {
-        assertThat(User.fromUsername("aa@bb"))
-            .isEqualTo(User.from("aa", Optional.of("bb")));
+        assertThat(Username.fromUsername("aa@bb"))
+            .isEqualTo(Username.from("aa", Optional.of("bb")));
     }
 
     @Test
     public void fromUsernameShouldParseUsernameWithoutDomain() {
-        assertThat(User.fromUsername("aa"))
-            .isEqualTo(User.from("aa", Optional.empty()));
+        assertThat(Username.fromUsername("aa"))
+            .isEqualTo(Username.from("aa", Optional.empty()));
     }
 
     @Test
     public void fromLocalPartWithDomainShouldReturnAValidUser() {
-        assertThat(User.fromLocalPartWithDomain("aa", "bb"))
-            .isEqualTo(User.from("aa", Optional.of("bb")));
+        assertThat(Username.fromLocalPartWithDomain("aa", "bb"))
+            .isEqualTo(Username.from("aa", Optional.of("bb")));
     }
 
     @Test
     public void fromLocalPartWithoutDomainShouldReturnAValidUser() {
-        assertThat(User.fromLocalPartWithoutDomain("aa"))
-            .isEqualTo(User.from("aa", Optional.empty()));
+        assertThat(Username.fromLocalPartWithoutDomain("aa"))
+            .isEqualTo(Username.from("aa", Optional.empty()));
     }
 
     @Test
     public void hasDomainPartShouldReturnFalseWhenNoDomain() {
-        assertThat(User.fromLocalPartWithoutDomain("aa").hasDomainPart())
+        assertThat(Username.fromLocalPartWithoutDomain("aa").hasDomainPart())
             .isFalse();
     }
 
     @Test
     public void hasDomainPartShouldReturnTrueWhenHasADomain() {
-        assertThat(User.fromLocalPartWithDomain("aa", "domain").hasDomainPart())
+        assertThat(Username.fromLocalPartWithDomain("aa", "domain").hasDomainPart())
             .isTrue();
     }
 
     @Test
     public void withDefaultDomainShouldAppendDefaultDomainWhenNone() {
-        assertThat(User.fromUsername("user")
+        assertThat(Username.fromUsername("user")
             .withDefaultDomain(Domain.LOCALHOST))
-            .isEqualTo(User.fromLocalPartWithDomain("user", Domain.LOCALHOST));
+            .isEqualTo(Username.fromLocalPartWithDomain("user", Domain.LOCALHOST));
     }
 
     @Test
     public void withDefaultDomainShouldNotAppendDefaultDomainWhenDomainIsPresent() {
-        assertThat(User.fromUsername("user@domain")
+        assertThat(Username.fromUsername("user@domain")
             .withDefaultDomain(Domain.LOCALHOST))
-            .isEqualTo(User.fromUsername("user@domain"));
+            .isEqualTo(Username.fromUsername("user@domain"));
     }
 
     @Test
     public void withDefaultDomainShouldNotThrowUponEmptyDomain() {
-        assertThat(User.fromUsername("user")
+        assertThat(Username.fromUsername("user")
             .withDefaultDomain(Optional.empty()))
-            .isEqualTo(User.fromUsername("user"));
+            .isEqualTo(Username.fromUsername("user"));
     }
 
     @Test
     public void withDefaultDomainShouldNotThrowUponEmptyDomainWhenUsersHadADomain() {
-        assertThat(User.fromUsername("user@domain")
+        assertThat(Username.fromUsername("user@domain")
             .withDefaultDomain(Optional.empty()))
-            .isEqualTo(User.fromUsername("user@domain"));
+            .isEqualTo(Username.fromUsername("user@domain"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldPreserveUserWhenAlreadyHasADomain() {
-        assertThat(User.fromUsername("user@domain")
-            .withDefaultDomainFromUser(User.fromUsername("bob@tld")))
-            .isEqualTo(User.fromUsername("user@domain"));
+        assertThat(Username.fromUsername("user@domain")
+            .withDefaultDomainFromUser(Username.fromUsername("bob@tld")))
+            .isEqualTo(Username.fromUsername("user@domain"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldAppendOtherUserDomainWhenNone() {
-        assertThat(User.fromUsername("user")
-            .withDefaultDomainFromUser(User.fromUsername("bob@tld")))
-            .isEqualTo(User.fromUsername("user@tld"));
+        assertThat(Username.fromUsername("user")
+            .withDefaultDomainFromUser(Username.fromUsername("bob@tld")))
+            .isEqualTo(Username.fromUsername("user@tld"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldNotThrowUponNoDomain() {
-        assertThat(User.fromUsername("user")
-            .withDefaultDomainFromUser(User.fromUsername("bob")))
-            .isEqualTo(User.fromUsername("user"));
+        assertThat(Username.fromUsername("user")
+            .withDefaultDomainFromUser(Username.fromUsername("bob")))
+            .isEqualTo(Username.fromUsername("user"));
     }
 }

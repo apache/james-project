@@ -27,7 +27,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationRepository;
@@ -55,7 +55,7 @@ public class GetVacationResponseMethodTest {
     private GetVacationResponseMethod testee;
     private VacationRepository vacationRepository;
     private MailboxSession mailboxSession;
-    private User user;
+    private Username username;
     private ZonedDateTimeProvider zonedDateTimeProvider;
 
     @Before
@@ -63,7 +63,7 @@ public class GetVacationResponseMethodTest {
         zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
         vacationRepository = mock(VacationRepository.class);
         mailboxSession = mock(MailboxSession.class);
-        user = User.fromUsername(USERNAME);
+        username = Username.fromUsername(USERNAME);
         testee = new GetVacationResponseMethod(vacationRepository, zonedDateTimeProvider, new DefaultMetricFactory());
 
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2014);
@@ -100,7 +100,7 @@ public class GetVacationResponseMethodTest {
             .toDate(Optional.of(DATE_2016))
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
-        when(mailboxSession.getUser()).thenReturn(user);
+        when(mailboxSession.getUser()).thenReturn(username);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2015);
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
@@ -132,7 +132,7 @@ public class GetVacationResponseMethodTest {
             .toDate(Optional.of(DATE_2016))
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
-        when(mailboxSession.getUser()).thenReturn(user);
+        when(mailboxSession.getUser()).thenReturn(username);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2014);
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();
@@ -166,7 +166,7 @@ public class GetVacationResponseMethodTest {
             .toDate(Optional.of(DATE_2015))
             .build();
         when(vacationRepository.retrieveVacation(AccountId.fromString(USERNAME))).thenReturn(Mono.just(vacation));
-        when(mailboxSession.getUser()).thenReturn(user);
+        when(mailboxSession.getUser()).thenReturn(username);
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2016);
 
         GetVacationRequest getVacationRequest = GetVacationRequest.builder().build();

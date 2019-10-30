@@ -42,7 +42,7 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.Event;
@@ -327,7 +327,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("user-reindexing"))
             .body("additionalInformation.successfullyReprocessedMailCount", is(0))
             .body("additionalInformation.failedReprocessedMailCount", is(0))
-            .body("additionalInformation.user", is(USERNAME))
+            .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.failures", is(anEmptyMap()));
     }
 
@@ -358,7 +358,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("status", is("completed"))
             .body("taskId", is(Matchers.notNullValue()))
             .body("type", is("deleted-messages-restore"))
-            .body("additionalInformation.user", is(USERNAME))
+            .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.successfulRestoreCount", is(0))
             .body("additionalInformation.errorRestoreCount", is(0));
     }
@@ -463,7 +463,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
         MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
             .eventId(Event.EventId.of(uuid))
-            .user(User.fromUsername(USERNAME))
+            .user(Username.fromUsername(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))
@@ -505,7 +505,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
         MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
             .eventId(Event.EventId.of(uuid))
-            .user(User.fromUsername(USERNAME))
+            .user(Username.fromUsername(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))
@@ -705,7 +705,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .body("status", is("completed"))
             .body("taskId", is(taskId))
             .body("type", is("deleted-messages-delete"))
-            .body("additionalInformation.user", is(USERNAME))
+            .body("additionalInformation.username", is(USERNAME))
             .body("additionalInformation.deleteMessageId", is(composedMessageId.getMessageId().serialize()));
     }
 

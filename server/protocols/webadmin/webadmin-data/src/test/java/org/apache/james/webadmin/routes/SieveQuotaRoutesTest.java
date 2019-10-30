@@ -23,7 +23,7 @@ import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
@@ -44,7 +44,7 @@ class SieveQuotaRoutesTest {
 
     private static final String USER_NAME_A = "userA";
     private static final String PASSWORD_A = "123456";
-    private static final User USER_A = User.fromUsername(USER_NAME_A);
+    private static final Username USERNAME_A = Username.of(USER_NAME_A);
 
     private WebAdminServer webAdminServer;
     private SieveQuotaRepository sieveRepository;
@@ -165,7 +165,7 @@ class SieveQuotaRoutesTest {
     @Test
     void getPerUserSieveQuotaShouldReturnStoredValue() throws Exception {
         QuotaSize value = QuotaSize.size(1024L);
-        sieveRepository.setQuota(USER_A, value);
+        sieveRepository.setQuota(USERNAME_A, value);
 
         long actual =
             given()
@@ -189,7 +189,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void updatePerUserSieveQuotaShouldUpdateStoredValue() throws Exception {
-        sieveRepository.setQuota(USER_A, QuotaSize.size(500L));
+        sieveRepository.setQuota(USERNAME_A, QuotaSize.size(500L));
         long requiredSize = 1024L;
 
         given()
@@ -198,7 +198,7 @@ class SieveQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(sieveRepository.getQuota(USER_A).asLong()).isEqualTo(requiredSize);
+        assertThat(sieveRepository.getQuota(USERNAME_A).asLong()).isEqualTo(requiredSize);
     }
 
     @Test
@@ -215,7 +215,7 @@ class SieveQuotaRoutesTest {
     void updatePerUserSieveQuotaShouldReturn400WhenInvalidIntegerFormatInTheBody() {
         given()
             .body("89884743.9999")
-            .put("/sieve/quota/users/" + USER_A.asString())
+            .put("/sieve/quota/users/" + USERNAME_A.asString())
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("message", is("unrecognized integer number '89884743.9999'"));
@@ -249,7 +249,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void removePerUserSieveQuotaShouldRemoveQuotaForUser() throws Exception {
-        sieveRepository.setQuota(USER_A, QuotaSize.size(1024));
+        sieveRepository.setQuota(USERNAME_A, QuotaSize.size(1024));
 
         given()
             .delete("/sieve/quota/users/" + USER_NAME_A)

@@ -26,7 +26,7 @@ import javax.inject.Named;
 import org.apache.james.backends.es.DocumentId;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.backends.es.RoutingKey;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -42,12 +42,12 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
 
     private final ElasticSearchIndexer indexer;
     private final QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson;
-    private final RoutingKey.Factory<User> routingKeyFactory;
+    private final RoutingKey.Factory<Username> routingKeyFactory;
 
     @Inject
     public ElasticSearchQuotaMailboxListener(@Named(QuotaRatioElasticSearchConstants.InjectionNames.QUOTA_RATIO) ElasticSearchIndexer indexer,
                                              QuotaRatioToElasticSearchJson quotaRatioToElasticSearchJson,
-                                             RoutingKey.Factory<User> routingKeyFactory) {
+                                             RoutingKey.Factory<Username> routingKeyFactory) {
         this.indexer = indexer;
         this.quotaRatioToElasticSearchJson = quotaRatioToElasticSearchJson;
         this.routingKeyFactory = routingKeyFactory;
@@ -69,13 +69,13 @@ public class ElasticSearchQuotaMailboxListener implements MailboxListener.GroupM
     }
 
     private void handleEvent(QuotaUsageUpdatedEvent event) throws IOException {
-        User user = event.getUser();
+        Username user = event.getUsername();
         indexer.index(toDocumentId(user),
             quotaRatioToElasticSearchJson.convertToJson(event),
             routingKeyFactory.from(user));
     }
 
-    private DocumentId toDocumentId(User user) {
+    private DocumentId toDocumentId(Username user) {
         return DocumentId.fromString(user.asString());
     }
 }

@@ -26,7 +26,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
@@ -42,12 +42,12 @@ public class DeletedMessagesVaultExportTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
 
-        private final User userExportFrom;
+        private final Username userExportFrom;
         private final MailAddress exportTo;
         private final long totalExportedMessages;
         private final Instant timestamp;
 
-        public AdditionalInformation(User userExportFrom, MailAddress exportTo, long totalExportedMessages, Instant timestamp) {
+        public AdditionalInformation(Username userExportFrom, MailAddress exportTo, long totalExportedMessages, Instant timestamp) {
             this.userExportFrom = userExportFrom;
             this.exportTo = exportTo;
             this.totalExportedMessages = totalExportedMessages;
@@ -75,13 +75,13 @@ public class DeletedMessagesVaultExportTask implements Task {
     private static final Logger LOGGER = LoggerFactory.getLogger(DeletedMessagesVaultExportTask.class);
 
     private final ExportService exportService;
-    private final User userExportFrom;
+    private final Username userExportFrom;
     @VisibleForTesting
     final Query exportQuery;
     private final MailAddress exportTo;
     private final AtomicLong totalExportedMessages;
 
-    DeletedMessagesVaultExportTask(ExportService exportService, User userExportFrom, Query exportQuery, MailAddress exportTo) {
+    DeletedMessagesVaultExportTask(ExportService exportService, Username userExportFrom, Query exportQuery, MailAddress exportTo) {
         this.exportService = exportService;
         this.userExportFrom = userExportFrom;
         this.exportQuery = exportQuery;
@@ -111,7 +111,7 @@ public class DeletedMessagesVaultExportTask implements Task {
         return Optional.of(new AdditionalInformation(userExportFrom, exportTo, totalExportedMessages.get(), Clock.systemUTC().instant()));
     }
 
-    User getUserExportFrom() {
+    Username getUserExportFrom() {
         return userExportFrom;
     }
 

@@ -110,7 +110,7 @@ public class SpamAssassinListener implements SpamEventListener {
                 .flatMap(range -> retrieveMessages(messageMapper, mailbox, range))
                 .map(Throwing.function(MailboxMessage::getFullContent))
                 .collect(Guavate.toImmutableList());
-            spamAssassin.learnHam(contents, event.getUser());
+            spamAssassin.learnHam(contents, event.getUsername());
         }
     }
 
@@ -118,11 +118,11 @@ public class SpamAssassinListener implements SpamEventListener {
         if (isMessageMovedToSpamMailbox(messageMoveEvent)) {
             LOGGER.debug("Spam event detected");
             ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
-            spamAssassin.learnSpam(messages, event.getUser());
+            spamAssassin.learnSpam(messages, event.getUsername());
         }
         if (isMessageMovedOutOfSpamMailbox(messageMoveEvent)) {
             ImmutableList<InputStream> messages = retrieveMessages(messageMoveEvent, session);
-            spamAssassin.learnHam(messages, event.getUser());
+            spamAssassin.learnHam(messages, event.getUsername());
         }
     }
 
@@ -137,7 +137,7 @@ public class SpamAssassinListener implements SpamEventListener {
 
     private boolean isAppendedToInbox(Added addedEvent) {
         try {
-            return systemMailboxesProvider.findMailbox(Role.INBOX, addedEvent.getUser())
+            return systemMailboxesProvider.findMailbox(Role.INBOX, addedEvent.getUsername())
                 .getId().equals(addedEvent.getMailboxId());
         } catch (MailboxException e) {
             LOGGER.warn("Could not resolve Inbox mailbox", e);
@@ -156,7 +156,7 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedToSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getUser()).getId();
+            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getUsername()).getId();
 
             return event.getMessageMoves().addedMailboxIds().contains(spamMailboxId);
         } catch (MailboxException e) {
@@ -168,8 +168,8 @@ public class SpamAssassinListener implements SpamEventListener {
     @VisibleForTesting
     boolean isMessageMovedOutOfSpamMailbox(MessageMoveEvent event) {
         try {
-            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getUser()).getId();
-            MailboxId trashMailboxId = systemMailboxesProvider.findMailbox(Role.TRASH, event.getUser()).getId();
+            MailboxId spamMailboxId = systemMailboxesProvider.findMailbox(Role.SPAM, event.getUsername()).getId();
+            MailboxId trashMailboxId = systemMailboxesProvider.findMailbox(Role.TRASH, event.getUsername()).getId();
 
             return event.getMessageMoves().removedMailboxIds().contains(spamMailboxId)
                 && !event.getMessageMoves().addedMailboxIds().contains(trashMailboxId);

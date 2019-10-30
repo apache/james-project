@@ -59,6 +59,6 @@ public class DeletedMessagesVaultDeleteTaskDTO implements TaskDTO {
     }
 
     public static DeletedMessagesVaultDeleteTaskDTO of(DeletedMessagesVaultDeleteTask task, String type) {
-        return new DeletedMessagesVaultDeleteTaskDTO(type, task.getUser().asString(), task.getMessageId().serialize());
+        return new DeletedMessagesVaultDeleteTaskDTO(type, task.getUsername().asString(), task.getMessageId().serialize());
     }
 }

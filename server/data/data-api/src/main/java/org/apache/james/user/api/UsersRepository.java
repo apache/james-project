@@ -22,6 +22,7 @@ package org.apache.james.user.api;
 import java.util.Iterator;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 
 /**
@@ -142,7 +143,7 @@ public interface UsersRepository {
      *
      * This makes sense as it handles virtual-hosting logic.
      */
-    MailAddress getMailAddressFor(org.apache.james.core.User user) throws UsersRepositoryException;
+    MailAddress getMailAddressFor(Username username) throws UsersRepositoryException;
     
     /**
      * Return true if the user is an admin for this repository

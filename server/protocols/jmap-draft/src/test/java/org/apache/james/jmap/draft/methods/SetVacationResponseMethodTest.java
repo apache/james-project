@@ -30,7 +30,7 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -53,8 +53,7 @@ import reactor.core.publisher.Mono;
 public class SetVacationResponseMethodTest {
     private static final String WRONG_ID = "WrongId";
     private static final String TEXT_BODY = "Text body";
-    private static final String USERNAME = "username";
-    private static final User USER = User.fromUsername(USERNAME);
+    private static final Username USERNAME = Username.fromUsername("username");
     private static final String SUBJECT = "subject";
 
     private SetVacationResponseMethod testee;
@@ -172,9 +171,9 @@ public class SetVacationResponseMethodTest {
                     .subject(Optional.of(SUBJECT))
                     .build()))
             .build();
-        AccountId accountId = AccountId.fromString(USERNAME);
+        AccountId accountId = AccountId.fromString(USERNAME.asString());
 
-        when(mailboxSession.getUser()).thenReturn(USER);
+        when(mailboxSession.getUser()).thenReturn(USERNAME);
         when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(Mono.empty());
         when(notificationRegistry.flush(any()))
             .thenReturn(Mono.empty());
@@ -204,7 +203,7 @@ public class SetVacationResponseMethodTest {
                 .enabled(false)
                 .build()))
             .build();
-        when(mailboxSession.getUser()).thenReturn(USER);
+        when(mailboxSession.getUser()).thenReturn(USERNAME);
 
         Stream<JmapResponse> result = testee.process(setVacationRequest, methodCallId, mailboxSession);
 

@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
 import org.apache.james.jmap.draft.model.JmapRuleDTO;
@@ -134,7 +134,7 @@ public class SetFilterMethod implements Method {
         }
     }
 
-    private Stream<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, User user) throws DuplicatedRuleException, MultipleMailboxIdException {
+    private Stream<JmapResponse> updateFilter(MethodCallId methodCallId, SetFilterRequest request, Username username) throws DuplicatedRuleException, MultipleMailboxIdException {
         ImmutableList<Rule> rules = request.getSingleton().stream()
             .map(JmapRuleDTO::toRule)
             .collect(ImmutableList.toImmutableList());
@@ -142,7 +142,7 @@ public class SetFilterMethod implements Method {
         ensureNoDuplicatedRules(rules);
         ensureNoMultipleMailboxesRules(rules);
 
-        filteringManagement.defineRulesForUser(user, rules);
+        filteringManagement.defineRulesForUser(username, rules);
 
         return Stream.of(JmapResponse.builder()
             .methodCallId(methodCallId)

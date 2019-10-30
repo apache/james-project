@@ -28,8 +28,8 @@ import static org.apache.james.vault.DeletedMessageFixture.MESSAGE_ID;
 import static org.apache.james.vault.DeletedMessageFixture.NOW;
 import static org.apache.james.vault.DeletedMessageFixture.OLD_DELETED_MESSAGE;
 import static org.apache.james.vault.DeletedMessageFixture.SUBJECT;
-import static org.apache.james.vault.DeletedMessageFixture.USER;
-import static org.apache.james.vault.DeletedMessageFixture.USER_2;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME;
+import static org.apache.james.vault.DeletedMessageFixture.USERNAME_2;
 import static org.apache.james.vault.search.Query.ALL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -64,7 +64,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void searchAllShouldThrowOnNullQuery() {
-       assertThatThrownBy(() -> getVault().search(USER, null))
+       assertThatThrownBy(() -> getVault().search(USERNAME, null))
            .isInstanceOf(NullPointerException.class);
     }
 
@@ -88,7 +88,7 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void deleteShouldThrowOnNullUser() {
-       assertThatThrownBy(() -> getVault().delete(USER, null))
+       assertThatThrownBy(() -> getVault().delete(USERNAME, null))
            .isInstanceOf(NullPointerException.class);
     }
 
@@ -100,13 +100,13 @@ public interface DeletedMessageVaultContract {
 
     @Test
     default void loadMimeMessageShouldThrowOnNullUser() {
-       assertThatThrownBy(() -> getVault().loadMimeMessage(USER, null))
+       assertThatThrownBy(() -> getVault().loadMimeMessage(USERNAME, null))
            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void searchAllShouldReturnEmptyWhenNoItem() {
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -114,7 +114,7 @@ public interface DeletedMessageVaultContract {
     default void searchAllShouldReturnContainedItems() {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE);
     }
 
@@ -123,7 +123,7 @@ public interface DeletedMessageVaultContract {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
         Mono.from(getVault().append(DELETED_MESSAGE_2, new ByteArrayInputStream(CONTENT))).block();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE, DELETED_MESSAGE_2);
     }
 
@@ -133,7 +133,7 @@ public interface DeletedMessageVaultContract {
         Mono.from(getVault().append(DELETED_MESSAGE_WITH_SUBJECT, new ByteArrayInputStream(CONTENT))).block();
 
         assertThat(
-            Flux.from(getVault().search(USER,
+            Flux.from(getVault().search(USERNAME,
                 Query.of(CriterionFactory.subject().containsIgnoreCase(SUBJECT))))
                 .collectList().block())
             .containsOnly(DELETED_MESSAGE_WITH_SUBJECT);
@@ -143,7 +143,7 @@ public interface DeletedMessageVaultContract {
     default void vaultShouldBePartitionnedByUser() {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
-        assertThat(Flux.from(getVault().search(USER_2, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME_2, ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -151,15 +151,15 @@ public interface DeletedMessageVaultContract {
     default void searchAllShouldNotReturnDeletedItems() {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
-        Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
+        Mono.from(getVault().delete(USERNAME, MESSAGE_ID)).block();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 
     @Test
     default void loadMimeMessageShouldReturnEmptyWhenNone() {
-        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+        assertThat(Mono.from(getVault().loadMimeMessage(USERNAME, MESSAGE_ID)).blockOptional())
             .isEmpty();
     }
 
@@ -167,7 +167,7 @@ public interface DeletedMessageVaultContract {
     default void loadMimeMessageShouldReturnStoredValue() {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
-        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+        assertThat(Mono.from(getVault().loadMimeMessage(USERNAME, MESSAGE_ID)).blockOptional())
             .isNotEmpty()
             .satisfies(maybeContent -> assertThat(maybeContent.get()).hasSameContentAs(new ByteArrayInputStream(CONTENT)));
     }
@@ -176,9 +176,9 @@ public interface DeletedMessageVaultContract {
     default void loadMimeMessageShouldReturnEmptyWhenDeleted() {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
 
-        Mono.from(getVault().delete(USER, MESSAGE_ID)).block();
+        Mono.from(getVault().delete(USERNAME, MESSAGE_ID)).block();
 
-        assertThat(Mono.from(getVault().loadMimeMessage(USER, MESSAGE_ID)).blockOptional())
+        assertThat(Mono.from(getVault().loadMimeMessage(USERNAME, MESSAGE_ID)).blockOptional())
             .isEmpty();
     }
 
@@ -194,7 +194,7 @@ public interface DeletedMessageVaultContract {
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .hasSize(threadCount * operationCount);
     }
 
@@ -209,12 +209,12 @@ public interface DeletedMessageVaultContract {
             .blockLast();
 
         ConcurrentTestRunner.builder()
-            .operation((a, b) -> Mono.from(getVault().delete(USER, InMemoryMessageId.of(a * threadCount + b))).block())
+            .operation((a, b) -> Mono.from(getVault().delete(USERNAME, InMemoryMessageId.of(a * threadCount + b))).block())
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -228,7 +228,7 @@ public interface DeletedMessageVaultContract {
     @Test
     default void deleteExpiredMessagesTaskShouldCompleteWhenAllMailsDeleted() throws InterruptedException {
         Mono.from(getVault().append(DELETED_MESSAGE, new ByteArrayInputStream(CONTENT))).block();
-        Mono.from(getVault().delete(USER, DELETED_MESSAGE.getMessageId())).block();
+        Mono.from(getVault().delete(USERNAME, DELETED_MESSAGE.getMessageId())).block();
 
         Task.Result result = getVault().deleteExpiredMessagesTask().run();
 
@@ -257,7 +257,7 @@ public interface DeletedMessageVaultContract {
     default void deleteExpiredMessagesTaskShouldDoNothingWhenEmpty() throws InterruptedException {
         getVault().deleteExpiredMessagesTask().run();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -267,7 +267,7 @@ public interface DeletedMessageVaultContract {
 
         getVault().deleteExpiredMessagesTask().run();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .containsOnly(DELETED_MESSAGE);
     }
 
@@ -278,7 +278,7 @@ public interface DeletedMessageVaultContract {
         getClock().setInstant(NOW.plusYears(2).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
     }
 
@@ -292,9 +292,9 @@ public interface DeletedMessageVaultContract {
         getClock().setInstant(NOW.plusYears(4).toInstant());
         getVault().deleteExpiredMessagesTask().run();
 
-        assertThat(Flux.from(getVault().search(USER, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME, ALL)).collectList().block())
             .isEmpty();
-        assertThat(Flux.from(getVault().search(USER_2, ALL)).collectList().block())
+        assertThat(Flux.from(getVault().search(USERNAME_2, ALL)).collectList().block())
             .isEmpty();
     }
 }

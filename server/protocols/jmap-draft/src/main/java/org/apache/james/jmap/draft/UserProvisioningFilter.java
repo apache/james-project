@@ -31,7 +31,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
@@ -69,9 +69,9 @@ public class UserProvisioningFilter implements Filter {
     void createAccountIfNeeded(MailboxSession session) {
         TimeMetric timeMetric = metricFactory.timer("JMAP-user-provisioning");
         try {
-            User user = session.getUser();
-            if (needsAccountCreation(user)) {
-                createAccount(user);
+            Username username = session.getUser();
+            if (needsAccountCreation(username)) {
+                createAccount(username);
             }
         } catch (AlreadyExistInUsersRepositoryException e) {
             // Ignore
@@ -82,19 +82,19 @@ public class UserProvisioningFilter implements Filter {
         }
     }
 
-    private void createAccount(User user) throws UsersRepositoryException {
-        usersRepository.addUser(getUsername(user), generatePassword());
+    private void createAccount(Username username) throws UsersRepositoryException {
+        usersRepository.addUser(getUsername(username), generatePassword());
     }
 
-    private boolean needsAccountCreation(User user) throws UsersRepositoryException {
-        return !usersRepository.contains(getUsername(user));
+    private boolean needsAccountCreation(Username username) throws UsersRepositoryException {
+        return !usersRepository.contains(getUsername(username));
     }
 
-    private String getUsername(User user) throws UsersRepositoryException {
+    private String getUsername(Username username) throws UsersRepositoryException {
         try {
-            return usersRepository.getUser(user.asMailAddress());
+            return usersRepository.getUser(username.asMailAddress());
         } catch (IllegalStateException | AddressException e) {
-            return user.asString();
+            return username.asString();
         }
     }
     

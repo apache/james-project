@@ -23,7 +23,8 @@ import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
+
 import org.junit.jupiter.api.Test;
 
 import play.api.libs.json.JsError;
@@ -35,26 +36,26 @@ import scala.math.BigDecimal;
 class UserTest {
     @Test
     void userShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(User.fromUsername("bob")))
+        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.fromUsername("bob")))
             .isEqualTo(new JsString("bob"));
     }
 
     @Test
     void userShouldBeWellDeSerialized() {
         assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob")).get())
-            .isEqualTo(User.fromUsername("bob"));
+            .isEqualTo(Username.fromUsername("bob"));
     }
 
     @Test
     void userShouldBeWellSerializedWhenVirtualHosting() {
-        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(User.fromUsername("bob@domain")))
+        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.fromUsername("bob@domain")))
             .isEqualTo(new JsString("bob@domain"));
     }
 
     @Test
     void userShouldBeWellDeSerializedWhenVirtualHosting() {
         assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob@domain")).get())
-            .isEqualTo(User.fromUsername("bob@domain"));
+            .isEqualTo(Username.fromUsername("bob@domain"));
     }
 
     @Test

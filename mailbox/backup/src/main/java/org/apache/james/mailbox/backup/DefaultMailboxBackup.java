@@ -24,7 +24,7 @@ import java.io.OutputStream;
 import java.util.List;
 import java.util.stream.Stream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -83,8 +83,8 @@ public class DefaultMailboxBackup implements MailboxBackup {
     }
 
     @Override
-    public void backupAccount(User user, OutputStream destination) throws IOException, MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+    public void backupAccount(Username username, OutputStream destination) throws IOException, MailboxException {
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
         List<MailAccountContent> accountContents = getAccountContentForUser(session);
         List<MailboxWithAnnotations> mailboxes = accountContents.stream()
             .map(MailAccountContent::getMailboxWithAnnotations)
@@ -94,8 +94,8 @@ public class DefaultMailboxBackup implements MailboxBackup {
         archive(mailboxes, messages, destination);
     }
 
-    private boolean isAccountNonEmpty(User user) throws BadCredentialsException, MailboxException, IOException {
-        MailboxSession session = mailboxManager.createSystemSession(user.asString());
+    private boolean isAccountNonEmpty(Username username) throws BadCredentialsException, MailboxException, IOException {
+        MailboxSession session = mailboxManager.createSystemSession(username.asString());
         return getAccountContentForUser(session)
             .stream()
             .findFirst()
@@ -103,19 +103,19 @@ public class DefaultMailboxBackup implements MailboxBackup {
     }
 
     @Override
-    public Publisher<BackupStatus> restore(User user, InputStream source) {
+    public Publisher<BackupStatus> restore(Username username, InputStream source) {
         try {
-            if (isAccountNonEmpty(user)) {
+            if (isAccountNonEmpty(username)) {
                 return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
             }
         } catch (Exception e) {
-            LOGGER.error("Error during account restoration for user : " + user, e);
+            LOGGER.error("Error during account restoration for user : " + username, e);
             return Mono.just(BackupStatus.FAILED);
         }
 
-        return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(user, source)).sneakyThrow())
+        return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(username, source)).sneakyThrow())
             .subscribeOn(Schedulers.boundedElastic())
-            .doOnError(e -> LOGGER.error("Error during account restoration for user : " + user, e))
+            .doOnError(e -> LOGGER.error("Error during account restoration for user : " + username, e))
             .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
             .thenReturn(BackupStatus.DONE)
             .onErrorReturn(BackupStatus.FAILED);

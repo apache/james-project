@@ -25,7 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraActiveScriptDAOTest {
-    private static final User USER = User.fromUsername("user");
+    private static final Username USERNAME = Username.fromUsername("user");
     private static final ScriptName SCRIPT_NAME = new ScriptName("sciptName");
     private static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
 
@@ -49,15 +49,15 @@ class CassandraActiveScriptDAOTest {
 
     @Test
     void getActiveSctiptInfoShouldReturnEmptyByDefault() {
-        assertThat(activeScriptDAO.getActiveSctiptInfo(USER).blockOptional().isPresent())
+        assertThat(activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional().isPresent())
             .isFalse();
     }
 
     @Test
     void getActiveSctiptInfoShouldReturnStoredName() {
-        activeScriptDAO.activate(USER, SCRIPT_NAME).block();
+        activeScriptDAO.activate(USERNAME, SCRIPT_NAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
 
         assertThat(actual.isPresent()).isTrue();
         assertThat(actual.get().getName()).isEqualTo(SCRIPT_NAME);
@@ -65,30 +65,30 @@ class CassandraActiveScriptDAOTest {
 
     @Test
     void activateShouldAllowRename() {
-        activeScriptDAO.activate(USER, SCRIPT_NAME).block();
+        activeScriptDAO.activate(USERNAME, SCRIPT_NAME).block();
 
-        activeScriptDAO.activate(USER, NEW_SCRIPT_NAME).block();
+        activeScriptDAO.activate(USERNAME, NEW_SCRIPT_NAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isTrue();
         assertThat(actual.get().getName()).isEqualTo(NEW_SCRIPT_NAME);
     }
 
     @Test
     void unactivateShouldAllowRemovingActiveScript() {
-        activeScriptDAO.activate(USER, SCRIPT_NAME).block();
+        activeScriptDAO.activate(USERNAME, SCRIPT_NAME).block();
 
-        activeScriptDAO.unactivate(USER).block();
+        activeScriptDAO.unactivate(USERNAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isFalse();
     }
 
     @Test
     void unactivateShouldWorkWhenNoneStore() {
-        activeScriptDAO.unactivate(USER).block();
+        activeScriptDAO.unactivate(USERNAME).block();
 
-        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USER).blockOptional();
+        Optional<ActiveScriptInfo> actual = activeScriptDAO.getActiveSctiptInfo(USERNAME).blockOptional();
         assertThat(actual.isPresent()).isFalse();
     }
 }

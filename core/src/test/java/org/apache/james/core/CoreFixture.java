@@ -32,18 +32,18 @@ public interface CoreFixture {
 
     interface Users {
         interface Simpson {
-            User BART = User.fromLocalPartWithDomain("bart", SIMPSON_COM);
-            User HOMER = User.fromLocalPartWithDomain("homer", SIMPSON_COM);
-            User LISA = User.fromLocalPartWithDomain("lisa", SIMPSON_COM);
+            Username BART = Username.fromLocalPartWithDomain("bart", SIMPSON_COM);
+            Username HOMER = Username.fromLocalPartWithDomain("homer", SIMPSON_COM);
+            Username LISA = Username.fromLocalPartWithDomain("lisa", SIMPSON_COM);
         }
 
         interface Alphabet {
-            User AAA = User.fromLocalPartWithDomain("aaa", ALPHABET_TLD);
-            User ABA = User.fromLocalPartWithDomain("aba", ALPHABET_TLD);
-            User ABB = User.fromLocalPartWithDomain("abb", ALPHABET_TLD);
-            User ACB = User.fromLocalPartWithDomain("acb", ALPHABET_TLD);
+            Username AAA = Username.fromLocalPartWithDomain("aaa", ALPHABET_TLD);
+            Username ABA = Username.fromLocalPartWithDomain("aba", ALPHABET_TLD);
+            Username ABB = Username.fromLocalPartWithDomain("abb", ALPHABET_TLD);
+            Username ACB = Username.fromLocalPartWithDomain("acb", ALPHABET_TLD);
         }
 
-        User BENOIT_AT_DOMAIN_TLD = User.fromLocalPartWithDomain("benoit", DOMAIN_TLD);
+        Username BENOIT_AT_DOMAIN_TLD = Username.fromLocalPartWithDomain("benoit", DOMAIN_TLD);
     }
 }

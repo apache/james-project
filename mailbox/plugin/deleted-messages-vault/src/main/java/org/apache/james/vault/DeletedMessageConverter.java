@@ -28,7 +28,7 @@ import java.util.Set;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mime4j.MimeIOException;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
@@ -78,7 +78,7 @@ class DeletedMessageConverter {
         }
     }
 
-    private User retrieveOwner(DeletedMessageVaultHook.DeletedMessageMailboxContext deletedMessageMailboxContext) {
+    private Username retrieveOwner(DeletedMessageVaultHook.DeletedMessageMailboxContext deletedMessageMailboxContext) {
         Preconditions.checkNotNull(deletedMessageMailboxContext.getOwner(), "Deleted mail is missing owner");
         return deletedMessageMailboxContext.getOwner();
     }

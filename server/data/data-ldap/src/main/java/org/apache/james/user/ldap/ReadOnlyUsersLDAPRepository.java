@@ -47,6 +47,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.directory.api.ldap.model.filter.FilterEncoder;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.user.api.UsersRepository;
@@ -681,12 +682,12 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
 
     @Override
-    public MailAddress getMailAddressFor(org.apache.james.core.User user) throws UsersRepositoryException {
+    public MailAddress getMailAddressFor(Username username) throws UsersRepositoryException {
         try {
             if (supportVirtualHosting()) {
-                return new MailAddress(user.asString());
+                return new MailAddress(username.asString());
             }
-            return new MailAddress(user.getLocalPart(), domainList.getDefaultDomain());
+            return new MailAddress(username.getLocalPart(), domainList.getDefaultDomain());
         } catch (Exception e) {
             throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
         }

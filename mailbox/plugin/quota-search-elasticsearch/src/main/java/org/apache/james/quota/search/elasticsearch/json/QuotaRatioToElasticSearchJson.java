@@ -41,7 +41,7 @@ public class QuotaRatioToElasticSearchJson {
 
     public String convertToJson(QuotaUsageUpdatedEvent event) throws JsonProcessingException {
         return mapper.writeValueAsString(QuotaRatioAsJson.builder()
-                .user(event.getUser().asString())
+                .user(event.getUsername().asString())
                 .domain(event.getQuotaRoot().getDomain().map(Domain::asString))
                 .quotaRatio(QuotaRatio.from(event.getSizeQuota(), event.getCountQuota()))
                 .build());

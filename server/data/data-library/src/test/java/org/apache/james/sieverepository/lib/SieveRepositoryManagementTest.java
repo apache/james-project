@@ -25,7 +25,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -55,15 +55,15 @@ public class SieveRepositoryManagementTest {
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
 
-        User user = User.fromUsername(userName);
+        Username username = Username.fromUsername(userName);
         ScriptName scriptName = new ScriptName(script);
         String sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);
         ScriptContent scriptContent = new ScriptContent(sieveContent);
 
         sieveRepositoryManagement.addActiveSieveScriptFromFile(userName, script, sieveResource.getFile());
 
-        verify(sieveRepository, times(1)).putScript(user, scriptName, scriptContent);
-        verify(sieveRepository, times(1)).setActive(user, scriptName);
+        verify(sieveRepository, times(1)).putScript(username, scriptName, scriptContent);
+        verify(sieveRepository, times(1)).setActive(username, scriptName);
     }
 
     @Test
@@ -72,13 +72,13 @@ public class SieveRepositoryManagementTest {
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
 
-        User user = User.fromUsername(userName);
+        Username username = Username.fromUsername(userName);
         ScriptName scriptName = new ScriptName(script);
         String sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);
         ScriptContent scriptContent = new ScriptContent(sieveContent);
 
         sieveRepositoryManagement.addActiveSieveScriptFromFile(userName, script, "wrong_path/" + sieveResource.getFile());
-        verify(sieveRepository, times(0)).putScript(user, scriptName, scriptContent);
-        verify(sieveRepository, times(0)).setActive(user, scriptName);
+        verify(sieveRepository, times(0)).putScript(username, scriptName, scriptContent);
+        verify(sieveRepository, times(0)).setActive(username, scriptName);
     }
 }

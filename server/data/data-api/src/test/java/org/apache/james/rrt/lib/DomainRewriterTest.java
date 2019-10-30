@@ -21,7 +21,8 @@ package org.apache.james.rrt.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
+
 import org.junit.jupiter.api.Test;
 
 public class DomainRewriterTest {
@@ -30,8 +31,8 @@ public class DomainRewriterTest {
         assertThat(
             new UserRewritter.DomainRewriter()
                 .generateUserRewriter("newdomain.com")
-                .rewrite(User.fromUsername("toto@olddomain.com")))
-            .contains(User.fromUsername("toto@newdomain.com"));
+                .rewrite(Username.fromUsername("toto@olddomain.com")))
+            .contains(Username.fromUsername("toto@newdomain.com"));
     }
 
     @Test
@@ -39,7 +40,7 @@ public class DomainRewriterTest {
         assertThat(
             new UserRewritter.DomainRewriter()
                 .generateUserRewriter("newdomain.com")
-                .rewrite(User.fromUsername("toto")))
-            .contains(User.fromUsername("toto@newdomain.com"));
+                .rewrite(Username.fromUsername("toto")))
+            .contains(Username.fromUsername("toto@newdomain.com"));
     }
 }

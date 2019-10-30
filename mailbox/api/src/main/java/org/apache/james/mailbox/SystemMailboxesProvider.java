@@ -21,15 +21,15 @@ package org.apache.james.mailbox;
 
 import java.util.stream.Stream;
 
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxRoleNotFoundException;
 
 public interface SystemMailboxesProvider {
-    Stream<MessageManager> getMailboxByRole(Role aRole, User user) throws MailboxException;
+    Stream<MessageManager> getMailboxByRole(Role aRole, Username username) throws MailboxException;
 
-    default MessageManager findMailbox(Role role, User user) throws MailboxException {
-        return getMailboxByRole(role, user).findAny()
+    default MessageManager findMailbox(Role role, Username username) throws MailboxException {
+        return getMailboxByRole(role, username).findAny()
             .orElseThrow(() -> new MailboxRoleNotFoundException(role));
     }
 }

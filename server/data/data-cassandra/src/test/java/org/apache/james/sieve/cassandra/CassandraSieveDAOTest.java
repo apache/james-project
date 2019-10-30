@@ -25,7 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.core.User;
+import org.apache.james.core.Username;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveDAOTest {
 
-    private static final User USER = User.fromUsername("user");
+    private static final Username USERNAME = Username.fromUsername("user");
     private static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
     private static final ScriptName SCRIPT_NAME2 = new ScriptName("scriptName2");
     private static final Script SCRIPT = Script.builder()
@@ -68,68 +68,68 @@ class CassandraSieveDAOTest {
     
      @Test
     void getScriptShouldReturnEmptyByDefault() {
-        assertThat(sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional())
+        assertThat(sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional())
             .isEmpty();
     }
 
     @Test
     void getScriptShouldReturnStoredScript() {
-        sieveDAO.insertScript(USER, SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
+        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
 
         assertThat(actual).contains(SCRIPT);
     }
 
     @Test
     void insertScriptShouldUpdateContent() {
-        sieveDAO.insertScript(USER, SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT).block();
 
-        sieveDAO.insertScript(USER, SCRIPT_NEW_CONTENT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT_NEW_CONTENT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
+        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
         assertThat(actual).contains(SCRIPT_NEW_CONTENT);
     }
 
     @Test
     void insertScriptShouldUpdateActivate() {
-        sieveDAO.insertScript(USER, SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT).block();
 
-        sieveDAO.insertScript(USER, ACTIVE_SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, ACTIVE_SCRIPT).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
+        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
         assertThat(actual).contains(ACTIVE_SCRIPT);
     }
 
     @Test
     void deleteScriptInCassandraShouldWork() {
-        sieveDAO.insertScript(USER, SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT).block();
 
-        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).block();
+        sieveDAO.deleteScriptInCassandra(USERNAME, SCRIPT_NAME).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
+        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
         assertThat(actual).isEmpty();
     }
 
     @Test
     void deleteScriptInCassandraShouldWorkWhenNoneStore() {
-        sieveDAO.deleteScriptInCassandra(USER, SCRIPT_NAME).block();
+        sieveDAO.deleteScriptInCassandra(USERNAME, SCRIPT_NAME).block();
 
-        Optional<Script> actual = sieveDAO.getScript(USER, SCRIPT_NAME).blockOptional();
+        Optional<Script> actual = sieveDAO.getScript(USERNAME, SCRIPT_NAME).blockOptional();
         assertThat(actual).isEmpty();
     }
 
     @Test
     void listScriptsShouldReturnEmpty() {
-        assertThat(sieveDAO.listScripts(USER).toIterable()).isEmpty();
+        assertThat(sieveDAO.listScripts(USERNAME).toIterable()).isEmpty();
     }
 
     @Test
     void listScriptsShouldReturnSingleStoredValue() {
-        sieveDAO.insertScript(USER, SCRIPT).block();
-        sieveDAO.insertScript(USER, SCRIPT2).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT).block();
+        sieveDAO.insertScript(USERNAME, SCRIPT2).block();
 
-        assertThat(sieveDAO.listScripts(USER).toIterable())
+        assertThat(sieveDAO.listScripts(USERNAME).toIterable())
             .containsOnly(SCRIPT.toSummary(), SCRIPT2.toSummary());
     }
 }
