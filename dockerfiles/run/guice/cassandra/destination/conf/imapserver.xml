@@ -19,6 +19,7 @@ specific language governing permissions and limitations
 under the License.
 -->
 
+<!-- Read https://james.apache.org/server/config-imap4.html for further details -->
 
 <imapservers>
     <imapserver enabled="true">
