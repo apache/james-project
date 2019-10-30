@@ -130,11 +130,11 @@
     <!-- Statements used to insert a message into this repository. -->
     <sql name="insertMessageSQL">INSERT INTO ${table} (message_name,
     repository_name, message_state, error_message, sender, recipients,
-    remote_host, remote_addr, last_updated, message_body,
-    message_attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</sql>
+    remote_host, remote_addr, per_recipient_headers, last_updated, message_body,
+    message_attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</sql>
 
     <!-- Statements used to retrieve a message stored in this repository. -->
-    <sql name="retrieveMessageSQL">SELECT message_state, error_message, sender, recipients, remote_host, remote_addr, last_updated FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageSQL">SELECT message_state, error_message, sender, recipients, remote_host, remote_addr, per_recipient_headers, last_updated FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
 
     <!-- Statements used to retrieve the body of a message stored in this repository. -->
     <sql name="retrieveMessageBodySQL">SELECT message_body FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
@@ -160,6 +160,9 @@
     <!-- Statements used to list all messages stored in this repository. -->
     <sql name="listMessagesSQL">SELECT message_name, message_state, last_updated FROM ${table} WHERE repository_name = ? ORDER BY last_updated ASC</sql>
 
+    <!-- Statements used to count messages stored in this repository. -->
+    <sql name="countMessagesSQL">SELECT COUNT(*) FROM ${table}</sql>
+
     <!-- Statements used to create the table associated with this class. -->
     <sql name="createTable" db="mysql">
         CREATE TABLE ${table} (
@@ -171,9 +174,10 @@
             recipients text NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers longblob NULL ,
+            last_updated datetime NOT NULL,
             message_body longblob NOT NULL ,
             message_attributes longblob NULL ,
-            last_updated datetime NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -187,9 +191,10 @@
             recipients varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers varchar NULL ,
+            last_updated timestamp NOT NULL,
             message_body varchar NOT NULL ,
             message_attributes varchar NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -203,9 +208,10 @@
             recipients varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers varchar NULL ,
+            last_updated timestamp NOT NULL,
             message_body varchar NOT NULL ,
             message_attributes varchar NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -219,9 +225,10 @@
             [recipients] [text] NOT NULL ,
             [remote_host] [varchar] (255) NOT NULL ,
             [remote_addr] [varchar] (20) NOT NULL ,
+            [per_recipient_headers] [image] NULL ,
+            [last_updated] [datetime] NOT NULL,
             [message_body] [image] NOT NULL ,
             [message_attributes] [image] NULL ,
-            [last_updated] [datetime] NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -235,9 +242,10 @@
             recipients varchar2(1000) NOT NULL ,
             remote_host varchar2(100) NOT NULL ,
             remote_addr varchar2(20) NOT NULL ,
+            per_recipient_headers blob NULL ,
+            last_updated date NOT NULL ,
             message_body blob NOT NULL ,
             message_attributes blob NULL ,
-            last_updated date NOT NULL ,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -251,9 +259,10 @@
             recipients text NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers oid NULL ,
+            last_updated timestamp NOT NULL,
             message_body bytea NOT NULL ,
             message_attributes bytea NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -267,9 +276,10 @@
             recipients long NOT NULL ,
             remote_host varchar (100) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers long byte NULL ,
+            last_updated date NOT NULL,
             message_body long byte NOT NULL ,
             message_attributes long byte NULL ,
-            last_updated date NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -283,9 +293,10 @@
             recipients varchar(1000) NOT NULL ,
             remote_host varchar(100) NOT NULL ,
             remote_addr varchar(20) NOT NULL ,
+            per_recipient_headers blob ,
+            last_updated timestamp NOT NULL ,
             message_body blob NOT NULL ,
             message_attributes blob ,
-            last_updated timestamp NOT NULL ,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>
@@ -299,9 +310,10 @@
             recipients LONG VARCHAR NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers LONG BYTE ,
+            last_updated DATE NOT NULL
             message_body LONG BYTE NOT NULL ,
             message_attributes LONG BYTE ,
-            last_updated DATE NOT NULL
         )
     </sql>
     <sql name="createTable" db="derby">
@@ -314,9 +326,10 @@
             recipients long varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers blob ,
+            last_updated timestamp NOT NULL,
             message_body blob NOT NULL ,
             message_attributes blob ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
         )
     </sql>

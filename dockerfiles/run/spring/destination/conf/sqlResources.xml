@@ -17,8 +17,29 @@
   under the License.                                           
  -->
 
+<!--
+   This template file can be used as example for James Server configuration
+   DO NOT USE IT AS SUCH AND ADAPT IT TO YOUR NEEDS
+-->
+
+<!-- See http://james.apache.org/server/3/config.html for usage -->
+
 <sqlResources>
 
+<!--
+     This section provided configuration to determine the
+     database product which is being used for storage. Different database
+     products may require different SQL syntax.
+
+     The jdbc database connection is examined to see if it matches with the
+     regular expressions specified in any of the defined matchers. The matchers
+     are processed in the over provided here, with the first successful match
+     defining the "db" value for this connection.
+
+     This value is then used to choose between different definitions for various
+     named sql statements, defined below. If no match is found,
+     the default sql statements are used.
+-->
     <dbMatchers>
         <dbMatcher db="mssql" databaseProductName="microsoft sql server"/>
         <dbMatcher db="oracle" databaseProductName="oracle.*"/>
@@ -32,6 +53,32 @@
         <dbMatcher db="ingres" databaseProductName="ingres.*"/>
     </dbMatchers>
 
+<!--
+    With the following section it is possible to associate several name/value pairs
+        of options to a database product, identified by the "db" XML attribute name.
+
+    An element without a "db" attribute, if used for an option name, will become a default value for such option.
+    Each option may have a "default default", i.e. a default that applies if no element with an empty
+        "db" attribute (default element) exists as said above;
+        such default default must be documented for such option below.
+
+    The order of the XML elements is meaningless.
+
+    Here only "getBody" and "getAttributes" option names are set, but others could be used in the future.
+    Option names:
+        "getBody" - a string (case insensitive) telling which JDBC ResultSet method will be used to
+            get the message body field for a database product.
+            The default default value is "useBytes"..
+            Values (case insensitive):
+                "useBytes"  - use getBytes(int).
+                "useBlob"   - use getBlob(int).
+        "getAttributes" - a string (case insensitive) telling which JDBC ResultSet method will be used to
+            get the message attributes field for a database product.
+           The default default value is "useBytes"..
+            Values (case insensitive):
+                "useBytes"  - use getBytes(int).
+                "useBlob"   - use getBlob(int).
+-->
     <dbOptions>
         <dbOption name="getBody" value="useBytes"/>
         <dbOption name="getAttributes" value="useBytes"/>
@@ -57,6 +104,15 @@
         <dbOption db="ingres" name="getAttributes" value="useBytes"/>
     </dbOptions>
 
+<!-- SQL statements to use for various components. -->
+<!-- -->
+<!-- Parameter definitions ${param} are replaced with parameter values -->
+<!-- read from the configuration file. -->
+<!-- -->
+<!-- If a named statement has a definition defined for the current database product, -->
+<!-- then that statement is used. Otherwise the default statement is used. -->
+
+<!-- SQL statements for the JdbcMailRepository  -->
     <sqlDefs name="org.apache.james.mailrepository.jdbc.JDBCMailRepository">
 
         <!-- Statements used to check whether a particular message exists in this repository. -->
@@ -74,11 +130,11 @@
         <!-- Statements used to insert a message into this repository. -->
         <sql name="insertMessageSQL">INSERT INTO ${table} (message_name,
             repository_name, message_state, error_message, sender, recipients,
-            remote_host, remote_addr, last_updated, message_body,
-            message_attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</sql>
+    remote_host, remote_addr, per_recipient_headers, last_updated, message_body,
+    message_attributes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)</sql>
 
         <!-- Statements used to retrieve a message stored in this repository. -->
-        <sql name="retrieveMessageSQL">SELECT message_state, error_message, sender, recipients, remote_host, remote_addr, last_updated FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
+    <sql name="retrieveMessageSQL">SELECT message_state, error_message, sender, recipients, remote_host, remote_addr, per_recipient_headers, last_updated FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
 
         <!-- Statements used to retrieve the body of a message stored in this repository. -->
         <sql name="retrieveMessageBodySQL">SELECT message_body FROM ${table} WHERE message_name = ? AND repository_name = ?</sql>
@@ -104,6 +160,9 @@
         <!-- Statements used to list all messages stored in this repository. -->
         <sql name="listMessagesSQL">SELECT message_name, message_state, last_updated FROM ${table} WHERE repository_name = ? ORDER BY last_updated ASC</sql>
 
+    <!-- Statements used to count messages stored in this repository. -->
+    <sql name="countMessagesSQL">SELECT COUNT(*) FROM ${table}</sql>
+
         <!-- Statements used to create the table associated with this class. -->
         <sql name="createTable" db="mysql">
             CREATE TABLE ${table} (
@@ -115,9 +174,10 @@
             recipients text NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers longblob NULL ,
+            last_updated datetime NOT NULL,
             message_body longblob NOT NULL ,
             message_attributes longblob NULL ,
-            last_updated datetime NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -131,9 +191,10 @@
             recipients varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers varchar NULL ,
+            last_updated timestamp NOT NULL,
             message_body varchar NOT NULL ,
             message_attributes varchar NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -147,9 +208,10 @@
             recipients varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers varchar NULL ,
+            last_updated timestamp NOT NULL,
             message_body varchar NOT NULL ,
             message_attributes varchar NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -163,9 +225,10 @@
             [recipients] [text] NOT NULL ,
             [remote_host] [varchar] (255) NOT NULL ,
             [remote_addr] [varchar] (20) NOT NULL ,
+            [per_recipient_headers] [image] NULL ,
+            [last_updated] [datetime] NOT NULL,
             [message_body] [image] NOT NULL ,
             [message_attributes] [image] NULL ,
-            [last_updated] [datetime] NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -179,9 +242,10 @@
             recipients varchar2(1000) NOT NULL ,
             remote_host varchar2(100) NOT NULL ,
             remote_addr varchar2(20) NOT NULL ,
+            per_recipient_headers blob NULL ,
+            last_updated date NOT NULL ,
             message_body blob NOT NULL ,
             message_attributes blob NULL ,
-            last_updated date NOT NULL ,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -195,9 +259,10 @@
             recipients text NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers oid NULL ,
+            last_updated timestamp NOT NULL,
             message_body bytea NOT NULL ,
             message_attributes bytea NULL ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -211,9 +276,10 @@
             recipients long NOT NULL ,
             remote_host varchar (100) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers long byte NULL ,
+            last_updated date NOT NULL,
             message_body long byte NOT NULL ,
             message_attributes long byte NULL ,
-            last_updated date NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -227,9 +293,10 @@
             recipients varchar(1000) NOT NULL ,
             remote_host varchar(100) NOT NULL ,
             remote_addr varchar(20) NOT NULL ,
+            per_recipient_headers blob ,
+            last_updated timestamp NOT NULL ,
             message_body blob NOT NULL ,
             message_attributes blob ,
-            last_updated timestamp NOT NULL ,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
@@ -243,9 +310,10 @@
             recipients LONG VARCHAR NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers LONG BYTE ,
+            last_updated DATE NOT NULL
             message_body LONG BYTE NOT NULL ,
             message_attributes LONG BYTE ,
-            last_updated DATE NOT NULL
             )
         </sql>
         <sql name="createTable" db="derby">
@@ -258,14 +326,18 @@
             recipients long varchar NOT NULL ,
             remote_host varchar (255) NOT NULL ,
             remote_addr varchar (20) NOT NULL ,
+            per_recipient_headers blob ,
+            last_updated timestamp NOT NULL,
             message_body blob NOT NULL ,
             message_attributes blob ,
-            last_updated timestamp NOT NULL,
             PRIMARY KEY (repository_name, message_name)
             )
         </sql>
     </sqlDefs>
 
+
+<!-- SQL statements to support the BayesianAnalysis and the BayesianAnalysisFeeder mailets -->
+<!-- -->
     <sqlDefs name="org.apache.james.util.bayesian.JDBCBayesianAnalyzer">
 
         <sql name="hamTableName">bayesiananalysis_ham</sql>
@@ -399,6 +471,8 @@
         </sql>
     </sqlDefs>
 
+<!-- SQL statements to support the WhiteListManager mailet and the IsInWhiteList matcher -->
+<!-- -->
     <sqlDefs name="WhiteList">
 
         <sql name="whiteListTableName">whitelist</sql>
@@ -589,6 +663,8 @@
 
     </sqlDefs>
 
+<!-- SQL statements to support the GreyList Handler-->
+<!-- -->
     <sqlDefs name="GreyList">
 
         <sql name="greyListTableName">greylist</sql>
