@@ -45,6 +45,7 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -743,6 +744,134 @@ class MIMEMessageConverterTest {
             Entity attachmentPart = typedResult.getBodyParts().get(1);
             String filename = getNameParameterValue(attachmentPart);
             assertThat(filename).isEqualTo(expectedName);
+        }
+
+
+        @Test
+        void convertToMimeShouldHaveMixedMultipart() {
+            MIMEMessageConverter sut = new MIMEMessageConverter();
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            MessageAttachment attachment = MessageAttachment.builder()
+                .name("ديناصور.png")
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes("123456".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+
+            assertThat(result.getBody()).isInstanceOf(Multipart.class);
+            Multipart typedResult = (Multipart)result.getBody();
+            assertThat(typedResult.getSubType()).isEqualTo("mixed");
+        }
+
+        @Test
+        void convertToMimeShouldNotHaveInnerMultipartWhenNoInline() {
+            MIMEMessageConverter sut = new MIMEMessageConverter();
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            MessageAttachment attachment = MessageAttachment.builder()
+                .name("ديناصور.png")
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes("123456".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            Multipart typedResult = (Multipart)result.getBody();
+
+            assertThat(typedResult.getBodyParts())
+                .noneMatch(Entity::isMultipart);
+        }
+
+        @Test
+        void convertToMimeShouldNotHaveChildrenAttachmentParts() {
+            MIMEMessageConverter sut = new MIMEMessageConverter();
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            MessageAttachment attachment = MessageAttachment.builder()
+                .name("ديناصور.png")
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes("123456".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(false)
+                .build();
+
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            Multipart typedResult = (Multipart)result.getBody();
+
+            assertThat(typedResult.getBodyParts())
+                .extracting(Entity::getDispositionType)
+                .anySatisfy(contentDisposition -> assertThat(contentDisposition).isEqualTo("attachment"));
+        }
+
+        @Disabled("Current structure is mixed -> alternative, attachments")
+        @Test
+        void convertToMimeShouldHaveChildMultipartWhenInline() {
+            MIMEMessageConverter sut = new MIMEMessageConverter();
+
+            CreationMessage testMessage = CreationMessage.builder()
+                    .mailboxIds(ImmutableList.of("dead-bada55"))
+                    .subject("subject")
+                    .from(DraftEmailer.builder().name("sender").build())
+                    .htmlBody("Hello <b>all<b>!")
+                    .build();
+
+            String name = "ديناصور.png";
+            MessageAttachment attachment = MessageAttachment.builder()
+                    .name(name)
+                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                        .attachmentId(AttachmentId.from("blodId"))
+                        .bytes("123456".getBytes())
+                        .type("image/png")
+                        .build())
+                    .cid(Cid.from("cid"))
+                    .isInline(true)
+                    .build();
+
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            Multipart typedResult = (Multipart)result.getBody();
+
+            assertThat(typedResult.getBodyParts())
+                .hasSize(1)
+                .allMatch(Entity::isMultipart)
+                .extracting(entity -> (Multipart) entity.getBody())
+                .extracting(Multipart::getSubType)
+                .allSatisfy(subType -> assertThat(subType).isEqualTo("related"));
         }
 
         private String getNameParameterValue(Entity attachmentPart) {
