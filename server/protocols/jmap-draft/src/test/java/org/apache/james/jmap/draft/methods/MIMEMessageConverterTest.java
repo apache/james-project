@@ -45,7 +45,7 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
-import org.junit.jupiter.api.Disabled;
+import org.assertj.core.data.Index;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
@@ -582,46 +582,47 @@ class MIMEMessageConverterTest {
     class WithAttachments {
 
         @Test
-        void convertToMimeShouldAddAttachmentWhenOne() {
+        void convertToMimeShouldAddAttachment() {
             // Given
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
-                    .mailboxId("dead-bada55")
-                    .subject("subject")
-                    .from(DraftEmailer.builder().name("sender").build())
-                    .htmlBody("Hello <b>all<b>!")
-                    .build();
+                .mailboxId("dead-bada55")
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
 
             String expectedCID = "cid";
             String expectedMimeType = "image/png";
             String text = "123456";
             TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
             MessageAttachment attachment = MessageAttachment.builder()
-                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                        .attachmentId(AttachmentId.from("blodId"))
-                        .bytes(text.getBytes())
-                        .type(expectedMimeType)
-                        .build())
-                    .cid(Cid.from(expectedCID))
-                    .isInline(true)
-                    .build();
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes(text.getBytes())
+                    .type(expectedMimeType)
+                    .build())
+                .cid(Cid.from(expectedCID))
+                .isInline(true)
+                .build();
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
-
-            // Then
-            assertThat(result.getBody()).isInstanceOf(Multipart.class);
-            assertThat(result.isMultipart()).isTrue();
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
-            assertThat(typedResult.getBodyParts()).hasSize(2);
-            Entity attachmentPart = typedResult.getBodyParts().get(1);
-            assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedBody, "content");
-            assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
-            assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
-            assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
-            assertThat(attachmentPart.getContentTransferEncoding()).isEqualTo("base64");
+
+            assertThat(typedResult.getBodyParts())
+                .hasSize(1)
+                .extracting(entity -> (Multipart) entity.getBody())
+                .flatExtracting(Multipart::getBodyParts)
+                .anySatisfy(part -> {
+                    assertThat(part.getBody()).isEqualToComparingOnlyGivenFields(expectedBody, "content");
+                    assertThat(part.getDispositionType()).isEqualTo("inline");
+                    assertThat(part.getMimeType()).isEqualTo(expectedMimeType);
+                    assertThat(part.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+                    assertThat(part.getContentTransferEncoding()).isEqualTo("base64");
+                });
         }
 
         @Test
@@ -630,12 +631,12 @@ class MIMEMessageConverterTest {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
-                    .mailboxId("dead-bada55")
-                    .subject("subject")
-                    .from(DraftEmailer.builder().name("sender").build())
-                    .textBody("Hello all!")
-                    .htmlBody("Hello <b>all<b>!")
-                    .build();
+                .mailboxId("dead-bada55")
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .textBody("Hello all!")
+                .htmlBody("Hello <b>all<b>!")
+                .build();
             TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), StandardCharsets.UTF_8);
             TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), StandardCharsets.UTF_8);
 
@@ -644,39 +645,40 @@ class MIMEMessageConverterTest {
             String text = "123456";
             TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
             MessageAttachment attachment = MessageAttachment.builder()
-                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                        .attachmentId(AttachmentId.from("blodId"))
-                        .bytes(text.getBytes())
-                        .type(expectedMimeType)
-                        .build())
-                    .cid(Cid.from(expectedCID))
-                    .isInline(true)
-                    .build();
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes(text.getBytes())
+                    .type(expectedMimeType)
+                    .build())
+                .cid(Cid.from(expectedCID))
+                .isInline(true)
+                .build();
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
-
-            // Then
-            assertThat(result.getBody()).isInstanceOf(Multipart.class);
-            assertThat(result.isMultipart()).isTrue();
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
-            assertThat(typedResult.getBodyParts()).hasSize(2);
-            Entity mainBodyPart = typedResult.getBodyParts().get(0);
-            assertThat(mainBodyPart.getBody()).isInstanceOf(Multipart.class);
-            assertThat(mainBodyPart.isMultipart()).isTrue();
-            assertThat(mainBodyPart.getMimeType()).isEqualTo("multipart/alternative");
-            assertThat(((Multipart)mainBodyPart.getBody()).getBodyParts()).hasSize(2);
-            Entity textPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(0);
-            Entity htmlPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(1);
-            assertThat(textPart.getBody()).isEqualToComparingOnlyGivenFields(expectedTextBody, "content");
-            assertThat(htmlPart.getBody()).isEqualToComparingOnlyGivenFields(expectedHtmlBody, "content");
 
-            Entity attachmentPart = typedResult.getBodyParts().get(1);
-            assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedAttachmentBody, "content");
-            assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
-            assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
-            assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+            assertThat(typedResult.getBodyParts())
+                .hasSize(1)
+                .extracting(entity -> (Multipart) entity.getBody())
+                .flatExtracting(Multipart::getBodyParts)
+                .satisfies(part -> {
+                    assertThat(part.getBody()).isInstanceOf(Multipart.class);
+                    assertThat(part.isMultipart()).isTrue();
+                    assertThat(part.getMimeType()).isEqualTo("multipart/alternative");
+                    assertThat(((Multipart)part.getBody()).getBodyParts()).hasSize(2);
+                    Entity textPart = ((Multipart)part.getBody()).getBodyParts().get(0);
+                    Entity htmlPart = ((Multipart)part.getBody()).getBodyParts().get(1);
+                    assertThat(textPart.getBody()).isEqualToComparingOnlyGivenFields(expectedTextBody, "content");
+                    assertThat(htmlPart.getBody()).isEqualToComparingOnlyGivenFields(expectedHtmlBody, "content");
+                }, Index.atIndex(0))
+                .satisfies(part -> {
+                    assertThat(part.getBody()).isEqualToComparingOnlyGivenFields(expectedAttachmentBody, "content");
+                    assertThat(part.getDispositionType()).isEqualTo("inline");
+                    assertThat(part.getMimeType()).isEqualTo(expectedMimeType);
+                    assertThat(part.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+                }, Index.atIndex(1));
         }
 
         @Test
@@ -709,11 +711,11 @@ class MIMEMessageConverterTest {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
-                    .mailboxIds(ImmutableList.of("dead-bada55"))
-                    .subject("subject")
-                    .from(DraftEmailer.builder().name("sender").build())
-                    .htmlBody("Hello <b>all<b>!")
-                    .build();
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
 
             String expectedCID = "cid";
             String expectedMimeType = "image/png";
@@ -721,29 +723,26 @@ class MIMEMessageConverterTest {
             String name = "ديناصور.png";
             String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
             MessageAttachment attachment = MessageAttachment.builder()
-                    .name(name)
-                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                        .attachmentId(AttachmentId.from("blodId"))
-                        .bytes(text.getBytes())
-                        .type(expectedMimeType)
-                        .build())
-                    .cid(Cid.from(expectedCID))
-                    .isInline(true)
-                    .build();
+                .name(name)
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes(text.getBytes())
+                    .type(expectedMimeType)
+                    .build())
+                .cid(Cid.from(expectedCID))
+                .isInline(true)
+                .build();
 
             // When
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
-
-            // Then
-            assertThat(result.getBody()).isInstanceOf(Multipart.class);
-            assertThat(result.isMultipart()).isTrue();
+                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
             Multipart typedResult = (Multipart)result.getBody();
-            assertThat(typedResult.getBodyParts()).hasSize(2);
 
-            Entity attachmentPart = typedResult.getBodyParts().get(1);
-            String filename = getNameParameterValue(attachmentPart);
-            assertThat(filename).isEqualTo(expectedName);
+            assertThat(typedResult.getBodyParts())
+                .hasSize(1)
+                .extracting(entity -> (Multipart) entity.getBody())
+                .flatExtracting(Multipart::getBodyParts)
+                .anySatisfy(part -> assertThat(getNameParameterValue(part)).isEqualTo(expectedName));
         }
 
 
@@ -808,7 +807,7 @@ class MIMEMessageConverterTest {
         }
 
         @Test
-        void convertToMimeShouldNotHaveChildrenAttachmentParts() {
+        void convertToMimeShouldHaveChildrenAttachmentParts() {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
@@ -838,29 +837,28 @@ class MIMEMessageConverterTest {
                 .anySatisfy(contentDisposition -> assertThat(contentDisposition).isEqualTo("attachment"));
         }
 
-        @Disabled("Current structure is mixed -> alternative, attachments")
         @Test
-        void convertToMimeShouldHaveChildMultipartWhenInline() {
+        void convertToMimeShouldHaveChildMultipartWhenOnlyInline() {
             MIMEMessageConverter sut = new MIMEMessageConverter();
 
             CreationMessage testMessage = CreationMessage.builder()
-                    .mailboxIds(ImmutableList.of("dead-bada55"))
-                    .subject("subject")
-                    .from(DraftEmailer.builder().name("sender").build())
-                    .htmlBody("Hello <b>all<b>!")
-                    .build();
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
 
             String name = "ديناصور.png";
             MessageAttachment attachment = MessageAttachment.builder()
-                    .name(name)
-                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                        .attachmentId(AttachmentId.from("blodId"))
-                        .bytes("123456".getBytes())
-                        .type("image/png")
-                        .build())
-                    .cid(Cid.from("cid"))
-                    .isInline(true)
-                    .build();
+                .name(name)
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes("123456".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(true)
+                .build();
 
             Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
                     CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
@@ -872,6 +870,57 @@ class MIMEMessageConverterTest {
                 .extracting(entity -> (Multipart) entity.getBody())
                 .extracting(Multipart::getSubType)
                 .allSatisfy(subType -> assertThat(subType).isEqualTo("related"));
+        }
+
+        @Test
+        void convertToMimeShouldHaveChildMultipartWhenBothInlinesAndAttachments() {
+            MIMEMessageConverter sut = new MIMEMessageConverter();
+
+            CreationMessage testMessage = CreationMessage.builder()
+                .mailboxIds(ImmutableList.of("dead-bada55"))
+                .subject("subject")
+                .from(DraftEmailer.builder().name("sender").build())
+                .htmlBody("Hello <b>all<b>!")
+                .build();
+
+            MessageAttachment inline = MessageAttachment.builder()
+                .name("ديناصور.png")
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId"))
+                    .bytes("inline data".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid"))
+                .isInline(true)
+                .build();
+
+            MessageAttachment attachment = MessageAttachment.builder()
+                .name("att.pdf")
+                .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                    .attachmentId(AttachmentId.from("blodId2"))
+                    .bytes("attachment data".getBytes())
+                    .type("image/png")
+                    .build())
+                .cid(Cid.from("cid2"))
+                .isInline(false)
+                .build();
+
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(inline, attachment));
+            Multipart typedResult = (Multipart)result.getBody();
+
+            assertThat(typedResult.getBodyParts())
+                .hasSize(2)
+                .satisfies(part -> {
+                    Multipart multipartRelated = (Multipart) part.getBody();
+                    assertThat(multipartRelated.getSubType()).isEqualTo("related");
+                    assertThat(multipartRelated.getBodyParts())
+                        .extracting(Entity::getDispositionType)
+                        .contains("inline");
+                }, Index.atIndex(0))
+                .satisfies(part -> {
+                    assertThat(part.getDispositionType()).isEqualTo("attachment");
+                }, Index.atIndex(1));
         }
 
         private String getNameParameterValue(Entity attachmentPart) {

@@ -76,6 +76,7 @@ public class MIMEMessageConverter {
     private static final NameValuePair UTF_8_CHARSET = new NameValuePair("charset", StandardCharsets.UTF_8.name());
     private static final String ALTERNATIVE_SUB_TYPE = "alternative";
     private static final String MIXED_SUB_TYPE = "mixed";
+    private static final String RELATED_SUB_TYPE = "related";
     private static final String FIELD_PARAMETERS_SEPARATOR = ";";
     private static final String QUOTED_PRINTABLE = "quoted-printable";
     private static final String BASE64 = "base64";
@@ -178,7 +179,7 @@ public class MIMEMessageConverter {
         Splitter.on(MessageFactory.JMAP_MULTIVALUED_FIELD_DELIMITER).split(multipleValues)
             .forEach(value -> addHeader(messageBuilder, fieldName, value));
     }
-    
+
     private void addHeader(Message.Builder messageBuilder, String fieldName, String value) {
         FieldParser<UnstructuredField> parser = UnstructuredFieldImpl.PARSER;
         RawField rawField = new RawField(fieldName, value);
@@ -204,13 +205,7 @@ public class MIMEMessageConverter {
     private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
         try {
             if (hasAttachment(messageAttachments)) {
-                MultipartBuilder builder = MultipartBuilder.create(MIXED_SUB_TYPE);
-                addBody(newMessage, builder);
-    
-                Consumer<MessageAttachment> addAttachment = addAttachment(builder);
-                messageAttachments.forEach(addAttachment);
-    
-                return builder.build();
+                return createMultipartWithAttachments(newMessage, messageAttachments);
             } else {
                 return createMultipartAlternativeBody(newMessage);
             }
@@ -220,6 +215,43 @@ public class MIMEMessageConverter {
         }
     }
 
+    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) throws IOException {
+        MultipartBuilder mixedMultipartBuilder = MultipartBuilder.create(MIXED_SUB_TYPE);
+        List<MessageAttachment> inlineAttachments = messageAttachments.stream()
+            .filter(MessageAttachment::isInline)
+            .collect(Guavate.toImmutableList());
+        List<MessageAttachment> besideAttachments = messageAttachments.stream()
+            .filter(attachment -> !attachment.isInline())
+            .collect(Guavate.toImmutableList());
+
+        if (inlineAttachments.size() > 0) {
+            mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments));
+        } else {
+            addBody(newMessage, mixedMultipartBuilder);
+        }
+
+        addAttachments(besideAttachments, mixedMultipartBuilder);
+
+        return mixedMultipartBuilder.build();
+    }
+
+    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachment> inlines) throws IOException {
+        MultipartBuilder relatedMultipart = MultipartBuilder.create(RELATED_SUB_TYPE);
+        addBody(newMessage, relatedMultipart);
+
+        return Message.Builder.of()
+            .setBody(addAttachments(inlines, relatedMultipart)
+                .build())
+            .build();
+    }
+
+    private MultipartBuilder addAttachments(List<MessageAttachment> messageAttachments,
+                                            MultipartBuilder multipartBuilder) {
+        messageAttachments.forEach(addAttachment(multipartBuilder));
+
+        return multipartBuilder;
+    }
+    
     private void addBody(CreationMessage newMessage, MultipartBuilder builder) throws IOException {
         if (newMessage.getHtmlBody().isPresent() && newMessage.getTextBody().isPresent()) {
             Multipart body = createMultipartAlternativeBody(newMessage);
