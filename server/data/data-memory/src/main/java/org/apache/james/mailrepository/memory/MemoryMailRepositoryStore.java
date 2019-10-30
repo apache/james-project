@@ -133,7 +133,7 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
                 ((Initializable) mailRepository).init();
             }
         } catch (Exception e) {
-            throw new MailRepositoryStoreException("Cannot init mail repository", e);
+            throw new UnsupportedRepositoryStoreException("Cannot init mail repository", e);
         }
     }
 
@@ -145,6 +145,6 @@ public class MemoryMailRepositoryStore implements MailRepositoryStore, Startable
 
         return fullyQualifiedClass
             .map(Throwing.function(fqcnToMailRepository).sneakyThrow())
-            .orElseThrow(() -> new MailRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()));
+            .orElseThrow(() -> new UnsupportedRepositoryStoreException("No Mail Repository associated with " + protocol.getValue()));
     }
 }

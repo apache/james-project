@@ -92,4 +92,14 @@ public interface MailRepositoryStore {
             super(msg);
         }
     }
+
+    class UnsupportedRepositoryStoreException extends MailRepositoryStoreException {
+        public UnsupportedRepositoryStoreException(String msg, Throwable t) {
+            super(msg, t);
+        }
+
+        public UnsupportedRepositoryStoreException(String msg) {
+            super(msg);
+        }
+    }
 }

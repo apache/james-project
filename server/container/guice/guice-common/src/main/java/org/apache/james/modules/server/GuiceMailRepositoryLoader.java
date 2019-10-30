@@ -45,7 +45,7 @@ public class GuiceMailRepositoryLoader implements MailRepositoryLoader {
             return genericLoader.<MailRepository>withChildModule(urlModule)
                 .instantiate(new ClassName(fullyQualifiedClassName));
         } catch (ClassNotFoundException e) {
-            throw new MailRepositoryStore.MailRepositoryStoreException("No Mail Repository found with class name " + fullyQualifiedClassName);
+            throw new MailRepositoryStore.UnsupportedRepositoryStoreException("No Mail Repository found with class name " + fullyQualifiedClassName);
         } catch (ClassCastException e) {
             throw new MailRepositoryStore.MailRepositoryStoreException(fullyQualifiedClassName + " is not a MailRepository");
         }

@@ -206,7 +206,7 @@ public class MailRepositoryStoreBeanFactory extends AbstractBeanFactory implemen
                 return reply;
             } catch (Exception e) {
                 LOGGER.warn("Exception while creating repository: {}", e.getMessage(), e);
-                throw new MailRepositoryStoreException("Cannot find or init repository", e);
+                throw new UnsupportedRepositoryStoreException("Cannot find or init repository", e);
             }
         }
 

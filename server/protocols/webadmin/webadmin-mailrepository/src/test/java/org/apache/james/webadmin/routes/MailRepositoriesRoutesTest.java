@@ -177,6 +177,22 @@ public class MailRepositoriesRoutesTest {
     }
 
     @Test
+    public void putMailRepositoryShouldReturnInvalidArgumentWhenProtocolIsUnsupported() {
+        given()
+            .params("protocol", "unsupported")
+        .when()
+            .put(PATH_ESCAPED_MY_REPO)
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .body("statusCode", is(400))
+            .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+            .body("message", is("'unsupported' is an unsupported protocol"));
+
+        assertThat(mailRepositoryStore.get(URL_MY_REPO))
+            .isEmpty();
+    }
+
+    @Test
     public void getMailRepositoriesShouldReturnEmptyWhenEmpty() {
         List<Object> mailRepositories =
             when()

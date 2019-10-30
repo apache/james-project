@@ -29,6 +29,6 @@ public class TestingMailRepositoryLoader implements MailRepositoryLoader {
         if (fullyQualifiedClassName.equals(MemoryMailRepository.class.getCanonicalName())) {
             return new MemoryMailRepository();
         }
-        throw new MailRepositoryStore.MailRepositoryStoreException(fullyQualifiedClassName + " is not supported");
+        throw new MailRepositoryStore.UnsupportedRepositoryStoreException(fullyQualifiedClassName + " is not supported");
     }
 }

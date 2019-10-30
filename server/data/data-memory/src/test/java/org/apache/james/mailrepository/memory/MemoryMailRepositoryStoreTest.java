@@ -69,7 +69,7 @@ public class MemoryMailRepositoryStoreTest {
         repositoryStore.init();
     }
 
-    @Test(expected = MailRepositoryStore.MailRepositoryStoreException.class)
+    @Test(expected = MailRepositoryStore.UnsupportedRepositoryStoreException.class)
     public void selectingANonRegisteredProtocolShouldFail() {
         repositoryStore.select(MailRepositoryUrl.from("proto://repo"));
     }
