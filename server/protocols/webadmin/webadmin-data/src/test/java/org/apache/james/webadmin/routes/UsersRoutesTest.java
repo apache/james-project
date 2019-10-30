@@ -123,7 +123,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldReturnUserErrorWhenWrongJsonBody() {
+        void putShouldReturnUserErrorWhenWrongJsonBody() {
             given()
                 .body("{\"bad\":\"any\"}")
             .when()
@@ -133,7 +133,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldReturnOkWhenValidJsonBody() {
+        void putShouldReturnOkWhenValidJsonBody() {
             given()
                 .body("{\"password\":\"password\"}")
             .when()
@@ -143,7 +143,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldReturnRequireNonNullPassword() {
+        void putShouldReturnRequireNonNullPassword() {
             given()
                 .body("{\"password\":null}")
             .when()
@@ -153,7 +153,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldAddTheUser() {
+        void putShouldAddTheUser() {
             with()
                 .body("{\"password\":\"password\"}")
                 .put(USERNAME);
@@ -173,7 +173,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postingTwoTimesShouldBeAllowed() {
+        void puttingTwoTimesShouldBeAllowed() {
             // Given
             with()
                 .body("{\"password\":\"password\"}")
@@ -351,7 +351,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldFailOnRepositoryExceptionOnGetUserByName() throws Exception {
+        void putShouldFailOnRepositoryExceptionOnGetUserByName() throws Exception {
             when(usersRepository.getUserByName(username)).thenThrow(new UsersRepositoryException("message"));
 
             given()
@@ -363,7 +363,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldNotFailOnRepositoryExceptionOnAddUser() throws Exception {
+        void putShouldNotFailOnRepositoryExceptionOnAddUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(null);
             doThrow(new UsersRepositoryException("message")).when(usersRepository).addUser(username, password);
 
@@ -376,7 +376,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldFailOnRepositoryExceptionOnUpdateUser() throws Exception {
+        void putShouldFailOnRepositoryExceptionOnUpdateUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(mock(User.class));
             doThrow(new UsersRepositoryException("message")).when(usersRepository).updateUser(any());
 
@@ -410,7 +410,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldFailOnUnknownExceptionOnGetUserByName() throws Exception {
+        void putShouldFailOnUnknownExceptionOnGetUserByName() throws Exception {
             when(usersRepository.getUserByName(username)).thenThrow(new RuntimeException());
 
             given()
@@ -422,7 +422,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldFailOnUnknownExceptionOnAddUser() throws Exception {
+        void putShouldFailOnUnknownExceptionOnAddUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(null);
             doThrow(new RuntimeException()).when(usersRepository).addUser(username, password);
 
@@ -435,7 +435,7 @@ class UsersRoutesTest {
         }
 
         @Test
-        void postShouldFailOnUnknownExceptionOnGetUpdateUser() throws Exception {
+        void putShouldFailOnUnknownExceptionOnGetUpdateUser() throws Exception {
             when(usersRepository.getUserByName(username)).thenReturn(mock(User.class));
             doThrow(new RuntimeException()).when(usersRepository).updateUser(any());
 
