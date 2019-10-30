@@ -36,10 +36,11 @@
         <dd>List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042</dd>
 
         <dt><strong>cassandra.keyspace</strong></dt>
-        <dd>Is the name of the keyspace used by James.</dd>
+        <dd>Is the name of the keyspace used by James. Optional, default value: <b>apache_james</b></dd>
 
         <dt><strong>cassandra.replication.factor</strong></dt>
-        <dd>Is the replication factor. (should be 1, as cluster is not yet supported)</dd>
+        <dd>Is the replication factor used upon keyspace creation. Modifying this property while the keyspace already exists
+        will have no effect. Optional. Default value 1.</dd>
 
         <dt><strong>cassandra.query.logger.constant.threshold</strong></dt>
         <dd>Optional.
@@ -67,16 +68,17 @@
         <dd>Optional.
           If specified defines the Cassandra <a href="https://docs.datastax.com/en/developer/java-driver/3.5/manual/socket_options/">driver read timeout</a>.</dd>
 
-        # Read com.datastax.driver.core.PoolingOptions for knowing defaults value
-        # No value here will default to driver's default value
 
-        # cassandra.pooling.local.max.connections=8
-        # cassandra.pooling.local.max.requests=128
-        ## In ms. Should be higher than socket read timeout
-        # cassandra.pooling.timeout=5000
-        ## In seconds.
-        # cassandra.pooling.heartbeat.timeout=30
-        # cassandra.pooling.max.queue.size=256
+        <pre><code># Read com.datastax.driver.core.PoolingOptions for knowing defaults value
+# No value here will default to driver's default value
+
+# cassandra.pooling.local.max.connections=8
+# cassandra.pooling.local.max.requests=128
+## In ms. Should be higher than socket read timeout
+# cassandra.pooling.timeout=5000
+## In seconds.
+# cassandra.pooling.heartbeat.timeout=30
+# cassandra.pooling.max.queue.size=256</code></pre>
 
         <dt><strong>cassandra.pooling.local.max.connections</strong></dt>
         <dd>Optional. Defaults to 8.<br/>
