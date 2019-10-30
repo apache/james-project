@@ -93,6 +93,11 @@ class DomainTest {
     }
 
     @Test
+    void shouldThrowWhenDomainContainUrlOperatorSymbol() {
+        assertThatThrownBy(() -> Domain.of("Dom/in")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void shouldThrowWhenDomainIsEmpty() {
         assertThatThrownBy(() -> Domain.of("")).isInstanceOf(IllegalArgumentException.class);
     }

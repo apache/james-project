@@ -326,7 +326,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
-                .body("details", is("Domain can not be empty nor contain `@`"));
+                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
         }
 
         @Test
@@ -643,7 +643,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
-                .body("details", is("Domain can not be empty nor contain `@`"));
+                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
         }
     }
 
@@ -856,7 +856,7 @@ class DLPConfigurationRoutesTest {
                 .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Invalid request for domain: dr@strange.com"))
-                .body("details", is("Domain can not be empty nor contain `@`"));
+                .body("details", is("Domain can not be empty nor contain `@` nor `/`"));
         }
     }
     
