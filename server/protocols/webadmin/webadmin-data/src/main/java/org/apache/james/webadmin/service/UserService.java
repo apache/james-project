@@ -43,6 +43,12 @@ import spark.Response;
 
 public class UserService {
 
+    public static class InvalidUsername extends RuntimeException {
+        InvalidUsername(Exception e) {
+            super("Username invariants violation", e);
+        }
+    }
+
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private static final String EMPTY_BODY = "";
     public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
@@ -81,8 +87,12 @@ public class UserService {
     }
 
     private void usernamePreconditions(String username) {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
-        Preconditions.checkArgument(username.length() < MAXIMUM_MAIL_ADDRESS_LENGTH);
+        try {
+            Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
+            Preconditions.checkArgument(username.length() < MAXIMUM_MAIL_ADDRESS_LENGTH);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidUsername(e);
+        }
     }
 
     private void upsert(User user, String username, char[] password) throws UsersRepositoryException {

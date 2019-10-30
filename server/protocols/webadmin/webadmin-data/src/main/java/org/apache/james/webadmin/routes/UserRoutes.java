@@ -150,6 +150,14 @@ public class UserRoutes implements Routes {
                 .message("The user " + username + " does not exists")
                 .cause(e)
                 .haltError();
+        } catch (UserService.InvalidUsername e) {
+            LOGGER.info("Invalid username", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid username: it should be between 1 and 255 long without '/'")
+                .cause(e)
+                .haltError();
         } catch (IllegalArgumentException e) {
             LOGGER.info("Invalid user path", e);
             throw ErrorResponder.builder()
@@ -172,6 +180,14 @@ public class UserRoutes implements Routes {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
                 .message("Error while deserializing addUser request")
+                .cause(e)
+                .haltError();
+        } catch (UserService.InvalidUsername e) {
+            LOGGER.info("Invalid username", e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Invalid username: it should be between 1 and 255 long without '/'")
                 .cause(e)
                 .haltError();
         } catch (IllegalArgumentException e) {
