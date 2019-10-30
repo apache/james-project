@@ -63,7 +63,7 @@ public interface UserRewritter extends Serializable {
     class ReplaceRewriter implements MappingUserRewriter {
         @Override
         public UserRewritter generateUserRewriter(String mapping) {
-            return oldUser -> Optional.of(Username.fromUsername(mapping));
+            return oldUser -> Optional.of(Username.of(mapping));
         }
     }
 
@@ -87,10 +87,10 @@ public interface UserRewritter extends Serializable {
             return oldUser -> {
                 try {
                     return regexMap(oldUser.asMailAddress(), mapping)
-                        .map(Username::fromUsername);
+                        .map(Username::of);
                 } catch (PatternSyntaxException e) {
                     LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.of(Username.fromUsername(Mapping.Type.Regex.asPrefix() + mapping));
+                    return Optional.of(Username.of(Mapping.Type.Regex.asPrefix() + mapping));
                 }
             };
         }

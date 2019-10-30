@@ -64,7 +64,7 @@ public class DeletedMessageWithStorageInformationConverter {
         return DeletedMessage.builder()
             .messageId(messageIdFactory.fromString(deletedMessageDTO.getMessageId()))
             .originMailboxes(deserializeOriginMailboxes(deletedMessageDTO.getOriginMailboxes()))
-            .user(Username.fromUsername(deletedMessageDTO.getOwner()))
+            .user(Username.of(deletedMessageDTO.getOwner()))
             .deliveryDate(ZonedDateTime.parse(deletedMessageDTO.getDeliveryDate()))
             .deletionDate(ZonedDateTime.parse(deletedMessageDTO.getDeletionDate()))
             .sender(MaybeSender.getMailSender(deletedMessageDTO.getSender()))

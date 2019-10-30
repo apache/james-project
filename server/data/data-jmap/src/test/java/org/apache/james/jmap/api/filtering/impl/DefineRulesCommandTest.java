@@ -46,7 +46,7 @@ class DefineRulesCommandTest {
 
     @Test
     void constructorShouldThrowWhenNullRuleList() {
-        assertThatThrownBy(() -> new DefineRulesCommand(Username.fromUsername("adam@james.org"), null))
+        assertThatThrownBy(() -> new DefineRulesCommand(Username.of("adam@james.org"), null))
             .isInstanceOf(NullPointerException.class);
     }
 }

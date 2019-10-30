@@ -93,7 +93,7 @@ public interface EventBusTestFixture {
     }
 
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
-    Username USERNAME = Username.fromUsername("user");
+    Username USERNAME = Username.of("user");
     MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName");
     TestId TEST_ID = TestId.of(18);
     Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");

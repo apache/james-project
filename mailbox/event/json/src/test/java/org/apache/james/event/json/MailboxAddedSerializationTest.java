@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 class MailboxAddedSerializationTest {
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final MailboxListener.MailboxAdded EVENT_1 = new MailboxListener.MailboxAdded(
         MailboxSession.SessionId.of(42),
         USERNAME,

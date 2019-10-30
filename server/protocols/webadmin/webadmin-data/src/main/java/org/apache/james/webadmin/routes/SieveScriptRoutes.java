@@ -143,7 +143,7 @@ public class SieveScriptRoutes implements Routes {
         if (!usersRepository.contains(userName)) {
             throw404("User not found");
         }
-        return Username.fromUsername(userName);
+        return Username.of(userName);
     }
 
     private ScriptName extractScriptName(Request request) {

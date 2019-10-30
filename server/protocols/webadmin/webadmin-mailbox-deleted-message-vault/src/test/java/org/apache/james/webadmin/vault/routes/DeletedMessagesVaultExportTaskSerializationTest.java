@@ -54,7 +54,7 @@ class DeletedMessagesVaultExportTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
 
     private static final String username = "james";
-    private static final Username USERNAME_EXPORT_FROM = Username.fromUsername(username);
+    private static final Username USERNAME_EXPORT_FROM = Username.of(username);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
     private static MailAddress exportTo;
     private static DeletedMessagesVaultExportTask.AdditionalInformation details;

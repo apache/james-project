@@ -67,11 +67,11 @@ class UserQuotaRoutesTest {
     private static final String QUOTA_USERS = "/quota/users";
     private static final String PERDU_COM = "perdu.com";
     private static final String STRANGE_ORG = "strange.org";
-    private static final Username BOB = Username.fromUsername("bob@" + PERDU_COM);
-    private static final Username ESCAPED_BOB = Username.fromUsername("bob%40" + PERDU_COM);
-    private static final Username JOE = Username.fromUsername("joe@" + PERDU_COM);
-    private static final Username JACK = Username.fromUsername("jack@" + PERDU_COM);
-    private static final Username GUY_WITH_STRANGE_DOMAIN = Username.fromUsername("guy@" + STRANGE_ORG);
+    private static final Username BOB = Username.of("bob@" + PERDU_COM);
+    private static final Username ESCAPED_BOB = Username.of("bob%40" + PERDU_COM);
+    private static final Username JOE = Username.of("joe@" + PERDU_COM);
+    private static final Username JACK = Username.of("jack@" + PERDU_COM);
+    private static final Username GUY_WITH_STRANGE_DOMAIN = Username.of("guy@" + STRANGE_ORG);
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
     private static final String SIZE = "size";

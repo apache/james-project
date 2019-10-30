@@ -32,8 +32,8 @@ public class ReplaceRewriterTest {
         assertThat(
             new UserRewritter.ReplaceRewriter()
                 .generateUserRewriter(newAddress)
-                .rewrite(Username.fromUsername("old@passed")))
-            .contains(Username.fromUsername(newAddress));
+                .rewrite(Username.of("old@passed")))
+            .contains(Username.of(newAddress));
     }
     
     @Test
@@ -42,8 +42,8 @@ public class ReplaceRewriterTest {
         assertThat(
             new UserRewritter.ReplaceRewriter()
                 .generateUserRewriter(newAddress)
-                .rewrite(Username.fromUsername("old")))
-            .contains(Username.fromUsername(newAddress));
+                .rewrite(Username.of("old")))
+            .contains(Username.of(newAddress));
     }
 
     @Test
@@ -52,7 +52,7 @@ public class ReplaceRewriterTest {
         assertThat(
             new UserRewritter.ReplaceRewriter()
                 .generateUserRewriter(newAddress)
-                .rewrite(Username.fromUsername("old@passed")))
-            .contains(Username.fromUsername(newAddress));
+                .rewrite(Username.of("old@passed")))
+            .contains(Username.of(newAddress));
     }
 }

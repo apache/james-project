@@ -43,7 +43,7 @@ class FilteringAggregateIdTest {
 
     @Test
     void asAggregateKeyShouldReturnAStringContainingThePrefixAndTheDomain() {
-        assertThat(new FilteringAggregateId(Username.fromUsername("foo@bar.space")).asAggregateKey())
+        assertThat(new FilteringAggregateId(Username.of("foo@bar.space")).asAggregateKey())
             .isEqualTo("FilteringRule/foo@bar.space");
     }
 

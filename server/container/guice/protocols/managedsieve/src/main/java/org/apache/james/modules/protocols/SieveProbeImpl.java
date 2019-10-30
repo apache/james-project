@@ -59,22 +59,22 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public long getSieveQuota(String user) throws Exception {
-        return sieveRepository.getQuota(Username.fromUsername(user)).asLong();
+        return sieveRepository.getQuota(Username.of(user)).asLong();
     }
 
     @Override
     public void setSieveQuota(String user, long quota) throws Exception {
-        sieveRepository.setQuota(Username.fromUsername(user), QuotaSize.size(quota));
+        sieveRepository.setQuota(Username.of(user), QuotaSize.size(quota));
     }
 
     @Override
     public void removeSieveQuota(String user) throws Exception {
-        sieveRepository.removeQuota(Username.fromUsername(user));
+        sieveRepository.removeQuota(Username.of(user));
     }
 
     @Override
     public void addActiveSieveScript(String userName, String name, String script) throws Exception {
-        Username username = Username.fromUsername(userName);
+        Username username = Username.of(userName);
         sieveRepository.putScript(username, new ScriptName(name), new ScriptContent(script));
         sieveRepository.setActive(username, new ScriptName(name));
     }

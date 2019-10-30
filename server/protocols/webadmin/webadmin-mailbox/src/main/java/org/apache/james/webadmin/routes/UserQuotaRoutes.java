@@ -362,7 +362,7 @@ public class UserQuotaRoutes implements Routes {
                 .message("User not found")
                 .haltError();
         }
-        return Username.fromUsername(user);
+        return Username.of(user);
     }
 
     private QuotaDTO parseQuotaDTO(Request request) {

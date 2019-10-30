@@ -63,7 +63,7 @@ public class GetVacationResponseMethodTest {
         zonedDateTimeProvider = mock(ZonedDateTimeProvider.class);
         vacationRepository = mock(VacationRepository.class);
         mailboxSession = mock(MailboxSession.class);
-        username = Username.fromUsername(USERNAME);
+        username = Username.of(USERNAME);
         testee = new GetVacationResponseMethod(vacationRepository, zonedDateTimeProvider, new DefaultMetricFactory());
 
         when(zonedDateTimeProvider.get()).thenReturn(DATE_2014);

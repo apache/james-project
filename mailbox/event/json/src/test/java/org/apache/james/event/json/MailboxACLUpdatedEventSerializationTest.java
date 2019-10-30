@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Test;
 
 class MailboxACLUpdatedEventSerializationTest {
 
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final MailboxACL.EntryKey ENTRY_KEY = org.apache.james.mailbox.model.MailboxACL.EntryKey.createGroupEntryKey("any", false);
     private static final MailboxACL.Rfc4314Rights RIGHTS = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer, MailboxACL.Right.Read);
     private static final MailboxACL MAILBOX_ACL = new MailboxACL(

@@ -40,14 +40,14 @@ public class UsersQuotaDetailsDTOTest {
     @Test
     public void builderShouldThrowWhenDetailIsNull() {
         assertThatThrownBy(() -> UsersQuotaDetailsDTO.builder()
-                .user(Username.fromUsername("user@domain.org"))
+                .user(Username.of("user@domain.org"))
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     public void builderShouldWork() throws AddressException {
-        Username username = Username.fromUsername("user@domain.org");
+        Username username = Username.of("user@domain.org");
         QuotaDetailsDTO quotaDetailsDTO = QuotaDetailsDTO.builder()
                 .occupation(
                         Quota.<QuotaSize>builder().used(QuotaSize.size(1)).computedLimit(QuotaSize.size(12)).build(),

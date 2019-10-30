@@ -63,7 +63,7 @@ public class MessageToElasticSearchJsonTest {
     private static final MessageId MESSAGE_ID = TestMessageId.of(184L);
     private static final long MOD_SEQ = 42L;
     private static final MessageUid UID = MessageUid.of(25);
-    private static final Username USERNAME = Username.fromUsername("username");
+    private static final Username USERNAME = Username.of("username");
 
     private TextExtractor textExtractor;
 
@@ -165,7 +165,7 @@ public class MessageToElasticSearchJsonTest {
         mail.setModSeq(MOD_SEQ);
         mail.setUid(UID);
         assertThatJson(messageToElasticSearchJson.convertToJson(mail,
-                ImmutableList.of(Username.fromUsername("user1"), Username.fromUsername("user2"))))
+                ImmutableList.of(Username.of("user1"), Username.of("user2"))))
             .when(IGNORING_ARRAY_ORDER).when(IGNORING_VALUES)
             .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/mail.json"));
     }

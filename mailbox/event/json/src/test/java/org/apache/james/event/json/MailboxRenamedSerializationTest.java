@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 
 class MailboxRenamedSerializationTest {
 
-    private static final Username DEFAULT_USERNAME = Username.fromUsername("user");
+    private static final Username DEFAULT_USERNAME = Username.of("user");
     private static final String OLD_MAILBOX_NAME = "oldMailboxName";
     private static final MailboxPath DEFAULT_OLD_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME.asString(), OLD_MAILBOX_NAME);
     private static final String NEW_MAILBOX_NAME = "newMailboxName";

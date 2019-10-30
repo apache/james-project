@@ -62,7 +62,7 @@ import com.google.common.collect.Lists;
 
 public class ManageSieveMailetTestCase {
 
-    public static final Username USERNAME = Username.fromUsername("test@localhost");
+    public static final Username USERNAME = Username.of("test@localhost");
     public static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
     public static final ScriptContent SCRIPT_CONTENT = new ScriptContent("scriptContent");
     public static final String SYNTAX_EXCEPTION = "SyntaxException";

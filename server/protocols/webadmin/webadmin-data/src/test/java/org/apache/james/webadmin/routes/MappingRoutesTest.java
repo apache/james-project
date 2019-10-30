@@ -100,7 +100,7 @@ class MappingRoutesTest {
 
     @Test
     void getMappingsShouldReturnAliasMappings() throws RecipientRewriteTableException {
-        Username aliasDomain = Username.fromUsername("alias@domain.tld");
+        Username aliasDomain = Username.of("alias@domain.tld");
 
         recipientRewriteTable.addAliasMapping(
             MappingSource.fromUser(aliasDomain),
@@ -240,7 +240,7 @@ class MappingRoutesTest {
 
     @Test
     void getMappingsShouldReturnForwardMappings() throws RecipientRewriteTableException {
-        Username forwardUsername = Username.fromUsername("forwarduser@domain.tld");
+        Username forwardUsername = Username.of("forwarduser@domain.tld");
 
         recipientRewriteTable.addForwardMapping(
             MappingSource.fromUser(forwardUsername), "person1@domain.tld");
@@ -274,7 +274,7 @@ class MappingRoutesTest {
 
     @Test
     void getMappingsShouldReturnRegexMappings() throws RecipientRewriteTableException {
-        Username regexUsername = Username.fromUsername("regex@domain.tld");
+        Username regexUsername = Username.of("regex@domain.tld");
 
         recipientRewriteTable.addRegexMapping(
             MappingSource.fromUser(regexUsername), "abc");
@@ -308,7 +308,7 @@ class MappingRoutesTest {
 
     @Test
     void getMappingsShouldReturnErrorMappings() throws RecipientRewriteTableException {
-        Username errorUsername = Username.fromUsername("error@domain.tld");
+        Username errorUsername = Username.of("error@domain.tld");
 
         recipientRewriteTable.addErrorMapping(
             MappingSource.fromUser(errorUsername), "Error 123");
@@ -345,7 +345,7 @@ class MappingRoutesTest {
         MailAddress mailAddress = new MailAddress("address@domain.tld");
 
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername("alias@domain.tld")),
+            MappingSource.fromUser(Username.of("alias@domain.tld")),
             "user@domain.tld");
 
         recipientRewriteTable.addAliasDomainMapping(
@@ -356,18 +356,18 @@ class MappingRoutesTest {
             MappingSource.fromMailAddress(mailAddress), "user@domain.tld");
 
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername("group@domain.tld")),
+            MappingSource.fromUser(Username.of("group@domain.tld")),
                 "member1@domain.tld");
 
         recipientRewriteTable.addForwardMapping(
-            MappingSource.fromUser(Username.fromUsername("forward@domain.tld")),
+            MappingSource.fromUser(Username.of("forward@domain.tld")),
                 "abc@domain.tld");
 
         recipientRewriteTable.addRegexMapping(
-            MappingSource.fromUser(Username.fromUsername("regex@domain.tld")), "abc");
+            MappingSource.fromUser(Username.of("regex@domain.tld")), "abc");
 
         recipientRewriteTable.addErrorMapping(
-            MappingSource.fromUser(Username.fromUsername("error@domain.tld")), "Error 456");
+            MappingSource.fromUser(Username.of("error@domain.tld")), "Error 456");
 
         String jsonBody = when()
                 .get()
@@ -448,18 +448,18 @@ class MappingRoutesTest {
     @Test
     void getUserMappingsShouldReturnCorrespondingMappingsFromUsername() throws Exception {
         recipientRewriteTable.addAddressMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_USER);
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_ALIAS);
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_GROUP);
 
         recipientRewriteTable.addAddressMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_USER);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_USER);
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_ALIAS);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_ALIAS);
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_GROUP);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_GROUP);
 
         String jsonBody = when()
                 .get("/user/alice123@domain.tld")
@@ -491,18 +491,18 @@ class MappingRoutesTest {
     @Test
     void getUserMappingsShouldReturnSameMappingsWhenParametersInUpperCase() throws RecipientRewriteTableException {
         recipientRewriteTable.addAddressMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_USER);
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_ALIAS);
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_GROUP);
 
         recipientRewriteTable.addAddressMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_USER);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_USER);
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_ALIAS);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_ALIAS);
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername(BOB_ADDRESS)), BOB_GROUP);
+            MappingSource.fromUser(Username.of(BOB_ADDRESS)), BOB_GROUP);
 
         String jsonBody = when()
                 .get("/user/AliCE123@domain.tld")
@@ -547,11 +547,11 @@ class MappingRoutesTest {
     @Test
     void getUserMappingShouldReturnEmptyWhenNoDomainOnUserParameter() throws RecipientRewriteTableException {
         recipientRewriteTable.addAddressMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_USER);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_USER);
         recipientRewriteTable.addAliasMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_ALIAS);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_ALIAS);
         recipientRewriteTable.addGroupMapping(
-            MappingSource.fromUser(Username.fromUsername(ALICE_ADDRESS)), ALICE_GROUP);
+            MappingSource.fromUser(Username.of(ALICE_ADDRESS)), ALICE_GROUP);
 
         String jsonBody = when()
                 .get("/user/alice")

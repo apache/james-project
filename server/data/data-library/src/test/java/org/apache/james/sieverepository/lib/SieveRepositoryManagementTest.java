@@ -55,7 +55,7 @@ public class SieveRepositoryManagementTest {
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
 
-        Username username = Username.fromUsername(userName);
+        Username username = Username.of(userName);
         ScriptName scriptName = new ScriptName(script);
         String sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);
         ScriptContent scriptContent = new ScriptContent(sieveContent);
@@ -72,7 +72,7 @@ public class SieveRepositoryManagementTest {
         String script = "user_script";
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
 
-        Username username = Username.fromUsername(userName);
+        Username username = Username.of(userName);
         ScriptName scriptName = new ScriptName(script);
         String sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);
         ScriptContent scriptContent = new ScriptContent(sieveContent);

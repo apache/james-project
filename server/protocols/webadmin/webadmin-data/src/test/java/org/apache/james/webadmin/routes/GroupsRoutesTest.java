@@ -127,7 +127,7 @@ class GroupsRoutesTest {
         void getShouldNotResolveRecurseGroups() throws Exception {
             when().put(GROUP1 + SEPARATOR + USER_A);
 
-            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(Username.fromUsername(USER_A)),
+            memoryRecipientRewriteTable.addForwardMapping(MappingSource.fromUser(Username.of(USER_A)),
                 "b@" + DOMAIN.name());
 
             List<String> addresses =

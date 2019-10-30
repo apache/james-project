@@ -45,7 +45,7 @@ public interface QuotaThresholdFixture {
             .gracePeriod(GRACE_PERIOD)
             .build();
         String BOB = "bob@domain";
-        Username BOB_USERNAME = Username.fromUsername(BOB);
+        Username BOB_USERNAME = Username.of(BOB);
         Instant NOW = Instant.now();
         QuotaRoot QUOTAROOT = QuotaRoot.quotaRoot("any", Optional.empty());
         Instant ONE_HOUR_AGO = NOW.minus(Duration.ofHours(1));

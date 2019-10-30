@@ -288,7 +288,7 @@ public class ReindexingRoutes implements Routes {
 
     private Username extractUser(Request request) {
         try {
-            return Username.fromUsername(request.queryParams(USER_QUERY_PARAM));
+            return Username.of(request.queryParams(USER_QUERY_PARAM));
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

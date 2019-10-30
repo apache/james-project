@@ -50,7 +50,7 @@ class QuotaUsageUpdatedEventSerializationTest {
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
     private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
         EVENT_ID,
-        Username.fromUsername("onlyUsername"),
+        Username.of("onlyUsername"),
         QUOTA_ROOT,
         QUOTA_COUNT,
         QUOTA_SIZE,

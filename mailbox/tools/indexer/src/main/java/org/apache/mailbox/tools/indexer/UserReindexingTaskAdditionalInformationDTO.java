@@ -35,7 +35,7 @@ public class UserReindexingTaskAdditionalInformationDTO implements AdditionalInf
     public static AdditionalInformationDTOModule<UserReindexingTask.AdditionalInformation, UserReindexingTaskAdditionalInformationDTO> serializationModule(MailboxId.Factory factory) {
         return DTOModule.forDomainObject(UserReindexingTask.AdditionalInformation.class)
             .convertToDTO(UserReindexingTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(Username.fromUsername(dto.getUser()),
+            .toDomainObjectConverter(dto -> new UserReindexingTask.AdditionalInformation(Username.of(dto.getUser()),
                 dto.getSuccessfullyReprocessedMailCount(),
                 dto.getFailedReprocessedMailCount(),
                 ReprocessingContextInformationDTO.deserializeFailures(factory, dto.getFailures()),

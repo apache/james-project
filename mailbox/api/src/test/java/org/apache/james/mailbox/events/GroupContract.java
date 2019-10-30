@@ -141,7 +141,7 @@ public interface GroupContract {
 
             eventBus().register(listener, GROUP_A);
 
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.of("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, NO_KEYS).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
@@ -351,7 +351,7 @@ public interface GroupContract {
 
             eventBus().register(listener, GROUP_A);
 
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.fromUsername("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.of("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().reDeliver(GROUP_A, noopEvent).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());

@@ -164,7 +164,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     }
 
     private Username retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
-        return Username.fromUsername(mapperFactory.getMailboxMapper(session)
+        return Username.of(mapperFactory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
             .getUser());
     }

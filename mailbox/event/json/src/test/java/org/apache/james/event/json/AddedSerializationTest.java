@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableSortedMap;
 
 class AddedSerializationTest {
 
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final String MAILBOX_NAME = "mailboxName";

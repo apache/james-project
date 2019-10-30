@@ -38,7 +38,7 @@ import org.junit.Test;
 public class ResourceLocatorTest {
 
     public static final String RECEIVER_LOCALHOST = "receiver@localhost";
-    public static final Username USERNAME = Username.fromUsername(RECEIVER_LOCALHOST);
+    public static final Username USERNAME = Username.of(RECEIVER_LOCALHOST);
     private SieveRepository sieveRepository;
     private ResourceLocator resourceLocator;
     private MailAddress mailAddress;

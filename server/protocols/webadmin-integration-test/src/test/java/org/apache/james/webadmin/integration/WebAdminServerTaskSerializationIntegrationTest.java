@@ -463,7 +463,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
         MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
             .eventId(Event.EventId.of(uuid))
-            .user(Username.fromUsername(USERNAME))
+            .user(Username.of(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))
@@ -505,7 +505,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
         MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
             .eventId(Event.EventId.of(uuid))
-            .user(Username.fromUsername(USERNAME))
+            .user(Username.of(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
             .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))

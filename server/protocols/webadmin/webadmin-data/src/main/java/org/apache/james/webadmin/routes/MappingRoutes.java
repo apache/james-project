@@ -111,7 +111,7 @@ public class MappingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid user parameter values.")
     })
     private List<MappingValueDTO> getUserMappings(Request request, Response response) throws RecipientRewriteTableException {
-        Username username = Username.fromUsername(request.params(USER).toLowerCase());
+        Username username = Username.of(request.params(USER).toLowerCase());
 
         return recipientRewriteTable.getStoredMappings(MappingSource.fromUser(username))
             .asStream()

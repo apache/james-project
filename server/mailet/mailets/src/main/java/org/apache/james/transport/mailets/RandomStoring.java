@@ -104,7 +104,7 @@ public class RandomStoring extends GenericMailet {
 
     private List<ReroutingInfos> retrieveReroutingInfos() throws UsersRepositoryException {
         return Streams.stream(usersRepository.list())
-            .map(Username::fromUsername)
+            .map(Username::of)
             .flatMap(this::buildReRoutingInfos)
             .collect(Guavate.toImmutableList());
     }

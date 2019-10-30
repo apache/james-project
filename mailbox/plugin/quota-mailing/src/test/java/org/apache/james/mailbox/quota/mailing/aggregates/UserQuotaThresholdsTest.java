@@ -29,7 +29,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class UserQuotaThresholdsTest {
 
-    public static final Username BOB = Username.fromUsername("bob@domain");
+    public static final Username BOB = Username.of("bob@domain");
 
     @Test
     public void aggregateShouldMatchBeanContract() {
@@ -46,13 +46,13 @@ public class UserQuotaThresholdsTest {
 
     @Test
     public void fromShouldThrowWhenUserWithSlash() {
-        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.fromUsername("foo/bar@domain"), "listenerName"))
+        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.of("foo/bar@domain"), "listenerName"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromShouldThrowWhenDomainWithSlash() {
-        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.fromUsername("foo.bar@dom/ain"), "listenerName"))
+        assertThatThrownBy(() -> UserQuotaThresholds.Id.from(Username.of("foo.bar@dom/ain"), "listenerName"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

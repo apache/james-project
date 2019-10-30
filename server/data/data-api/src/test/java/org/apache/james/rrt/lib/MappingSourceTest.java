@@ -64,7 +64,7 @@ class MappingSourceTest {
 
     @Test
     void asMailAddressStringShouldSerializeUserWithoutDomain() {
-        MappingSource mappingSource = MappingSource.fromUser(Username.fromUsername(USER));
+        MappingSource mappingSource = MappingSource.fromUser(Username.of(USER));
 
         assertThat(mappingSource.asMailAddressString()).isEqualTo(USER + "@*");
     }

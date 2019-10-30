@@ -60,7 +60,7 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
 
     @Override
     public void setMaxQuota(String user, long value) throws Exception {
-        sieveRepository.setQuota(Username.fromUsername(user), QuotaSize.size(value));
+        sieveRepository.setQuota(Username.of(user), QuotaSize.size(value));
     }
 
     @Override

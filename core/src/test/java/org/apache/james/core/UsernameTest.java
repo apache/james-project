@@ -117,57 +117,57 @@ public class UsernameTest {
 
     @Test
     public void fromUsernameShouldThrowOnNull() {
-        assertThatThrownBy(() -> Username.fromUsername(null))
+        assertThatThrownBy(() -> Username.of(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowOnEmpty() {
-        assertThatThrownBy(() -> Username.fromUsername(""))
+        assertThatThrownBy(() -> Username.of(""))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldAllow255LongUsername() {
         String tail = "@a";
-        assertThat(Username.fromUsername(StringUtils.repeat('j', 255 - tail.length()) + tail).asString())
+        assertThat(Username.of(StringUtils.repeat('j', 255 - tail.length()) + tail).asString())
             .hasSize(255);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenTooLong() {
         String tail = "@a";
-        assertThatThrownBy(() -> Username.fromUsername(StringUtils.repeat('j', 255 - tail.length() + 1) + tail))
+        assertThatThrownBy(() -> Username.of(StringUtils.repeat('j', 255 - tail.length() + 1) + tail))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenMultipleDomainDelimiter() {
-        assertThatThrownBy(() -> Username.fromUsername("aa@aa@aa"))
+        assertThatThrownBy(() -> Username.of("aa@aa@aa"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenEndsWithDomainDelimiter() {
-        assertThatThrownBy(() -> Username.fromUsername("aa@"))
+        assertThatThrownBy(() -> Username.of("aa@"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowWhenStartsWithDomainDelimiter() {
-        assertThatThrownBy(() -> Username.fromUsername("@aa"))
+        assertThatThrownBy(() -> Username.of("@aa"))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldParseUsernameWithDomain() {
-        assertThat(Username.fromUsername("aa@bb"))
+        assertThat(Username.of("aa@bb"))
             .isEqualTo(Username.from("aa", Optional.of("bb")));
     }
 
     @Test
     public void fromUsernameShouldParseUsernameWithoutDomain() {
-        assertThat(Username.fromUsername("aa"))
+        assertThat(Username.of("aa"))
             .isEqualTo(Username.from("aa", Optional.empty()));
     }
 
@@ -197,50 +197,50 @@ public class UsernameTest {
 
     @Test
     public void withDefaultDomainShouldAppendDefaultDomainWhenNone() {
-        assertThat(Username.fromUsername("user")
+        assertThat(Username.of("user")
             .withDefaultDomain(Domain.LOCALHOST))
             .isEqualTo(Username.fromLocalPartWithDomain("user", Domain.LOCALHOST));
     }
 
     @Test
     public void withDefaultDomainShouldNotAppendDefaultDomainWhenDomainIsPresent() {
-        assertThat(Username.fromUsername("user@domain")
+        assertThat(Username.of("user@domain")
             .withDefaultDomain(Domain.LOCALHOST))
-            .isEqualTo(Username.fromUsername("user@domain"));
+            .isEqualTo(Username.of("user@domain"));
     }
 
     @Test
     public void withDefaultDomainShouldNotThrowUponEmptyDomain() {
-        assertThat(Username.fromUsername("user")
+        assertThat(Username.of("user")
             .withDefaultDomain(Optional.empty()))
-            .isEqualTo(Username.fromUsername("user"));
+            .isEqualTo(Username.of("user"));
     }
 
     @Test
     public void withDefaultDomainShouldNotThrowUponEmptyDomainWhenUsersHadADomain() {
-        assertThat(Username.fromUsername("user@domain")
+        assertThat(Username.of("user@domain")
             .withDefaultDomain(Optional.empty()))
-            .isEqualTo(Username.fromUsername("user@domain"));
+            .isEqualTo(Username.of("user@domain"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldPreserveUserWhenAlreadyHasADomain() {
-        assertThat(Username.fromUsername("user@domain")
-            .withDefaultDomainFromUser(Username.fromUsername("bob@tld")))
-            .isEqualTo(Username.fromUsername("user@domain"));
+        assertThat(Username.of("user@domain")
+            .withDefaultDomainFromUser(Username.of("bob@tld")))
+            .isEqualTo(Username.of("user@domain"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldAppendOtherUserDomainWhenNone() {
-        assertThat(Username.fromUsername("user")
-            .withDefaultDomainFromUser(Username.fromUsername("bob@tld")))
-            .isEqualTo(Username.fromUsername("user@tld"));
+        assertThat(Username.of("user")
+            .withDefaultDomainFromUser(Username.of("bob@tld")))
+            .isEqualTo(Username.of("user@tld"));
     }
 
     @Test
     public void withDefaultDomainFromUserShouldNotThrowUponNoDomain() {
-        assertThat(Username.fromUsername("user")
-            .withDefaultDomainFromUser(Username.fromUsername("bob")))
-            .isEqualTo(Username.fromUsername("user"));
+        assertThat(Username.of("user")
+            .withDefaultDomainFromUser(Username.of("bob")))
+            .isEqualTo(Username.of("user"));
     }
 }

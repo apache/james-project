@@ -31,7 +31,7 @@ public class ThrowingRewriterTest {
         assertThatThrownBy(() ->
             new UserRewritter.ThrowingRewriter()
                 .generateUserRewriter("any")
-                .rewrite(Username.fromUsername("any")))
+                .rewrite(Username.of("any")))
             .isInstanceOf(RecipientRewriteTable.ErrorMappingException.class);
     }
 }

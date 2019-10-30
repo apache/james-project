@@ -86,7 +86,7 @@ public class UserService {
 
     private void usernamePreconditions(String username) {
         try {
-            Username.fromUsername(username);
+            Username.of(username);
         } catch (IllegalArgumentException e) {
             throw new InvalidUsername(e);
         }

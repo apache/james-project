@@ -49,7 +49,7 @@ class DeletedMessagesVaultRestoreTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
 
     private static final String USERNAME = "james";
-    private static final Username USERNAME_TO_RESTORE = Username.fromUsername(USERNAME);
+    private static final Username USERNAME_TO_RESTORE = Username.of(USERNAME);
     private static final Query QUERY = Query.of(CriterionFactory.hasAttachment(true));
     private static final DeletedMessagesVaultRestoreTask.AdditionalInformation DETAILS = new DeletedMessagesVaultRestoreTask.AdditionalInformation(USERNAME_TO_RESTORE,42, 10, TIMESTAMP);
 

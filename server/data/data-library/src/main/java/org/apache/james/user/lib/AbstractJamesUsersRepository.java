@@ -193,7 +193,7 @@ public abstract class AbstractJamesUsersRepository extends AbstractUsersReposito
                         domain = Domain.LOCALHOST;
                     }
                     try {
-                        MappingSource source = MappingSource.fromUser(Username.fromUsername(user));
+                        MappingSource source = MappingSource.fromUser(Username.of(user));
                         mappings.put(source, getResolvedMappings(username, domain));
                     } catch (ErrorMappingException e) {
                         // shold never happen here

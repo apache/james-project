@@ -46,7 +46,7 @@ class UserReindexingTaskSerializationTest {
     private JsonTaskSerializer taskSerializer;
     private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
 
-    private final Username username = Username.fromUsername("foo@apache.org");
+    private final Username username = Username.of("foo@apache.org");
     private final int successfullyReprocessedMailCount = 42;
     private final int failedReprocessedMailCount = 2;
     private ReIndexingExecutionFailures reIndexingExecutionFailures;
@@ -79,7 +79,7 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void userReindexingShouldBeSerializable() throws JsonProcessingException {
-        Username username = Username.fromUsername("foo@apache.org");
+        Username username = Username.of("foo@apache.org");
         UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, username);
 
         assertThatJson(taskSerializer.serialize(task))
@@ -88,7 +88,7 @@ class UserReindexingTaskSerializationTest {
 
     @Test
     void userReindexingShouldBeDeserializable() throws IOException {
-        Username username = Username.fromUsername("foo@apache.org");
+        Username username = Username.of("foo@apache.org");
         UserReindexingTask task = new UserReindexingTask(reIndexerPerformer, username);
 
         assertThat(taskSerializer.deserialize(serializedUserReindexingTask))

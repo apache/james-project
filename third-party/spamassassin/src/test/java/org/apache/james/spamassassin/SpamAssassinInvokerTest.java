@@ -39,7 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @ExtendWith(SpamAssassinExtension.class)
 public class SpamAssassinInvokerTest {
 
-    public static final Username USERNAME = Username.fromUsername("any@james");
+    public static final Username USERNAME = Username.of("any@james");
     private SpamAssassin spamAssassin;
     private SpamAssassinInvoker testee;
 

@@ -243,6 +243,6 @@ public class SieveQuotaRoutes implements Routes {
                 .message("User " + username + " does not exist")
                 .haltError();
         }
-        return Username.fromUsername(username);
+        return Username.of(username);
     }
 }

@@ -53,8 +53,8 @@ public interface User {
     boolean setPassword(String newPass);
 
     default boolean hasUsername(String username) {
-        Username thisUsername = Username.fromUsername(getUserName());
-        Username thatUsername = Username.fromUsername(username);
+        Username thisUsername = Username.of(getUserName());
+        Username thatUsername = Username.of(username);
 
         return thisUsername.equals(thatUsername);
     }

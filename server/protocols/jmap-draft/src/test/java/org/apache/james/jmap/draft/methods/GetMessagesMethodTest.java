@@ -82,7 +82,7 @@ import com.jayway.jsonpath.JsonPath;
 
 public class GetMessagesMethodTest {
     private static final String FORWARDED = "forwarded";
-    private static final Username ROBERT = Username.fromUsername("robert");
+    private static final Username ROBERT = Username.of("robert");
 
     private MessageIdManager messageIdManager;
     private org.apache.james.mime4j.dom.Message messageContent1;

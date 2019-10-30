@@ -34,7 +34,7 @@ import com.google.common.collect.ImmutableList;
 public class Username {
     public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
 
-    public static Username fromUsername(String username) {
+    public static Username of(String username) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH);
 

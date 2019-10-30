@@ -47,17 +47,17 @@ public class DTOTest {
     static final String EVENT_COMPLEX_JSON = ClassLoaderUtils.getSystemResourceAsString("json/eventComplex.json");
     static final FilteringRuleSetDefinedDTO SIMPLE_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(Username.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
                     ImmutableList.of(RULE_1, RULE_2)));
     static final FilteringRuleSetDefinedDTO EMPTY_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(Username.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
                     ImmutableList.of()));
     static final FilteringRuleSetDefinedDTO COMPLEX_DTO = FilteringRuleSetDefinedDTO.from(
             new RuleSetDefined(
-                    new FilteringAggregateId(Username.fromUsername("Bart")),
+                    new FilteringAggregateId(Username.of("Bart")),
                     EventId.first(),
                     ImmutableList.of(RULE_FROM, RULE_RECIPIENT, RULE_SUBJECT, RULE_TO)));
 

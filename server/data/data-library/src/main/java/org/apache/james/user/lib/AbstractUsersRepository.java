@@ -70,7 +70,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     }
 
     protected void isValidUsername(String username) throws UsersRepositoryException {
-        Username user = Username.fromUsername(username);
+        Username user = Username.of(username);
         if (supportVirtualHosting()) {
             // need a @ in the username
             if (!user.hasDomainPart()) {

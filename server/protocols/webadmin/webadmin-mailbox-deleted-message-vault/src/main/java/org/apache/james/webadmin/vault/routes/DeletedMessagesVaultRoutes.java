@@ -373,7 +373,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     private Username extractUser(Request request) {
         try {
-            return Username.fromUsername(request.params(USER_PATH_PARAM));
+            return Username.of(request.params(USER_PATH_PARAM));
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

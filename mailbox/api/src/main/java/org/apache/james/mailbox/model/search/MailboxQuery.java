@@ -145,7 +145,7 @@ public final class MailboxQuery {
     public boolean isPrivateMailboxes(MailboxSession session) {
         Username sessionUsername = session.getUser();
         return namespace.map(MailboxConstants.USER_NAMESPACE::equals).orElse(false)
-            && user.map(Username::fromUsername).map(sessionUsername::equals).orElse(false);
+            && user.map(Username::of).map(sessionUsername::equals).orElse(false);
     }
 
     @VisibleForTesting

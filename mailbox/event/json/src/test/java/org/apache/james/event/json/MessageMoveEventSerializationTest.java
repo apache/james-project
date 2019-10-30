@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 class MessageMoveEventSerializationTest {
     private static final Event EVENT = MessageMoveEvent.builder()
         .eventId(EVENT_ID)
-        .user(Username.fromUsername("bob@domain.tld"))
+        .user(Username.of("bob@domain.tld"))
         .messageId(TestMessageId.of(42))
         .messageMoves(
             MessageMoves.builder()
@@ -75,7 +75,7 @@ class MessageMoveEventSerializationTest {
         class EmptyTargetMailboxIds {
             private final Event event = MessageMoveEvent.builder()
                 .eventId(EVENT_ID)
-                .user(Username.fromUsername("bob"))
+                .user(Username.of("bob"))
                 .messageId(TestMessageId.of(42))
                 .messageMoves(
                     MessageMoves.builder()
@@ -109,7 +109,7 @@ class MessageMoveEventSerializationTest {
         class EmptyPreviousMailboxIds {
             private final Event event = MessageMoveEvent.builder()
                 .eventId(EVENT_ID)
-                .user(Username.fromUsername("bob"))
+                .user(Username.of("bob"))
                 .messageId(TestMessageId.of(42))
                 .messageMoves(
                     MessageMoves.builder()
@@ -143,7 +143,7 @@ class MessageMoveEventSerializationTest {
         class EmptyMessagesIds {
             private final Event event = MessageMoveEvent.builder()
                 .eventId(EVENT_ID)
-                .user(Username.fromUsername("bob"))
+                .user(Username.of("bob"))
                 .messageMoves(
                     MessageMoves.builder()
                         .previousMailboxIds(TestId.of(18), TestId.of(24))

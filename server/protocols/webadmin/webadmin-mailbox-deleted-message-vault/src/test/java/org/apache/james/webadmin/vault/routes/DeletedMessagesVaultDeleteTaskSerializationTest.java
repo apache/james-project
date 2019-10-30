@@ -42,7 +42,7 @@ class DeletedMessagesVaultDeleteTaskSerializationTest {
 
     private DeletedMessageVault deletedMessageVault;
     private JsonTaskSerializer taskSerializer;
-    private final Username username = Username.fromUsername("james");
+    private final Username username = Username.of("james");
 
     private final TestMessageId.Factory messageIdFactory = new TestMessageId.Factory();
     private final MessageId messageId = messageIdFactory.generate();

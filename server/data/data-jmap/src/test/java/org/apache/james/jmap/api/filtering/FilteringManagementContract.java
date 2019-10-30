@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 public interface FilteringManagementContract {
 
     String BART_SIMPSON_CARTOON = "bart@simpson.cartoon";
-    Username USERNAME = Username.fromUsername(BART_SIMPSON_CARTOON);
+    Username USERNAME = Username.of(BART_SIMPSON_CARTOON);
 
     default FilteringManagement instantiateFilteringManagement(EventStore eventStore) {
         return new EventSourcingFilteringManagement(eventStore);

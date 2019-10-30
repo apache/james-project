@@ -43,7 +43,7 @@ class QuotaRatioToElasticSearchJsonTest {
         String user = "user@domain.org";
         QuotaUsageUpdatedEvent event = EventFactory.quotaUpdated()
             .eventId(EVENT_ID)
-            .user(Username.fromUsername(user))
+            .user(Username.of(user))
             .quotaRoot(QuotaRoot.quotaRoot(user, Optional.of(Domain.of("domain.org"))))
             .quotaCount(QuotaFixture.Counts._52_PERCENT)
             .quotaSize(QuotaFixture.Sizes._55_PERCENT)
@@ -62,7 +62,7 @@ class QuotaRatioToElasticSearchJsonTest {
         String user = "user";
         QuotaUsageUpdatedEvent event = EventFactory.quotaUpdated()
             .eventId(EVENT_ID)
-            .user(Username.fromUsername(user))
+            .user(Username.of(user))
             .quotaRoot(QuotaRoot.quotaRoot(user, Optional.empty()))
             .quotaCount(QuotaFixture.Counts._52_PERCENT)
             .quotaSize(QuotaFixture.Sizes._55_PERCENT)

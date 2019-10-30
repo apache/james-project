@@ -104,7 +104,7 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public boolean test(String name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(Username.fromUsername(name).asString()))
+        return Optional.ofNullable(userByName.get(Username.of(name).asString()))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }

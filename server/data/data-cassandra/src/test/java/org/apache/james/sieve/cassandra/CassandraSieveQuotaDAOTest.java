@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveQuotaDAOTest {
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
 
     @RegisterExtension

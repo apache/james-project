@@ -80,7 +80,7 @@ public class UserPerBucketDAO {
         return cassandraAsyncExecutor.executeRows(listStatement.bind()
             .setString(BUCKET_NAME, bucketName.asString()))
             .map(row -> row.getString(USER))
-            .map(Username::fromUsername);
+            .map(Username::of);
     }
 
     Flux<BucketName> retrieveBuckets() {

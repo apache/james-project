@@ -51,7 +51,7 @@ public class DeletedMessagesVaultDeleteTask implements Task {
 
         public DeletedMessagesVaultDeleteTask create(DeletedMessagesVaultDeleteTaskDTO dto) {
             MessageId messageId = messageIdFactory.fromString(dto.getMessageId());
-            Username username = Username.fromUsername(dto.getUserName());
+            Username username = Username.of(dto.getUserName());
             return new DeletedMessagesVaultDeleteTask(deletedMessageVault, username, messageId);
         }
     }

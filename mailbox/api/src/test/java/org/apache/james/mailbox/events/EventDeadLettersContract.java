@@ -103,7 +103,7 @@ interface EventDeadLettersContract {
     int OPERATION_COUNT = 50;
 
     MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName");
-    Username USERNAME = Username.fromUsername("user");
+    Username USERNAME = Username.of("user");
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(235);
     TestId MAILBOX_ID = TestId.of(563);
     Event.EventId EVENT_ID_1 = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");

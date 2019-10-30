@@ -178,7 +178,7 @@ class SieveScriptRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(getScriptContent(sieveRepository
-            .getScript(Username.fromUsername("userA"), new ScriptName("scriptA"))))
+            .getScript(Username.of("userA"), new ScriptName("scriptA"))))
             .isEqualTo(new ScriptContent(" "));
     }
 
@@ -194,7 +194,7 @@ class SieveScriptRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(getScriptContent(sieveRepository
-            .getScript(Username.fromUsername("userA"), new ScriptName("scriptA"))))
+            .getScript(Username.of("userA"), new ScriptName("scriptA"))))
             .isEqualTo(new ScriptContent(sieveContent));
     }
 
@@ -211,7 +211,7 @@ class SieveScriptRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(getScriptContent(sieveRepository
-            .getActive(Username.fromUsername("userA"))))
+            .getActive(Username.of("userA"))))
             .isEqualTo(new ScriptContent(sieveContent));
     }
 
@@ -227,7 +227,7 @@ class SieveScriptRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThatThrownBy(() -> sieveRepository.getActive(Username.fromUsername("userA")))
+        assertThatThrownBy(() -> sieveRepository.getActive(Username.of("userA")))
             .isInstanceOf(ScriptNotFoundException.class);
     }
 

@@ -131,7 +131,7 @@ public class RegexMappingRoutes implements Routes {
     private MappingSource extractMappingSource(Request request) {
         try {
             return MappingSource
-                .fromUser(Username.fromUsername(request.params(MAPPING_SOURCE_PARAM)));
+                .fromUser(Username.of(request.params(MAPPING_SOURCE_PARAM)));
         } catch (IllegalArgumentException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)

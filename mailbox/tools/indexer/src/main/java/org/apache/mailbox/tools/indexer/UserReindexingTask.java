@@ -71,7 +71,7 @@ public class UserReindexingTask implements Task {
         }
 
         public UserReindexingTask create(UserReindexingTaskDTO dto) {
-            Username username = Username.fromUsername(dto.getUsername());
+            Username username = Username.of(dto.getUsername());
             return new UserReindexingTask(reIndexerPerformer, username);
         }
     }

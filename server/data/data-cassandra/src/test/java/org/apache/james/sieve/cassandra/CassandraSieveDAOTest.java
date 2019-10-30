@@ -34,7 +34,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveDAOTest {
 
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final ScriptName SCRIPT_NAME = new ScriptName("scriptName");
     private static final ScriptName SCRIPT_NAME2 = new ScriptName("scriptName2");
     private static final Script SCRIPT = Script.builder()

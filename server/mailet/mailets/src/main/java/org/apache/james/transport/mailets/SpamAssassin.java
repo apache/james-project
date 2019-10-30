@@ -108,7 +108,7 @@ public class SpamAssassin extends GenericMailet {
     }
 
     private void querySpamAssassin(Mail mail, MimeMessage message, SpamAssassinInvoker sa, MailAddress recipient) throws MessagingException, UsersRepositoryException {
-        SpamAssassinResult result = sa.scanMail(message, Username.fromUsername(usersRepository.getUser(recipient)));
+        SpamAssassinResult result = sa.scanMail(message, Username.of(usersRepository.getUser(recipient)));
 
         // Add headers per recipient to mail object
         for (Attribute attribute : result.getHeadersAsAttributes()) {

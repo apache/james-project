@@ -46,7 +46,7 @@ public class DeletedMessagesVaultRestoreTaskDTO implements TaskDTO {
         }
 
         public DeletedMessagesVaultRestoreTask create(DeletedMessagesVaultRestoreTaskDTO dto) {
-            Username usernameToRestore = Username.fromUsername(dto.userToRestore);
+            Username usernameToRestore = Username.of(dto.userToRestore);
             Query query = queryTranslator.translate(dto.query);
             return new DeletedMessagesVaultRestoreTask(restoreService, usernameToRestore, query);
         }

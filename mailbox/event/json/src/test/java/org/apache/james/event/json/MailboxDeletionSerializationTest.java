@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 class MailboxDeletionSerializationTest {
 
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(3652);
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, USERNAME.asString(), "mailboxName");
     private static final MailboxId MAILBOX_ID = TestId.of(789);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&user@domain", Optional.of(Domain.of("domain")));

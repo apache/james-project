@@ -106,7 +106,7 @@ public class StoreAttachmentManager implements AttachmentManager {
         Collection<org.apache.james.mailbox.store.mail.model.Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getOwners(attachmentId);
         return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().equals(Username.fromUsername(username.getValue())));
+            .anyMatch(username -> mailboxSession.getUser().equals(Username.of(username.getValue())));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

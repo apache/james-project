@@ -67,8 +67,8 @@ class DeletedMessageVaultHookTest {
     private static final String ALICE_ADDRESS = "alice@james.com";
     private static final String BOB_ADDRESS = "bob@james.com";
     private static final String TEST_ADDRESS = "test@james.com";
-    private static final Username ALICE = Username.fromUsername(ALICE_ADDRESS);
-    private static final Username BOB = Username.fromUsername(BOB_ADDRESS);
+    private static final Username ALICE = Username.of(ALICE_ADDRESS);
+    private static final Username BOB = Username.of(BOB_ADDRESS);
     private static final String MESSAGE_BODY = "testmail";
 
     private static final MailboxPath MAILBOX_ALICE_ONE = MailboxPath.forUser(ALICE_ADDRESS, "ALICE_ONE");

@@ -36,26 +36,26 @@ import scala.math.BigDecimal;
 class UserTest {
     @Test
     void userShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.fromUsername("bob")))
+        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.of("bob")))
             .isEqualTo(new JsString("bob"));
     }
 
     @Test
     void userShouldBeWellDeSerialized() {
         assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob")).get())
-            .isEqualTo(Username.fromUsername("bob"));
+            .isEqualTo(Username.of("bob"));
     }
 
     @Test
     void userShouldBeWellSerializedWhenVirtualHosting() {
-        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.fromUsername("bob@domain")))
+        assertThat(DTO_JSON_SERIALIZE.userWriters().writes(Username.of("bob@domain")))
             .isEqualTo(new JsString("bob@domain"));
     }
 
     @Test
     void userShouldBeWellDeSerializedWhenVirtualHosting() {
         assertThat(DTO_JSON_SERIALIZE.userReads().reads(new JsString("bob@domain")).get())
-            .isEqualTo(Username.fromUsername("bob@domain"));
+            .isEqualTo(Username.of("bob@domain"));
     }
 
     @Test

@@ -82,7 +82,7 @@ public class DeletedMessagesVaultRestoreTaskAdditionalInformationDTO implements 
 
     DeletedMessagesVaultRestoreTask.AdditionalInformation toDomainObject() {
         return new DeletedMessagesVaultRestoreTask.AdditionalInformation(
-            Username.fromUsername(user),
+            Username.of(user),
             successfulRestoreCount,
             errorRestoreCount,
             timestamp

@@ -58,7 +58,7 @@ import com.google.common.collect.Lists;
 
 public class CopyProcessorTest {
     public static final String TAG = "TAG";
-    private static final Username USERNAME = Username.fromUsername("username");
+    private static final Username USERNAME = Username.of("username");
 
     private CopyProcessor testee;
     private ImapProcessor mockNextProcessor;

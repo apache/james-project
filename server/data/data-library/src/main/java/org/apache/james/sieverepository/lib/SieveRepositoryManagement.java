@@ -71,22 +71,22 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
 
     @Override
     public long getQuota(String user) throws SieveRepositoryException {
-        return sieveRepository.getQuota(Username.fromUsername(user)).asLong();
+        return sieveRepository.getQuota(Username.of(user)).asLong();
     }
 
     @Override
     public void setQuota(String user, long quota) throws SieveRepositoryException {
-        sieveRepository.setQuota(Username.fromUsername(user), QuotaSize.size(quota));
+        sieveRepository.setQuota(Username.of(user), QuotaSize.size(quota));
     }
 
     @Override
     public void removeQuota(String user) throws SieveRepositoryException {
-        sieveRepository.removeQuota(Username.fromUsername(user));
+        sieveRepository.removeQuota(Username.of(user));
     }
 
     @Override
     public void addActiveSieveScript(String userName, String scriptName, String script) throws SieveRepositoryException {
-        Username username = Username.fromUsername(userName);
+        Username username = Username.of(userName);
         sieveRepository.putScript(username, new ScriptName(scriptName), new ScriptContent(script));
         sieveRepository.setActive(username, new ScriptName(scriptName));
     }

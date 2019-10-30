@@ -33,7 +33,7 @@ public class DeletedMessagesVaultDeleteTaskAdditionalInformationDTO implements A
     public static AdditionalInformationDTOModule<DeletedMessagesVaultDeleteTask.AdditionalInformation, DeletedMessagesVaultDeleteTaskAdditionalInformationDTO> serializationModule(MessageId.Factory factory) {
         return DTOModule.forDomainObject(DeletedMessagesVaultDeleteTask.AdditionalInformation.class)
             .convertToDTO(DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(Username.fromUsername(dto.userName), factory.fromString(dto.getMessageId()), dto.getTimestamp()))
+            .toDomainObjectConverter(dto -> new DeletedMessagesVaultDeleteTask.AdditionalInformation(Username.of(dto.userName), factory.fromString(dto.getMessageId()), dto.getTimestamp()))
             .toDTOConverter((details, type) -> new DeletedMessagesVaultDeleteTaskAdditionalInformationDTO(type, details.getUsername(), details.getDeleteMessageId(), details.timestamp()))
             .typeName(DeletedMessagesVaultDeleteTask.TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);

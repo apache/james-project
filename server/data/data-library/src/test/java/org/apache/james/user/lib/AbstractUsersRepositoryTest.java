@@ -374,7 +374,7 @@ public abstract class AbstractUsersRepositoryTest {
         Assume.assumeTrue(usersRepository.supportVirtualHosting());
 
         String username = "user@domain";
-        assertThat(usersRepository.getMailAddressFor(Username.fromUsername(username)))
+        assertThat(usersRepository.getMailAddressFor(Username.of(username)))
             .isEqualTo(username);
     }
 
@@ -387,7 +387,7 @@ public abstract class AbstractUsersRepositoryTest {
         Assume.assumeFalse(usersRepository.supportVirtualHosting());
 
         String username = "user";
-        assertThat(usersRepository.getMailAddressFor(Username.fromUsername(username)))
+        assertThat(usersRepository.getMailAddressFor(Username.of(username)))
             .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
     }
 }

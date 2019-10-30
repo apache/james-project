@@ -102,7 +102,7 @@ public class MessageMoveEventTest {
             .messageId(messageId)
             .build();
 
-        softly.assertThat(event.getUsername()).isEqualTo(Username.fromUsername(username));
+        softly.assertThat(event.getUsername()).isEqualTo(Username.of(username));
         softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
         softly.assertThat(event.getMessageIds()).containsExactly(messageId);
     }

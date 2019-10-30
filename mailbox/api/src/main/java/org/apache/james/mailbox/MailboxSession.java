@@ -167,7 +167,7 @@ public class MailboxSession {
      * @return not null
      */
     public Username getUser() {
-        return Username.fromUsername(userName);
+        return Username.of(userName);
     }
 
     /**

@@ -63,7 +63,7 @@ public class ElasticSearchQuotaSearcher implements QuotaSearcher {
             try (Stream<SearchHit> searchHits = searchHits(query)) {
                 return searchHits
                     .map(SearchHit::getId)
-                    .map(Username::fromUsername)
+                    .map(Username::of)
                     .collect(Guavate.toImmutableList());
             }
         } catch (IOException e) {

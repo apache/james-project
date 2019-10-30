@@ -33,7 +33,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraActiveScriptDAOTest {
-    private static final Username USERNAME = Username.fromUsername("user");
+    private static final Username USERNAME = Username.of("user");
     private static final ScriptName SCRIPT_NAME = new ScriptName("sciptName");
     private static final ScriptName NEW_SCRIPT_NAME = new ScriptName("newScriptName");
 

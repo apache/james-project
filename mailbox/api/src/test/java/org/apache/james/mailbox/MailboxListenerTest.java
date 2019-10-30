@@ -52,7 +52,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class MailboxListenerTest {
     private static final MailboxPath PATH = MailboxPath.forUser("bob", "mailbox");
     private static final MailboxPath OTHER_PATH = MailboxPath.forUser("bob", "mailbox.other");
-    private static final Username BOB = Username.fromUsername("bob");
+    private static final Username BOB = Username.of("bob");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final TestId MAILBOX_ID = TestId.of(18);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("bob", Optional.empty());

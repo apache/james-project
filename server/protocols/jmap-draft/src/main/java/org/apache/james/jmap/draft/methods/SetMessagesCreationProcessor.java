@@ -285,7 +285,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private void assertUserIsSender(MailboxSession session, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
         if (!from.flatMap(DraftEmailer::getEmail)
-                .filter(email -> session.getUser().equals(Username.fromUsername(email)))
+                .filter(email -> session.getUser().equals(Username.of(email)))
                 .isPresent()) {
             String allowedSender = session.getUser().asString();
             throw new MailboxSendingNotAllowedException(allowedSender);

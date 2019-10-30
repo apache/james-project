@@ -53,7 +53,7 @@ import reactor.core.publisher.Mono;
 public class SetVacationResponseMethodTest {
     private static final String WRONG_ID = "WrongId";
     private static final String TEXT_BODY = "Text body";
-    private static final Username USERNAME = Username.fromUsername("username");
+    private static final Username USERNAME = Username.of("username");
     private static final String SUBJECT = "subject";
 
     private SetVacationResponseMethod testee;

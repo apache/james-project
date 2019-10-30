@@ -33,7 +33,7 @@ public class FilteringAggregateId implements AggregateId {
 
     public static final FilteringAggregateId parse(String rawString) {
         Preconditions.checkArgument(rawString.startsWith(PREFIX + SEPARATOR));
-        return new FilteringAggregateId(Username.fromUsername(rawString.substring(PREFIX.length() + SEPARATOR.length())));
+        return new FilteringAggregateId(Username.of(rawString.substring(PREFIX.length() + SEPARATOR.length())));
     }
 
     private final Username username;

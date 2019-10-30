@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 class UserRoutingKeyFactoryTest {
     @Test
     void fromShouldRelyOnUsername() {
-        assertThat(new UserRoutingKeyFactory().from(Username.fromUsername("bob")))
+        assertThat(new UserRoutingKeyFactory().from(Username.of("bob")))
             .isEqualTo(RoutingKey.fromString("bob"));
     }
 }

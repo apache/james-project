@@ -261,7 +261,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case _ => JsError()
   }
   implicit val userReads: Reads[Username] = {
-    case JsString(userAsString) => JsSuccess(Username.fromUsername(userAsString))
+    case JsString(userAsString) => JsSuccess(Username.of(userAsString))
     case _ => JsError()
   }
   implicit val messageIdReads: Reads[MessageId] = {

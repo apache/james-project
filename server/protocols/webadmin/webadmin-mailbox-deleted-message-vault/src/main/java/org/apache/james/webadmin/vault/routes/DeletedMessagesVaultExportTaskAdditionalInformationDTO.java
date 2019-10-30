@@ -86,7 +86,7 @@ public class DeletedMessagesVaultExportTaskAdditionalInformationDTO implements A
     DeletedMessagesVaultExportTask.AdditionalInformation toDomainObject() {
         try {
             return new DeletedMessagesVaultExportTask.AdditionalInformation(
-                Username.fromUsername(userExportFrom),
+                Username.of(userExportFrom),
                 new MailAddress(exportTo),
                 totalExportedMessages,
                 timestamp

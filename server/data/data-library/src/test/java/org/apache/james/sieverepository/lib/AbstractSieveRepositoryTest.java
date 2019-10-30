@@ -43,7 +43,7 @@ import org.junit.Test;
 
 public abstract class AbstractSieveRepositoryTest {
 
-    protected static final Username USERNAME = Username.fromUsername("test");
+    protected static final Username USERNAME = Username.of("test");
     protected static final ScriptName SCRIPT_NAME = new ScriptName("script");
     protected static final ScriptContent SCRIPT_CONTENT = new ScriptContent("Hello World");
 

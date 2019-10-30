@@ -217,8 +217,8 @@ public class StoreRightManager implements RightManager {
 
     @VisibleForTesting
     boolean areDomainsDifferent(String user, String otherUser) {
-        Optional<Domain> domain = Username.fromUsername(user).getDomainPart();
-        Optional<Domain> otherDomain = Username.fromUsername(otherUser).getDomainPart();
+        Optional<Domain> domain = Username.of(user).getDomainPart();
+        Optional<Domain> otherDomain = Username.of(otherUser).getDomainPart();
         return !domain.equals(otherDomain);
     }
 

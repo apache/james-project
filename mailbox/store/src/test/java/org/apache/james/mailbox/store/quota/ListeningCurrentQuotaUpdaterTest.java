@@ -61,7 +61,7 @@ public class ListeningCurrentQuotaUpdaterTest {
     private static final int SIZE = 45;
     private static final MailboxId MAILBOX_ID = TestId.of(42);
     private static final String BENWA = "benwa";
-    private static final Username USERNAME_BENWA = Username.fromUsername(BENWA);
+    private static final Username USERNAME_BENWA = Username.of(BENWA);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot(BENWA, Optional.empty());
 
     private StoreCurrentQuotaManager mockedCurrentQuotaManager;

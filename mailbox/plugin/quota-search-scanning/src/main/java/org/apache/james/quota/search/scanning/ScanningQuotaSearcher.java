@@ -49,7 +49,7 @@ public class ScanningQuotaSearcher implements QuotaSearcher {
     @Override
     public List<Username> search(QuotaQuery query) {
         Stream<Username> results = Iterators.toStream(listUsers())
-            .map(Username::fromUsername)
+            .map(Username::of)
             .filter(clauseConverter.andToPredicate(query.getClause()))
             .sorted(Comparator.comparing(Username::asString))
             .skip(query.getOffset().getValue());

@@ -62,7 +62,7 @@ public class UserQuotaThresholds {
             if (keyParts.size() != 3 || !keyParts.get(PREFIX_INDEX).equals(PREFIX)) {
                 throw new IllegalArgumentException();
             }
-            return new Id(Username.fromUsername(keyParts.get(USER_INDEX)), keyParts.get(NAME_INDEX));
+            return new Id(Username.of(keyParts.get(USER_INDEX)), keyParts.get(NAME_INDEX));
         }
 
         public static Id from(Username username, String name) {

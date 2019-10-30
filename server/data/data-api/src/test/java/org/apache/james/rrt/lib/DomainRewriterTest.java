@@ -31,8 +31,8 @@ public class DomainRewriterTest {
         assertThat(
             new UserRewritter.DomainRewriter()
                 .generateUserRewriter("newdomain.com")
-                .rewrite(Username.fromUsername("toto@olddomain.com")))
-            .contains(Username.fromUsername("toto@newdomain.com"));
+                .rewrite(Username.of("toto@olddomain.com")))
+            .contains(Username.of("toto@newdomain.com"));
     }
 
     @Test
@@ -40,7 +40,7 @@ public class DomainRewriterTest {
         assertThat(
             new UserRewritter.DomainRewriter()
                 .generateUserRewriter("newdomain.com")
-                .rewrite(Username.fromUsername("toto")))
-            .contains(Username.fromUsername("toto@newdomain.com"));
+                .rewrite(Username.of("toto")))
+            .contains(Username.of("toto@newdomain.com"));
     }
 }

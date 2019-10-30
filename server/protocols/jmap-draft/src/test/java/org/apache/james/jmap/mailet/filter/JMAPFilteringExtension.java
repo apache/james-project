@@ -112,7 +112,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                     .build())
                 .collect(ImmutableList.toImmutableList());
 
-            testSystem.getFilteringManagement().defineRulesForUser(Username.fromUsername(RECIPIENT_1_USERNAME), rules);
+            testSystem.getFilteringManagement().defineRulesForUser(Username.of(RECIPIENT_1_USERNAME), rules);
         }
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {
