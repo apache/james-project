@@ -24,7 +24,6 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import com.datastax.driver.core.Cluster;
 import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.QueryOptions;
-import com.datastax.driver.core.Session;
 import com.datastax.driver.core.SocketOptions;
 import com.google.common.base.Preconditions;
 
@@ -62,21 +61,6 @@ public class ClusterFactory {
         } catch (Exception e) {
             cluster.close();
             throw e;
-        }
-    }
-
-    public static Cluster createWithKeyspace(ClusterConfiguration clusterConfiguration) {
-        Cluster cluster = create(clusterConfiguration);
-        createKeyspace(clusterConfiguration, cluster);
-        return cluster;
-    }
-
-    public static void createKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
-        try (Session session = cluster.connect()) {
-            session.execute("CREATE KEYSPACE IF NOT EXISTS " + clusterConfiguration.getKeyspace()
-                + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + clusterConfiguration.getReplicationFactor() + "}"
-                + " AND durable_writes = " + clusterConfiguration.isDurableWrites()
-                + ";");
         }
     }
 

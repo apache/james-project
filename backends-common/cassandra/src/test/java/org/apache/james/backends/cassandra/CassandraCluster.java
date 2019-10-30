@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.CassandraTableManager;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.init.ClusterFactory;
+import org.apache.james.backends.cassandra.init.KeyspaceFactory;
 import org.apache.james.backends.cassandra.init.SessionWithInitializedTablesFactory;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.util.Host;
@@ -61,7 +62,8 @@ public final class CassandraCluster implements AutoCloseable {
                 .keyspace(KEYSPACE)
                 .disableDurableWrites()
                 .build();
-            cluster = ClusterFactory.createWithKeyspace(clusterConfiguration);
+            cluster = ClusterFactory.create(clusterConfiguration);
+            KeyspaceFactory.createKeyspace(clusterConfiguration, cluster);
             session = new SessionWithInitializedTablesFactory(clusterConfiguration, cluster, module).get();
             typesProvider = new CassandraTypesProvider(module, session);
         } catch (Exception exception) {

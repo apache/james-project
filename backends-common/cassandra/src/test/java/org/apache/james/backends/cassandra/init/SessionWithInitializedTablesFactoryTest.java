@@ -33,7 +33,6 @@ import org.apache.james.backends.cassandra.init.configuration.ClusterConfigurati
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionDAO;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.util.Host;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -127,7 +126,8 @@ class SessionWithInitializedTablesFactoryTest {
             .replicationFactor(1)
             .disableDurableWrites()
             .build();
-        Cluster cluster = ClusterFactory.createWithKeyspace(clusterConfiguration);
+        Cluster cluster = ClusterFactory.create(clusterConfiguration);
+        KeyspaceFactory.createKeyspace(clusterConfiguration, cluster);
         return () -> new SessionWithInitializedTablesFactory(
                 clusterConfiguration,
                 cluster,

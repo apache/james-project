@@ -62,7 +62,7 @@ public class ResilientClusterProvider implements Provider<Cluster> {
         return () -> {
             Cluster cluster = ClusterFactory.create(configuration);
             try {
-                ClusterFactory.createKeyspace(configuration, cluster);
+                KeyspaceFactory.createKeyspace(configuration, cluster);
                 return cluster;
             } catch (Exception e) {
                 cluster.close();
