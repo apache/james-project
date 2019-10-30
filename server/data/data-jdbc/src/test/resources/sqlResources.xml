@@ -251,7 +251,7 @@
                 recipients text NOT NULL ,
                 remote_host varchar (255) NOT NULL ,
                 remote_addr varchar (20) NOT NULL ,
-                per_recipient_headers oid NULL ,
+                per_recipient_headers bytea NULL ,
                 last_updated timestamp NOT NULL,
                 message_body bytea NOT NULL ,
                 message_attributes bytea NULL ,
