@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.sql.Date;
@@ -44,14 +45,16 @@ import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
 import org.apache.james.mime4j.message.BasicBodyFactory;
 import org.apache.james.mime4j.stream.Field;
-import org.junit.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MIMEMessageConverterTest {
+class MIMEMessageConverterTest {
+    
     @Test
-    public void convertToMimeShouldAddInReplyToHeaderWhenProvided() {
+    void convertToMimeShouldAddInReplyToHeaderWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -73,7 +76,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldGenerateMessageId() {
+    void convertToMimeShouldGenerateMessageId() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -92,7 +95,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldGenerateMessageIdWhenSenderWithoutDomain() {
+    void convertToMimeShouldGenerateMessageIdWhenSenderWithoutDomain() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -112,7 +115,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldGenerateMessageIdContainingSenderDomain() {
+    void convertToMimeShouldGenerateMessageIdContainingSenderDomain() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -133,7 +136,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldAddHeaderWhenProvided() {
+    void convertToMimeShouldAddHeaderWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -154,7 +157,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldAddHeadersWhenProvided() {
+    void convertToMimeShouldAddHeadersWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -177,7 +180,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldFilterGeneratedHeadersWhenProvided() {
+    void convertToMimeShouldFilterGeneratedHeadersWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -203,7 +206,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldFilterGeneratedHeadersRegardlessOfCaseWhenProvided() {
+    void convertToMimeShouldFilterGeneratedHeadersRegardlessOfCaseWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -229,7 +232,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldAddMultivaluedHeadersWhenProvided() {
+    void convertToMimeShouldAddMultivaluedHeadersWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -250,7 +253,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldFilterEmptyHeaderNames() {
+    void convertToMimeShouldFilterEmptyHeaderNames() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -270,7 +273,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldFilterWhiteSpacesOnlyHeaderNames() {
+    void convertToMimeShouldFilterWhiteSpacesOnlyHeaderNames() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -290,15 +293,18 @@ public class MIMEMessageConverterTest {
         assertThat(result.getHeader().getFields("")).isEmpty();
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void convertToMimeShouldThrowWhenMessageIsNull() {
+    @Test
+    void convertToMimeShouldThrowWhenMessageIsNull() {
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        sut.convertToMime(new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null), ImmutableList.of());
+        assertThatThrownBy(() -> sut.convertToMime(
+                new ValueWithId.CreationMessageEntry(CreationMessageId.of("any"), null),
+                ImmutableList.of()))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void convertToMimeShouldSetBothFromAndSenderHeaders() {
+    void convertToMimeShouldSetBothFromAndSenderHeaders() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -319,7 +325,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetCorrectLocalDate() {
+    void convertToMimeShouldSetCorrectLocalDate() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -342,7 +348,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetQuotedPrintableContentTransferEncodingWhenText() {
+    void convertToMimeShouldSetQuotedPrintableContentTransferEncodingWhenText() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -365,7 +371,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetTextBodyWhenProvided() {
+    void convertToMimeShouldSetTextBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("Hello all!", StandardCharsets.UTF_8);
@@ -386,7 +392,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetEmptyBodyWhenNoBodyProvided() {
+    void convertToMimeShouldSetEmptyBodyWhenNoBodyProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
@@ -406,7 +412,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetHtmlBodyWhenProvided() {
+    void convertToMimeShouldSetHtmlBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("Hello <b>all</b>!", StandardCharsets.UTF_8);
@@ -427,7 +433,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldGenerateMultipartWhenHtmlBodyAndTextBodyProvided() throws Exception {
+    void convertToMimeShouldGenerateMultipartWhenHtmlBodyAndTextBodyProvided() throws Exception {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -452,7 +458,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertShouldGenerateExpectedMultipartWhenHtmlAndTextBodyProvided() throws Exception {
+    void convertShouldGenerateExpectedMultipartWhenHtmlAndTextBodyProvided() throws Exception {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -488,7 +494,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetMimeTypeWhenTextBody() {
+    void convertToMimeShouldSetMimeTypeWhenTextBody() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -508,7 +514,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetMimeTypeWhenHtmlBody() {
+    void convertToMimeShouldSetMimeTypeWhenHtmlBody() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
 
@@ -528,7 +534,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetEmptyHtmlBodyWhenProvided() {
+    void convertToMimeShouldSetEmptyHtmlBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
@@ -550,7 +556,7 @@ public class MIMEMessageConverterTest {
     }
 
     @Test
-    public void convertToMimeShouldSetEmptyTextBodyWhenProvided() {
+    void convertToMimeShouldSetEmptyTextBodyWhenProvided() {
         // Given
         MIMEMessageConverter sut = new MIMEMessageConverter();
         TextBody expected = new BasicBodyFactory().textBody("", StandardCharsets.UTF_8);
@@ -571,172 +577,176 @@ public class MIMEMessageConverterTest {
         assertThat(result.getMimeType()).isEqualTo("text/plain");
     }
 
-    @Test
-    public void convertToMimeShouldAddAttachmentWhenOne() {
-        // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter();
+    @Nested
+    class WithAttachments {
 
-        CreationMessage testMessage = CreationMessage.builder()
-                .mailboxId("dead-bada55")
-                .subject("subject")
-                .from(DraftEmailer.builder().name("sender").build())
-                .htmlBody("Hello <b>all<b>!")
-                .build();
+        @Test
+        void convertToMimeShouldAddAttachmentWhenOne() {
+            // Given
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        String expectedCID = "cid";
-        String expectedMimeType = "image/png";
-        String text = "123456";
-        TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
-        MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                    .attachmentId(AttachmentId.from("blodId"))
-                    .bytes(text.getBytes())
-                    .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
+            CreationMessage testMessage = CreationMessage.builder()
+                    .mailboxId("dead-bada55")
+                    .subject("subject")
+                    .from(DraftEmailer.builder().name("sender").build())
+                    .htmlBody("Hello <b>all<b>!")
+                    .build();
 
-        // When
-        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            String expectedCID = "cid";
+            String expectedMimeType = "image/png";
+            String text = "123456";
+            TextBody expectedBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
+            MessageAttachment attachment = MessageAttachment.builder()
+                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                        .attachmentId(AttachmentId.from("blodId"))
+                        .bytes(text.getBytes())
+                        .type(expectedMimeType)
+                        .build())
+                    .cid(Cid.from(expectedCID))
+                    .isInline(true)
+                    .build();
 
-        // Then
-        assertThat(result.getBody()).isInstanceOf(Multipart.class);
-        assertThat(result.isMultipart()).isTrue();
-        Multipart typedResult = (Multipart)result.getBody();
-        assertThat(typedResult.getBodyParts()).hasSize(2);
-        Entity attachmentPart = typedResult.getBodyParts().get(1);
-        assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedBody, "content");
-        assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
-        assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
-        assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
-        assertThat(attachmentPart.getContentTransferEncoding()).isEqualTo("base64");
-    }
+            // When
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
 
-    @Test
-    public void convertToMimeShouldAddAttachmentAndMultipartAlternativeWhenOneAttachementAndTextAndHtmlBody() {
-        // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter();
+            // Then
+            assertThat(result.getBody()).isInstanceOf(Multipart.class);
+            assertThat(result.isMultipart()).isTrue();
+            Multipart typedResult = (Multipart)result.getBody();
+            assertThat(typedResult.getBodyParts()).hasSize(2);
+            Entity attachmentPart = typedResult.getBodyParts().get(1);
+            assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedBody, "content");
+            assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
+            assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
+            assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+            assertThat(attachmentPart.getContentTransferEncoding()).isEqualTo("base64");
+        }
 
-        CreationMessage testMessage = CreationMessage.builder()
-                .mailboxId("dead-bada55")
-                .subject("subject")
-                .from(DraftEmailer.builder().name("sender").build())
-                .textBody("Hello all!")
-                .htmlBody("Hello <b>all<b>!")
-                .build();
-        TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), StandardCharsets.UTF_8);
-        TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), StandardCharsets.UTF_8);
+        @Test
+        void convertToMimeShouldAddAttachmentAndMultipartAlternativeWhenOneAttachementAndTextAndHtmlBody() {
+            // Given
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        String expectedCID = "cid";
-        String expectedMimeType = "image/png";
-        String text = "123456";
-        TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
-        MessageAttachment attachment = MessageAttachment.builder()
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                    .attachmentId(AttachmentId.from("blodId"))
-                    .bytes(text.getBytes())
-                    .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
+            CreationMessage testMessage = CreationMessage.builder()
+                    .mailboxId("dead-bada55")
+                    .subject("subject")
+                    .from(DraftEmailer.builder().name("sender").build())
+                    .textBody("Hello all!")
+                    .htmlBody("Hello <b>all<b>!")
+                    .build();
+            TextBody expectedTextBody = new BasicBodyFactory().textBody("Hello all!".getBytes(), StandardCharsets.UTF_8);
+            TextBody expectedHtmlBody = new BasicBodyFactory().textBody("Hello <b>all<b>!".getBytes(), StandardCharsets.UTF_8);
 
-        // When
-        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            String expectedCID = "cid";
+            String expectedMimeType = "image/png";
+            String text = "123456";
+            TextBody expectedAttachmentBody = new BasicBodyFactory().textBody(text.getBytes(), StandardCharsets.UTF_8);
+            MessageAttachment attachment = MessageAttachment.builder()
+                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                        .attachmentId(AttachmentId.from("blodId"))
+                        .bytes(text.getBytes())
+                        .type(expectedMimeType)
+                        .build())
+                    .cid(Cid.from(expectedCID))
+                    .isInline(true)
+                    .build();
 
-        // Then
-        assertThat(result.getBody()).isInstanceOf(Multipart.class);
-        assertThat(result.isMultipart()).isTrue();
-        Multipart typedResult = (Multipart)result.getBody();
-        assertThat(typedResult.getBodyParts()).hasSize(2);
-        Entity mainBodyPart = typedResult.getBodyParts().get(0);
-        assertThat(mainBodyPart.getBody()).isInstanceOf(Multipart.class);
-        assertThat(mainBodyPart.isMultipart()).isTrue();
-        assertThat(mainBodyPart.getMimeType()).isEqualTo("multipart/alternative");
-        assertThat(((Multipart)mainBodyPart.getBody()).getBodyParts()).hasSize(2);
-        Entity textPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(0);
-        Entity htmlPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(1);
-        assertThat(textPart.getBody()).isEqualToComparingOnlyGivenFields(expectedTextBody, "content");
-        assertThat(htmlPart.getBody()).isEqualToComparingOnlyGivenFields(expectedHtmlBody, "content");
+            // When
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
 
-        Entity attachmentPart = typedResult.getBodyParts().get(1);
-        assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedAttachmentBody, "content");
-        assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
-        assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
-        assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
-    }
+            // Then
+            assertThat(result.getBody()).isInstanceOf(Multipart.class);
+            assertThat(result.isMultipart()).isTrue();
+            Multipart typedResult = (Multipart)result.getBody();
+            assertThat(typedResult.getBodyParts()).hasSize(2);
+            Entity mainBodyPart = typedResult.getBodyParts().get(0);
+            assertThat(mainBodyPart.getBody()).isInstanceOf(Multipart.class);
+            assertThat(mainBodyPart.isMultipart()).isTrue();
+            assertThat(mainBodyPart.getMimeType()).isEqualTo("multipart/alternative");
+            assertThat(((Multipart)mainBodyPart.getBody()).getBodyParts()).hasSize(2);
+            Entity textPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(0);
+            Entity htmlPart = ((Multipart)mainBodyPart.getBody()).getBodyParts().get(1);
+            assertThat(textPart.getBody()).isEqualToComparingOnlyGivenFields(expectedTextBody, "content");
+            assertThat(htmlPart.getBody()).isEqualToComparingOnlyGivenFields(expectedHtmlBody, "content");
 
-    @Test
-    public void convertShouldEncodeWhenNonASCIICharacters() {
-        // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter();
+            Entity attachmentPart = typedResult.getBodyParts().get(1);
+            assertThat(attachmentPart.getBody()).isEqualToComparingOnlyGivenFields(expectedAttachmentBody, "content");
+            assertThat(attachmentPart.getDispositionType()).isEqualTo("inline");
+            assertThat(attachmentPart.getMimeType()).isEqualTo(expectedMimeType);
+            assertThat(attachmentPart.getHeader().getField("Content-ID").getBody()).isEqualTo(expectedCID);
+        }
 
-        CreationMessage testMessage = CreationMessage.builder()
-                .mailboxId("dead-bada55")
-                .subject("subject")
-                .from(DraftEmailer.builder().name("sender").build())
-                .htmlBody("Some non-ASCII characters: áÄÎßÿ")
-                .build();
+        @Test
+        void convertShouldEncodeWhenNonASCIICharacters() {
+            // Given
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        // When
-        ImmutableList<MessageAttachment> attachments = ImmutableList.of();
-        byte[] convert = sut.convert(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), attachments);
+            CreationMessage testMessage = CreationMessage.builder()
+                    .mailboxId("dead-bada55")
+                    .subject("subject")
+                    .from(DraftEmailer.builder().name("sender").build())
+                    .htmlBody("Some non-ASCII characters: áÄÎßÿ")
+                    .build();
 
-        String expectedEncodedContent = "Some non-ASCII characters: =C3=A1=C3=84=C3=8E=C3=9F=C3=BF";
+            // When
+            ImmutableList<MessageAttachment> attachments = ImmutableList.of();
+            byte[] convert = sut.convert(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), attachments);
 
-        // Then
-        String actual = new String(convert, StandardCharsets.US_ASCII);
-        assertThat(actual).contains(expectedEncodedContent);
-    }
+            String expectedEncodedContent = "Some non-ASCII characters: =C3=A1=C3=84=C3=8E=C3=9F=C3=BF";
 
-    @Test
-    public void convertToMimeShouldAddAttachmentAndContainsIndicationAboutTheWayToEncodeFilenamesAttachmentInTheInputStreamWhenSending() {
-        // Given
-        MIMEMessageConverter sut = new MIMEMessageConverter();
+            // Then
+            String actual = new String(convert, StandardCharsets.US_ASCII);
+            assertThat(actual).contains(expectedEncodedContent);
+        }
 
-        CreationMessage testMessage = CreationMessage.builder()
-                .mailboxIds(ImmutableList.of("dead-bada55"))
-                .subject("subject")
-                .from(DraftEmailer.builder().name("sender").build())
-                .htmlBody("Hello <b>all<b>!")
-                .build();
+        @Test
+        void convertToMimeShouldAddAttachmentAndContainsIndicationAboutTheWayToEncodeFilenamesAttachmentInTheInputStreamWhenSending() {
+            // Given
+            MIMEMessageConverter sut = new MIMEMessageConverter();
 
-        String expectedCID = "cid";
-        String expectedMimeType = "image/png";
-        String text = "123456";
-        String name = "ديناصور.png";
-        String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
-        MessageAttachment attachment = MessageAttachment.builder()
-                .name(name)
-                .attachment(org.apache.james.mailbox.model.Attachment.builder()
-                    .attachmentId(AttachmentId.from("blodId"))
-                    .bytes(text.getBytes())
-                    .type(expectedMimeType)
-                    .build())
-                .cid(Cid.from(expectedCID))
-                .isInline(true)
-                .build();
+            CreationMessage testMessage = CreationMessage.builder()
+                    .mailboxIds(ImmutableList.of("dead-bada55"))
+                    .subject("subject")
+                    .from(DraftEmailer.builder().name("sender").build())
+                    .htmlBody("Hello <b>all<b>!")
+                    .build();
 
-        // When
-        Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
-                CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
+            String expectedCID = "cid";
+            String expectedMimeType = "image/png";
+            String text = "123456";
+            String name = "ديناصور.png";
+            String expectedName = EncoderUtil.encodeEncodedWord(name, Usage.TEXT_TOKEN);
+            MessageAttachment attachment = MessageAttachment.builder()
+                    .name(name)
+                    .attachment(org.apache.james.mailbox.model.Attachment.builder()
+                        .attachmentId(AttachmentId.from("blodId"))
+                        .bytes(text.getBytes())
+                        .type(expectedMimeType)
+                        .build())
+                    .cid(Cid.from(expectedCID))
+                    .isInline(true)
+                    .build();
 
-        // Then
-        assertThat(result.getBody()).isInstanceOf(Multipart.class);
-        assertThat(result.isMultipart()).isTrue();
-        Multipart typedResult = (Multipart)result.getBody();
-        assertThat(typedResult.getBodyParts()).hasSize(2);
+            // When
+            Message result = sut.convertToMime(new ValueWithId.CreationMessageEntry(
+                    CreationMessageId.of("user|mailbox|1"), testMessage), ImmutableList.of(attachment));
 
-        Entity attachmentPart = typedResult.getBodyParts().get(1);
-        String filename = getNameParameterValue(attachmentPart);
-        assertThat(filename).isEqualTo(expectedName);
-    }
+            // Then
+            assertThat(result.getBody()).isInstanceOf(Multipart.class);
+            assertThat(result.isMultipart()).isTrue();
+            Multipart typedResult = (Multipart)result.getBody();
+            assertThat(typedResult.getBodyParts()).hasSize(2);
 
-    private String getNameParameterValue(Entity attachmentPart) {
-        return ((ContentTypeField) attachmentPart.getHeader().getField("Content-Type")).getParameter("name");
+            Entity attachmentPart = typedResult.getBodyParts().get(1);
+            String filename = getNameParameterValue(attachmentPart);
+            assertThat(filename).isEqualTo(expectedName);
+        }
+
+        private String getNameParameterValue(Entity attachmentPart) {
+            return ((ContentTypeField) attachmentPart.getHeader().getField("Content-Type")).getParameter("name");
+        }
     }
 }
