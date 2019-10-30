@@ -126,4 +126,15 @@ public class SmtpAuthIntegrationTest {
             .isFalse();
     }
 
+    @Test
+    public void mixedCaseSenderMailShouldBeDelivered() throws Exception {
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessage("FROMUSER@" + DEFAULT_DOMAIN, FROM);
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(FROM, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+    }
 }
