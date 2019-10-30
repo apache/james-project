@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
+
 import org.junit.Test;
 
 public class UserTest {
@@ -116,12 +118,26 @@ public class UserTest {
     @Test
     public void fromUsernameShouldThrowOnNull() {
         assertThatThrownBy(() -> User.fromUsername(null))
-            .isInstanceOf(NullPointerException.class);
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void fromUsernameShouldThrowOnEmpty() {
         assertThatThrownBy(() -> User.fromUsername(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    public void fromUsernameShouldAllow255LongUsername() {
+        String tail = "@a";
+        assertThat(User.fromUsername(StringUtils.repeat('j', 255 - tail.length()) + tail).asString())
+            .hasSize(255);
+    }
+
+    @Test
+    public void fromUsernameShouldThrowWhenTooLong() {
+        String tail = "@a";
+        assertThatThrownBy(() -> User.fromUsername(StringUtils.repeat('j', 255 - tail.length() + 1) + tail))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

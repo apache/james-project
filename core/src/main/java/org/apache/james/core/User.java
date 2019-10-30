@@ -32,9 +32,11 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 
 public class User {
+    public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
+
     public static User fromUsername(String username) {
-        Preconditions.checkNotNull(username);
         Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
+        Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH);
 
         List<String> parts = ImmutableList.copyOf(Splitter.on('@').split(username));
         switch (parts.size()) {

@@ -36,8 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import spark.Response;
 
@@ -51,7 +49,6 @@ public class UserService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
     private static final String EMPTY_BODY = "";
-    public static final int MAXIMUM_MAIL_ADDRESS_LENGTH = 255;
 
     private final UsersRepository usersRepository;
 
@@ -88,8 +85,7 @@ public class UserService {
 
     private void usernamePreconditions(String username) {
         try {
-            Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
-            Preconditions.checkArgument(username.length() < MAXIMUM_MAIL_ADDRESS_LENGTH);
+            org.apache.james.core.User.fromUsername(username);
         } catch (IllegalArgumentException e) {
             throw new InvalidUsername(e);
         }

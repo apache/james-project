@@ -32,6 +32,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
@@ -138,6 +139,17 @@ class UsersRoutesTest {
                 .body("{\"password\":\"password\"}")
             .when()
                 .put(USERNAME)
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void putShouldReturnOkWhenWithA255LongUsername() {
+            String usernameTail = "@" + DOMAIN.name();
+            given()
+                .body("{\"password\":\"password\"}")
+            .when()
+                .put(StringUtils.repeat('j', 255 - usernameTail.length()) + usernameTail)
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
         }
