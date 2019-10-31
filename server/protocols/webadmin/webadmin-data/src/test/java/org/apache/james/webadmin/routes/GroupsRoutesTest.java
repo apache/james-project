@@ -540,7 +540,7 @@ class GroupsRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The group is not an email address")
+                .containsEntry("message", "The group member is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
@@ -587,7 +587,7 @@ class GroupsRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The group is not an email address")
+                .containsEntry("message", "The group member is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
