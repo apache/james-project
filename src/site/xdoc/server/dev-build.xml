@@ -68,7 +68,7 @@
       <li>Java Development Kit - You must have a JDK of Java version 11 or higher installed to build the
           James distribution.  The exact JDKs available depend on the platform. A JDK must be downloaded and
           installed before the build can run.</li>
-      <li>Maven 3.3.9 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.3.9+) in order
+      <li>Maven 3.6.0 - This is a Java-tailored, XML-configured, extensible build or make system. You need maven (3.6.0+) in order
           to build James. We recommend you to use maven 3.6.2. You can get maven from <a href="http://maven.apache.org/download.html">here</a>.
           Installation instructions for maven are also available on the same page <a href="http://maven.apache.org/download.html">http://maven.apache.org/download.html</a>.</li>
     </ol>
