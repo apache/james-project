@@ -38,13 +38,11 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
-
 import org.apache.james.metrics.api.Gauge;
 import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueMetricContract;
@@ -99,11 +97,9 @@ class RabbitMQMailQueueTest {
     private UpdatableTickingClock clock;
     private RabbitMQMailQueue mailQueue;
     private RabbitMQMailQueueManagement mqManagementApi;
-    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     @AfterEach
     void tearDown() {
-        reactorRabbitMQChannelPool.close();
         mqManagementApi.deleteAllQueues();
     }
 
@@ -275,12 +271,10 @@ class RabbitMQMailQueueTest {
                 .build(),
             mimeMessageStoreFactory);
 
-        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
-        reactorRabbitMQChannelPool.start();
         RabbitMQMailQueueFactory.PrivateFactory factory = new RabbitMQMailQueueFactory.PrivateFactory(
             metricTestSystem.getMetricFactory(),
             metricTestSystem.getSpyGaugeRegistry(),
-            reactorRabbitMQChannelPool,
+            rabbitMQExtension.getRabbitChannelPool(),
             mimeMessageStoreFactory,
             BLOB_ID_FACTORY,
             mailQueueViewFactory,
@@ -288,7 +282,7 @@ class RabbitMQMailQueueTest {
             new RawMailQueueItemDecoratorFactory(),
             configuration);
         mqManagementApi = new RabbitMQMailQueueManagement(rabbitMQExtension.managementAPI());
-        mailQueueFactory = new RabbitMQMailQueueFactory(reactorRabbitMQChannelPool, mqManagementApi, factory);
+        mailQueueFactory = new RabbitMQMailQueueFactory(rabbitMQExtension.getRabbitChannelPool(), mqManagementApi, factory);
         mailQueue = mailQueueFactory.createQueue(SPOOL);
     }
 }

@@ -75,17 +75,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.stubbing.Answer;
 
-import com.rabbitmq.client.Connection;
-
-import reactor.core.publisher.Mono;
 import reactor.rabbitmq.BindingSpecification;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.QueueSpecification;
-import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Receiver;
-import reactor.rabbitmq.ReceiverOptions;
 import reactor.rabbitmq.Sender;
-import reactor.rabbitmq.SenderOptions;
 
 class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract, GroupContract.MultipleEventBusGroupContract,
     KeyContract.SingleEventBusKeyContract, KeyContract.MultipleEventBusKeyContract,
@@ -100,8 +94,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     private EventSerializer eventSerializer;
     private RoutingKeyConverter routingKeyConverter;
     private MemoryEventDeadLetters memoryEventDeadLetters;
-    private Mono<Connection> resilientConnection;
-    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     @BeforeEach
     void setUp() {
@@ -110,8 +102,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         TestId.Factory mailboxIdFactory = new TestId.Factory();
         eventSerializer = new EventSerializer(mailboxIdFactory, new TestMessageId.Factory(), new DefaultUserQuotaRootResolver.DefaultQuotaRootDeserializer());
         routingKeyConverter = RoutingKeyConverter.forFactories(new MailboxIdRegistrationKey.Factory(mailboxIdFactory));
-        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
-        reactorRabbitMQChannelPool.start();
 
         eventBus = newEventBus();
         eventBus2 = newEventBus();
@@ -120,7 +110,6 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus.start();
         eventBus2.start();
         eventBus3.start();
-        resilientConnection = rabbitMQExtension.getRabbitConnectionPool().getResilientConnection();
     }
 
     @AfterEach
@@ -130,13 +119,15 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         eventBus3.stop();
         ALL_GROUPS.stream()
             .map(GroupRegistration.WorkQueueName::of)
-            .forEach(queueName -> reactorRabbitMQChannelPool.getSender().delete(QueueSpecification.queue(queueName.asString())).block());
-        reactorRabbitMQChannelPool.getSender().delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME)).block();
-        reactorRabbitMQChannelPool.close();
+            .forEach(queueName -> rabbitMQExtension.getRabbitChannelPool().getSender().delete(QueueSpecification.queue(queueName.asString())).block());
+        rabbitMQExtension.getRabbitChannelPool()
+            .getSender()
+            .delete(ExchangeSpecification.exchange(MAILBOX_EVENT_EXCHANGE_NAME))
+            .block();
     }
 
     private RabbitMQEventBus newEventBus() {
-        return newEventBus(reactorRabbitMQChannelPool);
+        return newEventBus(rabbitMQExtension.getRabbitChannelPool());
     }
 
     private RabbitMQEventBus newEventBus(ReactorRabbitMQChannelPool rabbitMQChannelPool) {
@@ -262,29 +253,22 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
     @Nested
     class PublishingTest {
         private static final String MAILBOX_WORK_QUEUE_NAME = MAILBOX_EVENT + "-workQueue";
-        private Sender sender1;
 
         @BeforeEach
         void setUp() {
-            SenderOptions senderOption = new SenderOptions().connectionMono(resilientConnection);
-            sender1 = RabbitFlux.createSender(senderOption);
+            Sender sender = rabbitMQExtension.getRabbitChannelPool().getSender();
 
-            sender1.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
+            sender.declareQueue(QueueSpecification.queue(MAILBOX_WORK_QUEUE_NAME)
                 .durable(DURABLE)
                 .exclusive(!EXCLUSIVE)
                 .autoDelete(!AUTO_DELETE)
                 .arguments(NO_ARGUMENTS))
                 .block();
-            sender1.bind(BindingSpecification.binding()
+            sender.bind(BindingSpecification.binding()
                 .exchange(MAILBOX_EVENT_EXCHANGE_NAME)
                 .queue(MAILBOX_WORK_QUEUE_NAME)
                 .routingKey(EMPTY_ROUTING_KEY))
                 .block();
-        }
-
-        @AfterEach
-        void tearDown() {
-            sender1.close();
         }
 
         @Test
@@ -302,7 +286,7 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
         }
 
         private Event dequeueEvent() {
-            try (Receiver receiver = RabbitFlux.createReceiver(new ReceiverOptions().connectionMono(resilientConnection))) {
+            try (Receiver receiver = rabbitMQExtension.getRabbitChannelPool().createReceiver()) {
                 byte[] eventInBytes = receiver.consumeAutoAck(MAILBOX_WORK_QUEUE_NAME)
                     .blockFirst()
                     .getBody();
@@ -341,18 +325,10 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
                     .restartPolicy(DockerRestartPolicy.PER_TEST);
 
                 private RabbitMQEventBus rabbitMQEventBusWithNetWorkIssue;
-                private ReactorRabbitMQChannelPool reactorRabbitMQChannelPoolWithNetWorkIssue;
 
                 @BeforeEach
                 void beforeEach() {
-                    reactorRabbitMQChannelPoolWithNetWorkIssue = new ReactorRabbitMQChannelPool(rabbitMQNetWorkIssueExtension.getRabbitConnectionPool());
-                    reactorRabbitMQChannelPoolWithNetWorkIssue.start();
-                    rabbitMQEventBusWithNetWorkIssue = newEventBus(reactorRabbitMQChannelPoolWithNetWorkIssue);
-                }
-
-                @AfterEach
-                void afterEach() {
-                    reactorRabbitMQChannelPoolWithNetWorkIssue.close();
+                    rabbitMQEventBusWithNetWorkIssue = newEventBus(rabbitMQNetWorkIssueExtension.getRabbitChannelPool());
                 }
 
                 @Test

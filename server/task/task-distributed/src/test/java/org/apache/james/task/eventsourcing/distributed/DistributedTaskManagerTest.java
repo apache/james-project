@@ -73,9 +73,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.github.steveash.guavate.Guavate;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
-
-    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
-
     private static class TrackedRabbitMQWorkQueueSupplier implements WorkQueueSupplier {
         private final List<RabbitMQWorkQueue> workQueues;
         private final RabbitMQWorkQueueSupplier supplier;
@@ -141,9 +138,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     @BeforeEach
     void setUp(EventStore eventStore) {
-        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
-        reactorRabbitMQChannelPool.start();
-        workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(reactorRabbitMQChannelPool, TASK_SERIALIZER);
+        workQueueSupplier = new TrackedRabbitMQWorkQueueSupplier(rabbitMQExtension.getRabbitChannelPool(), TASK_SERIALIZER);
         this.eventStore = eventStore;
         terminationSubscribers = new ArrayList<>();
     }
@@ -152,7 +147,6 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     void tearDown() {
         terminationSubscribers.forEach(RabbitMQTerminationSubscriber::close);
         workQueueSupplier.stopWorkQueues();
-        reactorRabbitMQChannelPool.close();
     }
 
     public EventSourcingTaskManager taskManager() {
@@ -160,7 +154,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     private EventSourcingTaskManager taskManager(Hostname hostname) {
-        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getRabbitConnectionPool(), EVENT_SERIALIZER);
+        RabbitMQTerminationSubscriber terminationSubscriber = new RabbitMQTerminationSubscriber(rabbitMQExtension.getRabbitChannelPool(), EVENT_SERIALIZER);
         terminationSubscribers.add(terminationSubscriber);
         terminationSubscriber.start();
         return new EventSourcingTaskManager(workQueueSupplier, eventStore, executionDetailsProjection, hostname, terminationSubscriber);

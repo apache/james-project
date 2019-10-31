@@ -35,7 +35,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.IntStream;
 
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
-import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.TestTask;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
@@ -69,7 +68,6 @@ class RabbitMQWorkQueueTest {
     private RabbitMQWorkQueue testee;
     private ImmediateWorker worker;
     private JsonTaskSerializer serializer;
-    private ReactorRabbitMQChannelPool reactorRabbitMQChannelPool;
 
     private static class ImmediateWorker implements TaskManagerWorker {
 
@@ -103,16 +101,13 @@ class RabbitMQWorkQueueTest {
     void setUp() {
         worker = spy(new ImmediateWorker());
         serializer = new JsonTaskSerializer(TestTaskDTOModules.COMPLETED_TASK_MODULE);
-        reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(rabbitMQExtension.getRabbitConnectionPool());
-        reactorRabbitMQChannelPool.start();
-        testee = new RabbitMQWorkQueue(worker, reactorRabbitMQChannelPool, serializer);
+        testee = new RabbitMQWorkQueue(worker, rabbitMQExtension.getRabbitChannelPool(), serializer);
         testee.start();
     }
 
     @AfterEach
     void tearDown() {
         testee.close();
-        reactorRabbitMQChannelPool.close();
     }
 
     @Test
@@ -137,7 +132,7 @@ class RabbitMQWorkQueueTest {
         testee.submit(TASK_WITH_ID);
 
         ImmediateWorker otherTaskManagerWorker = new ImmediateWorker();
-        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, reactorRabbitMQChannelPool, serializer)) {
+        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getRabbitChannelPool(), serializer)) {
             otherWorkQueue.start();
 
             IntStream.range(0, 9)
@@ -156,7 +151,7 @@ class RabbitMQWorkQueueTest {
 
         ImmediateWorker otherTaskManagerWorker = new ImmediateWorker();
         JsonTaskSerializer otherTaskSerializer = new JsonTaskSerializer(TestTaskDTOModules.TEST_TYPE);
-        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, reactorRabbitMQChannelPool, otherTaskSerializer)) {
+        try (RabbitMQWorkQueue otherWorkQueue = new RabbitMQWorkQueue(otherTaskManagerWorker, rabbitMQExtension.getRabbitChannelPool(), otherTaskSerializer)) {
             //wait to be sur that the first workqueue has subscribed as an exclusive consumer of the RabbitMQ queue.
             Thread.sleep(200);
             otherWorkQueue.start();
