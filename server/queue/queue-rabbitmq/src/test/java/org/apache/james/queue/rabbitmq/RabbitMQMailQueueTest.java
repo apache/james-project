@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -216,6 +217,37 @@ class RabbitMQMailQueueTest {
         @Override
         public void concurrentEnqueueDequeueShouldNotFail() {
 
+        }
+
+        @Test
+        void dequeueShouldWorkAfterNetworkOutage() throws Exception {
+            String name1 = "myMail1";
+            String name2 = "myMail2";
+            String name3 = "myMail3";
+            Flux<MailQueue.MailQueueItem> dequeueFlux = Flux.from(getMailQueue().deQueue());
+            getMailQueue().enQueue(defaultMail()
+                .name(name1)
+                .build());
+
+            rabbitMQExtension.getRabbitMQ().pause();
+            Thread.sleep(2000);
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name2)
+                .build());
+
+            rabbitMQExtension.getRabbitMQ().unpause();
+            Thread.sleep(100);
+
+            getMailQueue().enQueue(defaultMail()
+                .name(name3)
+                .build());
+
+            List<MailQueue.MailQueueItem> items = dequeueFlux.take(3).collectList().block(Duration.ofSeconds(10));
+
+            assertThat(items)
+                .extracting(item -> item.getMail().getName())
+                .containsExactly(name1, name2, name3);
         }
 
         private void enqueueSomeMails(Function<Integer, String> namePattern, int emailCount) {
