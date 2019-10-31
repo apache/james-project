@@ -96,7 +96,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
             }
         }
 
-        if (!assertLocalPartValid(username)) {
+        if (!isLocalPartValid(username)) {
             throw new InvalidUsernameException(String.format("Given Username '%s' should not contain any of those characters: %s",
                 username.asString(), ILLEGAL_USERNAME_CHARACTERS));
         }
@@ -156,7 +156,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         }
     }
 
-    private boolean assertLocalPartValid(Username username) {
+    private boolean isLocalPartValid(Username username) {
         return CharMatcher.anyOf(ILLEGAL_USERNAME_CHARACTERS)
             .matchesNoneOf(username.getLocalPart());
     }

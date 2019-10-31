@@ -32,11 +32,12 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.domainlist.api.DomainList;
+import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -50,6 +51,7 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -57,6 +59,9 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -67,14 +72,20 @@ class UserRoutesTest {
 
     private static class UserRoutesExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
-        static UserRoutesExtension withVirtualHosting() {
-            SimpleDomainList domainList = new SimpleDomainList();
+        static UserRoutesExtension withVirtualHosting() throws DomainListException {
+            SimpleDomainList domainList = setupDomainList();
             return new UserRoutesExtension(MemoryUsersRepository.withVirtualHosting(domainList), domainList);
         }
 
-        static UserRoutesExtension withoutVirtualHosting() {
-            SimpleDomainList domainList = new SimpleDomainList();
+        static UserRoutesExtension withoutVirtualHosting() throws DomainListException {
+            SimpleDomainList domainList = setupDomainList();
             return new UserRoutesExtension(MemoryUsersRepository.withoutVirtualHosting(domainList), domainList);
+        }
+
+        private static SimpleDomainList setupDomainList() throws DomainListException {
+            SimpleDomainList domainList = new SimpleDomainList();
+            domainList.addDomain(DOMAIN);
+            return domainList;
         }
 
         final MemoryUsersRepository usersRepository;
@@ -88,9 +99,7 @@ class UserRoutesTest {
         }
 
         @Override
-        public void beforeEach(ExtensionContext extensionContext) throws Exception {
-            domainList.addDomain(DOMAIN);
-
+        public void beforeEach(ExtensionContext extensionContext) {
             webAdminServer = startServer(usersRepository);
         }
 
@@ -310,6 +319,39 @@ class UserRoutesTest {
             }
         }
 
+        @TestInstance(TestInstance.Lifecycle.PER_CLASS)
+        interface IllegalCharactersErrorHandlingContract {
+
+            default Stream<Arguments> illegalCharacters() {
+                return Stream.of(
+                    Arguments.of("\""),
+                    Arguments.of("("),
+                    Arguments.of(")"),
+                    Arguments.of(","),
+                    Arguments.of(":"),
+                    Arguments.of(";"),
+                    Arguments.of("<"),
+                    Arguments.of(">"),
+                    Arguments.of("@"),
+                    Arguments.of("["),
+                    Arguments.of("\\"),
+                    Arguments.of("]"),
+                    Arguments.of(" ")
+                );
+            }
+
+            @ParameterizedTest
+            @MethodSource("illegalCharacters")
+            default void putShouldReturnBadRequestWhenUsernameContainsSpecialCharacter(String illegalCharacter) {
+                given()
+                    .body("{\"password\":\"password\"}")
+                .when()
+                    .put("user" + illegalCharacter + "name@" + DOMAIN.name())
+                .then()
+                    .statusCode(HttpStatus.BAD_REQUEST_400);
+            }
+        }
+
         interface MockBehaviorErrorHandlingContract {
 
             @Test
@@ -443,6 +485,9 @@ class UserRoutesTest {
         @RegisterExtension
         UserRoutesExtension extension = UserRoutesExtension.withVirtualHosting();
 
+        WithVirtualHosting() throws DomainListException {
+        }
+
         @Test
         void puttingWithDomainPartInUsernameTwoTimesShouldBeAllowed() {
             // Given
@@ -527,6 +572,11 @@ class UserRoutesTest {
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
         }
+
+        @Nested
+        class IllegalCharacterErrorHandlingTest implements UserRoutesContract.IllegalCharactersErrorHandlingContract {
+
+        }
     }
 
     @Nested
@@ -534,6 +584,9 @@ class UserRoutesTest {
 
         @RegisterExtension
         UserRoutesExtension extension = UserRoutesExtension.withoutVirtualHosting();
+
+        WithoutVirtualHosting() throws DomainListException {
+        }
 
         @Test
         void puttingWithoutDomainPartInUsernameTwoTimesShouldBeAllowed() {
@@ -618,6 +671,11 @@ class UserRoutesTest {
                 .put(USERNAME_WITHOUT_DOMAIN.asString())
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Nested
+        class IllegalCharacterErrorHandlingTest implements UserRoutesContract.IllegalCharactersErrorHandlingContract {
+
         }
     }
 }
