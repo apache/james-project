@@ -182,6 +182,9 @@ Response codes:
 curl -XDELETE http://ip:port/domains/domainToBeDeleted
 ```
 
+Note: Deletion of an auto-detected domain or of an auto-detected ip is not supported. We encourage you instead to review 
+your [domain list configuration](https://james.apache.org/server/config-domainlist.html).
+
 Response codes:
 
  - 204: The domain was successfully removed
