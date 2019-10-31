@@ -21,6 +21,7 @@ package org.apache.james.imap.api;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxSession;
 
@@ -36,10 +37,10 @@ public class ImapSessionUtils {
         return (MailboxSession) session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
     }
 
-    public static String getUserName(ImapSession imapSession) {
+    public static Username getUserName(ImapSession imapSession) {
         Preconditions.checkNotNull(imapSession);
         return Optional.ofNullable(getMailboxSession(imapSession))
-            .map(mailboxSession -> mailboxSession.getUser().asString())
+            .map(mailboxSession -> mailboxSession.getUser())
             .orElse(null);
     }
 }

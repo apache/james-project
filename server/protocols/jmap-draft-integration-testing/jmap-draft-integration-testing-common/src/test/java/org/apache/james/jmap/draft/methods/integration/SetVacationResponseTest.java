@@ -34,6 +34,7 @@ import java.time.ZonedDateTime;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
@@ -77,7 +78,7 @@ public abstract class SetVacationResponseTest {
             .fluent()
             .addDomain(DOMAIN)
             .addUser(USER, PASSWORD);
-        accessToken = authenticateJamesUser(baseUri(jmapServer), USER, PASSWORD);
+        accessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(USER), PASSWORD);
     }
 
     @After

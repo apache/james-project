@@ -22,6 +22,7 @@ package org.apache.james.mpt.user;
 import java.io.Reader;
 import java.io.StringReader;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.Runner;
 import org.apache.james.mpt.api.Monitor;
 import org.apache.james.mpt.api.UserAdder;
@@ -48,7 +49,7 @@ public class ScriptedUserAdder implements UserAdder {
     
     /**
      * Constructs an adder without a script.
-     * Note that {@link #addUser(String, String)} will not be available
+     * Note that {@link #addUser(Username, String)} will not be available
      * @param host connect to this host
      * @param port connect to this port
      */
@@ -61,7 +62,7 @@ public class ScriptedUserAdder implements UserAdder {
     }
     
     /**
-     * Note that {@link #addUser(String, String)} will not be available
+     * Note that {@link #addUser(Username, String)} will not be available
      * @param host connect to this host
      * @param port connect to this port
      * @param monitor not null
@@ -85,7 +86,7 @@ public class ScriptedUserAdder implements UserAdder {
      * @throws NullPointerException when script has not been set
      */
     @Override
-    public void addUser(String user, String password) throws Exception {
+    public void addUser(Username user, String password) throws Exception {
         final StringReader reader = new StringReader(script);
         addUser(user, password, reader);
     }
@@ -97,9 +98,9 @@ public class ScriptedUserAdder implements UserAdder {
      * @param reader reader for script, not null
      * @throws Exception upon failure
      */
-    public void addUser(String user, String password, Reader reader) throws Exception {
+    public void addUser(Username user, String password, Reader reader) throws Exception {
         final ProtocolSessionBuilder builder = new ProtocolSessionBuilder();
-        builder.setVariable(USER_VARIABLE_NAME, user);
+        builder.setVariable(USER_VARIABLE_NAME, user.asString());
         builder.setVariable(PASSWORD_VARIABLE_NAME, password);
         
         final Runner runner = new Runner();

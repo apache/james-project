@@ -21,6 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -50,7 +51,7 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
 
     @Override
     public String getQuotaRoot(String namespace, String user, String name) throws MailboxException {
-        return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
+        return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, Username.of(user), name)).getValue();
     }
 
     @Override

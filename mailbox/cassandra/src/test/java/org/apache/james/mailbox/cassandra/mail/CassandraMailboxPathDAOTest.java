@@ -28,6 +28,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -40,8 +41,8 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 @ExtendWith(CassandraRestartExtension.class)
 public abstract class CassandraMailboxPathDAOTest {
-    private static final String USER = "user";
-    private static final String OTHER_USER = "other";
+    private static final Username USER = Username.of("user");
+    private static final Username OTHER_USER = Username.of("other");
 
     static final CassandraId INBOX_ID = CassandraId.timeBased();
     static final CassandraId OUTBOX_ID = CassandraId.timeBased();

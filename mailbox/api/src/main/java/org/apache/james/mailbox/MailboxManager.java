@@ -23,6 +23,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -262,7 +263,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     /**
      * Creates a new system session.<br>
      * A system session is intended to be used for programmatic access.<br>
-     * Use {@link #login(String, String)} when accessing this API from a
+     * Use {@link #login(Username, String)} when accessing this API from a
      * protocol.
      * 
      * @param userName
@@ -273,7 +274,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxException
      *            when the creation fails for other reasons
      */
-    MailboxSession createSystemSession(String userName) throws BadCredentialsException, MailboxException;
+    MailboxSession createSystemSession(Username userName) throws BadCredentialsException, MailboxException;
 
     /**
      * Autenticates the given user against the given password.<br>
@@ -290,7 +291,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxException
      *            when the creation fails for other reasons
      */
-    MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException;
+    MailboxSession login(Username userid, String passwd) throws BadCredentialsException, MailboxException;
 
     /**
      * Autenticates the given administrator against the given password,
@@ -310,7 +311,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
-    MailboxSession loginAsOtherUser(String adminUserId, String passwd, String otherUserId) throws BadCredentialsException, MailboxException;
+    MailboxSession loginAsOtherUser(Username adminUserId, String passwd, Username otherUserId) throws BadCredentialsException, MailboxException;
 
     /**
      * <p>

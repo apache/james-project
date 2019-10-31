@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.time.Duration;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -50,7 +51,7 @@ public abstract class ProvisioningTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String DOMAIN = "mydomain.tld";
-    private static final String USER = "myuser@" + DOMAIN;
+    private static final Username USER = Username.of("myuser@" + DOMAIN);
     private static final String PASSWORD = "secret";
     
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
@@ -68,7 +69,7 @@ public abstract class ProvisioningTest {
         jmapServer.getProbe(DataProbeImpl.class)
             .fluent()
             .addDomain(DOMAIN)
-            .addUser(USER, PASSWORD);
+            .addUser(USER.asString(), PASSWORD);
     }
 
     @After
@@ -111,7 +112,7 @@ public abstract class ProvisioningTest {
             .post("/jmap");
 
         assertThat(jmapServer.getProbe(MailboxProbeImpl.class)
-            .listSubscriptions(USER))
+            .listSubscriptions(USER.asString()))
             .containsAll(DefaultMailboxes.DEFAULT_MAILBOXES);
     }
 }

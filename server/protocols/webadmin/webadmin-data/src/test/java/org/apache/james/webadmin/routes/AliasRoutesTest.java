@@ -37,6 +37,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -119,9 +120,9 @@ class AliasRoutesTest {
             usersRepository.setDomainList(domainList);
             usersRepository.configure(new BaseHierarchicalConfiguration());
 
-            usersRepository.addUser(BOB, BOB_PASSWORD);
-            usersRepository.addUser(BOB_WITH_SLASH, BOB_WITH_SLASH_PASSWORD);
-            usersRepository.addUser(ALICE, ALICE_PASSWORD);
+            usersRepository.addUser(Username.of(BOB), BOB_PASSWORD);
+            usersRepository.addUser(Username.of(BOB_WITH_SLASH), BOB_WITH_SLASH_PASSWORD);
+            usersRepository.addUser(Username.of(ALICE), ALICE_PASSWORD);
 
             createServer(new AliasRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(module)));
         }

@@ -50,8 +50,8 @@ import com.google.common.collect.ImmutableSortedMap;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxListenerTest {
-    private static final MailboxPath PATH = MailboxPath.forUser("bob", "mailbox");
-    private static final MailboxPath OTHER_PATH = MailboxPath.forUser("bob", "mailbox.other");
+    private static final MailboxPath PATH = MailboxPath.forUser(Username.of("bob"), "mailbox");
+    private static final MailboxPath OTHER_PATH = MailboxPath.forUser(Username.of("bob"), "mailbox.other");
     private static final Username BOB = Username.of("bob");
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final TestId MAILBOX_ID = TestId.of(18);
@@ -59,9 +59,9 @@ class MailboxListenerTest {
     private static final QuotaCount QUOTA_COUNT = QuotaCount.count(34);
     private static final QuotaSize QUOTA_SIZE = QuotaSize.size(48);
     private static final MailboxACL ACL_1 = new MailboxACL(
-        Pair.of(MailboxACL.EntryKey.createUserEntryKey("Bob"), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer)));
+        Pair.of(MailboxACL.EntryKey.createUserEntryKey(Username.of("Bob")), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer)));
     private static final MailboxACL ACL_2 = new MailboxACL(
-        Pair.of(MailboxACL.EntryKey.createUserEntryKey("Bob"), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read)));
+        Pair.of(MailboxACL.EntryKey.createUserEntryKey(Username.of("Bob")), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read)));
     private static final MessageUid UID = MessageUid.of(85);
     private static final MessageMetaData META_DATA = new MessageMetaData(UID, 45, new Flags(), 45, new Date(), TestMessageId.of(75));
 

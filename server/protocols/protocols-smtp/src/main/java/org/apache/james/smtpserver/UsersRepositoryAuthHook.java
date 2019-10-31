@@ -20,6 +20,7 @@ package org.apache.james.smtpserver;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.AuthHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -58,10 +59,10 @@ public class UsersRepositoryAuthHook implements AuthHook {
     }
 
     @Override
-    public HookResult doAuth(SMTPSession session, String username, String password) {
+    public HookResult doAuth(SMTPSession session, Username username, String password) {
         try {
             if (users.test(username, password)) {
-                session.setUser(username);
+                session.setUsername(username);
                 session.setRelayingAllowed(true);
                 return HookResult.builder()
                     .hookReturnCode(HookReturnCode.ok())

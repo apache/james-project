@@ -51,10 +51,10 @@ public abstract class AbstractUsersRepositoryTest {
      */
     protected abstract AbstractUsersRepository getUsersRepository() throws Exception;
 
-    private String user1;
-    private String user2;
-    private String user3;
-    private String admin;
+    private Username user1;
+    private Username user2;
+    private Username user3;
+    private Username admin;
     
     public void setUp() throws Exception { 
         this.usersRepository = getUsersRepository();
@@ -71,11 +71,11 @@ public abstract class AbstractUsersRepositoryTest {
         disposeUsersRepository();
     }
     
-    private String login(String login) {
+    private Username login(String login) {
         if (usersRepository.supportVirtualHosting()) {
-            return login + '@' + DOMAIN.name();
+            return Username.of(login + '@' + DOMAIN.name());
         } else {
-            return login;
+            return Username.of(login);
         }
     }
     
@@ -92,12 +92,12 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void countUsersShouldReturnNumberOfUsersWhenNotEmptyRepository() throws UsersRepositoryException {
         //Given
-        ArrayList<String> keys = new ArrayList<>(3);
+        ArrayList<Username> keys = new ArrayList<>(3);
         keys.add(user1);
         keys.add(user2);
         keys.add(user3);
-        for (String username : keys) {
-            usersRepository.addUser(username, username);
+        for (Username username : keys) {
+            usersRepository.addUser(username, username.asString());
         }
         //When
         int actual = usersRepository.countUsers();
@@ -108,7 +108,7 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void listShouldReturnEmptyIteratorWhenEmptyRepository() throws UsersRepositoryException {
         //When
-        Iterator<String> actual = usersRepository.list();
+        Iterator<Username> actual = usersRepository.list();
         //Then
         assertThat(actual)
             .toIterable()
@@ -118,15 +118,15 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void listShouldReturnExactlyUsersInRepository() throws UsersRepositoryException {
         //Given
-        ArrayList<String> keys = new ArrayList<>(3);
+        ArrayList<Username> keys = new ArrayList<>(3);
         keys.add(user1);
         keys.add(user2);
         keys.add(user3);
-        for (String username : keys) {
-            usersRepository.addUser(username, username);
+        for (Username username : keys) {
+            usersRepository.addUser(username, username.asString());
         }
         //When
-        Iterator<String> actual = usersRepository.list();
+        Iterator<Username> actual = usersRepository.list();
         //Then
         assertThat(actual)
             .toIterable()
@@ -205,9 +205,9 @@ public abstract class AbstractUsersRepositoryTest {
         domainList.addDomain(Domain.of("jAmEs.oRg"));
         String username = "myuser";
         String password = "password";
-        usersRepository.addUser(username + "@jAmEs.oRg", password);
+        usersRepository.addUser(Username.of(username + "@jAmEs.oRg"), password);
 
-        boolean actual = usersRepository.test(username + "@james.org", password);
+        boolean actual = usersRepository.test(Username.of(username + "@james.org"), password);
 
         assertThat(actual).isTrue();
     }
@@ -328,7 +328,7 @@ public abstract class AbstractUsersRepositoryTest {
         // Some implementations do not support changing virtual hosting value
         Assume.assumeTrue(usersRepository.supportVirtualHosting());
 
-        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo("local@domain");
+        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo(Username.of("local@domain"));
     }
 
     @Test
@@ -338,7 +338,7 @@ public abstract class AbstractUsersRepositoryTest {
         // Some implementations do not support changing virtual hosting value
         Assume.assumeFalse(usersRepository.supportVirtualHosting());
 
-        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo("local");
+        assertThat(usersRepository.getUser(new MailAddress("local@domain"))).isEqualTo(Username.of("local"));
     }
 
     protected void disposeUsersRepository() throws UsersRepositoryException {

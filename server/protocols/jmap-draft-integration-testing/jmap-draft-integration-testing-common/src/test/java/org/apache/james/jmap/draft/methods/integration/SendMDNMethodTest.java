@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -70,8 +71,8 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 
 public abstract class SendMDNMethodTest {
-    private static final String HOMER = "homer@" + DOMAIN;
-    private static final String BART = "bart@" + DOMAIN;
+    private static final Username HOMER = Username.of("homer@" + DOMAIN);
+    private static final Username BART = Username.of("bart@" + DOMAIN);
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
 
@@ -93,9 +94,9 @@ public abstract class SendMDNMethodTest {
         RestAssured.defaultParser = Parser.JSON;
 
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(HOMER, PASSWORD);
-        dataProbe.addUser(BART, BOB_PASSWORD);
-        mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
+        dataProbe.addUser(HOMER.asString(), PASSWORD);
+        dataProbe.addUser(BART.asString(), BOB_PASSWORD);
+        mailboxProbe.createMailbox("#private", HOMER.asString(), DefaultMailboxes.INBOX);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }
@@ -403,10 +404,10 @@ public abstract class SendMDNMethodTest {
         List<String> messageIds = listMessageIdsForAccount(homerAccessToken);
 
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
-        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER, DefaultMailboxes.INBOX);
+        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER.asString(), DefaultMailboxes.INBOX);
         quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
 
-        MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), HOMER, MailboxConstants.INBOX);
+        MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), HOMER.asString(), MailboxConstants.INBOX);
 
         String creationId = "creation-1";
         given()

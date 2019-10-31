@@ -21,6 +21,7 @@ package org.apache.james.protocols.pop3.core;
 
 import java.util.Collection;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.ProtocolSession.State;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
@@ -57,11 +58,12 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
         }
         if (!syntaxError && session.getHandlerState() == POP3Session.AUTHENTICATION_READY) {
 
-            Response response = doAuth(session, parts[0], parts[1]);
+            Username username = Username.of(parts[0]);
+            Response response = doAuth(session, username, parts[1]);
             
             if (POP3Response.OK_RESPONSE.equals(response.getRetCode())) {
                 // the auth was successful so set the user
-                session.setUser(parts[0]);
+                session.setUsername(username);
             }
             return response;
         } else {
@@ -78,7 +80,7 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 
     
     @Override
-    protected final Mailbox auth(POP3Session session, String username, String password) throws Exception {
+    protected final Mailbox auth(POP3Session session, Username username, String password) throws Exception {
         return auth(session, (String)session.getAttachment(POP3Session.APOP_TIMESTAMP, State.Connection), username, password);
     }
 
@@ -88,5 +90,5 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
      *
      * @return mailbox
      */
-    protected abstract Mailbox auth(POP3Session session, String apopTimestamp, String user, String digest) throws Exception;
+    protected abstract Mailbox auth(POP3Session session, String apopTimestamp, Username user, String digest) throws Exception;
 }

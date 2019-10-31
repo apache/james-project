@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -34,13 +35,13 @@ public class MailboxUtilsTest {
 
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
-    private String user;
+    private Username user;
     private MailboxUtils sut;
 
     @Before
     public void setup() throws Exception {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        user = "user@domain.org";
+        user = Username.of("user@domain.org");
         mailboxSession = mailboxManager.createSystemSession(user);
         sut = new MailboxUtils(mailboxManager);
     }

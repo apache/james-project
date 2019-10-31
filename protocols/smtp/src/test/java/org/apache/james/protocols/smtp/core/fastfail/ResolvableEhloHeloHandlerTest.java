@@ -30,6 +30,7 @@ import java.util.Map;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
@@ -43,7 +44,7 @@ public class ResolvableEhloHeloHandlerTest {
 
 
     private SMTPSession setupMockSession(String argument,
-             final boolean relaying, final boolean authRequired, final String user, MailAddress recipient) {
+             final boolean relaying, final boolean authRequired, final Username username, MailAddress recipient) {
 
         return new BaseFakeSMTPSession() {
 
@@ -56,8 +57,8 @@ public class ResolvableEhloHeloHandlerTest {
             }
 
             @Override
-            public String getUser() {
-                return user;
+            public Username getUsername() {
+                return username;
             }
 
             @Override
@@ -148,7 +149,7 @@ public class ResolvableEhloHeloHandlerTest {
     @Test
     public void testRejectInvalidHeloAuthUser() throws Exception {
         MailAddress mailAddress = new MailAddress("test@localhost");
-        SMTPSession session = setupMockSession(INVALID_HOST,false,true,"valid@user",mailAddress);
+        SMTPSession session = setupMockSession(INVALID_HOST, false, true, Username.of("valid@user"), mailAddress);
         ResolvableEhloHeloHandler handler = createHandler();
 
 

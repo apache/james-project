@@ -33,6 +33,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.StringTokenizer;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.CommandHandler;
@@ -156,7 +157,7 @@ public class AuthCmdHandler
      * @param argument the argument passed in with the command by the SMTP client
      */
     private Response doAUTH(SMTPSession session, String argument) {
-        if (session.getUser() != null) {
+        if (session.getUsername() != null) {
             return ALREADY_AUTH;
         } else if (argument == null) {
             return SYNTAX_ERROR;
@@ -267,7 +268,7 @@ public class AuthCmdHandler
             // with in the if clause below
         }
         // Authenticate user
-        Response response = doAuthTest(session, user, pass, "PLAIN");
+        Response response = doAuthTest(session, Username.of(user), pass, "PLAIN");
         
         session.popLineHandler();
 
@@ -303,22 +304,22 @@ public class AuthCmdHandler
         
         session.pushLineHandler(new AbstractSMTPLineHandler() {
 
-            private String user;
+            private Username username;
 
-            public LineHandler<SMTPSession> setUser(String user) {
-                this.user = user;
+            public LineHandler<SMTPSession> setUsername(Username username) {
+                this.username = username;
                 return this;
             }
 
             @Override
             protected Response onCommand(SMTPSession session, String l) {
-                return doLoginAuthPassCheck(session, user, l);
+                return doLoginAuthPassCheck(session, username, l);
             }
-        }.setUser(user));
+        }.setUsername(Username.of(user)));
         return AUTH_READY_PASSWORD_LOGIN;
     }
     
-    private Response doLoginAuthPassCheck(SMTPSession session, String user, String pass) {
+    private Response doLoginAuthPassCheck(SMTPSession session, Username username, String pass) {
         if (pass != null) {
             try {
                 pass = decodeBase64(pass);
@@ -332,11 +333,11 @@ public class AuthCmdHandler
         session.popLineHandler();
 
         // Authenticate user
-        return doAuthTest(session, user, pass, "LOGIN");
+        return doAuthTest(session, username, pass, "LOGIN");
     }
 
-    protected Response doAuthTest(SMTPSession session, String user, String pass, String authType) {
-        if ((user == null) || (pass == null)) {
+    protected Response doAuthTest(SMTPSession session, Username username, String pass, String authType) {
+        if ((username == null) || (pass == null)) {
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH " + authType);
         }
 
@@ -349,7 +350,7 @@ public class AuthCmdHandler
                 LOGGER.debug("executing  hook {}", rawHook);
 
                 long start = System.currentTimeMillis();
-                HookResult hRes = rawHook.doAuth(session, user, pass);
+                HookResult hRes = rawHook.doAuth(session, username, pass);
                 long executionTime = System.currentTimeMillis() - start;
 
                 if (rHooks != null) {
@@ -374,7 +375,7 @@ public class AuthCmdHandler
         }
 
         res = AUTH_FAILED;
-        LOGGER.error("AUTH method {} failed from {}@{}", authType, user, session.getRemoteAddress().getAddress().getHostAddress());
+        LOGGER.error("AUTH method {} failed from {}@{}", authType, username, session.getRemoteAddress().getAddress().getHostAddress());
         return res;
     }
 

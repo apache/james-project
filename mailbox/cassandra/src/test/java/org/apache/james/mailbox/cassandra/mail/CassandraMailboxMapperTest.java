@@ -31,6 +31,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -49,7 +50,7 @@ import org.junit.Test;
 public class CassandraMailboxMapperTest {
     
     private static final int UID_VALIDITY = 52;
-    private static final String USER = "user";
+    private static final Username USER = Username.of("user");
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(USER, "name");
     private static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);

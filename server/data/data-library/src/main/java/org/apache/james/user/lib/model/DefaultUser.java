@@ -22,6 +22,7 @@ package org.apache.james.user.lib.model;
 import java.io.Serializable;
 import java.security.NoSuchAlgorithmException;
 
+import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.util.DigestUtil;
 
@@ -33,7 +34,7 @@ public class DefaultUser implements User, Serializable {
 
     private static final long serialVersionUID = 5178048915868531270L;
 
-    private final String userName;
+    private final Username userName;
     private String hashedPassword;
     private final String algorithm;
 
@@ -45,7 +46,7 @@ public class DefaultUser implements User, Serializable {
      * @param hashAlg
      *            the algorithm used to generate the hash of the password
      */
-    public DefaultUser(String name, String hashAlg) {
+    public DefaultUser(Username name, String hashAlg) {
         userName = name;
         algorithm = hashAlg;
     }
@@ -61,14 +62,14 @@ public class DefaultUser implements User, Serializable {
      * @param hashAlg
      *            the String algorithm used to generate the hash of the password
      */
-    public DefaultUser(String name, String passwordHash, String hashAlg) {
+    public DefaultUser(Username name, String passwordHash, String hashAlg) {
         userName = name;
         hashedPassword = passwordHash;
         algorithm = hashAlg;
     }
 
     @Override
-    public String getUserName() {
+    public Username getUserName() {
         return userName;
     }
 

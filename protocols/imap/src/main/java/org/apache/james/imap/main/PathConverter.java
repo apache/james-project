@@ -21,6 +21,7 @@ package org.apache.james.imap.main;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -74,14 +75,14 @@ public class PathConverter {
         return buildMailboxPath(namespace, retrieveUserName(namespace), mailboxName);
     }
 
-    private String retrieveUserName(String namespace) {
+    private Username retrieveUserName(String namespace) {
         if (namespace.equals(MailboxConstants.USER_NAMESPACE)) {
             return ImapSessionUtils.getUserName(session);
         }
         throw new DeniedAccessOnSharedMailboxException();
     }
 
-    private MailboxPath buildMailboxPath(String namespace, String user, String mailboxName) {
+    private MailboxPath buildMailboxPath(String namespace, Username user, String mailboxName) {
         if (!namespace.equals(MailboxConstants.USER_NAMESPACE)) {
             throw new DeniedAccessOnSharedMailboxException();
         }

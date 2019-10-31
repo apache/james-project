@@ -20,6 +20,7 @@
 
 package org.apache.james.managesieve.api;
 
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.commands.Authenticate;
 
 public interface Session {
@@ -34,9 +35,9 @@ public interface Session {
 
     boolean isAuthenticated();
 
-    String getUser();
+    Username getUser();
 
-    void setUser(String user);
+    void setUser(Username user);
 
     State getState();
 

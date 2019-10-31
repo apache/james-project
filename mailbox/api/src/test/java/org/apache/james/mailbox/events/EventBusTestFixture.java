@@ -94,7 +94,7 @@ public interface EventBusTestFixture {
 
     MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     Username USERNAME = Username.of("user");
-    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "mailboxName");
+    MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, USERNAME, "mailboxName");
     TestId TEST_ID = TestId.of(18);
     Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
     Event.EventId EVENT_ID_2 = Event.EventId.of("5a7a9f3f-5f03-44be-b457-a51e93760645");

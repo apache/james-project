@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -90,7 +91,7 @@ class CassandraIndexTableHandlerTest {
                                                 applicableFlagDAO,
                                                 deletedMessageDAO);
 
-        mailbox = new Mailbox(MailboxPath.forUser("user", "name"),
+        mailbox = new Mailbox(MailboxPath.forUser(Username.of("user"), "name"),
             UID_VALIDITY,
             MAILBOX_ID);
     }

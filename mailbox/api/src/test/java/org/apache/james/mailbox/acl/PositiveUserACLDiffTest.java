@@ -20,6 +20,7 @@ package org.apache.james.mailbox.acl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
@@ -30,8 +31,9 @@ import org.junit.jupiter.api.Test;
 
 class PositiveUserACLDiffTest {
 
-    private static final EntryKey USER_ENTRY_KEY = EntryKey.createUserEntryKey("user");
-    private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey("user", true);
+    private static final Username USER = Username.of("user");
+    private static final EntryKey USER_ENTRY_KEY = EntryKey.createUserEntryKey(USER);
+    private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey(USER, true);
     private static final EntryKey GROUP_ENTRY_KEY = EntryKey.createGroupEntryKey("group");
     private static final Rfc4314Rights RIGHTS = new Rfc4314Rights(Right.Administer);
 

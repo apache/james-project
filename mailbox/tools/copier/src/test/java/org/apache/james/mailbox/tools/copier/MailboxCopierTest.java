@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -110,7 +111,7 @@ public class MailboxCopierTest {
      * @throws BadCredentialsException
      */
     private void assertMailboxManagerSize(MailboxManager mailboxManager, int multiplicationFactor) throws BadCredentialsException, MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("manager");
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of("manager"));
         mailboxManager.startProcessingRequest(mailboxSession);
 
         List<MailboxPath> mailboxPathList = mailboxManager.list(mailboxSession);

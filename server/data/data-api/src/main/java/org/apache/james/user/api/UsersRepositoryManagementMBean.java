@@ -19,6 +19,8 @@
 
 package org.apache.james.user.api;
 
+import org.apache.james.core.Username;
+
 /**
  * Expose user account management functionality through JMX.
  */
@@ -99,7 +101,7 @@ public interface UsersRepositoryManagementMBean {
      *             if error
      */
     @Deprecated
-    void unsetAlias(String userName) throws Exception;
+    void unsetAlias(Username userName) throws Exception;
 
     /**
      * Retrieves the user's alias, if set
@@ -110,7 +112,7 @@ public interface UsersRepositoryManagementMBean {
      *             if error
      */
     @Deprecated
-    String getAlias(String userName) throws Exception;
+    String getAlias(Username userName) throws Exception;
 
     /**
      * Removes a user's forward email address which terminates remote mail
@@ -123,7 +125,7 @@ public interface UsersRepositoryManagementMBean {
      *             if error
      */
     @Deprecated
-    void unsetForwardAddress(String userName) throws Exception;
+    void unsetForwardAddress(Username userName) throws Exception;
 
     /**
      * Retrieves the user's forward, if set
@@ -136,7 +138,7 @@ public interface UsersRepositoryManagementMBean {
      *             if error
      */
     @Deprecated
-    String getForwardAddress(String userName) throws Exception;
+    String getForwardAddress(Username userName) throws Exception;
 
     /**
      * Return true if the UserRepository has VirtualHosting enabled

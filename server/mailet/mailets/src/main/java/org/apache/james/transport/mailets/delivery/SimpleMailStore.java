@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.delivery;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
@@ -91,7 +92,7 @@ public class SimpleMailStore implements MailStore {
 
     @Override
     public void storeMail(MailAddress recipient, Mail mail) throws MessagingException {
-        String username = computeUsername(recipient);
+        Username username = computeUsername(recipient);
 
         String locatedFolder = locateFolder(username, mail);
         ComposedMessageId composedMessageId = mailboxAppender.append(mail.getMessage(), username, locatedFolder);
@@ -101,18 +102,18 @@ public class SimpleMailStore implements MailStore {
             mail.getMaybeSender().asString(), recipient.asPrettyString(), locatedFolder, composedMessageId);
     }
 
-    private String locateFolder(String username, Mail mail) {
+    private String locateFolder(Username username, Mail mail) {
         return AttributeUtils
-            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username), String.class)
+            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), String.class) //FIXME-USERNAME
             .orElse(folder);
     }
 
-    private String computeUsername(MailAddress recipient) {
+    private Username computeUsername(MailAddress recipient) {
         try {
             return usersRepository.getUser(recipient);
         } catch (UsersRepositoryException e) {
             LOGGER.warn("Unable to retrieve username for {}", recipient.asPrettyString(), e);
-            return recipient.asString();
+            return Username.of(recipient.asString());
         }
     }
 }

@@ -70,15 +70,15 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    protected void doAddUser(String username, String password) throws UsersRepositoryException {
+    protected void doAddUser(Username username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, algo);
         user.setPassword(password);
-        userByName.put(username.toLowerCase(Locale.US), user);
+        userByName.put(toKey(username), user);
     }
 
     @Override
-    public User getUserByName(String name) throws UsersRepositoryException {
-        return userByName.get(name);
+    public User getUserByName(Username name) throws UsersRepositoryException {
+        return userByName.get(toKey(name));
     }
 
     @Override
@@ -87,24 +87,24 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         if (existingUser == null) {
             throw new UsersRepositoryException("Please provide an existing user to update");
         }
-        userByName.put(user.getUserName().toLowerCase(Locale.US), user);
+        userByName.put(toKey(user.getUserName()), user);
     }
 
     @Override
-    public void removeUser(String name) throws UsersRepositoryException {
-        if (userByName.remove(name) == null) {
-            throw new UsersRepositoryException("unable to remove unknown user " + name);
+    public void removeUser(Username name) throws UsersRepositoryException {
+        if (userByName.remove(toKey(name)) == null) {
+            throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
         }
     }
 
     @Override
-    public boolean contains(String name) throws UsersRepositoryException {
-        return userByName.containsKey(name.toLowerCase(Locale.US));
+    public boolean contains(Username name) throws UsersRepositoryException {
+        return userByName.containsKey(toKey(name));
     }
 
     @Override
-    public boolean test(String name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(Username.of(name).asString()))
+    public boolean test(Username name, final String password) throws UsersRepositoryException {
+        return Optional.ofNullable(userByName.get(toKey(name)))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }
@@ -115,7 +115,14 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public Iterator<String> list() throws UsersRepositoryException {
-        return userByName.keySet().iterator();
+    public Iterator<Username> list() throws UsersRepositoryException {
+        return userByName.values()
+            .stream()
+            .map(User::getUserName)
+            .iterator();
+    }
+
+    private String toKey(Username username) {
+        return username.asString().toLowerCase(Locale.US);
     }
 }

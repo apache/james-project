@@ -21,17 +21,20 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Username;
 import org.junit.jupiter.api.Test;
 
+
 class MailboxAssertTests {
+    private static final Username USER = Username.of("user");
 
     private static final long UID_VALIDITY = 42;
     private static final TestId MAILBOX_ID = TestId.of(24);
 
     @Test
     void isEqualToShouldNotFailWithEqualMailbox() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
 
@@ -40,8 +43,8 @@ class MailboxAssertTests {
 
     @Test
     void isEqualToShouldFailWithNotEqualNamespace() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", "user", "name"), UID_VALIDITY);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(new MailboxPath("other_namespace", USER, "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
 
@@ -51,8 +54,8 @@ class MailboxAssertTests {
 
     @Test
     void isEqualToShouldFailWithNotEqualUser() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", "other_user", "name"), UID_VALIDITY);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", Username.of("other_user"), "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
 
@@ -62,8 +65,8 @@ class MailboxAssertTests {
 
     @Test
     void isEqualToShouldFailWithNotEqualName() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", "user", "other_name"), UID_VALIDITY);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(new MailboxPath("namespace", USER, "other_name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
 
@@ -73,8 +76,8 @@ class MailboxAssertTests {
 
     @Test
     void isEqualToShouldFailWithNotEqualId() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(TestId.of(MAILBOX_ID.id + 1));
 
@@ -84,8 +87,8 @@ class MailboxAssertTests {
 
     @Test
     void isEqualToShouldFailWithNotEqualUidValidity() {
-        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY);
-        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY + 1);
+        Mailbox mailbox1 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY);
+        Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY + 1);
         mailbox1.setMailboxId(MAILBOX_ID);
         mailbox2.setMailboxId(MAILBOX_ID);
 

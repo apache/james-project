@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.delivery;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -45,7 +46,7 @@ public class MailboxAppender {
         this.mailboxManager = mailboxManager;
     }
 
-    public ComposedMessageId append(MimeMessage mail, String user, String folder) throws MessagingException {
+    public ComposedMessageId append(MimeMessage mail, Username user, String folder) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
         return append(mail, user, useSlashAsSeparator(folder, session), session);
     }
@@ -61,7 +62,7 @@ public class MailboxAppender {
         return destination;
     }
 
-    private ComposedMessageId append(MimeMessage mail, String user, String folder, MailboxSession session) throws MessagingException {
+    private ComposedMessageId append(MimeMessage mail, Username user, String folder, MailboxSession session) throws MessagingException {
         mailboxManager.startProcessingRequest(session);
         try {
             MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
@@ -95,7 +96,7 @@ public class MailboxAppender {
         }
     }
 
-    public MailboxSession createMailboxSession(String user) throws MessagingException {
+    public MailboxSession createMailboxSession(Username user) throws MessagingException {
         try {
             return mailboxManager.createSystemSession(user);
         } catch (BadCredentialsException e) {

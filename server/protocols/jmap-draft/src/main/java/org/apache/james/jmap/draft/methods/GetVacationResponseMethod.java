@@ -82,7 +82,7 @@ public class GetVacationResponseMethod implements Method {
     }
 
     private GetVacationResponse process(MailboxSession mailboxSession) {
-        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromString(mailboxSession.getUser().asString())).block();
+        Vacation vacation = vacationRepository.retrieveVacation(AccountId.fromUsername(mailboxSession.getUser())).block();
         return GetVacationResponse.builder()
             .accountId(mailboxSession.getUser().asString())
             .vacationResponse(VacationResponse.builder()

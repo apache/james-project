@@ -469,7 +469,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
      * @throws NamingException
      *             Propagated by the underlying LDAP communication layer.
      */
-    private ReadOnlyLDAPUser searchAndBuildUser(String name) throws NamingException {
+    private ReadOnlyLDAPUser searchAndBuildUser(Username name) throws NamingException {
         SearchControls sc = new SearchControls();
         sc.setSearchScope(SearchControls.SUBTREE_SCOPE);
         sc.setReturningAttributes(new String[] { ldapConfiguration.getUserIdAttribute() });
@@ -482,7 +482,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         String sanitizedFilter = FilterEncoder.format(
             filterTemplate,
             ldapConfiguration.getUserIdAttribute(),
-            name,
+            name.asString(),
             ldapConfiguration.getUserObjectClass());
 
         NamingEnumeration<SearchResult> sr = ldapContext.search(ldapConfiguration.getUserBase(), sanitizedFilter, sc);
@@ -496,7 +496,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
         if (!ldapConfiguration.getRestriction().isActivated()
             || userInGroupsMembershipList(r.getNameInNamespace(), ldapConfiguration.getRestriction().getGroupMembershipLists(ldapContext))) {
-            return new ReadOnlyLDAPUser(userName.get().toString(), r.getNameInNamespace(), ldapContext);
+            return new ReadOnlyLDAPUser(Username.of(userName.get().toString()), r.getNameInNamespace(), ldapContext);
         }
 
         return null;
@@ -521,11 +521,11 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     private ReadOnlyLDAPUser buildUser(String userDN) throws NamingException {
       Attributes userAttributes = ldapContext.getAttributes(userDN);
       Attribute userName = userAttributes.get(ldapConfiguration.getUserIdAttribute());
-      return new ReadOnlyLDAPUser(userName.get().toString(), userDN, ldapContext);
+      return new ReadOnlyLDAPUser(Username.of(userName.get().toString()), userDN, ldapContext);
     }
 
     @Override
-    public boolean contains(String name) throws UsersRepositoryException {
+    public boolean contains(Username name) throws UsersRepositoryException {
         return getUserByName(name) != null;
     }
 
@@ -546,7 +546,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Deprecated
-    public String getRealName(String name) throws UsersRepositoryException {
+    public Username getRealName(String name) throws UsersRepositoryException {
         User u = getUserByNameCaseInsensitive(name);
         if (u != null) {
             return u.getUserName();
@@ -556,7 +556,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
-    public User getUserByName(String name) throws UsersRepositoryException {
+    public User getUserByName(Username name) throws UsersRepositoryException {
         try {
           return searchAndBuildUser(name);
         } catch (NamingException e) {
@@ -570,7 +570,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     public User getUserByNameCaseInsensitive(String name) throws UsersRepositoryException {
         try {
             for (ReadOnlyLDAPUser u : buildUserCollection(getValidUsers())) {
-                if (u.getUserName().equalsIgnoreCase(name)) {
+                if (u.getUserName().asString().equalsIgnoreCase(name)) {
                     return u;
                 }
             }
@@ -584,7 +584,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
-    public Iterator<String> list() throws UsersRepositoryException {
+    public Iterator<Username> list() throws UsersRepositoryException {
         try {
             return buildUserCollection(getValidUsers())
                 .stream()
@@ -622,7 +622,7 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
-    public void removeUser(String name) throws UsersRepositoryException {
+    public void removeUser(Username name) throws UsersRepositoryException {
         LOGGER.warn("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
@@ -630,13 +630,13 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
     }
 
     @Override
-    public boolean test(String name, String password) throws UsersRepositoryException {
+    public boolean test(Username name, String password) throws UsersRepositoryException {
         User u = getUserByName(name);
         return u != null && u.verifyPassword(password);
     }
 
     @Override
-    public void addUser(String username, String password) throws UsersRepositoryException {
+    public void addUser(Username username, String password) throws UsersRepositoryException {
         LOGGER.error("This user-repository is read-only. Modifications are not permitted.");
         throw new UsersRepositoryException(
                 "This user-repository is read-only. Modifications are not permitted.");
@@ -659,16 +659,16 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
 
 
     @Override
-    public String getUser(MailAddress mailAddress) {
+    public Username getUser(MailAddress mailAddress) {
         if (supportVirtualHosting()) {
-            return mailAddress.asString();
+            return Username.of(mailAddress.asString());
         } else {
-            return mailAddress.getLocalPart();
+            return Username.of(mailAddress.getLocalPart());
         }
     }
 
     @Override
-    public boolean isAdministrator(String username) {
+    public boolean isAdministrator(Username username) {
         if (ldapConfiguration.getAdministratorId().isPresent()) {
             return ldapConfiguration.getAdministratorId().get().equals(username);
         }

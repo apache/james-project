@@ -43,7 +43,7 @@ public interface UsersRepository {
      *             if error
      * 
      */
-    void addUser(String username, String password) throws UsersRepositoryException;
+    void addUser(Username username, String password) throws UsersRepositoryException;
 
     /**
      * Get the user object with the specified user name. Return null if no such
@@ -55,7 +55,7 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      *             if error
      */
-    User getUserByName(String name) throws UsersRepositoryException;
+    User getUserByName(Username name) throws UsersRepositoryException;
 
     /**
      * Update the repository with the specified user object. A user object with
@@ -74,7 +74,7 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      *             if error
      */
-    void removeUser(String name) throws UsersRepositoryException;
+    void removeUser(Username name) throws UsersRepositoryException;
 
     /**
      * Returns whether or not this user is in the repository
@@ -85,7 +85,7 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      *             if error
      */
-    boolean contains(String name) throws UsersRepositoryException;
+    boolean contains(Username name) throws UsersRepositoryException;
 
     /**
      * Test if user with name 'name' has password 'password'.
@@ -101,7 +101,7 @@ public interface UsersRepository {
      *             if error
      * 
      */
-    boolean test(String name, String password) throws UsersRepositoryException;
+    boolean test(Username name, String password) throws UsersRepositoryException;
 
     /**
      * Returns a count of the users in the repository.
@@ -120,7 +120,7 @@ public interface UsersRepository {
      * @throws UsersRepositoryException
      *             if error
      */
-    Iterator<String> list() throws UsersRepositoryException;
+    Iterator<Username> list() throws UsersRepositoryException;
 
     /**
      * Return true if virtualHosting support is enabled, otherwise false
@@ -136,7 +136,7 @@ public interface UsersRepository {
      * @return Username used by James for this mailAddress
      * @throws UsersRepositoryException
      */
-    String getUser(MailAddress mailAddress) throws UsersRepositoryException;
+    Username getUser(MailAddress mailAddress) throws UsersRepositoryException;
 
     /**
      * Returns one of the possible mail addresses to be used to send a mail to that user
@@ -148,11 +148,11 @@ public interface UsersRepository {
     /**
      * Return true if the user is an admin for this repository
      */
-    boolean isAdministrator(String username) throws UsersRepositoryException;
+    boolean isAdministrator(Username username) throws UsersRepositoryException;
 
     /**
-     * @return true if one can use {@link UsersRepository#updateUser(User)} {@link UsersRepository#addUser(String, String)}
-     *             {@link UsersRepository#removeUser(String)} and false overwhise
+     * @return true if one can use {@link UsersRepository#updateUser(User)} {@link UsersRepository#addUser(Username, String)}
+     *             {@link UsersRepository#removeUser(Username)} and false overwhise
      */
     boolean isReadOnly();
 

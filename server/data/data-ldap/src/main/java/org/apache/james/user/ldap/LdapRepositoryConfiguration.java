@@ -25,6 +25,7 @@ import java.util.Optional;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Username;
 
 import com.google.common.base.Preconditions;
 
@@ -286,7 +287,7 @@ public class LdapRepositoryConfiguration {
      * UserId of the administrator
      * The administrator is allowed to log in as other users
      */
-    private final Optional<String> administratorId;
+    private final Optional<Username> administratorId;
 
     private LdapRepositoryConfiguration(String ldapHost, String principal, String credentials, String userBase, String userIdAttribute,
                                        String userObjectClass, boolean useConnectionPool, int connectionTimeout, int readTimeout,
@@ -309,7 +310,7 @@ public class LdapRepositoryConfiguration {
         this.scale = scale;
         this.restriction = restriction;
         this.filter = filter;
-        this.administratorId = administratorId;
+        this.administratorId = administratorId.map(Username::of);
 
         checkState();
     }
@@ -390,7 +391,7 @@ public class LdapRepositoryConfiguration {
         return filter;
     }
 
-    public Optional<String> getAdministratorId() {
+    public Optional<Username> getAdministratorId() {
         return administratorId;
     }
 

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.Serializable;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Rights;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
@@ -90,11 +91,11 @@ public class ObjectMapperFactoryTest {
     @Test
     public void readValueShouldParseUsernameObject() throws Exception {
         String username = "username";
-        Rights.Username actual = testee.forParsing()
-            .readValue("\"" + username + "\"", Rights.Username.class);
+        Username actual = testee.forParsing()
+            .readValue("\"" + username + "\"", Username.class);
 
         assertThat(actual)
-            .isEqualTo(new Rights.Username(username));
+            .isEqualTo(Username.of(username));
     }
 
     @Test
@@ -212,7 +213,7 @@ public class ObjectMapperFactoryTest {
 
         assertThat(actual)
             .isEqualTo(Rights.builder()
-                .delegateTo(new Rights.Username(username), Rights.Right.Administer, Rights.Right.Expunge)
+                .delegateTo(Username.of(username), Rights.Right.Administer, Rights.Right.Expunge)
                 .build());
     }
 

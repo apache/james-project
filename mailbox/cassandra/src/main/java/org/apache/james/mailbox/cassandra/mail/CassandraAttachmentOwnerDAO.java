@@ -31,8 +31,8 @@ import static org.apache.james.mailbox.cassandra.table.CassandraAttachmentOwnerT
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.store.mail.model.Username;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -72,7 +72,7 @@ public class CassandraAttachmentOwnerDAO {
         return executor.executeVoid(
             addStatement.bind()
                 .setUUID(ID, attachmentId.asUUID())
-                .setString(OWNER, owner.getValue()));
+                .setString(OWNER, owner.asString()));
     }
 
     public Flux<Username> retrieveOwners(AttachmentId attachmentId) {
@@ -83,6 +83,6 @@ public class CassandraAttachmentOwnerDAO {
     }
 
     private Username toOwner(Row row) {
-        return Username.fromRawValue(row.getString(OWNER));
+        return Username.of(row.getString(OWNER));
     }
 }

@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -53,7 +54,7 @@ public class ExternalJamesImapHostSystem extends ExternalHostSystem {
     }
     
     @Override
-    public boolean addUser(String user, String password) throws Exception {
+    public boolean addUser(Username user, String password) throws Exception {
         return super.addUser(user, password);
     }
     

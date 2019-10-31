@@ -20,6 +20,7 @@
 package org.apache.james.mpt.host;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -82,7 +83,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     }
     
     @Override
-    public boolean addUser(String user, String password) throws Exception {
+    public boolean addUser(Username user, String password) throws Exception {
         if (userAdder == null) {
             monitor.note("Please ensure user '" + user + "' with password '" + password + "' exists.");
             return false;
@@ -122,7 +123,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     }
 
     @Override
-    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+    public void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception {
         throw new NotImplementedException("Not implemented");
     }
 }

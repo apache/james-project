@@ -23,11 +23,11 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
 import org.apache.james.jmap.draft.model.mailbox.Quotas;
 import org.apache.james.jmap.draft.model.mailbox.Rights;
-import org.apache.james.jmap.draft.model.mailbox.Rights.Username;
 import org.apache.james.jmap.draft.model.mailbox.SortOrder;
 import org.apache.james.jmap.draft.utils.quotas.DefaultQuotaLoader;
 import org.apache.james.jmap.draft.utils.quotas.QuotaLoader;
@@ -122,8 +122,8 @@ public class MailboxFactory {
         MailboxCounters mailboxCounters = messageManager.getMailboxCounters(mailboxSession);
 
         Rights rights = Rights.fromACL(messageManager.getResolvedAcl(mailboxSession))
-            .removeEntriesFor(Username.forMailboxPath(mailboxPath));
-        Username username = Username.fromSession(mailboxSession);
+            .removeEntriesFor(mailboxPath.getUser());
+        Username username = mailboxSession.getUser();
 
         Quotas quotas = quotaLoader.getQuotas(mailboxPath);
 

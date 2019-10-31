@@ -25,6 +25,7 @@ import javax.naming.Context;
 import javax.naming.NamingException;
 import javax.naming.ldap.LdapContext;
 
+import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.ldap.api.LdapConstants;
 
@@ -54,7 +55,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * <code>&quot;myorg.com&quot;</code>, the user's email address will be
      * <code>&quot;john.bold&#64;myorg.com&quot;</code>.
      */
-    private String userName;
+    private Username userName;
 
     /**
      * The distinguished name of the user-record in the LDAP directory.
@@ -93,7 +94,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      *            invoked.
      * @throws NamingException 
      */
-    public ReadOnlyLDAPUser(String userName, String userDN, LdapContext ldapContext) {
+    public ReadOnlyLDAPUser(Username userName, String userDN, LdapContext ldapContext) {
         this();
         this.userName = userName;
         this.userDN = userDN;
@@ -108,7 +109,7 @@ public class ReadOnlyLDAPUser implements User, Serializable {
      * @return The user's identifier or name.
      */
     @Override
-    public String getUserName() {
+    public Username getUserName() {
         return userName;
     }
 

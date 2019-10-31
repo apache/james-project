@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail.task;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -51,7 +52,7 @@ public class MailboxMergingTaskRunner {
 
     @Inject
     public MailboxMergingTaskRunner(MailboxManager mailboxManager, StoreMessageIdManager messageIdManager, CassandraMessageIdDAO cassandraMessageIdDAO, CassandraMailboxDAO mailboxDAO, CassandraUserMailboxRightsDAO rightsDAO, CassandraACLMapper cassandraACLMapper) throws MailboxException {
-        this.mailboxSession = mailboxManager.createSystemSession("task");
+        this.mailboxSession = mailboxManager.createSystemSession(Username.of("task"));
         this.messageIdManager = messageIdManager;
         this.cassandraMessageIdDAO = cassandraMessageIdDAO;
         this.mailboxDAO = mailboxDAO;

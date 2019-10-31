@@ -32,7 +32,7 @@ public class BasicImapCommands implements ImapTestConstants {
     }
     
     public static void authenticate(GenericSimpleScriptedTestProtocol<?, ?> scriptedTestProtocol) {
-        addLogin(scriptedTestProtocol.preElements(), USER, PASSWORD);
+        addLogin(scriptedTestProtocol.preElements(), USER.asString(), PASSWORD);
     }
 
 

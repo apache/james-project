@@ -23,6 +23,7 @@ import javax.inject.Named;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.transport.mailets.delivery.MailboxAppender;
 import org.apache.james.user.api.UsersRepository;
@@ -81,7 +82,7 @@ public class ToSenderFolder extends GenericMailet {
     private void doService(Mail mail) throws MessagingException {
         if (mail.hasSender()) {
             MailAddress sender = mail.getMaybeSender().get();
-            String username = retrieveUser(sender);
+            Username username = retrieveUser(sender);
 
             mailboxAppender.append(mail.getMessage(), username, folder);
 
@@ -89,7 +90,7 @@ public class ToSenderFolder extends GenericMailet {
         }
     }
 
-    private String retrieveUser(MailAddress sender) throws MessagingException {
+    private Username retrieveUser(MailAddress sender) throws MessagingException {
         try {
             return usersRepository.getUser(sender);
         } catch (UsersRepositoryException e) {

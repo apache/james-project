@@ -107,7 +107,7 @@ public class GetMessagesMethodTest {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
-        session = MailboxSessionUtil.create(ROBERT.asString());
+        session = MailboxSessionUtil.create(ROBERT);
         inboxPath = MailboxPath.inbox(session);
         customMailboxPath = new MailboxPath(inboxPath, "custom");
         mailboxManager.createMailbox(inboxPath, session);

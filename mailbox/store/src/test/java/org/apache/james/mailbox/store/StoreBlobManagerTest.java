@@ -29,6 +29,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -67,7 +68,7 @@ public class StoreBlobManagerTest {
     public void setUp() {
         attachmentManager = mock(AttachmentManager.class);
         messageIdManager = mock(MessageIdManager.class);
-        session = MailboxSessionUtil.create("user");
+        session = MailboxSessionUtil.create(Username.of("user"));
 
         blobManager = new StoreBlobManager(attachmentManager, messageIdManager, new TestMessageId.Factory());
     }

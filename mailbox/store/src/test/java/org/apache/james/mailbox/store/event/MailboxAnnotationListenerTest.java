@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxSession;
@@ -54,7 +55,8 @@ import org.mockito.MockitoAnnotations;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxAnnotationListenerTest {
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
+    private static final Username USER = Username.of("user");
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", USER, "name");
 
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
@@ -78,20 +80,20 @@ public class MailboxAnnotationListenerTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        mailboxSession = MailboxSessionUtil.create("test");
+        mailboxSession = MailboxSessionUtil.create(Username.of("test"));
         listener = new MailboxAnnotationListener(mailboxSessionMapperFactory, sessionProvider);
 
         deleteEvent = EventFactory.mailboxDeleted()
             .randomEventId()
             .mailboxSession(mailboxSession)
             .mailboxId(mailboxId)
-            .mailboxPath(MailboxPath.forUser("user", "name"))
+            .mailboxPath(MailboxPath.forUser(USER, "name"))
             .quotaRoot(QuotaRoot.quotaRoot("root", Optional.empty()))
             .quotaCount(QuotaCount.count(123))
             .quotaSize(QuotaSize.size(456))
             .build();
 
-        when(sessionProvider.createSystemSession(deleteEvent.getUsername().asString()))
+        when(sessionProvider.createSystemSession(deleteEvent.getUsername()))
             .thenReturn(mailboxSession);
         when(mailboxSessionMapperFactory.getAnnotationMapper(eq(mailboxSession))).thenReturn(annotationMapper);
     }

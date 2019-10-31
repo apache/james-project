@@ -76,7 +76,7 @@ public class PropagateLookupRightListener implements MailboxListener.GroupMailbo
     }
 
     private MailboxSession createMailboxSession(Event event) throws MailboxException {
-        return mailboxManager.createSystemSession(event.getUsername().asString());
+        return mailboxManager.createSystemSession(event.getUsername());
     }
 
     private void updateLookupRightOnParent(MailboxSession session, MailboxPath path) throws MailboxException {

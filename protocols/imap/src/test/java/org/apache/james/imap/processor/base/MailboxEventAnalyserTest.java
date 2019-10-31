@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
@@ -110,10 +111,11 @@ public class MailboxEventAnalyserTest {
     }
 
     private static final MessageUid MESSAGE_UID = MessageUid.of(1);
-    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
-    private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create("user");
+    private static final Username USER = Username.of("user");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
+    private static final MailboxSession OTHER_MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     private static final char PATH_DELIMITER = '.';
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "user", "name");
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", USER, "name");
     private static final TestId MAILBOX_ID = TestId.of(36);
     private static final int UID_VALIDITY = 1024;
     private static final Mailbox DEFAULT_MAILBOX = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID);

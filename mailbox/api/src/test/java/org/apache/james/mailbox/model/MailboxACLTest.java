@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -41,6 +42,8 @@ class MailboxACLTest {
 
     private static final String USER_1 = "user1";
     private static final String USER_2 = "user2";
+    private static final Username USERNAME_1 = Username.of("user1");
+    private static final Username USERNAME_2 = Username.of("user2");
     private static final boolean NEGATIVE = true;
 
     private static final String ae = "ae";
@@ -221,7 +224,7 @@ class MailboxACLTest {
     @Test
     void applyShouldNotThrowWhenRemovingANonExistingEntry() throws Exception {
         assertThat(MailboxACL.EMPTY
-            .apply(MailboxACL.command().forUser("bob").noRights().asReplacement()))
+            .apply(MailboxACL.command().forUser(Username.of("bob")).noRights().asReplacement()))
             .isEqualTo(MailboxACL.EMPTY);
     }
 
@@ -244,20 +247,20 @@ class MailboxACLTest {
     void usersACLShouldReturnOnlyUsersMapWhenSomeUserEntries() throws Exception {
         MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("aei");
         MailboxACL mailboxACL = new MailboxACL(
-            ImmutableMap.of(EntryKey.createUserEntryKey("user1"), MailboxACL.FULL_RIGHTS,
+            ImmutableMap.of(EntryKey.createUserEntryKey(USERNAME_1), MailboxACL.FULL_RIGHTS,
                 EntryKey.createGroupEntryKey("group"), MailboxACL.FULL_RIGHTS,
-                EntryKey.createUserEntryKey("user2"), rights,
+                EntryKey.createUserEntryKey(USERNAME_2), rights,
                 EntryKey.createGroupEntryKey("group2"), MailboxACL.NO_RIGHTS));
         assertThat(mailboxACL.ofPositiveNameType(NameType.user))
             .containsOnly(
-                MapEntry.entry(EntryKey.createUserEntryKey("user1"), MailboxACL.FULL_RIGHTS),
-                MapEntry.entry(EntryKey.createUserEntryKey("user2"), rights));
+                MapEntry.entry(EntryKey.createUserEntryKey(USERNAME_1), MailboxACL.FULL_RIGHTS),
+                MapEntry.entry(EntryKey.createUserEntryKey(USERNAME_2), rights));
     }
 
     @Test
     void ofPositiveNameTypeShouldFilterOutNegativeEntries() throws Exception {
         MailboxACL mailboxACL = new MailboxACL(
-            ImmutableMap.of(EntryKey.createUserEntryKey("user1", NEGATIVE), MailboxACL.FULL_RIGHTS));
+            ImmutableMap.of(EntryKey.createUserEntryKey(Username.of("user1"), NEGATIVE), MailboxACL.FULL_RIGHTS));
         assertThat(mailboxACL.ofPositiveNameType(NameType.user))
             .isEmpty();
     }

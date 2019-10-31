@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.mailet.filter;
 
+import org.apache.james.core.Username;
 import org.apache.mailet.AttributeValue;
 
 public interface JMAPFilteringFixture {
@@ -46,7 +47,7 @@ public interface JMAPFilteringFixture {
     String SHOULD_NOT_MATCH = "should not match";
 
     String RECIPIENT_1 = "recipient1@james.org";
-    String RECIPIENT_1_USERNAME = "recipient1";
+    Username RECIPIENT_1_USERNAME = Username.of("recipient1");
     AttributeValue<String> RECIPIENT_1_MAILBOX_1 = AttributeValue.of("recipient1_maibox1");
 
     String FRED_MARTIN_FULLNAME = "Frédéric MARTIN";

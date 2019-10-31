@@ -30,6 +30,7 @@ import java.time.Duration;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.CassandraMailboxManager;
@@ -51,7 +52,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.base.Strings;
 
 public class CassandraReIndexerImplTest {
-    private static final String USERNAME = "benwa@apache.org";
+    private static final Username USERNAME = Username.of("benwa@apache.org");
     public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
     private CassandraMailboxManager mailboxManager;
     private ListeningMessageSearchIndex messageSearchIndex;

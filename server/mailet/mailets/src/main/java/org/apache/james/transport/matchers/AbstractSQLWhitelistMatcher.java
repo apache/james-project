@@ -36,6 +36,7 @@ import javax.sql.DataSource;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.transport.mailets.WhiteListManager;
 import org.apache.james.user.api.UsersRepository;
@@ -183,7 +184,7 @@ public abstract class AbstractSQLWhitelistMatcher extends GenericMatcher {
         String username;
         try {
             username = originalUsername;
-            JamesUser user = (JamesUser) localusers.getUserByName(username);
+            JamesUser user = (JamesUser) localusers.getUserByName(Username.of(username));
             if (user.getAliasing()) {
                 username = user.getAlias();
             }

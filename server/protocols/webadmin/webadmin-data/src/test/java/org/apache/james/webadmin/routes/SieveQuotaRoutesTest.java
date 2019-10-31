@@ -54,7 +54,7 @@ class SieveQuotaRoutesTest {
         sieveRepository = new InMemorySieveQuotaRepository();
 
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        usersRepository.addUser(USER_NAME_A, PASSWORD_A);
+        usersRepository.addUser(Username.of(USER_NAME_A), PASSWORD_A);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, usersRepository, new JsonTransformer()))
             .start();

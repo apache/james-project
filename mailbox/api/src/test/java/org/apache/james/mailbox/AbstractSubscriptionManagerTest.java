@@ -20,6 +20,7 @@ package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.junit.jupiter.api.Test;
 
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractSubscriptionManagerTest {
 
-    private static final String USER1 = "test";
+    private static final Username USER1 = Username.of("test");
     private static final String MAILBOX1 = "test1";
     private static final String MAILBOX2 = "test2";
     private SubscriptionManager manager;

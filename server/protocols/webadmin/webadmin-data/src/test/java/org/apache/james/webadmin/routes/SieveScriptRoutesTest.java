@@ -81,7 +81,7 @@ class SieveScriptRoutesTest {
 
         sieveRepository = new SieveFileRepository(fileSystem);
         UsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        usersRepository.addUser("userA", "password");
+        usersRepository.addUser(Username.of("userA"), "password");
 
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");
         sieveContent = IOUtils.toString(sieveResource, StandardCharsets.UTF_8);

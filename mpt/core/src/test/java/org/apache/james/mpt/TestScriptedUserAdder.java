@@ -21,6 +21,7 @@ package org.apache.james.mpt;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.user.ScriptedUserAdder;
 import org.junit.After;
 import org.junit.Before;
@@ -47,7 +48,7 @@ public class TestScriptedUserAdder {
     @Test
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         ScriptedUserAdder adder = new ScriptedUserAdder("localhost", protocol.getPort(), "C: USER='${user}' password='${password}'");
-        adder.addUser("A User", "Some Password");
+        adder.addUser(Username.of("A User"), "Some Password");
         assertThat(record.complete()).isEqualTo("USER='A User' password='Some Password'\r\n");
     }
 }

@@ -135,15 +135,16 @@ public class SieveScriptRoutes implements Routes {
     }
 
     private Username extractUser(Request request) throws UsersRepositoryException {
-        String userName = Optional.ofNullable(request.params(USER_NAME))
+        Username userName = Optional.ofNullable(request.params(USER_NAME))
             .map(String::trim)
             .filter(StringUtils::isNotEmpty)
+            .map(Username::of)
             .orElseThrow(() -> throw400withInvalidArgument("Invalid username"));
 
         if (!usersRepository.contains(userName)) {
             throw404("User not found");
         }
-        return Username.of(userName);
+        return userName;
     }
 
     private ScriptName extractScriptName(Request request) {

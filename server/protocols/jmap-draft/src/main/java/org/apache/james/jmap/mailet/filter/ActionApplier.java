@@ -94,7 +94,7 @@ public class ActionApplier {
 
     private void addStorageDirective(MailboxId mailboxId) {
         try {
-            MailboxSession mailboxSession = mailboxManager.createSystemSession(username.asString());
+            MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             MessageManager messageManager = mailboxManager.getMailbox(mailboxId, mailboxSession);
 
             String mailboxName = messageManager.getMailboxPath().getName();

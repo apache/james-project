@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.ImapCommand;
@@ -62,7 +63,8 @@ import com.google.common.collect.ImmutableList;
 public class GetQuotaProcessorTest {
 
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop", Optional.empty());
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", "plop", "INBOX");
+    private static final Username PLOP = Username.of("plop");
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath("namespace", PLOP, "INBOX");
     private static final Quota<QuotaCount> MESSAGE_QUOTA =
         Quota.<QuotaCount>builder().used(QuotaCount.count(24)).computedLimit(QuotaCount.count(1589)).build();
     private static final Quota<QuotaSize> STORAGE_QUOTA =
@@ -79,7 +81,7 @@ public class GetQuotaProcessorTest {
 
     @Before
     public void setUp() throws Exception {
-        mailboxSession = MailboxSessionUtil.create("plop");
+        mailboxSession = MailboxSessionUtil.create(PLOP);
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedQuotaManager = mock(QuotaManager.class);

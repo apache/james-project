@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.imapmailbox;
 
+import org.apache.james.core.Username;
+
 /**
  * Some constants to use when running Imap tests.
  */
@@ -27,7 +29,7 @@ public interface ImapTestConstants {
 
     String HOST = "localhost";
 
-    String USER = "imapuser";
+    Username USER = Username.of("imapuser");
 
     String PASSWORD = "password";
 

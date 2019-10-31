@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.Role;
@@ -90,12 +91,13 @@ public class SpamAssassinListener implements SpamEventListener {
 
     @Override
     public void event(Event event) throws MailboxException {
+        Username username = Username.of(getClass().getCanonicalName());
         if (event instanceof MessageMoveEvent) {
-            MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
+            MailboxSession session = mailboxManager.createSystemSession(username);
             handleMessageMove(event, session, (MessageMoveEvent) event);
         }
         if (event instanceof Added) {
-            MailboxSession session = mailboxManager.createSystemSession(getClass().getCanonicalName());
+            MailboxSession session = mailboxManager.createSystemSession(username);
             handleAdded(event, session, (Added) event);
         }
     }

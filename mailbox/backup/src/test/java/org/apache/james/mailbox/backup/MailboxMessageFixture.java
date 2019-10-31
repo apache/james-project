@@ -47,11 +47,11 @@ import com.google.common.collect.ImmutableList;
 
 public interface MailboxMessageFixture {
 
-    String USER = "user";
-    String OTHER_USER = "otherUser";
+    Username USER = Username.of("user");
+    Username OTHER_USER = Username.of("otherUser");
 
-    Username USERNAME_1 = Username.of(USER);
-    Username USERNAME_2 = Username.of(OTHER_USER);
+    Username USERNAME_1 = USER;
+    Username USERNAME_2 = OTHER_USER;
 
     String DATE_STRING_1 = "2018-02-15T15:54:02Z";
     String DATE_STRING_2 = "2018-03-15T15:54:02Z";

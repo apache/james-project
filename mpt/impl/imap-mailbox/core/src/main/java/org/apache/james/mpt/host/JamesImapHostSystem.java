@@ -25,6 +25,7 @@ import org.apache.commons.configuration2.plist.PropertyListConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -80,7 +81,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
     }
 
     @Override
-    public boolean addUser(String user, String password) throws Exception {
+    public boolean addUser(Username user, String password) throws Exception {
         memoryUsersRepository.addUser(user, password);
         return true;
     }
@@ -106,16 +107,16 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
     }
 
     @Override
-    public void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception {
+    public void grantRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) throws Exception {
         MailboxManager mailboxManager = getMailboxManager();
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
         mailboxManager.startProcessingRequest(mailboxSession);
         mailboxManager.setRights(mailboxPath,
             MailboxACL.EMPTY.apply(MailboxACL.command()
-                .forUser(userName)
+                .forUser(username)
                 .rights(rights)
                 .asAddition()),
-            mailboxManager.createSystemSession(userName));
+            mailboxManager.createSystemSession(username));
         mailboxManager.logout(mailboxSession, true);
         mailboxManager.endProcessingRequest(mailboxSession);
     }

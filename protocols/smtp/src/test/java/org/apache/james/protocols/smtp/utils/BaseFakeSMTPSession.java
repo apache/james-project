@@ -24,6 +24,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Response;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -71,7 +72,7 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public String getUser() {
+    public Username getUsername() {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
 
@@ -96,10 +97,9 @@ public class BaseFakeSMTPSession implements SMTPSession {
     }
 
     @Override
-    public void setUser(String user) {
+    public void setUsername(Username username) {
         throw new UnsupportedOperationException("Unimplemented Stub Method");
     }
-
 
     @Override
     public void popLineHandler() {

@@ -37,6 +37,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
@@ -147,7 +148,7 @@ public class CassandraMailboxDAO {
         return new Mailbox(
             new MailboxPath(
                 row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
-                row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER),
+                Username.of(row.getUDTValue(MAILBOX_BASE).getString(CassandraMailboxTable.MailboxBase.USER)),
                 row.getString(NAME)),
             row.getLong(UIDVALIDITY));
     }

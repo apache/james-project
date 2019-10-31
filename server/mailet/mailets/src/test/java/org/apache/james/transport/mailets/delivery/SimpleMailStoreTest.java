@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.user.api.UsersRepository;
@@ -66,27 +67,27 @@ public class SimpleMailStoreTest {
     @Test
     public void storeMailShouldUseFullMailAddressWhenSupportsVirtualHosting() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
-        when(usersRepository.getUser(recipient)).thenReturn(recipient.asString());
+        when(usersRepository.getUser(recipient)).thenReturn(Username.of(recipient.asString()));
         FakeMail mail = FakeMail.builder()
             .name("name")
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.asString()), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.asString())), eq(FOLDER));
     }
 
     @Test
     public void storeMailShouldUseLocalPartWhenSupportsVirtualHosting() throws Exception {
         MailAddress recipient = MailAddressFixture.OTHER_AT_JAMES;
-        when(usersRepository.getUser(recipient)).thenReturn(recipient.getLocalPart());
+        when(usersRepository.getUser(recipient)).thenReturn(Username.of(recipient.getLocalPart()));
         FakeMail mail = FakeMail.builder()
             .name("name")
             .mimeMessage(mimeMessage)
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.getLocalPart()), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.getLocalPart())), eq(FOLDER));
     }
 
     @Test
@@ -99,6 +100,6 @@ public class SimpleMailStoreTest {
             .build();
         testee.storeMail(recipient, mail);
 
-        verify(mailboxAppender).append(any(MimeMessage.class), eq(recipient.toString()), eq(FOLDER));
+        verify(mailboxAppender).append(any(MimeMessage.class), eq(Username.of(recipient.toString())), eq(FOLDER));
     }
 }

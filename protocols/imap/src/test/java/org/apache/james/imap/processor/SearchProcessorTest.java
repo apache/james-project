@@ -39,6 +39,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -100,8 +101,9 @@ public class SearchProcessorTest {
     private static final SearchQuery.UidRange[] RANGES = {
             new SearchQuery.UidRange(MessageUid.of(1)),
             new SearchQuery.UidRange(MessageUid.of(42), MessageUid.of(1048)) };
-    
-    private static final MailboxPath mailboxPath = new MailboxPath("namespace", "user", "name");
+
+    private static final Username USER = Username.of("user");
+    private static final MailboxPath mailboxPath = new MailboxPath("namespace", USER, "name");
     private static final MailboxId mailboxId = TestId.of(18);
 
     SearchProcessor processor;
@@ -126,7 +128,7 @@ public class SearchProcessorTest {
         statusResponse = mock(StatusResponse.class);
         mailbox = mock(MessageManager.class);
         mailboxManager = mock(MailboxManager.class);
-        mailboxSession = MailboxSessionUtil.create("user");
+        mailboxSession = MailboxSessionUtil.create(USER);
         selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getMailboxId()).thenReturn(mailboxId);
         
@@ -140,7 +142,7 @@ public class SearchProcessorTest {
     }
 
     private void allowUnsolicitedResponses() {
-        when(session.getAttribute(ImapSessionUtils.MAILBOX_USER_ATTRIBUTE_SESSION_KEY)).thenReturn("user");
+        when(session.getAttribute(ImapSessionUtils.MAILBOX_USER_ATTRIBUTE_SESSION_KEY)).thenReturn(USER);
         when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
     }
 

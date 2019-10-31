@@ -21,6 +21,7 @@ package org.apache.james.adapter.mailbox.store;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.user.api.UsersRepository;
@@ -39,7 +40,7 @@ public class UserRepositoryAuthorizator implements Authorizator {
     }
 
     @Override
-    public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) throws MailboxException {
+    public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException {
         try {
             if (!repos.isAdministrator(userId)) {
                 return AuthorizationState.NOT_ADMIN;

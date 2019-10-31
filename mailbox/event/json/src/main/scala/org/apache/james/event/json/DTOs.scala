@@ -24,6 +24,7 @@ import java.util.Date
 
 import javax.mail.Flags.Flag
 import javax.mail.{Flags => JavaMailFlags}
+import org.apache.james.core.Username
 import org.apache.james.core.quota.QuotaValue
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.mailbox.acl.{ACLDiff => JavaACLDiff}
@@ -59,7 +60,7 @@ object DTOs {
     def toJava: JavaACLDiff = new JavaACLDiff(new MailboxACL(oldACL.asJava), new MailboxACL(newACL.asJava))
   }
 
-  case class MailboxPath(namespace: Option[String], user: Option[String], name: String) {
+  case class MailboxPath(namespace: Option[String], user: Option[Username], name: String) {
     def toJava: JavaMailboxPath = new JavaMailboxPath(namespace.orNull, user.orNull, name)
   }
 

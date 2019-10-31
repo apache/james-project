@@ -45,14 +45,14 @@ public class MailboxQuery {
     public static Builder privateMailboxesBuilder(MailboxSession session) {
         return builder()
             .namespace(MailboxConstants.USER_NAMESPACE)
-            .username(session.getUser().asString())
+            .username(session.getUser())
             .matchesAllMailboxNames();
     }
 
     public static class Builder {
         private static final Wildcard DEFAULT_WILDCARD = Wildcard.INSTANCE;
 
-        Optional<String> username;
+        Optional<Username> username;
         Optional<String> namespace;
         Optional<MailboxNameExpression> mailboxNameExpression;
         
@@ -71,7 +71,7 @@ public class MailboxQuery {
             return this;
         }
 
-        public Builder username(String username) {
+        public Builder username(Username username) {
             Preconditions.checkState(!this.username.isPresent());
 
             this.username = Optional.of(username);
@@ -79,7 +79,7 @@ public class MailboxQuery {
         }
 
         public Builder user(Username username) {
-            this.username(username.asString());
+            this.username(username);
             return this;
         }
 
@@ -113,7 +113,7 @@ public class MailboxQuery {
     }
 
     public static class UserBound extends MailboxQuery {
-        private UserBound(String namespace, String user, MailboxNameExpression mailboxNameExpression) {
+        private UserBound(String namespace, Username user, MailboxNameExpression mailboxNameExpression) {
             super(Optional.of(namespace), Optional.of(user), mailboxNameExpression);
             Preconditions.checkNotNull(namespace);
             Preconditions.checkNotNull(user);
@@ -123,19 +123,19 @@ public class MailboxQuery {
             return namespace.get();
         }
 
-        public String getFixedUser() {
+        public Username getFixedUser() {
             return user.get();
         }
     }
 
     protected final Optional<String> namespace;
-    protected final Optional<String> user;
+    protected final Optional<Username> user;
     private final MailboxNameExpression mailboxNameExpression;
 
     /**
      * Constructs an expression determining a set of mailbox names.
      */
-    private MailboxQuery(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
+    private MailboxQuery(Optional<String> namespace, Optional<Username> user, MailboxNameExpression mailboxNameExpression) {
         this.namespace = namespace;
         this.user = user;
         this.mailboxNameExpression = mailboxNameExpression;
@@ -145,7 +145,7 @@ public class MailboxQuery {
         return namespace;
     }
 
-    public Optional<String> getUser() {
+    public Optional<Username> getUser() {
         return user;
     }
 
@@ -156,7 +156,7 @@ public class MailboxQuery {
     public boolean isPrivateMailboxes(MailboxSession session) {
         Username sessionUsername = session.getUser();
         return namespace.map(MailboxConstants.USER_NAMESPACE::equals).orElse(false)
-            && user.map(Username::of).map(sessionUsername::equals).orElse(false);
+            && user.map(sessionUsername::equals).orElse(false);
     }
 
     @VisibleForTesting

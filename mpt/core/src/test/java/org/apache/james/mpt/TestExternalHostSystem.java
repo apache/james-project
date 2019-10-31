@@ -25,6 +25,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -39,7 +40,7 @@ import org.junit.Test;
 
 public class TestExternalHostSystem {
     
-    private static final String USER = "USER NAME";
+    private static final Username USER = Username.of("USERNAME");
 
     private static final String PASSWORD = "SOME PASSWORD";
 

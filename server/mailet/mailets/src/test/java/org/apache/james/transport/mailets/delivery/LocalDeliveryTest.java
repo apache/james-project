@@ -41,6 +41,7 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.model.User;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -68,7 +69,7 @@ public class LocalDeliveryTest {
 
         session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
-        when(mailboxManager.createSystemSession(any(String.class))).thenReturn(session);
+        when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(session);
 
 
         config = FakeMailetConfig.builder()
@@ -80,14 +81,14 @@ public class LocalDeliveryTest {
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         // Given
-        String username = "receiver@domain.com";
+        Username username = Username.of("receiver@domain.com");
         MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
 
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(username))).thenReturn(username);
+        when(usersRepository.getUser(new MailAddress(username.asString()))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getUser()).thenReturn(Username.of(username));
+        when(session.getUser()).thenReturn(username);
 
         // When
         Mail mail = createMail();
@@ -101,14 +102,14 @@ public class LocalDeliveryTest {
     @Test
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
         // Given
-        String username = "receiver";
+        Username username = Username.of("receiver");
         MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
         MessageManager messageManager = mock(MessageManager.class);
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);
         when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
         when(mailboxManager.getMailbox(eq(inbox), any(MailboxSession.class))).thenReturn(messageManager);
-        when(session.getUser()).thenReturn(Username.of(username));
+        when(session.getUser()).thenReturn(username);
 
         // When
         Mail mail = createMail();

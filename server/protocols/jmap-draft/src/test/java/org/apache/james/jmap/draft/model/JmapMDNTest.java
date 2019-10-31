@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -56,7 +57,7 @@ public class JmapMDNTest {
         .subject(SUBJECT)
         .textBody(TEXT_BODY)
         .build();
-    public static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user@localhost.com");
+    public static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(Username.of("user@localhost.com"));
 
     @Test
     public void shouldMatchBeanContract() {

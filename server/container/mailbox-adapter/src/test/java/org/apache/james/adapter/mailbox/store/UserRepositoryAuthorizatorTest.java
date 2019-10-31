@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.user.api.UsersRepository;
@@ -33,8 +34,8 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
 public class UserRepositoryAuthorizatorTest {
-    private static final String ADMIN = "admin";
-    private static final String USER = "user";
+    private static final Username ADMIN = Username.of("admin");
+    private static final Username USER = Username.of("user");
 
     private UsersRepository usersRepository;
     private UserRepositoryAuthorizator testee;

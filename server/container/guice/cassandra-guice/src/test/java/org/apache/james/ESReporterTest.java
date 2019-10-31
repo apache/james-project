@@ -34,6 +34,7 @@ import java.util.TimerTask;
 import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
@@ -98,7 +99,7 @@ class ESReporterTest {
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
                 .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
                 .build();
-        accessToken = authenticateJamesUser(baseUri(server), USERNAME, PASSWORD);
+        accessToken = authenticateJamesUser(baseUri(server), Username.of(USERNAME), PASSWORD);
 
         timer = new Timer();
     }

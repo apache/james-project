@@ -82,11 +82,11 @@ public class SmtpTestRule implements TestRule, SmtpHostSystem {
     }
 
     @Override
-    public boolean addUser(String userAtDomain, String password) throws Exception {
-        Optional<Domain> domain = Username.of(userAtDomain).getDomainPart();
+    public boolean addUser(Username userAtDomain, String password) throws Exception {
+        Optional<Domain> domain = userAtDomain.getDomainPart();
         Preconditions.checkArgument(domain.isPresent(), "The 'user' should contain the 'domain'");
         createDomainIfNeeded(domain.get().asString());
-        jamesServer.getProbe(DataProbeImpl.class).addUser(userAtDomain, password);
+        jamesServer.getProbe(DataProbeImpl.class).addUser(userAtDomain.asString(), password);
         return true;
     }
 

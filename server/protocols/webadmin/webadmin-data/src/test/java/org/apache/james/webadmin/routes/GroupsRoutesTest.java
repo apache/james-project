@@ -355,7 +355,7 @@ class GroupsRoutesTest {
 
         @Test
         void putUserInGroupShouldNotAllowUserShadowing() throws UsersRepositoryException {
-            usersRepository.addUser(USER_A, "whatever");
+            usersRepository.addUser(Username.of(USER_A), "whatever");
 
             Map<String, Object> errors = when()
                 .put(USER_A + SEPARATOR + USER_B)

@@ -32,10 +32,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
-import org.apache.james.jmap.draft.AuthenticationFilter;
-import org.apache.james.jmap.draft.AuthenticationStrategy;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
 import org.apache.james.mailbox.MailboxSession;
@@ -47,6 +46,7 @@ import com.google.common.collect.ImmutableList;
 
 public class AuthenticationFilterTest {
     private static final String TOKEN = "df991d2a-1c5a-4910-a90f-808b6eda133e";
+    public static final Username USERNAME = Username.of("user@domain.tld");
 
     private HttpServletRequest mockedRequest;
     private HttpServletResponse mockedResponse;
@@ -94,7 +94,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token).block();
+        accessTokenRepository.addToken(USERNAME, token).block();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);
@@ -108,7 +108,7 @@ public class AuthenticationFilterTest {
         when(mockedRequest.getHeader("Authorization"))
             .thenReturn(TOKEN);
 
-        accessTokenRepository.addToken("user@domain.tld", token).block();
+        accessTokenRepository.addToken(USERNAME, token).block();
 
         AuthenticationFilter sut = new AuthenticationFilter(ImmutableList.of(new FakeAuthenticationStrategy(false), new FakeAuthenticationStrategy(true)), new NoopMetricFactory());
         sut.doFilter(mockedRequest, mockedResponse, filterChain);

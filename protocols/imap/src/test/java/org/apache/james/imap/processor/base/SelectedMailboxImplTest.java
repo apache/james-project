@@ -36,6 +36,7 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxManager;
@@ -84,7 +85,7 @@ public class SelectedMailboxImplTest {
     public void setUp() throws Exception {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         executorService = Executors.newFixedThreadPool(1, threadFactory);
-        mailboxPath = MailboxPath.forUser("tellier@linagora.com", MailboxConstants.INBOX);
+        mailboxPath = MailboxPath.forUser(Username.of("tellier@linagora.com"), MailboxConstants.INBOX);
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
         imapSession = mock(ImapSession.class);
@@ -171,7 +172,7 @@ public class SelectedMailboxImplTest {
     private void emitEvent(MailboxListener mailboxListener) throws Exception {
         mailboxListener.event(EventFactory.added()
             .randomEventId()
-            .mailboxSession(MailboxSessionUtil.create("user"))
+            .mailboxSession(MailboxSessionUtil.create(Username.of("user")))
             .mailbox(mailbox)
             .addMetaData(new MessageMetaData(EMITTED_EVENT_UID, MOD_SEQ, new Flags(), SIZE, new Date(), new DefaultMessageId()))
             .build());

@@ -21,11 +21,13 @@ package org.apache.james.jmap.cassandra.access;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraAccessTokenRepository implements AccessTokenRepository {
@@ -33,14 +35,13 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     private final CassandraAccessTokenDAO cassandraAccessTokenDAO;
 
     @Inject
-    public CassandraAccessTokenRepository(CassandraAccessTokenDAO cassandraAccessTokenDAO) {
+    CassandraAccessTokenRepository(CassandraAccessTokenDAO cassandraAccessTokenDAO) {
         this.cassandraAccessTokenDAO = cassandraAccessTokenDAO;
     }
 
     @Override
-    public Mono<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(Username username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
-        Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.addToken(username, accessToken);
@@ -54,7 +55,7 @@ public class CassandraAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public Mono<Username> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
 
         return cassandraAccessTokenDAO.getUsernameFromToken(accessToken)

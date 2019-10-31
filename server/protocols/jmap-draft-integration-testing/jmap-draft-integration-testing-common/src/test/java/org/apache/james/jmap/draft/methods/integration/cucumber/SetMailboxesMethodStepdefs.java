@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -67,7 +68,7 @@ public class SetMailboxesMethodStepdefs {
     @Given("^mailbox \"([^\"]*)\" with (\\d+) messages$")
     public void mailboxWithMessages(String mailboxName, int messageCount) {
         mainStepdefs.mailboxProbe.createMailbox("#private", userStepdefs.getConnectedUser(), mailboxName);
-        MailboxPath mailboxPath = MailboxPath.forUser(userStepdefs.getConnectedUser(), mailboxName);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(userStepdefs.getConnectedUser()), mailboxName);
         IntStream
             .range(0, messageCount)
             .forEach(Throwing.intConsumer(i -> appendMessage(mailboxPath, i)));

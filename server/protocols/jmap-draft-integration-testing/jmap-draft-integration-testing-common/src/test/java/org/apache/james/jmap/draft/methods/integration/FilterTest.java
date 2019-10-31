@@ -85,8 +85,8 @@ public abstract class FilterTest {
 
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(ALICE, ALICE_PASSWORD);
-        dataProbe.addUser(BOB, BOB_PASSWORD);
+        dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
+        dataProbe.addUser(BOB.asString(), BOB_PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
         bobAccessToken = authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
 
@@ -1651,7 +1651,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"exactly-equals\"," +
-                "        \"value\": \"bob <" + BOB.toUpperCase(Locale.ENGLISH) + ">\"" +
+                "        \"value\": \"bob <" + BOB.asString().toUpperCase(Locale.ENGLISH) + ">\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +

@@ -50,10 +50,10 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
-import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import org.junit.jupiter.api.Test;
 
 public interface GroupContract {
 
@@ -141,7 +141,8 @@ public interface GroupContract {
 
             eventBus().register(listener, GROUP_A);
 
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.of("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Username bob = Username.of("bob");
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, NO_KEYS).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
@@ -351,7 +352,8 @@ public interface GroupContract {
 
             eventBus().register(listener, GROUP_A);
 
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.of("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Username bob = Username.of("bob");
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().reDeliver(GROUP_A, noopEvent).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never()).event(any());

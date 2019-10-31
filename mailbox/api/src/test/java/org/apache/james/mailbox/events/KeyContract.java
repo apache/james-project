@@ -90,7 +90,8 @@ public interface KeyContract extends EventBusContract {
 
             eventBus().register(listener, KEY_1);
 
-            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), Username.of("bob"), MailboxPath.forUser("bob", "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
+            Username bob = Username.of("bob");
+            MailboxListener.Added noopEvent = new MailboxListener.Added(MailboxSession.SessionId.of(18), bob, MailboxPath.forUser(bob, "mailbox"), TestId.of(58), ImmutableSortedMap.of(), Event.EventId.random());
             eventBus().dispatch(noopEvent, KEY_1).block();
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())

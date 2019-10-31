@@ -31,13 +31,15 @@ import org.apache.james.mime4j.message.BodyPart;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.message.SingleBodyBuilder;
+import org.apache.james.user.api.UsersRepository;
+
 import org.junit.Test;
 
 public class ExtractMDNOriginalJMAPMessageIdTest {
 
     @Test
     public void extractReportShouldRejectNonMultipartMessage() throws IOException {
-        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class));
+        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class), mock(UsersRepository.class));
 
         Message message = Message.Builder.of()
             .setBody("content", StandardCharsets.UTF_8)
@@ -48,7 +50,7 @@ public class ExtractMDNOriginalJMAPMessageIdTest {
 
     @Test
     public void extractReportShouldRejectMultipartWithSinglePart() throws Exception {
-        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class));
+        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class), mock(UsersRepository.class));
 
         Message message = Message.Builder.of()
             .setBody(
@@ -63,7 +65,7 @@ public class ExtractMDNOriginalJMAPMessageIdTest {
 
     @Test
     public void extractReportShouldRejectSecondPartWithBadContentType() throws IOException {
-        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class));
+        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class), mock(UsersRepository.class));
 
         Message message = Message.Builder.of()
             .setBody(MultipartBuilder.create()
@@ -78,7 +80,7 @@ public class ExtractMDNOriginalJMAPMessageIdTest {
 
     @Test
     public void extractReportShouldExtractMDNWhenValidMDN() throws IOException {
-        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class));
+        ExtractMDNOriginalJMAPMessageId testee = new ExtractMDNOriginalJMAPMessageId(mock(MailboxManager.class), mock(UsersRepository.class));
 
         BodyPart mdn = BodyPartBuilder
             .create()

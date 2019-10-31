@@ -79,7 +79,7 @@ class ElasticSearchQuotaSearcherTest implements QuotaSearcherContract {
 
     private void provisionUser(QuotaSearchTestSystem testSystem, Username username) {
         try {
-            testSystem.getUsersRepository().addUser(username.asString(), PASSWORD);
+            testSystem.getUsersRepository().addUser(username, PASSWORD);
             appendMessage(testSystem, username, withSize(49));
         } catch (Exception e) {
             throw new RuntimeException(e);

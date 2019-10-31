@@ -83,7 +83,7 @@ public abstract class GetVacationResponseTest {
 
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(ALICE, ALICE_PASSWORD);
+        dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
         accessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
     }
 
@@ -121,7 +121,7 @@ public abstract class GetVacationResponseTest {
     @Category(BasicFeature.class)
     @Test
     public void getVacationResponseShouldReturnStoredValue() {
-        jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),
+        jmapGuiceProbe.modifyVacation(AccountId.fromUsername(ALICE),
             VacationPatch.builder()
                 .isEnabled(true)
                 .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00Z"))
@@ -156,7 +156,7 @@ public abstract class GetVacationResponseTest {
 
     @Test
     public void getVacationResponseShouldReturnStoredValueWithNonDefaultTimezone() {
-        jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),
+        jmapGuiceProbe.modifyVacation(AccountId.fromUsername(ALICE),
             VacationPatch.builder()
                 .isEnabled(true)
                 .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00+02:00"))
@@ -187,7 +187,7 @@ public abstract class GetVacationResponseTest {
 
     @Test
     public void getVacationResponseShouldReturnIsActivatedWhenInRange() {
-        jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),
+        jmapGuiceProbe.modifyVacation(AccountId.fromUsername(ALICE),
             VacationPatch.builder()
                 .isEnabled(true)
                 .fromDate(DATE_2014)
@@ -216,7 +216,7 @@ public abstract class GetVacationResponseTest {
     public void getVacationResponseShouldNotReturnIsActivatedWhenOutOfRange() {
         fixedDateZonedDateTimeProvider.setFixedDateTime(DATE_2014);
 
-        jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),
+        jmapGuiceProbe.modifyVacation(AccountId.fromUsername(ALICE),
             VacationPatch.builder()
                 .isEnabled(true)
                 .fromDate(DATE_2015)
@@ -243,7 +243,7 @@ public abstract class GetVacationResponseTest {
 
     @Test
     public void accountIdIsNotSupported() {
-        jmapGuiceProbe.modifyVacation(AccountId.fromString(ALICE),
+        jmapGuiceProbe.modifyVacation(AccountId.fromUsername(ALICE),
             VacationPatch.builder()
                 .isEnabled(true)
                 .fromDate(ZonedDateTime.parse("2014-09-30T14:10:00+02:00"))

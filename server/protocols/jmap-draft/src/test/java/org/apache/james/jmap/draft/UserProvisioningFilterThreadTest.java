@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.UserProvisioningFilter;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -39,7 +40,7 @@ public class UserProvisioningFilterThreadTest {
     @Before
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting();
-        session = MailboxSessionUtil.create("username");
+        session = MailboxSessionUtil.create(Username.of("username"));
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }
 

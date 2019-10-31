@@ -19,6 +19,7 @@
 
 package org.apache.james.jmap.api.access;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import reactor.core.publisher.Mono;
@@ -27,10 +28,10 @@ public interface AccessTokenRepository {
 
     String TOKEN_EXPIRATION_IN_MS = "tokenExpirationInMs";
     
-    Mono<Void> addToken(String username, AccessToken accessToken);
+    Mono<Void> addToken(Username username, AccessToken accessToken);
 
     Mono<Void> removeToken(AccessToken accessToken);
 
-    Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
+    Mono<Username> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken;
 
 }

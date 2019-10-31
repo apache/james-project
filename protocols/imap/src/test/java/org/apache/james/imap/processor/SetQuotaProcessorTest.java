@@ -26,6 +26,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -51,7 +52,7 @@ public class SetQuotaProcessorTest {
 
     @Before
     public void setUp() {
-        mailboxSession = MailboxSessionUtil.create("plop");
+        mailboxSession = MailboxSessionUtil.create(Username.of("plop"));
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mockedImapSession = mock(ImapSession.class);
         mockedResponder = mock(ImapProcessor.Responder.class);

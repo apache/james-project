@@ -22,6 +22,7 @@ package org.apache.james.mailbox.jpa.mail;
 import java.util.List;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -97,7 +98,7 @@ public class TransactionalMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
         return wrapped.findNonPersonalMailboxes(userName, right);
     }
 

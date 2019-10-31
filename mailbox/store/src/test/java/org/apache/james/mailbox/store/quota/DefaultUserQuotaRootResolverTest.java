@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -43,10 +44,11 @@ import com.google.common.collect.Lists;
 
 public class DefaultUserQuotaRootResolverTest {
 
-    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
+    private static final Username BENWA = Username.of("benwa");
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(BENWA, "INBOX");
     public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
-    private static final MailboxPath PATH_LIKE = MailboxPath.forUser("benwa", "%");
-    private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser("benwa", "test");
+    private static final MailboxPath PATH_LIKE = MailboxPath.forUser(BENWA, "%");
+    private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
     private static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
     private static final MailboxId MAILBOX_ID = TestId.of(42);
@@ -68,12 +70,12 @@ public class DefaultUserQuotaRootResolverTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void getQuotaRootShouldThrowWhenNamespaceContainsSeparator() {
-        testee.getQuotaRoot(new MailboxPath("#pr&ivate", "benwa", "INBOX"));
+        testee.getQuotaRoot(new MailboxPath("#pr&ivate", BENWA, "INBOX"));
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void getQuotaRootShouldThrowWhenUserContainsSeparator() {
-        testee.getQuotaRoot(MailboxPath.forUser("ben&wa", "INBOX"));
+        testee.getQuotaRoot(MailboxPath.forUser(Username.of("ben&wa"), "INBOX"));
     }
 
     @Test

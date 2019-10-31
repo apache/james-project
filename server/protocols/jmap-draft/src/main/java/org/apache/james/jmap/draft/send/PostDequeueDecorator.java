@@ -24,6 +24,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.send.exception.MailShouldBeInOutboxException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -84,7 +85,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
             Optional<String> username = retrieveUsername();
             if (!getMail().getAttribute(IS_DELIVERED.getName()).isPresent()) {
                 try {
-                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username.get());
+                    MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username.get()));
                     moveFromOutboxToSentWithSeenFlag(messageId, mailboxSession);
                     getMail().setAttribute(IS_DELIVERED);
                 } catch (MailShouldBeInOutboxException e) {

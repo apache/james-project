@@ -21,6 +21,7 @@ package org.apache.james.jmap.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -43,8 +44,8 @@ import org.junit.Test;
 
 public class PropagateLookupRightListenerTest {
     private static final boolean RESET_RECENT = false;
-    private static final String OWNER_USER = "user";
-    private static final String SHARED_USER = "sharee";
+    private static final Username OWNER_USER = Username.of("user");
+    private static final Username SHARED_USER = Username.of("sharee");
     private static final EntryKey SHARED_USER_KEY = EntryKey.createUserEntryKey(SHARED_USER);
 
     private static final MailboxPath PARENT_MAILBOX = MailboxPath.forUser(OWNER_USER, "shared");
@@ -86,7 +87,7 @@ public class PropagateLookupRightListenerTest {
         childMailboxId1 = storeMailboxManager.createMailbox(CHILD_MAILBOX1, mailboxSession).get();
         grandChildMailboxId = storeMailboxManager.createMailbox(GRAND_CHILD_MAILBOX, mailboxSession).get();
 
-        lookupEntry = new Entry(SHARED_USER, "l");
+        lookupEntry = new Entry(SHARED_USER.asString(), "l");
     }
 
     @Test

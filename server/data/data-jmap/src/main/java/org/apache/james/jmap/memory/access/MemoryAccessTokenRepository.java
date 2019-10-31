@@ -25,16 +25,17 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.commons.collections4.map.PassiveExpiringMap;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Mono;
 
 public class MemoryAccessTokenRepository implements AccessTokenRepository {
-
-    private final PassiveExpiringMap<AccessToken, String> tokensExpirationDates;
+    private final PassiveExpiringMap<AccessToken, Username> tokensExpirationDates;
 
     @Inject
     public MemoryAccessTokenRepository(@Named(TOKEN_EXPIRATION_IN_MS) long durationInMilliseconds) {
@@ -42,9 +43,8 @@ public class MemoryAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public Mono<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(Username username, AccessToken accessToken) {
         Preconditions.checkNotNull(username);
-        Preconditions.checkArgument(! username.isEmpty(), "Username should not be empty");
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
             tokensExpirationDates.put(accessToken, username);
@@ -62,7 +62,7 @@ public class MemoryAccessTokenRepository implements AccessTokenRepository {
     }
 
     @Override
-    public Mono<String> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
+    public Mono<Username> getUsernameFromToken(AccessToken accessToken) throws InvalidAccessToken {
         Preconditions.checkNotNull(accessToken);
         synchronized (tokensExpirationDates) {
             return Mono.just(

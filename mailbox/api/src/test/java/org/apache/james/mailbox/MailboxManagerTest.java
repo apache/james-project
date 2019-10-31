@@ -39,6 +39,7 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
@@ -98,8 +99,8 @@ import reactor.core.publisher.Mono;
  * 
  */
 public abstract class MailboxManagerTest<T extends MailboxManager> {
-    public static final String USER_1 = "USER_1";
-    public static final String USER_2 = "USER_2";
+    public static final Username USER_1 = Username.of("USER_1");
+    public static final Username USER_2 = Username.of("USER_2");
     private static final int DEFAULT_MAXIMUM_LIMIT = 256;
 
     private T mailboxManager;
@@ -1476,7 +1477,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void listShouldReturnMailboxes() throws Exception {
-            session = mailboxManager.createSystemSession("manager");
+            session = mailboxManager.createSystemSession(Username.of("manager"));
             mailboxManager.startProcessingRequest(session);
 
             DataProvisioner.feedMailboxManager(mailboxManager);
@@ -1551,7 +1552,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         void createUser1SystemSessionShouldReturnValidSession() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
 
-            assertThat(session.getUser().asString()).isEqualTo(USER_1);
+            assertThat(session.getUser()).isEqualTo(USER_1);
         }
 
         @Test

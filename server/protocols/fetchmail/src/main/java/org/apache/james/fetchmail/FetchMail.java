@@ -34,6 +34,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.lifecycle.api.Configurable;
@@ -720,7 +721,7 @@ public class FetchMail implements Runnable, Configurable {
     protected Map<DynamicAccountKey, DynamicAccount> computeDynamicAccounts(Map<DynamicAccountKey, DynamicAccount> oldAccounts, ParsedDynamicAccountParameters parameters) throws ConfigurationException {
 
         Map<DynamicAccountKey, DynamicAccount> accounts;
-        Iterator<String> usersIterator;
+        Iterator<Username> usersIterator;
         try {
             accounts = new HashMap<>(getLocalUsers().countUsers());
             usersIterator = getLocalUsers().list();
@@ -729,7 +730,7 @@ public class FetchMail implements Runnable, Configurable {
             throw new ConfigurationException("Unable to access UsersRepository", e);
         }
         while (usersIterator.hasNext()) {
-            String userName = usersIterator.next();
+            String userName = usersIterator.next().asString();
             DynamicAccountKey key = new DynamicAccountKey(userName, parameters.getSequenceNumber());
             DynamicAccount account = oldAccounts.get(key);
             if (null == account) {

@@ -20,6 +20,8 @@
 
 package org.apache.james.managesieve.api;
 
+import org.apache.james.core.Username;
+
 public interface AuthenticationProcessor {
 
     String initialServerResponse(Session session);
@@ -27,6 +29,6 @@ public interface AuthenticationProcessor {
     /**
      * @return Null if authentication failed, the authenticated username if authentication is successful
      */
-    String isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException;
+    Username isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException;
 
 }

@@ -19,14 +19,15 @@
 
 package org.apache.james.jmap.draft.api;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 
 public interface AccessTokenManager {
 
-    AccessToken grantAccessToken(String username);
+    AccessToken grantAccessToken(Username username);
 
-    String getUsernameFromToken(AccessToken token) throws InvalidAccessToken;
+    Username getUsernameFromToken(AccessToken token) throws InvalidAccessToken;
     
     boolean isValid(AccessToken token);
     

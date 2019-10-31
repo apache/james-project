@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.GetMailboxesResponse;
@@ -58,8 +59,8 @@ import com.google.common.collect.ImmutableList;
 
 public class GetMailboxesMethodTest {
 
-    private static final String USERNAME = "username@domain.tld";
-    private static final String USERNAME2 = "username2@domain.tld";
+    private static final Username USERNAME = Username.of("username@domain.tld");
+    private static final Username USERNAME2 = Username.of("username2@domain.tld");
 
     private StoreMailboxManager mailboxManager;
     private GetMailboxesMethod getMailboxesMethod;
@@ -102,7 +103,7 @@ public class GetMailboxesMethodTest {
     public void getMailboxesShouldNotFailWhenMailboxManagerErrors() throws Exception {
         StoreMailboxManager mockedMailboxManager = mock(StoreMailboxManager.class);
         when(mockedMailboxManager.list(any()))
-            .thenReturn(ImmutableList.of(new MailboxPath("namespace", "user", "name")));
+            .thenReturn(ImmutableList.of(new MailboxPath("namespace", Username.of("user"), "name")));
         when(mockedMailboxManager.getMailbox(any(MailboxPath.class), any()))
             .thenThrow(new MailboxException());
         GetMailboxesMethod testee = new GetMailboxesMethod(mockedMailboxManager, quotaRootResolver, quotaManager, mailboxFactory, new DefaultMetricFactory());

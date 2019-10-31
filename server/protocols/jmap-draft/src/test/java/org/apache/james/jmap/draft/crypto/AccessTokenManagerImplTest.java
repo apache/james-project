@@ -24,19 +24,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.jmap.draft.api.AccessTokenManager;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
+import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.memory.access.MemoryAccessTokenRepository;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
 public class AccessTokenManagerImplTest {
-    
+    private static final Username USERNAME = Username.of("username");
+
     private AccessTokenManager accessTokenManager;
     private AccessTokenRepository accessTokenRepository;
     
@@ -54,13 +55,13 @@ public class AccessTokenManagerImplTest {
     
     @Test
     void grantShouldGenerateATokenOnUsername() {
-        assertThat(accessTokenManager.grantAccessToken("username")).isNotNull();
+        assertThat(accessTokenManager.grantAccessToken(USERNAME)).isNotNull();
     }
 
     @Test
     void grantShouldStoreATokenOnUsername() {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
-        assertThat(accessTokenRepository.getUsernameFromToken(token).block()).isEqualTo("username");
+        AccessToken token = accessTokenManager.grantAccessToken(USERNAME);
+        assertThat(accessTokenRepository.getUsernameFromToken(token).block()).isEqualTo(USERNAME);
     }
     
     @Test
@@ -77,15 +78,15 @@ public class AccessTokenManagerImplTest {
 
     @Test
     void getUsernameShouldThrowWhenOtherToken() {
-        accessTokenManager.grantAccessToken("username");
+        accessTokenManager.grantAccessToken(USERNAME);
         assertThatThrownBy(() -> accessTokenManager.getUsernameFromToken(AccessToken.generate()))
             .isExactlyInstanceOf(InvalidAccessToken.class);
     }
 
     @Test
     void getUsernameShouldReturnUsernameWhenExistingUsername() {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
-        assertThat(accessTokenManager.getUsernameFromToken(token)).isEqualTo("username");
+        AccessToken token = accessTokenManager.grantAccessToken(USERNAME);
+        assertThat(accessTokenManager.getUsernameFromToken(token)).isEqualTo(USERNAME);
     }
     
     @Test
@@ -101,13 +102,13 @@ public class AccessTokenManagerImplTest {
     
     @Test
     void isValidShouldReturnFalseWhenOtherToken() {
-        accessTokenManager.grantAccessToken("username");
+        accessTokenManager.grantAccessToken(USERNAME);
         assertThat(accessTokenManager.isValid(AccessToken.generate())).isFalse();
     }
     
     @Test
     void isValidShouldReturnTrueWhenValidToken() {
-        AccessToken accessToken = accessTokenManager.grantAccessToken("username");
+        AccessToken accessToken = accessTokenManager.grantAccessToken(USERNAME);
         assertThat(accessTokenManager.isValid(accessToken)).isTrue();
     }
     
@@ -131,7 +132,7 @@ public class AccessTokenManagerImplTest {
     
     @Test
     void revokeShouldInvalidExistingToken() {
-        AccessToken token = accessTokenManager.grantAccessToken("username");
+        AccessToken token = accessTokenManager.grantAccessToken(USERNAME);
         accessTokenManager.revoke(token);
         assertThat(accessTokenManager.isValid(token)).isFalse();
     }

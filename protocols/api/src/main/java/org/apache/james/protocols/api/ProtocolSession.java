@@ -23,6 +23,7 @@ import java.net.InetSocketAddress;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.handler.LineHandler;
 
 /**
@@ -116,14 +117,14 @@ public interface ProtocolSession {
      *
      * @return the user name
      */
-    String getUser();
+    Username getUsername();
 
     /**
      * Sets the user name associated with this interaction.
      *
-     * @param user the user name
+     * @param username the user name
      */
-    void setUser(String user);
+    void setUsername(Username username);
 
     /**
      * Return true if StartTLS is supported by the configuration

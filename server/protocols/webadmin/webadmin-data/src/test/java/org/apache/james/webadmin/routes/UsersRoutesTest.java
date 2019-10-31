@@ -34,6 +34,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -331,14 +332,14 @@ class UsersRoutesTest {
     class ErrorHandling {
 
         private UsersRepository usersRepository;
-        private String username;
+        private Username username;
         private String password;
 
         @BeforeEach
         void setUp() throws Exception {
             usersRepository = mock(UsersRepository.class);
             createServer(usersRepository);
-            username = "username@domain";
+            username = Username.of("username@domain");
             password = "password";
         }
 

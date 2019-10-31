@@ -48,6 +48,7 @@ import javax.sql.DataSource;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
@@ -723,7 +724,7 @@ public class WhiteListManager extends GenericMailet {
         String username;
         try {
             username = originalUsername;
-            JamesUser user = (JamesUser) localusers.getUserByName(username);
+            JamesUser user = (JamesUser) localusers.getUserByName(Username.of(username));
             if (user.getAliasing()) {
                 username = user.getAlias();
             }

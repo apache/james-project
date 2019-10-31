@@ -33,6 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 
 import com.github.fge.lambdas.Throwing;
@@ -367,12 +368,12 @@ public class MailboxACL {
             return new EntryKey(name, NameType.group, negative);
         }
 
-        public static EntryKey createUserEntryKey(String name) {
-            return new EntryKey(name, NameType.user, false);
+        public static EntryKey createUserEntryKey(Username name) {
+            return new EntryKey(name.asString(), NameType.user, false);
         }
 
-        public static EntryKey createUserEntryKey(String name, boolean negative) {
-            return new EntryKey(name, NameType.user, negative);
+        public static EntryKey createUserEntryKey(Username name, boolean negative) {
+            return new EntryKey(name.asString(), NameType.user, negative);
         }
 
         private final String name;
@@ -520,7 +521,7 @@ public class MailboxACL {
             private Builder() {
             }
 
-            public Builder forUser(String user) {
+            public Builder forUser(Username user) {
                 key = EntryKey.createUserEntryKey(user);
                 return this;
             }

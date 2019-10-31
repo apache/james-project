@@ -24,6 +24,7 @@ import java.util.List;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -51,19 +52,19 @@ public class MessageIdProbe implements GuiceProbe {
         this.messageIdManager = messageIdManager;
     }
 
-    public List<MessageResult> getMessages(MessageId messageId, String user) throws MailboxException {
+    public List<MessageResult> getMessages(MessageId messageId, Username user) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
         return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession);
     }
 
-    public void updateNewFlags(String user, Flags newFlags, MessageId messageId, List<MailboxId> mailboxIds) throws MailboxException {
+    public void updateNewFlags(Username user, Flags newFlags, MessageId messageId, List<MailboxId> mailboxIds) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
         messageIdManager.setFlags(newFlags, FlagsUpdateMode.REPLACE, messageId, mailboxIds, mailboxSession);
     }
 
-    public List<AttachmentId> retrieveAttachmentIds(MessageId messageId, String username) throws MailboxException {
+    public List<AttachmentId> retrieveAttachmentIds(MessageId messageId, Username username) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         List<MessageResult> messages = messageIdManager.getMessages(
             ImmutableList.of(messageId),

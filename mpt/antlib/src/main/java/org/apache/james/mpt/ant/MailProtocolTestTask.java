@@ -30,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.Runner;
 import org.apache.james.mpt.api.ImapFeatures;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
@@ -388,7 +389,7 @@ public class MailProtocolTestTask extends Task implements Monitor {
                 final File scriptFile = getScript();
                 final ScriptedUserAdder adder = new ScriptedUserAdder(getHost(), port, MailProtocolTestTask.this);
                 try (Reader reader = newReader(scriptFile)) {
-                    adder.addUser(getUser(), getPasswd(), reader);
+                    adder.addUser(Username.of(getUser()), getPasswd(), reader);
                 }
             } catch (Exception e) {
                 log(e.getMessage(), Project.MSG_ERR);

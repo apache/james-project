@@ -106,10 +106,10 @@ public class StoreRightManager implements RightManager {
         return Optional.ofNullable(username)
             .map(Throwing.function(value ->
                 aclResolver.resolveRights(
-                    username.asString(),
+                    username,
                     groupMembershipResolver,
                     mailbox.getACL(),
-                    mailbox.getUser(),
+                    mailbox.getUser().asString(),
                     !GROUP_FOLDER))
                 .sneakyThrow())
             .orElse(MailboxACL.NO_RIGHTS);
@@ -122,7 +122,7 @@ public class StoreRightManager implements RightManager {
 
         return aclResolver.listRights(key,
             groupMembershipResolver,
-            mailbox.getUser(),
+            mailbox.getUser().asString(),
             !GROUP_FOLDER);
     }
 
@@ -150,7 +150,7 @@ public class StoreRightManager implements RightManager {
             .block();
     }
 
-    private void assertSharesBelongsToUserDomain(String user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
+    private void assertSharesBelongsToUserDomain(Username user, ACLCommand mailboxACLCommand) throws DifferentDomainException {
         assertSharesBelongsToUserDomain(user, ImmutableMap.of(mailboxACLCommand.getEntryKey(), mailboxACLCommand.getRights()));
     }
 
@@ -206,7 +206,7 @@ public class StoreRightManager implements RightManager {
     }
 
     @VisibleForTesting
-    void assertSharesBelongsToUserDomain(String user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
+    void assertSharesBelongsToUserDomain(Username user, Map<EntryKey, Rfc4314Rights> entries) throws DifferentDomainException {
         if (entries.keySet().stream()
             .filter(entry -> !entry.getNameType().equals(NameType.special))
             .map(EntryKey::getName)
@@ -216,9 +216,9 @@ public class StoreRightManager implements RightManager {
     }
 
     @VisibleForTesting
-    boolean areDomainsDifferent(String user, String otherUser) {
+    boolean areDomainsDifferent(String user, Username otherUser) {
         Optional<Domain> domain = Username.of(user).getDomainPart();
-        Optional<Domain> otherDomain = Username.of(otherUser).getDomainPart();
+        Optional<Domain> otherDomain = otherUser.getDomainPart();
         return !domain.equals(otherDomain);
     }
 
@@ -260,7 +260,7 @@ public class StoreRightManager implements RightManager {
             return acl;
         }
 
-        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser().asString());
+        MailboxACL.EntryKey userAsKey = MailboxACL.EntryKey.createUserEntryKey(mailboxSession.getUser());
         Rfc4314Rights rights = acl.getEntries().getOrDefault(userAsKey, new Rfc4314Rights());
         if (rights.contains(MailboxACL.Right.Administer)) {
             return acl;

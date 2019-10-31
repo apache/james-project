@@ -24,6 +24,7 @@ import java.util.Locale;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.transport.mailets.jsieve.Poster;
 import org.apache.james.user.api.UsersRepository;
@@ -67,7 +68,7 @@ public class SievePoster implements Poster {
             throw new MessagingException("Shared mailbox is not supported");
         } else {
             String host = url.substring(startOfHost, endOfHost);
-            String user = retrieveUser(url, startOfUser, endOfUser, host);
+            String user = retrieveUser(url, startOfUser, endOfUser, host).asString();
             String urlPath = parseUrlPath(url, endOfHost);
 
             return new UserAndPath(user, urlPath);
@@ -83,7 +84,7 @@ public class SievePoster implements Poster {
         }
     }
 
-    private String retrieveUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
+    private Username retrieveUser(String url, int startOfUser, int endOfUser, String host) throws MessagingException {
         // lowerCase the user - see
         // https://issues.apache.org/jira/browse/JAMES-1369
         String user = url.substring(startOfUser, endOfUser).toLowerCase(Locale.US);

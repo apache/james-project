@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -61,7 +62,7 @@ import org.mockito.ArgumentCaptor;
 public class GetACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
-    private static final String USER_1 = "user1";
+    private static final Username USER_1 = Username.of("user1");
 
     private ImapSession imapSession;
     private MailboxManager mailboxManager;

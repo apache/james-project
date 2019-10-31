@@ -32,6 +32,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 
 import com.github.fge.lambdas.Throwing;
@@ -125,7 +126,7 @@ public class UserStepdefs {
             String password = passwordByUser.get(user);
             Preconditions.checkState(password != null, "unknown user " + user);
 
-            return authenticateJamesUser(baseUri(mainStepdefs.jmapServer), user, password);
+            return authenticateJamesUser(baseUri(mainStepdefs.jmapServer), Username.of(user), password);
         });
     }
 

@@ -82,7 +82,7 @@ public class ManageSieveMailetTestCase {
         sieveParser = mock(SieveParser.class);
         usersRepository = mock(UsersRepository.class);
         initializeMailet();
-        when(usersRepository.contains(USERNAME.asString())).thenReturn(true);
+        when(usersRepository.contains(USERNAME)).thenReturn(true);
     }
 
     @Test

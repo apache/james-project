@@ -27,6 +27,7 @@ import java.util.Set;
 
 import javax.mail.Flags.Flag;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -72,7 +73,7 @@ public class MailboxCopierImpl implements MailboxCopier {
 
         List<MailboxPath> mailboxPathList = null;
 
-        srcMailboxSession = srcMailboxManager.createSystemSession("manager");
+        srcMailboxSession = srcMailboxManager.createSystemSession(Username.of("manager"));
         srcMailboxManager.startProcessingRequest(srcMailboxSession);
         mailboxPathList = srcMailboxManager.list(srcMailboxSession);
         srcMailboxManager.endProcessingRequest(srcMailboxSession);

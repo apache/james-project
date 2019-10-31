@@ -77,7 +77,7 @@ public class StoreAttachmentManager implements AttachmentManager {
     @Override
     public void storeAttachment(Attachment attachment, MailboxSession mailboxSession) throws MailboxException {
         attachmentMapperFactory.getAttachmentMapper(mailboxSession)
-            .storeAttachmentForOwner(attachment, org.apache.james.mailbox.store.mail.model.Username.fromMailboxSession(mailboxSession));
+            .storeAttachmentForOwner(attachment, mailboxSession.getUser());
     }
 
     @Override
@@ -103,10 +103,10 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     private boolean isExplicitlyAOwner(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {
-        Collection<org.apache.james.mailbox.store.mail.model.Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
+        Collection<Username> explicitOwners = attachmentMapperFactory.getAttachmentMapper(mailboxSession)
             .getOwners(attachmentId);
         return explicitOwners.stream()
-            .anyMatch(username -> mailboxSession.getUser().equals(Username.of(username.getValue())));
+            .anyMatch(username -> mailboxSession.getUser().equals(username));
     }
 
     private Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId, MailboxSession mailboxSession) throws MailboxException {

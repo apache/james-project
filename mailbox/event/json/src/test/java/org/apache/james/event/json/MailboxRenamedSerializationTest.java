@@ -41,9 +41,9 @@ class MailboxRenamedSerializationTest {
 
     private static final Username DEFAULT_USERNAME = Username.of("user");
     private static final String OLD_MAILBOX_NAME = "oldMailboxName";
-    private static final MailboxPath DEFAULT_OLD_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME.asString(), OLD_MAILBOX_NAME);
+    private static final MailboxPath DEFAULT_OLD_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME, OLD_MAILBOX_NAME);
     private static final String NEW_MAILBOX_NAME = "newMailboxName";
-    private static final MailboxPath DEFAULT_NEW_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME.asString(), NEW_MAILBOX_NAME);
+    private static final MailboxPath DEFAULT_NEW_MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, DEFAULT_USERNAME, NEW_MAILBOX_NAME);
     private static final MailboxSession.SessionId DEFAULT_SESSION_ID = MailboxSession.SessionId.of(123456789);
     private static final MailboxId DEFAULT_MAILBOX_ID = TestId.of(123456);
     private static final MailboxListener.MailboxRenamed DEFAULT_MAILBOX_RENAMED_EVENT = new MailboxListener.MailboxRenamed(

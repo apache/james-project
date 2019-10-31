@@ -38,6 +38,7 @@ import java.util.Map;
 
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -118,10 +119,10 @@ class ForwardRoutesTest {
             usersRepository.setDomainList(domainList);
             usersRepository.configure(new BaseHierarchicalConfiguration());
 
-            usersRepository.addUser(BOB, BOB_PASSWORD);
-            usersRepository.addUser(ALICE, ALICE_PASSWORD);
-            usersRepository.addUser(ALICE_WITH_SLASH, ALICE_SLASH_PASSWORD);
-            usersRepository.addUser(CEDRIC, CEDRIC_PASSWORD);
+            usersRepository.addUser(Username.of(BOB), BOB_PASSWORD);
+            usersRepository.addUser(Username.of(ALICE), ALICE_PASSWORD);
+            usersRepository.addUser(Username.of(ALICE_WITH_SLASH), ALICE_SLASH_PASSWORD);
+            usersRepository.addUser(Username.of(CEDRIC), CEDRIC_PASSWORD);
 
             createServer(new ForwardRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
         }

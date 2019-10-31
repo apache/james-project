@@ -117,7 +117,7 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
                             DeletedMessageConverter deletedMessageConverter,
                             MailboxSessionMapperFactory mapperFactory,
                             Clock clock) {
-        this.session = sessionProvider.createSystemSession(getClass().getName());
+        this.session = sessionProvider.createSystemSession(Username.of(getClass().getName()));
         this.deletedMessageVault = deletedMessageVault;
         this.deletedMessageConverter = deletedMessageConverter;
         this.mapperFactory = mapperFactory;
@@ -164,8 +164,8 @@ public class DeletedMessageVaultHook implements PreDeletionHook {
     }
 
     private Username retrieveMailboxUser(MailboxId mailboxId) throws MailboxException {
-        return Username.of(mapperFactory.getMailboxMapper(session)
+        return mapperFactory.getMailboxMapper(session)
             .findMailboxById(mailboxId)
-            .getUser());
+            .getUser();
     }
 }

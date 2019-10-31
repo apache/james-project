@@ -29,6 +29,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -62,7 +63,7 @@ public class ListMessageAssertTest {
     
     @Before
     public void setUp() {
-        benwaInboxMailbox = createMailbox(MailboxPath.forUser("user", "INBOX"));
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser(Username.of("user"), "INBOX"));
 
         message1 = createMessage(benwaInboxMailbox, MESSAGE_ID, BODY_CONTENT1, BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, MESSAGE_ID, BODY_CONTENT2, BODY_START, new PropertyBuilder());

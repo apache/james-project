@@ -97,20 +97,20 @@ public class MailboxSession {
     private final String otherUsersSpace;
     private final String personalSpace;
     private final SessionId sessionId;
-    private final String userName;
+    private final Username userName;
     private boolean open = true;
     private final List<Locale> localePreferences;
     private final Map<Object, Object> attributes;
     private final char pathSeparator;
     private final SessionType type;
 
-    public MailboxSession(SessionId sessionId, String userName,
+    public MailboxSession(SessionId sessionId, Username userName,
                                 List<Locale> localePreferences, char pathSeparator, SessionType type) {
         this(sessionId, userName, localePreferences, new ArrayList<>(), null, pathSeparator, type);
     }
 
-    public MailboxSession(SessionId sessionId, String userName,
-                                List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
+    public MailboxSession(SessionId sessionId, Username userName,
+                          List<Locale> localePreferences, List<String> sharedSpaces, String otherUsersSpace, char pathSeparator, SessionType type) {
         this.sessionId = sessionId;
         this.userName = userName;
         this.otherUsersSpace = otherUsersSpace;
@@ -163,7 +163,7 @@ public class MailboxSession {
      * @return not null
      */
     public Username getUser() {
-        return Username.of(userName);
+        return userName;
     }
 
     /**

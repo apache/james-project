@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -44,10 +45,11 @@ import org.junit.Test;
  * You then just need to instantiate your mailbox mapper and an IdGenerator.
  */
 public abstract class MailboxMapperTest {
-    
+
     private static final char DELIMITER = '.';
     private static final char WILDCARD = '%';
     private static final long UID_VALIDITY = 42;
+    private static final Username BENWA = Username.of("benwa");
 
     private MailboxPath benwaInboxPath;
     private Mailbox benwaInboxMailbox;
@@ -80,7 +82,7 @@ public abstract class MailboxMapperTest {
 
     @Test
     public void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
-        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser("benwa", "INBOX")))
+        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser(BENWA, "INBOX")))
             .isInstanceOf(MailboxNotFoundException.class);
     }
 
@@ -209,14 +211,14 @@ public abstract class MailboxMapperTest {
     }
 
     private void initData() {
-        benwaInboxPath = MailboxPath.forUser("benwa", "INBOX");
-        benwaWorkPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work");
-        benwaWorkTodoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "todo");
-        benwaPersoPath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "perso");
-        benwaWorkDonePath = MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work" + DELIMITER + "done");
-        bobInboxPath = MailboxPath.forUser("bob", "INBOX");
-        bobyMailboxPath = MailboxPath.forUser("boby", "INBOX.that.is.a.trick");
-        bobDifferentNamespacePath = new MailboxPath("#private_bob", "bob", "INBOX.bob");
+        benwaInboxPath = MailboxPath.forUser(BENWA, "INBOX");
+        benwaWorkPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work");
+        benwaWorkTodoPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work" + DELIMITER + "todo");
+        benwaPersoPath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "perso");
+        benwaWorkDonePath = MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work" + DELIMITER + "done");
+        bobInboxPath = MailboxPath.forUser(Username.of("bob"), "INBOX");
+        bobyMailboxPath = MailboxPath.forUser(Username.of("boby"), "INBOX.that.is.a.trick");
+        bobDifferentNamespacePath = new MailboxPath("#private_bob", Username.of("bob"), "INBOX.bob");
 
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         benwaWorkMailbox = createMailbox(benwaWorkPath);

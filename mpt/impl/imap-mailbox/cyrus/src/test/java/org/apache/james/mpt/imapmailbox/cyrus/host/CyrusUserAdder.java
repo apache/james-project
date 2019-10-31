@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.cyrus.host;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.api.UserAdder;
 
 import com.google.inject.Inject;
@@ -38,7 +39,7 @@ public class CyrusUserAdder implements UserAdder {
     }
 
     @Override
-    public void addUser(String user, String password) throws Exception {
-        this.docker.createUser(container.get(), user, password);
+    public void addUser(Username user, String password) throws Exception {
+        this.docker.createUser(container.get(), user.asString(), password);
     }
 }

@@ -32,6 +32,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -57,7 +58,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SpamAssassinListenerTest {
-    public static final String USER = "user";
+    public static final Username USER = Username.of("user");
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
     private static final int UID_VALIDITY = 43;
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(45);

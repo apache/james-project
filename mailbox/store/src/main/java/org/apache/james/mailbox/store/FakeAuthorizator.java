@@ -20,26 +20,28 @@ package org.apache.james.mailbox.store;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
+
 public class FakeAuthorizator implements Authorizator {
 
     public static FakeAuthorizator defaultReject() {
         return new FakeAuthorizator(Optional.empty(), Optional.empty());
     }
 
-    public static FakeAuthorizator forUserAndAdmin(String admin, String user) {
+    public static FakeAuthorizator forUserAndAdmin(Username admin, Username user) {
         return new FakeAuthorizator(Optional.of(admin), Optional.of(user));
     }
 
-    private final Optional<String> adminId;
-    private final Optional<String> delegatedUserId;
+    private final Optional<Username> adminId;
+    private final Optional<Username> delegatedUserId;
 
-    private FakeAuthorizator(Optional<String> adminId, Optional<String> userId) {
+    private FakeAuthorizator(Optional<Username> adminId, Optional<Username> userId) {
         this.adminId = adminId;
         this.delegatedUserId = userId;
     }
 
     @Override
-    public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+    public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) {
         if (!adminId.isPresent() || !this.delegatedUserId.isPresent()) {
             return AuthorizationState.NOT_ADMIN;
         }

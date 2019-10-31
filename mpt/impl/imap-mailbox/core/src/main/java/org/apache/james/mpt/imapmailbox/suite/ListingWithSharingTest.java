@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
@@ -31,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public abstract class ListingWithSharingTest implements ImapTestConstants {
-    public static final String OTHER_USER_NAME = "Boby";
+    public static final Username OTHER_USER_NAME = Username.of("Boby");
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_SHARED_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox");
     public static final MailboxPath OTHER_USER_SHARED_MAILBOX_CHILD = MailboxPath.forUser(OTHER_USER_NAME, "sharedMailbox.child");

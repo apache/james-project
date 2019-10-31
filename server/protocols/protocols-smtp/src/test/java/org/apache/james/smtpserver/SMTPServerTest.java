@@ -46,6 +46,7 @@ import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -1279,7 +1280,7 @@ public class SMTPServerTest {
             .as("expected 530 error")
             .isEqualTo(530);
 
-        assertThat(usersRepository.contains(noexistUserName))
+        assertThat(usersRepository.contains(Username.of(noexistUserName)))
             .as("user not existing")
             .isFalse();
 
@@ -1290,7 +1291,7 @@ public class SMTPServerTest {
             .as("expected error")
             .isEqualTo(535);
 
-        usersRepository.addUser(userName, "pwd");
+        usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0wrongpwd\0"));
@@ -1333,7 +1334,7 @@ public class SMTPServerTest {
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
         String userName = "test_user_smtp";
-        usersRepository.addUser(userName, "pwd");
+        usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.setSender("");
 
@@ -1554,7 +1555,7 @@ public class SMTPServerTest {
 
         smtpProtocol.setSender(sender);
 
-        usersRepository.addUser(userName, "pwd");
+        usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
         smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));

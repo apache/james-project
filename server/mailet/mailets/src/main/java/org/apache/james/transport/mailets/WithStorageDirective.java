@@ -81,7 +81,7 @@ public class WithStorageDirective extends GenericMailet {
 
     public ThrowingConsumer<MailAddress> addStorageDirective(Mail mail) {
         return recipient -> {
-            AttributeName attributeNameForUser = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + usersRepository.getUser(recipient));
+            AttributeName attributeNameForUser = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + usersRepository.getUser(recipient).asString());
             mail.setAttribute(new Attribute(attributeNameForUser, targetFolderName));
         };
 

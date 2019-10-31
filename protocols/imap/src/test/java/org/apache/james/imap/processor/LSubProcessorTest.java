@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -68,7 +69,7 @@ public class LSubProcessorTest {
 
     private static final String MAILBOX_A = "A.MAILBOX";
 
-    public static final String USER = "test";
+    public static final Username USER = Username.of("test");
 
     LSubProcessor processor;
     ImapProcessor next;

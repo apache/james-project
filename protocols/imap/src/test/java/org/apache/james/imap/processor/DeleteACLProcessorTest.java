@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -61,7 +62,7 @@ import org.mockito.ArgumentCaptor;
 public class DeleteACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
-    private static final String USER_1 = "user1";
+    private static final Username USER_1 = Username.of("user1");
 
     private ImapSession imapSession;
     private MailboxManager mailboxManager;
@@ -99,9 +100,9 @@ public class DeleteACLProcessorTest {
         deleteACLRequest = new DeleteACLRequest(TAG,
             ImapCommand.anyStateCommand("Name"),
             MAILBOX_NAME,
-            USER_1);
+            USER_1.asString());
 
-        user1Key = EntryKey.deserialize(USER_1);
+        user1Key = EntryKey.deserialize(USER_1.asString());
 
         argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
     }

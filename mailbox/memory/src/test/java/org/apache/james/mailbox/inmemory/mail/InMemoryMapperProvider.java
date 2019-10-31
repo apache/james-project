@@ -22,6 +22,7 @@ package org.apache.james.mailbox.inmemory.mail;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -42,7 +43,8 @@ import com.google.common.collect.ImmutableList;
 
 public class InMemoryMapperProvider implements MapperProvider {
 
-    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("user");
+    private static final Username USER = Username.of("user");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USER);
 
     private final MessageId.Factory messageIdFactory;
     private final MessageUidProvider messageUidProvider;
@@ -62,7 +64,7 @@ public class InMemoryMapperProvider implements MapperProvider {
 
     @Override
     public MessageMapper createMessageMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createMessageMapper(MailboxSessionUtil.create("user"));
+        return inMemoryMailboxSessionMapperFactory.createMessageMapper(MailboxSessionUtil.create(USER));
     }
 
     @Override

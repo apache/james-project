@@ -54,7 +54,7 @@ class ExpungedSerializationTest {
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final String MAILBOX_NAME = "mailboxName";
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", MAILBOX_NAME);
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("user"), MAILBOX_NAME);
     private static final MessageUid MESSAGE_UID = MessageUid.of(123456);
     private static final Instant INSTANT = Instant.parse("2018-12-14T09:41:51.541Z");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(42);

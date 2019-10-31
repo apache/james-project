@@ -33,6 +33,7 @@ import static org.mockito.Mockito.when;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -62,7 +63,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 class UserMailboxesRoutesTest {
-    private static final String USERNAME = "username";
+    private static final Username USERNAME = Username.of("username");
     private static final String MAILBOX_NAME = "myMailboxName";
 
     private WebAdminServer webAdminServer;
@@ -77,7 +78,7 @@ class UserMailboxesRoutesTest {
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
-            .setBasePath(USERS_BASE + SEPARATOR + USERNAME + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
+            .setBasePath(USERS_BASE + SEPARATOR + USERNAME.asString() + SEPARATOR + UserMailboxesRoutes.MAILBOXES)
             .build();
     }
 

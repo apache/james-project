@@ -30,6 +30,7 @@ import javax.mail.MessagingException;
 import javax.mail.internet.MimeBodyPart;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.core.builder.MimeMessageBuilder.Header;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -54,15 +55,16 @@ public class SieveIntegrationTest {
 
     public static final String LOCAL_PART = "receiver";
     public static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
+    public static final Username LOCAL_USER = Username.of(LOCAL_PART);
 
     public static final ZonedDateTime DATE_CLOSE = ZonedDateTime.parse("2016-01-16T00:00:00Z");
     public static final ZonedDateTime DATE_DEFAULT = ZonedDateTime.parse("2016-01-14T00:00:00Z");
     public static final ZonedDateTime DATE_NEW = ZonedDateTime.parse("2016-01-18T00:00:00Z");
     public static final ZonedDateTime DATE_OLD = ZonedDateTime.parse("2011-01-18T00:00:00Z");
-    public static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.not.selected");
-    public static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_PART, "INBOX.select");
-    public static final MailboxPath INBOX = MailboxPath.forUser(LOCAL_PART, "INBOX");
-    public static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_PART, "INBOX.any");
+    public static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.not.selected");
+    public static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.select");
+    public static final MailboxPath INBOX = MailboxPath.forUser(LOCAL_USER, "INBOX");
+    public static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_USER, "INBOX.any");
 
     public static final AttributeName ATTRIBUTE_NAME = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART);
     public static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
@@ -90,7 +92,7 @@ public class SieveIntegrationTest {
     @Test
     public void serviceShouldNotModifyEmailWhenErrorRetrievingScript() throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(RECEIVER_DOMAIN_COM);
+        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
         when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenThrow(new ScriptNotFoundException());
 
         FakeMail mail = createMail();
@@ -104,7 +106,7 @@ public class SieveIntegrationTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
-        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(RECEIVER_DOMAIN_COM);
+        when(usersRepository.getUser(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(Username.of(RECEIVER_DOMAIN_COM));
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -116,7 +118,7 @@ public class SieveIntegrationTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenvirtualHostingIsTurnedOff() throws Exception {
         prepareTestUsingScript("org/apache/james/transport/mailets/delivery/keep.script");
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn("receiver");
+        when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(Username.of("receiver"));
 
         FakeMail mail = createMail();
         testee.service(mail);
@@ -956,8 +958,8 @@ public class SieveIntegrationTest {
 
     private void prepareTestUsingScriptAndDates(String script, ZonedDateTime scriptCreationDate, ZonedDateTime scriptExecutionDate) throws Exception {
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
-        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(LOCAL_PART);
-        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(LOCAL_PART);
+        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@localhost"))).thenReturn(Username.of(LOCAL_PART));
+        when(usersRepository.getUser(new MailAddress(LOCAL_PART + "@domain.com"))).thenReturn(Username.of(LOCAL_PART));
         when(resourceLocator.get(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(new ResourceLocator.UserSieveInformation(scriptCreationDate,
             scriptExecutionDate,
             ClassLoader.getSystemResourceAsStream(script)));

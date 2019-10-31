@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -63,7 +64,7 @@ import org.mockito.ArgumentCaptor;
 public class SetACLProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
-    private static final String USER_1 = "user1";
+    private static final Username USER_1 = Username.of("user1");
     private static final String SET_RIGHTS = "aw";
     private static final String UNSUPPORTED_RIGHT = "W";
 
@@ -101,15 +102,15 @@ public class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        replaceAclRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, SET_RIGHTS);
+        replaceAclRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), SET_RIGHTS);
 
-        user1Key = EntryKey.deserialize(USER_1);
+        user1Key = EntryKey.deserialize(USER_1.asString());
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
     }
     
     @Test
     public void testUnsupportedRight() throws Exception {
-        SetACLRequest setACLRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, UNSUPPORTED_RIGHT);
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), UNSUPPORTED_RIGHT);
 
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
@@ -180,8 +181,7 @@ public class SetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(true);
 
-
-        SetACLRequest r = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, prefix + SET_RIGHTS);
+        SetACLRequest r = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), prefix + SET_RIGHTS);
         subject.doProcess(r, responder, imapSession);
 
         verify(mailboxManager).applyRightsCommand(path,

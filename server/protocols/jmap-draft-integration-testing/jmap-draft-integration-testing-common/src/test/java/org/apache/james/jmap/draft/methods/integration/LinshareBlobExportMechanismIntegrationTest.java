@@ -44,6 +44,7 @@ import java.io.ByteArrayInputStream;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.ExportRequest;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.linshare.LinshareExtension;
@@ -114,8 +115,8 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, HOMER, DefaultMailboxes.INBOX);
 
-        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, HOMER_PASSWORD);
-        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BART_PASSWORD);
+        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(HOMER), HOMER_PASSWORD);
+        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(BART), BART_PASSWORD);
         user1LinshareAPI = linshareExtension.getAPIFor(USER_1);
 
         fakeSmtpRequestSpecification = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());

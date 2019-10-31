@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.mpt.imapmailbox.external.james.host.external;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 
 public class NoopDomainsAndUserAdder implements ProvisioningAPI {
@@ -27,7 +28,7 @@ public class NoopDomainsAndUserAdder implements ProvisioningAPI {
     }
 
     @Override
-    public void addUser(String user, String password) throws Exception {
+    public void addUser(Username user, String password) throws Exception {
         // User should already be configured
         // We do not throw an exception in order to use BaseImapProtocol based tests
     }

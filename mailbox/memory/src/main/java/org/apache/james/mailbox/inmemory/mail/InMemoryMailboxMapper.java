@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -155,14 +156,14 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
         return mailboxesByPath.values()
             .stream()
             .filter(mailbox -> hasRightOn(mailbox, userName, right))
             .collect(Guavate.toImmutableList());
     }
 
-    private Boolean hasRightOn(Mailbox mailbox, String userName, Right right) {
+    private Boolean hasRightOn(Mailbox mailbox, Username userName, Right right) {
         return Optional.ofNullable(
             mailbox.getACL()
                 .ofPositiveNameType(NameType.user)

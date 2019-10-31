@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -57,7 +58,7 @@ public class ReIndexerManagementTest {
 
         assertThat(taskManager.list()).isEmpty();
         testee.reIndex(namespace, user, name);
-        verify(reIndexer).reIndex(new MailboxPath(namespace, user, name));
+        verify(reIndexer).reIndex(new MailboxPath(namespace, Username.of(user), name));
         assertThat(taskManager.list()).hasSize(1);
     }
 

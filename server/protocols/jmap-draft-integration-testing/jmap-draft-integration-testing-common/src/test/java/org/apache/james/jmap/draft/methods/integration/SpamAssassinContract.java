@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -90,7 +91,7 @@ public interface SpamAssassinContract {
     }
 
     default AccessToken accessTokenFor(GuiceJamesServer james, String user, String password) {
-        return authenticateJamesUser(baseUri(james), user, password);
+        return authenticateJamesUser(baseUri(james), Username.of(user), password);
     }
 
     @Test

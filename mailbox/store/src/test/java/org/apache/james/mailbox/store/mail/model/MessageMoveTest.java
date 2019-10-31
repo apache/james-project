@@ -26,6 +26,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -72,8 +73,9 @@ public abstract class MessageMoveTest {
         this.mailboxMapper = mapperProvider.createMailboxMapper();
         Assume.assumeNotNull(mailboxMapper);
 
-        benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
-        benwaWorkMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work"));
+        Username benwa = Username.of("benwa");
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser(benwa, "INBOX"));
+        benwaWorkMailbox = createMailbox(MailboxPath.forUser(benwa, "INBOX" + DELIMITER + "work"));
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
     }
 

@@ -36,6 +36,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.ParseException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.transport.KeyHolder;
 import org.apache.james.transport.SMIMEAttributeNames;
 import org.apache.james.user.api.UsersRepository;
@@ -584,8 +585,8 @@ public abstract class AbstractSign extends GenericMailet {
             }
         } else {
             // is the reverse-path user different from the SMTP authorized user?
-            String username = getUsername(reversePath);
-            if (!username.equals(authUser)) {
+            Username username = getUsername(reversePath);
+            if (!username.asString().equals(authUser)) { //FIXME-USERNAME
                 LOGGER.info("SMTP logged in as <{}> but pretend to be sender <{}>", authUser, username);
                 return false;
             }
@@ -607,7 +608,7 @@ public abstract class AbstractSign extends GenericMailet {
 
     }
 
-    private String getUsername(MailAddress mailAddress) {
+    private Username getUsername(MailAddress mailAddress) {
         try {
             return usersRepository.getUser(mailAddress);
         } catch (UsersRepositoryException e) {

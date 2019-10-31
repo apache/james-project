@@ -20,12 +20,13 @@
 
 package org.apache.james.managesieve.util;
 
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.commands.Authenticate;
 
 public class SettableSession implements Session {
 
-    private String user;
+    private Username user;
     private State state;
     private Authenticate.SupportedMechanism choosedAuthenticationMechanism;
     private boolean sslEnabled;
@@ -36,7 +37,7 @@ public class SettableSession implements Session {
     }
 
     @Override
-    public String getUser() {
+    public Username getUser() {
         return user;
     }
 
@@ -46,7 +47,7 @@ public class SettableSession implements Session {
     }
 
     @Override
-    public void setUser(String user) {
+    public void setUser(Username user) {
         this.user = user;
     }
 

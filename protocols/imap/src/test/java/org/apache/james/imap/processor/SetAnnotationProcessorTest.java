@@ -31,6 +31,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -91,7 +92,7 @@ public class SetAnnotationProcessorTest {
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
 
-        mockMailboxSession = MailboxSessionUtil.create("username");
+        mockMailboxSession = MailboxSessionUtil.create(Username.of("username"));
         inbox = MailboxPath.inbox(mockMailboxSession);
         mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
         request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);

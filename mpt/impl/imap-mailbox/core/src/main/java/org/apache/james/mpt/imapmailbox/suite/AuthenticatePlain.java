@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.ImapTestConstants;
@@ -42,8 +43,8 @@ public abstract class AuthenticatePlain implements ImapTestConstants {
         simpleScriptedTestProtocol = new ImapScriptedTestProtocol("/org/apache/james/imap/scripts/", system)
                 .withUser(USER, PASSWORD)
                 .withUser("delegate", "123456")
-                .withMailbox(MailboxPath.forUser("delegate", "delegate"))
-                .withMailbox(MailboxPath.forUser("imapuser", "imapuser"));
+                .withMailbox(MailboxPath.forUser(Username.of("delegate"), "delegate"))
+                .withMailbox(MailboxPath.forUser(Username.of("imapuser"), "imapuser"));
         BasicImapCommands.welcome(simpleScriptedTestProtocol);
     }
     

@@ -23,6 +23,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
@@ -51,7 +52,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
     @Override
     public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
 
-        Optional<String> username = authenticationExtractor.authHeaders(httpRequest)
+        Optional<Username> username = authenticationExtractor.authHeaders(httpRequest)
             .map(AccessToken::fromString)
             .filter(accessTokenManager::isValid)
             .map(accessTokenManager::getUsernameFromToken)

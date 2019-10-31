@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -260,7 +261,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) {
+    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return userMailboxRightsDAO.listRightsForUser(userName)
             .filter(mailboxId -> authorizedMailbox(mailboxId.getRight(), right))
             .map(Pair::getLeft)

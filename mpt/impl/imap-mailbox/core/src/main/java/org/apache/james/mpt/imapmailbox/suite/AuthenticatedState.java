@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures.Feature;
 import org.apache.james.mpt.api.ImapHostSystem;
@@ -31,7 +32,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public abstract class AuthenticatedState extends BasicImapCommands {
-    
+    private static final Username USER_2 = Username.of("imapuser2");
+
     protected abstract ImapHostSystem createImapHostSystem();
     
     private ImapHostSystem system;
@@ -436,13 +438,13 @@ public abstract class AuthenticatedState extends BasicImapCommands {
 
     @Test
     public void listShouldNotListMailboxWithOtherUserUS() throws Exception {
-        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER_2, "Other"));
         simpleScriptedTestProtocol.run("ListMailboxes");
     }
 
     @Test
     public void listShouldNotListMailboxWithOtherUserITALY() throws Exception {
-        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER_2, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.ITALY)
             .run("ListMailboxes");
@@ -450,7 +452,7 @@ public abstract class AuthenticatedState extends BasicImapCommands {
 
     @Test
     public void listShouldNotListMailboxWithOtherUserKOREA() throws Exception {
-        system.createMailbox(MailboxPath.forUser(USER + "2", "Other"));
+        system.createMailbox(MailboxPath.forUser(USER_2, "Other"));
         simpleScriptedTestProtocol
             .withLocale(Locale.KOREA)
             .run("ListMailboxes");

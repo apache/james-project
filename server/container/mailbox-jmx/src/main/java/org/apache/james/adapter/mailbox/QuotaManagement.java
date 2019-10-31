@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -57,7 +58,7 @@ public class QuotaManagement implements QuotaManagementMBean {
                      .addContext(MDCBuilder.PROTOCOL, "CLI")
                      .addContext(MDCBuilder.ACTION, "getQuotaRoot")
                      .build()) {
-            return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, user, name)).getValue();
+            return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, Username.of(user), name)).getValue();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

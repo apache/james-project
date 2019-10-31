@@ -22,13 +22,13 @@ package org.apache.james.jmap.api.access;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
 import org.junit.Test;
 
 public abstract class AccessTokenRepositoryTest {
-
     private static final AccessToken TOKEN = AccessToken.generate();
-    private static final String USERNAME = "username";
+    private static final Username USERNAME = Username.of("username");
     public static final long TTL_IN_MS = 1000;
 
     private AccessTokenRepository accessTokenRepository;
@@ -68,12 +68,6 @@ public abstract class AccessTokenRepositoryTest {
     public void addTokenMustThrowWhenUsernameIsNull() throws Exception {
         assertThatThrownBy(() -> accessTokenRepository.addToken(null, TOKEN))
             .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    public void addTokenMustThrowWhenUsernameIsEmpty() throws Exception {
-        assertThatThrownBy(() -> accessTokenRepository.addToken("", TOKEN))
-            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

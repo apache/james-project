@@ -29,6 +29,7 @@ import java.util.Scanner;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.Session;
 import org.apache.james.managesieve.api.SieveParser;
 import org.apache.james.managesieve.core.CoreProcessor;
@@ -137,7 +138,7 @@ public class ManageSieveMailet extends GenericMailet implements MessageToCoreToM
         } else {
             session.setState(Session.State.UNAUTHENTICATED);
         }
-        session.setUser(mail.getMaybeSender().get().asString());
+        session.setUser(Username.of(mail.getMaybeSender().get().asString()));
         getMailetContext().sendMail(
             mail.getRecipients().iterator().next(),
             mail.getMaybeSender().asList(),

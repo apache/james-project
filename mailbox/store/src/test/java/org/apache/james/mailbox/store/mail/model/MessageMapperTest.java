@@ -36,6 +36,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
@@ -71,6 +72,7 @@ public abstract class MessageMapperTest {
     private static final String USER_FLAG = "userFlag";
 
     private static final String CUSTOMS_USER_FLAGS_VALUE = "CustomsFlags";
+    private static final Username BENWA = Username.of("benwa");
 
     private MapperProvider mapperProvider;
     private MessageMapper messageMapper;
@@ -103,8 +105,8 @@ public abstract class MessageMapperTest {
     }
 
     private void initData() throws MailboxException {
-        benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
-        benwaWorkMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work"));
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX"));
+        benwaWorkMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work"));
 
         message1 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, mapperProvider.generateMessageId(), "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
@@ -1103,7 +1105,7 @@ public abstract class MessageMapperTest {
 
     @Test
     public void getApplicableFlagShouldReturnDefaultApplicableFlagsWhenMailboxEmpty() throws Exception {
-        Mailbox emptyMailbox = createMailbox(MailboxPath.forUser("benwa", "EMPTY"));
+        Mailbox emptyMailbox = createMailbox(MailboxPath.forUser(BENWA, "EMPTY"));
 
         assertThat(messageMapper.getApplicableFlag(emptyMailbox))
             .isEqualTo(new FlagsBuilder()

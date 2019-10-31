@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxCounterModule;
 import org.apache.james.mailbox.model.Mailbox;
@@ -49,7 +50,7 @@ class CassandraMailboxCounterDAOTest {
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxCounterDAO(cassandra.getConf());
 
-        mailbox = new Mailbox(MailboxPath.forUser("user", "name"), UID_VALIDITY, MAILBOX_ID);
+        mailbox = new Mailbox(MailboxPath.forUser(Username.of("user"), "name"), UID_VALIDITY, MAILBOX_ID);
     }
 
     @Test

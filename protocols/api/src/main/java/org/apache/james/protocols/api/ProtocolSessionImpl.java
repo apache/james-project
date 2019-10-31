@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.handler.LineHandler;
 
 /**
@@ -35,7 +36,7 @@ public class ProtocolSessionImpl implements ProtocolSession {
     private final ProtocolTransport transport;
     private final Map<String, Object> connectionState;
     private final Map<String, Object> sessionState;
-    private String user;
+    private Username username;
     protected final ProtocolConfiguration config;
     private static final Charset CHARSET = Charset.forName("US-ASCII");
     private static final String DELIMITER = "\r\n";
@@ -58,13 +59,13 @@ public class ProtocolSessionImpl implements ProtocolSession {
     }
 
     @Override
-    public String getUser() {
-        return user;
+    public Username getUsername() {
+        return username;
     }
 
     @Override
-    public void setUser(String user) {
-        this.user = user;
+    public void setUsername(Username username) {
+        this.username = username;
     }
 
     /**

@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.crypto;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.access.exceptions.InvalidAccessToken;
@@ -33,12 +34,12 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
     private final AccessTokenRepository accessTokenRepository;
 
     @Inject
-    public AccessTokenManagerImpl(AccessTokenRepository accessTokenRepository) {
+    AccessTokenManagerImpl(AccessTokenRepository accessTokenRepository) {
         this.accessTokenRepository = accessTokenRepository;
     }
 
     @Override
-    public AccessToken grantAccessToken(String username) {
+    public AccessToken grantAccessToken(Username username) {
         Preconditions.checkNotNull(username);
         AccessToken accessToken = AccessToken.generate();
         accessTokenRepository.addToken(username, accessToken).block();
@@ -46,7 +47,7 @@ public class AccessTokenManagerImpl implements AccessTokenManager {
     }
 
     @Override
-    public String getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
+    public Username getUsernameFromToken(AccessToken token) throws InvalidAccessToken {
         return accessTokenRepository.getUsernameFromToken(token).block();
     }
     

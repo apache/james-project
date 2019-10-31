@@ -21,6 +21,7 @@ package org.apache.james.protocols.pop3.utils;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.pop3.POP3Session;
 import org.apache.james.protocols.pop3.core.AbstractPassCmdHandler;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
@@ -33,8 +34,8 @@ public class TestPassCmdHandler extends AbstractPassCmdHandler {
     }
     
     @Override
-    protected Mailbox auth(POP3Session session, String username, String password) throws Exception {
-        return mailboxes.get(username);
+    protected Mailbox auth(POP3Session session, Username username, String password) throws Exception {
+        return mailboxes.get(username.asString());
     }
 
 }

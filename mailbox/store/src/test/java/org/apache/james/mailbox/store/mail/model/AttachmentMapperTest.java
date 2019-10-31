@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
@@ -39,8 +40,8 @@ import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
-    public static final Username OWNER = Username.fromRawValue("owner");
-    public static final Username ADDITIONAL_OWNER = Username.fromRawValue("additionalOwner");
+    public static final Username OWNER = Username.of("owner");
+    public static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
 
     private AttachmentMapper attachmentMapper;
 

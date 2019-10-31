@@ -20,6 +20,7 @@
 
 package org.apache.james.mailbox.acl;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
 
@@ -91,6 +92,6 @@ public interface MailboxACLResolver {
      *            otherwise.
      * @return the rights applicable for the given user and resource.
      */
-    MailboxACL.Rfc4314Rights resolveRights(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
+    MailboxACL.Rfc4314Rights resolveRights(Username requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
 }

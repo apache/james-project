@@ -48,7 +48,7 @@ import org.mockito.ArgumentCaptor;
 
 public class ReIndexerImplTest {
 
-    private static final String USERNAME = "benwa@apache.org";
+    private static final Username USERNAME = Username.of("benwa@apache.org");
     public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
     private InMemoryMailboxManager mailboxManager;
     private ListeningMessageSearchIndex messageSearchIndex;
@@ -126,7 +126,7 @@ public class ReIndexerImplTest {
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
                 systemSession);
 
-        reIndexer.reIndex(Username.of(USERNAME)).run();
+        reIndexer.reIndex(USERNAME).run();
         ArgumentCaptor<MailboxMessage> messageCaptor = ArgumentCaptor.forClass(MailboxMessage.class);
         ArgumentCaptor<MailboxId> mailboxCaptor1 = ArgumentCaptor.forClass(MailboxId.class);
         ArgumentCaptor<Mailbox> mailboxCaptor2 = ArgumentCaptor.forClass(Mailbox.class);

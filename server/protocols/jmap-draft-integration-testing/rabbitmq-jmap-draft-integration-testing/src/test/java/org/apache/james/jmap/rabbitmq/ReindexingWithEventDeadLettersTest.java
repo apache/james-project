@@ -98,7 +98,7 @@ class ReindexingWithEventDeadLettersTest {
         jamesServer.getProbe(DataProbeImpl.class)
             .fluent()
             .addDomain(DOMAIN)
-            .addUser(ALICE, ALICE_PASSWORD);
+            .addUser(ALICE.asString(), ALICE_PASSWORD);
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort())

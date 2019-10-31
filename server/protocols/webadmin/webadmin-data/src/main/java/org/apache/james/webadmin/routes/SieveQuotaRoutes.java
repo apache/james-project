@@ -235,7 +235,8 @@ public class SieveQuotaRoutes implements Routes {
         }
     }
 
-    private Username getUsername(String username) throws UsersRepositoryException {
+    private Username getUsername(String usernameParameter) throws UsersRepositoryException {
+        Username username = Username.of(usernameParameter);
         if (!usersRepository.contains(username)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
@@ -243,6 +244,6 @@ public class SieveQuotaRoutes implements Routes {
                 .message("User " + username + " does not exist")
                 .haltError();
         }
-        return Username.of(username);
+        return username;
     }
 }

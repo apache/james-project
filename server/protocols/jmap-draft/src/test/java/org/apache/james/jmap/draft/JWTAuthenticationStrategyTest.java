@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.JWTAuthenticationStrategy;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
@@ -36,6 +37,8 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.user.api.model.User;
+
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,7 +80,7 @@ public class JWTAuthenticationStrategyTest {
 
         when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(false);
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(username)))
+        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
@@ -104,7 +107,7 @@ public class JWTAuthenticationStrategyTest {
 
         when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(username)))
+        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenThrow(new MailboxException());
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
@@ -122,7 +125,7 @@ public class JWTAuthenticationStrategyTest {
 
         when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
         when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(username)))
+        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
                 .thenReturn(fakeMailboxSession);
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));

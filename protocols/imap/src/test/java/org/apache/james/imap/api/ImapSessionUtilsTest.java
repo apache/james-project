@@ -22,6 +22,7 @@ package org.apache.james.imap.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -29,7 +30,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ImapSessionUtilsTest {
-    private static final String USERNAME = "username";
+    private static final Username USERNAME = Username.of("username");
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(USERNAME);
     private FakeImapSession fakeImapSession;
 

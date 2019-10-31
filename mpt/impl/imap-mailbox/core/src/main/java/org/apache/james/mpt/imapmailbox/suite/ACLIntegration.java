@@ -21,6 +21,7 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
@@ -31,7 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public abstract class ACLIntegration implements ImapTestConstants {
-    public static final String OTHER_USER_NAME = "Boby";
+    public static final Username OTHER_USER_NAME = Username.of("Boby");
     public static final String OTHER_USER_PASSWORD = "password";
     public static final MailboxPath OTHER_USER_MAILBOX = MailboxPath.forUser(OTHER_USER_NAME, "");
     public static final MailboxPath MY_INBOX = MailboxPath.forUser(USER, "");
@@ -104,7 +105,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightXOnOriginShouldBeSufficientToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
-            .withMailbox(MailboxPath.forUser("Boby","test"))
+            .withMailbox(MailboxPath.forUser(OTHER_USER_NAME,"test"))
             .withGrantRights(MailboxPath.forUser(OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("x"))
             .run("aclIntegration/ACLIntegrationRightX");
     }
@@ -112,7 +113,7 @@ public abstract class ACLIntegration implements ImapTestConstants {
     @Test
     public void rightXOnOriginShouldBeNeededToRenameAMailboxUS() throws Exception {
         scriptedTestProtocol
-            .withMailbox(MailboxPath.forUser("Boby","test"))
+            .withMailbox(MailboxPath.forUser(OTHER_USER_NAME,"test"))
             .withGrantRights(MailboxPath.forUser(OTHER_USER_NAME, "test"), USER, MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("rswipktela"))
             .run("aclIntegration/ACLIntegrationWithoutRightX");
     }

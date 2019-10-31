@@ -72,7 +72,7 @@ import io.restassured.http.ContentType;
 
 class EventDeadLettersRoutesTest {
     private static final String EVENTS_ACTION = "reDeliver";
-    private static final String BOB = "bob@apache.org";
+    private static final Username BOB = Username.of("bob@apache.org");
     private static final String UUID_1 = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
     private static final String UUID_2 = "6e0dd59d-660e-4d9b-b22f-0354479f47b5";
     private static final String INSERTION_UUID_1 = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
@@ -83,14 +83,14 @@ class EventDeadLettersRoutesTest {
     private static final EventDeadLetters.InsertionId INSERTION_ID_3 = EventDeadLetters.InsertionId.of(INSERTION_UUID_3);
     private static final MailboxListener.MailboxAdded EVENT_1 = EventFactory.mailboxAdded()
         .eventId(Event.EventId.of(UUID_1))
-        .user(Username.of(BOB))
+        .user(BOB)
         .sessionId(MailboxSession.SessionId.of(452))
         .mailboxId(InMemoryId.of(453))
         .mailboxPath(MailboxPath.forUser(BOB, "Important-mailbox"))
         .build();
     private static final MailboxListener.MailboxAdded EVENT_2 = EventFactory.mailboxAdded()
         .eventId(Event.EventId.of(UUID_2))
-        .user(Username.of(BOB))
+        .user(BOB)
         .sessionId(MailboxSession.SessionId.of(455))
         .mailboxId(InMemoryId.of(456))
         .mailboxPath(MailboxPath.forUser(BOB, "project-3"))

@@ -33,6 +33,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.user.api.UsersRepository;
@@ -46,7 +47,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class MalformedUrlRoutesTest {
-    private static final String USERNAME = "username";
+    private static final Username USERNAME = Username.of("username");
     private static final String MALFORMED_MAILBOX_NAME = "inbox%work";
 
     private WebAdminServer webAdminServer;
@@ -74,7 +75,7 @@ class MalformedUrlRoutesTest {
     @Test
     @Disabled()
     void getMailboxesShouldReturnJsonErrorWhenMalformedUrl() throws Exception {
-        String response = executeRawPUT(USERS_BASE + SEPARATOR + USERNAME + SEPARATOR + MALFORMED_MAILBOX_NAME);
+        String response = executeRawPUT(USERS_BASE + SEPARATOR + USERNAME.asString() + SEPARATOR + MALFORMED_MAILBOX_NAME);
         assertThat(response).doesNotContain("<h1>Bad Message 400</h1><pre>reason: Bad Request</pre>");
     }
 

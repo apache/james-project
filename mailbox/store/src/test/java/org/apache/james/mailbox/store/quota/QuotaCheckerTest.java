@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -41,7 +42,7 @@ import org.junit.Test;
 public class QuotaCheckerTest {
 
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
-    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser("benwa", "INBOX");
+    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(Username.of("benwa"), "INBOX");
     public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
 
     private QuotaRootResolver mockedQuotaRootResolver;

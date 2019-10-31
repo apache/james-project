@@ -317,7 +317,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
 
     private void validateUserExist(Username username) {
         try {
-            if (!usersRepository.contains(username.asString())) {
+            if (!usersRepository.contains(username)) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)

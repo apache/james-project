@@ -23,6 +23,7 @@ import java.util.Arrays;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -70,7 +71,7 @@ public class JmapGuiceProbe implements GuiceProbe {
         return vacationRepository.retrieveVacation(accountId).block();
     }
 
-    public void setInMailboxes(MessageId messageId, String username, MailboxId... mailboxIds) throws MailboxException {
+    public void setInMailboxes(MessageId messageId, Username username, MailboxId... mailboxIds) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         messageIdManager.setInMailboxes(messageId, Arrays.asList(mailboxIds), mailboxSession);
     }

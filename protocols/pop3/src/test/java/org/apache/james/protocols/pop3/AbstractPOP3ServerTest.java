@@ -31,6 +31,7 @@ import java.util.regex.Pattern;
 import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
+import org.apache.james.core.Username;
 import org.apache.james.protocols.api.Protocol;
 import org.apache.james.protocols.api.ProtocolServer;
 import org.apache.james.protocols.api.handler.WiringException;
@@ -520,8 +521,8 @@ public abstract class AbstractPOP3ServerTest {
         }
 
         @Override
-        protected Mailbox auth(POP3Session session, String apopTimestamp, String user, String digest) throws Exception {
-            return mailboxes.get(user);
+        protected Mailbox auth(POP3Session session, String apopTimestamp, Username user, String digest) throws Exception {
+            return mailboxes.get(user.asString());
         }
         
         

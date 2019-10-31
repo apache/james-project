@@ -27,6 +27,7 @@ import java.util.HashMap;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
@@ -42,7 +43,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class ValidRcptHandlerTest {
-    private static final String VALID_USER = "postmaster";
+    private static final Username VALID_USER = Username.of("postmaster");
     private static final String INVALID_USER = "invalid";
     private static final String USER1 = "user1";
     private static final String USER2 = "user2";
@@ -71,7 +72,7 @@ public class ValidRcptHandlerTest {
 
         handler = new ValidRcptHandler(users, memoryRecipientRewriteTable, memoryDomainList);
 
-        validUserEmail = new MailAddress(VALID_USER + "@localhost");
+        validUserEmail = new MailAddress(VALID_USER.asString() + "@localhost");
         user1mail = new MailAddress(USER1 + "@localhost");
         invalidUserEmail = new MailAddress(INVALID_USER + "@localhost");
     }

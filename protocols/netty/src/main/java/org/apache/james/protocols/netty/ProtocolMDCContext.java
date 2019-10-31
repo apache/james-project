@@ -64,7 +64,7 @@ public class ProtocolMDCContext {
             .map(protocolSession -> MDCBuilder.create()
                 .addContext(MDCBuilder.SESSION_ID, protocolSession.getSessionID())
                 .addContext(MDCBuilder.CHARSET, protocolSession.getCharset().displayName())
-                .addContext(MDCBuilder.USER, protocolSession.getUser()))
+                .addContext(MDCBuilder.USER, protocolSession.getUsername()))
             .orElse(MDCBuilder.create());
     }
 

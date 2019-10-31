@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
@@ -164,7 +165,7 @@ public class AuthenticationServlet extends HttpServlet {
     }
 
     private void manageAuthenticationResponse(AccessTokenRequest request, HttpServletResponse resp) throws IOException {
-        String username = request.getToken().getUsername();
+        Username username = Username.of(request.getToken().getUsername());
         if (authenticate(request, username)) {
             returnAccessTokenResponse(resp, username);
         } else {
@@ -173,7 +174,7 @@ public class AuthenticationServlet extends HttpServlet {
         }
     }
 
-    private boolean authenticate(AccessTokenRequest request, String username) {
+    private boolean authenticate(AccessTokenRequest request, Username username) {
         boolean authenticated = false;
         try {
             authenticated = usersRepository.test(username, request.getPassword());
@@ -183,7 +184,7 @@ public class AuthenticationServlet extends HttpServlet {
         return authenticated;
     }
 
-    private void returnAccessTokenResponse(HttpServletResponse resp, String username) throws IOException {
+    private void returnAccessTokenResponse(HttpServletResponse resp, Username username) throws IOException {
         resp.setContentType(JSON_CONTENT_TYPE_UTF8);
         resp.setStatus(HttpServletResponse.SC_CREATED);
         AccessTokenResponse response = AccessTokenResponse

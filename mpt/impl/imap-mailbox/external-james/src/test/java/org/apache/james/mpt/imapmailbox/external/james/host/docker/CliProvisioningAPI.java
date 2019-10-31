@@ -22,6 +22,7 @@ import java.io.IOException;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mpt.imapmailbox.external.james.ProvisioningException;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.util.docker.DockerContainer;
@@ -66,8 +67,8 @@ public class CliProvisioningAPI implements ProvisioningAPI {
     }
 
     @Override
-    public void addUser(String user, String password) throws Exception {
-        Container.ExecResult execResult = exec("adduser", user, password);
+    public void addUser(Username user, String password) throws Exception {
+        Container.ExecResult execResult = exec("adduser", user.asString(), password);
 
         if (execResult.getExitCode() != 0) {
             throw new ProvisioningException("Failed to add user" + executionResultToString(execResult));

@@ -257,7 +257,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
                 USERNAME,
-                MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
+                MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
                 new Date(),
                 false,
@@ -286,7 +286,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
             USERNAME,
-            MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
+            MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             false,
@@ -466,7 +466,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .user(Username.of(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
-            .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))
+            .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
             .build();
 
         guiceJamesServer
@@ -508,7 +508,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
             .user(Username.of(USERNAME))
             .sessionId(MailboxSession.SessionId.of(452))
             .mailboxId(InMemoryId.of(453))
-            .mailboxPath(MailboxPath.forUser(USERNAME, "Important-mailbox"))
+            .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
             .build();
 
         guiceJamesServer
@@ -684,7 +684,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
             USERNAME,
-            MailboxPath.forUser(USERNAME, MailboxConstants.INBOX),
+            MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             false,

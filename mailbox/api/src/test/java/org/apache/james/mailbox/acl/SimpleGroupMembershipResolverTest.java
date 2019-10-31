@@ -22,10 +22,12 @@ package org.apache.james.mailbox.acl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.core.Username;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SimpleGroupMembershipResolverTest {
+    private static final Username USER = Username.of("user");
 
     private SimpleGroupMembershipResolver simpleGroupMembershipResolver;
 
@@ -37,7 +39,7 @@ class SimpleGroupMembershipResolverTest {
     @Test
     void isMemberShouldReturnFalseWhenEmptyResolver() {
         //When
-        boolean actual = simpleGroupMembershipResolver.isMember("user", "group");
+        boolean actual = simpleGroupMembershipResolver.isMember(USER, "group");
         //Then
         assertThat(actual).isFalse();
     }
@@ -45,9 +47,9 @@ class SimpleGroupMembershipResolverTest {
     @Test
     void isMemberShouldReturnTrueWhenTheSearchedMembershipIsPresent() {
         //Given
-        simpleGroupMembershipResolver.addMembership("group", "user");
+        simpleGroupMembershipResolver.addMembership("group", USER);
         //When
-        boolean actual = simpleGroupMembershipResolver.isMember("user", "group");
+        boolean actual = simpleGroupMembershipResolver.isMember(USER, "group");
         //Then
         assertThat(actual).isTrue();
     }
@@ -55,8 +57,8 @@ class SimpleGroupMembershipResolverTest {
     @Test
     void addMembershipShouldAddAMembershipWhenNonNullUser() {
         //When
-        simpleGroupMembershipResolver.addMembership("group", "user");
-        boolean actual = simpleGroupMembershipResolver.isMember("user", "group");
+        simpleGroupMembershipResolver.addMembership("group", USER);
+        boolean actual = simpleGroupMembershipResolver.isMember(USER, "group");
         //Then
         assertThat(actual).isTrue();
     }
@@ -64,7 +66,7 @@ class SimpleGroupMembershipResolverTest {
     @Test
     void addMembershipShouldAddAMembershipWithANullUser() {
         //Given
-        String userAdded = null;
+        Username userAdded = null;
         //When
         simpleGroupMembershipResolver.addMembership("group", userAdded);
         boolean actual = simpleGroupMembershipResolver.isMember(userAdded, "group");

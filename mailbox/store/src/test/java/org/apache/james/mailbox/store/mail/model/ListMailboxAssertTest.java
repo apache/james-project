@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.junit.Before;
@@ -34,7 +35,7 @@ import com.google.common.collect.ImmutableList;
 public class ListMailboxAssertTest {
     private static final String OTHER_NAMESPACE = "other_namespace";
     private static final String NAME = "name";
-    private static final String USER = "user";
+    private static final Username USER = Username.of("user");
     private static final String NAMESPACE = "namespace";
     private static final long UID_VALIDITY = 42;
     private static final Mailbox mailbox1 = new Mailbox(new MailboxPath(NAMESPACE, USER, NAME), UID_VALIDITY);

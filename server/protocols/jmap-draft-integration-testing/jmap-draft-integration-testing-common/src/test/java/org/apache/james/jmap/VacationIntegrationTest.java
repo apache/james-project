@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -59,8 +60,8 @@ import io.restassured.RestAssured;
 
 public abstract class VacationIntegrationTest {
 
-    private static final String USER_1 = "benwa@" + DOMAIN;
-    private static final String USER_2 = "matthieu@" + DOMAIN;
+    private static final Username USER_1 = Username.of("benwa@" + DOMAIN);
+    private static final Username USER_2 = Username.of("matthieu@" + DOMAIN);
     private static final String PASSWORD = "secret";
     private static final String REASON = "Message explaining my wonderful vacations";
     private static final String HTML_REASON = "<b>" + REASON + "</b>";
@@ -80,14 +81,14 @@ public abstract class VacationIntegrationTest {
 
         DataProbe dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(USER_1, PASSWORD);
-        dataProbe.addUser(USER_2, PASSWORD);
+        dataProbe.addUser(USER_1.asString(), PASSWORD);
+        dataProbe.addUser(USER_2.asString(), PASSWORD);
         MailboxProbe mailboxProbe = guiceJamesServer.getProbe(MailboxProbeImpl.class);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.OUTBOX);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.SENT);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.SENT);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1, DefaultMailboxes.INBOX);
-        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2.asString(), DefaultMailboxes.OUTBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1.asString(), DefaultMailboxes.SENT);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2.asString(), DefaultMailboxes.SENT);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_1.asString(), DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USER_2.asString(), DefaultMailboxes.INBOX);
         await();
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
@@ -125,10 +126,10 @@ public abstract class VacationIntegrationTest {
         // Then
         // User 1 should well receive this mail
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2.asString(), USER_1.asString()));
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1.asString(), USER_2.asString()));
     }
 
     @Test
@@ -137,7 +138,7 @@ public abstract class VacationIntegrationTest {
         AccessToken user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
         AccessToken user2AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_2, PASSWORD);
         jmapGuiceProbe.modifyVacation(
-            AccountId.fromString(USER_1),
+            AccountId.fromUsername(USER_1),
             VacationPatch.builder()
                 .isEnabled(true)
                 .build());
@@ -149,10 +150,10 @@ public abstract class VacationIntegrationTest {
         // Then
         // User 1 should well receive this mail
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2.asString(), USER_1.asString()));
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), "", USER_1, USER_2));
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), "", USER_1.asString(), USER_2.asString()));
     }
 
     @Test
@@ -168,9 +169,9 @@ public abstract class VacationIntegrationTest {
 
         // Then
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2.asString(), USER_1.asString()));
         calmlyAwait.atMost(10, TimeUnit.SECONDS)
-                .until(() -> assertOneMessageWithHtmlBodyReceived(user2AccessToken, getInboxId(user2AccessToken), HTML_REASON, USER_1, USER_2));
+                .until(() -> assertOneMessageWithHtmlBodyReceived(user2AccessToken, getInboxId(user2AccessToken), HTML_REASON, USER_1.asString(), USER_2.asString()));
     }
 
     @Test
@@ -193,7 +194,7 @@ public abstract class VacationIntegrationTest {
         // Then
         // User 1 should well receive this mail
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2.asString(), USER_1.asString()));
         // User 2 should not receive a notification
         Thread.sleep(1000L);
         with()
@@ -237,10 +238,10 @@ public abstract class VacationIntegrationTest {
         // Then
         // User 2 should well receive a notification about user 1 vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2));
+            .until(() -> isTextMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1.asString(), USER_2.asString()));
         // User 2 should not receive another notification
         Thread.sleep(1000L);
-        assertOneMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1, USER_2);
+        assertOneMessageReceived(user2AccessToken, getInboxId(user2AccessToken), REASON, USER_1.asString(), USER_2.asString());
     }
 
     @Test
@@ -263,7 +264,7 @@ public abstract class VacationIntegrationTest {
         sendMail(user2AccessToken, user2OutboxId, "user|inbox|1");
         // Wait user 1 to receive the eMail before reset of vacation
         calmlyAwait.atMost(30, TimeUnit.SECONDS)
-            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2, USER_1));
+            .until(() -> isTextMessageReceived(user1AccessToken, getInboxId(user1AccessToken), ORIGINAL_MESSAGE_TEXT_BODY, USER_2.asString(), USER_1.asString()));
 
         // When
         // User 1 benw@mydomain.tld resets a Vacation on its account

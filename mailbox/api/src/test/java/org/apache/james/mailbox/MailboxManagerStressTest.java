@@ -31,6 +31,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -65,7 +66,7 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
         CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
         Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
-        String username = "username";
+        Username username = Username.of("username");
         MailboxSession session = mailboxManager.createSystemSession(username);
         mailboxManager.startProcessingRequest(session);
         MailboxPath path = MailboxPath.forUser(username, "INBOX");

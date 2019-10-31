@@ -26,16 +26,16 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Domain;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepository;
+import org.apache.james.util.streams.Iterators;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
 
 public class DataProbeImpl implements GuiceProbe, DataProbe {
     
@@ -55,12 +55,12 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public void addUser(String userName, String password) throws Exception {
-        usersRepository.addUser(userName, password);
+        usersRepository.addUser(Username.of(userName), password);
     }
 
     @Override
     public void removeUser(String username) throws Exception {
-        usersRepository.removeUser(username);
+        usersRepository.removeUser(Username.of(username));
     }
 
     @Override
@@ -70,7 +70,9 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
 
     @Override
     public String[] listUsers() throws Exception {
-        return Iterables.toArray(ImmutableList.copyOf(usersRepository.list()), String.class);
+        return Iterators.toStream(usersRepository.list())
+            .map(Username::asString)
+            .toArray(String[]::new);
     }
 
     @Override

@@ -22,6 +22,8 @@ package org.apache.james.jmap.draft.model.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Username;
+
 import org.junit.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -41,19 +43,19 @@ public class MailboxNamespaceTest {
 
     @Test
     public void delegatedShouldThrowWhenEmptyOwner() throws Exception {
-        assertThatThrownBy(() -> MailboxNamespace.delegated(""))
+        assertThatThrownBy(() -> MailboxNamespace.delegated(Username.of("")))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void delegatedShouldThrowWhenBlankOwner() throws Exception {
-        assertThatThrownBy(() -> MailboxNamespace.delegated("  "))
+        assertThatThrownBy(() -> MailboxNamespace.delegated(Username.of("  ")))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     public void delegatedShouldReturnDelegatedNamespace() throws Exception {
-        String owner = "owner@test.com";
+        Username owner = Username.of("owner@test.com");
         MailboxNamespace actualNamespace = MailboxNamespace.delegated(owner);
 
         assertThat(actualNamespace.getType()).isEqualTo(MailboxNamespace.Type.Delegated);

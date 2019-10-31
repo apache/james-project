@@ -22,6 +22,7 @@ package org.apache.james.managesieve.core;
 
 import java.util.Iterator;
 
+import org.apache.james.core.Username;
 import org.apache.james.managesieve.api.AuthenticationException;
 import org.apache.james.managesieve.api.AuthenticationProcessor;
 import org.apache.james.managesieve.api.Session;
@@ -52,7 +53,7 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
 
 
     @Override
-    public String isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException {
+    public Username isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException {
         if (suppliedClientData.contains("\u0000")) {
             return authenticateWithSeparator(session, suppliedClientData, '\u0000');
         } else {
@@ -60,12 +61,12 @@ public class PlainAuthenticationProcessor implements AuthenticationProcessor {
         }
     }
 
-    private String authenticateWithSeparator(Session session, String suppliedClientData, char c) throws SyntaxException, AuthenticationException {
+    private Username authenticateWithSeparator(Session session, String suppliedClientData, char c) throws SyntaxException, AuthenticationException {
         Iterator<String> it = Splitter.on(c).split(suppliedClientData).iterator();
         if (!it.hasNext()) {
             throw new SyntaxException("You must supply a username for the authentication mechanism. Formal syntax : <NULL>username<NULL>password");
         }
-        String userName = it.next();
+        Username userName = Username.of(it.next());
         if (!it.hasNext()) {
             throw new SyntaxException("You must supply a password for the authentication mechanism. Formal syntax : <NULL>username<NULL>password");
         }

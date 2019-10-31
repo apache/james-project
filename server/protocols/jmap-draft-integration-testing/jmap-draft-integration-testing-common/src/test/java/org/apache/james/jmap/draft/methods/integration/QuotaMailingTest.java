@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
@@ -62,8 +63,8 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 
 public abstract class QuotaMailingTest {
-    private static final String HOMER = "homer@" + DOMAIN;
-    private static final String BART = "bart@" + DOMAIN;
+    private static final Username HOMER = Username.of("homer@" + DOMAIN);
+    private static final Username BART = Username.of("bart@" + DOMAIN);
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
@@ -87,9 +88,9 @@ public abstract class QuotaMailingTest {
         RestAssured.defaultParser = Parser.JSON;
 
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(HOMER, PASSWORD);
-        dataProbe.addUser(BART, BOB_PASSWORD);
-        mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
+        dataProbe.addUser(HOMER.asString(), PASSWORD);
+        dataProbe.addUser(BART.asString(), BOB_PASSWORD);
+        mailboxProbe.createMailbox("#private", HOMER.asString(), DefaultMailboxes.INBOX);
         homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
     }

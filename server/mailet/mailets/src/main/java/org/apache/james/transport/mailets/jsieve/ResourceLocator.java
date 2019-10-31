@@ -68,7 +68,7 @@ public class ResourceLocator {
 
     private Username retrieveUsername(MailAddress mailAddress) {
         try {
-            return Username.of(usersRepository.getUser(mailAddress));
+            return usersRepository.getUser(mailAddress);
         } catch (UsersRepositoryException e) {
             return Username.fromMailAddress(mailAddress);
         }

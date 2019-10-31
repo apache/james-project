@@ -77,7 +77,7 @@ class SetCustomFlagOnBigMessages implements MailboxListener.GroupMailboxListener
 
     private void setBigMessageFlag(Added addedEvent, MessageUid messageUid) {
         try {
-            MailboxSession session = mailboxManager.createSystemSession(addedEvent.getUsername().asString());
+            MailboxSession session = mailboxManager.createSystemSession(addedEvent.getUsername());
             MessageManager messageManager = mailboxManager.getMailbox(addedEvent.getMailboxId(), session);
 
             messageManager.setFlags(

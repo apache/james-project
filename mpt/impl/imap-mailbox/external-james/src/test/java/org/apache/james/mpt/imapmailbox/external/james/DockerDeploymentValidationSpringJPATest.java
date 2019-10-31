@@ -19,6 +19,7 @@
 
 package org.apache.james.mpt.imapmailbox.external.james;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.api.ImapHostSystem;
 import org.apache.james.mpt.imapmailbox.external.james.host.ProvisioningAPI;
 import org.apache.james.mpt.imapmailbox.external.james.host.SmtpHostSystem;
@@ -51,7 +52,7 @@ public class DockerDeploymentValidationSpringJPATest extends DeploymentValidatio
         Injector injector = Guice.createInjector(new ExternalJamesModule(getConfiguration(), provisioningAPI));
         system = injector.getInstance(ImapHostSystem.class);
         provisioningAPI.addDomain(DOMAIN);
-        provisioningAPI.addUser(USER_ADDRESS, PASSWORD);
+        provisioningAPI.addUser(Username.of(USER_ADDRESS), PASSWORD);
         smtpHostSystem = injector.getInstance(SmtpHostSystem.class);
         system.beforeTest();
 

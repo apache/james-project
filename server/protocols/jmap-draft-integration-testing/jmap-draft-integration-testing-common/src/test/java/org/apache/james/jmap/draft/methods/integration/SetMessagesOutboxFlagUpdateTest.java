@@ -39,6 +39,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -61,7 +62,7 @@ import io.restassured.parsing.Parser;
 import reactor.core.publisher.Flux;
 
 public abstract class SetMessagesOutboxFlagUpdateTest {
-    private static final String USERNAME = "username@" + DOMAIN;
+    private static final Username USERNAME = Username.of("username@" + DOMAIN);
     private static final String PASSWORD = "password";
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
@@ -122,9 +123,9 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
         RestAssured.defaultParser = Parser.JSON;
 
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(USERNAME, PASSWORD);
-        dataProbe.addUser(BOB, BOB_PASSWORD);
-        mailboxProbe.createMailbox("#private", USERNAME, DefaultMailboxes.INBOX);
+        dataProbe.addUser(USERNAME.asString(), PASSWORD);
+        dataProbe.addUser(BOB.asString(), BOB_PASSWORD);
+        mailboxProbe.createMailbox("#private", USERNAME.asString(), DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
     }
 
@@ -136,8 +137,8 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
     @Test
     public void flagsUpdateShouldBeAllowedInTheOutbox() {
         String messageCreationId = "creationId1337";
-        String fromAddress = USERNAME;
-        String toUsername = USERNAME;
+        String fromAddress = USERNAME.asString();
+        String toUsername = USERNAME.asString();
         String requestBody = "[" +
             "  [" +
             "    \"setMessages\"," +

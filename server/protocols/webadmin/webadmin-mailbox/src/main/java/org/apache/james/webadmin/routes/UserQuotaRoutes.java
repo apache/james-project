@@ -355,14 +355,16 @@ public class UserQuotaRoutes implements Routes {
         String user = URLDecoder.decode(request.params(USER),
             StandardCharsets.UTF_8.displayName());
 
-        if (!usersRepository.contains(user)) {
+        Username username = Username.of(user);
+
+        if (!usersRepository.contains(username)) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.NOT_FOUND)
                 .message("User not found")
                 .haltError();
         }
-        return Username.of(user);
+        return username;
     }
 
     private QuotaDTO parseQuotaDTO(Request request) {

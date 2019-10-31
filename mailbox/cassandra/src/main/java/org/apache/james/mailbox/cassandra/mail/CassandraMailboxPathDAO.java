@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -29,7 +30,7 @@ public interface CassandraMailboxPathDAO {
 
     Mono<CassandraIdAndPath> retrieveId(MailboxPath mailboxPath);
 
-    Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user);
+    Flux<CassandraIdAndPath> listUserMailboxes(String namespace, Username user);
 
     void logGhostMailboxSuccess(CassandraIdAndPath value);
 

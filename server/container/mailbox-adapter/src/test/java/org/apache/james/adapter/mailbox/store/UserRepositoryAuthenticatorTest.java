@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -34,9 +35,9 @@ import org.junit.rules.ExpectedException;
 public class UserRepositoryAuthenticatorTest {
 
     public static final String PASSWORD = "password";
-    public static final String USER = "user";
+    public static final Username USER = Username.of("user");
     public static final String BAD_PASSWORD = "badPassword";
-    public static final String BAD_USER = "badUser";
+    public static final Username BAD_USER = Username.of("badUser");
     private UsersRepository usersRepository;
     private UserRepositoryAuthenticator testee;
 

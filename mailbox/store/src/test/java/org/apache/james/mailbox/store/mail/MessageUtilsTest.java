@@ -29,6 +29,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
@@ -65,7 +66,7 @@ public class MessageUtilsTest {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
-        mailboxSession = MailboxSessionUtil.create("user");
+        mailboxSession = MailboxSessionUtil.create(Username.of("user"));
         messageUtils = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
         message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START, new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
     }

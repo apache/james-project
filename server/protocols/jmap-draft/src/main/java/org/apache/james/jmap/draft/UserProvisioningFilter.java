@@ -23,7 +23,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
-import javax.mail.internet.AddressException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -83,21 +82,13 @@ public class UserProvisioningFilter implements Filter {
     }
 
     private void createAccount(Username username) throws UsersRepositoryException {
-        usersRepository.addUser(getUsername(username), generatePassword());
+        usersRepository.addUser(username, generatePassword());
     }
 
     private boolean needsAccountCreation(Username username) throws UsersRepositoryException {
-        return !usersRepository.contains(getUsername(username));
+        return !usersRepository.contains(username);
     }
 
-    private String getUsername(Username username) throws UsersRepositoryException {
-        try {
-            return usersRepository.getUser(username.asMailAddress());
-        } catch (IllegalStateException | AddressException e) {
-            return username.asString();
-        }
-    }
-    
     private String generatePassword() {
         return UUID.randomUUID().toString();
     }

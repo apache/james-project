@@ -19,6 +19,7 @@
 
 package org.apache.james.mpt.api;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.host.ExternalHostSystem;
 
 /**
@@ -44,7 +45,7 @@ public interface HostSystem extends SessionFactory {
      *            user password
      * @throws Exception
      */
-    boolean addUser(String user, String password) throws Exception;
+    boolean addUser(Username user, String password) throws Exception;
 
     /**
      * Creates a new session for functional testing.

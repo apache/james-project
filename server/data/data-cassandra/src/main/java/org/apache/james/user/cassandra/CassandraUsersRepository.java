@@ -39,6 +39,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -113,11 +114,11 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public User getUserByName(String name) {
+    public User getUserByName(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
-                    .setString(NAME, name.toLowerCase(Locale.US)))
-            .map(row -> new DefaultUser(row.getString(REALNAME), row.getString(PASSWORD), row.getString(ALGORITHM)))
+                    .setString(NAME, name.asString().toLowerCase(Locale.US)))
+            .map(row -> new DefaultUser(Username.of(row.getString(REALNAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .filter(user -> user.hasUsername(name))
             .blockOptional()
             .orElse(null);
@@ -129,10 +130,10 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         DefaultUser defaultUser = (DefaultUser) user;
         boolean executed = executor.executeReturnApplied(
                 updateUserStatement.bind()
-                    .setString(REALNAME, defaultUser.getUserName())
+                    .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
-                    .setString(NAME, defaultUser.getUserName().toLowerCase(Locale.US)))
+                    .setString(NAME, defaultUser.getUserName().asString().toLowerCase(Locale.US)))
             .block();
 
         if (!executed) {
@@ -141,24 +142,24 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public void removeUser(String name) throws UsersRepositoryException {
+    public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
-                .setString(NAME, name))
+                .setString(NAME, name.asString()))
             .block();
 
         if (!executed) {
-            throw new UsersRepositoryException("unable to remove unknown user " + name);
+            throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
         }
     }
 
     @Override
-    public boolean contains(String name) {
+    public boolean contains(Username name) {
         return getUserByName(name) != null;
     }
 
     @Override
-    public boolean test(String name, String password) throws UsersRepositoryException {
+    public boolean test(Username name, String password) throws UsersRepositoryException {
         return Optional.ofNullable(getUserByName(name))
                 .map(x -> x.verifyPassword(password))
             .orElseGet(() -> {
@@ -175,27 +176,28 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     @Override
-    public Iterator<String> list() throws UsersRepositoryException {
+    public Iterator<Username> list() throws UsersRepositoryException {
         return executor.executeRows(listStatement.bind())
             .map(row -> row.getString(REALNAME))
+            .map(Username::of)
             .toIterable()
             .iterator();
     }
 
     @Override
-    public void addUser(String username, String password) throws UsersRepositoryException {
+    public void addUser(Username username, String password) throws UsersRepositoryException {
         isValidUsername(username);
         doAddUser(username, password);
     }
 
     @Override
-    protected void doAddUser(String username, String password) throws UsersRepositoryException {
+    protected void doAddUser(Username username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, DEFAULT_ALGO_VALUE);
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
             insertStatement.bind()
-                .setString(NAME, user.getUserName().toLowerCase(Locale.US))
-                .setString(REALNAME, user.getUserName())
+                .setString(NAME, user.getUserName().asString().toLowerCase(Locale.US))
+                .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))
             .block();

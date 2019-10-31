@@ -27,6 +27,7 @@ import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.DownloadServlet;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.utils.DownloadPath;
@@ -41,7 +42,7 @@ public class DownloadServletTest {
 
     @Test
     public void downloadMayFailWhenUnknownErrorOnAttachmentManager() throws Exception {
-        MailboxSession mailboxSession = MailboxSessionUtil.create("User");
+        MailboxSession mailboxSession = MailboxSessionUtil.create(Username.of("User"));
         BlobManager mockedBlobManager = mock(BlobManager.class);
         when(mockedBlobManager.retrieve(any(), eq(mailboxSession)))
             .thenThrow(new MailboxException());

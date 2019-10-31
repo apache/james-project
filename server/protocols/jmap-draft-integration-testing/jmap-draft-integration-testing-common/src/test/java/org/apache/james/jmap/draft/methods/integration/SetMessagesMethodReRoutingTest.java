@@ -40,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.probe.MailboxProbe;
@@ -97,8 +98,8 @@ public abstract class SetMessagesMethodReRoutingTest {
         dataProbe.addDomain(ALIAS_DOMAIN);
         dataProbe.addUser(RECEIVER_AT_DESTINATION_DOMAIN, PASSWORD);
         dataProbe.addUser(SENDER_AT_DESTINATION_DOMAIN, PASSWORD);
-        receiverAtDestinationDomainToken = authenticateJamesUser(baseUri(jmapServer), RECEIVER_AT_DESTINATION_DOMAIN, PASSWORD);
-        senderAtDestinationDomainToken = authenticateJamesUser(baseUri(jmapServer), SENDER_AT_DESTINATION_DOMAIN, PASSWORD);
+        receiverAtDestinationDomainToken = authenticateJamesUser(baseUri(jmapServer), Username.of(RECEIVER_AT_DESTINATION_DOMAIN), PASSWORD);
+        senderAtDestinationDomainToken = authenticateJamesUser(baseUri(jmapServer), Username.of(SENDER_AT_DESTINATION_DOMAIN), PASSWORD);
     }
 
     @After

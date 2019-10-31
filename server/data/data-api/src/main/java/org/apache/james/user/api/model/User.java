@@ -31,7 +31,7 @@ public interface User {
      * 
      * @return the user name for this user
      */
-    String getUserName();
+    Username getUserName();
 
     /**
      * Return true if pass matches password of this user.
@@ -52,9 +52,9 @@ public interface User {
      */
     boolean setPassword(String newPass);
 
-    default boolean hasUsername(String username) {
-        Username thisUsername = Username.of(getUserName());
-        Username thatUsername = Username.of(username);
+    default boolean hasUsername(Username username) {
+        Username thisUsername = getUserName();
+        Username thatUsername = username;
 
         return thisUsername.equals(thatUsername);
     }

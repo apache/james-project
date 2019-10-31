@@ -22,6 +22,7 @@ package org.apache.james.mpt.maven;
 import java.io.File;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.util.Port;
 
 
@@ -31,7 +32,7 @@ import org.apache.james.util.Port;
 public class AddUser {
     
     private Optional<Port> port = Optional.empty();
-    private String user;
+    private Username user;
     private String passwd;
     private String scriptText;
     private String host;
@@ -89,7 +90,7 @@ public class AddUser {
      * Gets the name of the user to be created.
      * @return user name, not null
      */
-    public String getUser() {
+    public Username getUser() {
         return user;
     }
 
@@ -97,7 +98,7 @@ public class AddUser {
      * Sets the name of the user to be created.
      * @param user not null
      */
-    public void setUser(String user) {
+    public void setUser(Username user) {
         this.user = user;
     }
     

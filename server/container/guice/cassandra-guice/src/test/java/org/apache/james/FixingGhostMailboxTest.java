@@ -41,6 +41,7 @@ import static org.hamcrest.Matchers.nullValue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
@@ -137,7 +138,7 @@ public class FixingGhostMailboxTest {
             .addDomain(DOMAIN)
             .addUser(ALICE, ALICE_SECRET)
             .addUser(BOB, BOB_SECRET);
-        accessToken = authenticateJamesUser(baseUri(server), ALICE, ALICE_SECRET);
+        accessToken = authenticateJamesUser(baseUri(server), Username.of(ALICE), ALICE_SECRET);
 
         Host cassandraHost = dockerCassandra.getCassandra().getHost();
         session = Cluster.builder()
@@ -153,7 +154,7 @@ public class FixingGhostMailboxTest {
     private void simulateGhostMailboxBug() throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
-        aliceInboxPath = MailboxPath.forUser(ALICE, MailboxConstants.INBOX);
+        aliceInboxPath = MailboxPath.forUser(Username.of(ALICE), MailboxConstants.INBOX);
         aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
         aclProbe.addRights(aliceInboxPath, BOB, MailboxACL.FULL_RIGHTS);
         message1 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));

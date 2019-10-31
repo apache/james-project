@@ -29,6 +29,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.ContentType;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.hamcrest.core.IsAnything;
 
@@ -36,12 +37,12 @@ import com.jayway.jsonpath.JsonPath;
 
 public class HttpJmapAuthentication {
 
-    public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, String username, String password) {
+    public static AccessToken authenticateJamesUser(URIBuilder uriBuilder, Username username, String password) {
         return calmlyAwait.until(
             () -> doAuthenticate(uriBuilder, username, password), IsAnything.anything());
     }
 
-    public static AccessToken doAuthenticate(URIBuilder uriBuilder, String username, String password) throws ClientProtocolException, IOException, URISyntaxException {
+    public static AccessToken doAuthenticate(URIBuilder uriBuilder, Username username, String password) throws ClientProtocolException, IOException, URISyntaxException {
         String continuationToken = getContinuationToken(uriBuilder, username);
 
         Response response = postAuthenticate(uriBuilder, password, continuationToken);
@@ -59,9 +60,9 @@ public class HttpJmapAuthentication {
                 .execute();
     }
 
-    private static String getContinuationToken(URIBuilder uriBuilder, String username) throws ClientProtocolException, IOException, URISyntaxException {
+    private static String getContinuationToken(URIBuilder uriBuilder, Username username) throws ClientProtocolException, IOException, URISyntaxException {
         Response response = Request.Post(uriBuilder.setPath("/authentication").build())
-            .bodyString("{\"username\": \"" + username + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}",
+            .bodyString("{\"username\": \"" + username.asString() + "\", \"clientName\": \"Mozilla Thunderbird\", \"clientVersion\": \"42.0\", \"deviceName\": \"Joe Blogg’s iPhone\"}",
                 ContentType.APPLICATION_JSON)
             .setHeader("Accept", ContentType.APPLICATION_JSON.getMimeType())
             .execute();

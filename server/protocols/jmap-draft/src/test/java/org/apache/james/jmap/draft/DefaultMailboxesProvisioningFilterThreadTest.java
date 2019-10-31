@@ -28,6 +28,7 @@ import static org.mockito.Mockito.when;
 import java.time.Duration;
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.DefaultMailboxesProvisioningFilter;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -42,7 +43,7 @@ import org.junit.Test;
 
 public class DefaultMailboxesProvisioningFilterThreadTest {
 
-    private static final String USERNAME = "username";
+    private static final Username USERNAME = Username.of("username");
 
     private DefaultMailboxesProvisioningFilter sut;
     private MailboxSession session;

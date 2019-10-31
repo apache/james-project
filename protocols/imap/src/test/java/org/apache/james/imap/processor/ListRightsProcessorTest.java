@@ -29,6 +29,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
@@ -62,7 +63,7 @@ import org.mockito.ArgumentCaptor;
 public class ListRightsProcessorTest {
 
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
-    private static final String USER_1 = "user1";
+    private static final Username USER_1 = Username.of("user1");
 
     private ImapSession imapSession;
     private MailboxManager mailboxManager;
@@ -99,9 +100,9 @@ public class ListRightsProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        listRightsRequest = new ListRightsRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1);
+        listRightsRequest = new ListRightsRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString());
 
-        user1Key = EntryKey.deserialize(USER_1);
+        user1Key = EntryKey.deserialize(USER_1.asString());
         listRights = new Rfc4314Rights[] {Rfc4314Rights.fromSerializedRfc4314Rights("ae"), Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k")};
     }
     
@@ -171,7 +172,7 @@ public class ListRightsProcessorTest {
 
         subject.doProcess(listRightsRequest, responder, imapSession);
 
-        ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, USER_1, listRights);
+        ListRightsResponse response = new ListRightsResponse(MAILBOX_NAME, USER_1.asString(), listRights);
         verify(responder, times(2)).respond(argumentCaptor.capture());
         verifyNoMoreInteractions(responder);
 

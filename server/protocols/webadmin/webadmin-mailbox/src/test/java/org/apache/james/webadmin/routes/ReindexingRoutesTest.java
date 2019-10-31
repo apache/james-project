@@ -33,6 +33,7 @@ import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.indexer.ReIndexer;
@@ -71,7 +72,7 @@ import org.mockito.ArgumentCaptor;
 import io.restassured.RestAssured;
 
 class ReindexingRoutesTest {
-    private static final String USERNAME = "benwa@apache.org";
+    private static final Username USERNAME = Username.of("benwa@apache.org");
     private static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
 
     private WebAdminServer webAdminServer;
@@ -278,7 +279,7 @@ class ReindexingRoutesTest {
             @Test
             void userReprocessingShouldFailWithNoTask() {
                 given()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                 .when()
                     .post("/mailboxes")
                 .then()
@@ -291,7 +292,7 @@ class ReindexingRoutesTest {
             @Test
             void userReprocessingShouldFailWithBadTask() {
                 given()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                     .queryParam("task", "bad")
                 .when()
                     .post("/mailboxes")
@@ -322,7 +323,7 @@ class ReindexingRoutesTest {
             @Test
             void userReprocessingShouldNotFailWhenNoMail() {
                 String taskId = given()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                     .queryParam("task", "reIndex")
                 .when()
                     .post("/mailboxes")
@@ -355,7 +356,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = given()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                     .queryParam("task", "reIndex")
                 .when()
                     .post("/mailboxes")
@@ -392,7 +393,7 @@ class ReindexingRoutesTest {
                     .add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 
                 String taskId = with()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                     .queryParam("task", "reIndex")
                     .post("/mailboxes")
                     .jsonPath()
@@ -427,7 +428,7 @@ class ReindexingRoutesTest {
                         systemSession);
 
                 String taskId = given()
-                    .queryParam("user", USERNAME)
+                    .queryParam("user", USERNAME.asString())
                     .queryParam("task", "reIndex")
                 .when()
                     .post("/mailboxes")

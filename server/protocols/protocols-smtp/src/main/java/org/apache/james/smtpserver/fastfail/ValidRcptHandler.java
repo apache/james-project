@@ -24,6 +24,7 @@ import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -64,12 +65,12 @@ public class ValidRcptHandler extends AbstractValidRcptHandler implements Protoc
     @Override
     protected boolean isValidRecipient(SMTPSession session, MailAddress recipient) {
         try {
-            String username = users.getUser(recipient);
+            Username username = users.getUser(recipient);
 
             if (users.contains(username)) {
                 return true;
             } else {
-                return supportsRecipientRewriteTable && isRedirected(recipient, username);
+                return supportsRecipientRewriteTable && isRedirected(recipient, username.asString());
             }
         } catch (UsersRepositoryException e) {
             LOGGER.info("Unable to access UsersRepository", e);

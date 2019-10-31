@@ -38,6 +38,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
@@ -134,7 +135,7 @@ public class EventDeadLettersIntegrationTest {
     private static final String EVENTS_ACTION = "reDeliver";
     private static final String GROUP_ID = new RetryEventsListenerGroup().asString();
 
-    private static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(BOB, DefaultMailboxes.INBOX);
+    private static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(Username.of(BOB), DefaultMailboxes.INBOX);
 
     private Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private ConditionFactory calmlyAwait = Awaitility.with()
@@ -183,7 +184,7 @@ public class EventDeadLettersIntegrationTest {
     }
 
     private void generateSecondEvent() {
-        mailboxProbe.createMailbox(MailboxPath.forUser(BOB, DefaultMailboxes.OUTBOX));
+        mailboxProbe.createMailbox(MailboxPath.forUser(Username.of(BOB), DefaultMailboxes.OUTBOX));
     }
 
     private String retrieveFirstFailedInsertionId() {

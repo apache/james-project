@@ -23,6 +23,7 @@ import java.util.ArrayList;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionIdGenerator;
 import org.apache.james.mailbox.exception.BadCredentialsException;
@@ -47,11 +48,11 @@ public class SessionProvider {
         return MailboxConstants.DEFAULT_DELIMITER;
     }
 
-    public MailboxSession createSystemSession(String userName) {
+    public MailboxSession createSystemSession(Username userName) {
         return createSession(userName, MailboxSession.SessionType.System);
     }
 
-    public MailboxSession login(String userid, String passwd) throws MailboxException {
+    public MailboxSession login(Username userid, String passwd) throws MailboxException {
         if (isValidLogin(userid, passwd)) {
             return createSession(userid, MailboxSession.SessionType.User);
         } else {
@@ -59,7 +60,7 @@ public class SessionProvider {
         }
     }
 
-    public MailboxSession loginAsOtherUser(String adminUserid, String passwd, String otherUserId) throws MailboxException {
+    public MailboxSession loginAsOtherUser(Username adminUserid, String passwd, Username otherUserId) throws MailboxException {
         if (! isValidLogin(adminUserid, passwd)) {
             throw new BadCredentialsException();
         }
@@ -82,7 +83,7 @@ public class SessionProvider {
         }
     }
 
-    private MailboxSession createSession(String userName, MailboxSession.SessionType type) {
+    private MailboxSession createSession(Username userName, MailboxSession.SessionType type) {
         return new MailboxSession(newSessionId(), userName, new ArrayList<>(), getDelimiter(), type);
     }
 
@@ -101,7 +102,7 @@ public class SessionProvider {
      * @param passwd the password
      * @return success true if login success false otherwise
      */
-    private boolean isValidLogin(String userid, String passwd) throws MailboxException {
+    private boolean isValidLogin(Username userid, String passwd) throws MailboxException {
         return authenticator.isAuthentic(userid, passwd);
     }
 }

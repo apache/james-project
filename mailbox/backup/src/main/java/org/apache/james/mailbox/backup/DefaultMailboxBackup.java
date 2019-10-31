@@ -85,7 +85,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
 
     @Override
     public void backupAccount(Username username, OutputStream destination) throws IOException, MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(username.asString());
+        MailboxSession session = mailboxManager.createSystemSession(username);
         List<MailAccountContent> accountContents = getAccountContentForUser(session);
         List<MailboxWithAnnotations> mailboxes = accountContents.stream()
             .map(MailAccountContent::getMailboxWithAnnotations)
@@ -96,7 +96,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
     }
 
     private boolean isAccountNonEmpty(Username username) throws BadCredentialsException, MailboxException, IOException {
-        MailboxSession session = mailboxManager.createSystemSession(username.asString());
+        MailboxSession session = mailboxManager.createSystemSession(username);
         return getAccountContentForUser(session)
             .stream()
             .findFirst()
@@ -110,13 +110,13 @@ public class DefaultMailboxBackup implements MailboxBackup {
                 return Mono.just(BackupStatus.NON_EMPTY_RECEIVER_ACCOUNT);
             }
         } catch (Exception e) {
-            LOGGER.error("Error during account restoration for user : " + username, e);
+            LOGGER.error("Error during account restoration for user : " + username.asString(), e);
             return Mono.just(BackupStatus.FAILED);
         }
 
         return Mono.fromRunnable(Throwing.runnable(() -> archiveRestorer.restore(username, source)).sneakyThrow())
             .subscribeOn(Schedulers.boundedElastic())
-            .doOnError(e -> LOGGER.error("Error during account restoration for user : " + username, e))
+            .doOnError(e -> LOGGER.error("Error during account restoration for user : " + username.asString(), e))
             .doOnTerminate(Throwing.runnable(source::close).sneakyThrow())
             .thenReturn(BackupStatus.DONE)
             .onErrorReturn(BackupStatus.FAILED);

@@ -43,6 +43,8 @@ import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.message.DefaultMessageBuilder;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 import org.slf4j.Logger;
@@ -63,10 +65,12 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     private static final String X_JAMES_MDN_JMAP_MESSAGE_ID = "X-JAMES-MDN-JMAP-MESSAGE-ID";
 
     private final MailboxManager mailboxManager;
+    private final UsersRepository usersRepository;
 
     @Inject
-    public ExtractMDNOriginalJMAPMessageId(MailboxManager mailboxManager) {
+    public ExtractMDNOriginalJMAPMessageId(MailboxManager mailboxManager, UsersRepository usersRepository) {
         this.mailboxManager = mailboxManager;
+        this.usersRepository = usersRepository;
     }
 
     @Override
@@ -98,13 +102,13 @@ public class ExtractMDNOriginalJMAPMessageId extends GenericMailet {
     private Optional<MessageId> findMessageIdForRFC822MessageId(String messageId, MailAddress recipient) {
         LOGGER.debug("Searching message {} for recipient {}", messageId, recipient.asPrettyString());
         try {
-            MailboxSession session = mailboxManager.createSystemSession(recipient.asString());
+            MailboxSession session = mailboxManager.createSystemSession(usersRepository.getUser(recipient));
             int limit = 1;
             MultimailboxesSearchQuery searchByRFC822MessageId = MultimailboxesSearchQuery
                 .from(new SearchQuery(SearchQuery.mimeMessageID(messageId)))
                 .build();
             return mailboxManager.search(searchByRFC822MessageId, session, limit).stream().findFirst();
-        } catch (MailboxException e) {
+        } catch (MailboxException | UsersRepositoryException e) {
             LOGGER.error("unable to find message with Message-Id: " + messageId, e);
         }
         return Optional.empty();

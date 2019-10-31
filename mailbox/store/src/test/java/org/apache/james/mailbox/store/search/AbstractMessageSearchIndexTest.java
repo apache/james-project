@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -68,8 +69,8 @@ import com.google.common.collect.ImmutableList;
 public abstract class AbstractMessageSearchIndexTest {
 
     protected static final String INBOX = "INBOX";
-    protected static final String OTHERUSER = "otheruser";
-    protected static final String USERNAME = "benwa";
+    protected static final Username OTHERUSER = Username.of("otheruser");
+    protected static final Username USERNAME = Username.of("benwa");
 
     public static final long LIMIT = 100L;
     public static final boolean RECENT = true;

@@ -214,7 +214,7 @@ class DeletedMessagesVaultRoutesTest {
         usersRepository.setDomainList(domainList);
         usersRepository.configure(new BaseHierarchicalConfiguration());
 
-        usersRepository.addUser(USERNAME.asString(), "userPassword");
+        usersRepository.addUser(USERNAME, "userPassword");
 
         return usersRepository;
     }
@@ -1683,8 +1683,8 @@ class DeletedMessagesVaultRoutesTest {
 
         @Test
         void restoreShouldNotDeleteExistingMessagesInTheUserMailbox() throws Exception {
-            MailboxSession session = mailboxManager.createSystemSession(USERNAME.asString());
-            MailboxPath restoreMailboxPath = MailboxPath.forUser(USERNAME.asString(), DefaultMailboxes.RESTORED_MESSAGES);
+            MailboxSession session = mailboxManager.createSystemSession(USERNAME);
+            MailboxPath restoreMailboxPath = MailboxPath.forUser(USERNAME, DefaultMailboxes.RESTORED_MESSAGES);
             mailboxManager.createMailbox(restoreMailboxPath, session);
             MessageManager messageManager = mailboxManager.getMailbox(restoreMailboxPath, session);
             messageManager.appendMessage(
@@ -2247,7 +2247,7 @@ class DeletedMessagesVaultRoutesTest {
     }
 
     private boolean hasAnyMail(Username username) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(username.asString());
+        MailboxSession session = mailboxManager.createSystemSession(username);
         int limitToOneMessage = 1;
 
         return !mailboxManager.search(MultimailboxesSearchQuery.from(new SearchQuery()).build(), session, limitToOneMessage)
@@ -2268,8 +2268,8 @@ class DeletedMessagesVaultRoutesTest {
     }
 
     private List<MessageResult> restoreMailboxMessages(Username username) throws Exception {
-        MailboxSession session = mailboxManager.createSystemSession(username.asString());
-        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username.asString(), DefaultMailboxes.RESTORED_MESSAGES), session);
+        MailboxSession session = mailboxManager.createSystemSession(username);
+        MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, DefaultMailboxes.RESTORED_MESSAGES), session);
         return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session));
     }
 

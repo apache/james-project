@@ -32,6 +32,7 @@ import java.nio.charset.StandardCharsets;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
@@ -66,11 +67,12 @@ import com.google.common.collect.ImmutableList;
 public class PostDequeueDecoratorTest {
     private static final String OUTBOX = DefaultMailboxes.OUTBOX;
     private static final String SENT = DefaultMailboxes.SENT;
-    private static final String USERNAME = "username@domain.tld";
+    private static final String RAW_USERNAME = "username@domain.tld";
+    private static final Username USERNAME = Username.of(RAW_USERNAME);
     private static final MessageUid UID = MessageUid.of(1);
     private static final MailboxPath OUTBOX_MAILBOX_PATH = MailboxPath.forUser(USERNAME, OUTBOX);
     private static final MailboxPath SENT_MAILBOX_PATH = MailboxPath.forUser(USERNAME, SENT);
-    private static final Attribute USERNAME_ATTRIBUTE = new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(USERNAME));
+    private static final Attribute USERNAME_ATTRIBUTE = new Attribute(MailMetadata.MAIL_METADATA_USERNAME_ATTRIBUTE, AttributeValue.of(RAW_USERNAME));
     
     private StoreMailboxManager mailboxManager;
     private MailQueueItem mockedMailQueueItem;

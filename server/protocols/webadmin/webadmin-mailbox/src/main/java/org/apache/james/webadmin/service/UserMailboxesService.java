@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -43,7 +44,6 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 
 public class UserMailboxesService {
@@ -58,19 +58,19 @@ public class UserMailboxesService {
         this.usersRepository = usersRepository;
     }
 
-    public void createMailbox(String username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
+    public void createMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             mailboxManager.createMailbox(
-                convertToMailboxPath(username, mailboxName),
+                MailboxPath.forUser(username, mailboxName.asString()),
                 mailboxSession);
         } catch (MailboxExistsException e) {
             LOGGER.info("Attempt to create mailbox {} for user {} that already exists", mailboxName, username);
         }
     }
 
-    public void deleteMailboxes(String username) throws MailboxException, UsersRepositoryException {
+    public void deleteMailboxes(Username username) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         listUserMailboxes(mailboxSession)
@@ -78,7 +78,7 @@ public class UserMailboxesService {
             .forEach(Throwing.consumer(mailboxPath -> deleteMailbox(mailboxSession, mailboxPath)));
     }
 
-    public List<MailboxResponse> listMailboxes(String username) throws MailboxException, UsersRepositoryException {
+    public List<MailboxResponse> listMailboxes(Username username) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         return listUserMailboxes(mailboxSession)
@@ -86,18 +86,18 @@ public class UserMailboxesService {
             .collect(Guavate.toImmutableList());
     }
 
-    public boolean testMailboxExists(String username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
+    public boolean testMailboxExists(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         return mailboxManager.mailboxExists(
-            convertToMailboxPath(username, mailboxName),
+            MailboxPath.forUser(username, mailboxName.asString()),
             mailboxSession);
     }
 
-    public void deleteMailbox(String username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
+    public void deleteMailbox(Username username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MailboxPath mailboxPath = convertToMailboxPath(username, mailboxName);
+        MailboxPath mailboxPath = MailboxPath.forUser(username, mailboxName.asString());
         listChildren(mailboxPath, mailboxSession)
             .forEach(Throwing.consumer(path -> deleteMailbox(mailboxSession, path)));
     }
@@ -116,13 +116,8 @@ public class UserMailboxesService {
         }
     }
 
-    private void usernamePreconditions(String username) throws UsersRepositoryException {
-        Preconditions.checkArgument(!Strings.isNullOrEmpty(username));
+    private void usernamePreconditions(Username username) throws UsersRepositoryException {
         Preconditions.checkState(usersRepository.contains(username));
-    }
-
-    private MailboxPath convertToMailboxPath(String username, MailboxName mailboxName) {
-        return MailboxPath.forUser(username, mailboxName.asString());
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {

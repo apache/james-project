@@ -51,7 +51,7 @@ public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
         // Check if EHLO was used
         if (EHLO.equals(heloMode)) {
             // Not successful auth
-            if (session.getUser() == null) {
+            if (session.getUsername() == null) {
                 return ESMTP;
             } else {
                 // See RFC3848

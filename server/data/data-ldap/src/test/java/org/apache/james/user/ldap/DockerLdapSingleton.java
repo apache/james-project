@@ -19,8 +19,10 @@
 
 package org.apache.james.user.ldap;
 
+import org.apache.james.core.Username;
+
 public class DockerLdapSingleton {
-    public static final String JAMES_USER = "james-user";
+    public static final Username JAMES_USER = Username.of("james-user");
     public static final String PASSWORD = "secret";
     public static final String DOMAIN = "james.org";
     public static final String ADMIN_PASSWORD = "mysecretpassword";

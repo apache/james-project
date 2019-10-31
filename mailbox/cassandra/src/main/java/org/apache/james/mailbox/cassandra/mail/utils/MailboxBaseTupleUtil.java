@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.cassandra.mail.utils;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxTable;
 
 import com.datastax.driver.core.UDTValue;
@@ -31,10 +32,10 @@ public class MailboxBaseTupleUtil {
         this.typesProvider = typesProvider;
     }
 
-    public UDTValue createMailboxBaseUDT(String namespace, String user) {
+    public UDTValue createMailboxBaseUDT(String namespace, Username user) {
         return typesProvider.getDefinedUserType(CassandraMailboxTable.MAILBOX_BASE)
             .newValue()
             .setString(CassandraMailboxTable.MailboxBase.NAMESPACE, namespace)
-            .setString(CassandraMailboxTable.MailboxBase.USER, user);
+            .setString(CassandraMailboxTable.MailboxBase.USER, user.asString());
     }
 }

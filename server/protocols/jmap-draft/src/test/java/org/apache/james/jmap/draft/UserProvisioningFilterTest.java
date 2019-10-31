@@ -33,8 +33,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.james.jmap.draft.AuthenticationFilter;
-import org.apache.james.jmap.draft.UserProvisioningFilter;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -45,8 +44,8 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class UserProvisioningFilterTest {
-    private static final String USERNAME = "username";
-    private static final String MAIL = USERNAME + "@james.org";
+    private static final Username USERNAME = Username.of("username");
+    private static final Username USERNAME_WITH_DOMAIN = Username.of("username@james.org");
 
     private UserProvisioningFilter sut;
     private MemoryUsersRepository usersRepository;
@@ -89,7 +88,7 @@ public class UserProvisioningFilterTest {
     @Test
     public void filterShouldAddUsernameWhenNoVirtualHostingAndMailboxSessionContainsMail() throws Exception {
         usersRepository.setEnableVirtualHosting(false);
-        MailboxSession mailboxSession = MailboxSessionUtil.create(MAIL);
+        MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
             .thenReturn(mailboxSession);
 
@@ -106,7 +105,7 @@ public class UserProvisioningFilterTest {
         when(usersRepository.isReadOnly()).thenReturn(true);
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
 
-        MailboxSession mailboxSession = MailboxSessionUtil.create(MAIL);
+        MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
             .thenReturn(mailboxSession);
 
@@ -122,7 +121,7 @@ public class UserProvisioningFilterTest {
         when(usersRepository.isReadOnly()).thenReturn(true);
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
 
-        MailboxSession mailboxSession = MailboxSessionUtil.create(MAIL);
+        MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
             .thenReturn(mailboxSession);
 

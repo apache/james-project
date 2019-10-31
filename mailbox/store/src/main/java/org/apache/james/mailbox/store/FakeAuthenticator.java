@@ -21,20 +21,22 @@ package org.apache.james.mailbox.store;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.james.core.Username;
+
 public class FakeAuthenticator implements Authenticator {
 
     private final Map<String, String> users = new HashMap<>();
 
     @Override
-    public boolean isAuthentic(String userid, CharSequence passwd) {
-        String pass = users.get(userid);
+    public boolean isAuthentic(Username userid, CharSequence passwd) {
+        String pass = users.get(userid.asString());
         if (pass != null) {
             return passwd.toString().equals(pass);
         }
         return false;
     }
     
-    public void addUser(String user, String password) {
-        users.put(user, password);
+    public void addUser(Username user, String password) {
+        users.put(user.asString(), password);
     }
 }

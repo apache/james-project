@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -44,7 +45,7 @@ import org.junit.jupiter.api.Test;
 
 public class MailboxManagementTest {
 
-    public static final String USER = "user";
+    public static final Username USER = Username.of("user");
     public static final int UID_VALIDITY = 10;
     public static final int LIMIT = 1;
 
@@ -59,27 +60,27 @@ public class MailboxManagementTest {
 
         mailboxManagerManagement = new MailboxManagerManagement();
         mailboxManagerManagement.setMailboxManager(mailboxManager);
-        session = mailboxManager.createSystemSession("TEST");
+        session = mailboxManager.createSystemSession(Username.of("TEST"));
     }
 
     @Test
     void deleteMailboxesShouldDeleteMailboxes() throws Exception {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
     @Test
     void deleteMailboxesShouldDeleteInbox() throws Exception {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "INBOX"), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
     @Test
     void deleteMailboxesShouldDeleteMailboxesChildren() throws Exception {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "INBOX.test"), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
@@ -87,22 +88,22 @@ public class MailboxManagementTest {
     void deleteMailboxesShouldNotDeleteMailboxesBelongingToNotPrivateNamespace() throws Exception {
         Mailbox mailbox = new Mailbox(new MailboxPath("#top", USER, "name"), UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).containsExactly(mailbox);
     }
 
     @Test
     void deleteMailboxesShouldNotDeleteMailboxesBelongingToOtherUsers() throws Exception {
-        Mailbox mailbox = new Mailbox(MailboxPath.forUser("userbis", "name"), UID_VALIDITY);
+        Mailbox mailbox = new Mailbox(MailboxPath.forUser(Username.of("userbis"), "name"), UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).containsExactly(mailbox);
     }
 
     @Test
     void deleteMailboxesShouldDeleteMailboxesWithEmptyNames() throws Exception {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, ""), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
@@ -123,13 +124,13 @@ public class MailboxManagementTest {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY));
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "INBOX"), UID_VALIDITY));
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "INBOX.test"), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailboxes(USER);
+        mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
     @Test
     void createMailboxShouldCreateAMailbox() throws Exception {
-        mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+        mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).hasSize(1);
         assertThat(mapperFactory.createMailboxMapper(session).findMailboxByPath(MailboxPath.forUser(USER, "name"))).isNotNull();
     }
@@ -140,7 +141,7 @@ public class MailboxManagementTest {
         Mailbox mailbox = new Mailbox(path, UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
 
-        assertThatThrownBy(() -> mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER, "name"))
+        assertThatThrownBy(() -> mailboxManagerManagement.createMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name"))
             .isInstanceOf(RuntimeException.class)
             .hasCauseInstanceOf(MailboxExistsException.class);
     }
@@ -194,7 +195,7 @@ public class MailboxManagementTest {
     void listMailboxesShouldReturnUserMailboxes() throws Exception {
         Mailbox mailbox1 = new Mailbox(new MailboxPath("#top", USER, "name1"), UID_VALIDITY);
         Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(USER, "name2"), UID_VALIDITY);
-        Mailbox mailbox3 = new Mailbox(MailboxPath.forUser("other_user", "name3"), UID_VALIDITY);
+        Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(Username.of("other_user"), "name3"), UID_VALIDITY);
         Mailbox mailbox4 = new Mailbox(MailboxPath.forUser(USER, "name4"), UID_VALIDITY);
         Mailbox mailbox5 = new Mailbox(MailboxPath.forUser(USER, "INBOX"), UID_VALIDITY);
         Mailbox mailbox6 = new Mailbox(MailboxPath.forUser(USER, "INBOX.toto"), UID_VALIDITY);
@@ -204,7 +205,7 @@ public class MailboxManagementTest {
         mapperFactory.createMailboxMapper(session).save(mailbox4);
         mapperFactory.createMailboxMapper(session).save(mailbox5);
         mapperFactory.createMailboxMapper(session).save(mailbox6);
-        assertThat(mailboxManagerManagement.listMailboxes(USER)).containsOnly("name2", "name4", "INBOX", "INBOX.toto");
+        assertThat(mailboxManagerManagement.listMailboxes(USER.asString())).containsOnly("name2", "name4", "INBOX", "INBOX.toto");
     }
 
     @Test
@@ -222,7 +223,7 @@ public class MailboxManagementTest {
     @Test
     void deleteMailboxShouldDeleteGivenMailbox() throws Exception {
         mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "name"), UID_VALIDITY));
-        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }
 
@@ -230,15 +231,15 @@ public class MailboxManagementTest {
     void deleteMailboxShouldNotDeleteGivenMailboxIfWrongNamespace() throws Exception {
         Mailbox mailbox = new Mailbox(new MailboxPath("#top", USER, "name"), UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).containsOnly(mailbox);
     }
 
     @Test
     void deleteMailboxShouldNotDeleteGivenMailboxIfWrongUser() throws Exception {
-        Mailbox mailbox = new Mailbox(MailboxPath.forUser("userbis", "name"), UID_VALIDITY);
+        Mailbox mailbox = new Mailbox(MailboxPath.forUser(Username.of("userbis"), "name"), UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).containsOnly(mailbox);
     }
 
@@ -246,7 +247,7 @@ public class MailboxManagementTest {
     void deleteMailboxShouldNotDeleteGivenMailboxIfWrongName() throws Exception {
         Mailbox mailbox = new Mailbox(MailboxPath.forUser(USER, "wrong_name"), UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
-        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER, "name");
+        mailboxManagerManagement.deleteMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name");
         assertThat(mapperFactory.createMailboxMapper(session).list()).containsOnly(mailbox);
     }
 
@@ -256,7 +257,7 @@ public class MailboxManagementTest {
                 UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
         String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
-        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", emlpath);
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name", emlpath);
 
         assertThat(mapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(1);
         Iterator<MailboxMessage> iterator = mapperFactory.getMessageMapper(session).findInMailbox(mailbox,
@@ -273,7 +274,7 @@ public class MailboxManagementTest {
                 UID_VALIDITY);
         mapperFactory.createMailboxMapper(session).save(mailbox);
         String emlpath = ClassLoader.getSystemResource("eml/frnog.eml").getFile();
-        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER, "name", "wrong_path" + emlpath);
+        mailboxManagerManagement.importEmlFileToMailbox(MailboxConstants.USER_NAMESPACE, USER.asString(), "name", "wrong_path" + emlpath);
 
         assertThat(mapperFactory.getMessageMapper(session).countMessagesInMailbox(mailbox)).isEqualTo(0);
         Iterator<MailboxMessage> iterator = mapperFactory.getMessageMapper(session).findInMailbox(mailbox,

@@ -55,6 +55,7 @@ public class ReIndexerPerformer {
     private static final int NO_LIMIT = 0;
     private static final int SINGLE_MESSAGE = 1;
     private static final String RE_INDEXING = "re-indexing";
+    private static final Username RE_INDEXER_PERFORMER_USER = Username.of(RE_INDEXING);
 
     private final MailboxManager mailboxManager;
     private final ListeningMessageSearchIndex messageSearchIndex;
@@ -71,7 +72,7 @@ public class ReIndexerPerformer {
 
     Task.Result reIndex(MailboxId mailboxId, ReprocessingContext reprocessingContext) throws Exception {
         LOGGER.info("Intend to reindex mailbox with mailboxId {}", mailboxId.serialize());
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
         messageSearchIndex.deleteAll(mailboxSession, mailboxId);
         try {
@@ -108,7 +109,7 @@ public class ReIndexerPerformer {
     }
 
     Task.Result reIndex(ReprocessingContext reprocessingContext) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
         LOGGER.info("Starting a full reindex");
         Stream<MailboxId> mailboxIds = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).list()
             .stream()
@@ -122,7 +123,7 @@ public class ReIndexerPerformer {
     }
 
     Task.Result reIndex(Username username, ReprocessingContext reprocessingContext) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username.asString());
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         LOGGER.info("Starting a reindex for user {}", username.asString());
 
         Stream<MailboxId> mailboxIds = mailboxManager.search(MailboxQuery.privateMailboxesBuilder(mailboxSession).build(), mailboxSession)
@@ -137,7 +138,7 @@ public class ReIndexerPerformer {
     }
 
     Task.Result handleMessageReIndexing(MailboxId mailboxId, MessageUid uid, ReprocessingContext reprocessingContext) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXING);
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
         Mailbox mailbox = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
         return handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext);
@@ -145,7 +146,7 @@ public class ReIndexerPerformer {
 
     Task.Result handleMessageIdReindexing(MessageId messageId) {
         try {
-            MailboxSession session = mailboxManager.createSystemSession("MessageIdReIndexerImpl");
+            MailboxSession session = mailboxManager.createSystemSession(RE_INDEXER_PERFORMER_USER);
 
             return mailboxSessionMapperFactory.getMessageIdMapper(session)
                 .find(ImmutableList.of(messageId), MessageMapper.FetchType.Full)

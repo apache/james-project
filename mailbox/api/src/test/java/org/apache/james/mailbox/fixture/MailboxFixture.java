@@ -19,12 +19,13 @@
 
 package org.apache.james.mailbox.fixture;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public class MailboxFixture {
-    public static final String ALICE = "alice";
-    public static final String BOB = "bob";
-    public static final String CEDRIC = "cedric";
+    public static final Username ALICE = Username.of("alice");
+    public static final Username BOB = Username.of("bob");
+    public static final Username CEDRIC = Username.of("cedric");
 
     public static final MailboxPath INBOX_ALICE = MailboxPath.forUser(ALICE, "INBOX");
     public static final MailboxPath OUTBOX_ALICE = MailboxPath.forUser(ALICE, "OUTBOX");

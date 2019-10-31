@@ -27,6 +27,7 @@ import java.time.Duration;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -43,7 +44,7 @@ import org.junit.jupiter.api.Test;
 
 public class MailboxAppenderTest {
 
-    public static final String USER = "user";
+    public static final Username USER = Username.of("user");
     public static final String FOLDER = "folder";
     public static final String EMPTY_FOLDER = "";
 

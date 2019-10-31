@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -77,7 +78,7 @@ public class ReindexCommandIntegrationTest {
         String mailbox = "mailbox";
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "reindexmailbox", MailboxConstants.USER_NAMESPACE, USER, mailbox});
 
-        verify(reIndexer).reIndex(MailboxPath.forUser(USER, mailbox));
+        verify(reIndexer).reIndex(MailboxPath.forUser(Username.of(USER), mailbox));
     }
 
 }

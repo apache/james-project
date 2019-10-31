@@ -23,6 +23,7 @@ import java.util.Optional;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
@@ -54,11 +55,12 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
         return getAccessToken(httpRequest)
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
+            .map(Username::of)
             .map(this::createSystemSession)
             .orElseThrow(UnauthorizedException::new);
     }
 
-    private MailboxSession createSystemSession(String username) {
+    private MailboxSession createSystemSession(Username username) {
         try {
             return mailboxManager.createSystemSession(username);
         } catch (MailboxException e) {

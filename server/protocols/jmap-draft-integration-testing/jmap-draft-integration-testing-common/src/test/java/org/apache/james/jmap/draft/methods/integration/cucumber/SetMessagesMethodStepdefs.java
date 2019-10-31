@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
@@ -293,7 +294,7 @@ public class SetMessagesMethodStepdefs {
     @When("^message \"([^\"]*)\" has flags (.*) in mailbox \"([^\"]*)\" of user \"([^\"]*)\"$")
     public void setMessageFlagsInSpecifiedMailbox(String message, List<String> flags, String mailbox, String mailboxOwner) throws Exception {
         Flags newFlags = Keywords.lenientFactory().fromCollection(flags).asFlags();
-        String username = userStepdefs.getConnectedUser();
+        Username username = Username.of(userStepdefs.getConnectedUser());
         MessageId messageId = messageIdStepdefs.getMessageId(message);
         MailboxId mailboxId = mainStepdefs.getMailboxId(mailboxOwner, mailbox);
 

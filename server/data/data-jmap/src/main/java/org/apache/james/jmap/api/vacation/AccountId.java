@@ -21,6 +21,8 @@ package org.apache.james.jmap.api.vacation;
 
 import java.util.Objects;
 
+import org.apache.james.core.Username;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
@@ -29,6 +31,10 @@ public class AccountId {
     public static AccountId fromString(String identifier) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(identifier), "AccountId identifier should not be null or empty");
         return new AccountId(identifier);
+    }
+
+    public static AccountId fromUsername(Username username) {
+        return new AccountId(username.asString());
     }
 
     private final String identifier;

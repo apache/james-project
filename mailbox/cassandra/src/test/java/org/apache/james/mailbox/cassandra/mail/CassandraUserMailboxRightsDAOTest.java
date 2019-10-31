@@ -24,6 +24,7 @@ import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
@@ -39,7 +40,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 @ExtendWith(CassandraRestartExtension.class)
 class CassandraUserMailboxRightsDAOTest {
-    private static final String USER_NAME = "userName";
+    private static final Username USER_NAME = Username.of("userName");
     private static final EntryKey ENTRY_KEY = EntryKey.createUserEntryKey(USER_NAME);
     private static final CassandraId MAILBOX_ID = CassandraId.timeBased();
     private static final Rfc4314Rights RIGHTS = MailboxACL.FULL_RIGHTS;

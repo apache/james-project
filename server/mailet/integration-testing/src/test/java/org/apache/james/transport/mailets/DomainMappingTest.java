@@ -28,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -91,8 +92,8 @@ public class DomainMappingTest {
             .addUser(SENDER, PASSWORD)
             .addUser(USER_DOMAIN1, PASSWORD);
 
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(USER_DOMAIN1, MailboxConstants.INBOX));
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(USER_DOMAIN2, MailboxConstants.INBOX));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(USER_DOMAIN1), MailboxConstants.INBOX));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(USER_DOMAIN2), MailboxConstants.INBOX));
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 

@@ -33,12 +33,14 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.cassandra.access.table.CassandraAccessTokenTable;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.google.common.primitives.Ints;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraAccessTokenDAO {
@@ -70,10 +72,10 @@ public class CassandraAccessTokenDAO {
             .where(eq(CassandraAccessTokenTable.TOKEN, bindMarker(CassandraAccessTokenTable.TOKEN))));
     }
 
-    public Mono<Void> addToken(String username, AccessToken accessToken) {
+    public Mono<Void> addToken(Username username, AccessToken accessToken) {
         return cassandraAsyncExecutor.executeVoid(insertStatement.bind()
             .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID())
-            .setString(CassandraAccessTokenTable.USERNAME, username)
+            .setString(CassandraAccessTokenTable.USERNAME, username.asString())
             .setInt(TTL, durationInSeconds));
     }
 
@@ -82,9 +84,10 @@ public class CassandraAccessTokenDAO {
             .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()));
     }
 
-    public Mono<String> getUsernameFromToken(AccessToken accessToken) {
+    public Mono<Username> getUsernameFromToken(AccessToken accessToken) {
         return cassandraAsyncExecutor.executeSingleRow(selectStatement.bind()
                 .setUUID(CassandraAccessTokenTable.TOKEN, accessToken.asUUID()))
-            .map(row -> row.getString(CassandraAccessTokenTable.USERNAME));
+            .map(row -> row.getString(CassandraAccessTokenTable.USERNAME))
+            .map(Username::of);
     }
 }

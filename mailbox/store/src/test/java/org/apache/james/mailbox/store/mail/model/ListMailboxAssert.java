@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
@@ -55,11 +56,11 @@ public class ListMailboxAssert {
 
     private final class InnerMailbox {
         private final MailboxId id;
-        private final String user;
+        private final Username user;
         private final String name;
         private final String namespace;
 
-        public InnerMailbox(MailboxId id, String user, String name, String namespace) {
+        public InnerMailbox(MailboxId id, Username user, String name, String namespace) {
             this.id = id;
             this.user = user;
             this.name = name;
@@ -70,7 +71,7 @@ public class ListMailboxAssert {
             return id;
         }
 
-        public String getUser() {
+        public Username getUser() {
             return user;
         }
 

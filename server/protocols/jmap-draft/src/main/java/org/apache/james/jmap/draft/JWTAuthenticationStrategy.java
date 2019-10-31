@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
@@ -51,14 +52,15 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     @Override
     public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
 
-        Stream<String> userLoginStream = extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
+        Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
                 .filter(tokenManager::verify)
-                .map(tokenManager::extractLogin);
+                .map(tokenManager::extractLogin)
+                .map(Username::of);
 
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
-                .map(l -> {
+                .map(login -> {
                     try {
-                        return mailboxManager.createSystemSession(l);
+                        return mailboxManager.createSystemSession(login);
                     } catch (MailboxException e) {
                         throw new MailboxSessionCreationException(e);
                     }

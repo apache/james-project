@@ -19,16 +19,18 @@
 
 package org.apache.james.mailbox.exception;
 
+import org.apache.james.core.Username;
+
 public class UserDoesNotExistException extends MailboxException {
 
-    private final String name;
+    private final Username name;
 
-    public UserDoesNotExistException(String name) {
-        super("User " + name + "does not exist");
+    public UserDoesNotExistException(Username name) {
+        super("User " + name.asString() + "does not exist");
         this.name = name;
     }
 
-    public String getName() {
+    public Username getName() {
         return name;
     }
 }

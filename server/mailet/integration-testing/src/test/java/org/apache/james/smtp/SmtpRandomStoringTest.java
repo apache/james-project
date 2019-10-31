@@ -33,6 +33,7 @@ import java.util.stream.LongStream;
 import javax.mail.MessagingException;
 
 import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -123,7 +124,7 @@ public class SmtpRandomStoringTest {
     private static void populateUser(MailboxProbeImpl mailboxProbe, DataProbe dataProbe, String user) {
         try {
             dataProbe.addUser(user, PASSWORD);
-            MAILBOXES.forEach(mailbox -> mailboxProbe.createMailbox(MailboxPath.forUser(user, mailbox)));
+            MAILBOXES.forEach(mailbox -> mailboxProbe.createMailbox(MailboxPath.forUser(Username.of(user), mailbox)));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

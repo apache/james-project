@@ -25,6 +25,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
@@ -41,7 +42,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 public class MessageIdReIndexerImplTest {
-    private static final String USERNAME = "benwa@apache.org";
+    private static final Username USERNAME = Username.of("benwa@apache.org");
     public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
 
     private InMemoryMailboxManager mailboxManager;

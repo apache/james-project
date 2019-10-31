@@ -78,7 +78,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class SetMessagesCreationProcessorTest {
     
-    private static final String USER = "user@example.com";
+    private static final Username USER = Username.of("user@example.com");
     private static final String OUTBOX = "outbox";
     private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
@@ -349,7 +349,7 @@ public class SetMessagesCreationProcessorTest {
         when(mockedMailboxIdFactory.fromString(mailboxId.serialize()))
             .thenReturn(mailboxId);
         when(mailbox.getMailboxPath())
-            .thenReturn(MailboxPath.forUser("otheruser@example.com", mailboxId.serialize()));
+            .thenReturn(MailboxPath.forUser(Username.of("otheruser@example.com"), mailboxId.serialize()));
 
         assertThatThrownBy(() -> sut.assertIsUserOwnerOfMailboxes(ImmutableList.of(mailboxId), session))
             .isInstanceOf(MailboxNotOwnedException.class);

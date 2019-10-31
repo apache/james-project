@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Duration;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.DefaultMailboxesProvisioningFilter;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
@@ -40,7 +41,7 @@ import com.github.steveash.guavate.Guavate;
 
 public class DefaultMailboxesProvisioningFilterTest {
 
-    public static final String USERNAME = "username";
+    public static final Username USERNAME = Username.of("username");
     private DefaultMailboxesProvisioningFilter testee;
     private MailboxSession session;
     private InMemoryMailboxManager mailboxManager;

@@ -29,6 +29,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
@@ -43,7 +44,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class CassandraMailboxDAOTest {
     private static final int UID_VALIDITY_1 = 145;
     private static final int UID_VALIDITY_2 = 147;
-    private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser("user", "xyz");
+    private static final Username USER = Username.of("user");
+    private static final MailboxPath NEW_MAILBOX_PATH = MailboxPath.forUser(USER, "xyz");
     private static CassandraId CASSANDRA_ID_1 = CassandraId.timeBased();
     private static CassandraId CASSANDRA_ID_2 = CassandraId.timeBased();
 
@@ -63,10 +65,10 @@ class CassandraMailboxDAOTest {
     void setUp(CassandraCluster cassandra) {
         testee = new CassandraMailboxDAO(cassandra.getConf(), cassandra.getTypesProvider());
 
-        mailbox1 = new Mailbox(MailboxPath.forUser("user", "abcd"),
+        mailbox1 = new Mailbox(MailboxPath.forUser(USER, "abcd"),
             UID_VALIDITY_1,
             CASSANDRA_ID_1);
-        mailbox2 = new Mailbox(MailboxPath.forUser("user", "defg"),
+        mailbox2 = new Mailbox(MailboxPath.forUser(USER, "defg"),
             UID_VALIDITY_2,
             CASSANDRA_ID_2);
     }

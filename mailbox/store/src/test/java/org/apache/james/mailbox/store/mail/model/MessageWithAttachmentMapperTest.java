@@ -30,6 +30,7 @@ import java.util.List;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
@@ -81,7 +82,7 @@ public abstract class MessageWithAttachmentMapperTest {
         this.messageMapper = mapperProvider.createMessageMapper();
         this.attachmentMapper = mapperProvider.createAttachmentMapper();
 
-        attachmentsMailbox = createMailbox(MailboxPath.forUser("benwa", "Attachments"));
+        attachmentsMailbox = createMailbox(MailboxPath.forUser(Username.of("benwa"), "Attachments"));
 
         Attachment attachment = Attachment.builder()
                 .attachmentId(AttachmentId.from("123"))

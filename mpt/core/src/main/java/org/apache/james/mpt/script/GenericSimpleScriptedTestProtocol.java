@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mpt.api.Continuation;
 import org.apache.james.mpt.api.HostSystem;
 import org.apache.james.mpt.api.Session;
@@ -42,20 +43,20 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
     
     private static class CreateUser implements PrepareCommand<HostSystem> {
         
-        final String user;
+        final Username username;
         final String password;
 
-        CreateUser(String user, String password) {
-            this.user = user;
+        CreateUser(Username username, String password) {
+            this.username = username;
             this.password = password;
         }
         
         @Override
         public void prepare(HostSystem system) throws Exception {
             try {
-                system.addUser(user, password);
+                system.addUser(username, password);
             } catch (Exception e) {
-                LOGGER.info("User {} already exists", user, e);
+                LOGGER.info("User {} already exists", username, e);
             }
         }
     }
@@ -88,10 +89,14 @@ public class GenericSimpleScriptedTestProtocol<T extends HostSystem, SelfT exten
         this.locale = locale;
         return (SelfT) this;
     }
-    
-    @SuppressWarnings("unchecked")
+
     public SelfT withUser(String user, String password) {
-        prepareCommands.add(new CreateUser(user, password));
+        return withUser(Username.of(user), password);
+    }
+
+    @SuppressWarnings("unchecked")
+    public SelfT withUser(Username username, String password) {
+        prepareCommands.add(new CreateUser(username, password));
         return (SelfT) this;
     }
     

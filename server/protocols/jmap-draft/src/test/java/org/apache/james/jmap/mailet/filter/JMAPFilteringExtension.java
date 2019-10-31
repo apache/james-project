@@ -89,7 +89,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
             return recipient1Mailbox;
         }
 
-        public MailboxId createMailbox(String username, String mailboxName) throws Exception {
+        public MailboxId createMailbox(Username username, String mailboxName) throws Exception {
             MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
             return mailboxManager
                 .createMailbox(MailboxPath.forUser(username, mailboxName), mailboxSession)
@@ -112,7 +112,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
                     .build())
                 .collect(ImmutableList.toImmutableList());
 
-            testSystem.getFilteringManagement().defineRulesForUser(Username.of(RECIPIENT_1_USERNAME), rules);
+            testSystem.getFilteringManagement().defineRulesForUser(RECIPIENT_1_USERNAME, rules);
         }
 
         public FakeMail asMail(MimeMessageBuilder mimeMessageBuilder) throws MessagingException {

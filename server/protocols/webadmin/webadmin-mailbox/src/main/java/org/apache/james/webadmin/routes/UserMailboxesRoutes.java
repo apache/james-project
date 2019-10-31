@@ -26,6 +26,7 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Username;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UserMailboxesService;
@@ -45,6 +46,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.Request;
 import spark.Service;
 
 @Api(tags = "User's Mailbox")
@@ -106,7 +108,7 @@ public class UserMailboxesRoutes implements Routes {
         service.get(USER_MAILBOXES_BASE, (request, response) -> {
             response.status(HttpStatus.OK_200);
             try {
-                return userMailboxesService.listMailboxes(request.params(USER_NAME));
+                return userMailboxesService.listMailboxes(getUsernameParam(request));
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid get on user mailboxes", e);
                 throw ErrorResponder.builder()
@@ -136,7 +138,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineDeleteUserMailbox() {
         service.delete(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                userMailboxesService.deleteMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
+                userMailboxesService.deleteMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailbox", e);
@@ -180,7 +182,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineDeleteUserMailboxes() {
         service.delete(USER_MAILBOXES_BASE, (request, response) -> {
             try {
-                userMailboxesService.deleteMailboxes(request.params(USER_NAME));
+                userMailboxesService.deleteMailboxes(getUsernameParam(request));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid delete on user mailboxes", e);
@@ -211,7 +213,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineMailboxExists() {
         service.get(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                if (userMailboxesService.testMailboxExists(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)))) {
+                if (userMailboxesService.testMailboxExists(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)))) {
                     return Responses.returnNoContent(response);
                 } else {
                     throw ErrorResponder.builder()
@@ -257,7 +259,7 @@ public class UserMailboxesRoutes implements Routes {
     public void defineCreateUserMailbox() {
         service.put(SPECIFIC_MAILBOX, (request, response) -> {
             try {
-                userMailboxesService.createMailbox(request.params(USER_NAME), new MailboxName(request.params(MAILBOX_NAME)));
+                userMailboxesService.createMailbox(getUsernameParam(request), new MailboxName(request.params(MAILBOX_NAME)));
                 return Responses.returnNoContent(response);
             } catch (IllegalStateException e) {
                 LOGGER.info("Invalid put on user mailbox", e);
@@ -277,5 +279,9 @@ public class UserMailboxesRoutes implements Routes {
                     .haltError();
             }
         });
+    }
+
+    private Username getUsernameParam(Request request) {
+        return Username.of(request.params(USER_NAME));
     }
 }

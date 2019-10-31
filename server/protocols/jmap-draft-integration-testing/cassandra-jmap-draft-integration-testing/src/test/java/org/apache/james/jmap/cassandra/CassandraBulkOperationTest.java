@@ -39,6 +39,7 @@ import org.apache.james.CassandraJmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -67,7 +68,7 @@ public class CassandraBulkOperationTest {
     public CassandraJmapTestRule rule = CassandraJmapTestRule.defaultTestRule();
 
     private static final String USERNAME = "username@" + DOMAIN;
-    private static final MailboxPath TRASH_PATH = MailboxPath.forUser(USERNAME, DefaultMailboxes.TRASH);
+    private static final MailboxPath TRASH_PATH = MailboxPath.forUser(Username.of(USERNAME), DefaultMailboxes.TRASH);
     private static final String PASSWORD = "password";
 
     private GuiceJamesServer jmapServer;
@@ -90,7 +91,7 @@ public class CassandraBulkOperationTest {
         jmapServer = createServerWithExpungeChunkSize(85);
         String mailIds = provistionMails(NUMBER_OF_MAIL_TO_CREATE);
 
-        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
+        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(USERNAME), PASSWORD);
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [" + mailIds + "]}, \"#0\"]]")
@@ -108,7 +109,7 @@ public class CassandraBulkOperationTest {
         jmapServer = createServerWithExpungeChunkSize(NUMBER_OF_MAIL_TO_CREATE);
         String mailIds = provistionMails(NUMBER_OF_MAIL_TO_CREATE);
 
-        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
+        AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(USERNAME), PASSWORD);
         given()
             .header("Authorization", accessToken.serialize())
             .body("[[\"setMessages\", {\"destroy\": [" + mailIds + "]}, \"#0\"]]")

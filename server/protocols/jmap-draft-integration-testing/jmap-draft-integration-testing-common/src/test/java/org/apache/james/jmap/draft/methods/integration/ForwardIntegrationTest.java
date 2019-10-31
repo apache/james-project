@@ -78,9 +78,9 @@ public abstract class ForwardIntegrationTest {
 
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
-        dataProbe.addUser(BOB, BOB_PASSWORD);
-        dataProbe.addUser(ALICE, ALICE_PASSWORD);
-        dataProbe.addUser(CEDRIC, CEDRIC_PASSWORD);
+        dataProbe.addUser(BOB.asString(), BOB_PASSWORD);
+        dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
+        dataProbe.addUser(CEDRIC.asString(), CEDRIC_PASSWORD);
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
                 .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())

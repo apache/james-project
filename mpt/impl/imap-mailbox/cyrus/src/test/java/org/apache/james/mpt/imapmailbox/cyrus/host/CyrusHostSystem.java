@@ -22,6 +22,7 @@ import java.net.InetSocketAddress;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -64,12 +65,12 @@ public class CyrusHostSystem extends ExternalHostSystem implements Provider<Cont
     }
     
     @Override
-    public boolean addUser(String user, String password) throws Exception {
+    public boolean addUser(Username user, String password) throws Exception {
         return super.addUser(user, password) && createUserInbox(user);
     }
 
-    private boolean createUserInbox(String user) {
-        createMailbox(MailboxPath.forUser(user, ""));
+    private boolean createUserInbox(Username username) {
+        createMailbox(MailboxPath.forUser(username, ""));
         return true;
     }
     

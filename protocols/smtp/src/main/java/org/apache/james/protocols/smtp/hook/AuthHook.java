@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.protocols.smtp.hook;
 
+import org.apache.james.core.Username;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
@@ -33,5 +34,5 @@ public interface AuthHook extends Hook {
      * @param password the password
      * @return HockResult
      */
-    HookResult doAuth(SMTPSession session, String username, String password);
+    HookResult doAuth(SMTPSession session, Username username, String password);
 }

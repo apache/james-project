@@ -53,7 +53,7 @@ class FlagsUpdatedSerializationTest {
     private static final MailboxSession.SessionId SESSION_ID = MailboxSession.SessionId.of(42);
     private static final MailboxId MAILBOX_ID = TestId.of(18);
     private static final String MAILBOX_NAME = "mailboxName";
-    private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", MAILBOX_NAME);
+    private static final MailboxPath MAILBOX_PATH = new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("user"), MAILBOX_NAME);
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(123456);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(654321);
 

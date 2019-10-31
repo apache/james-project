@@ -33,6 +33,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
@@ -56,7 +57,7 @@ import com.google.common.collect.ImmutableList;
 public class JamesMailetContextTest {
     public static final Domain DOMAIN_COM = Domain.of("domain.com");
     public static final String USERNAME = "user";
-    public static final String USERMAIL = USERNAME + "@" + DOMAIN_COM.name();
+    public static final Username USERMAIL = Username.of(USERNAME + "@" + DOMAIN_COM.name());
     public static final String PASSWORD = "password";
     public static final DNSService DNS_SERVICE = null;
 
@@ -86,7 +87,7 @@ public class JamesMailetContextTest {
         DNSService dnsService = null;
         testee = new JamesMailetContext(dnsService, usersRepository, domainList, mailQueueFactory);
         testee.configure(new BaseHierarchicalConfiguration());
-        mailAddress = new MailAddress(USERMAIL);
+        mailAddress = new MailAddress(USERMAIL.asString());
     }
 
     @Test
@@ -111,7 +112,7 @@ public class JamesMailetContextTest {
         domainList.addDomain(DOMAIN_COM);
         usersRepository.addUser(USERMAIL, PASSWORD);
 
-        assertThat(testee.isLocalUser(USERMAIL)).isTrue();
+        assertThat(testee.isLocalUser(USERMAIL.asString())).isTrue();
     }
 
     @Test
@@ -143,7 +144,7 @@ public class JamesMailetContextTest {
 
     @Test
     public void isLocalUserShouldBeFalseWhenUsernameDoNotExist() throws Exception {
-        assertThat(testee.isLocalUser(USERMAIL)).isFalse();
+        assertThat(testee.isLocalUser(USERMAIL.asString())).isFalse();
     }
 
     @Test

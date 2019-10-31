@@ -35,6 +35,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.GhostMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -114,7 +115,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
     }
 
     @Override
-    public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user) {
+    public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, Username user) {
         return cassandraAsyncExecutor.execute(
             selectAll.bind()
                 .setString(NAMESPACE, namespace)
@@ -161,7 +162,7 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
         return new CassandraIdAndPath(
             CassandraId.of(row.getUUID(MAILBOX_ID)),
             new MailboxPath(row.getString(NAMESPACE),
-                row.getString(USER),
+                Username.of(row.getString(USER)),
                 row.getString(MAILBOX_NAME)));
     }
 
@@ -182,10 +183,10 @@ public class CassandraMailboxPathV2DAO implements CassandraMailboxPathDAO {
             .setString(MAILBOX_NAME, mailboxPath.getName()));
     }
 
-    private String sanitizeUser(String user) {
+    private String sanitizeUser(Username user) {
         if (user == null) {
             return "";
         }
-        return user;
+        return user.asString();
     }
 }

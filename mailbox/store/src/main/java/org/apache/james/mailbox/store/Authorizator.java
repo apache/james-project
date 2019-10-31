@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 
 /**
@@ -32,6 +33,6 @@ public interface Authorizator {
         UNKNOWN_USER
     }
 
-    AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) throws MailboxException;
+    AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) throws MailboxException;
 }
 

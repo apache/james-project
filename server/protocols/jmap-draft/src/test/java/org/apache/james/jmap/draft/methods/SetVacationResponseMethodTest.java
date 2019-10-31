@@ -171,7 +171,7 @@ public class SetVacationResponseMethodTest {
                     .subject(Optional.of(SUBJECT))
                     .build()))
             .build();
-        AccountId accountId = AccountId.fromString(USERNAME.asString());
+        AccountId accountId = AccountId.fromUsername(USERNAME);
 
         when(mailboxSession.getUser()).thenReturn(USERNAME);
         when(vacationRepository.modifyVacation(eq(accountId), any())).thenReturn(Mono.empty());

@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.cassandra.GhostMailbox;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.MailboxBaseTupleUtil;
@@ -134,7 +135,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
     }
 
     @Override
-    public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, String user) {
+    public Flux<CassandraIdAndPath> listUserMailboxes(String namespace, Username user) {
         return cassandraAsyncExecutor.execute(
             selectAllForUser.bind()
                 .setUDTValue(NAMESPACE_AND_USER, mailboxBaseTupleUtil.createMailboxBaseUDT(namespace, user)))
@@ -181,7 +182,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
         return new CassandraIdAndPath(
             CassandraId.of(row.getUUID(MAILBOX_ID)),
             new MailboxPath(row.getUDTValue(NAMESPACE_AND_USER).getString(CassandraMailboxTable.MailboxBase.NAMESPACE),
-                row.getUDTValue(NAMESPACE_AND_USER).getString(CassandraMailboxTable.MailboxBase.USER),
+                Username.of(row.getUDTValue(NAMESPACE_AND_USER).getString(CassandraMailboxTable.MailboxBase.USER)),
                 row.getString(MAILBOX_NAME)));
     }
 

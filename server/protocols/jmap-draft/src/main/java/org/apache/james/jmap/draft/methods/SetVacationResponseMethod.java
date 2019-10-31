@@ -97,7 +97,7 @@ public class SetVacationResponseMethod implements Method {
         }
 
         return process(methodCallId,
-            AccountId.fromString(mailboxSession.getUser().asString()),
+            AccountId.fromUsername(mailboxSession.getUser()),
             setVacationRequest.getUpdate().get(Vacation.ID));
     }
 

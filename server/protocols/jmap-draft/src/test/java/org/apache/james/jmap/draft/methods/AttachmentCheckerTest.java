@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.AttachmentsNotFoundException;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
@@ -55,7 +56,7 @@ public class AttachmentCheckerTest {
 
     @Before
     public void setUp() {
-        session = MailboxSessionUtil.create("Jonhy");
+        session = MailboxSessionUtil.create(Username.of("Jonhy"));
         attachmentManager = mock(AttachmentManager.class);
 
         sut = new AttachmentChecker(attachmentManager);

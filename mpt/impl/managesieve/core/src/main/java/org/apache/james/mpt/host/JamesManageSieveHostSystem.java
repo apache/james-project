@@ -53,8 +53,8 @@ public abstract class JamesManageSieveHostSystem implements ManageSieveHostSyste
     protected abstract UsersRepository createUsersRepository();
 
     @Override
-    public boolean addUser(String user, String password) throws Exception {
-        usersRepository.addUser(user, password);
+    public boolean addUser(Username username, String password) throws Exception {
+        usersRepository.addUser(username, password);
         return true;
     }
 

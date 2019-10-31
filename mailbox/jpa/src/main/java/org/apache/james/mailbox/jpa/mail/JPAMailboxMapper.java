@@ -28,6 +28,7 @@ import javax.persistence.PersistenceException;
 import javax.persistence.RollbackException;
 import javax.persistence.TypedQuery;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
@@ -107,7 +108,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         try {
             JPAMailbox result = loadJpaMailbox(mailbox.getMailboxId());
             result.setNamespace(mailbox.getNamespace());
-            result.setUser(mailbox.getUser());
+            result.setUser(mailbox.getUser().asString());
             result.setName(mailbox.getName());
             return result;
         } catch (MailboxNotFoundException e) {
@@ -205,11 +206,11 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         }
     }
 
-    private TypedQuery<JPAMailbox> findMailboxWithPathLikeTypedQuery(String namespace, String user, String pathLike) {
+    private TypedQuery<JPAMailbox> findMailboxWithPathLikeTypedQuery(String namespace, Username username, String pathLike) {
         return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser", JPAMailbox.class)
             .setParameter("nameParam", pathLike)
             .setParameter("namespaceParam", namespace)
-            .setParameter("userParam", user);
+            .setParameter("userParam", username.asString());
     }
 
     public void deleteAllMemberships() throws MailboxException {
@@ -232,7 +233,14 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
         final String name = mailbox.getName() + delimiter + SQL_WILDCARD_CHAR; 
         final Long numberOfChildMailboxes;
-        numberOfChildMailboxes = (Long) getEntityManager().createNamedQuery("countMailboxesWithNameLikeWithUser").setParameter("nameParam", name).setParameter("namespaceParam", mailbox.getNamespace()).setParameter("userParam", mailbox.getUser()).getSingleResult();
+
+        numberOfChildMailboxes = (Long) getEntityManager()
+            .createNamedQuery("countMailboxesWithNameLikeWithUser")
+            .setParameter("nameParam", name)
+            .setParameter("namespaceParam", mailbox.getNamespace())
+            .setParameter("userParam", mailbox.getUser().asString())
+            .getSingleResult();
+
         return numberOfChildMailboxes != null && numberOfChildMailboxes > 0;
     }
 
@@ -264,7 +272,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public List<Mailbox> findNonPersonalMailboxes(String userName, Right right) throws MailboxException {
+    public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) throws MailboxException {
         return ImmutableList.of();
     }
 }

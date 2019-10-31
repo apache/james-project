@@ -2,6 +2,7 @@ package org.apache.james.mpt.imapmailbox.suite;
 
 import java.util.Locale;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.HostSystem;
@@ -16,19 +17,19 @@ public class ACLScriptedTestProtocol extends ImapScriptedTestProtocol {
     private static class GrantRightsCommand implements SimpleScriptedTestProtocol.PrepareCommand<HostSystem> {
         GrantRightsOnHost grantRightsOnHost;
         MailboxPath mailboxPath;
-        String userName;
+        Username username;
         MailboxACL.Rfc4314Rights rights;
 
-        GrantRightsCommand(GrantRightsOnHost grantRightsOnHost, MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) {
+        GrantRightsCommand(GrantRightsOnHost grantRightsOnHost, MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {
             this.grantRightsOnHost = grantRightsOnHost;
             this.mailboxPath = mailboxPath;
-            this.userName = userName;
+            this.username = username;
             this.rights = rights;
         }
 
         @Override
         public void prepare(HostSystem system) throws Exception {
-            grantRightsOnHost.grantRights(mailboxPath, userName, rights);
+            grantRightsOnHost.grantRights(mailboxPath, username, rights);
         }
     }
     
@@ -56,8 +57,8 @@ public class ACLScriptedTestProtocol extends ImapScriptedTestProtocol {
         this.mailboxMessageAppender = mailboxMessageAppender;
     }
 
-    public ACLScriptedTestProtocol withGrantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) {
-        return (ACLScriptedTestProtocol) withPreparedCommand(new GrantRightsCommand(grantRightsOnHost, mailboxPath, userName, rights));
+    public ACLScriptedTestProtocol withGrantRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {
+        return (ACLScriptedTestProtocol) withPreparedCommand(new GrantRightsCommand(grantRightsOnHost, mailboxPath, username, rights));
     }
     
     public ACLScriptedTestProtocol withFilledMailbox(MailboxPath otherUserMailbox) {
@@ -66,6 +67,11 @@ public class ACLScriptedTestProtocol extends ImapScriptedTestProtocol {
     
     @Override
     public ACLScriptedTestProtocol withUser(String user, String password) {
+        return (ACLScriptedTestProtocol) super.withUser(user, password);
+    }
+
+    @Override
+    public ACLScriptedTestProtocol withUser(Username user, String password) {
         return (ACLScriptedTestProtocol) super.withUser(user, password);
     }
     

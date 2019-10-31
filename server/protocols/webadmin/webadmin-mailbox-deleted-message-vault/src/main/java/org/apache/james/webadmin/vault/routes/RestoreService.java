@@ -70,7 +70,7 @@ class RestoreService {
     }
 
     Flux<RestoreResult> restore(Username usernameToRestore, Query searchQuery) throws MailboxException {
-        MailboxSession session = mailboxManager.createSystemSession(usernameToRestore.asString());
+        MailboxSession session = mailboxManager.createSystemSession(usernameToRestore);
         MessageManager restoreMessageManager = restoreMailboxManager(session);
 
         return Flux.from(deletedMessageVault.search(usernameToRestore, searchQuery))
@@ -104,7 +104,7 @@ class RestoreService {
     }
 
     private MessageManager restoreMailboxManager(MailboxSession session) throws MailboxException {
-        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser().asString(), DefaultMailboxes.RESTORED_MESSAGES);
+        MailboxPath restoreMailbox = MailboxPath.forUser(session.getUser(), DefaultMailboxes.RESTORED_MESSAGES);
         try {
             return mailboxManager.getMailbox(restoreMailbox, session);
         } catch (MailboxNotFoundException e) {

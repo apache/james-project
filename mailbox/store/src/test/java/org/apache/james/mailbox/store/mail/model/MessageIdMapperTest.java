@@ -31,6 +31,7 @@ import javax.mail.Flags.Flag;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -58,6 +59,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultimap;
 
 public abstract class MessageIdMapperTest {
+    private static final Username BENWA = Username.of("benwa");
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
@@ -92,8 +94,8 @@ public abstract class MessageIdMapperTest {
         this.messageMapper = mapperProvider.createMessageMapper();
         this.mailboxMapper = mapperProvider.createMailboxMapper();
 
-        benwaInboxMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX"));
-        benwaWorkMailbox = createMailbox(MailboxPath.forUser("benwa", "INBOX" + DELIMITER + "work"));
+        benwaInboxMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX"));
+        benwaWorkMailbox = createMailbox(MailboxPath.forUser(BENWA, "INBOX" + DELIMITER + "work"));
 
         message1 = createMessage(benwaInboxMailbox, "Subject: Test1 \n\nBody1\n.\n", BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, "Subject: Test2 \n\nBody2\n.\n", BODY_START, new PropertyBuilder());
@@ -163,7 +165,7 @@ public abstract class MessageIdMapperTest {
 
     @Test
     public void saveShouldThrowWhenMailboxDoesntExist() throws Exception {
-        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
+        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser(BENWA, "mybox"), UID_VALIDITY);
         notPersistedMailbox.setMailboxId(mapperProvider.generateId());
         SimpleMailboxMessage message = createMessage(notPersistedMailbox, "Subject: Test \n\nBody\n.\n", BODY_START, new PropertyBuilder());
         message.setUid(mapperProvider.generateMessageUid());
@@ -208,7 +210,7 @@ public abstract class MessageIdMapperTest {
         message1.setModSeq(mapperProvider.generateModSeq(benwaInboxMailbox));
         sut.save(message1);
 
-        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser("benwa", "mybox"), UID_VALIDITY);
+        Mailbox notPersistedMailbox = new Mailbox(MailboxPath.forUser(BENWA, "mybox"), UID_VALIDITY);
         notPersistedMailbox.setMailboxId(mapperProvider.generateId());
 
         SimpleMailboxMessage message1InOtherMailbox = SimpleMailboxMessage.copy(notPersistedMailbox.getMailboxId(), message1);

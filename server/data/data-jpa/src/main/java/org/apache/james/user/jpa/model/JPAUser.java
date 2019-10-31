@@ -32,6 +32,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.Version;
 
+import org.apache.james.core.Username;
 import org.apache.james.user.api.model.User;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -115,8 +116,8 @@ public class JPAUser implements User {
     }
 
     @Override
-    public String getUserName() {
-        return name;
+    public Username getUserName() {
+        return Username.of(name);
     }
 
     @Override

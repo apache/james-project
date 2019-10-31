@@ -19,6 +19,8 @@
 
 package org.apache.james.mpt.api;
 
+import org.apache.james.core.Username;
+
 /**
  * Adds users on demand.
  */
@@ -28,5 +30,5 @@ public interface UserAdder {
      * @param user not null
      * @param password not null
      */
-    void addUser(String user, String password) throws Exception;
+    void addUser(Username user, String password) throws Exception;
 }

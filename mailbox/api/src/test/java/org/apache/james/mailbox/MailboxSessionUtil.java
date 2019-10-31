@@ -23,17 +23,18 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.concurrent.ThreadLocalRandom;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxConstants;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class MailboxSessionUtil {
-    public static MailboxSession create(String username) {
+    public static MailboxSession create(Username username) {
         return create(username, MailboxSession.SessionId.of(ThreadLocalRandom.current().nextLong()));
     }
 
     @VisibleForTesting
-    public static MailboxSession create(String username, MailboxSession.SessionId sessionId) {
+    public static MailboxSession create(Username username, MailboxSession.SessionId sessionId) {
         ArrayList<Locale> locales = new ArrayList<>();
 
         return new MailboxSession(

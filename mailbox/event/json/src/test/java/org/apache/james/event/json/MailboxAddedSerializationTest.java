@@ -41,7 +41,7 @@ class MailboxAddedSerializationTest {
     private static final MailboxListener.MailboxAdded EVENT_1 = new MailboxListener.MailboxAdded(
         MailboxSession.SessionId.of(42),
         USERNAME,
-        new MailboxPath(MailboxConstants.USER_NAMESPACE, "bob", "mailboxName"),
+        new MailboxPath(MailboxConstants.USER_NAMESPACE, Username.of("bob"), "mailboxName"),
         TestId.of(18),
         EVENT_ID);
     private static final String JSON_1 = "{" +

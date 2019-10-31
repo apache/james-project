@@ -24,6 +24,7 @@ import java.util.Locale;
 import java.util.Optional;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -96,7 +97,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @return The Mailbox object populated with data from the file system
      * @throws MailboxException If the mailbox folder doesn't exist or can't be read
      */
-    public Mailbox loadMailbox(MailboxSession session, File root, String namespace, String user, String folderName) throws MailboxException {
+    public Mailbox loadMailbox(MailboxSession session, File root, String namespace, Username user, String folderName) throws MailboxException {
         String mailboxName = getMailboxNameFromFolderName(folderName);
         return loadMailbox(session, new File(root, folderName), new MailboxPath(namespace, user, mailboxName));
     }
@@ -143,10 +144,10 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @param user The user to get the root for.
      * @return The name of the folder which contains the specified user's mailbox
      */
-    public String userRoot(String user) {
-        String path = maildirLocation.replace(PATH_FULLUSER, user);
-        String[] userParts = user.split("@");
-        String userName = user;
+    public String userRoot(Username user) {
+        String userName = user.asString();
+        String path = maildirLocation.replace(PATH_FULLUSER, userName);
+        String[] userParts = userName.split("@");
         if (userParts.length == 2) {
             userName = userParts[0];
             // At least the domain part should not handled in a case-sensitive manner
@@ -163,7 +164,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @return A File object referencing the main maildir folder
      * @throws MailboxException If the folder does not exist or is no directory
      */
-    public File getMailboxRootForUser(String user) throws MailboxException {
+    public File getMailboxRootForUser(Username user) throws MailboxException {
         String path = userRoot(user);
         File root = new File(path);
         if (!root.isDirectory()) {
@@ -214,7 +215,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @param name The name of the mailbox
      * @return absolute name
      */
-    public String getFolderName(String namespace, String user, String name) {
+    public String getFolderName(String namespace, Username user, String name) {
         String root = userRoot(user);
         // if INBOX => location == maildirLocation
         if (name.equals(MailboxConstants.INBOX)) {
@@ -235,7 +236,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * @return The absolute path to the folder containing the mailbox
      */
     public String getFolderName(Mailbox mailbox) {
-        return getFolderName(mailbox.getNamespace(), mailbox.getUser(), mailbox.getName());
+        return getFolderName(mailbox.generateAssociatedPath());
     }
     
     /**

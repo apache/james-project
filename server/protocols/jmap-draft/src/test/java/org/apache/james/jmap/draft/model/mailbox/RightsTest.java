@@ -22,6 +22,7 @@ package org.apache.james.jmap.draft.model.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Rights.Right;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Entry;
@@ -36,18 +37,12 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class RightsTest {
 
     public static final boolean NEGATIVE = true;
-    public static final Rights.Username USERNAME = new Rights.Username("user");
-    public static final Rights.Username OTHER_USERNAME = new Rights.Username("otherUser");
+    public static final Username USERNAME = Username.of("user");
+    public static final Username OTHER_USERNAME = Username.of("otherUser");
 
     @Test
     public void rightsShouldMatchBeanContract() {
         EqualsVerifier.forClass(Rights.class)
-            .verify();
-    }
-
-    @Test
-    public void usernameShouldMatchBeanContract() {
-        EqualsVerifier.forClass(Rights.Username.class)
             .verify();
     }
 
@@ -111,7 +106,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldFilterNegatedUsers() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUserEntryKey("user", NEGATIVE), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
+            EntryKey.createUserEntryKey(USERNAME, NEGATIVE), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.EMPTY);
@@ -120,7 +115,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldAcceptUsers() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUserEntryKey("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
+            EntryKey.createUserEntryKey(USERNAME), Rfc4314Rights.fromSerializedRfc4314Rights("aet")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
@@ -131,7 +126,7 @@ public class RightsTest {
     @Test
     public void fromACLShouldFilterOutUnknownRights() throws Exception {
         MailboxACL acl = new MailboxACL(ImmutableMap.of(
-            EntryKey.createUserEntryKey("user"), Rfc4314Rights.fromSerializedRfc4314Rights("aetpk")));
+            EntryKey.createUserEntryKey(USERNAME), Rfc4314Rights.fromSerializedRfc4314Rights("aetpk")));
 
         assertThat(Rights.fromACL(acl))
             .isEqualTo(Rights.builder()
@@ -152,8 +147,8 @@ public class RightsTest {
         String user1 = "user1";
         String user2 = "user2";
         Rights rights = Rights.builder()
-            .delegateTo(new Rights.Username(user1), Right.Administer, Right.DeleteMessages)
-            .delegateTo(new Rights.Username(user2), Right.Expunge, Right.Lookup)
+            .delegateTo(Username.of(user1), Right.Administer, Right.DeleteMessages)
+            .delegateTo(Username.of(user2), Right.Expunge, Right.Lookup)
             .build();
 
         assertThat(rights.toMailboxAcl())

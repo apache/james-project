@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
@@ -44,7 +45,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
-    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create("benwa");
+    private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(Username.of("benwa"));
 
     @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
 

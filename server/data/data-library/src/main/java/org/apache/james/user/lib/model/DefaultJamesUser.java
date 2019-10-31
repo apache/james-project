@@ -20,6 +20,7 @@
 package org.apache.james.user.lib.model;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.user.api.model.JamesUser;
 
 /**
@@ -52,12 +53,12 @@ public class DefaultJamesUser extends DefaultUser implements JamesUser {
      */
     private String alias;
 
-    public DefaultJamesUser(String name, String alg) {
+    public DefaultJamesUser(Username name, String alg) {
         super(name, alg);
         initialize();
     }
 
-    public DefaultJamesUser(String name, String passwordHash, String hashAlg) {
+    public DefaultJamesUser(Username name, String passwordHash, String hashAlg) {
         super(name, passwordHash, hashAlg);
         initialize();
     }

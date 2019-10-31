@@ -26,6 +26,7 @@ import static org.mockito.Mockito.when;
 import java.util.Collection;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -61,8 +62,8 @@ public class IsOverQuotaTest {
 
         testee.init(FakeMatcherConfig.builder().matcherName("IsOverQuota").build());
 
-        when(usersRepository.getUser(MailAddressFixture.ANY_AT_JAMES)).thenReturn(MailAddressFixture.ANY_AT_JAMES.getLocalPart());
-        when(usersRepository.getUser(MailAddressFixture.OTHER_AT_JAMES)).thenReturn(MailAddressFixture.OTHER_AT_JAMES.getLocalPart());
+        when(usersRepository.getUser(MailAddressFixture.ANY_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.ANY_AT_JAMES.getLocalPart()));
+        when(usersRepository.getUser(MailAddressFixture.OTHER_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.OTHER_AT_JAMES.getLocalPart()));
     }
 
     @Test
@@ -133,7 +134,7 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldNotIncludeRecipientNotOverQuota() throws Exception {
-        String username = MailAddressFixture.ANY_AT_JAMES.getLocalPart();
+        Username username = Username.of(MailAddressFixture.ANY_AT_JAMES.getLocalPart());
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(mailboxManager.createSystemSession(username)));
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 
@@ -150,9 +151,9 @@ public class IsOverQuotaTest {
 
     @Test
     public void matchShouldSupportVirtualHosting() throws Exception {
-        when(usersRepository.getUser(MailAddressFixture.ANY_AT_JAMES)).thenReturn(MailAddressFixture.ANY_AT_JAMES.asString());
-        when(usersRepository.getUser(MailAddressFixture.OTHER_AT_JAMES)).thenReturn(MailAddressFixture.OTHER_AT_JAMES.asString());
-        String username = MailAddressFixture.ANY_AT_JAMES.asString();
+        when(usersRepository.getUser(MailAddressFixture.ANY_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.ANY_AT_JAMES.asString()));
+        when(usersRepository.getUser(MailAddressFixture.OTHER_AT_JAMES)).thenReturn(Username.of(MailAddressFixture.OTHER_AT_JAMES.asString()));
+        Username username = Username.of(MailAddressFixture.ANY_AT_JAMES.asString());
         QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(MailboxPath.inbox(mailboxManager.createSystemSession(username)));
         maxQuotaManager.setMaxStorage(quotaRoot, QuotaSize.size(100));
 

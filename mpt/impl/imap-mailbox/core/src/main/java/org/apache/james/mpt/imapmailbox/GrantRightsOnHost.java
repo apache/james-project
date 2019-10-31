@@ -19,11 +19,12 @@
 
 package org.apache.james.mpt.imapmailbox;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 
 public interface GrantRightsOnHost {
 
-    void grantRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) throws Exception;
+    void grantRights(MailboxPath mailboxPath, Username userName, MailboxACL.Rfc4314Rights rights) throws Exception;
 
 }

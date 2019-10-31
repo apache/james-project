@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
 import org.apache.james.mailbox.MailboxSession;
@@ -52,8 +53,8 @@ public class MailboxFactoryTest {
     private StoreMailboxManager mailboxManager;
     private MailboxSession mailboxSession;
     private MailboxSession otherMailboxSession;
-    private String user;
-    private String otherUser;
+    private Username user;
+    private Username otherUser;
     private MailboxFactory sut;
 
     @Before

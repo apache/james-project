@@ -40,6 +40,7 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
@@ -98,7 +99,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\"$")
     public void appendMessageToMailbox(String user, String mailbox, String messageId) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
@@ -108,7 +109,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a big message \"([^\"]*)\"$")
     public void appendBigMessageToMailbox(String user, String mailbox, String messageId) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(new ByteArrayInputStream(
@@ -120,7 +121,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an attachment \"([^\"]*)\"$")
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneAttachment.eml")));
@@ -130,7 +131,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an attachment \"([^\"]*)\" having \"([^\"]*)\" contentType$")
     public void appendMessageWithAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId, String contentType) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         InputStream message = InputStreamUtils.concat(
             ClassLoader.getSystemResourceAsStream("eml/oneAttachment-part1.eml"),
@@ -144,7 +145,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with an inlined attachment \"([^\"]*)\"$")
     public void appendMessageWithInlinedAttachmentToMailbox(String user, String mailbox, String messageId, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/oneInlinedImage.eml")));
@@ -154,7 +155,7 @@ public class DownloadStepdefs {
 
     public void retrieveAndSaveAttachmentDetails(String user, String messageId, String attachmentId, ComposedMessageId composedMessageId) throws MailboxException {
         AttachmentId mailboxAttachmentId = mainStepdefs.messageIdProbe
-            .retrieveAttachmentIds(composedMessageId.getMessageId(), user)
+            .retrieveAttachmentIds(composedMessageId.getMessageId(), Username.of(user))
             .get(0);
 
         inputToMessageId.put(messageId, composedMessageId.getMessageId());
@@ -164,7 +165,7 @@ public class DownloadStepdefs {
 
     @Given("^\"([^\"]*)\" mailbox \"([^\"]*)\" contains a message \"([^\"]*)\" with multiple same inlined attachments \"([^\"]*)\"$")
     public void appendMessageWithSameInlinedAttachmentsToMailbox(String user, String mailbox, String messageName, String attachmentId) throws Throwable {
-        MailboxPath mailboxPath = MailboxPath.forUser(user, mailbox);
+        MailboxPath mailboxPath = MailboxPath.forUser(Username.of(user), mailbox);
 
         ComposedMessageId composedMessageId = mainStepdefs.mailboxProbe.appendMessage(user, mailboxPath,
             AppendCommand.from(ClassLoader.getSystemResourceAsStream("eml/sameInlinedImages.eml")));

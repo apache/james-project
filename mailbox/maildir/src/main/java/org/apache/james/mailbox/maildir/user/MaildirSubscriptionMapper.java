@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
@@ -57,7 +58,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
+                writeSubscriptions(new File(store.userRoot(Username.of(subscription.getUser()))), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -74,7 +75,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
 
     @Override
     public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
-        File userRoot = new File(store.userRoot(user));
+        File userRoot = new File(store.userRoot(Username.of(user)));
         Set<String> subscriptionNames;
         try {
             subscriptionNames = readSubscriptions(userRoot);
@@ -98,7 +99,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
+                writeSubscriptions(new File(store.userRoot(Username.of(subscription.getUser()))), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -117,7 +118,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * @return A Set of names of subscribed mailboxes of the user
      */
     private Set<String> readSubscriptionsForUser(String user) throws SubscriptionException { 
-        File userRoot = new File(store.userRoot(user));
+        File userRoot = new File(store.userRoot(Username.of(user)));
         try {
             return readSubscriptions(userRoot);
         } catch (IOException e) {

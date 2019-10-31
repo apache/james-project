@@ -27,6 +27,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -75,7 +76,7 @@ public class IsOverQuota extends GenericMatcher {
         try {
             List<MailAddress> result = new ArrayList<>();
             for (MailAddress mailAddress : mail.getRecipients()) {
-                String userName = usersRepository.getUser(mailAddress);
+                Username userName = usersRepository.getUser(mailAddress);
                 MailboxSession mailboxSession = mailboxManager.createSystemSession(userName);
                 MailboxPath mailboxPath = MailboxPath.inbox(mailboxSession);
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);

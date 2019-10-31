@@ -57,7 +57,7 @@ public class MailboxAnnotationListener implements MailboxListener.GroupMailboxLi
     @Override
     public void event(Event event) throws MailboxException {
         if (event instanceof MailboxDeletion) {
-            MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUsername().asString());
+            MailboxSession mailboxSession = sessionProvider.createSystemSession(event.getUsername());
             AnnotationMapper annotationMapper = mailboxSessionMapperFactory.getAnnotationMapper(mailboxSession);
             MailboxId mailboxId = ((MailboxDeletion) event).getMailboxId();
 

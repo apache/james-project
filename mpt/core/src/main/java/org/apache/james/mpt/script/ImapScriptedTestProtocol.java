@@ -19,6 +19,7 @@
 
 package org.apache.james.mpt.script;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapHostSystem;
@@ -42,18 +43,18 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
     private static class CreateRights implements PrepareCommand<ImapHostSystem> {
 
         final MailboxPath mailboxPath;
-        final String userName;
+        final Username username;
         final MailboxACL.Rfc4314Rights rights;
 
-        public CreateRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) {
+        public CreateRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {
             this.mailboxPath = mailboxPath;
-            this.userName = userName;
+            this.username = username;
             this.rights = rights;
         }
 
         @Override
         public void prepare(ImapHostSystem system) throws Exception {
-            system.grantRights(mailboxPath, userName, rights);
+            system.grantRights(mailboxPath, username, rights);
         }
     }
 
@@ -66,7 +67,7 @@ public class ImapScriptedTestProtocol extends GenericSimpleScriptedTestProtocol<
         return withPreparedCommand(new CreateMailbox(mailboxPath));
     }
 
-    public ImapScriptedTestProtocol withRights(MailboxPath mailboxPath, String userName, MailboxACL.Rfc4314Rights rights) {
-        return withPreparedCommand(new CreateRights(mailboxPath, userName, rights));
+    public ImapScriptedTestProtocol withRights(MailboxPath mailboxPath, Username username, MailboxACL.Rfc4314Rights rights) {
+        return withPreparedCommand(new CreateRights(mailboxPath, username, rights));
     }
 }

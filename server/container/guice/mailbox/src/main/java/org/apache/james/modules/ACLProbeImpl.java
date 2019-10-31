@@ -21,6 +21,7 @@ package org.apache.james.modules;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -45,14 +46,14 @@ public class ACLProbeImpl implements GuiceProbe, ACLProbe {
     public void replaceRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
 
-        ACLCommand command = MailboxACL.command().forUser(targetUser).rights(rights).asReplacement();
+        ACLCommand command = MailboxACL.command().forUser(Username.of(targetUser)).rights(rights).asReplacement();
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }
 
     @Override
     public void addRights(MailboxPath mailboxPath, String targetUser, Rfc4314Rights rights) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(mailboxPath.getUser());
-        ACLCommand command = MailboxACL.command().forUser(targetUser).rights(rights).asAddition();
+        ACLCommand command = MailboxACL.command().forUser(Username.of(targetUser)).rights(rights).asAddition();
 
         mailboxManager.applyRightsCommand(mailboxPath, command, mailboxSession);
     }

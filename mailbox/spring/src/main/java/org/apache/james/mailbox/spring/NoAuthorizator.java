@@ -18,12 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.spring;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.Authorizator;
 
 public class NoAuthorizator implements Authorizator {
 
     @Override
-    public AuthorizationState canLoginAsOtherUser(String userId, String otherUserId) {
+    public AuthorizationState canLoginAsOtherUser(Username userId, Username otherUserId) {
         return AuthorizationState.NOT_ADMIN;
     }
 

@@ -29,9 +29,9 @@ import java.util.stream.Stream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
-import org.apache.james.jmap.draft.AccessTokenAuthenticationStrategy;
 import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
@@ -80,7 +80,7 @@ public class AccessTokenAuthenticationStrategyTest {
 
     @Test
     public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() throws Exception {
-        String username = "123456789";
+        Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
         when(mockedMailboxManager.createSystemSession(eq(username)))
@@ -99,7 +99,7 @@ public class AccessTokenAuthenticationStrategyTest {
 
     @Test
     public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        String username = "username";
+        Username username = Username.of("username");
         when(mockedMailboxManager.createSystemSession(eq(username)))
                 .thenThrow(new MailboxException());
 
@@ -118,7 +118,7 @@ public class AccessTokenAuthenticationStrategyTest {
 
     @Test
     public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() throws Exception {
-        String username = "123456789";
+        Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
         when(mockedMailboxManager.createSystemSession(eq(username)))

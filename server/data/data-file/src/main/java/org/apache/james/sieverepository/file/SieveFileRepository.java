@@ -366,7 +366,7 @@ public class SieveFileRepository implements SieveRepository {
             try {
                 FileUtils.forceMkdir(getUserDirectoryFile(username));
             } catch (IOException e) {
-                throw new StorageException("Error while creating directory for " + username, e);
+                throw new StorageException("Error while creating directory for " + username.asString(), e);
             }
         }
     }

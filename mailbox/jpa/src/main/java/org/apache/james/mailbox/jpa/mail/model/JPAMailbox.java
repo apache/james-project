@@ -27,6 +27,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -107,7 +108,7 @@ public class JPAMailbox {
     
     public JPAMailbox(MailboxPath path, long uidValidity) {
         this.name = path.getName();
-        this.user = path.getUser();
+        this.user = path.getUser().asString();
         this.namespace = path.getNamespace();
         this.uidValidity = uidValidity;
     }
@@ -137,7 +138,7 @@ public class JPAMailbox {
     }
 
     public MailboxPath generateAssociatedPath() {
-        return new MailboxPath(namespace, user, name);
+        return new MailboxPath(namespace, Username.of(user), name);
     }
 
     public void setMailboxId(long mailboxId) {

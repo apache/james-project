@@ -33,6 +33,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.backends.es.DockerElasticSearchRule;
 import org.apache.james.backends.es.ElasticSearchIndexer;
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
@@ -83,7 +84,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     private static final int BODY_START_OCTET = 100;
     private static final TestId MAILBOX_ID = TestId.of(1L);
     private static final long MOD_SEQ = 42L;
-    private static final String USERNAME = "user";
+    private static final Username USERNAME = Username.of("user");
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(25);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(26);
     private static final MessageUid MESSAGE_UID_3 = MessageUid.of(27);

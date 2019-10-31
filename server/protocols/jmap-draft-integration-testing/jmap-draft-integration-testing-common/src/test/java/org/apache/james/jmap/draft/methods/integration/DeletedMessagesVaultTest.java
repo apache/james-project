@@ -51,6 +51,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.ExportRequest;
 import org.apache.james.jmap.api.access.AccessToken;
@@ -150,9 +151,9 @@ public abstract class DeletedMessagesVaultTest {
         dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
-        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), HOMER, PASSWORD);
-        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), BART, BOB_PASSWORD);
-        jackAccessToken = authenticateJamesUser(baseUri(jmapServer), JACK, PASSWORD);
+        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(HOMER), PASSWORD);
+        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(BART), BOB_PASSWORD);
+        jackAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(JACK), PASSWORD);
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()

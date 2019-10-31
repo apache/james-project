@@ -103,7 +103,7 @@ public class ReIndexerImpl implements ReIndexer {
     }
 
     private void validateIdExists(MailboxId mailboxId) throws MailboxException {
-        MailboxSession mailboxSession = mailboxManager.createSystemSession("ReIndexingImap");
+        MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of("ReIndexingImap"));
         mapperFactory.getMailboxMapper(mailboxSession).findMailboxById(mailboxId);
     }
 }

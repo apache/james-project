@@ -83,9 +83,9 @@ class UserQuotaRoutesTest {
         domainList.addDomain(Domain.of(STRANGE_LOCAL));
 
         UsersRepository usersRepository = testSystem.getQuotaSearchTestSystem().getUsersRepository();
-        usersRepository.addUser(BOB.asString(), PASSWORD);
-        usersRepository.addUser(JACK.asString(), PASSWORD);
-        usersRepository.addUser(GUY_WITH_STRANGE_DOMAIN.asString(), PASSWORD);
+        usersRepository.addUser(BOB, PASSWORD);
+        usersRepository.addUser(JACK, PASSWORD);
+        usersRepository.addUser(GUY_WITH_STRANGE_DOMAIN, PASSWORD);
 
         RestAssured.requestSpecification = testSystem.getRequestSpecification();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
@@ -436,7 +436,7 @@ class UserQuotaRoutesTest {
 
         default void appendMessage(QuotaSearchTestSystem testSystem, Username username, MessageManager.AppendCommand appendCommand) throws MailboxException {
             MailboxManager mailboxManager = testSystem.getMailboxManager();
-            MailboxSession session = mailboxManager.createSystemSession(username.asString());
+            MailboxSession session = mailboxManager.createSystemSession(username);
 
             MailboxPath mailboxPath = MailboxPath.inbox(session);
             mailboxManager.createMailbox(mailboxPath, session);
