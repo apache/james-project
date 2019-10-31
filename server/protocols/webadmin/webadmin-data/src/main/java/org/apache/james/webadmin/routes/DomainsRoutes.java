@@ -32,6 +32,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
+import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -227,6 +228,13 @@ public class DomainsRoutes implements Routes {
             domainList.removeDomain(domain);
 
             domainAliasService.removeCorrespondingDomainAliases(domain);
+        } catch (AutoDetectedDomainRemovalException e) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .type(ErrorType.INVALID_ARGUMENT)
+                .message("Can not remove domain")
+                .cause(e)
+                .haltError();
         } catch (DomainListException e) {
             LOGGER.info("{} did not exists", request.params(DOMAIN_NAME));
         }

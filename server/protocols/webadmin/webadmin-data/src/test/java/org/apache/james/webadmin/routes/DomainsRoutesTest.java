@@ -52,9 +52,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableList;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
-
 
 class DomainsRoutesTest {
     private static final String DOMAIN = "domain";
@@ -547,7 +548,7 @@ class DomainsRoutesTest {
 
                 when()
                     .get(DOMAIN + "/aliases")
-                    .then()
+                .then()
                     .contentType(ContentType.JSON)
                     .statusCode(HttpStatus.OK_200)
                     .body("source", containsInAnyOrder(ALIAS_DOMAIN));
@@ -564,7 +565,7 @@ class DomainsRoutesTest {
 
                 when()
                     .get(DOMAIN + "/aliases")
-                    .then()
+                .then()
                     .contentType(ContentType.JSON)
                     .statusCode(HttpStatus.OK_200)
                     .body("source", containsInAnyOrder(ALIAS_DOMAIN));
@@ -666,6 +667,45 @@ class DomainsRoutesTest {
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
         }
 
+    }
+
+    @Nested
+    class DetectedDomainHandling {
+        @BeforeEach
+        void setUp() throws Exception {
+            DNSService dnsService = mock(DNSService.class);
+            when(dnsService.getAllByName(any())).thenReturn(ImmutableList.of(InetAddress.getByName("172.45.62.13")));
+            when(dnsService.getHostName(any())).thenReturn("james.local");
+
+            MemoryDomainList domainList = new MemoryDomainList(dnsService);
+            domainList.setAutoDetectIP(true);
+            domainList.setAutoDetect(true);
+            createServer(domainList);
+        }
+
+        @Test
+        void deleteShouldFailWhenAutoDetectedDomain() {
+            when()
+                .delete("james.local")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Can not remove domain"))
+                .body("details", is("james.local is autodetected and cannot be removed"));
+        }
+
+        @Test
+        void deleteShouldFailWhenAutoDetectedIp() {
+            when()
+                .delete("172.45.62.13")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Can not remove domain"))
+                .body("details", is("172.45.62.13 is autodetected and cannot be removed"));
+        }
     }
 
 }
