@@ -93,8 +93,7 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     private final DockerRabbitMQ rabbitMQ;
     private final DockerRestartPolicy dockerRestartPolicy;
 
-    private SimpleChannelPool simpleChannelPool;
-    private RabbitMQConnectionFactory connectionFactory;
+    private ReactorRabbitMQChannelPool channelPool;
     private SimpleConnectionPool connectionPool;
 
     public RabbitMQExtension(DockerRabbitMQ rabbitMQ,
@@ -112,14 +111,15 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
     public void beforeEach(ExtensionContext extensionContext) throws Exception {
         dockerRestartPolicy.beforeEach(rabbitMQ);
 
-        connectionFactory = createRabbitConnectionFactory();
+        RabbitMQConnectionFactory connectionFactory = createRabbitConnectionFactory();
         connectionPool = new SimpleConnectionPool(connectionFactory);
-        this.simpleChannelPool = new SimpleChannelPool(connectionPool);
+        channelPool = new ReactorRabbitMQChannelPool(connectionPool);
+        channelPool.start();
     }
 
     @Override
     public void afterEach(ExtensionContext context) throws Exception {
-        simpleChannelPool.close();
+        channelPool.close();
         connectionPool.close();
         rabbitMQ.reset();
         dockerRestartPolicy.afterEach(rabbitMQ);
@@ -140,11 +140,11 @@ public class RabbitMQExtension implements BeforeAllCallback, BeforeEachCallback,
         return rabbitMQ;
     }
 
-    public RabbitMQChannelPool getRabbitChannelPool() {
-        return simpleChannelPool;
+    public ReactorRabbitMQChannelPool getRabbitChannelPool() {
+        return channelPool;
     }
 
-    public SimpleConnectionPool getRabbitConnectionPool() {
+    public SimpleConnectionPool getConnectionPool() {
         return connectionPool;
     }
 

@@ -37,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
+import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -138,6 +139,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     public Mono<? extends Channel> getChannelMono() {
         return Mono.fromCallable(() -> {
             Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
+            Preconditions.checkArgument(channel.isOpen());
             borrowedChannels.add(channel);
             return channel;
         });
@@ -181,5 +183,13 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         borrowedChannels.forEach(channel -> getChannelCloseHandler().accept(SignalType.ON_NEXT, channel));
         borrowedChannels.clear();
         pool.close();
+    }
+
+    public boolean tryChannel() {
+        try {
+            return getChannelMono().block().isOpen();
+        } catch (Throwable t) {
+            return false;
+        }
     }
 }

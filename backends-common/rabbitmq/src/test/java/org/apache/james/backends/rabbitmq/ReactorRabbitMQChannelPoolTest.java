@@ -67,7 +67,7 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
 
     private ReactorRabbitMQChannelPool generateChannelPool(int poolSize) {
         ReactorRabbitMQChannelPool reactorRabbitMQChannelPool = new ReactorRabbitMQChannelPool(
-            rabbitMQExtension.getRabbitConnectionPool().getResilientConnection(),
+            rabbitMQExtension.getConnectionPool().getResilientConnection(),
             poolSize);
         reactorRabbitMQChannelPool.start();
         return reactorRabbitMQChannelPool;
