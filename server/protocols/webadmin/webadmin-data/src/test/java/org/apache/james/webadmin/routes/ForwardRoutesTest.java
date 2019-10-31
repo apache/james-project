@@ -475,7 +475,7 @@ class ForwardRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The forward is not an email address")
+                .containsEntry("message", "The base forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
@@ -494,7 +494,7 @@ class ForwardRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The forward is not an email address")
+                .containsEntry("message", "The base forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
@@ -550,7 +550,7 @@ class ForwardRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The forward is not an email address")
+                .containsEntry("message", "The target forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
@@ -580,7 +580,7 @@ class ForwardRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The forward is not an email address")
+                .containsEntry("message", "The base forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
@@ -599,7 +599,7 @@ class ForwardRoutesTest {
             assertThat(errors)
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "The forward is not an email address")
+                .containsEntry("message", "The target forward is not an email address")
                 .containsEntry("details", "Out of data at position 1 in 'not-an-address'");
         }
 
