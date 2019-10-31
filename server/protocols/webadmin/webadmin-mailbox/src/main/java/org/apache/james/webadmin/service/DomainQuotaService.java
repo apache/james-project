@@ -31,8 +31,6 @@ import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDomainDTO;
 
-import com.github.fge.lambdas.Throwing;
-
 public class DomainQuotaService {
 
     private final MaxQuotaManager maxQuotaManager;
@@ -84,9 +82,20 @@ public class DomainQuotaService {
     }
 
     public void defineQuota(Domain domain, QuotaDTO quota) {
-        quota.getCount()
-            .ifPresent(Throwing.consumer(count -> maxQuotaManager.setDomainMaxMessage(domain, count)));
-        quota.getSize()
-            .ifPresent(Throwing.consumer(size -> maxQuotaManager.setDomainMaxStorage(domain, size)));
+        try {
+            if (quota.getCount().isPresent()) {
+                maxQuotaManager.setDomainMaxMessage(domain, quota.getCount().get());
+            } else {
+                maxQuotaManager.removeDomainMaxMessage(domain);
+            }
+
+            if (quota.getSize().isPresent()) {
+                maxQuotaManager.setDomainMaxStorage(domain, quota.getSize().get());
+            } else {
+                maxQuotaManager.removeDomainMaxStorage(domain);
+            }
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

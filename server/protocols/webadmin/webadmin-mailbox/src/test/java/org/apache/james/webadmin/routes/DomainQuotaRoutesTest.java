@@ -450,7 +450,14 @@ class DomainQuotaRoutesTest {
     @Test
     void putQuotaShouldBeAbleToRemoveBothQuota() {
         given()
-            .body("{\"count\":null,\"count\":null}")
+            .body("{\"count\":52,\"size\":42}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+
+        given()
+            .body("{\"count\":null,\"size\":null}")
             .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
@@ -458,5 +465,44 @@ class DomainQuotaRoutesTest {
         assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).isEmpty();
         assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).isEmpty();
     }
+
+    @Test
+    void putQuotaShouldBeAbleToRemoveCountQuota() {
+        given()
+            .body("{\"count\":52,\"size\":42}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+
+        given()
+            .body("{\"count\":null,\"size\":42}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).isEmpty();
+    }
+
+    @Test
+    void putQuotaShouldBeAbleToRemoveSizeQuota() {
+        given()
+            .body("{\"count\":52,\"size\":42}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+
+        given()
+            .body("{\"count\":52,\"size\":null}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.NO_CONTENT_204);
+
+        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).isEmpty();
+        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).contains(QuotaCount.count(52));
+    }
+
 
 }
