@@ -40,6 +40,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.webadmin.WebAdminServer;
@@ -678,8 +679,11 @@ class DomainsRoutesTest {
             when(dnsService.getHostName(any())).thenReturn("james.local");
 
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            domainList.setAutoDetectIP(true);
-            domainList.setAutoDetect(true);
+            domainList.configure(DomainListConfiguration.builder()
+                .autoDetect(true)
+                .autoDetectIp(true)
+                .defaultDomain(Domain.of("default.tld"))
+                .build());
             createServer(domainList);
         }
 
@@ -705,6 +709,18 @@ class DomainsRoutesTest {
                 .body("type", is("InvalidArgument"))
                 .body("message", is("Can not remove domain"))
                 .body("details", is("172.45.62.13 is autodetected and cannot be removed"));
+        }
+
+        @Test
+        void deleteShouldFailWhenDefaultDomain() {
+            when()
+                .delete("default.tld")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Can not remove domain"))
+                .body("details", is("default.tld is autodetected and cannot be removed"));
         }
     }
 

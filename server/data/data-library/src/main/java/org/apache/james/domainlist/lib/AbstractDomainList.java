@@ -23,6 +23,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
@@ -55,6 +56,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
 
     enum DomainType {
+        DefaultDomain,
         Internal,
         Detected,
         DetectedIp
@@ -187,11 +189,13 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
             .build();
         ImmutableList<Domain> ips = detectIps(domainsWithoutIp);
 
-        return ImmutableMultimap.<DomainType, Domain>builder()
+        ImmutableMultimap.Builder<DomainType, Domain> result = ImmutableMultimap.<DomainType, Domain>builder()
             .putAll(DomainType.Internal, domains)
             .putAll(DomainType.Detected, detectedDomains)
-            .putAll(DomainType.DetectedIp, ips)
-            .build();
+            .putAll(DomainType.DetectedIp, ips);
+        Optional.ofNullable(defaultDomain)
+            .ifPresent(domain -> result.put(DomainType.DefaultDomain, domain));
+        return result.build();
     }
 
     private ImmutableList<Domain> detectIps(Collection<Domain> domains) {
@@ -281,7 +285,8 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         Multimap<DomainType, Domain> domainsWithType = getDomainsWithType();
 
         return domainsWithType.get(DomainType.Detected).contains(domain)
-            || domainsWithType.get(DomainType.DetectedIp).contains(domain);
+            || domainsWithType.get(DomainType.DetectedIp).contains(domain)
+            || domainsWithType.get(DomainType.DefaultDomain).contains(domain);
     }
 
     /**

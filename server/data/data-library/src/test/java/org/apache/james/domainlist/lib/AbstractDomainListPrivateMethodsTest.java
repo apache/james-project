@@ -348,6 +348,15 @@ public class AbstractDomainListPrivateMethodsTest {
     }
 
     @Test
+    public void removeDomainShouldThrowWhenRemovingDefaultDomain() throws Exception {
+        Domain defaultDomain = Domain.of("default.tld");
+        domainList.configureDefaultDomain(defaultDomain);
+
+        assertThatThrownBy(() -> domainList.removeDomain(defaultDomain))
+            .isInstanceOf(AutoDetectedDomainRemovalException.class);
+    }
+
+    @Test
     public void configuredDomainShouldBeAddedUponConfiguration() throws Exception {
         Domain domain1 = Domain.of("conf1.tld");
         Domain domain2 = Domain.of("conf2.tld");
