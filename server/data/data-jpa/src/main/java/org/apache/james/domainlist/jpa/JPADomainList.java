@@ -143,7 +143,7 @@ public class JPADomainList extends AbstractDomainList {
     }
 
     @Override
-    public void removeDomain(Domain domain) throws DomainListException {
+    public void doRemoveDomain(Domain domain) throws DomainListException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         final EntityTransaction transaction = entityManager.getTransaction();
         try {

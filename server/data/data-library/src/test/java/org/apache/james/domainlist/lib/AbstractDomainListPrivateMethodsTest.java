@@ -31,9 +31,8 @@ import java.util.List;
 
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
-import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.ImmutableList;
@@ -320,7 +319,6 @@ public class AbstractDomainListPrivateMethodsTest {
         assertThat(domainList.containsDomain(Domain.of(envDomain))).isTrue();
     }
 
-    @Ignore("JAMES-2943 Removing an auto-detected domain leads to a noop")
     @Test
     public void removeDomainShouldThrowWhenRemovingAutoDetectedDomains() throws Exception {
         domainList.configure(DomainListConfiguration.builder()
@@ -332,10 +330,9 @@ public class AbstractDomainListPrivateMethodsTest {
         when(dnsService.getHostName(any(InetAddress.class))).thenReturn(detected);
 
         assertThatThrownBy(() -> domainList.removeDomain(Domain.of(detected)))
-            .isInstanceOf(DomainListException.class);
+            .isInstanceOf(AutoDetectedDomainRemovalException.class);
     }
 
-    @Ignore("JAMES-2943 Removing an auto-detected ip leads to a noop")
     @Test
     public void removeDomainShouldThrowWhenRemovingAutoDetectedIps() throws Exception {
         String detected = "detected.tld";
@@ -347,7 +344,7 @@ public class AbstractDomainListPrivateMethodsTest {
         when(dnsService.getAllByName(detected)).thenReturn(ImmutableList.of(detectedAddress));
 
         assertThatThrownBy(() -> domainList.removeDomain(Domain.of(detectedIp)))
-            .isInstanceOf(DomainListException.class);
+            .isInstanceOf(AutoDetectedDomainRemovalException.class);
     }
 
     @Test

@@ -60,7 +60,7 @@ public class MemoryDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void removeDomain(Domain domain) throws DomainListException {
+    public void doRemoveDomain(Domain domain) throws DomainListException {
         if (!domains.remove(domain)) {
             throw new DomainListException(domain.name() + " was not found");
         }

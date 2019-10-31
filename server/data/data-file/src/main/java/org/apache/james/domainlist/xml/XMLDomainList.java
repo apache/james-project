@@ -72,7 +72,7 @@ public class XMLDomainList extends AbstractDomainList implements Configurable {
     }
 
     @Override
-    public void removeDomain(Domain domain) throws DomainListException {
+    public void doRemoveDomain(Domain domain) throws DomainListException {
         if (isConfigured) {
             throw new DomainListException("Read-Only DomainList implementation");
         }

@@ -108,7 +108,7 @@ public class CassandraDomainList extends AbstractDomainList {
     }
 
     @Override
-    public void removeDomain(Domain domain) throws DomainListException {
+    public void doRemoveDomain(Domain domain) throws DomainListException {
         boolean executed = executor.executeReturnApplied(removeStatement.bind()
             .setString(DOMAIN, domain.asString()))
             .block();

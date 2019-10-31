@@ -30,6 +30,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.AutoDetectedDomainRemovalException;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.lifecycle.api.Configurable;
@@ -41,7 +42,9 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Multimap;
 
 /**
  * All implementations of the DomainList interface should extends this abstract
@@ -50,6 +53,12 @@ import com.google.common.collect.ImmutableSet;
 public abstract class AbstractDomainList implements DomainList, Configurable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractDomainList.class);
+
+    enum DomainType {
+        Internal,
+        Detected,
+        DetectedIp
+    }
 
     public static final String CONFIGURE_AUTODETECT = "autodetect";
     public static final String CONFIGURE_AUTODETECT_IP = "autodetectIP";
@@ -155,17 +164,9 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
 
     @Override
     public ImmutableList<Domain> getDomains() throws DomainListException {
-        List<Domain> domains = getDomainListInternal();
-        ImmutableList<Domain> detectedDomains = detectDomains();
-
-        ImmutableList<Domain> domainsWithoutIp = ImmutableList.<Domain>builder()
-            .addAll(domains)
-            .addAll(detectedDomains)
-            .build();
-        ImmutableSet<Domain> allDomains = ImmutableSet.<Domain>builder()
-            .addAll(domainsWithoutIp)
-            .addAll(detectIps(domainsWithoutIp))
-            .build();
+        ImmutableSet<Domain> allDomains = getDomainsWithType().values()
+            .stream()
+            .collect(Guavate.toImmutableSet());
 
         if (LOGGER.isDebugEnabled()) {
             for (Domain domain : allDomains) {
@@ -174,6 +175,23 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         }
 
         return ImmutableList.copyOf(allDomains);
+    }
+
+    private Multimap<DomainType, Domain> getDomainsWithType() throws DomainListException {
+        List<Domain> domains = getDomainListInternal();
+        ImmutableList<Domain> detectedDomains = detectDomains();
+
+        ImmutableList<Domain> domainsWithoutIp = ImmutableList.<Domain>builder()
+            .addAll(domains)
+            .addAll(detectedDomains)
+            .build();
+        ImmutableList<Domain> ips = detectIps(domainsWithoutIp);
+
+        return ImmutableMultimap.<DomainType, Domain>builder()
+            .putAll(DomainType.Internal, domains)
+            .putAll(DomainType.Detected, detectedDomains)
+            .putAll(DomainType.DetectedIp, ips)
+            .build();
     }
 
     private ImmutableList<Domain> detectIps(Collection<Domain> domains) {
@@ -250,6 +268,22 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
         this.autoDetectIP = autoDetectIP;
     }
 
+    @Override
+    public void removeDomain(Domain domain) throws DomainListException {
+        if (isAutoDetected(domain)) {
+            throw new AutoDetectedDomainRemovalException(domain);
+        }
+
+        doRemoveDomain(domain);
+    }
+
+    private boolean isAutoDetected(Domain domain) throws DomainListException {
+        Multimap<DomainType, Domain> domainsWithType = getDomainsWithType();
+
+        return domainsWithType.get(DomainType.Detected).contains(domain)
+            || domainsWithType.get(DomainType.DetectedIp).contains(domain);
+    }
+
     /**
      * Return domainList
      * 
@@ -258,5 +292,7 @@ public abstract class AbstractDomainList implements DomainList, Configurable {
     protected abstract List<Domain> getDomainListInternal() throws DomainListException;
 
     protected abstract boolean containsDomainInternal(Domain domain) throws DomainListException;
+
+    protected abstract void doRemoveDomain(Domain domain) throws DomainListException;
 
 }
