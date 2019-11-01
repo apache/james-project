@@ -162,6 +162,14 @@ class DomainsRoutesTest {
         }
 
         @Test
+        void putShouldReturnOkWhenWithA255LongDomainName() {
+            when()
+                .put(StringUtils.repeat('a', 255))
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
         void putShouldReturnBadRequestWhenDomainNameIsTooLong() {
             String longDomainName = StringUtils.repeat('a', 256);
 

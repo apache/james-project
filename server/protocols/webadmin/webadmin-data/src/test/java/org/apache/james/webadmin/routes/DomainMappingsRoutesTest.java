@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
@@ -118,6 +119,26 @@ class DomainMappingsRoutesTest {
 
             given()
                 .body("to.com")
+            .when()
+                .put("from.com")
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void addDomainMappingsShouldReturnOkWhenWithA255LongDomainSource() {
+            given()
+                .body("to.com")
+            .when()
+                .put(StringUtils.repeat('a', 255))
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void addDomainMappingsShouldReturnOkWhenWithA255LongDomainDestination() {
+            given()
+                .body(StringUtils.repeat('a', 255))
             .when()
                 .put("from.com")
             .then()
@@ -400,6 +421,38 @@ class DomainMappingsRoutesTest {
                 .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
                 .containsEntry("type", "InvalidArgument")
                 .hasEntrySatisfying("message", o -> assertThat((String) o).matches("^The domain .* is invalid\\.$"));
+        }
+
+        @Test
+        void addDomainMappingShouldReturnBadRequestWhenDomainSourceTooLong() {
+            String longDomainName = StringUtils.repeat('a', 256);
+
+            given()
+                .body("destination.tld")
+            .when()
+                .put(longDomainName)
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("The domain " + longDomainName + " is invalid."))
+                .body("details", is("Domain name length should not exceed 255 characters"));
+        }
+
+        @Test
+        void addDomainMappingShouldReturnBadRequestWhenDomainDestinationTooLong() {
+            String longDomainName = StringUtils.repeat('a', 256);
+
+            given()
+                .body(longDomainName)
+            .when()
+                .put("source.tld")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("The domain " + longDomainName + " is invalid."))
+                .body("details", is("Domain name length should not exceed 255 characters"));
         }
 
         private void assertBadRequest(String toDomain, Function<RequestSpecification, Response> requestingFunction) {
