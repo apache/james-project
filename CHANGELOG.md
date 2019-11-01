@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 
 ## [Unreleased]
 
+### Added
+- Distributed task management for Guice cassandra-rabbitmq product. This enables two James server to share a consistent view
+of tasks being currently executed.
+
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
   - Use of routing keys to collocate documents per mailbox
