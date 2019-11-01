@@ -23,81 +23,81 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.core.Domain;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class DomainTest {
+class DomainTest {
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(Domain.class)
             .withIgnoredFields("domainName")
             .verify();
     }
 
     @Test
-    public void shouldBeCaseInsensitive() {
+    void shouldBeCaseInsensitive() {
         assertThat(Domain.of("Domain")).isEqualTo(Domain.of("domain"));
     }
 
     @Test
-    public void shouldRemoveBrackets() {
+    void shouldRemoveBrackets() {
         assertThat(Domain.of("[domain]")).isEqualTo(Domain.of("domain"));
     }
 
     @Test
-    public void openBracketWithTextShouldNotBeRemoved() {
+    void openBracketWithTextShouldNotBeRemoved() {
         assertThat(Domain.of("[domain")).isEqualTo(Domain.of("[Domain"));
     }
 
     @Test
-    public void singleOpenBracketShouldNotBeRemoved() {
+    void singleOpenBracketShouldNotBeRemoved() {
         assertThat(Domain.of("[")).isEqualTo(Domain.of("["));
     }
 
     @Test
-    public void singleClosingBracketShouldNotBeRemoved() {
+    void singleClosingBracketShouldNotBeRemoved() {
         assertThat(Domain.of("]")).isEqualTo(Domain.of("]"));
     }
 
     @Test
-    public void closeBracketWithTextShouldNotBeRemoved() {
+    void closeBracketWithTextShouldNotBeRemoved() {
         assertThat(Domain.of("aaa]")).isEqualTo(Domain.of("aaa]"));
     }
 
     @Test
-    public void bracketSurroundedWithTextShouldNotBeRemoved() {
+    void bracketSurroundedWithTextShouldNotBeRemoved() {
         assertThat(Domain.of("a[aaa]a")).isEqualTo(Domain.of("a[aaa]a"));
     }
 
     @Test
-    public void bracketWithTextSuffixShouldNotBeRemoved() {
+    void bracketWithTextSuffixShouldNotBeRemoved() {
         assertThat(Domain.of("[aaa]a")).isEqualTo(Domain.of("[aaa]a"));
     }
 
     @Test
-    public void bracketWithTextPrefixShouldNotBeRemoved() {
+    void bracketWithTextPrefixShouldNotBeRemoved() {
         assertThat(Domain.of("a[aaa]")).isEqualTo(Domain.of("a[aaa]"));
     }
 
     @Test
-    public void singleBracketShouldNotBeRemoved() {
+    void singleBracketShouldNotBeRemoved() {
         assertThat(Domain.of("[]")).isEqualTo(Domain.of("[]"));
     }
 
     @Test
-    public void shouldThrowWhenDomainContainAtSymbol() {
+    void shouldThrowWhenDomainContainAtSymbol() {
         assertThatThrownBy(() -> Domain.of("Dom@in")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowWhenDomainIsEmpty() {
+    void shouldThrowWhenDomainIsEmpty() {
         assertThatThrownBy(() -> Domain.of("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void shouldThrowOnNullArgument() {
+    void shouldThrowOnNullArgument() {
         assertThatThrownBy(() -> Domain.of(null)).isInstanceOf(NullPointerException.class);
     }
 
