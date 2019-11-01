@@ -22,6 +22,7 @@ package org.apache.james.domainlist.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.junit.jupiter.api.Test;
 
@@ -101,4 +102,15 @@ class DomainTest {
         assertThatThrownBy(() -> Domain.of(null)).isInstanceOf(NullPointerException.class);
     }
 
+    @Test
+    void shouldAllow255LongDomain() {
+        assertThat(Domain.of(StringUtils.repeat('a', 255)).asString())
+            .hasSize(255);
+    }
+
+    @Test
+    void shouldThrowWhenTooLong() {
+        assertThatThrownBy(() -> Domain.of(StringUtils.repeat('a', 256)))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
 }

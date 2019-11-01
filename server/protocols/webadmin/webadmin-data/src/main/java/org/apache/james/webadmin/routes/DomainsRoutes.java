@@ -48,7 +48,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 import io.swagger.annotations.Api;
@@ -244,7 +243,7 @@ public class DomainsRoutes implements Routes {
     private String addDomain(Request request, Response response) {
         Domain domain = checkValidDomain(request.params(DOMAIN_NAME));
         try {
-            addDomain(domain);
+            domainList.addDomain(domain);
             return Responses.returnNoContent(response);
         } catch (DomainListException e) {
             LOGGER.info("{} already exists", domain);
@@ -276,12 +275,6 @@ public class DomainsRoutes implements Routes {
                 .cause(e)
                 .haltError();
         }
-    }
-
-    private void addDomain(Domain domain) throws DomainListException {
-        Preconditions.checkArgument(domain.name().length() < MAXIMUM_DOMAIN_SIZE,
-            "Domain name length should not exceed " + (MAXIMUM_DOMAIN_SIZE - 1) + " characters");
-        domainList.addDomain(domain);
     }
 
     private String exists(Request request, Response response) throws DomainListException {
