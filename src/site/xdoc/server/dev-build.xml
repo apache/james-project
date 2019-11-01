@@ -160,7 +160,7 @@
 
     <section name="Build James from IntelliJ IDEA">
 
-          <p>This section has been created using IntelliJ IDEA 12 and Maven 3. And downloading the master version of the server
+          <p>This section has been created using IntelliJ IDEA 2019.2.1 and Maven 3. And downloading the master version of the server
               from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
           </p>
 
