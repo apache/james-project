@@ -23,8 +23,8 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,9 +33,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.InetAddress;
-import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainList;
@@ -97,22 +96,16 @@ class DomainsRoutesTest {
 
         @Test
         void getDomainsShouldBeEmptyByDefault() {
-            List<String> domains =
-                given()
-                    .get()
-                .then()
-                    .statusCode(HttpStatus.OK_200)
-                    .contentType(ContentType.JSON)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".");
-
-            assertThat(domains).isEmpty();
+            given()
+                .get()
+            .then()
+                .statusCode(HttpStatus.OK_200)
+                .contentType(ContentType.JSON)
+                .body(".", hasSize(0));
         }
 
         @Test
-        void putShouldReturnErrorWhenUsedWithEmptyDomain() {
+        void putShouldReturnNotFoundWhenUsedWithEmptyDomain() {
             given()
                 .put(SEPARATOR)
             .then()
@@ -120,7 +113,7 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void deleteShouldReturnErrorWhenUsedWithEmptyDomain() {
+        void deleteShouldReturnNotFoundWhenUsedWithEmptyDomain() {
             given()
                 .delete(SEPARATOR)
             .then()
@@ -140,40 +133,28 @@ class DomainsRoutesTest {
             with()
                 .put(DOMAIN);
 
-            List<String> domains =
-                when()
-                    .get()
-                .then()
-                    .contentType(ContentType.JSON)
-                    .statusCode(HttpStatus.OK_200)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".");
-
-            assertThat(domains).containsExactly(DOMAIN);
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(".", contains(DOMAIN));
         }
 
         @Test
-        void putShouldReturnUserErrorWhenNameContainsAT() {
-            Map<String, Object> errors = when()
+        void putShouldReturnBadRequestWhenDomainNameContainsAT() {
+            when()
                 .put(DOMAIN + "@" + DOMAIN)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Invalid request for domain creation domain@domain");
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid request for domain creation domain@domain"));
         }
 
         @Test
-        void putShouldReturnUserErrorWhenNameContainsUrlSeparator() {
+        void putShouldReturnNotFoundWhenDomainNameContainsUrlSeparator() {
             when()
                 .put(DOMAIN + "/" + DOMAIN)
             .then()
@@ -181,25 +162,18 @@ class DomainsRoutesTest {
         }
 
         @Test
-        void putShouldReturnUserErrorWhenNameIsTooLong() {
-            String longDomainName = DOMAIN + "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
-                "0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789.0123456789." +
-                "0123456789.0123456789.0123456789.";
-            Map<String, Object> errors = when()
+        void putShouldReturnBadRequestWhenDomainNameIsTooLong() {
+            String longDomainName = StringUtils.repeat('a', 256);
+
+            when()
                 .put(longDomainName)
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
-                .extract()
-                .body()
-                .jsonPath()
-                .getMap(".");
-
-            assertThat(errors)
-                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
-                .containsEntry("type", "InvalidArgument")
-                .containsEntry("message", "Invalid request for domain creation " + longDomainName)
-                .containsEntry("details", "Domain name length should not exceed 255 characters");
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is("InvalidArgument"))
+                .body("message", is("Invalid request for domain creation " + longDomainName))
+                .body("details", is("Domain name length should not exceed 255 characters"));
         }
 
         @Test
@@ -223,18 +197,12 @@ class DomainsRoutesTest {
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
 
-            List<String> domains =
-                when()
-                    .get()
-                .then()
-                    .contentType(ContentType.JSON)
-                    .statusCode(HttpStatus.OK_200)
-                    .extract()
-                    .body()
-                    .jsonPath()
-                    .getList(".");
-
-           assertThat(domains).isEmpty();
+            when()
+                .get()
+            .then()
+                .contentType(ContentType.JSON)
+                .statusCode(HttpStatus.OK_200)
+                .body(".", hasSize(0));
         }
 
         @Test
