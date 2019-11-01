@@ -52,7 +52,7 @@ We significantly improved our usage of ElasticSearch. Underlying changes include
  level synchronisation, and thus enhance throughput, latencies and scalability.
  - Disabling dynamic mapping. We now represent headers as nested objects.
  - Removing some not needed fields from the mapping
- - No longer index raw HTML. This was possible under some configuration combinaison, and caused the data stored in elasticSearch
+ - No longer index raw HTML. This was possible under some configuration combination, and caused the data stored in elasticSearch
  to be significantly larger than required.
 
 The downside of these changes is that a reindex is needed, implying a downtime on search:
