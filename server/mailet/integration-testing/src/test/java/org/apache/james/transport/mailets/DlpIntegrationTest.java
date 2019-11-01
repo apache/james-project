@@ -27,6 +27,7 @@ import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT;
 import static org.apache.james.mailets.configuration.Constants.RECIPIENT2;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.core.builder.MimeMessageBuilder;
@@ -35,9 +36,10 @@ import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.MailetContainer;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
-import org.apache.james.transport.matchers.All;
 import org.apache.james.transport.matchers.dlp.Dlp;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -46,6 +48,7 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -74,9 +77,7 @@ public class DlpIntegrationTest {
                 ProcessorConfiguration.transport()
                     .addMailet(MailetConfiguration.BCC_STRIPPER)
                     .addMailet(dlpMailet)
-                    .addMailet(MailetConfiguration.builder()
-                        .matcher(All.class)
-                        .mailet(Null.class)));
+                    .addMailet(MailetConfiguration.LOCAL_DELIVERY));
 
         jamesServer = TemporaryJamesServer.builder()
             .withBase(Modules.combine(MemoryJamesServerMain.SMTP_AND_IMAP_MODULE, MemoryJamesServerMain.WEBADMIN_TESTING))
@@ -238,6 +239,47 @@ public class DlpIntegrationTest {
                 .recipient(RECIPIENT));
 
         awaitAtMostOneMinute.until(() -> containsExactlyOneMail(repositoryUrl));
+    }
+
+    @Ignore("Dlp got an exception of parsing email body containing attachment with a part of error message: " +
+        "javax.activation.UnsupportedDataTypeException: Unknown image type image/jpeg; name=\"linux.jpeg\"")
+    @Test
+    public void dlpShouldBeAbleToReadMailContentWithAttachments() throws Exception {
+        createJamesServer(MailetConfiguration.builder()
+            .matcher(Dlp.class)
+            .mailet(ToSenderDomainRepository.class)
+            .addProperty(ToSenderDomainRepository.URL_PREFIX, REPOSITORY_PREFIX)
+            .addProperty(ToSenderDomainRepository.ALLOW_REPOSITORY_CREATION, "false"));
+
+        MailRepositoryUrl repositoryUrl = MailRepositoryUrl.from(REPOSITORY_PREFIX + DEFAULT_DOMAIN);
+        given()
+            .spec(specification)
+            .param("protocol", repositoryUrl.getProtocol().getValue())
+            .put("/mailRepositories/" + repositoryUrl.getPath().urlEncoded());
+
+        given()
+            .spec(specification)
+            .body("{\"rules\":[{" +
+                "  \"id\": \"1\"," +
+                "  \"expression\": \"matchMe\"," +
+                "  \"explanation\": \"\"," +
+                "  \"targetsSender\": false," +
+                "  \"targetsRecipients\": false," +
+                "  \"targetsContent\": true" +
+                "}]}")
+            .put("/dlp/rules/" + DEFAULT_DOMAIN);
+
+        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpAuthRequiredPort())
+            .authenticate(FROM, PASSWORD)
+            .sendMessageWithHeaders(FROM, RECIPIENT,
+                ClassLoaderUtils.getSystemResourceAsString("eml/dlp_read_mail_with_attachment.eml"));
+
+        imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
+            .login(RECIPIENT, PASSWORD)
+            .select(IMAPMessageReader.INBOX)
+            .awaitMessage(awaitAtMostOneMinute);
+        assertThat(imapMessageReader.readFirstMessage()).containsSequence("dlp subject");
+
     }
 
     private boolean containsExactlyOneMail(MailRepositoryUrl repositoryUrl) {
