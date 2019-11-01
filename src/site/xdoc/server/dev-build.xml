@@ -99,6 +99,34 @@
 
   </section>
 
+    <section name="Build James from IntelliJ IDEA">
+
+        <p>This section has been created using IntelliJ IDEA 2019.2.1 and Maven 3. And downloading the master version of the server
+            from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
+        </p>
+
+        <subsection name="Getting the sources from the repository">
+            <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
+
+            <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
+            <img src="./images/intellij-idea/intellij-new-project.png"/>
+            <p>In the pop-up window, fill the <strong>URL</strong> part to <i>http://git-wip-us.apache.org/repos/asf/james-project.git</i>.</p>
+            <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
+
+            <p>When this process is done, the project should look like this. <br/></p>
+            <img src="./images/intellij-idea/intellij-james-project.png"/>
+
+        </subsection>
+
+        <subsection name="Building the project">
+            <p> To build the project, you must open the <strong>Maven Projects</strong> panel (should be the maven option in the upper right). Then double click on the package goal to run this goal.<br/></p>
+            <img src="./images/intellij-idea/intellij-mvn.png"/>
+            <p>Then you will find the James server zip in the <strong>server/app/target</strong> folder.<br/></p>
+            <img src="./images/intellij-idea/intellij-james-zip.png"/>
+            <p>Note that tests can be long and can be skept by toggling <i>skip test</i></p>
+        </subsection>
+    </section>
+
   <section name="Build James Source from Eclipse">
 
     <p>Warning: due to bad scala support in eclipse, we are not able to compile James with Eclipse. Contributions to
@@ -157,34 +185,6 @@
      <img src="./images/eclipse/eclipse-m2eclipse-projects.gif"/>
 
     </subsection>
-
-    <section name="Build James from IntelliJ IDEA">
-
-          <p>This section has been created using IntelliJ IDEA 2019.2.1 and Maven 3. And downloading the master version of the server
-              from <code>http://git-wip-us.apache.org/repos/asf/james-project.git/</code>.
-          </p>
-
-          <subsection name="Getting the sources from the repository">
-              <p>To download the source code, you can use the Git support that comes with IntelliJ IDEA following the next steps:</p>
-
-              <p>First, in the Welcome page, click on <strong>Check out from Version Control</strong> and select <strong>Git</strong>.</p>
-              <img src="./images/intellij-idea/intellij-new-project.png"/>
-              <p>In the pop-up window, press the <strong>+</strong> button to add the James code repository in the next pop-up.</p>
-              <img src="./images/intellij-idea/intellij-git-repo.png"/>            <br/>
-
-              <p>When this process is done, the project should look like this. <br/></p>
-              <img src="./images/intellij-idea/intellij-james-project.png"/>
-
-          </subsection>
-
-          <subsection name="Building the project">
-              <p> To build the project, you must open the <strong>Maven Projects</strong> panel. Then double click on the install goal to run this goal.<br/></p>
-              <img src="./images/intellij-idea/intellij-mvn.png"/>
-              <p>Then you will find the James server zip in the <strong>server/app/target</strong> folder.<br/></p>
-              <img src="./images/intellij-idea/intellij-james-zip.png"/>
-              <p>Note that tests can be long and can be skept by toggling <i>skip test</i></p>
-          </subsection>
-    </section>
 
     <subsection name="Run James from Eclipse">
 
