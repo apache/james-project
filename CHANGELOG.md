@@ -8,6 +8,9 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
   - Use of routing keys to collocate documents per mailbox
+  - Under some configuration, html was not extracted before document indexing
+  - Removed unnecessary fields from mailbox mapping
+  - Disable dynamic mapping thanks to a change of the header structure 
   - Read related [upgrade instructions](upgrade-instructions.md)
 
 ### Removed

@@ -40,6 +40,9 @@ SHA-1 0d72783ff4
 
 JIRAS:
  - https://issues.apache.org/jira/browse/JAMES-2917
+ - https://issues.apache.org/jira/browse/JAMES-2078
+ - https://issues.apache.org/jira/browse/JAMES-2079
+ - https://issues.apache.org/jira/browse/JAMES-2910
 
 Concerned product: Guice product relying on ElasticSearch
 
@@ -47,6 +50,10 @@ We significantly improved our usage of ElasticSearch. Underlying changes include
 
  - The use of routing to collocate emails of a same mailbox within a same shard. This enables search queries to avoid cluster
  level synchronisation, and thus enhance throughput, latencies and scalability.
+ - Disabling dynamic mapping. We now represent headers as nested objects.
+ - Removing some not needed fields from the mapping
+ - No longer index raw HTML. This was possible under some configuration combinaison, and caused the data stored in elasticSearch
+ to be significantly larger than required.
 
 The downside of these changes is that a reindex is needed, implying a downtime on search:
  - Delete the indexes used by James
