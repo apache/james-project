@@ -48,7 +48,6 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -241,8 +240,6 @@ public class DlpIntegrationTest {
         awaitAtMostOneMinute.until(() -> containsExactlyOneMail(repositoryUrl));
     }
 
-    @Ignore("Dlp got an exception of parsing email body containing attachment with a part of error message: " +
-        "javax.activation.UnsupportedDataTypeException: Unknown image type image/jpeg; name=\"linux.jpeg\"")
     @Test
     public void dlpShouldBeAbleToReadMailContentWithAttachments() throws Exception {
         createJamesServer(MailetConfiguration.builder()
