@@ -34,13 +34,9 @@ import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
-import org.apache.james.webadmin.utils.JsonExtractException;
-import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 
@@ -63,17 +59,14 @@ public class SieveQuotaRoutes implements Routes {
     private static final String USER_ID = "userId";
     private static final String USER_SIEVE_QUOTA_PATH = Joiner.on(SEPARATOR).join(ROOT_PATH, "users", ":" + USER_ID);
     private static final String REQUESTED_SIZE = "requestedSize";
-    private static final Logger LOGGER = LoggerFactory.getLogger(SieveQuotaRoutes.class);
 
     private final SieveQuotaRepository sieveQuotaRepository;
     private final JsonTransformer jsonTransformer;
-    private final JsonExtractor<Long> jsonExtractor;
 
     @Inject
     public SieveQuotaRoutes(SieveQuotaRepository sieveQuotaRepository, JsonTransformer jsonTransformer) {
         this.sieveQuotaRepository = sieveQuotaRepository;
         this.jsonTransformer = jsonTransformer;
-        this.jsonExtractor = new JsonExtractor<>(Long.class);
     }
 
     @Override
@@ -123,19 +116,9 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineUpdateGlobalSieveQuota(Service service) {
         service.put(DEFAULT_QUOTA_PATH, (request, response) -> {
-            try {
-                QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
-                sieveQuotaRepository.setDefaultQuota(requestedSize);
-                return Responses.returnNoContent(response);
-            } catch (JsonExtractException e) {
-                LOGGER.info("Malformed JSON", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .message("Malformed JSON")
-                    .cause(e)
-                    .haltError();
-            }
+            QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
+            sieveQuotaRepository.setDefaultQuota(requestedSize);
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 
@@ -193,19 +176,9 @@ public class SieveQuotaRoutes implements Routes {
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
             User userId = User.fromUsername(request.params(USER_ID));
-            try {
-                QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
-                sieveQuotaRepository.setQuota(userId, requestedSize);
-                return Responses.returnNoContent(response);
-            } catch (JsonExtractException e) {
-                LOGGER.info("Malformed JSON", e);
-                throw ErrorResponder.builder()
-                    .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .message("Malformed JSON")
-                    .cause(e)
-                    .haltError();
-            }
+            QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
+            sieveQuotaRepository.setQuota(userId, requestedSize);
+            return Responses.returnNoContent(response);
         }, jsonTransformer);
     }
 
@@ -230,8 +203,8 @@ public class SieveQuotaRoutes implements Routes {
         });
     }
 
-    private QuotaSize extractRequestedQuotaSizeFromRequest(Request request) throws JsonExtractException {
-        Long requestedSize = jsonExtractor.parse(request.body());
+    private QuotaSize extractRequestedQuotaSizeFromRequest(Request request) {
+        long requestedSize = extractNumberFromRequestBody(request);
         if (requestedSize < 0) {
             throw ErrorResponder.builder()
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
@@ -240,5 +213,18 @@ public class SieveQuotaRoutes implements Routes {
                 .haltError();
         }
         return QuotaSize.size(requestedSize);
+    }
+
+    private long extractNumberFromRequestBody(Request request) {
+        String body = request.body();
+        try {
+            return Long.parseLong(body);
+        } catch (NumberFormatException e) {
+            throw ErrorResponder.builder()
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .message(String.format("unrecognized integer number '%s'", body))
+                .haltError();
+        }
     }
 }
