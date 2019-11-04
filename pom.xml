@@ -2670,6 +2670,11 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>${james.groupId}</groupId>
+                    <artifactId>mailetdocs-maven-plugin</artifactId>
+                    <version>${project.version}</version>
+                </plugin>
                 <!-- Order by groupId / artifactId / scope -->
                 <plugin>
                     <groupId>com.coderplus.maven.plugins</groupId>
