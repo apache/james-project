@@ -123,9 +123,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      * @throws MailboxException
-     *             when the mailbox cannot be opened
+     *            when the mailbox cannot be opened
      * @throws MailboxNotFoundException
-     *             when the given mailbox does not exist
+     *            when the given mailbox does not exist
      */
     MessageManager getMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
@@ -137,9 +137,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      * @throws MailboxException
-     *             when the mailbox cannot be opened
+     *            when the mailbox cannot be opened
      * @throws MailboxNotFoundException
-     *             when the given mailbox does not exist
+     *            when the given mailbox does not exist
      */
     MessageManager getMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
@@ -151,7 +151,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param mailboxSession
      *            the context for this call, not null
      * @throws MailboxException
-     *             when creation fails
+     *            when creation fails
      * @return Empty optional when the mailbox name is empty. If mailbox is created, the id of the mailboxPath specified as
      *  parameter is returned (and potential mailboxIds of parent mailboxes created in the process will be omitted)
      */
@@ -176,11 +176,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not nul
      * @throws MailboxException
-     *             otherwise
+     *            otherwise
      * @throws MailboxExistsException
-     *             when the <code>to</code> mailbox exists
+     *            when the <code>to</code> mailbox exists
      * @throws MailboxNotFoundException
-     *             when the <code>from</code> mailbox does not exist
+     *            when the <code>from</code> mailbox does not exist
      */
     void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
@@ -250,7 +250,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      * @return true when the mailbox exists and is accessible for the given
-     *         user, false otherwise
+     *            user, false otherwise
      * @throws MailboxException
      */
     boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
@@ -261,7 +261,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param session
      *            the context for this call, not null
      * @return true when the INBOX exists and is accessible for the given
-     *         user, false otherwise
+     *            user, false otherwise
      * @throws MailboxException
      */
     default boolean hasInbox(MailboxSession session) throws MailboxException {
@@ -278,9 +278,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            the name of the user whose session is being created
      * @return <code>MailboxSession</code>, not null
      * @throws BadCredentialsException
-     *             when system access is not allowed for the given user
+     *            when system access is not allowed for the given user
      * @throws MailboxException
-     *             when the creation fails for other reasons
+     *            when the creation fails for other reasons
      */
     MailboxSession createSystemSession(String userName) throws BadCredentialsException, MailboxException;
 
@@ -293,11 +293,11 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param passwd
      *            password supplied
      * @return a <code>MailboxSession</code> when the user is authenticated and
-     *         authorized to access
+     *            authorized to access
      * @throws BadCredentialsException
-     *             when system access is denied for the given user
+     *            when system access is denied for the given user
      * @throws MailboxException
-     *             when the creation fails for other reasons
+     *            when the creation fails for other reasons
      */
     MailboxSession login(String userid, String passwd) throws BadCredentialsException, MailboxException;
 
@@ -313,9 +313,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param otherUserId
      *            user name of the real user
      * @return a <code>MailboxSession</code> for the real user
-     *         when the admin is authenticated and authorized to access
+     *            when the admin is authenticated and authorized to access
      * @throws BadCredentialsException
-     *             when system access is denied for the given user
+     *            when system access is denied for the given user
      * @throws MailboxException
      *             when the creation fails for other reasons
      */
