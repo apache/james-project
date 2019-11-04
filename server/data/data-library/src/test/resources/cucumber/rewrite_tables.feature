@@ -34,6 +34,11 @@ Feature: Rewrite Tables tests
     Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
     Then mappings for user "test" at domain "localhost" should be empty
 
+  Scenario: chained stored regexp mapping should be retrieved when two levels
+    Given store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "use(.+)@localhost:final@localhost" regexp mapping for user "user" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "final@localhost"
+
 # Address mapping
 
   Scenario: stored address mapping should be retrieved when one mapping matching
