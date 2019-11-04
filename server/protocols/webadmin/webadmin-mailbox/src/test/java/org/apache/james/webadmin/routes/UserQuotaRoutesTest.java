@@ -1091,5 +1091,69 @@ class UserQuotaRoutesTest {
                 .contains(QuotaSize.size(42));
             softly.assertAll();
         }
+
+        @Test
+        void putQuotaShouldRemoveCount(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+
+            with()
+                .body("{\"count\":null,\"size\":42}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+                .isEmpty();
+            softly.assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaSize.size(42));
+            softly.assertAll();
+        }
+
+        @Test
+        void putQuotaShouldRemoveSize(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            with()
+                .body("{\"count\":52,\"size\":null}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaCount.count(52));
+            softly.assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+                .isEmpty();
+            softly.assertAll();
+        }
+
+        @Test
+        void putQuotaShouldRemoveBoth(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            with()
+                .body("{\"count\":null,\"size\":null}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.NO_CONTENT_204);
+
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+                .isEmpty();
+            softly.assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+                .isEmpty();
+            softly.assertAll();
+        }
+
     }
 }

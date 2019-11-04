@@ -61,11 +61,22 @@ public class UserQuotaService {
     }
 
     public void defineQuota(User user, QuotaDTO quota) {
-        QuotaRoot quotaRoot = userQuotaRootResolver.forUser(user);
-        quota.getCount()
-            .ifPresent(Throwing.consumer(count -> maxQuotaManager.setMaxMessage(quotaRoot, count)));
-        quota.getSize()
-            .ifPresent(Throwing.consumer(size -> maxQuotaManager.setMaxStorage(quotaRoot, size)));
+        try {
+            QuotaRoot quotaRoot = userQuotaRootResolver.forUser(user);
+            if (quota.getCount().isPresent()) {
+                maxQuotaManager.setMaxMessage(quotaRoot, quota.getCount().get());
+            } else {
+                maxQuotaManager.removeMaxMessage(quotaRoot);
+            }
+
+            if (quota.getSize().isPresent()) {
+                maxQuotaManager.setMaxStorage(quotaRoot, quota.getSize().get());
+            } else {
+                maxQuotaManager.removeMaxStorage(quotaRoot);
+            }
+        } catch (MailboxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public QuotaDetailsDTO getQuota(User user) throws MailboxException {
