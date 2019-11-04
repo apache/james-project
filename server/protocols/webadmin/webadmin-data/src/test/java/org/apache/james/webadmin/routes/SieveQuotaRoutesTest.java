@@ -27,6 +27,8 @@ import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
+import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -40,15 +42,21 @@ import io.restassured.http.ContentType;
 
 class SieveQuotaRoutesTest {
 
-    private static final User USER_A = User.fromUsername("userA");
+    private static final String USER_NAME_A = "userA";
+    private static final String PASSWORD_A = "123456";
+    private static final User USER_A = User.fromUsername(USER_NAME_A);
 
     private WebAdminServer webAdminServer;
     private SieveQuotaRepository sieveRepository;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws UsersRepositoryException {
         sieveRepository = new InMemorySieveQuotaRepository();
-        webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, new JsonTransformer()))
+
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        usersRepository.addUser(USER_NAME_A, PASSWORD_A);
+
+        webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, usersRepository, new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)
@@ -149,7 +157,7 @@ class SieveQuotaRoutesTest {
     @Test
     void getPerUserQuotaShouldReturn204WhenNoQuotaSetForUser() {
         given()
-            .get("/sieve/quota/users/" + USER_A.asString())
+            .get("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -161,7 +169,7 @@ class SieveQuotaRoutesTest {
 
         long actual =
             given()
-                .get("/sieve/quota/users/" + USER_A.asString())
+                .get("/sieve/quota/users/" + USER_NAME_A)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -172,13 +180,21 @@ class SieveQuotaRoutesTest {
     }
 
     @Test
+    void getPerUserSieveQuotaShouldReturn404WhenUserDoesNotExist() {
+        given()
+            .get("/sieve/quota/users/not_exist")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
     void updatePerUserSieveQuotaShouldUpdateStoredValue() throws Exception {
         sieveRepository.setQuota(USER_A, QuotaSize.size(500L));
         long requiredSize = 1024L;
 
         given()
             .body(requiredSize)
-            .put("/sieve/quota/users/" + USER_A.asString())
+            .put("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
@@ -189,7 +205,7 @@ class SieveQuotaRoutesTest {
     void updatePerUserSieveQuotaShouldReturn400WhenInvalidNumberFormatInTheBody() {
         given()
             .body("invalid")
-            .put("/sieve/quota/users/" + USER_A.asString())
+            .put("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("message", is("unrecognized integer number 'invalid'"));
@@ -209,15 +225,24 @@ class SieveQuotaRoutesTest {
     void updatePerUserSieveQuotaShouldReturn400WhenRequestedSizeNotPositiveInteger() {
         given()
             .body(-100L)
-            .put("/sieve/quota/users/" + USER_A.asString())
+            .put("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400);
     }
 
     @Test
+    void updatePerUserSieveQuotaShouldReturn404WhenUserDoesNotExist() {
+        given()
+            .body(500L)
+            .put("/sieve/quota/users/not_exist")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
+    }
+
+    @Test
     void removePerUserSieveQuotaShouldReturn204WhenNoQuotaSetForUser() {
         given()
-            .delete("/sieve/quota/users/" + USER_A.asString())
+            .delete("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
     }
@@ -227,8 +252,16 @@ class SieveQuotaRoutesTest {
         sieveRepository.setQuota(USER_A, QuotaSize.size(1024));
 
         given()
-            .delete("/sieve/quota/users/" + USER_A.asString())
+            .delete("/sieve/quota/users/" + USER_NAME_A)
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
+    }
+
+    @Test
+    void removePerUserSieveQuotaShouldReturn404WhenUserDoesNotExist() {
+        given()
+            .delete("/sieve/quota/users/not_exist")
+        .then()
+            .statusCode(HttpStatus.NOT_FOUND_404);
     }
 }

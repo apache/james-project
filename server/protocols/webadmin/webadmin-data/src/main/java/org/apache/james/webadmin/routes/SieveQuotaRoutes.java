@@ -32,6 +32,8 @@ import org.apache.james.core.User;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -61,11 +63,13 @@ public class SieveQuotaRoutes implements Routes {
     private static final String REQUESTED_SIZE = "requestedSize";
 
     private final SieveQuotaRepository sieveQuotaRepository;
+    private final UsersRepository usersRepository;
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    public SieveQuotaRoutes(SieveQuotaRepository sieveQuotaRepository, JsonTransformer jsonTransformer) {
+    public SieveQuotaRoutes(SieveQuotaRepository sieveQuotaRepository, UsersRepository usersRepository, JsonTransformer jsonTransformer) {
         this.sieveQuotaRepository = sieveQuotaRepository;
+        this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
     }
 
@@ -147,11 +151,12 @@ public class SieveQuotaRoutes implements Routes {
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "OK", response = Long.class),
             @ApiResponse(code = 204, message = "User sieve quota not set."),
+            @ApiResponse(code = 404, message = "The user name does not exist"),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineGetPerUserSieveQuota(Service service) {
         service.get(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = User.fromUsername(request.params(USER_ID));
+            User userId = getUser(request.params(USER_ID));
             try {
                 QuotaSize userQuota = sieveQuotaRepository.getQuota(userId);
                 response.status(HttpStatus.OK_200);
@@ -171,11 +176,12 @@ public class SieveQuotaRoutes implements Routes {
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "OK", response = Long.class),
             @ApiResponse(code = 400, message = "The body is not a positive integer."),
+            @ApiResponse(code = 404, message = "The user name does not exist"),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = User.fromUsername(request.params(USER_ID));
+            User userId = getUser(request.params(USER_ID));
             QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
             sieveQuotaRepository.setQuota(userId, requestedSize);
             return Responses.returnNoContent(response);
@@ -189,11 +195,12 @@ public class SieveQuotaRoutes implements Routes {
     })
     @ApiResponses(value = {
             @ApiResponse(code = 204, message = "User sieve quota removed."),
+            @ApiResponse(code = 404, message = "The user name does not exist"),
             @ApiResponse(code = 500, message = "Internal server error - Something went bad on the server side.")
     })
     public void defineRemovePerUserSieveQuota(Service service) {
         service.delete(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            User userId = User.fromUsername(request.params(USER_ID));
+            User userId = getUser(request.params(USER_ID));
             try {
                 sieveQuotaRepository.removeQuota(userId);
             } catch (QuotaNotFoundException e) {
@@ -226,5 +233,16 @@ public class SieveQuotaRoutes implements Routes {
                 .message(String.format("unrecognized integer number '%s'", body))
                 .haltError();
         }
+    }
+
+    private User getUser(String username) throws UsersRepositoryException {
+        if (!usersRepository.contains(username)) {
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
+                .message("User " + username + " does not exist")
+                .haltError();
+        }
+        return User.fromUsername(username);
     }
 }
