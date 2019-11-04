@@ -7,29 +7,32 @@ Feature: Rewrite Tables tests
 # Regexp mapping
 
   Scenario: stored regexp mapping should be retrieved when one mapping matching
-    Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
-    Then mappings for user "test" at domain "localhost" should contain only "regex:(.*)@localhost"
+    Given store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "user@localhost"
 
   Scenario: stored regexp mapping should be retrieved when two mappings matching
-    Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
-    And store "(.+)@test" regexp mapping for user "test" at domain "localhost"
-    Then mappings for user "test" at domain "localhost" should contain only "regex:(.*)@localhost, regex:(.+)@test"
+    Given store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "tes(.+)@localhost:user2@localhost" regexp mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "user@localhost, user2@localhost"
 
   Scenario: stored regexp mapping should not be retrieved by another user
-    Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
-    And store "(.+)@test" regexp mapping for user "test" at domain "localhost"
+    Given store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "tes(.+)@localhost:user2@localhost" regexp mapping for user "test" at domain "localhost"
     Then mappings for user "test2" at domain "localhost" should be empty
 
   Scenario: removing a stored regexp mapping should work
-    Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
-    And store "(.+)@test" regexp mapping for user "test" at domain "localhost"
-    When user "test" at domain "localhost" removes a regexp mapping "(.+)@test"
-    Then mappings for user "test" at domain "localhost" should contain only "regex:(.*)@localhost"
+    Given store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "tes(.+)@localhost:user2@localhost" regexp mapping for user "test" at domain "localhost"
+    When user "test" at domain "localhost" removes a regexp mapping "tes(.+)@localhost:user2@localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "user@localhost"
 
-  @readonly
   Scenario: storing an invalid regexp mapping should not work
     When store an invalid ".*):" regexp mapping for user "test" at domain "localhost"
     Then a "InvalidRegexException" exception should have been thrown
+
+  Scenario: storing a wrong formatted regexp mapping should not be retrieved
+    Given store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
+    Then mappings for user "test" at domain "localhost" should be empty
 
 # Address mapping
 
@@ -174,9 +177,9 @@ Feature: Rewrite Tables tests
 
   Scenario: mixed mapping should work
     Given store "test2@localhost" address mapping for user "test" at domain "localhost"
-    And store "(.*)@localhost" regexp mapping for user "test" at domain "localhost"
+    And store "(.*)@localhost:user@localhost" regexp mapping for user "test" at domain "localhost"
     And store "aliasdomain" alias domain mapping for domain "localhost"
-    Then mappings for user "test" at domain "localhost" should contain only "test2@localhost, regex:(.*)@localhost"
+    Then mappings for user "test" at domain "localhost" should contain only "test2@localhost, user@localhost"
 
 # Recursive mapping
 

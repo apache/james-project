@@ -90,7 +90,7 @@ public interface UserRewritter extends Serializable {
                         .map(Username::of);
                 } catch (PatternSyntaxException e) {
                     LOGGER.error("Exception during regexMap processing: ", e);
-                    return Optional.of(Username.of(Mapping.Type.Regex.asPrefix() + mapping));
+                    return Optional.empty();
                 }
             };
         }
