@@ -106,16 +106,22 @@ public class DlpDomainRules {
                 if (content instanceof String) {
                     return Stream.of((String) content);
                 }
+
+                return extractContentsComplexType(content)
+                    .flatMap(Throwing.function(this::getMessageBodiesFromContent).sneakyThrow());
+            }
+
+            private Stream<Object> extractContentsComplexType(Object content) throws IOException, MessagingException {
                 if (content instanceof Message) {
                     Message message = (Message) content;
-                    return getMessageBodiesFromContent(message.getContent());
+                    return Stream.of(message.getContent());
                 }
                 if (content instanceof Multipart) {
                     return MultipartUtil.retrieveBodyParts((Multipart) content)
                         .stream()
-                        .map(Throwing.function(BodyPart::getContent).sneakyThrow())
-                        .flatMap(Throwing.function(this::getMessageBodiesFromContent).sneakyThrow());
+                        .map(Throwing.function(BodyPart::getContent).sneakyThrow());
                 }
+
                 return Stream.of();
             }
         }
