@@ -51,7 +51,6 @@ import org.apache.james.mailbox.exception.AnnotationException;
 import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
 import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
@@ -86,6 +85,7 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -224,6 +224,30 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             assertThatThrownBy(() -> mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx"), session))
                 .isInstanceOf(InboxAlreadyCreated.class);
+        }
+
+        @Test
+        void creatingMixedCaseINBOXShouldCreateItAsINBOXUponChildMailboxCreation() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.forUser(USER_1, "iNbOx.submailbox"), session);
+            MessageManager retrievedMailbox = mailboxManager.getMailbox(MailboxPath.inbox(session), session);
+
+            assertThat(mailboxManager.hasInbox(session)).isTrue();
+        }
+
+        @Test
+        void creatingMixedCaseINBOXChildShouldNormalizeChildPath() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            MailboxPath childPath = MailboxPath.forUser(USER_1, "iNbOx.submailbox");
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(childPath, session);
+            MessageManager retrievedMailbox = mailboxManager.getMailbox(childPath, session);
+
+            assertThat(mailboxManager.hasInbox(session)).isTrue();
+            assertThat(mailboxId.get()).isEqualTo(retrievedMailbox.getId());
         }
     }
 
