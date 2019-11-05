@@ -24,6 +24,8 @@ In case of any error, the system will return an error message which is json form
 Also be aware that, in case things go wrong, all endpoints might return a 500 internal error (with a JSON body formatted
 as exposed above). To avoid information duplication, this is ommited on endpoint specific documentation.
 
+Finally, please note that in case of a malformed URL the 400 bad request response will contains an HTML body.
+
 ## Navigation menu
 
  - [HealthCheck](#HealthCheck)
