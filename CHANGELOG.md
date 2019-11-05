@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ### Added
 - Distributed task management for Guice cassandra-rabbitmq product. This enables two James servers to share a consistent view
 of tasks being currently executed.
+- JAMES-2563 Health check for ElasticSearch
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
@@ -27,6 +28,10 @@ of tasks being currently executed.
 - JAMES-2957 dlp.Dlp matcher should parse emails containing attachments
 - JAMES-2958 Limit domain name size to not longer than 255 characters
 - JAMES-2939 Prevent mixed case INBOX creation
+- JAMES-2903 Rework default LOG4J log file for Spring
+- JAMES-2739 fixed browse mails from queue over JMX
+- JAMES-2375 DSNBounce mailet should provide a subject
+- JAMES-2097 RemoteDelivery: Avoid retrying already succeeded recipients when sendPartial
 
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
