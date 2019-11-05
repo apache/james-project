@@ -121,6 +121,9 @@ import com.google.common.collect.HashMultimap;
  * When enabling SSL, you might need to specify <i>mail.smtp.ssl.checkserveridentity</i> and <i>mail.smtp.ssl.trust</i>
  * properties. You can also control ciphersuites and protocols via <i>mail.smtp.ssl.ciphersuites</i> and
  * <i>mail.smtp.ssl.protocols</i> properties.<br/>
+ * <b>startTls</b> can alternatively be enabled upon sending a mail. For this, use the <i>startTls</i> configuration property, serving as a shortcut for
+ * javax <i>mail.smtp.starttls.enable</i> property. Depending on how strict your security policy is, you might consider
+ * <i>mail.smtp.starttls.required</i> as well. Be aware that configuring trust will then be required.<br/>
  * Read <a href="https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html"><code>com.sun.mail.smtp</code></a>
  * for full information.
  */
