@@ -39,6 +39,8 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonEventSerializer {
 
+    public static final String EVENT_NESTED_TYPES_INJECTION_NAME = "EventNestedTypes";
+
     public static RequireNestedConfiguration forModules(Set<? extends EventDTOModule<?, ?>> modules) {
         return nestedTypesModules -> {
             ImmutableSet<EventDTOModule<?, ?>> dtoModules = ImmutableSet.copyOf(modules);
@@ -82,7 +84,7 @@ public class JsonEventSerializer {
     private JsonGenericSerializer<Event, EventDTO> jsonGenericSerializer;
 
     @Inject
-    private JsonEventSerializer(Set<EventDTOModule<?, ?>> modules, @Named("EventNestedTypes") Set<DTOModule<?, ?>> nestedTypesModules) {
+    private JsonEventSerializer(Set<EventDTOModule<?, ?>> modules, @Named(EVENT_NESTED_TYPES_INJECTION_NAME) Set<DTOModule<?, ?>> nestedTypesModules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withNestedTypeModules(nestedTypesModules);
     }
     

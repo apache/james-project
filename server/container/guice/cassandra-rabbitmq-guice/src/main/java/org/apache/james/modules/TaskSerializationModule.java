@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules;
 
+import static org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer.EVENT_NESTED_TYPES_INJECTION_NAME;
+
 import java.time.Clock;
 import java.util.Set;
 
@@ -345,7 +347,7 @@ public class TaskSerializationModule extends AbstractModule {
         return UserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 
-    @Named("EventNestedTypes")
+    @Named(EVENT_NESTED_TYPES_INJECTION_NAME)
     @Provides
     public Set<DTOModule<?, ?>> eventNestedTypes(Set<AdditionalInformationDTOModule<?, ?>> additionalInformationDTOModules,
                                             Set<TaskDTOModule<?, ?>> taskDTOModules) {
