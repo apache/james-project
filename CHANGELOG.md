@@ -17,6 +17,7 @@ of tasks being currently executed.
   - Removed unnecessary fields from mailbox mapping
   - Disable dynamic mapping thanks to a change of the header structure 
   - Read related [upgrade instructions](upgrade-instructions.md)
+- JAMES-2855 Multiple library/plugin/docker images/build tool upgrades
   
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B
