@@ -4,7 +4,9 @@ Date: 2019-10-09
 
 ## Status
 
-Accepted (lazy consensus)
+Proposed
+
+Adoption needs to be backed by some performance tests.
 
 ## Context
 
@@ -26,15 +28,14 @@ When the preview is precomputed then for these messages we can consider the "pre
 
 When the preview is not precomputed then we should compute the preview for these messages, and save the result for later.
 
-We should provide a webAdmin task allowing to rebuild the projection.
+We should provide a webAdmin task allowing to rebuild the projection. The computing and storing in MessagePreviewStore 
+is idempotent and that the task can be run in live without any concurrency problem.
 
 Some performance tests will be run in order to evaluate the improvements.
 
 ## Consequences
 
 We expect a huge performance enhancement for JMAP clients relying on preview for listing mails.
-
-Messages whose preview is not yet computed will still require live preview computation as a fallback mechanism.
 
 In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 

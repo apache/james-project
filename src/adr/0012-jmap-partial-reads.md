@@ -4,7 +4,9 @@ Date: 2019-10-09
 
 ## Status
 
-Accepted (lazy consensus)
+Proposed
+
+Adoption needs to be backed by some performance tests.
 
 ## Context
 
@@ -14,22 +16,21 @@ James currently computes all of the properties regardless of their cost, and if 
 
 Clearly we can save some latencies and resources by avoiding reading/computing expensive properties that had not been explicitly requested by the client.
 
-This is furthermore an opportunity to conform to /get behavior of released RFC-8620
-
 ## Decision
 
 Introduce two new datastructures representing JMAP messages:
  - One with only metadata
  - One with metadata + headers
 
-Given the properties requested by the client, the most appropriate message datastructure will be returned, on top of 
+Given the properties requested by the client, the most appropriate message datastructure will be computed, on top of 
 existing message storage APIs that should remain unchanged.
 
 Some performance tests will be run in order to evaluate the improvements.
 
 ## Consequences
 
-Fields that were previously returned in Messages might not be returned anymore if not explicitly asked by the client.
+GetMessages with a limited set of requested properties will no longer result necessarily in full database message read. We
+thus expect a significant improvement, for instance when only metadata are requested.
 
 In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
