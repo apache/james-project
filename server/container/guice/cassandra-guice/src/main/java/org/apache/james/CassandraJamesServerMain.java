@@ -19,6 +19,11 @@
 
 package org.apache.james;
 
+import static org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer.EVENT_NESTED_TYPES_INJECTION_NAME;
+
+import java.util.Set;
+
+import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
 import org.apache.james.modules.activemq.ActiveMQQueueModule;
@@ -67,7 +72,10 @@ import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
+import com.google.inject.TypeLiteral;
+import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
 public class CassandraJamesServerMain {
@@ -105,6 +113,10 @@ public class CassandraJamesServerMain {
         new BlobStoreAPIModule(),
         new BlobExportMechanismModule());
 
+    private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
+        binder.bind(new TypeLiteral<Set<DTOModule<?, ?>>>() {}).annotatedWith(Names.named(EVENT_NESTED_TYPES_INJECTION_NAME))
+            .toInstance(ImmutableSet.of());
+
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(
         new ActiveMQQueueModule(),
         new CassandraDomainListModule(),
@@ -117,7 +129,8 @@ public class CassandraJamesServerMain {
         new CassandraSessionModule(),
         new CassandraSieveRepositoryModule(),
         new CassandraUsersRepositoryModule(),
-        BLOB_MODULE);
+        BLOB_MODULE,
+        CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE);
 
     public static final Module CASSANDRA_MAILBOX_MODULE = Modules.combine(
         new CassandraMailboxModule(),
@@ -138,7 +151,8 @@ public class CassandraJamesServerMain {
 
     public static Module ALL_BUT_JMX_CASSANDRA_MODULE = Modules.combine(
         REQUIRE_TASK_MANAGER_MODULE,
-        new TaskManagerModule()
+        new TaskManagerModule(),
+        CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE
     );
 
     public static void main(String[] args) throws Exception {

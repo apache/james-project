@@ -35,12 +35,8 @@ import com.google.inject.util.Modules;
 public class CassandraRabbitMQJamesServerMain {
     public static final Module MODULES =
         Modules
-            .override(
-                Modules.combine(
-                    REQUIRE_TASK_MANAGER_MODULE,
-                    new DistributedTaskManagerModule(),
-                    new TaskSerializationModule()))
-            .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule());
+            .override(Modules.combine(REQUIRE_TASK_MANAGER_MODULE, new DistributedTaskManagerModule()))
+            .with(new RabbitMQModule(), new BlobStoreChoosingModule(), new RabbitMQEventBusModule(), new TaskSerializationModule());
 
     public static void main(String[] args) throws Exception {
         Configuration configuration = Configuration.builder()
