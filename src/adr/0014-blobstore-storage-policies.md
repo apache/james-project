@@ -47,6 +47,11 @@ We expect small frequently accessed blobs to be located in Cassandra, allowing O
 
 In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
+We expect more data to be stored in Cassandra.
+
+As reads will be reading the two blobStores, no migration is required to use this composite blobstore on top an existing implementation,
+however we will benefits of the performance enhancements only for newly stored blobs.
+
 ## References
 
  - [JIRA](https://issues.apache.org/jira/browse/JAMES-2921)

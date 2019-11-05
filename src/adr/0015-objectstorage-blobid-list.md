@@ -26,12 +26,15 @@ However, ObjectStorage (OpenStack Swift) `exist` method was not efficient enough
 
 ## Decision
 
-Rely on a StoredBlobIdsList API to know which blob is persisted or not in object storage. Provide a Cassandra implementation of it. Located in blob-api for convenience, this it not a top level API. It is intended to be used by some blobStore implementations (here only ObjectStorage).
+Rely on a StoredBlobIdsList API to know which blob is persisted or not in object storage. Provide a Cassandra implementation of it. 
+Located in blob-api for convenience, this it not a top level API. It is intended to be used by some blobStore implementations
+(here only ObjectStorage). We will provide a CassandraStoredBlobIdsList in blob-cassandra project so that guice products combining
+object storage and Cassandra can define a binding to it. 
 
  - When saving a blob with precomputed blobId, we can check the existence of the blob in storage, avoiding possibly the expensive "save".
  - When saving a blob too big to precompute its blobId, once the blob had been streamed using a temporary random blobId, copy operation can be avoided and the temporary blob could be directly removed.
 
-Cassandra is faster doing "write every time" rather than "read before write" so we should not use the stored blob projection for it
+Cassandra is probably faster doing "write every time" rather than "read before write" so we should not use the stored blob projection for it
 
 Some performance tests will be run in order to evaluate the improvements.
 
@@ -42,7 +45,8 @@ We expect to reduce the amount of writes to the object storage. This is expected
  - performance improvement
  - latency reduction under load
 
-Inconsistencies in StoredBlobIdsList will lead to duplicated saved blobs, which is the current behaviour.
+As id persistence in StoredBlobIdsList will be done once the blob successfully saved, inconsistencies in StoredBlobIdsList
+will lead to duplicated saved blobs, which is the current behaviour.
 
 In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
