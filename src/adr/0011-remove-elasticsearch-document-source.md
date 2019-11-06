@@ -27,6 +27,11 @@ document.
 Without `_source` field, flags update is two time slower, 99 percentile 4 time slower, and this impact negatively other 
 requests.
 
+Note please that `_source` allows admin flexibility like performing index level changes without downtime, amongst others:
+ - Increase shards
+ - Modifying replication factor
+ - Changing analysers (IE allows an admin to configure FR analyser instead of EN analyser)
+
 ## References
 
  - https://www.elastic.co/guide/en/elasticsearch/reference/6.3/mapping-source-field.html
