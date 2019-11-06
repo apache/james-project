@@ -28,8 +28,8 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDomainDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 
 public class DomainQuotaService {
 
@@ -66,22 +66,22 @@ public class DomainQuotaService {
 
     public QuotaDomainDTO getQuota(Domain domain) throws MailboxException {
         return QuotaDomainDTO.builder()
-            .domain(QuotaDTO
+            .domain(ValidatedQuotaDTO
                 .builder()
                 .count(maxQuotaManager.getDomainMaxMessage(domain))
                 .size(maxQuotaManager.getDomainMaxStorage(domain)))
-            .global(QuotaDTO
+            .global(ValidatedQuotaDTO
                 .builder()
                 .count(maxQuotaManager.getGlobalMaxMessage())
                 .size(maxQuotaManager.getGlobalMaxStorage()))
-            .computed(QuotaDTO
+            .computed(ValidatedQuotaDTO
                 .builder()
                 .count(maxQuotaManager.getComputedMaxMessage(domain))
                 .size(maxQuotaManager.getComputedMaxStorage(domain)))
             .build();
     }
 
-    public void defineQuota(Domain domain, QuotaDTO quota) {
+    public void defineQuota(Domain domain, ValidatedQuotaDTO quota) {
         try {
             if (quota.getCount().isPresent()) {
                 maxQuotaManager.setDomainMaxMessage(domain, quota.getCount().get());

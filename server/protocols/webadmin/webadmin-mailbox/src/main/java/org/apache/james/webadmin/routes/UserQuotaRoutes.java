@@ -46,6 +46,7 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDetailsDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.UserQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -55,6 +56,7 @@ import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.utils.ParametersExtractor;
 import org.apache.james.webadmin.utils.Responses;
+import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -85,6 +87,7 @@ public class UserQuotaRoutes implements Routes {
     private final UserQuotaService userQuotaService;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
+    private final QuotaDTOValidator quotaDTOValidator;
     private Service service;
 
     @Inject
@@ -93,6 +96,7 @@ public class UserQuotaRoutes implements Routes {
         this.userQuotaService = userQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
+        this.quotaDTOValidator = new QuotaDTOValidator();
     }
 
     @Override
@@ -131,10 +135,20 @@ public class UserQuotaRoutes implements Routes {
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
-            Username username = checkUserExist(request);
-            QuotaDTO quotaDTO = parseQuotaDTO(request);
-            userQuotaService.defineQuota(username, quotaDTO);
-            return Responses.returnNoContent(response);
+            try {
+                Username username = checkUserExist(request);
+                QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
+                ValidatedQuotaDTO validatedQuotaDTO = quotaDTOValidator.validatedQuotaDTO(quotaDTO);
+                userQuotaService.defineQuota(username, validatedQuotaDTO);
+                return Responses.returnNoContent(response);
+            } catch (IllegalArgumentException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Quota should be positive or unlimited (-1)")
+                    .cause(e)
+                    .haltError();
+            }
         }));
     }
 

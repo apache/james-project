@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class QuotaSize implements QuotaValue<QuotaSize> {
 
@@ -42,6 +43,7 @@ public class QuotaSize implements QuotaValue<QuotaSize> {
     private final Optional<Long> value;
 
     private QuotaSize(Optional<Long> value) {
+        Preconditions.checkArgument(QuotaValue.isValidValue(value), "Quota limit should be positive");
         this.value = value;
     }
 

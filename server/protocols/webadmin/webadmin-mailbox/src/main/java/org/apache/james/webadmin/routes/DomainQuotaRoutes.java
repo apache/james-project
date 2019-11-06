@@ -40,14 +40,15 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDomainDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.service.DomainQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
 import org.apache.james.webadmin.utils.Responses;
+import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -76,6 +77,7 @@ public class DomainQuotaRoutes implements Routes {
     private final UsersRepository usersRepository;
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
+    private final QuotaDTOValidator quotaDTOValidator;
     private Service service;
 
     @Inject
@@ -85,6 +87,7 @@ public class DomainQuotaRoutes implements Routes {
         this.usersRepository = usersRepository;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, modules.stream().map(JsonTransformerModule::asJacksonModule).collect(Collectors.toList()));
+        this.quotaDTOValidator = new QuotaDTOValidator();
     }
 
     @Override
@@ -130,10 +133,20 @@ public class DomainQuotaRoutes implements Routes {
     })
     public void defineUpdateQuota() {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
-            Domain domain = checkDomainExist(request);
-            QuotaDTO quotaDTO = parseQuotaDTO(request);
-            domainQuotaService.defineQuota(domain, quotaDTO);
-            return Responses.returnNoContent(response);
+            try {
+                Domain domain = checkDomainExist(request);
+                QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
+                ValidatedQuotaDTO validatedQuotaDTO = quotaDTOValidator.validatedQuotaDTO(quotaDTO);
+                domainQuotaService.defineQuota(domain, validatedQuotaDTO);
+                return Responses.returnNoContent(response);
+            } catch (IllegalArgumentException e) {
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.BAD_REQUEST_400)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("Quota should be positive or unlimited (-1)")
+                    .cause(e)
+                    .haltError();
+            }
         }));
     }
 
@@ -307,25 +320,4 @@ public class DomainQuotaRoutes implements Routes {
                 .haltError();
         }
     }
-
-    private QuotaDTO parseQuotaDTO(Request request) {
-        try {
-            return jsonExtractor.parse(request.body());
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Quota should be positive or unlimited (-1)")
-                .cause(e)
-                .haltError();
-        } catch (JsonExtractException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Malformed JSON input")
-                .cause(e)
-                .haltError();
-        }
-    }
-
 }

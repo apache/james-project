@@ -371,6 +371,86 @@ class GlobalQuotaRoutesTest {
     }
 
     @Test
+    void putQuotaWithNegativeCountShouldFail() throws Exception {
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+
+        Map<String, Object> errors = given()
+            .body("{\"count\":-2,\"size\":43}")
+            .when()
+            .put("/quota")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+        .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+    }
+
+    @Test
+    void putQuotaWithNegativeCountShouldNotUpdatePreviousQuota() throws Exception {
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+
+        given()
+            .body("{\"count\":-2,\"size\":43}")
+            .when()
+            .put("/quota")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON);
+
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(43));
+    }
+
+    @Test
+    void putQuotaWithNegativeSizeShouldFail() throws Exception {
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+
+        Map<String, Object> errors = given()
+            .body("{\"count\":42,\"size\":-2}")
+            .when()
+            .put("/quota")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+        .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+    }
+
+    @Test
+    void putQuotaWithNegativeSizeShouldNotUpdatePreviousQuota() throws Exception {
+        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+
+        given()
+            .body("{\"count\":42,\"size\":-2}")
+            .when()
+            .put("/quota")
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON);
+
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(43));
+    }
+
+    @Test
     void putQuotaShouldUnsetCountWhenNull() throws Exception {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
         given()

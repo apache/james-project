@@ -18,7 +18,13 @@
  ****************************************************************/
 package org.apache.james.core.quota;
 
+import java.util.Optional;
+
 public interface QuotaValue<T extends QuotaValue<T>> {
+
+    static boolean isValidValue(Optional<Long> value) {
+        return !value.isPresent() || value.get() >= 0;
+    }
 
     long asLong();
 

@@ -29,26 +29,26 @@ public class QuotaDomainDTO {
     }
 
     public static class Builder {
-        private Optional<QuotaDTO> global;
-        private Optional<QuotaDTO> domain;
-        private Optional<QuotaDTO> computed;
+        private Optional<ValidatedQuotaDTO> global;
+        private Optional<ValidatedQuotaDTO> domain;
+        private Optional<ValidatedQuotaDTO> computed;
 
         private Builder() {
             global = Optional.empty();
             computed = Optional.empty();
         }
 
-        public Builder global(QuotaDTO.Builder global) {
+        public Builder global(ValidatedQuotaDTO.Builder global) {
             this.global = Optional.of(global.build());
             return this;
         }
 
-        public Builder domain(QuotaDTO.Builder domain) {
+        public Builder domain(ValidatedQuotaDTO.Builder domain) {
             this.domain = Optional.of(domain.build());
             return this;
         }
 
-        public Builder computed(QuotaDTO.Builder computed) {
+        public Builder computed(ValidatedQuotaDTO.Builder computed) {
             this.computed = Optional.of(computed.build());
             return this;
         }
@@ -58,25 +58,25 @@ public class QuotaDomainDTO {
         }
     }
 
-    private final Optional<QuotaDTO> global;
-    private final Optional<QuotaDTO> domain;
-    private final Optional<QuotaDTO> computed;
+    private final Optional<ValidatedQuotaDTO> global;
+    private final Optional<ValidatedQuotaDTO> domain;
+    private final Optional<ValidatedQuotaDTO> computed;
 
-    private QuotaDomainDTO(Optional<QuotaDTO> global, Optional<QuotaDTO> domain, Optional<QuotaDTO> computed) {
+    private QuotaDomainDTO(Optional<ValidatedQuotaDTO> global, Optional<ValidatedQuotaDTO> domain, Optional<ValidatedQuotaDTO> computed) {
         this.global = global;
         this.domain = domain;
         this.computed = computed;
     }
 
-    public Optional<QuotaDTO> getGlobal() {
+    public Optional<ValidatedQuotaDTO> getGlobal() {
         return global;
     }
 
-    public Optional<QuotaDTO> getDomain() {
+    public Optional<ValidatedQuotaDTO> getDomain() {
         return domain;
     }
 
-    public Optional<QuotaDTO> getComputed() {
+    public Optional<ValidatedQuotaDTO> getComputed() {
         return computed;
     }
 }

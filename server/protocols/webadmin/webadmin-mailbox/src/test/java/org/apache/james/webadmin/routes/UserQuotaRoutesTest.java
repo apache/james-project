@@ -57,7 +57,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.google.common.base.Strings;
-
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
@@ -1052,6 +1051,102 @@ class UserQuotaRoutesTest {
                 .put(QUOTA_USERS + "/" + JOE.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
+        }
+
+        @Test
+        void putQuotaWithNegativeCountShouldFail(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            Map<String, Object> errors = with()
+                .body("{\"count\":-2,\"size\":42}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+        }
+
+        @Test
+        void putQuotaWithNegativeCountShouldNotUpdatePreviousQuota(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            with()
+                .body("{\"count\":-2,\"size\":42}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON);
+
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaCount.count(52));
+            softly.assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaSize.size(42));
+            softly.assertAll();
+        }
+
+        @Test
+        void putQuotaWithNegativeSizeShouldFail(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            Map<String, Object> errors = with()
+                .body("{\"count\":52,\"size\":-3}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON)
+            .extract()
+                .body()
+                .jsonPath()
+                .getMap(".");
+
+            assertThat(errors)
+                .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+                .containsEntry("type", "InvalidArgument")
+                .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+        }
+
+        @Test
+        void putQuotaWithNegativeSizeShouldNotUpdatePreviousQuota(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+            MaxQuotaManager maxQuotaManager = testSystem.getQuotaSearchTestSystem().getMaxQuotaManager();
+            UserQuotaRootResolver userQuotaRootResolver = testSystem.getQuotaSearchTestSystem().getQuotaRootResolver();
+
+            maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
+            maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
+
+            with()
+                .body("{\"count\":52,\"size\":-3}")
+                .put(QUOTA_USERS + "/" + BOB.asString())
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .contentType(ContentType.JSON);
+
+            SoftAssertions softly = new SoftAssertions();
+            softly.assertThat(maxQuotaManager.getMaxMessage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaCount.count(52));
+            softly.assertThat(maxQuotaManager.getMaxStorage(userQuotaRootResolver.forUser(BOB)))
+                .contains(QuotaSize.size(42));
+            softly.assertAll();
         }
 
         @Test

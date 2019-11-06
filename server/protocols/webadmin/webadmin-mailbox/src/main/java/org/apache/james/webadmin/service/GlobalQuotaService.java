@@ -26,7 +26,7 @@ import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.apache.james.webadmin.dto.QuotaDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 
 public class GlobalQuotaService {
 
@@ -37,7 +37,7 @@ public class GlobalQuotaService {
         this.maxQuotaManager = maxQuotaManager;
     }
 
-    public void defineQuota(QuotaDTO quota) throws MailboxException {
+    public void defineQuota(ValidatedQuotaDTO quota) throws MailboxException {
         Optional<QuotaCount> count = quota.getCount();
         if (count.isPresent()) {
             maxQuotaManager.setGlobalMaxMessage(count.get());
@@ -53,8 +53,8 @@ public class GlobalQuotaService {
         }
     }
 
-    public QuotaDTO getQuota() throws MailboxException {
-        return QuotaDTO
+    public ValidatedQuotaDTO getQuota() throws MailboxException {
+        return ValidatedQuotaDTO
             .builder()
             .count(maxQuotaManager.getGlobalMaxMessage())
             .size(maxQuotaManager.getGlobalMaxStorage())

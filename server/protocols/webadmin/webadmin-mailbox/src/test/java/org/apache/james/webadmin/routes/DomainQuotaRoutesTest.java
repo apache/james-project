@@ -29,6 +29,7 @@ import java.util.Map;
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -445,6 +446,78 @@ class DomainQuotaRoutesTest {
 
         assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCount.count(52));
         assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSize.size(42));
+    }
+
+    @Test
+    void putQuotaWithNegativeCountShouldFail() throws MailboxException {
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
+        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        Map<String, Object> errors = given()
+            .body("{\"count\":-5,\"size\":30}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+        .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+    }
+
+    @Test
+    void putQuotaWithNegativeCountShouldNotUpdatePreviousQuota() throws MailboxException {
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
+        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        given()
+            .body("{\"count\":-5,\"size\":30}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON);
+
+        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).contains(QuotaSize.size(42));
+    }
+
+    @Test
+    void putQuotaWithNegativeSizeShouldFail() throws MailboxException {
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
+        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        Map<String, Object> errors = given()
+            .body("{\"count\":40,\"size\":-19}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON)
+        .extract()
+            .body()
+            .jsonPath()
+            .getMap(".");
+
+        assertThat(errors)
+            .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
+            .containsEntry("type", "InvalidArgument")
+            .containsEntry("message", "Invalid quota. Need to be an integer value greater or equal to -1");
+    }
+
+    @Test
+    void putQuotaWithNegativeSizeShouldNotUpdatePreviousQuota() throws MailboxException {
+        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
+        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        given()
+            .body("{\"count\":40,\"size\":-19}")
+            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+        .then()
+            .statusCode(HttpStatus.BAD_REQUEST_400)
+            .contentType(ContentType.JSON);
+
+        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).contains(QuotaSize.size(42));
     }
 
     @Test

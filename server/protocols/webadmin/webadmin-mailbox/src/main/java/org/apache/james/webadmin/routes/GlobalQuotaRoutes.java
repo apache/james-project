@@ -33,14 +33,15 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.QuotaDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.jackson.QuotaModule;
 import org.apache.james.webadmin.service.GlobalQuotaService;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
-import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
+import org.apache.james.webadmin.validation.QuotaDTOValidator;
 import org.apache.james.webadmin.validation.Quotas;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -65,6 +66,7 @@ public class GlobalQuotaRoutes implements Routes {
 
     private final JsonTransformer jsonTransformer;
     private final JsonExtractor<QuotaDTO> jsonExtractor;
+    private final QuotaDTOValidator quotaDTOValidator;
     private final GlobalQuotaService globalQuotaService;
     private Service service;
 
@@ -73,6 +75,7 @@ public class GlobalQuotaRoutes implements Routes {
         this.globalQuotaService = globalQuotaService;
         this.jsonTransformer = jsonTransformer;
         this.jsonExtractor = new JsonExtractor<>(QuotaDTO.class, new QuotaModule().asJacksonModule());
+        quotaDTOValidator = new QuotaDTOValidator();
     }
 
     @Override
@@ -115,15 +118,9 @@ public class GlobalQuotaRoutes implements Routes {
         service.put(QUOTA_ENDPOINT, ((request, response) -> {
             try {
                 QuotaDTO quotaDTO = jsonExtractor.parse(request.body());
-                globalQuotaService.defineQuota(quotaDTO);
+                ValidatedQuotaDTO validatedQuotaDTO = quotaDTOValidator.validatedQuotaDTO(quotaDTO);
+                globalQuotaService.defineQuota(validatedQuotaDTO);
                 return Responses.returnNoContent(response);
-            } catch (JsonExtractException e) {
-                throw ErrorResponder.builder()
-                    .statusCode(HttpStatus.BAD_REQUEST_400)
-                    .type(ErrorType.INVALID_ARGUMENT)
-                    .message("Malformed JSON input")
-                    .cause(e)
-                    .haltError();
             } catch (IllegalArgumentException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)

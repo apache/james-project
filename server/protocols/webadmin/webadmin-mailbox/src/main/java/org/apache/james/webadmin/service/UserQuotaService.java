@@ -37,9 +37,9 @@ import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.quota.search.QuotaQuery;
 import org.apache.james.quota.search.QuotaSearcher;
-import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.QuotaDetailsDTO;
 import org.apache.james.webadmin.dto.UsersQuotaDetailsDTO;
+import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
@@ -60,7 +60,7 @@ public class UserQuotaService {
         this.quotaSearcher = quotaSearcher;
     }
 
-    public void defineQuota(Username username, QuotaDTO quota) {
+    public void defineQuota(Username username, ValidatedQuotaDTO quota) {
         try {
             QuotaRoot quotaRoot = userQuotaRootResolver.forUser(username);
             if (quota.getCount().isPresent()) {
@@ -94,19 +94,19 @@ public class UserQuotaService {
         return quotaDetails.build();
     }
 
-    private QuotaDTO computedQuota(QuotaRoot quotaRoot) throws MailboxException {
-        return QuotaDTO
+    private ValidatedQuotaDTO computedQuota(QuotaRoot quotaRoot) throws MailboxException {
+        return ValidatedQuotaDTO
                 .builder()
                 .count(maxQuotaManager.getMaxMessage(quotaRoot))
                 .size(maxQuotaManager.getMaxStorage(quotaRoot))
                 .build();
     }
 
-    private Map<Quota.Scope, QuotaDTO> mergeMaps(Map<Quota.Scope, QuotaCount> counts, Map<Quota.Scope, QuotaSize> sizes) {
+    private Map<Quota.Scope, ValidatedQuotaDTO> mergeMaps(Map<Quota.Scope, QuotaCount> counts, Map<Quota.Scope, QuotaSize> sizes) {
        return Sets.union(counts.keySet(), sizes.keySet())
             .stream()
             .collect(Collectors.toMap(Function.identity(),
-                scope -> QuotaDTO
+                scope -> ValidatedQuotaDTO
                             .builder()
                             .count(Optional.ofNullable(counts.get(scope)))
                             .size(Optional.ofNullable(sizes.get(scope)))

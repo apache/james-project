@@ -23,12 +23,15 @@ package org.apache.james.webadmin.dto;
 import java.util.Objects;
 import java.util.Optional;
 
+import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaSize;
+
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.MoreObjects;
 
-@JsonDeserialize(builder = QuotaDTO.Builder.class)
-public class QuotaDTO {
+@JsonDeserialize(builder = ValidatedQuotaDTO.Builder.class)
+public class ValidatedQuotaDTO {
 
     public static Builder builder() {
         return new Builder();
@@ -36,49 +39,50 @@ public class QuotaDTO {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private Optional<Long> count;
-        private Optional<Long> size;
+        private Optional<QuotaCount> count;
+        private Optional<QuotaSize> size;
 
         private Builder() {
             count = Optional.empty();
             size = Optional.empty();
         }
 
-        public Builder count(Optional<Long> count) {
+        public Builder count(Optional<QuotaCount> count) {
             this.count = count;
             return this;
         }
 
-        public Builder size(Optional<Long> size) {
+        public Builder size(Optional<QuotaSize> size) {
             this.size = size;
             return this;
         }
 
-        public QuotaDTO build() {
-            return new QuotaDTO(count, size);
+        public ValidatedQuotaDTO build() {
+            return new ValidatedQuotaDTO(count, size);
         }
     }
 
-    private final Optional<Long> count;
-    private final Optional<Long> size;
 
-    private QuotaDTO(Optional<Long> count, Optional<Long> size) {
+    private final Optional<QuotaCount> count;
+    private final Optional<QuotaSize> size;
+
+    private ValidatedQuotaDTO(Optional<QuotaCount> count, Optional<QuotaSize> size) {
         this.count = count;
         this.size = size;
     }
 
-    public Optional<Long> getCount() {
+    public Optional<QuotaCount> getCount() {
         return count;
     }
 
-    public Optional<Long> getSize() {
+    public Optional<QuotaSize> getSize() {
         return size;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof QuotaDTO) {
-            QuotaDTO that = (QuotaDTO) o;
+        if (o instanceof ValidatedQuotaDTO) {
+            ValidatedQuotaDTO that = (ValidatedQuotaDTO) o;
 
             return Objects.equals(this.count, that.count) &&
                 Objects.equals(this.size, that.size);
