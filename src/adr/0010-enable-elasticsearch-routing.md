@@ -33,7 +33,8 @@ Quota Ratio should be indexed by user.
 
 A data reindex is needed.
 
-Performance needs to be detailed here once tests are conducted.
+On a single ElasticSearch node with 5 shards, we noticed latency reduction for mailbox search (2x mean time and 3x 99 
+percentile reduction)
 
 ## References
 
