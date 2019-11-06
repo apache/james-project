@@ -35,7 +35,7 @@ The proposed policies include:
  - LowCostStoragePolicy: The blob is expected to be saved in low cost storage. Access is expected to be unfrequent.
  - PerformantStoragePolicy: The blob is expected to be saved in performant storage. Access is expected to be frequent.
 
-An HybridBlobStore will be replace current UnionBlobStore and will allow to choose between Cassandra and ObjectStorage implementations depending on the policies.
+An HybridBlobStore will replace current UnionBlobStore and will allow to choose between Cassandra and ObjectStorage implementations depending on the policies.
 
 DeletedMessageVault, BlobExport & MailRepository will rely on LowCostStoragePolicy. Other BlobStore users will rely on SizeBasedStoragePolicy.
 
