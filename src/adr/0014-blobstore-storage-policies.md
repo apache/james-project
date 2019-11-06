@@ -23,7 +23,7 @@ Also, the capabilities of the various implementations of BlobStore have differen
  - CassandraBlobStore is efficient for small blobs and offers low latency. However it is known to be expensive for big blobs. Cassandra storage is expensive.
  - Object Storage blob store is good at storing big blobs, but it induces higher latencies than Cassandra for small blobs for a cost gain that isn't worth it.
 
-Thus, significant performance could be unlocked by using the right blob store for the right blob.
+Thus, significant performance and cost ratio refinement could be unlocked by using the right blob store for the right blob.
 
 ## Decision
 
@@ -35,7 +35,7 @@ The proposed policies include:
  - LowCostStoragePolicy: The blob is expected to be saved in low cost storage. Access is expected to be unfrequent.
  - PerformantStoragePolicy: The blob is expected to be saved in performant storage. Access is expected to be frequent.
 
-An HybridBlobStore will be created to choose between Cassandra and ObjectStorage implementations depending on the policies.
+An HybridBlobStore will be replace current UnionBlobStore and will allow to choose between Cassandra and ObjectStorage implementations depending on the policies.
 
 DeletedMessageVault, BlobExport & MailRepository will rely on LowCostStoragePolicy. Other BlobStore users will rely on SizeBasedStoragePolicy.
 
