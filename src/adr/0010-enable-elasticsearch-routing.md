@@ -18,8 +18,12 @@ Without routing key, each shard needs to execute the query. The coordinator
 needs also to be waiting for the slowest shard.
 
 Using the routing key unlocks significant throughput enhancement (proportional
-to the number of shard) and also a possible high percentile latencies enhancement.
-This allows to be more linearly scalable.
+to the number of shards) and also a possible high percentile latency enhancement.
+
+As most requests are restricted to a single coordination, most search requests will
+hit a single shard, as opposed to non routed searches which would have hit each shards 
+(each shard would return the number of searched documents, to be ordered and limited 
+again in the coordination node). This allows to be more linearly scalable.
 
 ## Decision
 
