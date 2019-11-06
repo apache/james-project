@@ -38,8 +38,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoProcessor;
-import reactor.core.scheduler.Schedulers;
 
 public class InVmEventDelivery implements EventDelivery {
     private static final Logger LOGGER = LoggerFactory.getLogger(InVmEventDelivery.class);
@@ -71,13 +69,10 @@ public class InVmEventDelivery implements EventDelivery {
         Mono<Void> deliveryToListener = Mono.fromRunnable(() -> doDeliverToListener(listener, event))
             .doOnError(throwable -> structuredLogger(event, listener)
                 .log(logger -> logger.error("Error while processing listener", throwable)))
-            .subscribeOn(Schedulers.boundedElastic())
             .then();
 
         return deliveryOption.getRetrier().doRetry(deliveryToListener, event)
             .onErrorResume(throwable -> deliveryOption.getPermanentFailureHandler().handle(event))
-            .subscribeWith(MonoProcessor.create())
-            .subscribeOn(Schedulers.boundedElastic())
             .then();
     }
 
