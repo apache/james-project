@@ -40,6 +40,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -70,27 +71,27 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
             .block();
     }
 
-    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) throws IOException {
+    private RestHighLevelClient connectToCluster(ElasticSearchConfiguration configuration) {
         LOGGER.info("Trying to connect to ElasticSearch service at {}", LocalDateTime.now());
-        Optional<CredentialsProvider> credentials = credentials(configuration);
         RestClientBuilder restClientBuilder = RestClient.builder(hostsToHttpHosts());
-        credentials.ifPresent(provider -> restClientBuilder
-            .setHttpClientConfigCallback(httpClientBuilder -> {
-                return httpClientBuilder.setDefaultCredentialsProvider(provider);
-            }));
 
         return new RestHighLevelClient(
-            restClientBuilder
+            credentialsProvider(configuration)
+                .map(provider -> restClientBuilder.setHttpClientConfigCallback(
+                    httpClientBuilder -> httpClientBuilder.setDefaultCredentialsProvider(provider)))
+                .orElse(restClientBuilder)
                 .setMaxRetryTimeoutMillis(Math.toIntExact(configuration.getRequestTimeout().toMillis())));
     }
 
-    private Optional<CredentialsProvider> credentials(ElasticSearchConfiguration configuration) {
-        if (configuration.getUser().isPresent() && configuration.getPassword().isPresent()) {
-            CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-            credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(configuration.getUser().get(), configuration.getPassword().get()));
-            return Optional.of(credentialsProvider);
-        }
-        return Optional.empty();
+    private Optional<CredentialsProvider> credentialsProvider(ElasticSearchConfiguration configuration) {
+        return configuration.getCredential()
+            .map(credential -> {
+                CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+                credentialsProvider.setCredentials(AuthScope.ANY,
+                    new UsernamePasswordCredentials(credential.getUsername(), credential.getPassword()));
+
+                return credentialsProvider;
+            });
     }
 
     private HttpHost[] hostsToHttpHosts() {
