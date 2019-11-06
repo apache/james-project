@@ -28,6 +28,7 @@ import org.apache.james.core.quota.QuotaValue;
 public class QuotaCodec {
 
     private static final long INFINITE = -1;
+    private static final long NO_RIGHT = 0L;
 
     static Long quotaValueToLong(QuotaValue<?> value) {
         if (value.isUnlimited()) {
@@ -51,6 +52,13 @@ public class QuotaCodec {
         if (value == INFINITE) {
             return Optional.of(infiniteValue);
         }
+        if (isInvalid(value)) {
+            return Optional.of(quotaFactory.apply(NO_RIGHT));
+        }
         return Optional.of(quotaFactory.apply(value));
+    }
+
+    private static boolean isInvalid(Long value) {
+        return value < -1;
     }
 }
