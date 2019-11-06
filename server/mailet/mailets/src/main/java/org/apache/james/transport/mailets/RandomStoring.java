@@ -42,6 +42,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Streams;
@@ -75,12 +76,12 @@ public class RandomStoring extends GenericMailet {
         Collection<ReroutingInfos> reroutingInfos = generateRandomMailboxes();
         Collection<MailAddress> mailAddresses = reroutingInfos
             .stream()
-            .map(ReroutingInfos::getMailAddress)
+            .map(Throwing.function(info -> info.getUser().asMailAddress()))
             .collect(Guavate.toImmutableList());
 
         mail.setRecipients(mailAddresses);
         reroutingInfos.forEach(reroutingInfo ->
-            mail.setAttribute(Attribute.convertToAttribute(MailStore.DELIVERY_PATH_PREFIX + reroutingInfo.getUser(), reroutingInfo.getMailbox())));
+            mail.setAttribute(Attribute.convertToAttribute(MailStore.DELIVERY_PATH_PREFIX + reroutingInfo.getUser().asString(), reroutingInfo.getMailbox())));
     }
 
     @Override
@@ -114,39 +115,31 @@ public class RandomStoring extends GenericMailet {
 
     private Stream<ReroutingInfos> buildReRoutingInfos(Username username) {
         try {
-            MailAddress mailAddress = usersRepository.getMailAddressFor(username);
-
             MailboxSession session = mailboxManager.createSystemSession(username.asString());
             return mailboxManager
                 .search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
                 .stream()
-                .map(metaData -> new ReroutingInfos(mailAddress, metaData.getPath().getName(), username.asString()));
+                .map(metaData -> new ReroutingInfos(metaData.getPath().getName(), username));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private class ReroutingInfos {
-        private final MailAddress mailAddress;
+    private static class ReroutingInfos {
         private final String mailbox;
-        private final String user;
+        private final Username username;
 
-        ReroutingInfos(MailAddress mailAddress, String mailbox, String user) {
-            this.mailAddress = mailAddress;
+        ReroutingInfos(String mailbox, Username username) {
             this.mailbox = mailbox;
-            this.user = user;
-        }
-
-        public MailAddress getMailAddress() {
-            return mailAddress;
+            this.username = username;
         }
 
         public String getMailbox() {
             return mailbox;
         }
 
-        public String getUser() {
-            return user;
+        public Username getUser() {
+            return username;
         }
 
         @Override
@@ -154,24 +147,22 @@ public class RandomStoring extends GenericMailet {
             if (o instanceof ReroutingInfos) {
                 ReroutingInfos that = (ReroutingInfos) o;
 
-                return Objects.equals(this.mailAddress, that.mailAddress)
-                    && Objects.equals(this.mailbox, that.mailbox)
-                    && Objects.equals(this.user, that.user);
+                return Objects.equals(this.mailbox, that.mailbox)
+                    && Objects.equals(this.username, that.username);
             }
             return false;
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(mailAddress, mailbox, user);
+            return Objects.hash(mailbox, username);
         }
 
         @Override
         public String toString() {
             return MoreObjects.toStringHelper(this)
-                .add("user", mailAddress.asString())
                 .add("mailbox", mailbox)
-                .add("user", user)
+                .add("username", username)
                 .toString();
         }
     }
