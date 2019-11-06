@@ -19,12 +19,11 @@
 
 package org.apache.james.imap.message.response;
 
-import org.apache.james.imap.api.message.response.AbstractTestForStatusResponseFactory;
+import org.apache.james.imap.api.message.response.AbstractStatusResponseFactoryTest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 
 public class UnpooledStatusResponseFactoryTest extends
-        AbstractTestForStatusResponseFactory {
+    AbstractStatusResponseFactoryTest {
 
     @Override
     protected StatusResponseFactory createInstance() {

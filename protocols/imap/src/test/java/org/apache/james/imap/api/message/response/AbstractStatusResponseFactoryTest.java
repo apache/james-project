@@ -26,7 +26,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.junit.Before;
 import org.junit.Test;
 
-public abstract class AbstractTestForStatusResponseFactory  {
+public abstract class AbstractStatusResponseFactoryTest {
 
     private static final String TAG = "ATAG";
 
