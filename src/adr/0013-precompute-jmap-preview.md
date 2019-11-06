@@ -29,7 +29,7 @@ When the preview is precomputed then for these messages we can consider the "pre
 When the preview is not precomputed then we should compute the preview for these messages, and save the result for later.
 
 We should provide a webAdmin task allowing to rebuild the projection. The computing and storing in MessagePreviewStore 
-is idempotent and that the task can be run in live without any concurrency problem.
+is idempotent and the task can be run in live without any concurrency problem.
 
 Some performance tests will be run in order to evaluate the improvements.
 
