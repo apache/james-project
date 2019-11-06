@@ -38,6 +38,25 @@
           <dd>Is the IP (or host) of the ElasticSearch master</dd>
           <dt><strong>elasticsearch.port</strong></dt>
           <dd>Is the port of ElasticSearch master</dd>
+
+          <dt><strong>elasticsearch.hostScheme</strong></dt>
+          <dd>Optional. Only http or https are accepted, default is http</dd>
+
+          <dt><strong>elasticsearch.user</strong></dt>
+          <dd>
+              Optional.
+              Basic auth username to access elasticsearch.
+              Ignore elasticsearch.user and elasticsearch.password to not be using authentication (default behaviour).
+              Otherwise, you need to specify both properties.
+          </dd>
+
+          <dt><strong>elasticsearch.password</strong></dt>
+          <dd>
+              Optional.
+              Basic auth password to access elasticsearch.
+              Ignore elasticsearch.user and elasticsearch.password to not be using authentication (default behaviour).
+              Otherwise, you need to specify both properties.
+          </dd>
       </dl>
 
       Or you can connect a cluster by :
