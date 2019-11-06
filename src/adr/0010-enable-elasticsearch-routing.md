@@ -14,7 +14,7 @@ Our queries are mostly bounded to a mailbox or a user. We can easily
 limit the number of ElasticSearch nodes involved in a given query by
 grouping the underlying documents on the same node using a routing key.
 
-Without routing key, each shard needs to execute the query. The coordinator
+Without a routing key, each shard needs to execute the query. The coordinator
 needs also to be waiting for the slowest shard.
 
 Using the routing key unlocks significant throughput enhancement (proportional
