@@ -4,7 +4,7 @@ Date: 2019-10-17
 
 ## Status
 
-Proposed
+Accepted (lazy consensus)
 
 Additional performance testing is required for adoption.
 
