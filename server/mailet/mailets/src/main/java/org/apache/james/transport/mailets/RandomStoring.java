@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
 import javax.inject.Inject;
 import javax.mail.MessagingException;
 
@@ -33,6 +34,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -43,6 +45,7 @@ import org.apache.mailet.base.GenericMailet;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Streams;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -115,9 +118,9 @@ public class RandomStoring extends GenericMailet {
 
             MailboxSession session = mailboxManager.createSystemSession(username.asString());
             return mailboxManager
-                .list(session)
+                .search(MailboxQuery.privateMailboxesBuilder(session).build(), session)
                 .stream()
-                .map(mailboxPath -> new ReroutingInfos(mailAddress, mailboxPath.getName(), username.asString()));
+                .map(metaData -> new ReroutingInfos(mailAddress, metaData.getPath().getName(), username.asString()));
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
