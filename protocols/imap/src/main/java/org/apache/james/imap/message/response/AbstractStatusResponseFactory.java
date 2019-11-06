@@ -28,7 +28,6 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 public abstract class AbstractStatusResponseFactory implements StatusResponseFactory {
 
     AbstractStatusResponseFactory() {
-        super();
     }
 
     protected abstract StatusResponse createResponse(StatusResponse.Type type, String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code);
