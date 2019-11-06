@@ -38,6 +38,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.transport.mailets.delivery.MailStore;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
+import org.apache.james.util.streams.Iterators;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
@@ -45,7 +46,6 @@ import org.apache.mailet.base.GenericMailet;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
-import com.google.common.collect.Streams;
 
 import reactor.core.publisher.Mono;
 
@@ -107,7 +107,7 @@ public class RandomStoring extends GenericMailet {
     }
 
     private List<ReroutingInfos> retrieveReroutingInfos() throws UsersRepositoryException {
-        return Streams.stream(usersRepository.list())
+        return Iterators.toStream(usersRepository.list())
             .map(Username::of)
             .flatMap(this::buildReRoutingInfos)
             .collect(Guavate.toImmutableList());
