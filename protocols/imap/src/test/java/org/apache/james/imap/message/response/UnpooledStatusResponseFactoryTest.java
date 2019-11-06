@@ -19,15 +19,24 @@
 
 package org.apache.james.imap.message.response;
 
+import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.AbstractStatusResponseFactoryTest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
+import org.junit.jupiter.api.BeforeEach;
 
-public class UnpooledStatusResponseFactoryTest extends
-    AbstractStatusResponseFactoryTest {
+class UnpooledStatusResponseFactoryTest implements AbstractStatusResponseFactoryTest {
+
+    StatusResponseFactory factory;
+
+
+    @BeforeEach
+    void setUp() throws Exception {
+        factory = new UnpooledStatusResponseFactory();
+    }
 
     @Override
-    protected StatusResponseFactory createInstance() {
-        return new UnpooledStatusResponseFactory();
+    public StatusResponseFactory factory() {
+        return factory;
     }
 
 }
