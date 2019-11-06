@@ -25,9 +25,9 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 
-public abstract class AbstactStatusResponseFactory implements StatusResponseFactory {
+public abstract class AbstractStatusResponseFactory implements StatusResponseFactory {
 
-    public AbstactStatusResponseFactory() {
+    AbstractStatusResponseFactory() {
         super();
     }
 

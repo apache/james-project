@@ -26,7 +26,7 @@ import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponse.Type;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 
-public class UnpooledStatusResponseFactory extends AbstactStatusResponseFactory implements StatusResponseFactory {
+public class UnpooledStatusResponseFactory extends AbstractStatusResponseFactory implements StatusResponseFactory {
 
     @Override
     protected StatusResponse createResponse(Type type, String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
