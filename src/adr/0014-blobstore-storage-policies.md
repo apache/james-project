@@ -6,7 +6,7 @@ Date: 2019-10-09
 
 Proposed
 
-Adoption needs to be backed by some performance tests.
+Adoption needs to be backed by some performance tests, as well as data repartition between Cassandra and object storage shifts.
 
 ## Context
 
@@ -47,7 +47,7 @@ We expect small frequently accessed blobs to be located in Cassandra, allowing O
 
 In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
 
-We expect more data to be stored in Cassandra.
+We expect more data to be stored in Cassandra. We need to quantify this for adoption.
 
 As reads will be reading the two blobStores, no migration is required to use this composite blobstore on top an existing implementation,
 however we will benefits of the performance enhancements only for newly stored blobs.
