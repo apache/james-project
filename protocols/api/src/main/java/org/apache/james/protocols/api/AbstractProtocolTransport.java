@@ -33,16 +33,6 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
     
     @Override
     public final void writeResponse(Response response, ProtocolSession session) {
-        writeResponseToClient(response, session);
-    }
-    
-    /**
-     * Write the {@link Response} to the client
-     * 
-     * @param response
-     * @param session
-     */
-    protected void writeResponseToClient(Response response, ProtocolSession session) {
         if (response != null) {
             boolean startTLS = false;
             if (response instanceof StartTlsResponse) {
@@ -64,7 +54,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             if (startTLS) {
                 session.resetState();
             }
-            
+
             if (response.isEndSession()) {
                 // close the channel if needed after the message was written out
                 close();
