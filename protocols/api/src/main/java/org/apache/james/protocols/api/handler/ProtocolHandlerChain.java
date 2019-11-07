@@ -25,13 +25,11 @@ import java.util.LinkedList;
 
 /**
  * Chain which can be used to get all Handlers for a given Class.
- *
  */
 public interface ProtocolHandlerChain {
 
     /**
      * Returns a list of handler of the requested type.
-     * @param <T>
      * 
      * @param type the type of handler we're interested in
      * @return a List of handlers

@@ -24,8 +24,6 @@ import java.util.List;
 
 /**
  * Abstract base implementation of {@link Response}
- * 
- *
  */
 public abstract class AbstractResponse implements Response {
 
@@ -94,8 +92,6 @@ public abstract class AbstractResponse implements Response {
 
     /**
      * Set to true to end the session
-     * 
-     * @param endSession
      */
     public void setEndSession(boolean endSession) {
         this.endSession = endSession;

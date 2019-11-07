@@ -50,8 +50,6 @@ public abstract class AbstractProtocolHandlerChain implements ProtocolHandlerCha
     /**
      * ExtensibleHandler wiring. This should get called after the class was constructed
      * and every stuff was set
-     * 
-     * @throws WiringException 
      */
     public void wireExtensibleHandlers() throws WiringException {
         List<ProtocolHandler> handlers = getHandlers();

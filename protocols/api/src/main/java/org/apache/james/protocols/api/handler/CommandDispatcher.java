@@ -150,9 +150,6 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     /**
      * Dispatch the {@link CommandHandler}'s for the given {@link Request} and return a {@link Response} or <code>null</code> if non should get written
      * back to the client
-     * 
-     * @param session
-     * @param request
      * @return response
      */
     protected Response dispatchCommandHandlers(SessionT session, Request request) {
@@ -191,8 +188,6 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     
     /**
      * Parse the line into a {@link Request}
-     *
-     * @throws Exception
      */
     protected Request parseRequest(SessionT session, ByteBuffer buffer) throws Exception {
         String curCommandName;

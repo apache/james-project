@@ -33,8 +33,6 @@ public interface DisconnectHandler<S extends ProtocolSession> extends ProtocolHa
     
     /**
      * Get called on disconnect
-     *
-     * @param session
     **/
     void onDisconnect(S session);
 

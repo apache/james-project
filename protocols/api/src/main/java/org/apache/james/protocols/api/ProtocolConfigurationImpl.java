@@ -27,8 +27,6 @@ import java.net.UnknownHostException;
  * Default implementation of a {@link ProtocolConfiguration} which allows to easily set the different configurations. 
  * 
  * Be aware that set and get operations are not thread-safe
- * 
- *
  */
 public class ProtocolConfigurationImpl implements ProtocolConfiguration {
     

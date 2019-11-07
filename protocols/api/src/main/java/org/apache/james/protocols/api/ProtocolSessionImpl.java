@@ -69,8 +69,6 @@ public class ProtocolSessionImpl implements ProtocolSession {
 
     /**
      * Return the wrapped {@link ProtocolTransport} which is used for this {@link ProtocolSession}
-     * 
-     * @return transport
      */
     public ProtocolTransport getProtocolTransport() {
         return transport;

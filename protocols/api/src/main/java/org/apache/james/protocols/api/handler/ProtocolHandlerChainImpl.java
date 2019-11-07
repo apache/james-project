@@ -32,8 +32,6 @@ import com.google.common.collect.ImmutableList;
  * {@link #wireExtensibleHandlers()} is called. After that all operations which
  * try to modify the instance will throw and
  * {@link UnsupportedOperationException}
- * 
- * 
  */
 public class ProtocolHandlerChainImpl extends AbstractProtocolHandlerChain implements List<ProtocolHandler> {
 

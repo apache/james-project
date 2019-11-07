@@ -24,8 +24,6 @@ import java.util.List;
 
 /**
  * Protocol response to send to the client
- * 
- *
  */
 public interface Response {
     

@@ -24,9 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
  * {@link ProtocolHandlerResultHandler} which logs the {@link Response} of {@link CommandHandler}'s.
- *
  */
 public class CommandHandlerResultLogger implements ProtocolHandlerResultHandler<Response, ProtocolSession> {
 

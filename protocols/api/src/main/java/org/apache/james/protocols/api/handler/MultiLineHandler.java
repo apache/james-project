@@ -55,18 +55,12 @@ public abstract class MultiLineHandler<S extends ProtocolSession> implements Lin
 
     /**
      * Return <code>true</code> if the buffered lines are ready to get pushed to the {@link #onLines(ProtocolSession, Collection)} method
-     * 
-     * @param session
-     * @param line
-     * @return ready
      */
     protected abstract boolean isReady(S session, ByteBuffer line);
     
     /**
      * Handle the buffered lines
-     * 
-     * @param session
-     * @param lines
+     *
      * @return response
      */
     protected abstract Response onLines(S session, Collection<ByteBuffer> lines);

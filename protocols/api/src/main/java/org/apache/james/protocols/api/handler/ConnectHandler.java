@@ -33,10 +33,7 @@ import org.apache.james.protocols.api.Response;
 public interface ConnectHandler<SessionT extends ProtocolSession> extends ProtocolHandler {
     /**
      * Handle connection and disconnect if true is returned
-     * 
-     * @param session
      * @return response or null
-     * 
     **/
     Response onConnect(SessionT session);
 

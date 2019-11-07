@@ -21,7 +21,6 @@ package org.apache.james.protocols.api;
 
 /**
  * Basic Request which contains a command and argument
- *
  */
 public class BaseRequest implements Request {
 

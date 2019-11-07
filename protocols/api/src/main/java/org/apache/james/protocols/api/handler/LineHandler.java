@@ -35,7 +35,7 @@ public interface LineHandler<SessionT extends ProtocolSession> extends ProtocolH
      * Processing the give line. The line includes the {@link ProtocolSession#getLineDelimiter()} delimiter.
      * 
      * @param session not null
-     * @param line not null 
+     * @param buffer not null
      * @return response or null
      */
     Response onLine(SessionT session, ByteBuffer buffer);

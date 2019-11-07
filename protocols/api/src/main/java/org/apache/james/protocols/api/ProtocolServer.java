@@ -23,15 +23,11 @@ import java.util.List;
 
 /**
  * A {@link ProtocolServer} accept inbound traffic and handle it. Basically the protocols API can be used to handle every "line based" protocol in an easy fashion
- *
  */
 public interface ProtocolServer {
 
     /**
      * Start the server
-     * 
-     * @throws Exception 
-     * 
      */
     void bind() throws Exception;
     
@@ -41,9 +37,7 @@ public interface ProtocolServer {
     void unbind();
     
     /**
-     * return true if the server is bound 
-     * 
-     * @return bound
+     * return true if the server is bound
      */
     boolean isBound();
 

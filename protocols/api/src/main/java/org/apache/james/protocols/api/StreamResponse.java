@@ -23,16 +23,12 @@ import java.io.InputStream;
 
 /**
  * Special {@link Response} sub-type which allows to write an {@link InputStream} to the remote peer
- * 
- *
  */
 public interface StreamResponse extends Response {
 
     /**
      * Return the stream which needs to get written to the remote peer. This method should only be called one time (when the data is written to the client) as it returns
      * the same {@link InputStream} on every call. So once it is consumed there is no way to re-process it.
-     * 
-     * @return stream
      */
     InputStream getStream();
 

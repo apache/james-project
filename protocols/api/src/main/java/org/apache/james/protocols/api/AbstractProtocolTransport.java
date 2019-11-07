@@ -64,8 +64,6 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
 
     /**
      * Take the {@link Response} and encode it to a <code>byte</code> array
-     * 
-     * @param response
      * @return bytes
      */
     protected static byte[] toBytes(Response response) {

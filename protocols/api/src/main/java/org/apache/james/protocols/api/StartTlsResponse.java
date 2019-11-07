@@ -23,7 +23,6 @@ package org.apache.james.protocols.api;
  * An special sub-type of {@link Response} which makes it possible to detect a response to a STARTTLS request.
  * 
  * After writing this response its a MUST to enable STARTTLS before further processing
- *
  */
 public interface StartTlsResponse extends Response {
 

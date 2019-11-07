@@ -39,8 +39,7 @@ public interface ExtensibleHandler {
     /**
      * Method called during initialization after all the handlers have been declared
      * in the ProtocolHandlerChain.
-     * 
-     * @param interfaceName
+     *
      * @param extension a list of objects implementing the marker interface
      */
     void wireExtensions(Class<?> interfaceName, List<?> extension) throws WiringException;

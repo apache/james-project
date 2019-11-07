@@ -21,12 +21,8 @@ package org.apache.james.protocols.api;
 
 /**
  * Configuration which is used in scope of a Protocol
- * 
- *
  */
 public interface ProtocolConfiguration {
-
-    
     /**
      * Return the Greeting which should used.
      * 

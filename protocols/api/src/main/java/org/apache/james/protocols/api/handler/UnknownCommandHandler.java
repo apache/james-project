@@ -27,9 +27,6 @@ import com.google.common.collect.ImmutableSet;
 /**
  * A special {@link CommandHandler} implementation which should be extended by {@link CommandHandler}'s which should get called for unknown command. So this is some kind
  * of a <strong>fallback</strong> {@link CommandHandler} which will get executed if no other matching {@link CommandHandler} could be found for a given command.
- * 
- *
- * @param <S>
  */
 public abstract class UnknownCommandHandler<S extends ProtocolSession> implements CommandHandler<S> {
 

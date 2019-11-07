@@ -21,23 +21,17 @@ package org.apache.james.protocols.api;
 
 /**
  * Request received from the client
- * 
- *
  */
 public interface Request {
 
     
     /**
      * Return the current argument. If there is no argument null is returned
-     * 
-     * @return argument
      */
     String getArgument();
 
     /**
      * Return the current command
-     * 
-     * @return command
      */
     String getCommand();
 }

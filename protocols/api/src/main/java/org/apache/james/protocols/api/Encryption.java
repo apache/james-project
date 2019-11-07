@@ -23,7 +23,6 @@ import javax.net.ssl.SSLContext;
 
 /**
  * This class should be used to setup encrypted protocol handling
- * 
  */
 public final class Encryption {
 
@@ -44,11 +43,9 @@ public final class Encryption {
     /**
      * Create a new {@link Encryption} which is TLS based and only allows the
      * given Ciphersuites
-     * 
-     * @param context
+     *
      * @param enabledCipherSuites
      *            or <code>null</code> if all Ciphersuites should be allowed
-     * @return enc
      */
     public static Encryption createTls(SSLContext context, String[] enabledCipherSuites) {
         return new Encryption(context, false, enabledCipherSuites);
@@ -61,11 +58,9 @@ public final class Encryption {
     /**
      * Create a new {@link Encryption} which uses STARTTLS and only allows the
      * given Ciphersuites
-     * 
-     * @param context
+     *
      * @param enabledCipherSuites
      *            or <code>null</code> if all Ciphersuites should be allowed
-     * @return enc
      */
     public static Encryption createStartTls(SSLContext context, String[] enabledCipherSuites) {
         return new Encryption(context, true, enabledCipherSuites);

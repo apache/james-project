@@ -28,8 +28,6 @@ import java.util.NoSuchElementException;
  * {@link SequenceInputStream} sub-class which allows direct access to the pair of {@link InputStream}'s.
  * 
  * When ever you need to "combine" two {@link InputStream}'s you should use this class as it may allow the Transport to optimize the transfer of it!
- * 
- *
  */
 public class CombinedInputStream extends SequenceInputStream implements Iterable<InputStream> {
 

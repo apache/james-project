@@ -33,15 +33,11 @@ public interface ProtocolTransport {
 
     /**
      * Return the {@link InetSocketAddress} of the remote peer
-     * 
-     * @return address
      */
     InetSocketAddress getRemoteAddress();
 
     /**
      * Return the {@link InetSocketAddress} of the local bound address
-     * 
-     * @return local
      */
     InetSocketAddress getLocalAddress();
 
@@ -49,31 +45,22 @@ public interface ProtocolTransport {
     /**
      * Return the unique id. The id MUST NOT be 100 % unique for ever. It just should just not have the same
      * id when having concurrent connections
-     * 
-     * @return id
      */
     String getId();
 
     /**
      * Return <code>true</code> if <code>TLS</code> encryption is active
-     * 
-     * @return tlsStarted
      */
     boolean isTLSStarted();
 
     /**
      * Return <code>true</code> if <code>STARTTLS</code> is supported by this {@link ProtocolTransport}
-     * 
-     * @return tlsSupprted
      */
     boolean isStartTLSSupported();
     
     /**
      * Write the {@link Response} to the {@link ProtocolTransport} which will forward it to the connected
      * peer
-     * 
-     * @param response
-     * @param session
      */
     void writeResponse(Response response, ProtocolSession session);
 
@@ -84,31 +71,22 @@ public interface ProtocolTransport {
 
     /**
      * Push a {@link LineHandler} in.
-     * 
-     * @param overrideCommandHandler
-     * @param session
      */
     void pushLineHandler(LineHandler<? extends ProtocolSession> overrideCommandHandler, ProtocolSession session);
 
     /**
      * Return the count of pushed {@link LineHandler}'s
-     * 
-     * @return lineCount
      */
     int getPushedLineHandlerCount();
     
     
     /**
-     * Set the {@link ProtocolTransport} readable or not. If its not readable then no new lines should get processed 
-     * 
-     * @param readable
+     * Set the {@link ProtocolTransport} readable or not. If its not readable then no new lines should get processed
      */
     void setReadable(boolean readable);
 
     /**
      * Return <code>true</code> if the channel is readable
-     * 
-     * @return
      */
     boolean isReadable();
 }
