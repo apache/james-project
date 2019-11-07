@@ -23,7 +23,6 @@ package org.apache.james.managesieve.api;
 public class ManageSieveException extends Exception {
     /**
      * Creates a new instance of ManageSieveException.
-     *
      */
     public ManageSieveException() {
         super();
@@ -31,9 +30,6 @@ public class ManageSieveException extends Exception {
 
     /**
      * Creates a new instance of ManageSieveException.
-     *
-     * @param message
-     * @param cause
      */
     public ManageSieveException(String message, Throwable cause) {
         super(message, cause);
@@ -41,8 +37,6 @@ public class ManageSieveException extends Exception {
 
     /**
      * Creates a new instance of ManageSieveException.
-     *
-     * @param message
      */
     public ManageSieveException(String message) {
         super(message);
@@ -50,8 +44,6 @@ public class ManageSieveException extends Exception {
 
     /**
      * Creates a new instance of ManageSieveException.
-     *
-     * @param cause
      */
     public ManageSieveException(Throwable cause) {
         super(cause);

@@ -25,9 +25,7 @@ public interface AuthenticationProcessor {
     String initialServerResponse(Session session);
 
     /**
-     * @return Null if authentication failed, the authenticated username if authentication is successfull
-     * @throws SyntaxException
-     * @throws AuthenticationException
+     * @return Null if authentication failed, the authenticated username if authentication is successful
      */
     String isAuthenticationSuccesfull(Session session, String suppliedClientData) throws SyntaxException, AuthenticationException;
 
