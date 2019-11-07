@@ -29,23 +29,19 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.server.core.MailImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SetMimeHeaderHandlerTest {
+class SetMimeHeaderHandlerTest {
 
     private static final String HEADER_NAME = "JUNIT";
     private static final String HEADER_VALUE = "test-value";
 
-    private SMTPSession mockedSMTPSession;
+    private SMTPSession fakeSMTPSession;
 
-    @Before
-    public void setUp() throws Exception {
-        setupMockedSMTPSession();
-    }
-
-    private void setupMockedSMTPSession() {
-        mockedSMTPSession = new BaseFakeSMTPSession() {
+    @BeforeEach
+    void setUp() {
+        fakeSMTPSession = new BaseFakeSMTPSession() {
 
             @Override
             public int getRcptCount() {
@@ -55,7 +51,7 @@ public class SetMimeHeaderHandlerTest {
     }
 
     @Test
-    public void setMimeHeaderHandlerShouldAddSpecifiedHeader() throws MessagingException {
+    void setMimeHeaderHandlerShouldAddSpecifiedHeader() throws MessagingException {
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("testmail")
             .setText("testtext")
@@ -73,13 +69,13 @@ public class SetMimeHeaderHandlerTest {
         header.setHeaderName(HEADER_NAME);
         header.setHeaderValue(HEADER_VALUE);
 
-        header.onMessage(mockedSMTPSession, mail);
+        header.onMessage(fakeSMTPSession, mail);
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME)).containsOnly(HEADER_VALUE);
     }
 
     @Test
-    public void setMimeHeaderHandlerShouldReplaceSpecifiedHeader() throws MessagingException {
+    void setMimeHeaderHandlerShouldReplaceSpecifiedHeader() throws MessagingException {
 
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER_NAME, "defaultHeaderValue")
@@ -98,7 +94,7 @@ public class SetMimeHeaderHandlerTest {
         header.setHeaderName(HEADER_NAME);
         header.setHeaderValue(HEADER_VALUE);
 
-        header.onMessage(mockedSMTPSession, mail);
+        header.onMessage(fakeSMTPSession, mail);
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME)).containsOnly(HEADER_VALUE);
     }
