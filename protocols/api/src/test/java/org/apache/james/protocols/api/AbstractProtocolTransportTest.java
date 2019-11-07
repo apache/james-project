@@ -26,13 +26,11 @@ import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
-import org.apache.james.protocols.api.future.FutureResponseImpl;
 import org.apache.james.protocols.api.handler.LineHandler;
 import org.junit.Test;
 
@@ -53,78 +51,6 @@ public class AbstractProtocolTransportTest {
             .collect(Guavate.toImmutableList());
 
         checkWrittenResponses(messages);
-    }
-    
-    @Test
-    public void testWriteOrderFutureResponseAllReady() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<>();
-        for (int i = 0; i < 2000; i++) {
-                FutureResponseImpl r = new FutureResponseImpl();
-                r.setResponse(new TestResponse());
-                messages.add(r);
-        }
-        checkWrittenResponses(messages);
-    }
-        
-       
-    @Test
-    public void testWriteOrderFutureResponse() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = IntStream.range(0, 2000)
-            .mapToObj(i -> new FutureResponseImpl())
-            .collect(Guavate.toImmutableList());
-
-        notifyFutureResponses(messages, false);
-        
-        checkWrittenResponses(messages);
-    }
-
-    @Test
-    public void testWriteOrderFutureResponseReverseNotify() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = IntStream.range(0, 2000)
-            .mapToObj(i -> new FutureResponseImpl())
-            .collect(Guavate.toImmutableList());
-
-        notifyFutureResponses(messages, true);
-
-        checkWrittenResponses(messages);
-    }
-    
-    @Test
-    public void testWriteOrderMixedResponse() throws InterruptedException, UnsupportedEncodingException {
-        final List<Response> messages = new ArrayList<>();
-        for (int i = 0; i < 2000; i++) {
-            if (i % 2 == 0) {
-                messages.add(new TestResponse());
-            } else {
-                messages.add(new FutureResponseImpl());
-            }
-
-        }
-        notifyFutureResponses(messages, false);
-        
-        checkWrittenResponses(messages);
-    }
-    
-    private void notifyFutureResponses(final List<Response> messages, final boolean reverse) {
-        new Thread(() -> {
-            try {
-                Thread.sleep(200);
-                List<Response> responses = new ArrayList<>(messages);
-                if (reverse) {
-                    Collections.reverse(responses);
-                }
-
-                for (Response r : responses) {
-                    if (r instanceof FutureResponseImpl) {
-                        ((FutureResponseImpl) r).setResponse(new TestResponse());
-                    }
-                }
-
-            } catch (InterruptedException e) {
-                throw new RuntimeException();
-            }
-
-        }).start();
     }
     
     private void checkWrittenResponses(List<Response> messages) throws InterruptedException, UnsupportedEncodingException {
