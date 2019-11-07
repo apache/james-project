@@ -28,7 +28,6 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -904,7 +903,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
 
     private ImapMessage unsupportedCharset(String tag, ImapCommand command) {
         final StatusResponseFactory factory = getStatusResponseFactory();
-        final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames());
+        final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset();
         return factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
     }
 

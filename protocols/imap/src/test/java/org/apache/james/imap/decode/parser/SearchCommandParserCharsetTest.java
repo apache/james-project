@@ -34,7 +34,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -96,7 +95,7 @@ public class SearchCommandParserCharsetTest {
             eq(TAG),
             same(command),
             eq(HumanReadableText.BAD_CHARSET),
-            eq(StatusResponse.ResponseCode.badCharset(CharsetUtil.getAvailableCharsetNames())));
+            eq(StatusResponse.ResponseCode.badCharset()));
 
         verifyNoMoreInteractions(mockStatusResponseFactory);
     }

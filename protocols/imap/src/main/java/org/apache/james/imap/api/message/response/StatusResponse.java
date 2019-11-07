@@ -26,6 +26,7 @@ import java.util.Collections;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.MessageFlags;
@@ -211,12 +212,10 @@ public interface StatusResponse extends ImapResponseMessage {
         /**
          * Creates a RFC2060 <code>BADCHARSET</code> response code.
          * 
-         * @param charsetNames
-         *            <code>Collection<String></code> containing charset names
          * @return <code>ResponseCode</code>, not null
          */
-        public static ResponseCode badCharset(Collection<String> charsetNames) {
-            return new ResponseCode("BADCHARSET", charsetNames);
+        public static ResponseCode badCharset() {
+            return new ResponseCode("BADCHARSET", CharsetUtil.getAvailableCharsetNames());
         }
 
         /**
