@@ -23,8 +23,6 @@ import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
  * Returns the WELCOME response to the client after it established a connection
- * 
- *
  */
 public class WelcomeMessageHandler extends org.apache.james.protocols.smtp.core.WelcomeMessageHandler {
     

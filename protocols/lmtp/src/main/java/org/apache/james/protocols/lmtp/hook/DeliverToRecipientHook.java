@@ -34,10 +34,7 @@ public interface DeliverToRecipientHook extends Hook {
 
     /**
      * Deliver the message to the recipient
-     * 
-     * @param session
-     * @param recipient
-     * @param envelope
+     *
      * @return response
      */
     HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope);

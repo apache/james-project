@@ -85,13 +85,8 @@ public abstract class AbstractApopCmdHandler extends AbstractPassCmdHandler {
 
     /**
      * Authenticate a {@link POP3Session} and returns the {@link Mailbox} for it. If it can not get authenticated it will return <code>null</code>.
-     * 
-     * @param session
-     * @param apopTimestamp
-     * @param user
-     * @param digest
+     *
      * @return mailbox
-     * @throws Exception
      */
     protected abstract Mailbox auth(POP3Session session, String apopTimestamp, String user, String digest) throws Exception;
 }

@@ -28,7 +28,6 @@ import org.apache.james.protocols.api.StreamResponse;
 
 /**
  * {@link StreamResponse} implementation which allows to write back big-data to the client for POP3
- *
  */
 public class POP3StreamResponse extends POP3Response implements StreamResponse {
 

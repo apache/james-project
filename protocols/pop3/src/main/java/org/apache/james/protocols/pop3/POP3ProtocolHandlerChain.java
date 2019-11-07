@@ -58,9 +58,6 @@ public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl {
     /**
      * The {@link AbstractPassCmdHandler}'s to use. If at least one {@link AbstractPassCmdHandler} is given, the {@link POP3ProtocolHandlerChain}
      * will add all default handlers
-     * 
-     * @param authHandlers
-     * @throws WiringException 
      */
     public POP3ProtocolHandlerChain(AbstractPassCmdHandler... authHandlers) throws WiringException {
         if (authHandlers != null && authHandlers.length > 0) {

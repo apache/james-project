@@ -58,11 +58,6 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
     
     /**
      * Authenticate a user and return the {@link Response}
-     * 
-     * @param session
-     * @param user
-     * @param pass
-     * @return response
      */
     protected final Response doAuth(POP3Session session, String user, String pass) {
         try {
@@ -94,13 +89,10 @@ public abstract class AbstractPassCmdHandler extends RsetCmdHandler {
     }
 
     /**
-     * Authenticate a {@link POP3Session} and returns the {@link Mailbox} for it. If it can not get authenticated it will return <code>null</code>.
-     * 
-     * @param session
-     * @param user
-     * @param password
+     * Authenticate a {@link POP3Session} and returns the {@link Mailbox} for it. If it can not get authenticated it
+     * will return <code>null</code>.
+     *
      * @return mailbox
-     * 
      */
     protected abstract Mailbox auth(POP3Session session, String username, String password) throws Exception;
 }

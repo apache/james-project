@@ -23,7 +23,6 @@ import java.util.Set;
 
 import org.apache.james.protocols.pop3.POP3Session;
 
-
 /**
  * A handler which support the POP3 Extension Mechanism should implement this
  * interface
@@ -33,9 +32,6 @@ public interface CapaCapability {
     /**
      * Return a List of responses which should get returned when a client issue
      * the CAPA command
-     * 
-     * @param session
-     * @return list
      */
     Set<String> getImplementedCapabilities(POP3Session session);
 }

@@ -25,9 +25,8 @@ import java.util.List;
 import org.apache.james.protocols.api.Response;
 
 /**
- * After the message message is submitted via the 'CRLF.CLRF' sequence the LMTP Server will return a response line for every recipient. This special {@link Response} can be used for this
- * 
- *
+ * After the message message is submitted via the 'CRLF.CLRF' sequence the LMTP Server will return a response line for
+ * every recipient. This special {@link Response} can be used for this
  */
 public class LMTPMultiResponse implements Response {
 

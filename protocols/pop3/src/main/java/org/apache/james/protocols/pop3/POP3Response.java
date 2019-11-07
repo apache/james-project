@@ -80,8 +80,6 @@ public class POP3Response extends AbstractResponse {
 
     /**
      * Return a List of all responseLines stored in this POP3Response
-     * 
-     * @return all responseLines
      */
     @Override
     public List<CharSequence> getLines() {

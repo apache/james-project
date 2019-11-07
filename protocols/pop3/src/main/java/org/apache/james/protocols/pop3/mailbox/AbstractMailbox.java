@@ -25,9 +25,8 @@ import java.io.InputStream;
 import org.apache.james.protocols.api.CombinedInputStream;
 
 /**
- * A {@link Mailbox} implementation which use a {@link CombinedInputStream} over {@link #getMessageHeaders(long)}  and {@link #getMessageBody(long)} to return the full message.
- * 
- *
+ * A {@link Mailbox} implementation which use a {@link CombinedInputStream} over {@link #getMessageHeaders(String)} (long)}
+ * and {@link #getMessageBody(String)} (long)} to return the full message.
  */
 public abstract class AbstractMailbox implements Mailbox {
 

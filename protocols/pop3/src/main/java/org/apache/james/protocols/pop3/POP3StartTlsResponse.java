@@ -26,8 +26,6 @@ import org.apache.james.protocols.api.StartTlsResponse;
 
 /**
  * Special sub-type of {@link POP3Response} which will trigger the start of TLS after the response was written to the client
- * 
- *
  */
 public class POP3StartTlsResponse extends POP3Response implements StartTlsResponse {
 

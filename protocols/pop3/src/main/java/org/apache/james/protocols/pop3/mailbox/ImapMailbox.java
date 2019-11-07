@@ -24,8 +24,6 @@ import java.util.Arrays;
 
 /**
  * An IMAP Mailbox adapter which is used in POP3 to retrieve messages
- * 
- * 
  */
 @Deprecated
 public abstract class ImapMailbox implements Mailbox {
@@ -33,10 +31,6 @@ public abstract class ImapMailbox implements Mailbox {
     /**
      * Returns the message body as {@link InputStream} or <code>null</code> if
      * no message can be found for the given <code>uid</code>
-     * 
-     * @param uid
-     * @return body
-     * @throws IOException
      */
     public abstract InputStream getMessageBody(long uid) throws IOException;
 
@@ -48,10 +42,6 @@ public abstract class ImapMailbox implements Mailbox {
     /**
      * Returns the message headers as {@link InputStream} or <code>null</code>
      * if no message can be found for the given <code>uid</code>
-     * 
-     * @param uid
-     * @return headers
-     * @throws IOException
      */
     public abstract InputStream getMessageHeaders(long uid) throws IOException;
 
@@ -64,10 +54,6 @@ public abstract class ImapMailbox implements Mailbox {
      * Return the full message (headers + body) as {@link InputStream} or
      * <code>null</code> if no message can be found for the given
      * <code>uid</code>
-     * 
-     * @param uid
-     * @return message
-     * @throws IOException
      */
     public abstract InputStream getMessage(long uid) throws IOException;
 
@@ -78,8 +64,6 @@ public abstract class ImapMailbox implements Mailbox {
 
     /**
      * Remove the messages with the given uids
-     * 
-     * @param uids
      */
     public abstract void remove(long... uids) throws IOException;
 

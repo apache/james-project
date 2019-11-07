@@ -39,8 +39,6 @@ public class MessageMetaData {
 
     /**
      * Return the uid of the message
-     * 
-     * @return uid
      */
     public String getUid() {
         return uid;
@@ -49,10 +47,6 @@ public class MessageMetaData {
     /**
      * Return the uid of the message. This method uses extra Mailbox ID argument to make
      * UID unique when it is not globally unique. By default assuming UID globally unique.
-     *
-     * @param mailboxId
-     *            Mailbox ID
-     * @return
      */
     public String getUid(String mailboxId) {
         return uid;
@@ -60,8 +54,6 @@ public class MessageMetaData {
 
     /**
      * Return the size of a message
-     * 
-     * @return size
      */
     public long getSize() {
         return size;

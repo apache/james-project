@@ -48,8 +48,6 @@ import org.apache.james.protocols.smtp.hook.Hook;
 
 /**
  * Special {@link SMTPProtocolHandlerChain} sub-class which should be used to build the chain for LMTP.
- * 
- *
  */
 public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
 
