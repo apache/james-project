@@ -31,12 +31,12 @@ import java.util.Properties;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MimeMessageWrapperTest {
+class MimeMessageWrapperTest {
 
     @Test
-    public void saveChangesShouldPreserveMessageId() throws Exception {
+    void saveChangesShouldPreserveMessageId() throws Exception {
         String messageId = "<5436@ab.com>";
         String messageText = "Message-ID: " + messageId + "\r\n" +
             "Subject: test\r\n" +
@@ -53,7 +53,7 @@ public class MimeMessageWrapperTest {
     }
 
     @Test
-    public void wrapShouldPreserveBody() throws Exception {
+    void wrapShouldPreserveBody() throws Exception {
         String messageAsText = "header1: <5436@ab.com>\r\n" +
             "Subject: test\r\n" +
             "\r\n" +
@@ -71,7 +71,7 @@ public class MimeMessageWrapperTest {
     }
 
     @Test
-    public void wrapShouldNotThrowWhenNoBody() throws Exception {
+    void wrapShouldNotThrowWhenNoBody() throws Exception {
         MimeMessage originalMessage = new MimeMessage(Session.getDefaultInstance(new Properties()));
         originalMessage.addHeader("header1", "value1");
         originalMessage.addHeader("header2", "value2");

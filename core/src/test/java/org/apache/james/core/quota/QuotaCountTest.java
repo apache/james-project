@@ -35,7 +35,7 @@ public class QuotaCountTest implements QuotaValueTest<QuotaCount> {
     }
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(QuotaCount.class).verify();
     }
 

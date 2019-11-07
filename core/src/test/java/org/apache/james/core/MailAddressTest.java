@@ -26,11 +26,11 @@ import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MailAddressTest {
+class MailAddressTest {
 
     private static final String GOOD_LOCAL_PART = "\"quoted@local part\"";
     private static final String GOOD_QUOTED_LOCAL_PART = "\"quoted@local part\"@james.apache.org";
@@ -85,8 +85,7 @@ public class MailAddressTest {
      * @throws AddressException
      */
     @Test
-    public void testHashCode() throws AddressException {
-
+    void testHashCode() throws AddressException {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         MailAddress b = new MailAddress(GOOD_ADDRESS);
         assertThat(a.hashCode()).isEqualTo(b.hashCode());
@@ -98,8 +97,7 @@ public class MailAddressTest {
      * @throws AddressException
      */
     @Test
-    public void testMailAddressString() throws AddressException {
-
+    void testMailAddressString() throws AddressException {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
 
@@ -121,8 +119,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#MailAddress(java.lang.String, java.lang.String)}.
      */
     @Test
-    public void testMailAddressStringString() {
-
+    void testMailAddressStringString() {
         try {
             new MailAddress("local-part", "domain");
         } catch (AddressException e) {
@@ -140,8 +137,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#MailAddress(javax.mail.internet.InternetAddress)}.
      */
     @Test
-    public void testMailAddressInternetAddress() {
-
+    void testMailAddressInternetAddress() {
         try {
             new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
         } catch (AddressException e) {
@@ -154,8 +150,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#getDomain()}.
      */
     @Test
-    public void testGetDomain() {
-
+    void testGetDomain() {
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
             assertThat(a.getDomain()).isEqualTo(GOOD_DOMAIN);
@@ -169,8 +164,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#getLocalPart()}.
      */
     @Test
-    public void testGetLocalPart() {
-
+    void testGetLocalPart() {
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
             assertThat(a.getLocalPart()).isEqualTo(GOOD_LOCAL_PART);
@@ -184,8 +178,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#toString()}.
      */
     @Test
-    public void testToString() {
-
+    void testToString() {
         try {
             MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
             assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
@@ -199,8 +192,7 @@ public class MailAddressTest {
      * Test method for {@link MailAddress#toInternetAddress()}.
      */
     @Test
-    public void testToInternetAddress() {
-
+    void testToInternetAddress() {
         try {
             InternetAddress b = new InternetAddress(GOOD_ADDRESS);
             MailAddress a = new MailAddress(b);
@@ -218,8 +210,7 @@ public class MailAddressTest {
      * @throws AddressException
      */
     @Test
-    public void testEqualsObject() throws AddressException {
-
+    void testEqualsObject() throws AddressException {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
         MailAddress b = new MailAddress(GOOD_ADDRESS);
 
@@ -227,41 +218,41 @@ public class MailAddressTest {
     }
 
     @Test
-    public void equalsShouldReturnTrueWhenBothNullSender() {
+    void equalsShouldReturnTrueWhenBothNullSender() {
         assertThat(MailAddress.nullSender())
             .isEqualTo(MailAddress.nullSender());
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void getMailSenderShouldReturnNullSenderWhenNullSender() {
+    void getMailSenderShouldReturnNullSenderWhenNullSender() {
         assertThat(MailAddress.getMailSender(MailAddress.NULL_SENDER_AS_STRING))
             .isEqualTo(MailAddress.nullSender());
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void getMailSenderShouldReturnParsedAddressWhenNotNullAddress() throws Exception {
+    void getMailSenderShouldReturnParsedAddressWhenNotNullAddress() throws Exception {
         assertThat(MailAddress.getMailSender(GOOD_ADDRESS))
             .isEqualTo(new MailAddress(GOOD_ADDRESS));
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void equalsShouldReturnFalseWhenOnlyFirstMemberIsANullSender() {
+    void equalsShouldReturnFalseWhenOnlyFirstMemberIsANullSender() {
         assertThat(MailAddress.getMailSender(GOOD_ADDRESS))
             .isNotEqualTo(MailAddress.nullSender());
     }
 
     @SuppressWarnings("deprecation")
     @Test
-    public void equalsShouldReturnFalseWhenOnlySecondMemberIsANullSender() {
+    void equalsShouldReturnFalseWhenOnlySecondMemberIsANullSender() {
         assertThat(MailAddress.nullSender())
             .isNotEqualTo(MailAddress.getMailSender(GOOD_ADDRESS));
     }
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailAddress.class)
             .verify();
     }

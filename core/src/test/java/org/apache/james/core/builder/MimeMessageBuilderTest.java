@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.util.MimeMessageUtil;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MimeMessageBuilderTest {
+class MimeMessageBuilderTest {
 
     @Test
-    public void buildShouldPreserveMessageID() throws Exception {
+    void buildShouldPreserveMessageID() throws Exception {
         String messageID = "<abc@123>";
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader("Message-ID", messageID)
@@ -40,7 +40,7 @@ public class MimeMessageBuilderTest {
     }
 
     @Test
-    public void buildShouldAllowMultiValuedHeader() throws Exception {
+    void buildShouldAllowMultiValuedHeader() throws Exception {
         String headerName = "header";
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(headerName, "value1")
@@ -52,7 +52,7 @@ public class MimeMessageBuilderTest {
     }
 
     @Test
-    public void buildShouldPreserveDate() throws Exception {
+    void buildShouldPreserveDate() throws Exception {
         String value = "Wed, 28 Mar 2018 17:02:25 +0200";
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader("Date", value)
@@ -63,7 +63,7 @@ public class MimeMessageBuilderTest {
     }
 
     @Test
-    public void embeddedMessagesShouldBeSupported() throws Exception {
+    void embeddedMessagesShouldBeSupported() throws Exception {
         MimeMessage embeddedMimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("A unicorn eat popcorn")
             .setText("As studies demonstrated unicorns eats cereals.")
@@ -81,7 +81,7 @@ public class MimeMessageBuilderTest {
     }
 
     @Test
-    public void buildShouldAllowToSpecifyMultipartSubtype() throws Exception {
+    void buildShouldAllowToSpecifyMultipartSubtype() throws Exception {
         MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setContent(MimeMessageBuilder.multipartBuilder()
                 .subType("alternative")
@@ -92,6 +92,5 @@ public class MimeMessageBuilderTest {
         assertThat(mimeMessage.getContentType())
             .startsWith("multipart/alternative");
     }
-
 
 }

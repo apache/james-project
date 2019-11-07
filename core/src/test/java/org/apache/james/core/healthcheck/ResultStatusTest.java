@@ -22,18 +22,18 @@ package org.apache.james.core.healthcheck;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.assertj.core.api.SoftAssertions;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ResultStatusTest {
+class ResultStatusTest {
 
     @Test
-    public void mergeReturnHealthyWhenMergeWithHealthy() {
+    void mergeReturnHealthyWhenMergeWithHealthy() {
         assertThat(ResultStatus.merge(ResultStatus.HEALTHY, ResultStatus.HEALTHY))
                 .isEqualTo(ResultStatus.HEALTHY);
     }
 
     @Test
-    public void mergeReturnUnHealthyWhenMergeWithUnHealthy() {
+    void mergeReturnUnHealthyWhenMergeWithUnHealthy() {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(ResultStatus.merge(ResultStatus.HEALTHY, ResultStatus.UNHEALTHY))
                 .isEqualTo(ResultStatus.UNHEALTHY);
@@ -49,7 +49,7 @@ public class ResultStatusTest {
     }
 
     @Test
-    public void mergeReturnDegradedWhenMergeWithDegraded() {
+    void mergeReturnDegradedWhenMergeWithDegraded() {
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(ResultStatus.merge(ResultStatus.HEALTHY, ResultStatus.DEGRADED))
                 .isEqualTo(ResultStatus.DEGRADED);
