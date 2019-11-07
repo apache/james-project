@@ -61,7 +61,12 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
     }
 
     public static MailboxMetaData unselectableMailbox(MailboxPath path, MailboxId mailboxId, char delimiter) {
-        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE, new MailboxACL());
+        return new MailboxMetaData(path, mailboxId, delimiter, Children.CHILDREN_ALLOWED_BUT_UNKNOWN, Selectability.NONE, new MailboxACL(),
+            MailboxCounters.builder()
+                .mailboxId(mailboxId)
+                .count(0)
+                .unseen(0)
+                .build());
     }
 
     public static  final Comparator<MailboxMetaData> COMPARATOR = Comparator
@@ -74,14 +79,20 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
     private final Selectability selectability;
     private final MailboxId mailboxId;
     private final MailboxACL resolvedAcls;
+    private final MailboxCounters counters;
 
-    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability, MailboxACL resolvedAcls) {
+    public MailboxMetaData(MailboxPath path, MailboxId mailboxId, char delimiter, Children inferiors, Selectability selectability, MailboxACL resolvedAcls, MailboxCounters counters) {
         this.path = path;
         this.mailboxId = mailboxId;
         this.delimiter = delimiter;
         this.inferiors = inferiors;
         this.selectability = selectability;
         this.resolvedAcls = resolvedAcls;
+        this.counters = counters;
+    }
+
+    public MailboxCounters getCounters() {
+        return counters;
     }
 
     public MailboxACL getResolvedAcls() {
