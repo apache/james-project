@@ -22,8 +22,6 @@ package org.apache.james.protocols.api;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 /**
@@ -32,27 +30,10 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 public abstract class AbstractProtocolTransport implements ProtocolTransport {
     private static final String CRLF = "\r\n";
-
-    // TODO: Should we limit the size ?
-    private final Queue<Response> responses = new LinkedBlockingQueue<>();
-    private volatile boolean isAsync = false;
     
     @Override
     public final void writeResponse(Response response, ProtocolSession session) {
-        // if we already in asynchrnous mode we simply enqueue the response
-        // we do this synchronously because we may have a dequeuer thread working on
-        // isAsync and responses.
-        boolean enqueued = false;
-        synchronized (this) {
-            if (isAsync == true) {
-                responses.offer(response);
-                enqueued = true;
-            }
-        }
-
-        if (!enqueued) {
-            writeResponseToClient(response, session);
-        }
+        writeResponseToClient(response, session);
     }
     
     /**
