@@ -56,28 +56,10 @@ public class QuotaCountLimit implements QuotaLimitValue<QuotaCountLimit> {
     }
 
     @Override
-    public QuotaCountLimit add(long additionalValue) {
-        return new QuotaCountLimit(value.map(x -> x + additionalValue));
-    }
-
-    @Override
-    public QuotaCountLimit add(QuotaCountLimit additionalValue) {
-        if (additionalValue.isUnlimited()) {
-            return unlimited();
-        }
-        return new QuotaCountLimit(value.map(x -> x + additionalValue.asLong()));
-    }
-
-    @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
             .add("value", value.map(String::valueOf).orElse("unlimited"))
             .toString();
-    }
-
-    @Override
-    public boolean isGreaterThan(QuotaCountLimit other) {
-        return value.orElse(Long.MAX_VALUE) > other.value.orElse(Long.MAX_VALUE);
     }
 
     @Override

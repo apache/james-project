@@ -23,7 +23,7 @@ import java.util.Optional;
 public interface QuotaLimitValue<T extends QuotaLimitValue<T>> {
 
     static boolean isValidValue(Optional<Long> value) {
-        return !value.isPresent() || value.get() >= 0;
+        return value.map(longValue -> longValue >= 0).orElse(true);
     }
 
     long asLong();
@@ -34,9 +34,4 @@ public interface QuotaLimitValue<T extends QuotaLimitValue<T>> {
         return !isLimited();
     }
 
-    T add(long additionalValue);
-
-    T add(T additionalValue);
-
-    boolean isGreaterThan(T other);
 }
