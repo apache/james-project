@@ -151,9 +151,8 @@ public class GetMailboxesMethod implements Method {
 
         return userMailboxes
             .stream()
-            .map(MailboxMetaData::getId)
-            .map(mailboxId -> mailboxFactory.builder()
-                .id(mailboxId)
+            .map(mailboxMetaData -> mailboxFactory.builder()
+                .mailboxMetadata(mailboxMetaData)
                 .session(mailboxSession)
                 .usingPreloadedMailboxesMetadata(Optional.of(userMailboxes))
                 .quotaLoader(quotaLoader)
