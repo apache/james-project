@@ -46,18 +46,13 @@ import com.google.common.collect.ImmutableList;
 
 public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequest> implements CapabilityImplementingProcessor {
 
-    private static final List<String> CAPS;
-    
-    static {
-        List<String> caps = new ArrayList<>();
-        caps.add(VERSION);
-        caps.add(SUPPORTS_LITERAL_PLUS);
-        caps.add(SUPPORTS_RFC3348);
-        caps.add(SUPPORTS_I18NLEVEL_1);
-        caps.add(SUPPORTS_CONDSTORE);
-        CAPS = ImmutableList.copyOf(caps);
-    }
-    
+    private static final List<String> CAPS = ImmutableList.of(
+            VERSION,
+            SUPPORTS_LITERAL_PLUS,
+            SUPPORTS_RFC3348,
+            SUPPORTS_I18NLEVEL_1,
+            SUPPORTS_CONDSTORE);
+
     private final List<CapabilityImplementingProcessor> capabilities = new ArrayList<>();
     private final Set<String> disabledCaps = new HashSet<>();
     
