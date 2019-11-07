@@ -18,27 +18,15 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
-import java.util.concurrent.ThreadLocalRandom;
-
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.mailet.Mail;
-import org.apache.mailet.base.test.FakeMail;
 
 /**
  * some utilities for James unit testing
  */
 public class Util {
-
-    public static Mail createMockMail2Recipients(MimeMessage m) throws MessagingException {
-        return FakeMail.builder()
-            .name("ID=" + ThreadLocalRandom.current().nextLong())
-            .mimeMessage(m)
-            .recipients("test@james.apache.org", "test2@james.apache.org")
-            .build();
-    }
 
     public static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
         String sender = "test@james.apache.org";

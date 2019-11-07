@@ -20,12 +20,15 @@ package org.apache.james.smtpserver;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.mailet.Mail;
+import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -74,7 +77,7 @@ public class SetMimeHeaderHandlerTest {
         setHeaderValue(HEADER_VALUE);
 
         setupMockedMimeMessage();
-        mockedMail = Util.createMockMail2Recipients(mockedMimeMessage);
+        mockedMail = createMockMail2Recipients(mockedMimeMessage);
 
         SetMimeHeaderHandler header = new SetMimeHeaderHandler();
 
@@ -92,7 +95,7 @@ public class SetMimeHeaderHandlerTest {
         setHeaderValue(headerValue);
 
         setupMockedMimeMessage();
-        mockedMail = Util.createMockMail2Recipients(mockedMimeMessage);
+        mockedMail = createMockMail2Recipients(mockedMimeMessage);
 
         SetMimeHeaderHandler header = new SetMimeHeaderHandler();
 
@@ -102,4 +105,13 @@ public class SetMimeHeaderHandlerTest {
 
         assertThat(mockedMail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
     }
+
+    private static Mail createMockMail2Recipients(MimeMessage m) throws MessagingException {
+        return FakeMail.builder()
+            .name("ID=" + ThreadLocalRandom.current().nextLong())
+            .mimeMessage(m)
+            .recipients("test@james.apache.org", "test2@james.apache.org")
+            .build();
+    }
+
 }
