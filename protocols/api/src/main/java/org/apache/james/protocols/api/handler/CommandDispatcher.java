@@ -33,8 +33,6 @@ import org.apache.james.protocols.api.BaseRequest;
 import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.Request;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.future.FutureResponse;
-import org.apache.james.protocols.api.future.FutureResponseImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -183,28 +181,10 @@ public class CommandDispatcher<SessionT extends ProtocolSession> implements Exte
     private Response executeResultHandlers(final SessionT session, Response responseFuture, final long executionTime, final CommandHandler<SessionT> cHandler, final Iterator<ProtocolHandlerResultHandler<Response, SessionT>> resultHandlers) {
         // Check if the there is a ResultHandler left to execute if not just return the response
         if (resultHandlers.hasNext()) {
-            // Special handling of FutureResponse
-            // See PROTOCOLS-37
-            if (responseFuture instanceof FutureResponse) {
-                final FutureResponseImpl futureResponse = new FutureResponseImpl();
-                ((FutureResponse) responseFuture).addListener(response -> {
-                    Response r = resultHandlers.next().onResponse(session, response, executionTime, cHandler);
+            responseFuture = resultHandlers.next().onResponse(session, responseFuture, executionTime, cHandler);
 
-                    // call the next ResultHandler
-                    r = executeResultHandlers(session, r, executionTime, cHandler, resultHandlers);
-
-                    // notify the FutureResponse that we are ready
-                    futureResponse.setResponse(r);
-                });
-                
-                // just return the new FutureResponse which will get notified once its ready
-                return futureResponse;
-            }  else {
-                responseFuture = resultHandlers.next().onResponse(session, responseFuture, executionTime, cHandler);
-                
-                // call the next ResultHandler 
-                return executeResultHandlers(session, responseFuture, executionTime, cHandler, resultHandlers);
-            }
+            // call the next ResultHandler
+            return executeResultHandlers(session, responseFuture, executionTime, cHandler, resultHandlers);
         }
         return responseFuture;
     }

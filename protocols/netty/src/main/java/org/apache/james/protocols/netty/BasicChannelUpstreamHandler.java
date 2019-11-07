@@ -31,7 +31,6 @@ import org.apache.james.protocols.api.ProtocolSession;
 import org.apache.james.protocols.api.ProtocolSessionImpl;
 import org.apache.james.protocols.api.ProtocolTransport;
 import org.apache.james.protocols.api.Response;
-import org.apache.james.protocols.api.future.FutureResponse;
 import org.apache.james.protocols.api.handler.ConnectHandler;
 import org.apache.james.protocols.api.handler.DisconnectHandler;
 import org.apache.james.protocols.api.handler.LineHandler;
@@ -99,11 +98,6 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                     long executionTime = System.currentTimeMillis() - start;
 
                     for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                        // Disable till PROTOCOLS-37 is implemented
-                        if (response instanceof FutureResponse) {
-                            LOGGER.debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
-                            break;
-                        }
                         resultHandler.onResponse(session, response, executionTime, cHandler);
                     }
                     if (response != null) {
@@ -156,11 +150,6 @@ public class BasicChannelUpstreamHandler extends SimpleChannelUpstreamHandler {
                 long executionTime = System.currentTimeMillis() - start;
 
                 for (ProtocolHandlerResultHandler resultHandler : resultHandlers) {
-                    // Disable till PROTOCOLS-37 is implemented
-                    if (response instanceof FutureResponse) {
-                        LOGGER.debug("ProtocolHandlerResultHandler are not supported for FutureResponse yet");
-                        break;
-                    }
                     response = resultHandler.onResponse(pSession, response, executionTime, lHandler);
                 }
                 if (response != null) {

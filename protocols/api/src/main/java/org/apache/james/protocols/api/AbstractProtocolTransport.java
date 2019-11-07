@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.james.protocols.api.future.FutureResponse;
-
 
 /**
  * Abstract base class for {@link ProtocolTransport} implementation which already takes care of all the complex
@@ -56,21 +54,14 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
                 enqueued = true;
             }
         }
-        
-        // if we didn't enqueue then we check if the response is writable or we have to 
-        // set us "asynchrnous" and wait for response to be ready.
+
         if (!enqueued) {
-            if (isResponseWritable(response)) {
-                writeResponseToClient(response, session);
-            } else {
-                addDequeuerListener(response, session);
-                isAsync = true;
-            }
+            writeResponseToClient(response, session);
         }
     }
     
     /**
-     * Helper method which tries to write all queued {@link Response}'s to the remote client. This method is aware of {@link FutureResponse} and makes sure the {@link Response}'s are written
+     * Helper method which tries to write all queued {@link Response}'s to the remote client. This method makes sure the {@link Response}'s are written
      * in the correct order
      * 
      * This is related to PROTOCOLS-36
@@ -94,28 +85,8 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
                 }
             }
 
-            // if we have something in the queue we continue writing until we
-            // find something asynchronous.
-            if (isResponseWritable(queuedResponse)) {
-                writeResponseToClient(queuedResponse, session);
-            } else {
-                addDequeuerListener(queuedResponse, session);
-                // no changes to isAsync here, because in this method we are always already async.
-                break;
-            }
+            writeResponseToClient(queuedResponse, session);
         }
-    }
-    
-    private boolean isResponseWritable(Response response) {
-        return !(response instanceof FutureResponse) || ((FutureResponse) response).isReady();
-    }
-    
-    private void addDequeuerListener(Response responseFuture, final ProtocolSession session) {
-        ((FutureResponse) responseFuture).addListener(
-            response -> {
-                writeResponseToClient(response, session);
-                writeQueuedResponses(session);
-            });
     }
     
     /**
