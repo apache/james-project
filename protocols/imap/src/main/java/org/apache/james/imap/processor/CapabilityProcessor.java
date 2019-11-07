@@ -23,7 +23,6 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_CONDSTORE;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_I18NLEVEL_1;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_LITERAL_PLUS;
 import static org.apache.james.imap.api.ImapConstants.SUPPORTS_RFC3348;
-import static org.apache.james.imap.api.ImapConstants.UTF8;
 import static org.apache.james.imap.api.ImapConstants.VERSION;
 
 import java.io.Closeable;
@@ -34,7 +33,6 @@ import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -55,11 +53,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         caps.add(VERSION);
         caps.add(SUPPORTS_LITERAL_PLUS);
         caps.add(SUPPORTS_RFC3348);
-
-        // UTF-8 is needed for I18NLEVEL_1
-        if (CharsetUtil.getAvailableCharsetNames().contains(UTF8)) {
-            caps.add(SUPPORTS_I18NLEVEL_1);
-        }
+        caps.add(SUPPORTS_I18NLEVEL_1);
         caps.add(SUPPORTS_CONDSTORE);
         CAPS = ImmutableList.copyOf(caps);
     }
