@@ -28,16 +28,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Abstract base class for {@link ProtocolTransport} implementation which already takes care of all the complex
- * stuff when handling {@link Response}'s. 
- * 
- * 
- *
+ * stuff when handling {@link Response}'s.
  */
 public abstract class AbstractProtocolTransport implements ProtocolTransport {
-    
     private static final String CRLF = "\r\n";
 
-    
     // TODO: Should we limit the size ?
     private final Queue<Response> responses = new LinkedBlockingQueue<>();
     private volatile boolean isAsync = false;
@@ -73,13 +68,11 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
                 if (isStartTLSSupported()) {
                     startTLS = true;
                 } else {
-                    
                     // StartTls is not supported by this transport, so throw a exception
                     throw new UnsupportedOperationException("StartTls is not supported by this ProtocolTransport implementation");
                 }
             }
-            
-            
+
             if (response instanceof StreamResponse) {
                 writeToClient(toBytes(response), session, false);
                 writeToClient(((StreamResponse) response).getStream(), session, startTLS);
@@ -94,10 +87,9 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             if (response.isEndSession()) {
                 // close the channel if needed after the message was written out
                 close();
-           } 
-         }        
+            }
+        }
     }
-    
 
     /**
      * Take the {@link Response} and encode it to a <code>byte</code> array
@@ -120,7 +112,6 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
             throw new RuntimeException("No US-ASCII ?");
         }
     }
-    
 
     /**
      * Write the given <code>byte's</code> to the remote peer
@@ -139,7 +130,6 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
      * @param startTLS true if startTLS should be started after the {@link InputStream} was written to the client
      */
     protected abstract void writeToClient(InputStream in, ProtocolSession session, boolean startTLS);
-
     
     /**
      * Close the Transport
