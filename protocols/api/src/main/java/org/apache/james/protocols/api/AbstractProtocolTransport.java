@@ -61,35 +61,6 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
     }
     
     /**
-     * Helper method which tries to write all queued {@link Response}'s to the remote client. This method makes sure the {@link Response}'s are written
-     * in the correct order
-     * 
-     * This is related to PROTOCOLS-36
-     * 
-     * @param session
-     */
-    private  void writeQueuedResponses(ProtocolSession session) {
-        
-        // dequeue Responses until non is left
-        while (true) {
-            
-            Response queuedResponse = null;
-            
-            // synchrnously we check responses and if it is empty we move back to non asynch
-            // behaviour
-            synchronized (this) {
-                queuedResponse = responses.poll();
-                if (queuedResponse == null) {
-                    isAsync = false;
-                    break;
-                }
-            }
-
-            writeResponseToClient(queuedResponse, session);
-        }
-    }
-    
-    /**
      * Write the {@link Response} to the client
      * 
      * @param response
