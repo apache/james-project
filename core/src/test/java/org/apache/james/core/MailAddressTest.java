@@ -20,13 +20,18 @@
 package org.apache.james.core;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Fail.fail;
+import static org.assertj.core.api.Assertions.assertThatCode;
+
+import java.util.stream.Stream;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -37,47 +42,51 @@ class MailAddressTest {
     private static final String GOOD_ADDRESS = "server-dev@james.apache.org";
     private static final Domain GOOD_DOMAIN = Domain.of("james.apache.org");
 
-    private static final String[] GOOD_ADDRESSES = {
-            GOOD_ADDRESS,
-            GOOD_QUOTED_LOCAL_PART,
-            "server-dev@james-apache.org",
-            "server-dev@[127.0.0.1]",
-            "server-dev@#123",
-            "server-dev@#123.apache.org",
-            "server.dev@james.apache.org",
-            "\\.server-dev@james.apache.org",
-            "server-dev\\.@james.apache.org",
+    private static Stream<Arguments> goodAddresses() {
+        return Stream.of(
+                GOOD_ADDRESS,
+                GOOD_QUOTED_LOCAL_PART,
+                "server-dev@james-apache.org",
+                "server-dev@[127.0.0.1]",
+                "server-dev@#123",
+                "server-dev@#123.apache.org",
+                "server.dev@james.apache.org",
+                "\\.server-dev@james.apache.org",
+                "server-dev\\.@james.apache.org")
+            .map(Arguments::of);
     };
 
-    private static final String[] BAD_ADDRESSES = {
-            "",
-            "server-dev",
-            "server-dev@",
-            "[]",
-            "server-dev@[]",
-            "server-dev@#",
-            "quoted local-part@james.apache.org",
-            "quoted@local-part@james.apache.org",
-            "local-part.@james.apache.org",
-            ".local-part@james.apache.org",
-            "local-part@.james.apache.org",
-            "local-part@james.apache.org.",
-            "local-part@james.apache..org",
-            "server-dev@-james.apache.org",
-            "server-dev@james.apache.org-",
-            "server-dev@#james.apache.org",
-            "server-dev@#123james.apache.org",
-            "server-dev@#-123.james.apache.org",
-            "server-dev@james. apache.org",
-            "server-dev@james\\.apache.org",
-            "server-dev@[300.0.0.1]",
-            "server-dev@[127.0.1]",
-            "server-dev@[0127.0.0.1]",
-            "server-dev@[127.0.1.1a]",
-            "server-dev@[127\\.0.1.1]",
-            "server-dev@[127.0.1.1.1]",
-            "server-dev@[127.0.1.-1]"
-    };
+    private static Stream<Arguments> badAddresses() {
+        return Stream.of(
+                "",
+                "server-dev",
+                "server-dev@",
+                "[]",
+                "server-dev@[]",
+                "server-dev@#",
+                "quoted local-part@james.apache.org",
+                "quoted@local-part@james.apache.org",
+                "local-part.@james.apache.org",
+                ".local-part@james.apache.org",
+                "local-part@.james.apache.org",
+                "local-part@james.apache.org.",
+                "local-part@james.apache..org",
+                "server-dev@-james.apache.org",
+                "server-dev@james.apache.org-",
+                "server-dev@#james.apache.org",
+                "server-dev@#123james.apache.org",
+                "server-dev@#-123.james.apache.org",
+                "server-dev@james. apache.org",
+                "server-dev@james\\.apache.org",
+                "server-dev@[300.0.0.1]",
+                "server-dev@[127.0.1]",
+                "server-dev@[0127.0.0.1]",
+                "server-dev@[127.0.1.1a]",
+                "server-dev@[127\\.0.1.1]",
+                "server-dev@[127.0.1.1.1]",
+                "server-dev@[127.0.1.-1]")
+            .map(Arguments::of);
+    }
 
     /**
      * Test method for {@link MailAddress#hashCode()}.
@@ -91,28 +100,18 @@ class MailAddressTest {
         assertThat(a.hashCode()).isEqualTo(b.hashCode());
     }
 
-    /**
-     * Test method for {@link MailAddress#MailAddress(java.lang.String)}.
-     *
-     * @throws AddressException
-     */
-    @Test
-    void testMailAddressString() throws AddressException {
-        MailAddress a = new MailAddress(GOOD_ADDRESS);
-        assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
+    @ParameterizedTest
+    @MethodSource("goodAddresses")
+    void testGoodMailAddressString(String mailAddress) {
+        assertThatCode(() -> new MailAddress(mailAddress))
+            .doesNotThrowAnyException();
+    }
 
-        for (String goodAddress : GOOD_ADDRESSES) {
-            try {
-                a = new MailAddress(goodAddress);
-            } catch (AddressException e) {
-                fail(e.getMessage());
-            }
-        }
-
-        for (String badAddress : BAD_ADDRESSES) {
-            Assertions.assertThatThrownBy(() -> new MailAddress(badAddress))
-                .isInstanceOf(AddressException.class);
-        }
+    @ParameterizedTest
+    @MethodSource("badAddresses")
+    void testBadMailAddressString(String mailAddress) {
+        Assertions.assertThatThrownBy(() -> new MailAddress(mailAddress))
+            .isInstanceOf(AddressException.class);
     }
 
     /**
