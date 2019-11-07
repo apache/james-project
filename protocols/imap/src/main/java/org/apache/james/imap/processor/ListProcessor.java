@@ -26,8 +26,8 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -104,7 +104,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     } else {
                         referenceRoot = referenceName.substring(0, firstDelimiter);
                     }
-                    referenceRoot = CharsetUtil.decodeModifiedUTF7(referenceRoot);
+                    referenceRoot = ModifiedUtf7.decodeModifiedUTF7(referenceRoot);
                 } else {
                     // A relative reference name, return "" to indicate it is
                     // non-rooted
@@ -127,7 +127,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 // Is the interpreted (combined) pattern relative?
                 isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
-                finalReferencename = CharsetUtil.decodeModifiedUTF7(finalReferencename);
+                finalReferencename = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
 
                 MailboxPath basePath = null;
                 if (isRelative) {
@@ -141,7 +141,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                             .userAndNamespaceFrom(basePath)
                             .expression(new PrefixedRegex(
                                 basePath.getName(),
-                                CharsetUtil.decodeModifiedUTF7(mailboxName),
+                                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
                                 mailboxSession.getPathDelimiter()))
                             .build(), mailboxSession);
             }

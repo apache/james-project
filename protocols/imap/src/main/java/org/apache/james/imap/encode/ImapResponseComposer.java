@@ -24,7 +24,7 @@ import java.io.IOException;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.display.CharsetUtil;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.message.response.Literal;
@@ -112,7 +112,7 @@ public interface ImapResponseComposer {
 
     /**
      * First encodes the given {@code mailboxName} using
-     * {@link CharsetUtil#encodeModifiedUTF7(String)} and then quotes the result
+     * {@link ModifiedUtf7#encodeModifiedUTF7(String)} and then quotes the result
      * with {@link #quote(String)}.
      * 
      * @param mailboxName

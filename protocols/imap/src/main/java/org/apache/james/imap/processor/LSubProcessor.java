@@ -25,8 +25,8 @@ import java.util.Collection;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -71,11 +71,11 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         Collection<String> mailboxes = getSubscriptionManager().subscriptions(mailboxSession);
 
-        String decodedMailName = CharsetUtil.decodeModifiedUTF7(referenceName);
+        String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);
 
         MailboxNameExpression expression = new PrefixedRegex(
             decodedMailName,
-            CharsetUtil.decodeModifiedUTF7(mailboxName),
+            ModifiedUtf7.decodeModifiedUTF7(mailboxName),
             mailboxSession.getPathDelimiter());
         Collection<String> mailboxResponses = new ArrayList<>();
 

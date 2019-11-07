@@ -35,8 +35,8 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
@@ -240,7 +240,7 @@ public abstract class ImapRequestLineReader {
 
     /**
      * 
-     * Reads the mailbox name via {@link #mailboxUTF7()} but also decode it via {@link CharsetUtil#decodeModifiedUTF7(String)}
+     * Reads the mailbox name via {@link #mailboxUTF7()} but also decode it via {@link ModifiedUtf7#decodeModifiedUTF7(String)}
      * 
      * If you really want to get the modified UTF7 version you should use {@link #mailboxUTF7()}
      * 
@@ -248,7 +248,7 @@ public abstract class ImapRequestLineReader {
      * 
      */
     public String mailbox() throws DecodingException {
-       return CharsetUtil.decodeModifiedUTF7(mailboxUTF7());
+       return ModifiedUtf7.decodeModifiedUTF7(mailboxUTF7());
     }
 
     /**

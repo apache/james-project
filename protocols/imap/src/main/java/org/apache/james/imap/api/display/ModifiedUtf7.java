@@ -24,36 +24,31 @@ import java.nio.charset.Charset;
 import com.beetstra.jutf7.CharsetProvider;
 
 /**
- * Utility class which can be used to get a list of supported {@link Charset}'s 
- * 
- * Beside this it has some methods included which helps to encode/decode modified UTF7
+ * This class has some methods included which helps to encode/decode modified UTF7
  */
-public class CharsetUtil {
+public class ModifiedUtf7 {
 
-    private static final String X_MODIFIED_UTF_7 = "X-MODIFIED-UTF-7";
-    private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName(X_MODIFIED_UTF_7);
+    private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName("X-MODIFIED-UTF-7");
 
     /**
      * Decode the given UTF7 encoded <code>String</code>
-     *
-     * @return decoded
+     * 
+     * @param input utf7-encoded value
+     * @return decoded value
      */
-    public static String decodeModifiedUTF7(String string) {
-        return X_MODIFIED_UTF_7_CHARSET.decode(ByteBuffer.wrap(string.getBytes())).toString();
-
+    public static String decodeModifiedUTF7(String input) {
+        return X_MODIFIED_UTF_7_CHARSET.decode(ByteBuffer.wrap(input.getBytes())).toString();
     }
-    
 
     /**
      * Encode the given <code>String</code> to modified UTF7. 
      * See RFC3501 for more details
-     *
-     * @return encoded
+     * 
+     * @param input
+     * @return utf7-encoded value
      */
-    
-    public static String encodeModifiedUTF7(String string) {
-        ByteBuffer encode = X_MODIFIED_UTF_7_CHARSET.encode(string);
+    public static String encodeModifiedUTF7(String input) {
+        ByteBuffer encode = X_MODIFIED_UTF_7_CHARSET.encode(input);
         return new String(encode.array(), 0, encode.remaining());
-
     }
 }

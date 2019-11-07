@@ -26,7 +26,7 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.display.CharsetUtil;
+import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
@@ -237,7 +237,7 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     
     @Override
     public ImapResponseComposer mailbox(String mailboxName) throws IOException {
-        quote(CharsetUtil.encodeModifiedUTF7(mailboxName));
+        quote(ModifiedUtf7.encodeModifiedUTF7(mailboxName));
         return this;
     }
 
