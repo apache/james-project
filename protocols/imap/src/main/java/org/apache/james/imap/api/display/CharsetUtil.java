@@ -20,11 +20,8 @@ package org.apache.james.imap.api.display;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
-import java.util.Set;
-import java.util.stream.Stream;
 
 import com.beetstra.jutf7.CharsetProvider;
-import com.github.steveash.guavate.Guavate;
 
 /**
  * Utility class which can be used to get a list of supported {@link Charset}'s 
@@ -33,24 +30,8 @@ import com.github.steveash.guavate.Guavate;
  */
 public class CharsetUtil {
 
-    private static final Set<String> CHARSET_NAMES =
-        Charset.availableCharsets()
-            .values()
-            .stream()
-            .flatMap(charset -> Stream.concat(
-                Stream.of(charset.name()),
-                charset.aliases().stream()))
-            .collect(Guavate.toImmutableSet());
-
     private static final String X_MODIFIED_UTF_7 = "X-MODIFIED-UTF-7";
     private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName(X_MODIFIED_UTF_7);
-
-    /**
-     * Return an unmodifiable {@link Set} which holds the names (and aliases) of all supported Charsets
-     */
-    public static final Set<String> getAvailableCharsetNames() {
-        return CHARSET_NAMES;
-    }
 
     /**
      * Decode the given UTF7 encoded <code>String</code>

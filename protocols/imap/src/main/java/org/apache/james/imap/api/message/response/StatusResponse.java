@@ -19,19 +19,23 @@
 
 package org.apache.james.imap.api.message.response;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.display.CharsetUtil;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.mailbox.MessageUid;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * <p>
@@ -43,6 +47,15 @@ import org.apache.james.mailbox.MessageUid;
  * </p>
  */
 public interface StatusResponse extends ImapResponseMessage {
+
+    Set<String> AVAILABLE_CHARSET_NAMES =
+        Charset.availableCharsets()
+            .values()
+            .stream()
+            .flatMap(charset -> Stream.concat(
+                Stream.of(charset.name()),
+                charset.aliases().stream()))
+            .collect(Guavate.toImmutableSet());
 
     /**
      * Gets the server response type of this status message.
@@ -215,7 +228,7 @@ public interface StatusResponse extends ImapResponseMessage {
          * @return <code>ResponseCode</code>, not null
          */
         public static ResponseCode badCharset() {
-            return new ResponseCode("BADCHARSET", CharsetUtil.getAvailableCharsetNames());
+            return new ResponseCode("BADCHARSET", AVAILABLE_CHARSET_NAMES);
         }
 
         /**
