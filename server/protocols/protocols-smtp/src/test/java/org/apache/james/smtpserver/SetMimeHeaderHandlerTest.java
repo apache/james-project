@@ -39,26 +39,12 @@ public class SetMimeHeaderHandlerTest {
     private static final String HEADER_VALUE = "test-value";
 
     private SMTPSession mockedSMTPSession;
-    private MimeMessage mockedMimeMessage;
+    private MimeMessage mimeMessage;
     private Mail mail;
-    private String headerName = "defaultHeaderName";
-    private String headerValue = "defaultHeaderValue";
 
     @Before
     public void setUp() throws Exception {
         setupMockedSMTPSession();
-    }
-
-    private void setHeaderName(String headerName) {
-        this.headerName = headerName;
-    }
-
-    private void setHeaderValue(String headerValue) {
-        this.headerValue = headerValue;
-    }
-
-    private void setupMockedMimeMessage() throws MessagingException {
-        mockedMimeMessage = createMimeMessage(headerName, headerValue);
     }
 
     private void setupMockedSMTPSession() {
@@ -74,13 +60,17 @@ public class SetMimeHeaderHandlerTest {
     // test if the Header was add
     @Test
     public void testHeaderIsPresent() throws MessagingException {
-        setHeaderName(HEADER_NAME);
-        setHeaderValue(HEADER_VALUE);
+        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME, HEADER_VALUE)
+            .setSubject("testmail")
+            .setText("testtext")
+            .addToRecipient("test2@james.apache.org")
+            .addFrom("test@james.apache.org")
+            .build();
 
-        setupMockedMimeMessage();
         mail = MailImpl.builder()
             .name("ID=" + ThreadLocalRandom.current().nextLong())
-            .mimeMessage(mockedMimeMessage)
+            .mimeMessage(mimeMessage)
             .addRecipients("test@james.apache.org", "test2@james.apache.org")
             .build();
 
@@ -96,13 +86,17 @@ public class SetMimeHeaderHandlerTest {
     // test if the Header was replaced
     @Test
     public void testHeaderIsReplaced() throws MessagingException {
-        setHeaderName(HEADER_NAME);
-        setHeaderValue(headerValue);
 
-        setupMockedMimeMessage();
+        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(HEADER_NAME, "defaultHeaderValue")
+            .setSubject("testmail")
+            .setText("testtext")
+            .addToRecipient("test2@james.apache.org")
+            .addFrom("test@james.apache.org")
+            .build();
         mail = MailImpl.builder()
             .name("ID=" + ThreadLocalRandom.current().nextLong())
-            .mimeMessage(mockedMimeMessage)
+            .mimeMessage(mimeMessage)
             .addRecipients("test@james.apache.org", "test2@james.apache.org")
             .build();
 
@@ -113,18 +107,6 @@ public class SetMimeHeaderHandlerTest {
         header.onMessage(mockedSMTPSession, mail);
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
-    }
-
-    private static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
-        String sender = "test@james.apache.org";
-        String rcpt = "test2@james.apache.org";
-        return MimeMessageBuilder.mimeMessageBuilder()
-            .addHeader(headerName, headerValue)
-            .setSubject("testmail")
-            .setText("testtext")
-            .addToRecipient(rcpt)
-            .addFrom(sender)
-            .build();
     }
 
 }
