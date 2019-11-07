@@ -102,100 +102,54 @@ class MailAddressTest {
             .isInstanceOf(AddressException.class);
     }
 
-    /**
-     * Test method for {@link MailAddress#MailAddress(java.lang.String, java.lang.String)}.
-     */
     @Test
-    void testMailAddressStringString() {
-        try {
-            new MailAddress("local-part", "domain");
-        } catch (AddressException e) {
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
-        try {
-            MailAddress a = new MailAddress("local-part", "-domain");
-            assertThat(true).describedAs(a.toString()).isFalse();
-        } catch (AddressException e) {
-            assertThat(true).isTrue();
-        }
+    void testGoodMailAddressWithLocalPartAndDomain() {
+        assertThatCode(() -> new MailAddress("local-part", "domain"))
+            .doesNotThrowAnyException();
     }
 
-    /**
-     * Test method for {@link MailAddress#MailAddress(javax.mail.internet.InternetAddress)}.
-     */
+    @Test
+    void testBadMailAddressWithLocalPartAndDomain() {
+        Assertions.assertThatThrownBy(() -> new MailAddress("local-part", "-domain"))
+            .isInstanceOf(AddressException.class);
+    }
+
     @Test
     void testMailAddressInternetAddress() {
-        try {
-            new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
-        } catch (AddressException e) {
-            System.out.println("AddressException" + e.getMessage());
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
+        assertThatCode(() -> new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART)))
+            .doesNotThrowAnyException();
     }
 
-    /**
-     * Test method for {@link MailAddress#getDomain()}.
-     */
     @Test
-    void testGetDomain() {
-        try {
-            MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
-            assertThat(a.getDomain()).isEqualTo(GOOD_DOMAIN);
-        } catch (AddressException e) {
-            System.out.println("AddressException" + e.getMessage());
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
+    void testGetDomain() throws AddressException {
+        MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
+
+        assertThat(a.getDomain()).isEqualTo(GOOD_DOMAIN);
     }
 
-    /**
-     * Test method for {@link MailAddress#getLocalPart()}.
-     */
     @Test
-    void testGetLocalPart() {
-        try {
-            MailAddress a = new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
-            assertThat(a.getLocalPart()).isEqualTo(GOOD_LOCAL_PART);
-        } catch (AddressException e) {
-            System.out.println("AddressException" + e.getMessage());
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
+    void testGetLocalPart() throws AddressException {
+        MailAddress a = new MailAddress(new InternetAddress(GOOD_QUOTED_LOCAL_PART));
+
+        assertThat(a.getLocalPart()).isEqualTo(GOOD_LOCAL_PART);
     }
 
-    /**
-     * Test method for {@link MailAddress#toString()}.
-     */
     @Test
-    void testToString() {
-        try {
-            MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
-            assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
-        } catch (AddressException e) {
-            System.out.println("AddressException" + e.getMessage());
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
+    void testToString() throws AddressException {
+        MailAddress a = new MailAddress(new InternetAddress(GOOD_ADDRESS));
+
+        assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
     }
 
-    /**
-     * Test method for {@link MailAddress#toInternetAddress()}.
-     */
     @Test
-    void testToInternetAddress() {
-        try {
-            InternetAddress b = new InternetAddress(GOOD_ADDRESS);
-            MailAddress a = new MailAddress(b);
-            assertThat(a.toInternetAddress()).isEqualTo(b);
-            assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
-        } catch (AddressException e) {
-            System.out.println("AddressException" + e.getMessage());
-            assertThat(false).describedAs(e.getMessage()).isTrue();
-        }
+    void testToInternetAddress() throws AddressException {
+        InternetAddress b = new InternetAddress(GOOD_ADDRESS);
+        MailAddress a = new MailAddress(b);
+
+        assertThat(a.toInternetAddress()).isEqualTo(b);
+        assertThat(a.toString()).isEqualTo(GOOD_ADDRESS);
     }
 
-    /**
-     * Test method for {@link MailAddress#equals(java.lang.Object)}.
-     *
-     * @throws AddressException
-     */
     @Test
     void testEqualsObject() throws AddressException {
         MailAddress a = new MailAddress(GOOD_ADDRESS);
