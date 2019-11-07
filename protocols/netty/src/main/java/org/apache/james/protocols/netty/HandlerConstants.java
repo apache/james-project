@@ -24,8 +24,6 @@ import org.jboss.netty.channel.ChannelPipeline;
 /**
  * Provide the keys under which the {@link ChannelHandler}'s are stored in the
  * {@link ChannelPipeline}
- * 
- * 
  */
 public interface HandlerConstants {
 

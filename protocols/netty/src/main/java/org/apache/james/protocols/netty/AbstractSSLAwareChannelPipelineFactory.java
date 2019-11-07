@@ -28,9 +28,7 @@ import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.util.HashedWheelTimer;
 
 /**
- * Abstract base class for {@link ChannelPipeline} implementations which use TLS 
- * 
- *
+ * Abstract base class for {@link ChannelPipeline} implementations which use TLS
  */
 public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractChannelPipelineFactory {
 
@@ -78,15 +76,11 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
 
     /**
      * Return if the socket is using SSL/TLS
-     * 
-     * @return isSSL
      */
     protected abstract boolean isSSLSocket();
     
     /**
      * Return the SSL context
-     * 
-     * @return context
      */
     protected abstract SSLContext getSSLContext();
 }

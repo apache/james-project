@@ -40,7 +40,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Abstract base class for Servers which want to use async io
- *
  */
 public abstract class AbstractAsyncServer implements ProtocolServer {
 
@@ -68,8 +67,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     /**
      * Set the IO-worker thread count to use. Default is nCores * 2
-     * 
-     * @param ioWorker
      */
     public void setIoWorkerCount(int ioWorker) {
         if (started) {
@@ -80,8 +77,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     /**
      * Return the IO worker thread count to use
-     * 
-     * @return ioWorker
      */
     public int getIoWorkerCount() {
         return ioWorker;
@@ -114,8 +109,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     /**
      * Configure the bootstrap before it get bound
-     * 
-     * @param bootstrap
      */
     protected void configureBootstrap(ServerBootstrap bootstrap) {
         // Bind and start to accept incoming connections.
@@ -155,16 +148,12 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     /**
      * Create ChannelPipelineFactory to use by this Server implementation
-     * 
-     * @return factory
      */
     protected abstract ChannelPipelineFactory createPipelineFactory(ChannelGroup group);
 
     /**
      * Set the read/write timeout for the server. This will throw a {@link IllegalStateException} if the
      * server is running.
-     * 
-     * @param timeout
      */
     public void setTimeout(int timeout) {
         if (started) {
@@ -176,8 +165,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     
     /**
      * Set the Backlog for the socket. This will throw a {@link IllegalStateException} if the server is running.
-     * 
-     * @param backlog
      */
     public void setBacklog(int backlog) {
         if (started) {
@@ -201,8 +188,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
     /**
      * Create a new {@link Executor} used for dispatch messages to the workers. One Thread will be used per port which is bound.
      * This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     * 
-     * @return bossExecutor
      */
     protected Executor createBossExecutor() {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
@@ -211,8 +196,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
 
     /**
      * Create a new {@link Executor} used for workers. This can get overridden if needed, by default it use a {@link Executors#newCachedThreadPool()}
-     * 
-     * @return workerExecutor
      */
     protected Executor createWorkerExecutor() {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());

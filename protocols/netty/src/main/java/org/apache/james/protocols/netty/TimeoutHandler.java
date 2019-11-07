@@ -27,7 +27,6 @@ import org.jboss.netty.util.Timer;
 /**
  * {@link IdleStateHandler} implementation which disconnect the {@link Channel} after a configured
  * idle timeout. Be aware that this handle is not thread safe so it can't be shared across pipelines
- *
  */
 public class TimeoutHandler extends IdleStateHandler {
 
