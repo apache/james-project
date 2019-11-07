@@ -48,7 +48,6 @@ public class NoopCmdHandler implements CommandHandler<SMTPSession> {
     /**
      * Handler method called upon receipt of a NOOP command.
      * Just sends back an OK and logs the command.
-     *
      */
     @Override
     public Response onCommand(SMTPSession session, Request request) {

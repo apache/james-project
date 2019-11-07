@@ -29,23 +29,16 @@ import org.apache.james.core.MaybeSender;
 
 /**
  * The MailEnvelope of a SMTP-Transaction
- * 
- * 
  */
 public interface MailEnvelope {
 
     /**
-     * Return the size of the message. If the message is "empty" it will return
-     * -1
-     * 
-     * @return size
+     * Return the size of the message. If the message is "empty" it will return -1
      */
     long getSize();
 
     /**
      * Return the recipients which where supplied in the RCPT TO: command
-     * 
-     * @return recipients
      */
     List<MailAddress> getRecipients();
 
@@ -57,8 +50,6 @@ public interface MailEnvelope {
      *
      * Note that SMTP null sender ( "&lt;&gt;" ) needs to be implicitly handled by the caller under the form of 'null' or
      * {@link MailAddress#nullSender()}. Replacement method adds type safety on this operation.
-     *
-     * @return sender
      */
     @Deprecated
     default MailAddress getSender() {
@@ -82,17 +73,11 @@ public interface MailEnvelope {
      * Return the OutputStream of the message
      * 
      * TODO: Think about how to remove this!
-     * 
-     * @return out
-     * @throws IOException
      */
     OutputStream getMessageOutputStream() throws IOException;
 
     /**
      * Return the InputStream of the message
-     * 
-     * @return in
-     * @throws IOException
      */
     InputStream getMessageInputStream() throws IOException;
 }

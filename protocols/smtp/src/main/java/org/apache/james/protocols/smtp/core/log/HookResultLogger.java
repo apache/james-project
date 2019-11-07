@@ -27,10 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * 
  * Log the {@link HookResult}. If {@link HookReturnCode.Action#DENY}, {@link HookReturnCode.Action#DENYSOFT} or {@link HookReturnCode#isDisconnected()} was used it will get
  * logged to INFO. If not to DEBUG
- *
  */
 public class HookResultLogger implements HookResultHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(HookResultLogger.class);

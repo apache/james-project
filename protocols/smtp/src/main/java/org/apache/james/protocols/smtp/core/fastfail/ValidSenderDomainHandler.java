@@ -27,8 +27,7 @@ import org.apache.james.protocols.smtp.hook.HookReturnCode;
 import org.apache.james.protocols.smtp.hook.MailHook;
 
 /**
- * Add MFDNSCheck feature to SMTPServer. This handler reject mail from domains which have not an an valid MX record.  
- * 
+ * Add MFDNSCheck feature to SMTPServer. This handler reject mail from domains which have not an an valid MX record.
  */
 public abstract class ValidSenderDomainHandler implements MailHook { 
 

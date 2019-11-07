@@ -22,8 +22,6 @@ import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 /**
  * Just and marker interface for the different Hooks
- * 
- *
  */
 public interface Hook extends ProtocolHandler{
 

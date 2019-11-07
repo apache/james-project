@@ -36,10 +36,6 @@ public interface DataLineFilter extends ProtocolHandler {
     
     /**
      * Handle line processing
-     * 
-     * @param session
-     * @param line
-     * @param next
      */
     Response onLine(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next);
 }

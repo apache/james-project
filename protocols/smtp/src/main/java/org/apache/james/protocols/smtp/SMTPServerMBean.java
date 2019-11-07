@@ -17,13 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
 package org.apache.james.protocols.smtp;
 
 /**
  * An interface to expose James management functionality through JMX.
- * 
  */
 public interface SMTPServerMBean {
     /**
@@ -36,7 +33,7 @@ public interface SMTPServerMBean {
     /**
     * Returns the server socket type, plain or SSL 
     * 
-    * @return String The scoekt type, plain or SSL     
+    * @return String The socket type, plain or SSL
     */  
-    String  getSocketType();
+    String getSocketType();
 }

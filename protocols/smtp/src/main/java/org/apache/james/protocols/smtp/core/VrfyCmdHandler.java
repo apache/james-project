@@ -44,7 +44,6 @@ public class VrfyCmdHandler implements CommandHandler<SMTPSession> {
      * Handler method called upon receipt of a VRFY command.
      * This method informs the client that the command is
      * not implemented.
-     *
      */
     @Override
     public Response onCommand(SMTPSession session, Request request) {

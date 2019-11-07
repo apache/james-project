@@ -34,11 +34,8 @@ import org.apache.james.protocols.smtp.hook.RcptHook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 /**
- * Abstract base class which implement GreyListing. 
- * 
- *
+ * Abstract base class which implement GreyListing.
  */
 public abstract class AbstractGreylistHandler implements RcptHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGreylistHandler.class);
@@ -152,7 +149,6 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            The rcptTo
      * @return data
      *            The data
-     * @throws Exception
      */
     protected abstract  Iterator<String> getGreyListData(String ipAddress, String sender, String recip) throws Exception;
 
@@ -187,7 +183,6 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      *            The count
      * @param time
      *            the current time in ms
-     * @throws Exception
      */
     protected abstract void updateTriplet(String ipAddress, String sender, String recip, int count, Instant time) throws Exception;
        
@@ -197,7 +192,6 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      * 
      * @param time
      *            The time which must be reached before delete the records
-     * @throws Exception
      */
     protected abstract void cleanupAutoWhiteListGreyList(Instant time)throws Exception;
 
@@ -206,7 +200,6 @@ public abstract class AbstractGreylistHandler implements RcptHook {
      * 
      * @param time
      *            The time which must be reached before delete the records
-     * @throws Exception
      */
     protected abstract void cleanupGreyList(Instant time) throws Exception;
 

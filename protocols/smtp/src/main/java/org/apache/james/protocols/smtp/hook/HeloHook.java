@@ -17,16 +17,12 @@
  * under the License.                                           *
  ****************************************************************/
 
-
-
-
 package org.apache.james.protocols.smtp.hook;
 
 import org.apache.james.protocols.smtp.SMTPSession;
 
 /**
  * Implement this interfaces to hook in the HELO Command
- * 
  */
 public interface HeloHook extends Hook {
 

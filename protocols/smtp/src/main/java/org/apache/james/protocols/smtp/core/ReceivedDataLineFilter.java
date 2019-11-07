@@ -46,10 +46,6 @@ public class ReceivedDataLineFilter extends AbstractAddHeadersFilter {
 
     /**
      * Return the service type which will be used in the Received headers.
-     * 
-     * @param session
-     * @param heloMode
-     * @return type
      */
     protected String getServiceType(SMTPSession session, String heloMode) {
         // Check if EHLO was used

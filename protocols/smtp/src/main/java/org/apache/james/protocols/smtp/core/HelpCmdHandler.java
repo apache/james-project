@@ -44,7 +44,6 @@ public class HelpCmdHandler implements CommandHandler<SMTPSession> {
 
     /**
      * handles HELP command
-     *
     **/
     @Override
     public Response onCommand(SMTPSession session, Request request) {

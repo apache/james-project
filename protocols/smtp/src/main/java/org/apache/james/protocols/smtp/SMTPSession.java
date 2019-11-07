@@ -61,8 +61,6 @@ public interface SMTPSession extends ProtocolSession {
     
     /**
      * Set if reallying is allowed
-     * 
-     * @param relayingAllowed
      */
     void setRelayingAllowed(boolean relayingAllowed);
 

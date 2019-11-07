@@ -54,7 +54,6 @@ public class RsetCmdHandler implements CommandHandler<SMTPSession> {
      *
      * @param session SMTP session object
      * @param argument the argument passed in with the command by the SMTP client
-     * @return 
      */
     private Response doRSET(SMTPSession session, String argument) {
         if ((argument == null) || (argument.length() == 0)) {

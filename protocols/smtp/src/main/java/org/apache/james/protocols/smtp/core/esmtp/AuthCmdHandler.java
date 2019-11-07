@@ -213,7 +213,7 @@ public class AuthCmdHandler
      * Decoded: test\000test\000tEst42
      *
      * @param session SMTP session object
-     * @param initialResponse the initial response line passed in with the AUTH command
+     * @param line the initial response line passed in with the AUTH command
      */
     private Response doPlainAuthPass(SMTPSession session, String line) {
         String user = null;
@@ -286,7 +286,7 @@ public class AuthCmdHandler
      * Carries out the Login AUTH SASL exchange.
      *
      * @param session SMTP session object
-     * @param initialResponse the initial response line passed in with the AUTH command
+     * @param user the user passed in with the AUTH command
      */
     private Response doLoginAuthPass(SMTPSession session, String user) {
         if (user != null) {
@@ -335,15 +335,6 @@ public class AuthCmdHandler
         return doAuthTest(session, user, pass, "LOGIN");
     }
 
-
-
-    /**
-     * @param session
-     * @param user
-     * @param pass
-     * @param authType
-     * @return
-     */
     protected Response doAuthTest(SMTPSession session, String user, String pass, String authType) {
         if ((user == null) || (pass == null)) {
             return new SMTPResponse(SMTPRetCode.SYNTAX_ERROR_ARGUMENTS,"Could not decode parameters for AUTH " + authType);

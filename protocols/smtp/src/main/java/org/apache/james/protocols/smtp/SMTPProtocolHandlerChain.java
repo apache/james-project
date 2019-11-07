@@ -56,7 +56,6 @@ import org.apache.james.protocols.smtp.hook.Hook;
  * This {@link ProtocolHandlerChain} implementation add all needed handlers to
  * the chain to act as full blown SMTPServer. By default messages will just get
  * rejected after the DATA command.
- * 
  */
 public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
@@ -76,9 +75,6 @@ public class SMTPProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
     /**
      * Add all default handlers to the chain and the given {@link Hook}'s. After that {@link #wireExtensibleHandlers()} is called
-     * 
-     * @param hooks
-     * @throws WiringException
      */
     public SMTPProtocolHandlerChain(MetricFactory metricFactory, Hook... hooks) throws WiringException {
         this(metricFactory, true);

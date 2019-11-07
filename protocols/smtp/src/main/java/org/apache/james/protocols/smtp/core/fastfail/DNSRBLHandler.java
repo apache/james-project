@@ -198,8 +198,7 @@ public class DNSRBLHandler implements RcptHook {
      * Check if the given ipaddress is resolvable. 
      * 
      * This implementation use {@link InetAddress#getByName(String)}. Sub-classes may override this with a more performant solution
-     * 
-     * @param ip
+     *
      * @return canResolve
      */
     protected boolean resolve(String ip) {
@@ -215,8 +214,7 @@ public class DNSRBLHandler implements RcptHook {
      * Return a {@link Collection} which holds all TXT records for the ip. This is most times used to add details for a RBL entry.
      * 
      * This implementation always returns an empty {@link Collection}. Sub-classes may override this.
-     * 
-     * @param ip
+     *
      * @return txtRecords
      */
     protected Collection<String> resolveTXTRecords(String ip) {

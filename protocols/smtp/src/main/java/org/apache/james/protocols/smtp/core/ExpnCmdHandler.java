@@ -48,7 +48,6 @@ public class ExpnCmdHandler implements CommandHandler<SMTPSession> {
      * Handler method called upon receipt of a EXPN command.
      * This method informs the client that the command is
      * not implemented.
-     *
      */
     @Override
     public Response onCommand(SMTPSession session, Request request) {

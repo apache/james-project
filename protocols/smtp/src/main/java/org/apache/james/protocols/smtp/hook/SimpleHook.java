@@ -24,12 +24,10 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.protocols.smtp.MailEnvelope;
 import org.apache.james.protocols.smtp.SMTPSession;
 
-
 /**
  * Simple {@link Hook} implementation which can be used as base class when writing simple {@link Hook}'s
  * 
  * The SMTP-Server will just accept email with this {@link Hook} in place and discard it
- *
  */
 public class SimpleHook implements HeloHook, MailHook, RcptHook, MessageHook {
 

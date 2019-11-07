@@ -26,8 +26,6 @@ import org.apache.james.protocols.api.handler.ProtocolHandlerChain;
 
 /**
  * {@link ProtocolImpl} which creates {@link SMTPSessionImpl} instances
- * 
- *
  */
 public class SMTPProtocol extends ProtocolImpl {
 

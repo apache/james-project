@@ -67,8 +67,7 @@ public abstract class AbstractAuthRequiredToRelayRcptHook implements RcptHook {
     
     /**
      * Return true if the given domain is a local domain for this server
-     * 
-     * @param domain
+     *
      * @return isLocal
      */
     protected abstract boolean isLocalDomain(Domain domain);

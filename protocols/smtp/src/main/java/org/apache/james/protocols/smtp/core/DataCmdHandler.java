@@ -125,7 +125,6 @@ public class DataCmdHandler implements CommandHandler<SMTPSession>, ExtensibleHa
 
     /**
      * process DATA command
-     *
      */
     @Override
     public Response onCommand(SMTPSession session, Request request) {

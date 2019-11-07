@@ -27,8 +27,6 @@ import org.apache.james.protocols.api.StartTlsResponse;
 
 /**
  * This {@link SMTPResponse} should only be used once you want to start tls after the {@link SMTPResponse} was written to the client
- * 
- *
  */
 public class SMTPStartTlsResponse extends SMTPResponse implements StartTlsResponse {
 

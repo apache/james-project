@@ -43,13 +43,7 @@ public class SMTPResponse extends AbstractResponse {
     public SMTPResponse(String code, CharSequence description) {
         super(code, description);
     }
-    
-    /**
-     * Construct a new SMTPResponse. The given rawLine need to be in format [SMTPResponseReturnCode SMTResponseDescription].
-     * If this is not the case an IllegalArgumentException get thrown.
-     * 
-     * @param rawLine the raw SMTPResponse
-     */
+
     /**
      * Construct a new SMTPResponse. The given rawLine need to be in format [SMTPResponseReturnCode SMTResponseDescription].
      * If this is not the case an IllegalArgumentException get thrown.

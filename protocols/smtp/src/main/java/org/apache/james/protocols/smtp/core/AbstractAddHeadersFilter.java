@@ -75,10 +75,7 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter 
    
     /**
      * Add headers to the message
-     * 
-     * @param session
-     * @param line
-     * @param next
+     *
      * @return response
      */
     private Response addHeaders(SMTPSession session, ByteBuffer line, LineHandler<SMTPSession> next) {
@@ -112,8 +109,6 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter 
         
         /**
          * Add the value to the header
-         * @param value
-         * @return
          */
         public Header add(String value) {
             values.add(value);
@@ -126,9 +121,7 @@ public abstract class AbstractAddHeadersFilter extends SeparatingDataLineFilter 
          * 
          * This is done for each line of the {@link Header} until the end is reached or the {@link LineHandler#onLine(org.apache.james.protocols.api.ProtocolSession, ByteBuffer)}
          * return <code>non-null</code>
-         * 
-         * @param session
-         * @param handler
+         *
          * @return response
          */
         public Response transferTo(SMTPSession session, LineHandler<SMTPSession> handler) {

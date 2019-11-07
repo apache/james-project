@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Abstract class which Handle hook-aware CommanHandler.
- * 
  */
 public abstract class AbstractHookableCmdHandler<HookT extends org.apache.james.protocols.smtp.hook.Hook> implements CommandHandler<SMTPSession>, ExtensibleHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractHookableCmdHandler.class);

@@ -31,8 +31,6 @@ import org.apache.james.core.MaybeSender;
 
 /**
  * MailEnvelope implementation which stores everything in memory
- * 
- *
  */
 public class MailEnvelopeImpl implements MailEnvelope {
 
@@ -62,8 +60,6 @@ public class MailEnvelopeImpl implements MailEnvelope {
 
     /**
      * Set the recipients of the mail
-     * 
-     * @param recipientCollection
      */
     public void setRecipients(List<MailAddress> recipientCollection) {
         this.recipients = recipientCollection;
@@ -71,8 +67,6 @@ public class MailEnvelopeImpl implements MailEnvelope {
 
     /**
      * Set the sender of the mail
-     * 
-     * @param sender
      */
     public void setSender(MaybeSender sender) {
         this.sender = sender;

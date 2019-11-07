@@ -22,11 +22,9 @@ package org.apache.james.protocols.smtp;
 
 import org.apache.james.protocols.api.ProtocolConfigurationImpl;
 
-
 /**
  * {@link SMTPConfiguration} implementation which allows to set and get various configuration params. The set and get methods
  * are not thread-safe
- *
  */
 public class SMTPConfigurationImpl extends ProtocolConfigurationImpl implements SMTPConfiguration {
 

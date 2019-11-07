@@ -45,8 +45,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * This class handles the actual calling of the {@link MessageHook} implementations to queue the message. If no {@link MessageHook} return OK or DECLINED it will write back an
- * error to the client to report the problem while trying to queue the message 
- *
+ * error to the client to report the problem while trying to queue the message
  */
 public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataLineMessageHookHandler.class);
@@ -108,9 +107,6 @@ public class DataLineMessageHookHandler implements DataLineFilter, ExtensibleHan
         return bline;
     }
 
-    /**
-     * @param session
-     */
     protected Response processExtensions(SMTPSession session, MailEnvelopeImpl mail) {
        
 
