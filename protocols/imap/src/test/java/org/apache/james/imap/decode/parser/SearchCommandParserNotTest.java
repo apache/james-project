@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
@@ -113,7 +114,7 @@ public class SearchCommandParserNotTest {
     @Test 
     public void testUserFlagsParsing() throws Exception { 
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream("NOT (KEYWORD bar KEYWORD foo)".getBytes("US-ASCII")), 
+                new ByteArrayInputStream("NOT (KEYWORD bar KEYWORD foo)".getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream()); 
         SearchKey key = parser.searchKey(null, reader, null, false); 
         List<SearchKey> keys = key.getKeys().get(0).getKeys(); 
@@ -124,7 +125,7 @@ public class SearchCommandParserNotTest {
 
     private void checkValid(String input, SearchKey key) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);

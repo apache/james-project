@@ -19,9 +19,8 @@
 
 package org.apache.james.server.core;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Enumeration;
 
 import javax.mail.internet.InternetHeaders;
@@ -48,7 +47,7 @@ public class InternetHeadersInputStream extends InputStream {
     }
 
     @Override
-    public int read() throws IOException {
+    public int read() {
         if (currLine == null || pos == currLine.length) {
             if (!readNextLine()) {
                 return -1;
@@ -61,31 +60,24 @@ public class InternetHeadersInputStream extends InputStream {
      * Load the next header line if possible
      * 
      * @return true if there was an headerline which could be read
-     * 
-     * @throws IOException
      */
-    private boolean readNextLine() throws IOException {
+    private boolean readNextLine() {
         if (headerLines.hasMoreElements()) {
-            try {
-                pos = 0;
-                String line = (headerLines.nextElement() + LINE_SEPERATOR);
-                // Add seperator to show that headers are complete
-                if (!headerLines.hasMoreElements()) {
-                    line += LINE_SEPERATOR;
-                }
-                currLine = line.getBytes("US-ASCII");
-                return true;
-            } catch (UnsupportedEncodingException e) {
-                // should never happen
-                throw new IOException("US-ASCII encoding not supported by this platform ?!");
+            pos = 0;
+            String line = (headerLines.nextElement() + LINE_SEPERATOR);
+            // Add seperator to show that headers are complete
+            if (!headerLines.hasMoreElements()) {
+                line += LINE_SEPERATOR;
             }
+            currLine = line.getBytes(StandardCharsets.US_ASCII);
+            return true;
         } else {
             return false;
         }
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         currLine = null;
     }
 

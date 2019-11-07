@@ -19,9 +19,9 @@
 package org.apache.james.protocols.pop3.utils;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,25 +51,25 @@ public class MockMailbox extends ImapMailbox {
     }
 
     @Override
-    public InputStream getMessageBody(long uid) throws IOException {
+    public InputStream getMessageBody(long uid) {
         Message m = messages.get(uid);
         if (m == null) {
             return null;
         }
-        return new ByteArrayInputStream(m.body.getBytes("US-ASCII"));
+        return new ByteArrayInputStream(m.body.getBytes(StandardCharsets.US_ASCII));
     }
 
     @Override
-    public InputStream getMessageHeaders(long uid) throws IOException {
+    public InputStream getMessageHeaders(long uid) {
         Message m = messages.get(uid);
         if (m == null) {
             return null;
         }
-        return new ByteArrayInputStream((m.headers + "\r\n").getBytes("US-ASCII"));
+        return new ByteArrayInputStream((m.headers + "\r\n").getBytes(StandardCharsets.US_ASCII));
     }
 
     @Override
-    public InputStream getMessage(long uid) throws IOException {
+    public InputStream getMessage(long uid) {
         InputStream body = getMessageBody(uid);
         InputStream headers = getMessageHeaders(uid);
         if (body == null || headers == null) {
@@ -79,7 +79,7 @@ public class MockMailbox extends ImapMailbox {
     }
 
     @Override
-    public List<MessageMetaData> getMessages() throws IOException {
+    public List<MessageMetaData> getMessages() {
         return messages.values()
             .stream()
             .map(m -> m.meta)
@@ -87,19 +87,19 @@ public class MockMailbox extends ImapMailbox {
     }
 
     @Override
-    public void remove(long... uids) throws IOException {
+    public void remove(long... uids) {
         for (long uid: uids) {
             messages.remove(uid);
         }
     }
 
     @Override
-    public String getIdentifier() throws IOException {
+    public String getIdentifier() {
         return identifier;
     }
 
     @Override
-    public void close() throws IOException {
+    public void close() {
         // nothing
     }
     

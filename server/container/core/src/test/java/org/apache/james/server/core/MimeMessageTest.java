@@ -24,6 +24,7 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.Properties;
@@ -401,7 +402,7 @@ public class MimeMessageTest {
     public void testGeronimoIndexOutOfBounds() throws Exception {
         String message = "                  \r\n" + "Subject: test\r\n" + "\r\n" + "Body\r\n";
 
-        byte[] messageBytes = message.getBytes("US-ASCII");
+        byte[] messageBytes = message.getBytes(StandardCharsets.US_ASCII);
         new MimeMessage(null, new ByteArrayInputStream(messageBytes));
     }
 }

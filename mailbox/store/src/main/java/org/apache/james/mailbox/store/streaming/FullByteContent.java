@@ -23,6 +23,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.SequenceInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -64,10 +65,10 @@ public class FullByteContent implements Content {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         for (Header header : headers) {
             if (header != null) {
-                out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes("US-ASCII"));
+                out.write((header.getName() + ": " + header.getValue() + "\r\n").getBytes(StandardCharsets.US_ASCII));
             }
         }
-        out.write("\r\n".getBytes("US-ASCII"));
+        out.write("\r\n".getBytes(StandardCharsets.US_ASCII));
         out.flush();
         return new SequenceInputStream(new ByteArrayInputStream(out.toByteArray()), new ByteArrayInputStream(body));
     }

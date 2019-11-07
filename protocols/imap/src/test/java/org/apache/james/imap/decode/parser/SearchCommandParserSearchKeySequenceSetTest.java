@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -130,7 +131,7 @@ public class SearchCommandParserSearchKeySequenceSetTest {
     private void checkValid(String input, SearchKey key) throws Exception {
         input = input + "\r\n";
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         final SearchKey searchKey = parser.searchKey(null, reader, null, false);

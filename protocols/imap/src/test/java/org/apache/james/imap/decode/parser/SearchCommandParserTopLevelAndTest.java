@@ -23,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -183,13 +183,12 @@ public class SearchCommandParserTopLevelAndTest {
         }
     }
 
-    private void check(List<SearchKey> keys, StringBuffer buffer)
-            throws UnsupportedEncodingException, DecodingException {
+    private void check(List<SearchKey> keys, StringBuffer buffer) throws DecodingException {
         buffer.append("\r\n");
         String input = buffer.toString();
         SearchKey key = SearchKey.buildAnd(keys);
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         assertThat(parser.decode(null, reader)).describedAs(input).isEqualTo(key);

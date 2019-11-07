@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -172,7 +173,7 @@ public class SearchCommandParserOrTest {
         String input = "OR " + one.input + " " + two.input + "\r\n";
         SearchKey key = SearchKey.buildOr(one.key, two.key);
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);

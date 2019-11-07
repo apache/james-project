@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -182,11 +183,11 @@ public class SearchCommandParserAndParenthesesTest {
         check(and(top, false));
     }
 
-    private void check(Input in) throws UnsupportedEncodingException,
-            DecodingException {
+    private void check(Input in) throws
+        DecodingException {
         String input = in.input + "\r\n";
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         final SearchKey result = parser.decode(null, reader);

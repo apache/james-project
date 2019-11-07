@@ -30,6 +30,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
@@ -87,7 +88,7 @@ public class SearchCommandParserCharsetTest {
     @Test
     public void testBadCharset() throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream("CHARSET BOGUS ".getBytes("US-ASCII")),
+                new ByteArrayInputStream("CHARSET BOGUS ".getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
         parser.decode(command, reader, TAG, false, session);
 
@@ -103,50 +104,50 @@ public class SearchCommandParserCharsetTest {
     @Test
     public void testBCCShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildBcc(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("BCC".getBytes("US-ASCII"), key);
+        checkUTF8Valid("BCC".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testBODYShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildBody(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("BODY".getBytes("US-ASCII"), key);
+        checkUTF8Valid("BODY".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testCCShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildCc(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("CC".getBytes("US-ASCII"), key);
+        checkUTF8Valid("CC".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testFROMShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildFrom(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("FROM".getBytes("US-ASCII"), key);
+        checkUTF8Valid("FROM".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testHEADERShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey
                 .buildHeader("whatever", NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("HEADER whatever".getBytes("US-ASCII"), key);
+        checkUTF8Valid("HEADER whatever".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testSUBJECTShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildSubject(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("SUBJECT".getBytes("US-ASCII"), key);
+        checkUTF8Valid("SUBJECT".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testTEXTShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildText(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("TEXT".getBytes("US-ASCII"), key);
+        checkUTF8Valid("TEXT".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test
     public void testTOShouldConvertCharset() throws Exception {
         SearchKey key = SearchKey.buildTo(NON_ASCII_SEARCH_TERM);
-        checkUTF8Valid("TO".getBytes("US-ASCII"), key);
+        checkUTF8Valid("TO".getBytes(StandardCharsets.US_ASCII), key);
     }
 
     @Test

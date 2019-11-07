@@ -24,6 +24,7 @@ import static org.assertj.core.api.Fail.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
@@ -374,7 +375,7 @@ public class SearchCommandParserSearchKeyTest {
    
     private void checkValid(String input, SearchKey key) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         assertThat(parser.searchKey(null, reader, null, false)).isEqualTo(key);
@@ -727,7 +728,7 @@ public class SearchCommandParserSearchKeyTest {
     private void checkInvalid(String input, SearchKey key)
             throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         try {

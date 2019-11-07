@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.BodyFetchElement;
@@ -68,10 +69,10 @@ public class FetchCommandParserPartialFetchTest  {
     }
 
     @Test
-    public void testShouldNotParseZeroLength() throws Exception {
+    public void testShouldNotParseZeroLength() {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
-                        .getBytes("US-ASCII")), new ByteArrayOutputStream());
+                        .getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());
 
         assertThatThrownBy(() -> parser.decode(command, reader, "A01", false, session))
             .isInstanceOf(DecodingException.class);
@@ -80,7 +81,7 @@ public class FetchCommandParserPartialFetchTest  {
     private void check(String input, IdRange[] idSet,
             boolean useUids, FetchData data, String tag) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         parser.decode(command, reader, tag, useUids, session);

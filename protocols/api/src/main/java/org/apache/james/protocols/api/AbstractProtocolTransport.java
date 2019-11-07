@@ -20,7 +20,7 @@
 package org.apache.james.protocols.api;
 
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 
@@ -75,11 +75,7 @@ public abstract class AbstractProtocolTransport implements ProtocolTransport {
                 builder.append(CRLF);
             }
         }
-        try {
-            return builder.toString().getBytes("US-ASCII");
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException("No US-ASCII ?");
-        }
+        return builder.toString().getBytes(StandardCharsets.US_ASCII);
     }
 
     /**

@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import java.nio.charset.StandardCharsets;
+
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.handler.timeout.IdleState;
@@ -29,7 +31,7 @@ public class ImapHeartbeatHandler extends IdleStateAwareChannelHandler {
     @Override
     public void channelIdle(ChannelHandlerContext ctx, IdleStateEvent e) throws Exception {
         if (e.getState().equals(IdleState.WRITER_IDLE)) {
-            e.getChannel().write(ChannelBuffers.wrappedBuffer("* OK Hang in there..\r\n".getBytes("US-ASCII")));
+            e.getChannel().write(ChannelBuffers.wrappedBuffer("* OK Hang in there..\r\n".getBytes(StandardCharsets.US_ASCII)));
         }
         super.channelIdle(ctx, e);
     }

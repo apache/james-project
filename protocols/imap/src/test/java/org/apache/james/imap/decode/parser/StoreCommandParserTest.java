@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 import javax.mail.Flags;
 
@@ -75,7 +76,7 @@ public class StoreCommandParserTest {
             final Boolean sign, Flags flags, boolean useUids, String tag)
             throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
-                new ByteArrayInputStream(input.getBytes("US-ASCII")),
+                new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
         parser.decode(command, reader, tag, useUids, session);
