@@ -34,7 +34,6 @@ import com.beetstra.jutf7.CharsetProvider;
 public class CharsetUtil {
 
     private static final Set<String> charsetNames;
-    private static final Set<Charset> charsets;
     private static final String X_MODIFIED_UTF_7 = "X-MODIFIED-UTF-7";
     private static final Charset X_MODIFIED_UTF_7_CHARSET = new CharsetProvider().charsetForName(X_MODIFIED_UTF_7);
 
@@ -42,37 +41,24 @@ public class CharsetUtil {
     // build the sets which holds the charsets and names
     static {
         Set<String> cNames = new HashSet<>();
-        Set<Charset> sets = new HashSet<>();
 
         for (Charset charset : Charset.availableCharsets().values()) {
             final Set<String> aliases = charset.aliases();
             cNames.add(charset.name());
             cNames.addAll(aliases);
-            sets.add(charset);
-
         }
+
         charsetNames = Collections.unmodifiableSet(cNames);
-        charsets = Collections.unmodifiableSet(sets);
     }
 
     /**
      * Return an unmodifiable {@link Set} which holds the names (and aliases) of all supported Charsets
-     * 
+     *
      * @return supportedCharsetNames
      */
     public static final Set<String> getAvailableCharsetNames() {
         return charsetNames;
     }
-    
-    /**
-     * Return an unmodifiable {@link Set} which holds all supported Charsets
-     * 
-     * @return supportedCharsets
-     */
-    public static final Set<Charset> getAvailableCharsets() {
-        return charsets;
-    }
-    
 
     /**
      * Decode the given UTF7 encoded <code>String</code>
