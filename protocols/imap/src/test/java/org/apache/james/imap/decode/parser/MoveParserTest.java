@@ -26,9 +26,9 @@ import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.MoveRequest;
-import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
 
 public class MoveParserTest {

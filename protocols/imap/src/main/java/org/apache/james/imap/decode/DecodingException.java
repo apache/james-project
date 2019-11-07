@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.imap;
+package org.apache.james.imap.decode;
 
 import java.io.IOException;
 

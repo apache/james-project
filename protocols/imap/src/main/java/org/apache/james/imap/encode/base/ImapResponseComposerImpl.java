@@ -32,7 +32,7 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.response.Literal;
-import org.apache.james.protocols.imap.utils.FastByteArrayOutputStream;
+import org.apache.james.imap.utils.FastByteArrayOutputStream;
 
 /**
  * Class providing methods to send response messages from the server to the

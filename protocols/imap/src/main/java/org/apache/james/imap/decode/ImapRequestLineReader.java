@@ -42,10 +42,8 @@ import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SearchResUtil;
+import org.apache.james.imap.utils.FastByteArrayOutputStream;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.protocols.imap.DecodingException;
-import org.apache.james.protocols.imap.utils.DecoderUtils;
-import org.apache.james.protocols.imap.utils.FastByteArrayOutputStream;
 
 /**
  * Wraps the client input reader with a bunch of convenience methods, allowing

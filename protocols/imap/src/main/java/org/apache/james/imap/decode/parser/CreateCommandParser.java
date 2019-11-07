@@ -24,11 +24,11 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.CreateRequest;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.protocols.imap.DecodingException;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;

@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.imapserver.netty;
 
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.protocols.imap.DecodingException;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBuffers;
 import org.jboss.netty.channel.Channel;

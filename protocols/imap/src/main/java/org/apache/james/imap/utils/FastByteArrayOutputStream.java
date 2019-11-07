@@ -1,4 +1,4 @@
-package org.apache.james.protocols.imap.utils;
+package org.apache.james.imap.utils;
 
 /**
  *  Licensed to the Apache Software Foundation (ASF) under one or more

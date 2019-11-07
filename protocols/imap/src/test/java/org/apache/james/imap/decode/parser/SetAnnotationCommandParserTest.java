@@ -26,11 +26,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
 
 public class SetAnnotationCommandParserTest {

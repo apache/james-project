@@ -23,9 +23,9 @@ import java.io.InputStream;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.protocols.imap.DecodingException;
-import org.apache.james.protocols.imap.utils.EolInputStream;
+import org.apache.james.imap.utils.EolInputStream;
 import org.jboss.netty.buffer.ChannelBuffer;
 import org.jboss.netty.buffer.ChannelBufferInputStream;
 import org.jboss.netty.channel.Channel;

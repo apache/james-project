@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.imap.utils;
+package org.apache.james.imap.decode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
@@ -30,7 +30,6 @@ import java.util.TimeZone;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.time.FastDateFormat;
-import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Test;
 
 public class DecoderUtilsTest {

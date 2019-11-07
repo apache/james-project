@@ -25,7 +25,6 @@ import static org.assertj.core.api.Fail.fail;
 import java.util.Collection;
 import java.util.Iterator;
 
-import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Before;
 import org.junit.Test;
 

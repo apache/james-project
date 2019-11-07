@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.protocols.imap.utils;
+package org.apache.james.imap.utils;
 
 import java.io.FileInputStream;
 import java.io.FilterInputStream;

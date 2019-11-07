@@ -28,11 +28,11 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.GetAnnotationRequest;
 import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
-import org.apache.james.protocols.imap.DecodingException;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -22,9 +22,9 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.protocols.imap.DecodingException;
-import org.apache.james.protocols.imap.utils.EolInputStream;
-import org.apache.james.protocols.imap.utils.FixedLengthInputStream;
+import org.apache.james.imap.decode.DecodingException;
+import org.apache.james.imap.utils.EolInputStream;
+import org.apache.james.imap.utils.FixedLengthInputStream;
 import org.jboss.netty.channel.Channel;
 
 public class NettyStreamImapRequestLineReader extends AbstractNettyImapRequestLineReader {

@@ -24,9 +24,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 
 import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.protocols.imap.DecodingException;
-import org.apache.james.protocols.imap.utils.EolInputStream;
-import org.apache.james.protocols.imap.utils.FixedLengthInputStream;
+import org.apache.james.imap.utils.EolInputStream;
+import org.apache.james.imap.utils.FixedLengthInputStream;
 
 /**
  * {@link ImapRequestLineReader} which use normal IO Streaming

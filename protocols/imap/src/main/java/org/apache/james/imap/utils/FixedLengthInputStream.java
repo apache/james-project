@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.protocols.imap.utils;
+package org.apache.james.imap.utils;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
