@@ -65,22 +65,22 @@ import io.restassured.path.json.JsonPath;
 class UserQuotaRoutesTest {
 
     private static final String QUOTA_USERS = "/quota/users";
-    private static final String PERDU_COM = "perdu.com";
-    private static final String STRANGE_ORG = "strange.org";
-    private static final Username BOB = Username.of("bob@" + PERDU_COM);
-    private static final Username ESCAPED_BOB = Username.of("bob%40" + PERDU_COM);
-    private static final Username JOE = Username.of("joe@" + PERDU_COM);
-    private static final Username JACK = Username.of("jack@" + PERDU_COM);
-    private static final Username GUY_WITH_STRANGE_DOMAIN = Username.of("guy@" + STRANGE_ORG);
+    private static final String LOST_LOCAL = "lost.local";
+    private static final String STRANGE_LOCAL = "strange.local";
+    private static final Username BOB = Username.of("bob@" + LOST_LOCAL);
+    private static final Username ESCAPED_BOB = Username.of("bob%40" + LOST_LOCAL);
+    private static final Username JOE = Username.of("joe@" + LOST_LOCAL);
+    private static final Username JACK = Username.of("jack@" + LOST_LOCAL);
+    private static final Username GUY_WITH_STRANGE_DOMAIN = Username.of("guy@" + STRANGE_LOCAL);
     private static final String PASSWORD = "secret";
     private static final String COUNT = "count";
     private static final String SIZE = "size";
 
     @BeforeEach
-    public void setUp(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
+    void setUp(WebAdminQuotaSearchTestSystem testSystem) throws Exception {
         DomainList domainList = testSystem.getQuotaSearchTestSystem().getDomainList();
-        domainList.addDomain(Domain.of(PERDU_COM));
-        domainList.addDomain(Domain.of(STRANGE_ORG));
+        domainList.addDomain(Domain.of(LOST_LOCAL));
+        domainList.addDomain(Domain.of(STRANGE_LOCAL));
 
         UsersRepository usersRepository = testSystem.getQuotaSearchTestSystem().getUsersRepository();
         usersRepository.addUser(BOB.asString(), PASSWORD);
@@ -121,7 +121,7 @@ class UserQuotaRoutesTest {
             testSystem.getQuotaSearchTestSystem().await();
 
             given()
-                .param("domain", PERDU_COM)
+                .param("domain", LOST_LOCAL)
             .when()
                 .get("/quota/users")
             .then()
@@ -428,7 +428,7 @@ class UserQuotaRoutesTest {
                             "                }" +
                             "            }" +
                             "        }," +
-                            "        \"username\": \"guy@strange.org\"" +
+                            "        \"username\": \"guy@strange.local\"" +
                             "    }" +
                             "]");
         }
@@ -814,8 +814,8 @@ class UserQuotaRoutesTest {
 
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
             maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(22));
-            maxQuotaManager.setDomainMaxStorage(Domain.of(PERDU_COM), QuotaSize.size(34));
-            maxQuotaManager.setDomainMaxMessage(Domain.of(PERDU_COM), QuotaCount.count(23));
+            maxQuotaManager.setDomainMaxStorage(Domain.of(LOST_LOCAL), QuotaSize.size(34));
+            maxQuotaManager.setDomainMaxMessage(Domain.of(LOST_LOCAL), QuotaCount.count(23));
             maxQuotaManager.setMaxStorage(userQuotaRootResolver.forUser(BOB), QuotaSize.size(42));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(52));
 
@@ -903,7 +903,7 @@ class UserQuotaRoutesTest {
 
             maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1111));
             maxQuotaManager.setMaxMessage(userQuotaRootResolver.forUser(BOB), QuotaCount.count(18));
-            maxQuotaManager.setDomainMaxMessage(Domain.of(PERDU_COM), QuotaCount.count(52));
+            maxQuotaManager.setDomainMaxMessage(Domain.of(LOST_LOCAL), QuotaCount.count(52));
 
             JsonPath jsonPath =
                 when()

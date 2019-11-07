@@ -44,7 +44,7 @@ import io.restassured.RestAssured;
 class DomainQuotaRoutesNoVirtualHostingTest {
 
     private static final String QUOTA_DOMAINS = "/quota/domains";
-    private static final String FOUND_COM = "found.com";
+    private static final String FOUND_LOCAL = "found.local";
     private static final String COUNT = "count";
     private static final String SIZE = "size";
     private WebAdminServer webAdminServer;
@@ -54,7 +54,7 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
         MemoryDomainList memoryDomainList = new MemoryDomainList(new InMemoryDNSService());
         memoryDomainList.setAutoDetect(false);
-        memoryDomainList.addDomain(Domain.of(FOUND_COM));
+        memoryDomainList.addDomain(Domain.of(FOUND_LOCAL));
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
         MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
@@ -74,9 +74,9 @@ class DomainQuotaRoutesNoVirtualHostingTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        QUOTA_DOMAINS + "/" + FOUND_COM,
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + COUNT,
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + SIZE })
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL,
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + COUNT,
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + SIZE })
     void allGetEndpointsShouldReturnNotAllowed(String endpoint) {
         given()
             .get(endpoint)
@@ -86,9 +86,9 @@ class DomainQuotaRoutesNoVirtualHostingTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        QUOTA_DOMAINS + "/" + FOUND_COM,
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + COUNT,
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + SIZE })
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL,
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + COUNT,
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + SIZE })
     void allPutEndpointsShouldReturnNotAllowed(String endpoint) {
         given()
             .put(endpoint)
@@ -98,8 +98,8 @@ class DomainQuotaRoutesNoVirtualHostingTest {
 
     @ParameterizedTest
     @ValueSource(strings = {
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + COUNT,
-        QUOTA_DOMAINS + "/" + FOUND_COM + "/" + SIZE })
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + COUNT,
+        QUOTA_DOMAINS + "/" + FOUND_LOCAL + "/" + SIZE })
     void allDeleteEndpointsShouldReturnNotAllowed(String endpoint) {
         given()
             .delete(endpoint)
