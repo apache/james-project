@@ -18,63 +18,40 @@
  ****************************************************************/
 package org.apache.james.core.quota;
 
-import java.util.Optional;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class QuotaCountUsage implements QuotaUsageValue<QuotaCountUsage, QuotaCountLimit> {
 
-    public static QuotaCountUsage unlimited() {
-        return new QuotaCountUsage(Optional.empty());
-    }
-
     public static QuotaCountUsage count(long value) {
-        return count(Optional.of(value));
-    }
-
-    public static QuotaCountUsage count(Optional<Long> value) {
         return new QuotaCountUsage(value);
     }
 
-    private final Optional<Long> value;
+    private final Long value;
 
-    private QuotaCountUsage(Optional<Long> value) {
+    private QuotaCountUsage(Long value) {
         this.value = value;
     }
 
     @Override
     public long asLong() {
-        return value.orElseThrow(IllegalStateException::new);
-    }
-
-    @Override
-    public boolean isLimited() {
-        return value.isPresent();
+        return value;
     }
 
     @Override
     public QuotaCountUsage add(long additionalValue) {
-        return new QuotaCountUsage(value.map(x -> x + additionalValue));
+        return new QuotaCountUsage(value + additionalValue);
     }
 
     @Override
     public QuotaCountUsage add(QuotaCountUsage additionalValue) {
-        if (additionalValue.isUnlimited()) {
-            return unlimited();
-        }
-        return new QuotaCountUsage(value.map(x -> x + additionalValue.asLong()));
-    }
-
-    @Override
-    public boolean greaterThan(QuotaCountUsage other) {
-        return value.orElse(Long.MAX_VALUE) > other.value.orElse(Long.MAX_VALUE);
+        return new QuotaCountUsage(value + additionalValue.asLong());
     }
 
     @Override
     public boolean exceedLimit(QuotaCountLimit limit) {
         if (limit.isLimited()) {
-            return value.orElse(Long.MAX_VALUE) > limit.asLong();
+            return value > limit.asLong();
         } else {
             return false;
         }
@@ -83,7 +60,7 @@ public class QuotaCountUsage implements QuotaUsageValue<QuotaCountUsage, QuotaCo
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("value", value.map(String::valueOf).orElse("unlimited"))
+            .add("value", value.toString())
             .toString();
     }
 

@@ -22,7 +22,6 @@ package org.apache.james.mailbox.model;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.apache.james.core.quota.QuotaLimitValue;
 import org.apache.james.core.quota.QuotaUsageValue;
@@ -32,16 +31,11 @@ import com.google.common.base.MoreObjects;
 public class SerializableQuotaUsageValue<T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> implements Serializable {
 
     public static <T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> SerializableQuotaUsageValue<T, U> valueOf(Optional<U> input) {
-        return new SerializableQuotaUsageValue<T, U>(input.orElse(null));
+        return new SerializableQuotaUsageValue<>(input.orElse(null));
     }
 
-    public static final long UNLIMITED = -1;
-
     private static <T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> Long encodeAsLong(U quota) {
-        if (quota.isLimited()) {
-            return quota.asLong();
-        }
-        return UNLIMITED;
+        return quota.asLong();
     }
 
     private final Long value;
@@ -58,21 +52,10 @@ public class SerializableQuotaUsageValue<T extends QuotaLimitValue<T>, U extends
         return value;
     }
 
-    public Optional<U> toValue(Function<Long, U> factory, U unlimited) {
-        Long longValue = encodeAsLong();
-        if (longValue == null) {
-            return Optional.empty();
-        }
-        if (longValue == UNLIMITED) {
-            return Optional.of(unlimited);
-        }
-        return Optional.of(factory.apply(longValue));
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o instanceof SerializableQuotaUsageValue<?, ?>) {
-            SerializableQuotaUsageValue<?, ?> that = (SerializableQuotaUsageValue<?,?>) o;
+            SerializableQuotaUsageValue<?, ?> that = (SerializableQuotaUsageValue<?, ?>) o;
             return Objects.equals(value, that.value);
         }
         return false;
@@ -89,4 +72,5 @@ public class SerializableQuotaUsageValue<T extends QuotaLimitValue<T>, U extends
             .add("value", value)
             .toString();
     }
+
 }

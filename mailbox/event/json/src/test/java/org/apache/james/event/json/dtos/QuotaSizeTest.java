@@ -81,18 +81,6 @@ class QuotaSizeTest {
     }
 
     @Test
-    void quotaSizeUsageShouldBeWellSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaUsageValueWrites().writes(QuotaSizeUsage.unlimited()))
-            .isEqualTo(JsNull$.MODULE$);
-    }
-
-    @Test
-    void quotaSizeUsageShouldBeWellDeSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaSizeUsageReads().reads(JsNull$.MODULE$).get())
-            .isEqualTo(QuotaSizeUsage.unlimited());
-    }
-
-    @Test
     void quotaSizeUsageShouldReturnErrorWhenString() {
         assertThat(DTO_JSON_SERIALIZE.quotaSizeUsageReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);

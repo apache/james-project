@@ -31,21 +31,6 @@ public interface QuotaUsageValueTest<T extends QuotaLimitValue<T>, U extends Quo
     T unlimited();
 
     @Test
-    default void greaterThanShouldReturnFalseWhenFirstEqualToSecond() {
-        assertThat(usageInstance(1).greaterThan(usageInstance(1))).isFalse();
-    }
-
-    @Test
-    default void greaterThanShouldReturnFalseWhenFirstSmallerThanSecond() {
-        assertThat(usageInstance(1).greaterThan(usageInstance(2))).isFalse();
-    }
-
-    @Test
-    default void greaterThanShouldReturnTrueWhenFirstGreaterThanSecond() {
-        assertThat(usageInstance(2).greaterThan(usageInstance(1))).isTrue();
-    }
-
-    @Test
     default void greaterThanShouldReturnFalseWhenUsageEqualToLimit() {
         assertThat(usageInstance(1).exceedLimit(limitInstance(1))).isFalse();
     }

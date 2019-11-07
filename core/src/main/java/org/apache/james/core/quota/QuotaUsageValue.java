@@ -18,27 +18,13 @@
  ****************************************************************/
 package org.apache.james.core.quota;
 
-import java.util.Optional;
-
 public interface QuotaUsageValue<T extends QuotaUsageValue<T, U>, U extends QuotaLimitValue<U>> {
 
-    static boolean isValidValue(Optional<Long> value) {
-        return !value.isPresent() || value.get() >= -1;
-    }
-
     long asLong();
-
-    boolean isLimited();
-
-    default boolean isUnlimited() {
-        return !isLimited();
-    }
 
     T add(long additionalValue);
 
     T add(T additionalValue);
-
-    boolean greaterThan(T other);
 
     boolean exceedLimit(U limit);
 }

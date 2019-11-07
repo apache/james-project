@@ -491,7 +491,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETSTORAGEQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        when(quotaProbe.getStorageQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaSizeUsage.unlimited(), QuotaSizeLimit.size(12)));
+        when(quotaProbe.getStorageQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaSizeUsage.size(12), QuotaSizeLimit.unlimited()));
 
         testee.executeCommandLine(commandLine);
     }
@@ -502,7 +502,7 @@ public class ServerCmdTest {
         String[] arguments = { "-h", "127.0.0.1", "-p", "9999", CmdType.GETMESSAGECOUNTQUOTA.getCommand(), quotaroot};
         CommandLine commandLine = ServerCmd.parseCommandLine(arguments);
 
-        when(quotaProbe.getMessageCountQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaCountUsage.unlimited(), QuotaCountLimit.count(12)));
+        when(quotaProbe.getMessageCountQuota(quotaroot)).thenReturn(SerializableQuota.newInstance(QuotaCountUsage.count(12), QuotaCountLimit.unlimited()));
 
         testee.executeCommandLine(commandLine);
     }

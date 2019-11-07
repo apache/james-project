@@ -205,7 +205,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
-  implicit val quotaUsageValueWrites: Writes[QuotaUsageValue[_, _]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
+  implicit val quotaUsageValueWrites: Writes[QuotaUsageValue[_, _]] = value => JsNumber(value.asLong())
   implicit val quotaLimitValueWrites: Writes[QuotaLimitValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
   implicit val quotaScopeWrites: Writes[JavaQuota.Scope] = value => JsString(value.name)
   implicit val quotaCountWrites: Writes[Quota[QuotaCountLimit, QuotaCountUsage]] = Json.writes[Quota[QuotaCountLimit, QuotaCountUsage]]
@@ -246,7 +246,6 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val quotaCountUsageReads: Reads[QuotaCountUsage] = {
     case JsNumber(count) => JsSuccess(QuotaCountUsage.count(count.toLong))
-    case JsNull => JsSuccess(QuotaCountUsage.unlimited())
     case _ => JsError()
   }
   implicit val quotaRootReads: Reads[QuotaRoot] = {
@@ -264,7 +263,6 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val quotaSizeUsageReads: Reads[QuotaSizeUsage] = {
     case JsNumber(size) => JsSuccess(QuotaSizeUsage.size(size.toLong))
-    case JsNull => JsSuccess(QuotaSizeUsage.unlimited())
     case _ => JsError()
   }
   implicit val sessionIdReads: Reads[SessionId] = {
