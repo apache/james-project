@@ -88,18 +88,6 @@ class MailAddressTest {
             .map(Arguments::of);
     }
 
-    /**
-     * Test method for {@link MailAddress#hashCode()}.
-     *
-     * @throws AddressException
-     */
-    @Test
-    void testHashCode() throws AddressException {
-        MailAddress a = new MailAddress(GOOD_ADDRESS);
-        MailAddress b = new MailAddress(GOOD_ADDRESS);
-        assertThat(a.hashCode()).isEqualTo(b.hashCode());
-    }
-
     @ParameterizedTest
     @MethodSource("goodAddresses")
     void testGoodMailAddressString(String mailAddress) {
