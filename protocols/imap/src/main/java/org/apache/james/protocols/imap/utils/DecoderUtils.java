@@ -228,7 +228,6 @@ public final class DecoderUtils {
      * @param yearChar
      *            forth digit
      * @return {@link Calendar} year
-     * @throws DecodingException
      */
     public static int decodeYear(char milleniumChar, char centuryChar, char decadeChar, char yearChar) throws DecodingException {
         return (decodeDigit(milleniumChar) * 1000) + (decodeDigit(centuryChar) * 100) + (decodeDigit(decadeChar) * 10) + decodeDigit(yearChar);
@@ -244,7 +243,6 @@ public final class DecoderUtils {
      * @param monthThirdChar
      *            third character in a month triple
      * @return {@link Calendar} month (<code>JAN</code>=0)
-     * @throws DecodingException
      */
     public static int decodeMonth(char monthFirstChar, char monthSecondChar, char monthThirdChar) throws DecodingException {
         final int result;
@@ -423,8 +421,7 @@ public final class DecoderUtils {
 
     /**
      * Decodes a number character into a <code>0-9</code> digit.
-     * 
-     * @param character
+     *
      * @return a digit
      * @throws DecodingException
      *             if the char is not a digit

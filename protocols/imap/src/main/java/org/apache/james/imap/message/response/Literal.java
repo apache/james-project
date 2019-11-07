@@ -28,7 +28,6 @@ public interface Literal {
      * 
      * @return number of octets which will be
      *         put onto the channel
-     * @throws IOException 
      */
     long size() throws IOException;
 
@@ -37,7 +36,6 @@ public interface Literal {
      * Return the Literal as {@link InputStream}
      * 
      * @return elementIn
-     * @throws IOException
      */
     InputStream getInputStream() throws IOException;
 }

@@ -32,32 +32,18 @@ public interface PermitEnableCapabilityProcessor extends CapabilityImplementingP
      * Return the capabilities which supports to get ENABLED.
      * 
      * Be sure that these are also returned by {@link #getImplementedCapabilities(ImapSession)}
-     * 
-     * @param session
-     * @return permitCaps
      */
     List<String> getPermitEnableCapabilities(ImapSession session);
     
     /**
      * Callback which is used when a ENABLED command was used to enable on of the CAPABILITIES which is managed by this implementation
-     * 
-     * @param message
-     * @param responder
-     * @param session
-     * @param capability
-     * @throws EnableException
      */
     void enable(ImapMessage message, Responder responder, ImapSession session, String capability) throws EnableException;
 
     /**
      * Exception which should get thrown if for whatever reason its not possible to enable a capability
-     * 
-     *
      */
     final class EnableException extends Exception {
-        /**
-         * 
-         */
         private static final long serialVersionUID = -4456052968041000753L;
 
         public EnableException(String msg, Throwable e) {

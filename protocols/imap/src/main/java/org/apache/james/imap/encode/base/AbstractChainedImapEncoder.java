@@ -57,11 +57,6 @@ public abstract class AbstractChainedImapEncoder implements ImapEncoder {
 
     /**
      * Call next Encoder in the chain
-     * 
-     * @param message
-     * @param composer
-     * @param session
-     * @throws IOException
      */
     protected void chainEncode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
         next.encode(message, composer, session);

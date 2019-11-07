@@ -29,9 +29,7 @@ import com.beetstra.jutf7.CharsetProvider;
 /**
  * Utility class which can be used to get a list of supported {@link Charset}'s 
  * 
- * Beside this it has some methods included which helps to encode/decode modified UTF7 
- * 
- *
+ * Beside this it has some methods included which helps to encode/decode modified UTF7
  */
 public class CharsetUtil {
 
@@ -78,8 +76,7 @@ public class CharsetUtil {
 
     /**
      * Decode the given UTF7 encoded <code>String</code>
-     * 
-     * @param string
+     *
      * @return decoded
      */
     public static String decodeModifiedUTF7(String string) {
@@ -91,8 +88,7 @@ public class CharsetUtil {
     /**
      * Encode the given <code>String</code> to modified UTF7. 
      * See RFC3501 for more details
-     * 
-     * @param string
+     *
      * @return encoded
      */
     

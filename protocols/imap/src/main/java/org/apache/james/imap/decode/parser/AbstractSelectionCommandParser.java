@@ -163,11 +163,6 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
      *                          ;; set of UIDs corresponding to the messages in
      *                          ;; known-sequence-set, in ascending order.
      *                          ;; * is not allowed.
-     * 
-     * 
-     * @param ranges
-     * @param checkOrder
-     * @throws DecodingException
      */
     private void checkIdRanges(IdRange[] ranges, boolean checkOrder) throws DecodingException {
         long last = 0;
@@ -205,11 +200,6 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
      *                          ;; set of UIDs corresponding to the messages in
      *                          ;; known-sequence-set, in ascending order.
      *                          ;; * is not allowed.
-     * 
-     * 
-     * @param ranges
-     * @param checkOrder
-     * @throws DecodingException
      */
     private void checkUidRanges(UidRange[] ranges, boolean checkOrder) throws DecodingException {
         MessageUid last = MessageUid.MIN_VALUE;

@@ -373,9 +373,6 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string
-     * 
-     * @param mailboxPath
-     * @return
      */
     private String joinMailboxPath(MailboxPath mailboxPath, char delimiter) {
         StringBuilder sb = new StringBuilder("");
@@ -513,7 +510,6 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
      * @param range
      *            input range
      * @return normalized message range
-     * @throws MessageRangeException
      */
     protected MessageRange normalizeMessageRange(SelectedMailbox selected, MessageRange range) throws MessageRangeException {
         Type rangeType = range.getType();

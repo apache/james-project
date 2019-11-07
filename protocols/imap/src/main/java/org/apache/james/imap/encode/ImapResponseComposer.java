@@ -52,19 +52,15 @@ public interface ImapResponseComposer {
 
     /**
      * Composes a <code>NIL</code>.
-     * 
-     * @throws IOException
      */
     ImapResponseComposer nil() throws IOException;
 
     /**
      * Compose a response which contains the {@link ImapCommand} to which the
      * response belongs
-     * 
-     * @param command
+     *
      * @param message
      * @return self
-     * @throws IOException
      */
     ImapResponseComposer commandResponse(ImapCommand command, String message) throws IOException;
 
@@ -90,24 +86,18 @@ public interface ImapResponseComposer {
      * Write a '*'
      * 
      * @return composer
-     * @throws IOException
      */
     ImapResponseComposer untagged() throws IOException;
 
     /**
-     * 
-     * @param name
      * @return composer
-     * @throws IOException
      */
     ImapResponseComposer commandName(String name) throws IOException;
 
     /**
      * Write the message of type <code>String</code>
-     * 
-     * @param message
+     *
      * @return composer
-     * @throws IOException
      */
     ImapResponseComposer message(String message) throws IOException;
 

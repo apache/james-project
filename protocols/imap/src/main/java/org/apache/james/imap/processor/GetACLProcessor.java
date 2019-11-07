@@ -50,7 +50,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * GETACL Processor.
- * 
  */
 public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetACLProcessor.class);

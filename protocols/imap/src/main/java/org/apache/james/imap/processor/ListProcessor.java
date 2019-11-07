@@ -81,13 +81,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * the hierarchy delimiter and the root name of the name given in the
      * reference. The value returned as the root MAY be the empty string if the
      * reference is non-rooted or is an empty string.
-     * 
-     * @param referenceName
-     * @param mailboxName
-     * @param session
-     * @param tag
-     * @param command
-     * @param responder
      */
     protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder, MailboxTyper mailboxTyper) {
         String user = ImapSessionUtils.getUserName(session);

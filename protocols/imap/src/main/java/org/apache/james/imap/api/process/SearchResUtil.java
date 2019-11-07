@@ -25,7 +25,6 @@ import org.apache.james.imap.api.message.IdRange;
 
 /**
  * Utility class which is used to support the SEARCHRES extension
- *
  */
 public class SearchResUtil {
     
@@ -34,9 +33,6 @@ public class SearchResUtil {
     /**
      * Return the saved sequence-set which you can refer to with $. This method will
      * return a IdRange[0] If no sequence-set is saved
-     * 
-     * @param session
-     * @return sequenceSet
      */
     public static IdRange[] getSavedSequenceSet(ImapSession session) {
         Object obj = session.getAttribute(SEARCHRES_SAVED_SET);
@@ -49,9 +45,6 @@ public class SearchResUtil {
     
     /**
      * Save the given sequence-set which you can refer to later with $.
-     * 
-     * @param session
-     * @param ranges
      */
     public static void saveSequenceSet(ImapSession session, IdRange[] ranges) {
         session.setAttribute(SEARCHRES_SAVED_SET, IdRange.mergeRanges(Arrays.asList(ranges)).toArray(new IdRange[0]));
@@ -59,8 +52,6 @@ public class SearchResUtil {
     
     /**
      * Reset the saved sequence-set
-     * 
-     * @param session
      */
     public static void resetSavedSequenceSet(ImapSession session) {
         session.setAttribute(SEARCHRES_SAVED_SET, null);

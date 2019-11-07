@@ -38,7 +38,6 @@ public interface ImapResponseWriter {
      * 
      * @param literal
      *            <code>Literal</code> to be written, not null
-     * @throws IOException
      */
     void write(Literal literal) throws IOException;
 
@@ -47,7 +46,6 @@ public interface ImapResponseWriter {
      * 
      * @param buffer
      *            <code>byte array</code> to be written, not null
-     * @throws IOException
      */
     void write(byte[] buffer) throws IOException;
 

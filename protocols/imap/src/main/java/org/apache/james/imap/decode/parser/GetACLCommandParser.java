@@ -30,7 +30,6 @@ import org.apache.james.protocols.imap.DecodingException;
 
 /**
  * GETACL Parser
- * 
  */
 public class GetACLCommandParser extends AbstractImapCommandParser {
 

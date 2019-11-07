@@ -173,8 +173,6 @@ public abstract class ImapRequestLineReader {
 
     /**
      * Consume the rest of the line
-     * 
-     * @throws DecodingException
      */
     public void consumeLine() throws DecodingException {
         char next = nextChar();
@@ -265,9 +263,6 @@ public abstract class ImapRequestLineReader {
      * as an astring.
      * 
      * Be aware that mailbox names are encoded via a modified UTF7. For more information RFC3501
-     * 
-     * 
-     * 
      */
     public String mailboxUTF7() throws DecodingException {
         String mailbox = astring();
@@ -282,7 +277,6 @@ public abstract class ImapRequestLineReader {
      * Reads one <code>date</code> argument from the request.
      * 
      * @return <code>DayMonthYear</code>, not null
-     * @throws DecodingException
      */
     public DayMonthYear date() throws DecodingException {
 
@@ -443,9 +437,6 @@ public abstract class ImapRequestLineReader {
     /**
      * Consumes a CRLF from the request. TODO: This is too liberal, the spec
      * insists on \r\n for new lines.
-     * 
-     * @param request
-     * @throws DecodingException
      */
     private void consumeCRLF() throws DecodingException {
         char next = nextChar();
@@ -528,10 +519,9 @@ public abstract class ImapRequestLineReader {
     }
 
     /**
-     * Calls {@link #number()} with argument of false
+     * Calls {@link #number(boolean)} with argument of false
      * 
      * @return number
-     * @throws DecodingException
      */
     public long number() throws DecodingException {
         return number(false);
@@ -723,10 +713,8 @@ public abstract class ImapRequestLineReader {
     
     /**
      * Parse a range which use a ":" as delimiter
-     * 
-     * @param range
+     *
      * @return idRange
-     * @throws DecodingException
      */
     private IdRange parseRange(String range) throws DecodingException {
         int pos = range.indexOf(':');

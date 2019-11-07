@@ -139,29 +139,22 @@ public interface ImapSession {
 
     /**
      * Push in a new {@link ImapLineHandler} which is called for the next line received
-     * 
-     * @param lineHandler
      */
     void pushLineHandler(ImapLineHandler lineHandler);
 
     /**
      * Pop the current {@link ImapLineHandler}
-     * 
      */
     void popLineHandler();
     
     /**
      * Return true if multiple namespaces are supported
-     * 
-     * @return multipleNamespaces
      */
     boolean supportMultipleNamespaces();
     
     /**
      * Return true if the login / authentication via plain username / password is
      * disallowed
-     * 
-     * @return plainDisallowed
      */
     boolean isPlainAuthDisallowed();
 

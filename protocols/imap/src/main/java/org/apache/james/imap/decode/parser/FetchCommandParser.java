@@ -48,10 +48,8 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     /**
      * Create a {@link FetchData} by reading from the
      * {@link ImapRequestLineReader}
-     * 
-     * @param request
+     *
      * @return fetchData
-     * @throws DecodingException
      */
     protected FetchData fetchRequest(ImapRequestLineReader request) throws DecodingException {
         FetchData fetch = new FetchData();

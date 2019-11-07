@@ -31,8 +31,7 @@ public interface CapabilityImplementingProcessor extends ImapProcessor {
 
     /**
      * Return a list of all Capabilities that are implemented by the Processor
-     * 
-     * @param session
+     *
      * @return list not null
      */
     List<String> getImplementedCapabilities(ImapSession session);

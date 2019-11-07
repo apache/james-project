@@ -73,22 +73,16 @@ public interface SelectedMailbox {
 
     /**
      * Return the count of all recent uids
-     * 
-     * @return recentCount
      */
     int recentCount();
 
     /**
      * Return the count of all existing uids
-     * 
-     * @return existsCount
      */
     long existsCount();
 
     /**
      * Return the path of the selected Mailbox
-     * 
-     * @return path
      */
     MailboxPath getPath() throws MailboxException;
 
@@ -128,9 +122,6 @@ public interface SelectedMailbox {
      */
     boolean isRecentUidRemoved();
 
-    /**
-     * 
-     */
     void resetRecentUidRemoved();
 
 
@@ -178,8 +169,6 @@ public interface SelectedMailbox {
     
     /**
      * Return all applicable Flags for the selected mailbox
-     * 
-     * @return flags
      */
     Flags getApplicableFlags();
     

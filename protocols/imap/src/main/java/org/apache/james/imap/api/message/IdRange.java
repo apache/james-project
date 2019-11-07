@@ -80,9 +80,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
 
     /**
      * Return true if the {@link IdRange} includes the given value
-     * 
-     * @param value
-     * @return include
+     *
      */
     public boolean includes(long value) {
         return lowVal <= value && value <= highVal;
@@ -138,9 +136,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     /**
      * Utility method which will copy the given {@link List} and try to merge
      * the {@link IdRange} in the copy before return it.
-     * 
-     * 
-     * @param ranges
+     *
      * @return mergedRanges
      */
     public static List<IdRange> mergeRanges(List<IdRange> ranges) {
@@ -180,8 +176,6 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
 
     /**
      * Return a read-only {@link Iterator} which contains all msn/uid which fail in the specified range.
-     * 
-     * @return rangeIt
      */
     @Override
     public Iterator<Long> iterator() {
@@ -195,7 +189,6 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     
     /**
      * {@link Iterator} of a range of msn/uid
-     *
      */
     private final class RangeIterator implements Iterator<Long> {
 

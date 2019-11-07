@@ -49,7 +49,6 @@ import org.slf4j.LoggerFactory;
 
 /**
  * SETACL Processor.
-
  */
 public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetACLProcessor.class);

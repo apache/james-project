@@ -64,8 +64,6 @@ public class IMAPRequest implements Request {
     
     /**
      * Return the tag of the request
-     * 
-     * @return tag
      */
     public String getTag() {
         return tag;
@@ -108,8 +106,6 @@ public class IMAPRequest implements Request {
     /**
      * Return an {@link Iterator} which holds all argument lines. The returned {@link ByteBuffer}'s will be 
      * rewind by calling {@link ByteBuffer#rewind()} before return them
-     * 
-     * @return arguments
      */
     public Iterator<ByteBuffer> getArguments() {
         return new Iterator<ByteBuffer>() {

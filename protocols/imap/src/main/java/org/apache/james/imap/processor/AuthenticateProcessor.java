@@ -44,8 +44,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Processor which handles the AUTHENTICATE command. Only authtype of PLAIN is supported ATM.
- * 
- *
  */
 public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticateProcessor.class);
@@ -88,12 +86,6 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
 
     /**
      * Parse the initialClientResponse and do a PLAIN AUTH with it
-     * 
-     * @param initialClientResponse
-     * @param session
-     * @param tag
-     * @param command
-     * @param responder
      */
     protected void doPlainAuth(String initialClientResponse, ImapSession session, String tag, ImapCommand command, Responder responder) {
         AuthenticationAttempt authenticationAttempt = parseDelegationAttempt(initialClientResponse);

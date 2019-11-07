@@ -103,8 +103,6 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
     /**
      * Add a {@link PermitEnableCapabilityProcessor} which can be enabled
-     * 
-     * @param implementor
      */
     public void addProcessor(PermitEnableCapabilityProcessor implementor) {
         capabilities.add(implementor);
@@ -112,9 +110,6 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
     /**
      * Return all enabled <code>CAPABILITIES</code> for this {@link ImapSession}
-     * 
-     * @param session
-     * @return enabled
      */
     @SuppressWarnings("unchecked")
     public static Set<String> getEnabledCapabilities(ImapSession session) {
