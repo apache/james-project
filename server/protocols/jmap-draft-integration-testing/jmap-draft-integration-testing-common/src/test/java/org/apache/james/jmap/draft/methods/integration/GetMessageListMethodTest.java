@@ -22,7 +22,9 @@ package org.apache.james.jmap.draft.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JmapCommonRequests.bodyOfMessage;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
+import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsInMailbox;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
 import static org.apache.james.jmap.TestingConstants.ALICE;
 import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
@@ -66,7 +68,6 @@ import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
@@ -2317,6 +2318,24 @@ public abstract class GetMessageListMethodTest {
         calmlyAwait
             .atMost(30, TimeUnit.SECONDS)
             .until(() -> twoMessagesFoundInMailbox(otherMailboxId));
+    }
+
+    @Test
+    public void aMessageInOutboxShouldBeAccessibleViaJmap() throws Exception {
+        MailboxId outboxMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, "Outbox");
+        String messageBody = "We're all mad here.";
+        mailboxProbe.appendMessage(
+            ALICE,
+            MailboxPath.forUser(ALICE, "Outbox"),
+            new ByteArrayInputStream(("Subject: test\r\n\r\n" + messageBody).getBytes(StandardCharsets.UTF_8)),
+            new Date(), false, new Flags());
+
+        calmlyAwait
+            .atMost(30, TimeUnit.SECONDS)
+            .until(() -> listMessageIdsInMailbox(aliceAccessToken, outboxMailboxId.serialize()).size() == 1);
+
+        assertThat(bodyOfMessage(aliceAccessToken, listMessageIdsInMailbox(aliceAccessToken, outboxMailboxId.serialize()).get(0)))
+            .isEqualTo(messageBody);
     }
 
     private boolean twoMessagesFoundInMailbox(MailboxId mailboxId) {
