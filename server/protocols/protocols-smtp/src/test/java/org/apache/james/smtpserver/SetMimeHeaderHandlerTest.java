@@ -29,7 +29,6 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.server.core.MailImpl;
-import org.apache.mailet.Mail;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,8 +38,6 @@ public class SetMimeHeaderHandlerTest {
     private static final String HEADER_VALUE = "test-value";
 
     private SMTPSession mockedSMTPSession;
-    private MimeMessage mimeMessage;
-    private Mail mail;
 
     @Before
     public void setUp() throws Exception {
@@ -57,56 +54,53 @@ public class SetMimeHeaderHandlerTest {
         };
     }
 
-    // test if the Header was add
     @Test
-    public void testHeaderIsPresent() throws MessagingException {
-        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
-            .addHeader(HEADER_NAME, HEADER_VALUE)
+    public void setMimeHeaderHandlerShouldAddSpecifiedHeader() throws MessagingException {
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .setSubject("testmail")
             .setText("testtext")
             .addToRecipient("test2@james.apache.org")
             .addFrom("test@james.apache.org")
             .build();
 
-        mail = MailImpl.builder()
+        MailImpl mail = MailImpl.builder()
             .name("ID=" + ThreadLocalRandom.current().nextLong())
             .mimeMessage(mimeMessage)
             .addRecipients("test@james.apache.org", "test2@james.apache.org")
             .build();
 
         SetMimeHeaderHandler header = new SetMimeHeaderHandler();
-
         header.setHeaderName(HEADER_NAME);
         header.setHeaderValue(HEADER_VALUE);
+
         header.onMessage(mockedSMTPSession, mail);
 
-        assertThat(mail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
+        assertThat(mail.getMessage().getHeader(HEADER_NAME)).containsOnly(HEADER_VALUE);
     }
 
-    // test if the Header was replaced
     @Test
-    public void testHeaderIsReplaced() throws MessagingException {
+    public void setMimeHeaderHandlerShouldReplaceSpecifiedHeader() throws MessagingException {
 
-        mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
+        MimeMessage mimeMessage = MimeMessageBuilder.mimeMessageBuilder()
             .addHeader(HEADER_NAME, "defaultHeaderValue")
             .setSubject("testmail")
             .setText("testtext")
             .addToRecipient("test2@james.apache.org")
             .addFrom("test@james.apache.org")
             .build();
-        mail = MailImpl.builder()
+        MailImpl mail = MailImpl.builder()
             .name("ID=" + ThreadLocalRandom.current().nextLong())
             .mimeMessage(mimeMessage)
             .addRecipients("test@james.apache.org", "test2@james.apache.org")
             .build();
 
         SetMimeHeaderHandler header = new SetMimeHeaderHandler();
-
         header.setHeaderName(HEADER_NAME);
         header.setHeaderValue(HEADER_VALUE);
+
         header.onMessage(mockedSMTPSession, mail);
 
-        assertThat(mail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
+        assertThat(mail.getMessage().getHeader(HEADER_NAME)).containsOnly(HEADER_VALUE);
     }
 
 }
