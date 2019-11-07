@@ -25,6 +25,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.utils.BaseFakeSMTPSession;
 import org.apache.james.server.core.MailImpl;
@@ -57,7 +58,7 @@ public class SetMimeHeaderHandlerTest {
     }
 
     private void setupMockedMimeMessage() throws MessagingException {
-        mockedMimeMessage = Util.createMimeMessage(headerName, headerValue);
+        mockedMimeMessage = createMimeMessage(headerName, headerValue);
     }
 
     private void setupMockedSMTPSession() {
@@ -112,6 +113,18 @@ public class SetMimeHeaderHandlerTest {
         header.onMessage(mockedSMTPSession, mail);
 
         assertThat(mail.getMessage().getHeader(HEADER_NAME)[0]).isEqualTo(HEADER_VALUE);
+    }
+
+    private static MimeMessage createMimeMessage(String headerName, String headerValue) throws MessagingException {
+        String sender = "test@james.apache.org";
+        String rcpt = "test2@james.apache.org";
+        return MimeMessageBuilder.mimeMessageBuilder()
+            .addHeader(headerName, headerValue)
+            .setSubject("testmail")
+            .setText("testtext")
+            .addToRecipient(rcpt)
+            .addFrom(sender)
+            .build();
     }
 
 }
