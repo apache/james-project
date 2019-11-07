@@ -51,18 +51,3 @@
     principal="uid=ldapUser,ou=system" credentials="password" userBase="ou=People,o=myorg.com,ou=system" userIdAttribute="uid"/>;
 -->
 
-<!-- The UsersRepository implementations below are DEPRECATED and will get removed in the next release -->
-<!-- They are just listed here for backward-compatibility-->
-
-<!-- File-based user repositories  Use these configurations to store user info in the filesystem  -->
-<!-- The LocalUsers repository, for storing James' User info. -->
-<!-- DEPRECATED: This implementation will get removed in the next release -->
-<!--
-<usersrepository name="LocalUsers" class="org.apache.james.user.file.UsersFileRepository">
-    <destination URL="file://var/users/"/>
-    <ignoreCase>true</ignoreCase>
-    <enableAliases>true</enableAliases>
-    <enableForwarding>true</enableForwarding>
-    <enableVirtualHosting>false</enableVirtualHosting>    
-</usersrepository>
--->

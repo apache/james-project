@@ -66,30 +66,6 @@
 
     </subsection>
 
-    <subsection name="File Users Repository">
-
-      <p>The File UsersRepository implementations below are DEPRECATED and will get removed in the next release</p>
-      <p>It just listed here for backward-compatibility</p>
-
-      <p>File-based user repositories  Use these configurations to store user info in the filesystem.</p>
-
-     <p>The usersrepository tag as 2 attributes:name="LocalUsers" class="org.apache.james.user.file.UsersFileRepository"></p>
-
-      <dl>
-        <dt><strong>destination</strong></dt>
-        <dd>Example: file://var/users/.</dd>
-        <dt><strong>ignoreCase</strong></dt>
-        <dd>true or false.</dd>
-        <dt><strong>enableAliases</strong></dt>
-        <dd>true or false.</dd>
-        <dt><strong>enableForwarding</strong></dt>
-        <dd>true or false.</dd>
-        <dt><strong>enableVirtualHosting</strong></dt>
-        <dd>true (default) or false. Defines if the usernames must (true) or may not contain (false) a domain part (user@domain.tld).</dd>
-      </dl>
-
-    </subsection>
-
     <subsection name="LDAP Users Repository">
 
        <p>Read-Only LDAP based UsersRepository</p>
