@@ -18,25 +18,19 @@
  ****************************************************************/
 package org.apache.james.core.quota;
 
-import org.junit.jupiter.api.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-public class QuotaCountTest implements QuotaValueTest<QuotaCount> {
-
+public class QuotaCountUsageTest implements QuotaUsageValueTest<QuotaCountLimit, QuotaCountUsage> {
     @Override
-    public QuotaCount instance(long value) {
-        return QuotaCount.count(value);
+    public QuotaCountUsage usageInstance(long value) {
+        return QuotaCountUsage.count(value);
     }
 
     @Override
-    public QuotaCount unlimited() {
-        return QuotaCount.unlimited();
+    public QuotaCountLimit limitInstance(long value) {
+        return QuotaCountLimit.count(value);
     }
 
-    @Test
-    void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(QuotaCount.class).verify();
+    @Override
+    public QuotaCountLimit unlimited() {
+        return QuotaCountLimit.unlimited();
     }
-
 }

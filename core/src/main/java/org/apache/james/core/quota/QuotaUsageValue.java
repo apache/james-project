@@ -16,21 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.core.quota;
 
-package org.apache.james.mailbox.quota;
+import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCountUsage;
-import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.QuotaRoot;
+public interface QuotaUsageValue<T extends QuotaUsageValue<T, U>, U extends QuotaLimitValue<U>> {
 
-/**
- * This interface allows us to get the current value associated to a quota value
- */
-public interface CurrentQuotaManager {
+    static boolean isValidValue(Optional<Long> value) {
+        return !value.isPresent() || value.get() >= -1;
+    }
 
-    QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException;
+    long asLong();
 
-    QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException;
+    boolean isLimited();
 
+    default boolean isUnlimited() {
+        return !isLimited();
+    }
+
+    T add(long additionalValue);
+
+    T add(T additionalValue);
+
+    boolean greaterThan(T other);
+
+    boolean exceedLimit(U limit);
 }

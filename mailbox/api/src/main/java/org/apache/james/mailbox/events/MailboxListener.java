@@ -27,8 +27,10 @@ import java.util.Objects;
 import java.util.SortedMap;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -83,11 +85,11 @@ public interface MailboxListener {
         private final EventId eventId;
         private final Username username;
         private final QuotaRoot quotaRoot;
-        private final Quota<QuotaCount> countQuota;
-        private final Quota<QuotaSize> sizeQuota;
+        private final Quota<QuotaCountLimit, QuotaCountUsage> countQuota;
+        private final Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota;
         private final Instant instant;
 
-        public QuotaUsageUpdatedEvent(EventId eventId, Username username, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
+        public QuotaUsageUpdatedEvent(EventId eventId, Username username, QuotaRoot quotaRoot, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Instant instant) {
             this.eventId = eventId;
             this.username = username;
             this.quotaRoot = quotaRoot;
@@ -106,11 +108,11 @@ public interface MailboxListener {
             return username;
         }
 
-        public Quota<QuotaCount> getCountQuota() {
+        public Quota<QuotaCountLimit, QuotaCountUsage> getCountQuota() {
             return countQuota;
         }
 
-        public Quota<QuotaSize> getSizeQuota() {
+        public Quota<QuotaSizeLimit, QuotaSizeUsage> getSizeQuota() {
             return sizeQuota;
         }
 
@@ -218,10 +220,10 @@ public interface MailboxListener {
      */
     class MailboxDeletion extends MailboxEvent {
         private final QuotaRoot quotaRoot;
-        private final QuotaCount deletedMessageCount;
-        private final QuotaSize totalDeletedSize;
+        private final QuotaCountUsage deletedMessageCount;
+        private final QuotaSizeUsage totalDeletedSize;
 
-        public MailboxDeletion(MailboxSession.SessionId sessionId, Username username, MailboxPath path, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize,
+        public MailboxDeletion(MailboxSession.SessionId sessionId, Username username, MailboxPath path, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize,
                                MailboxId mailboxId, EventId eventId) {
             super(sessionId, username, path, mailboxId, eventId);
             this.quotaRoot = quotaRoot;
@@ -238,11 +240,11 @@ public interface MailboxListener {
             return quotaRoot;
         }
 
-        public QuotaCount getDeletedMessageCount() {
+        public QuotaCountUsage getDeletedMessageCount() {
             return deletedMessageCount;
         }
 
-        public QuotaSize getTotalDeletedSize() {
+        public QuotaSizeUsage getTotalDeletedSize() {
             return totalDeletedSize;
         }
 

@@ -20,7 +20,8 @@ package org.apache.james.jmap.draft.utils.quotas;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaLimitValue;
+import org.apache.james.core.quota.QuotaUsageValue;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.mailbox.Quotas;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -31,17 +32,21 @@ public abstract class QuotaLoader {
 
     public abstract Quotas getQuotas(MailboxPath mailboxPath) throws MailboxException;
 
-    protected <T extends QuotaValue<T>> Quotas.Value<T> quotaToValue(Quota<T> quota) {
+    protected <T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> Quotas.Value<T, U> quotaToValue(Quota<T, U> quota) {
         return new Quotas.Value<>(
-            quotaValueToNumber(quota.getUsed()),
-            quotaValueToOptionalNumber(quota.getLimit()));
+            quotaValueUsageToNumber(quota.getUsed()),
+            quotaLimitValueToOptionalNumber(quota.getLimit()));
     }
 
-    protected Number quotaValueToNumber(QuotaValue<?> value) {
+    protected Number quotaValueToNumber(QuotaLimitValue<?> value) {
         return Number.BOUND_SANITIZING_FACTORY.from(value.asLong());
     }
 
-    protected Optional<Number> quotaValueToOptionalNumber(QuotaValue<?> value) {
+    protected Number quotaValueUsageToNumber(QuotaUsageValue<?, ?> value) {
+        return Number.BOUND_SANITIZING_FACTORY.from(value.asLong());
+    }
+
+    protected Optional<Number> quotaLimitValueToOptionalNumber(QuotaLimitValue<?> value) {
         if (value.isUnlimited()) {
             return Optional.empty();
         }

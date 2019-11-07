@@ -32,8 +32,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
@@ -65,10 +67,10 @@ public class GetQuotaRootProcessorTest {
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("plop", Optional.empty());
     private static final Username PLOP = Username.of("plop");
     private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(PLOP, "INBOX");
-    private static final Quota<QuotaCount> MESSAGE_QUOTA =
-        Quota.<QuotaCount>builder().used(QuotaCount.count(24)).computedLimit(QuotaCount.count(1589)).build();
-    private static final Quota<QuotaSize> STORAGE_QUOTA =
-        Quota.<QuotaSize>builder().used(QuotaSize.size(240)).computedLimit(QuotaSize.size(15890)).build();
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> MESSAGE_QUOTA =
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(24)).computedLimit(QuotaCountLimit.count(1589)).build();
+    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> STORAGE_QUOTA =
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(240)).computedLimit(QuotaSizeLimit.size(15890)).build();
 
     private GetQuotaRootProcessor testee;
     private ImapSession mockedImapSession;

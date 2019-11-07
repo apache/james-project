@@ -29,8 +29,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraMaxQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
 
@@ -98,15 +98,15 @@ public class CassandraPerUserMaxQuotaDao {
             .value(CassandraMaxQuota.STORAGE, bindMarker());
     }
 
-    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
         session.execute(setMaxStorageStatement.bind(quotaRoot.getValue(), QuotaCodec.quotaValueToLong(maxStorageQuota)));
     }
 
-    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
         session.execute(setMaxMessageStatement.bind(quotaRoot.getValue(), QuotaCodec.quotaValueToLong(maxMessageCount)));
     }
 
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+    public Optional<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
         ResultSet resultSet = session.execute(getMaxStorageStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
             return Optional.empty();
@@ -115,7 +115,7 @@ public class CassandraPerUserMaxQuotaDao {
         return QuotaCodec.longToQuotaSize(maxStorage);
     }
 
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+    public Optional<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
         ResultSet resultSet = session.execute(getMaxMessageStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
             return Optional.empty();

@@ -26,8 +26,10 @@ import static org.mockito.Mockito.when;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -58,9 +60,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldNotThrowOnRegularQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(10)).computedLimit(QuotaCountLimit.count(100)).build());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(100)).computedLimit(QuotaSizeLimit.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(0, 0);
@@ -70,9 +72,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldNotThrowOnRegularModifiedQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(10)).computedLimit(QuotaCountLimit.count(100)).build());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(100)).computedLimit(QuotaSizeLimit.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(89, 899);
@@ -82,9 +84,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldNotThrowOnReachedMaximumQuotas() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(10)).computedLimit(QuotaCountLimit.count(100)).build());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(100)).computedLimit(QuotaSizeLimit.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         quotaChecker.tryAddition(90, 900);
@@ -94,9 +96,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldThrowOnExceededMessages() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(10)).computedLimit(QuotaCountLimit.count(100)).build());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(100)).computedLimit(QuotaSizeLimit.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         assertThatThrownBy(() -> quotaChecker.tryAddition(91, 899))
@@ -107,9 +109,9 @@ public class QuotaCheckerTest {
     public void quotaCheckerShouldThrowOnExceededStorage() throws MailboxException {
         when(mockedQuotaRootResolver.getQuotaRoot(MAILBOX_PATH)).thenReturn(QUOTA_ROOT);
         when(mockedQuotaManager.getMessageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(10)).computedLimit(QuotaCount.count(100)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(10)).computedLimit(QuotaCountLimit.count(100)).build());
         when(mockedQuotaManager.getStorageQuota(QUOTA_ROOT)).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(100)).computedLimit(QuotaSize.size(1000)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(100)).computedLimit(QuotaSizeLimit.size(1000)).build());
         QuotaChecker quotaChecker = new QuotaChecker(mockedQuotaManager, mockedQuotaRootResolver, MAILBOX);
 
         assertThatThrownBy(() -> quotaChecker.tryAddition(89, 901))

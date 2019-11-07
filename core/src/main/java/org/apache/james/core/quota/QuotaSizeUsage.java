@@ -22,28 +22,26 @@ import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
-import com.google.common.base.Preconditions;
 
-public class QuotaSize implements QuotaValue<QuotaSize> {
+public class QuotaSizeUsage implements QuotaUsageValue<QuotaSizeUsage, QuotaSizeLimit> {
 
-    public static final QuotaSize QUOTA_SIZE = new QuotaSize(Optional.empty());
+    public static final QuotaSizeUsage QUOTA_SIZE = new QuotaSizeUsage(Optional.empty());
 
-    public static QuotaSize unlimited() {
+    public static QuotaSizeUsage unlimited() {
         return QUOTA_SIZE;
     }
 
-    public static QuotaSize size(long value) {
+    public static QuotaSizeUsage size(long value) {
         return size(Optional.of(value));
     }
 
-    public static QuotaSize size(Optional<Long> value) {
-        return new QuotaSize(value);
+    public static QuotaSizeUsage size(Optional<Long> value) {
+        return new QuotaSizeUsage(value);
     }
 
     private final Optional<Long> value;
 
-    private QuotaSize(Optional<Long> value) {
-        Preconditions.checkArgument(QuotaValue.isValidValue(value), "Quota limit should be positive");
+    private QuotaSizeUsage(Optional<Long> value) {
         this.value = value;
     }
 
@@ -58,21 +56,30 @@ public class QuotaSize implements QuotaValue<QuotaSize> {
     }
 
     @Override
-    public QuotaSize add(long additionalValue) {
-        return new QuotaSize(value.map(x -> x + additionalValue));
+    public QuotaSizeUsage add(long additionalValue) {
+        return new QuotaSizeUsage(value.map(x -> x + additionalValue));
     }
 
     @Override
-    public QuotaSize add(QuotaSize additionalValue) {
+    public QuotaSizeUsage add(QuotaSizeUsage additionalValue) {
         if (additionalValue.isUnlimited()) {
             return unlimited();
         }
-        return new QuotaSize(value.map(x -> x + additionalValue.asLong()));
+        return new QuotaSizeUsage(value.map(x -> x + additionalValue.asLong()));
     }
 
     @Override
-    public boolean isGreaterThan(QuotaSize other) {
+    public boolean greaterThan(QuotaSizeUsage other) {
         return value.orElse(Long.MAX_VALUE) > other.value.orElse(Long.MAX_VALUE);
+    }
+
+    @Override
+    public boolean exceedLimit(QuotaSizeLimit limit) {
+        if (limit.isLimited()) {
+            return value.orElse(Long.MAX_VALUE) > limit.asLong();
+        } else {
+            return false;
+        }
     }
 
     @Override
@@ -84,8 +91,8 @@ public class QuotaSize implements QuotaValue<QuotaSize> {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof QuotaSize) {
-            QuotaSize that = (QuotaSize) o;
+        if (o instanceof QuotaSizeUsage) {
+            QuotaSizeUsage that = (QuotaSizeUsage) o;
             return Objects.equal(this.value, that.value);
         }
         return false;

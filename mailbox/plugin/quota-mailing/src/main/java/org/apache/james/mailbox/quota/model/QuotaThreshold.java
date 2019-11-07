@@ -47,7 +47,7 @@ public class QuotaThreshold implements Comparable<QuotaThreshold> {
         return Double.valueOf(quotaOccupationRatio * 100).intValue();
     }
 
-    public boolean isExceeded(Quota<?> quota) {
+    public boolean isExceeded(Quota<?, ?> quota) {
         if (quota.getLimit().isUnlimited()) {
             return false;
         }

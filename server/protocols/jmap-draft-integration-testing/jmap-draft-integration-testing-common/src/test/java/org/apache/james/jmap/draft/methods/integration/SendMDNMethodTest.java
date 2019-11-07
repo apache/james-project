@@ -46,7 +46,7 @@ import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
@@ -55,7 +55,7 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -406,7 +406,7 @@ public abstract class SendMDNMethodTest {
 
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER.asString(), DefaultMailboxes.INBOX);
-        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(100))));
+        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(100))));
 
         MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), HOMER.asString(), MailboxConstants.INBOX);
 

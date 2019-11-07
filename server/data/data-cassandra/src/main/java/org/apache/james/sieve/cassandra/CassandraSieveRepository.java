@@ -30,7 +30,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieve.cassandra.model.ActiveScriptInfo;
 import org.apache.james.sieve.cassandra.model.Script;
 import org.apache.james.sieve.cassandra.model.SieveQuota;
@@ -80,15 +80,15 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     private Mono<Void> throwOnOverQuota(Username username, Long sizeDifference) {
-        Mono<Optional<QuotaSize>> userQuotaMono = cassandraSieveQuotaDAO.getQuota(username);
-        Mono<Optional<QuotaSize>> globalQuotaMono = cassandraSieveQuotaDAO.getQuota();
+        Mono<Optional<QuotaSizeLimit>> userQuotaMono = cassandraSieveQuotaDAO.getQuota(username);
+        Mono<Optional<QuotaSizeLimit>> globalQuotaMono = cassandraSieveQuotaDAO.getQuota();
         Mono<Long> spaceUsedMono = cassandraSieveQuotaDAO.spaceUsedBy(username);
 
         return limitToUse(userQuotaMono, globalQuotaMono).zipWith(spaceUsedMono)
             .flatMap(pair -> checkOverQuotaUponModification(sizeDifference, pair.getT2(), pair.getT1()));
     }
 
-    private Mono<Void> checkOverQuotaUponModification(Long sizeDifference, Long spaceUsed, Optional<QuotaSize> limit) {
+    private Mono<Void> checkOverQuotaUponModification(Long sizeDifference, Long spaceUsed, Optional<QuotaSizeLimit> limit) {
         try {
             new SieveQuota(spaceUsed, limit)
                 .checkOverQuotaUponModification(sizeDifference);
@@ -105,7 +105,7 @@ public class CassandraSieveRepository implements SieveRepository {
             .map(sizeOfStoredScript -> scriptSize - sizeOfStoredScript);
     }
 
-    private Mono<Optional<QuotaSize>> limitToUse(Mono<Optional<QuotaSize>> userQuota, Mono<Optional<QuotaSize>> globalQuota) {
+    private Mono<Optional<QuotaSizeLimit>> limitToUse(Mono<Optional<QuotaSizeLimit>> userQuota, Mono<Optional<QuotaSizeLimit>> globalQuota) {
         return userQuota
             .filter(Optional::isPresent)
             .switchIfEmpty(globalQuota);
@@ -253,14 +253,14 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getDefaultQuota() throws QuotaNotFoundException {
+    public QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException {
         return cassandraSieveQuotaDAO.getQuota()
             .block()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setDefaultQuota(QuotaSize quota) {
+    public void setDefaultQuota(QuotaSizeLimit quota) {
         cassandraSieveQuotaDAO.setQuota(quota).block();
     }
 
@@ -279,14 +279,14 @@ public class CassandraSieveRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getQuota(Username username) throws QuotaNotFoundException {
+    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException {
         return cassandraSieveQuotaDAO.getQuota(username)
             .block()
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public void setQuota(Username username, QuotaSize quota) {
+    public void setQuota(Username username, QuotaSizeLimit quota) {
         cassandraSieveQuotaDAO.setQuota(username, quota).block();
     }
 

@@ -21,8 +21,10 @@ package org.apache.james.mailbox.quota.cassandra.dto;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -30,7 +32,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 class QuotaDTO {
-    public static QuotaDTO from(Quota<?> quota) {
+    public static QuotaDTO from(Quota<?, ?> quota) {
         if (quota.getLimit().isUnlimited()) {
             return new QuotaDTO(quota.getUsed().asLong(), Optional.empty());
         }
@@ -56,18 +58,18 @@ class QuotaDTO {
     }
 
     @JsonIgnore
-    public Quota<QuotaSize> asSizeQuota() {
-        return Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(used))
-            .computedLimit(QuotaSize.size(limit))
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> asSizeQuota() {
+        return Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(used))
+            .computedLimit(QuotaSizeLimit.size(limit))
             .build();
     }
 
     @JsonIgnore
-    public Quota<QuotaCount> asCountQuota() {
-        return Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(used))
-            .computedLimit(QuotaCount.count(limit))
+    public Quota<QuotaCountLimit, QuotaCountUsage> asCountQuota() {
+        return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(used))
+            .computedLimit(QuotaCountLimit.count(limit))
             .build();
     }
 }

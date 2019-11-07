@@ -32,7 +32,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.core.CoreFixture.Users.Alphabet;
 import org.apache.james.core.CoreFixture.Users.Simpson;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -54,7 +54,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.BART, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.HOMER, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
@@ -74,7 +74,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.BART, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.HOMER, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
@@ -94,7 +94,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.BART, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.HOMER, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(40));
         appendMessage(testSystem, Simpson.HOMER, withSize(51));
@@ -117,7 +117,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.BART, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
         testSystem.getUsersRepository().addUser(BENOIT_AT_DOMAIN_TLD, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
@@ -138,7 +138,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.BART, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
         testSystem.getUsersRepository().addUser(BENOIT_AT_DOMAIN_TLD, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.LISA, withSize(51));
@@ -160,7 +160,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Alphabet.ABA, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ABB, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ACB, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Alphabet.AAA, withSize(49));
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
@@ -181,7 +181,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Alphabet.ABA, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ABB, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ACB, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Alphabet.AAA, withSize(49));
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
@@ -203,7 +203,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Alphabet.ABA, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ABB, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ACB, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Alphabet.AAA, withSize(49));
         appendMessage(testSystem, Alphabet.ABA, withSize(50));
@@ -226,7 +226,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Simpson.HOMER, PASSWORD);
         testSystem.getUsersRepository().addUser(Simpson.LISA, PASSWORD);
         testSystem.getUsersRepository().addUser(BENOIT_AT_DOMAIN_TLD, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Simpson.BART, withSize(49));
         appendMessage(testSystem, Simpson.HOMER, withSize(50));
@@ -248,7 +248,7 @@ public interface QuotaSearcherContract {
         testSystem.getUsersRepository().addUser(Alphabet.ABA, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ABB, PASSWORD);
         testSystem.getUsersRepository().addUser(Alphabet.ACB, PASSWORD);
-        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSize.size(100));
+        testSystem.getMaxQuotaManager().setGlobalMaxStorage(QuotaSizeLimit.size(100));
 
         appendMessage(testSystem, Alphabet.AAA, withSize(49));
         appendMessage(testSystem, Alphabet.ABA, withSize(50));

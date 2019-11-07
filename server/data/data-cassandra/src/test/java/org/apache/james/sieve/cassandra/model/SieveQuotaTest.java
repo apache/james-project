@@ -21,17 +21,17 @@ package org.apache.james.sieve.cassandra.model;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 import org.junit.Test;
 
 public class SieveQuotaTest {
 
     public static final long INVALID_VALUE = -1L;
-    public static final QuotaSize LIMIT_LOW_VALUE = QuotaSize.size(10L);
+    public static final QuotaSizeLimit LIMIT_LOW_VALUE = QuotaSizeLimit.size(10L);
     public static final long SIZE_DIFFERENCE = 20L;
     public static final int CURRENT_USAGE = 0;
-    public static final QuotaSize LIMIT_HIGH_VALUE = QuotaSize.size(100L);
+    public static final QuotaSizeLimit LIMIT_HIGH_VALUE = QuotaSizeLimit.size(100L);
 
     @Test(expected = IllegalArgumentException.class)
     public void sieveQuotaShouldThrowOnNegativeCurrentValue() {
@@ -40,7 +40,7 @@ public class SieveQuotaTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void sieveQuotaShouldThrowOnNegativeLimitValue() {
-        new SieveQuota(0, Optional.of(QuotaSize.size(INVALID_VALUE)));
+        new SieveQuota(0, Optional.of(QuotaSizeLimit.size(INVALID_VALUE)));
     }
 
     @Test(expected = QuotaExceededException.class)

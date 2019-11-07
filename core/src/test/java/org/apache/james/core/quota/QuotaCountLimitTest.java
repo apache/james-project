@@ -16,34 +16,27 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.webadmin.dto;
+package org.apache.james.core.quota;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.webadmin.utils.JsonExtractException;
-import org.apache.james.webadmin.utils.JsonExtractor;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-class QuotaValueDeserializerTest {
+public class QuotaCountLimitTest implements QuotaLimitValueTest<QuotaCountLimit> {
+
+    @Override
+    public QuotaCountLimit instance(long value) {
+        return QuotaCountLimit.count(value);
+    }
+
+    @Override
+    public QuotaCountLimit unlimited() {
+        return QuotaCountLimit.unlimited();
+    }
 
     @Test
-    void objectDeserializeShouldContainGivenValues() throws JsonExtractException {
-        String payload = "{\"count\":52,\"size\":42}";
-        ValidatedQuotaDTO actual = new JsonExtractor<>(ValidatedQuotaDTO.class,
-            new SimpleModule()
-                .addDeserializer(QuotaCount.class, new QuotaValueDeserializer<>(QuotaCount.unlimited(), QuotaCount::count))
-                .addDeserializer(QuotaSize.class, new QuotaValueDeserializer<>(QuotaSize.unlimited(), QuotaSize::size))
-        ).parse(payload);
-        Assertions.assertThat(actual)
-            .isEqualTo(
-                ValidatedQuotaDTO
-                    .builder()
-                    .count(java.util.Optional.of(QuotaCount.count(52)))
-                    .size(java.util.Optional.of(QuotaSize.size(42)))
-                    .build());
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(QuotaCountLimit.class).verify();
     }
 
 }

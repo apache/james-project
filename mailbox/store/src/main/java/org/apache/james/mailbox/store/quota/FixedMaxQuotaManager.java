@@ -4,8 +4,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedOperationException;
 import org.apache.james.mailbox.model.Quota;
@@ -21,16 +21,16 @@ import com.google.common.collect.ImmutableMap;
  */
 public class FixedMaxQuotaManager implements MaxQuotaManager {
 
-    private Optional<QuotaSize> maxStorage = Optional.empty();
-    private Optional<QuotaCount> maxMessage = Optional.empty();
+    private Optional<QuotaSizeLimit> maxStorage = Optional.empty();
+    private Optional<QuotaCountLimit> maxMessage = Optional.empty();
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) throws MailboxException {
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) throws MailboxException {
         throw new UnsupportedOperationException("Can not modify QuotaRoot specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) throws MailboxException {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException {
         throw new UnsupportedOperationException("Can not modify QuotaRoot specific upper limit for FixedMaxQuotaManager");
     }
 
@@ -45,17 +45,17 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setDomainMaxMessage(Domain domain, QuotaCount count) throws MailboxException {
+    public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) throws MailboxException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void setDomainMaxStorage(Domain domain, QuotaSize size) throws UnsupportedOperationException {
+    public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");
     }
 
     @Override
-    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+    public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
         maxStorage = Optional.of(globalMaxStorage);
     }
 
@@ -70,41 +70,41 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+    public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
         maxMessage = Optional.empty();
     }
 
     @Override
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+    public Optional<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
         return maxStorage;
     }
 
     @Override
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+    public Optional<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
         return maxMessage;
     }
 
     @Override
-    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+    public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
         return maxMessage
             .map(value -> ImmutableMap.of(Quota.Scope.Global, value))
             .orElse(ImmutableMap.of());
     }
 
     @Override
-    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
+    public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
         return maxStorage
             .map(value -> ImmutableMap.of(Quota.Scope.Global, value))
             .orElse(ImmutableMap.of());
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+    public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
         return Optional.empty();
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+    public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
         return Optional.empty();
     }
 
@@ -119,12 +119,12 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaSize> getGlobalMaxStorage() {
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
         return maxStorage;
     }
 
     @Override
-    public Optional<QuotaCount> getGlobalMaxMessage() {
+    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         return maxMessage;
     }
 }

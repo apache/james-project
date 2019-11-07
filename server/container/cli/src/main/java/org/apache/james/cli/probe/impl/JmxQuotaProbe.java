@@ -24,11 +24,13 @@ import java.io.IOException;
 import javax.management.MalformedObjectNameException;
 
 import org.apache.james.adapter.mailbox.QuotaManagementMBean;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.SerializableQuota;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.QuotaProbe;
 
 public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
@@ -52,52 +54,52 @@ public class JmxQuotaProbe implements QuotaProbe, JmxProbe {
     }
 
     @Override
-    public SerializableQuota<QuotaCount> getMessageCountQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
         return quotaManagement.getMessageCountQuota(quotaRoot);
     }
 
     @Override
-    public SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
         return quotaManagement.getStorageQuota(quotaRoot);
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException {
+    public SerializableQuotaLimitValue<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
         return quotaManagement.getMaxMessageCount(quotaRoot);
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException {
+    public SerializableQuotaLimitValue<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
         return quotaManagement.getMaxStorage(quotaRoot);
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException {
+    public SerializableQuotaLimitValue<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException {
         return quotaManagement.getGlobalMaxMessageCount();
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException {
+    public SerializableQuotaLimitValue<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException {
         return quotaManagement.getGlobalMaxStorage();
     }
 
     @Override
-    public void setMaxMessageCount(String quotaRoot, SerializableQuotaValue<QuotaCount> maxMessageCount) throws MailboxException {
+    public void setMaxMessageCount(String quotaRoot, SerializableQuotaLimitValue<QuotaCountLimit> maxMessageCount) throws MailboxException {
         quotaManagement.setMaxMessageCount(quotaRoot, maxMessageCount);
     }
 
     @Override
-    public void setMaxStorage(String quotaRoot, SerializableQuotaValue<QuotaSize> maxSize) throws MailboxException {
+    public void setMaxStorage(String quotaRoot, SerializableQuotaLimitValue<QuotaSizeLimit> maxSize) throws MailboxException {
         quotaManagement.setMaxStorage(quotaRoot, maxSize);
     }
 
     @Override
-    public void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) throws MailboxException {
+    public void setGlobalMaxMessageCount(SerializableQuotaLimitValue<QuotaCountLimit> maxGlobalMessageCount) throws MailboxException {
         quotaManagement.setGlobalMaxMessageCount(maxGlobalMessageCount);
     }
 
     @Override
-    public void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) throws MailboxException {
+    public void setGlobalMaxStorage(SerializableQuotaLimitValue<QuotaSizeLimit> maxGlobalSize) throws MailboxException {
         quotaManagement.setGlobalMaxStorage(maxGlobalSize);
     }
 

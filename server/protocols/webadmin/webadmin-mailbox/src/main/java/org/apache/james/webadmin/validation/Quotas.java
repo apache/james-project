@@ -21,23 +21,23 @@ package org.apache.james.webadmin.validation;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.eclipse.jetty.http.HttpStatus;
 
 public abstract class Quotas {
 
-    public static QuotaCount quotaCount(String serialized) {
+    public static QuotaCountLimit quotaCount(String serialized) {
         return minusOneToEmpty(parseToLong(serialized))
-                .map(QuotaCount::count)
-                .orElse(QuotaCount.unlimited());
+                .map(QuotaCountLimit::count)
+                .orElse(QuotaCountLimit.unlimited());
     }
 
-    public static QuotaSize quotaSize(String serialized) {
+    public static QuotaSizeLimit quotaSize(String serialized) {
         return minusOneToEmpty(parseToLong(serialized))
-            .map(QuotaSize::size)
-            .orElse(QuotaSize.unlimited());
+            .map(QuotaSizeLimit::size)
+            .orElse(QuotaSizeLimit.unlimited());
     }
 
     private static Optional<Long> minusOneToEmpty(long value) {

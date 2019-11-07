@@ -33,8 +33,8 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -449,8 +449,8 @@ public class StoreMailboxManager implements MailboxManager {
                 .mailboxSession(session)
                 .mailbox(mailbox)
                 .quotaRoot(quotaRoot)
-                .quotaCount(QuotaCount.count(messageCount))
-                .quotaSize(QuotaSize.size(totalSize))
+                .quotaCount(QuotaCountUsage.count(messageCount))
+                .quotaSize(QuotaSizeUsage.size(totalSize))
                 .build(),
                 new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                 .block();

@@ -27,8 +27,10 @@ import static org.mockito.Mockito.when;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
@@ -54,39 +56,39 @@ public class StoreQuotaManagerTest {
     @SuppressWarnings("unchecked")
     @Test
     public void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
-        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCount.count(360L)));
-        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
+        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.count(360L)));
+        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.count(360)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(36)).computedLimit(QuotaCountLimit.count(360)).build());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
-        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSize.size(360L)));
-        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
+        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.size(360L)));
+        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.size(360)).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(36)).computedLimit(QuotaSizeLimit.size(360)).build());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSize.unlimited()));
-        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSize.size(36L));
+        when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.unlimited()));
+        when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
 
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(36)).computedLimit(QuotaSize.unlimited()).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(36)).computedLimit(QuotaSizeLimit.unlimited()).build());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
-        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCount.unlimited()));
-        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCount.count(36L));
+        when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.unlimited()));
+        when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
 
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(36)).computedLimit(QuotaCount.unlimited()).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(36)).computedLimit(QuotaCountLimit.unlimited()).build());
     }
 
 }

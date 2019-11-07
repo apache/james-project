@@ -21,13 +21,13 @@ package org.apache.james.webadmin.dto;
 import java.io.IOException;
 import java.util.function.Function;
 
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaLimitValue;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 
-public class QuotaValueDeserializer<T extends QuotaValue<T>> extends JsonDeserializer<T> {
+public class QuotaValueDeserializer<T extends QuotaLimitValue<T>> extends JsonDeserializer<T> {
 
     private final T unlimited;
     private final Function<Long, T> quotaFactory;

@@ -22,7 +22,8 @@ package org.apache.james.sieve.cassandra.model;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.sieverepository.api.exception.QuotaExceededException;
 
 import com.google.common.base.Preconditions;
@@ -30,9 +31,9 @@ import com.google.common.base.Preconditions;
 public class SieveQuota {
 
     private final long currentUsage;
-    private final Optional<QuotaSize> limit;
+    private final Optional<QuotaSizeLimit> limit;
 
-    public SieveQuota(long currentUsage, Optional<QuotaSize> limit) {
+    public SieveQuota(long currentUsage, Optional<QuotaSizeLimit> limit) {
         Preconditions.checkArgument(currentUsage >= 0, "Current usage should be positive or equal to zero");
         limit.ifPresent(limitValue -> Preconditions.checkArgument(limitValue.asLong() >= 0, "Limit value should be positive or equal to zero"));
         this.currentUsage = currentUsage;
@@ -47,9 +48,9 @@ public class SieveQuota {
 
     public boolean isExceededUponModification(long sizeDifference) {
         return limit.map(limitContent ->
-            QuotaSize.size(currentUsage)
+            QuotaSizeUsage.size(currentUsage)
                 .add(sizeDifference)
-                .isGreaterThan(limitContent))
+                .exceedLimit(limitContent))
             .orElse(false);
     }
 }

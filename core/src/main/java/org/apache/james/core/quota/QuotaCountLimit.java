@@ -24,24 +24,24 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 
-public class QuotaCount implements QuotaValue<QuotaCount> {
+public class QuotaCountLimit implements QuotaLimitValue<QuotaCountLimit> {
 
-    public static QuotaCount unlimited() {
-        return new QuotaCount(Optional.empty());
+    public static QuotaCountLimit unlimited() {
+        return new QuotaCountLimit(Optional.empty());
     }
 
-    public static QuotaCount count(long value) {
+    public static QuotaCountLimit count(long value) {
         return count(Optional.of(value));
     }
 
-    public static QuotaCount count(Optional<Long> value) {
-        return new QuotaCount(value);
+    public static QuotaCountLimit count(Optional<Long> value) {
+        return new QuotaCountLimit(value);
     }
 
     private final Optional<Long> value;
 
-    private QuotaCount(Optional<Long> value) {
-        Preconditions.checkArgument(QuotaValue.isValidValue(value), "Quota limit should be positive");
+    private QuotaCountLimit(Optional<Long> value) {
+        Preconditions.checkArgument(QuotaLimitValue.isValidValue(value), "Quota limit should be positive");
         this.value = value;
     }
 
@@ -56,16 +56,16 @@ public class QuotaCount implements QuotaValue<QuotaCount> {
     }
 
     @Override
-    public QuotaCount add(long additionalValue) {
-        return new QuotaCount(value.map(x -> x + additionalValue));
+    public QuotaCountLimit add(long additionalValue) {
+        return new QuotaCountLimit(value.map(x -> x + additionalValue));
     }
 
     @Override
-    public QuotaCount add(QuotaCount additionalValue) {
+    public QuotaCountLimit add(QuotaCountLimit additionalValue) {
         if (additionalValue.isUnlimited()) {
             return unlimited();
         }
-        return new QuotaCount(value.map(x -> x + additionalValue.asLong()));
+        return new QuotaCountLimit(value.map(x -> x + additionalValue.asLong()));
     }
 
     @Override
@@ -76,14 +76,14 @@ public class QuotaCount implements QuotaValue<QuotaCount> {
     }
 
     @Override
-    public boolean isGreaterThan(QuotaCount other) {
+    public boolean isGreaterThan(QuotaCountLimit other) {
         return value.orElse(Long.MAX_VALUE) > other.value.orElse(Long.MAX_VALUE);
     }
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof QuotaCount) {
-            QuotaCount that = (QuotaCount) o;
+        if (o instanceof QuotaCountLimit) {
+            QuotaCountLimit that = (QuotaCountLimit) o;
             return Objects.equal(this.value, that.value);
         }
         return false;

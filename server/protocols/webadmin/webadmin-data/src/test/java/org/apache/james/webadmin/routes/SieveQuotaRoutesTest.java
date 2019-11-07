@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -78,7 +78,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void getGlobalSieveQuotaShouldReturnStoredValue() throws Exception {
-        QuotaSize value = QuotaSize.size(1000L);
+        QuotaSizeLimit value = QuotaSizeLimit.size(1000L);
         sieveRepository.setDefaultQuota(value);
 
         long actual =
@@ -95,7 +95,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void updateGlobalSieveQuotaShouldUpdateStoredValue() throws Exception {
-        sieveRepository.setDefaultQuota(QuotaSize.size(500L));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(500L));
         long requiredSize = 1024L;
 
         given()
@@ -146,7 +146,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void removeGlobalSieveQuotaShouldRemoveGlobalSieveQuota() throws Exception {
-        sieveRepository.setDefaultQuota(QuotaSize.size(1024L));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(1024L));
 
         given()
             .delete("/sieve/quota/default")
@@ -164,7 +164,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void getPerUserSieveQuotaShouldReturnStoredValue() throws Exception {
-        QuotaSize value = QuotaSize.size(1024L);
+        QuotaSizeLimit value = QuotaSizeLimit.size(1024L);
         sieveRepository.setQuota(USERNAME_A, value);
 
         long actual =
@@ -189,7 +189,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void updatePerUserSieveQuotaShouldUpdateStoredValue() throws Exception {
-        sieveRepository.setQuota(USERNAME_A, QuotaSize.size(500L));
+        sieveRepository.setQuota(USERNAME_A, QuotaSizeLimit.size(500L));
         long requiredSize = 1024L;
 
         given()
@@ -249,7 +249,7 @@ class SieveQuotaRoutesTest {
 
     @Test
     void removePerUserSieveQuotaShouldRemoveQuotaForUser() throws Exception {
-        sieveRepository.setQuota(USERNAME_A, QuotaSize.size(1024));
+        sieveRepository.setQuota(USERNAME_A, QuotaSizeLimit.size(1024));
 
         given()
             .delete("/sieve/quota/users/" + USER_NAME_A)

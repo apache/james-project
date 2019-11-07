@@ -35,8 +35,8 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.quota.search.Limit;
 import org.apache.james.quota.search.Offset;
 import org.apache.james.quota.search.QuotaBoundary;
@@ -282,7 +282,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
-            QuotaSize quotaSize = Quotas.quotaSize(request.body());
+            QuotaSizeLimit quotaSize = Quotas.quotaSize(request.body());
             userQuotaService.defineMaxSizeQuota(username, quotaSize);
             return Responses.returnNoContent(response);
         });
@@ -300,7 +300,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
-            Optional<QuotaSize> maxSizeQuota = userQuotaService.getMaxSizeQuota(username);
+            Optional<QuotaSizeLimit> maxSizeQuota = userQuotaService.getMaxSizeQuota(username);
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
             }
@@ -339,7 +339,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
-            QuotaCount quotaCount = Quotas.quotaCount(request.body());
+            QuotaCountLimit quotaCount = Quotas.quotaCount(request.body());
             userQuotaService.defineMaxCountQuota(username, quotaCount);
             return Responses.returnNoContent(response);
         });
@@ -357,7 +357,7 @@ public class UserQuotaRoutes implements Routes {
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             Username username = checkUserExist(request);
-            Optional<QuotaCount> maxCountQuota = userQuotaService.getMaxCountQuota(username);
+            Optional<QuotaCountLimit> maxCountQuota = userQuotaService.getMaxCountQuota(username);
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
             }

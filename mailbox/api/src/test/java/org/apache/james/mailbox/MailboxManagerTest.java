@@ -40,8 +40,10 @@ import java.util.concurrent.CountDownLatch;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxManager.MailboxCapabilities;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.events.EventBus;
@@ -86,7 +88,6 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-
 import reactor.core.publisher.Mono;
 
 /**
@@ -633,8 +634,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .element(0)
                 .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
                 .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
-                .satisfies(event -> assertThat(event.getDeletedMessageCount()).isEqualTo(QuotaCount.count(0)))
-                .satisfies(event -> assertThat(event.getTotalDeletedSize()).isEqualTo(QuotaSize.size(0)));
+                .satisfies(event -> assertThat(event.getDeletedMessageCount()).isEqualTo(QuotaCountUsage.count(0)))
+                .satisfies(event -> assertThat(event.getTotalDeletedSize()).isEqualTo(QuotaSizeUsage.size(0)));
         }
 
         @Test
@@ -665,13 +666,13 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 .extracting(event -> (MailboxListener.QuotaUsageUpdatedEvent) event)
                 .element(0)
                 .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
-                .satisfies(event -> assertThat(event.getSizeQuota()).isEqualTo(Quota.<QuotaSize>builder()
-                    .used(QuotaSize.size(85))
-                    .computedLimit(QuotaSize.unlimited())
+                .satisfies(event -> assertThat(event.getSizeQuota()).isEqualTo(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                    .used(QuotaSizeUsage.size(85))
+                    .computedLimit(QuotaSizeLimit.unlimited())
                     .build()))
-                .satisfies(event -> assertThat(event.getCountQuota()).isEqualTo(Quota.<QuotaCount>builder()
-                    .used(QuotaCount.count(1))
-                    .computedLimit(QuotaCount.unlimited())
+                .satisfies(event -> assertThat(event.getCountQuota()).isEqualTo(Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+                    .used(QuotaCountUsage.count(1))
+                    .computedLimit(QuotaCountLimit.unlimited())
                     .build()));
         }
 

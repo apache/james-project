@@ -29,8 +29,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaFixture.Counts;
@@ -107,8 +109,8 @@ class QuotaThresholdNoticeTest {
 
     @Test
     void buildShouldReturnPresentWhenAbove() {
-        Quota<QuotaSize> sizeQuota = Sizes._82_PERCENT;
-        Quota<QuotaCount> countQuota = Counts._82_PERCENT;
+        Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota = Sizes._82_PERCENT;
+        Quota<QuotaCountLimit, QuotaCountUsage> countQuota = Counts._82_PERCENT;
         QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
 
         assertThat(QuotaThresholdNotice.builder()
@@ -123,8 +125,8 @@ class QuotaThresholdNoticeTest {
 
     @Test
     void buildShouldFilterOutNotInterestingFields() {
-        Quota<QuotaSize> sizeQuota = Sizes._82_PERCENT;
-        Quota<QuotaCount> countQuota = Counts._82_PERCENT;
+        Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota = Sizes._82_PERCENT;
+        Quota<QuotaCountLimit, QuotaCountUsage> countQuota = Counts._82_PERCENT;
         QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
         QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
 
@@ -141,8 +143,8 @@ class QuotaThresholdNoticeTest {
 
     @Test
     void buildShouldKeepAllInterestingFields() {
-        Quota<QuotaSize> sizeQuota = Sizes._82_PERCENT;
-        Quota<QuotaCount> countQuota = Counts._82_PERCENT;
+        Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota = Sizes._82_PERCENT;
+        Quota<QuotaCountLimit, QuotaCountUsage> countQuota = Counts._82_PERCENT;
         QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(_80, NOW);
         QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(_80, NOW);
 
@@ -210,9 +212,9 @@ class QuotaThresholdNoticeTest {
 
         assertThat(QuotaThresholdNotice.builder()
             .withConfiguration(DEFAULT_CONFIGURATION)
-            .sizeQuota(Quota.<QuotaSize>builder()
-                .used(QuotaSize.size(801 * 1024 * 1024))
-                .computedLimit(QuotaSize.size(1 * 1024 * 1024 * 1024))
+            .sizeQuota(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                .used(QuotaSizeUsage.size(801 * 1024 * 1024))
+                .computedLimit(QuotaSizeLimit.size(1 * 1024 * 1024 * 1024))
                 .build())
             .countQuota(Counts._72_PERCENT)
             .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))
@@ -228,9 +230,9 @@ class QuotaThresholdNoticeTest {
 
         assertThat(QuotaThresholdNotice.builder()
             .withConfiguration(DEFAULT_CONFIGURATION)
-            .sizeQuota(Quota.<QuotaSize>builder()
-                .used(QuotaSize.size(801 * 1024 * 1024))
-                .computedLimit(QuotaSize.size((2 * 1024 * 1024 * 1024) - 1))
+            .sizeQuota(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                .used(QuotaSizeUsage.size(801 * 1024 * 1024))
+                .computedLimit(QuotaSizeLimit.size((2 * 1024 * 1024 * 1024) - 1))
                 .build())
             .countQuota(Counts._72_PERCENT)
             .sizeThreshold(HistoryEvolution.higherThresholdReached(sizeThresholdChange, NotAlreadyReachedDuringGracePeriod))

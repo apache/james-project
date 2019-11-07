@@ -27,8 +27,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Instant;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.model.Quota;
@@ -46,8 +48,8 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 class DTOTest {
 
-    static final Quota<QuotaSize> SIZE_QUOTA = Quota.<QuotaSize>builder().used(QuotaSize.size(23)).computedLimit(QuotaSize.size(33)).build();
-    static final Quota<QuotaCount> COUNT_QUOTA = Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.count(45)).build();
+    static final Quota<QuotaSizeLimit, QuotaSizeUsage> SIZE_QUOTA = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(23)).computedLimit(QuotaSizeLimit.size(33)).build();
+    static final Quota<QuotaCountLimit, QuotaCountUsage> COUNT_QUOTA = Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(12)).computedLimit(QuotaCountLimit.count(45)).build();
     static final Instant INSTANT = Instant.ofEpochMilli(45554);
     public static final String DEFAULT_LISTENER_NAME = "default";
     static final QuotaThresholdChangedEvent EVENT = new QuotaThresholdChangedEvent(
@@ -62,7 +64,7 @@ class DTOTest {
         HistoryEvolution.lowerThresholdReached(new QuotaThresholdChange(_75, INSTANT)),
         HistoryEvolution.noChanges(),
         SIZE_QUOTA,
-        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(12)).computedLimit(QuotaCountLimit.unlimited()).build(),
         UserQuotaThresholds.Id.from(Username.of("foo@bar.com"), DEFAULT_LISTENER_NAME));
     static final QuotaThresholdChangedEvent EVENT_3 = new QuotaThresholdChangedEvent(
         EventId.first(),
@@ -70,7 +72,7 @@ class DTOTest {
         HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
             HistoryEvolution.HighestThresholdRecentness.NotAlreadyReachedDuringGracePeriod),
         SIZE_QUOTA,
-        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(12)).computedLimit(QuotaCountLimit.unlimited()).build(),
         UserQuotaThresholds.Id.from(Username.of("foo@bar.com"), DEFAULT_LISTENER_NAME));
     static final QuotaThresholdChangedEvent EVENT_4 = new QuotaThresholdChangedEvent(
         EventId.first(),
@@ -78,7 +80,7 @@ class DTOTest {
         HistoryEvolution.higherThresholdReached(new QuotaThresholdChange(_80, INSTANT),
             HistoryEvolution.HighestThresholdRecentness.AlreadyReachedDuringGracePeriod),
         SIZE_QUOTA,
-        Quota.<QuotaCount>builder().used(QuotaCount.count(12)).computedLimit(QuotaCount.unlimited()).build(),
+        Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(12)).computedLimit(QuotaCountLimit.unlimited()).build(),
         UserQuotaThresholds.Id.from(Username.of("foo@bar.com"), DEFAULT_LISTENER_NAME));
 
     static final String EVENT_JSON = ClassLoaderUtils.getSystemResourceAsString("json/event.json");

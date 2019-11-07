@@ -31,8 +31,8 @@ import java.util.Optional;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxId;
@@ -49,8 +49,8 @@ class MailboxDeletionSerializationTest {
     private static final MailboxPath MAILBOX_PATH = new MailboxPath(USER_NAMESPACE, USERNAME, "mailboxName");
     private static final MailboxId MAILBOX_ID = TestId.of(789);
     private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&user@domain", Optional.of(Domain.of("domain")));
-    private static final QuotaCount DELETED_MESSAGE_COUNT = QuotaCount.count(60);
-    private static final QuotaSize TOTAL_DELETED_SIZE = QuotaSize.size(100);
+    private static final QuotaCountUsage DELETED_MESSAGE_COUNT = QuotaCountUsage.count(60);
+    private static final QuotaSizeUsage TOTAL_DELETED_SIZE = QuotaSizeUsage.size(100);
     private static final MailboxListener.MailboxDeletion DEFAULT_MAILBOX_DELETION_EVENT = new MailboxListener.MailboxDeletion(
         SESSION_ID,
         USERNAME,

@@ -29,7 +29,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.user.api.UsersRepository;
@@ -99,7 +99,7 @@ public class SieveQuotaRoutes implements Routes {
     public void defineGetGlobalSieveQuota(Service service) {
         service.get(DEFAULT_QUOTA_PATH, (request, response) -> {
             try {
-                QuotaSize sieveQuota = sieveQuotaRepository.getDefaultQuota();
+                QuotaSizeLimit sieveQuota = sieveQuotaRepository.getDefaultQuota();
                 response.status(HttpStatus.OK_200);
                 return sieveQuota.asLong();
             } catch (QuotaNotFoundException e) {
@@ -120,7 +120,7 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineUpdateGlobalSieveQuota(Service service) {
         service.put(DEFAULT_QUOTA_PATH, (request, response) -> {
-            QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
+            QuotaSizeLimit requestedSize = extractRequestedQuotaSizeFromRequest(request);
             sieveQuotaRepository.setDefaultQuota(requestedSize);
             return Responses.returnNoContent(response);
         }, jsonTransformer);
@@ -156,9 +156,9 @@ public class SieveQuotaRoutes implements Routes {
     })
     public void defineGetPerUserSieveQuota(Service service) {
         service.get(USER_SIEVE_QUOTA_PATH, (request, response) -> {
-            Username usernameId = getUsername(request.params(USER_ID));
+            Username userId = getUsername(request.params(USER_ID));
             try {
-                QuotaSize userQuota = sieveQuotaRepository.getQuota(usernameId);
+                QuotaSizeLimit userQuota = sieveQuotaRepository.getQuota(userId);
                 response.status(HttpStatus.OK_200);
                 return userQuota.asLong();
             } catch (QuotaNotFoundException e) {
@@ -182,7 +182,7 @@ public class SieveQuotaRoutes implements Routes {
     public void defineUpdatePerUserSieveQuota(Service service) {
         service.put(USER_SIEVE_QUOTA_PATH, (request, response) -> {
             Username userId = getUsername(request.params(USER_ID));
-            QuotaSize requestedSize = extractRequestedQuotaSizeFromRequest(request);
+            QuotaSizeLimit requestedSize = extractRequestedQuotaSizeFromRequest(request);
             sieveQuotaRepository.setQuota(userId, requestedSize);
             return Responses.returnNoContent(response);
         }, jsonTransformer);
@@ -210,7 +210,7 @@ public class SieveQuotaRoutes implements Routes {
         });
     }
 
-    private QuotaSize extractRequestedQuotaSizeFromRequest(Request request) {
+    private QuotaSizeLimit extractRequestedQuotaSizeFromRequest(Request request) {
         long requestedSize = extractNumberFromRequestBody(request);
         if (requestedSize < 0) {
             throw ErrorResponder.builder()
@@ -219,7 +219,7 @@ public class SieveQuotaRoutes implements Routes {
                 .message("Requested quota size have to be a positive integer")
                 .haltError();
         }
-        return QuotaSize.size(requestedSize);
+        return QuotaSizeLimit.size(requestedSize);
     }
 
     private long extractNumberFromRequestBody(Request request) {

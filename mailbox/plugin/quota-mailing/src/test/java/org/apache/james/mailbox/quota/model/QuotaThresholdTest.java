@@ -26,7 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.junit.jupiter.api.Test;
@@ -86,9 +87,9 @@ public class QuotaThresholdTest {
 
     @Test
     public void isExceededShouldReturnFalseWhenUnlimited() {
-        Quota<QuotaSize> quota = Quota.<QuotaSize>builder()
-            .computedLimit(QuotaSize.unlimited())
-            .used(QuotaSize.size(80))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> quota = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .computedLimit(QuotaSizeLimit.unlimited())
+            .used(QuotaSizeUsage.size(80))
             .build();
 
         assertThat(_75.isExceeded(quota))

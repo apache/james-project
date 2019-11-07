@@ -25,8 +25,8 @@ import static org.mockito.Mockito.when;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
@@ -51,7 +51,7 @@ public class InMemoryCurrentQuotaManagerTest {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
             .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(18));
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCountUsage.count(18));
     }
 
     @Test
@@ -59,7 +59,7 @@ public class InMemoryCurrentQuotaManagerTest {
         when(mockedCurrentQuotaCalculator.recalculateCurrentQuotas(QUOTA_ROOT, null))
             .thenReturn(new CurrentQuotaCalculator.CurrentQuotas(18, 512));
 
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(512));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSizeUsage.size(512));
     }
 
     @Test
@@ -69,8 +69,8 @@ public class InMemoryCurrentQuotaManagerTest {
 
         testee.increase(QUOTA_ROOT, 10, 100);
 
-        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCount.count(28));
-        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSize.size(612));
+        assertThat(testee.getCurrentMessageCount(QUOTA_ROOT)).isEqualTo(QuotaCountUsage.count(28));
+        assertThat(testee.getCurrentStorage(QUOTA_ROOT)).isEqualTo(QuotaSizeUsage.size(612));
     }
 
     @Test(expected = IllegalArgumentException.class)

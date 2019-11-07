@@ -21,21 +21,23 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class QuotaRatioTest {
 
-    private static final Quota<QuotaSize> QUOTA_SIZE = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(15))
-            .computedLimit(QuotaSize.size(60))
+    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> QUOTA_SIZE = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(15))
+            .computedLimit(QuotaSizeLimit.size(60))
             .build();
-    private static final Quota<QuotaCount> QUOTA_COUNT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(1))
-            .computedLimit(QuotaCount.count(2))
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> QUOTA_COUNT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(1))
+            .computedLimit(QuotaCountLimit.count(2))
             .build();
 
     @Test

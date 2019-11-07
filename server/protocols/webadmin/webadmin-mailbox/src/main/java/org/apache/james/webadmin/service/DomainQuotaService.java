@@ -24,8 +24,8 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.QuotaDomainDTO;
@@ -40,11 +40,11 @@ public class DomainQuotaService {
         this.maxQuotaManager = maxQuotaManager;
     }
 
-    public Optional<QuotaCount> getMaxCountQuota(Domain domain) {
+    public Optional<QuotaCountLimit> getMaxCountQuota(Domain domain) {
         return maxQuotaManager.getDomainMaxMessage(domain);
     }
 
-    public void setMaxCountQuota(Domain domain, QuotaCount quotaCount) throws MailboxException {
+    public void setMaxCountQuota(Domain domain, QuotaCountLimit quotaCount) throws MailboxException {
         maxQuotaManager.setDomainMaxMessage(domain, quotaCount);
     }
 
@@ -52,11 +52,11 @@ public class DomainQuotaService {
         maxQuotaManager.removeDomainMaxMessage(domain);
     }
 
-    public Optional<QuotaSize> getMaxSizeQuota(Domain domain) {
+    public Optional<QuotaSizeLimit> getMaxSizeQuota(Domain domain) {
         return maxQuotaManager.getDomainMaxStorage(domain);
     }
 
-    public void setMaxSizeQuota(Domain domain, QuotaSize quotaSize) throws MailboxException {
+    public void setMaxSizeQuota(Domain domain, QuotaSizeLimit quotaSize) throws MailboxException {
         maxQuotaManager.setDomainMaxStorage(domain, quotaSize);
     }
 

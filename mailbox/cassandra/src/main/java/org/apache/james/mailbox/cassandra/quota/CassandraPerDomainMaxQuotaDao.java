@@ -30,8 +30,8 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraDomainMaxQuota;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -98,15 +98,15 @@ public class CassandraPerDomainMaxQuotaDao {
             .value(CassandraDomainMaxQuota.STORAGE, bindMarker());
     }
 
-    public void setMaxStorage(Domain domain, QuotaSize maxStorageQuota) {
+    public void setMaxStorage(Domain domain, QuotaSizeLimit maxStorageQuota) {
         session.execute(setMaxStorageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxStorageQuota)));
     }
 
-    public void setMaxMessage(Domain domain, QuotaCount maxMessageCount) {
+    public void setMaxMessage(Domain domain, QuotaCountLimit maxMessageCount) {
         session.execute(setMaxMessageStatement.bind(domain.asString(), QuotaCodec.quotaValueToLong(maxMessageCount)));
     }
 
-    public Optional<QuotaSize> getMaxStorage(Domain domain) {
+    public Optional<QuotaSizeLimit> getMaxStorage(Domain domain) {
         ResultSet resultSet = session.execute(getMaxStorageStatement.bind(domain.asString()));
         if (resultSet.isExhausted()) {
             return Optional.empty();
@@ -115,7 +115,7 @@ public class CassandraPerDomainMaxQuotaDao {
         return QuotaCodec.longToQuotaSize(maxStorage);
     }
 
-    public Optional<QuotaCount> getMaxMessage(Domain domain) {
+    public Optional<QuotaCountLimit> getMaxMessage(Domain domain) {
         ResultSet resultSet = session.execute(getMaxMessageStatement.bind(domain.asString()));
         if (resultSet.isExhausted()) {
             return Optional.empty();

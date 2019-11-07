@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.webadmin.jackson;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.webadmin.dto.QuotaValueDeserializer;
 import org.apache.james.webadmin.dto.QuotaValueSerializer;
 import org.apache.james.webadmin.utils.JsonTransformerModule;
@@ -33,10 +33,10 @@ public class QuotaModule implements JsonTransformerModule {
 
     public QuotaModule() {
         simpleModule = new SimpleModule()
-            .addSerializer(QuotaSize.class, new QuotaValueSerializer<>())
-            .addSerializer(QuotaCount.class, new QuotaValueSerializer<>())
-            .addDeserializer(QuotaSize.class, new QuotaValueDeserializer<>(QuotaSize.unlimited(), QuotaSize::size))
-            .addDeserializer(QuotaCount.class, new QuotaValueDeserializer<>(QuotaCount.unlimited(), QuotaCount::count));
+            .addSerializer(QuotaSizeLimit.class, new QuotaValueSerializer<>())
+            .addSerializer(QuotaCountLimit.class, new QuotaValueSerializer<>())
+            .addDeserializer(QuotaSizeLimit.class, new QuotaValueDeserializer<>(QuotaSizeLimit.unlimited(), QuotaSizeLimit::size))
+            .addDeserializer(QuotaCountLimit.class, new QuotaValueDeserializer<>(QuotaCountLimit.unlimited(), QuotaCountLimit::count));
     }
 
     @Override

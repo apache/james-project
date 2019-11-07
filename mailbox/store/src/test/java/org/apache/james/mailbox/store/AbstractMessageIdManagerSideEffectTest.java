@@ -34,8 +34,10 @@ import java.util.concurrent.CountDownLatch;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
@@ -73,13 +75,12 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-
 import reactor.core.publisher.Mono;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
-    private static final Quota<QuotaCount> OVER_QUOTA = Quota.<QuotaCount>builder()
-        .used(QuotaCount.count(102))
-        .computedLimit(QuotaCount.count(100))
+    private static final Quota<QuotaCountLimit, QuotaCountUsage> OVER_QUOTA = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+        .used(QuotaCountUsage.count(102))
+        .computedLimit(QuotaCountLimit.count(100))
         .build();
     private static final MessageUid messageUid1 = MessageUid.of(111);
     private static final MessageUid messageUid2 = MessageUid.of(113);
@@ -353,10 +354,10 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(OVER_QUOTA);
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
 
         assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
                 ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()),
@@ -522,8 +523,8 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
     private void givenUnlimitedQuota() throws MailboxException {
         when(quotaManager.getMessageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaCount>builder().used(QuotaCount.count(2)).computedLimit(QuotaCount.unlimited()).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(2)).computedLimit(QuotaCountLimit.unlimited()).build());
         when(quotaManager.getStorageQuota(any(QuotaRoot.class))).thenReturn(
-            Quota.<QuotaSize>builder().used(QuotaSize.size(2)).computedLimit(QuotaSize.unlimited()).build());
+            Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(2)).computedLimit(QuotaSizeLimit.unlimited()).build());
     }
 }

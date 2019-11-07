@@ -31,8 +31,8 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.user.api.UsersRepository;
@@ -201,7 +201,7 @@ public class DomainQuotaRoutes implements Routes {
     public void defineUpdateQuotaSize() {
         service.put(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
-            QuotaSize quotaSize = Quotas.quotaSize(request.body());
+            QuotaSizeLimit quotaSize = Quotas.quotaSize(request.body());
             domainQuotaService.setMaxSizeQuota(domain, quotaSize);
             return Responses.returnNoContent(response);
         });
@@ -220,7 +220,7 @@ public class DomainQuotaRoutes implements Routes {
     public void defineGetQuotaSize() {
         service.get(SIZE_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
-            Optional<QuotaSize> maxSizeQuota = domainQuotaService.getMaxSizeQuota(domain);
+            Optional<QuotaSizeLimit> maxSizeQuota = domainQuotaService.getMaxSizeQuota(domain);
             if (maxSizeQuota.isPresent()) {
                 return maxSizeQuota;
             }
@@ -261,7 +261,7 @@ public class DomainQuotaRoutes implements Routes {
     public void defineUpdateQuotaCount() {
         service.put(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
-            QuotaCount quotaCount = Quotas.quotaCount(request.body());
+            QuotaCountLimit quotaCount = Quotas.quotaCount(request.body());
             domainQuotaService.setMaxCountQuota(domain, quotaCount);
             return Responses.returnNoContent(response);
         });
@@ -279,7 +279,7 @@ public class DomainQuotaRoutes implements Routes {
     public void defineGetQuotaCount() {
         service.get(COUNT_ENDPOINT, (request, response) -> {
             Domain domain = checkDomainExist(request);
-            Optional<QuotaCount> maxCountQuota = domainQuotaService.getMaxCountQuota(domain);
+            Optional<QuotaCountLimit> maxCountQuota = domainQuotaService.getMaxCountQuota(domain);
             if (maxCountQuota.isPresent()) {
                 return maxCountQuota;
             }

@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-public interface QuotaValueTest<T extends QuotaValue<T>> {
+public interface QuotaLimitValueTest<T extends QuotaLimitValue<T>> {
 
     T instance(long i);
 

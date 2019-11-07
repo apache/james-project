@@ -22,21 +22,21 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class QuotaSizeTest implements QuotaValueTest<QuotaSize> {
+public class QuotaSizeLimitTest implements QuotaLimitValueTest<QuotaSizeLimit> {
 
     @Override
-    public QuotaSize instance(long value) {
-        return QuotaSize.size(value);
+    public QuotaSizeLimit instance(long value) {
+        return QuotaSizeLimit.size(value);
     }
 
     @Override
-    public QuotaSize unlimited() {
-        return QuotaSize.unlimited();
+    public QuotaSizeLimit unlimited() {
+        return QuotaSizeLimit.unlimited();
     }
 
     @Test
     void shouldRespectBeanContract() {
-        EqualsVerifier.forClass(QuotaSize.class).verify();
+        EqualsVerifier.forClass(QuotaSizeLimit.class).verify();
     }
 
 }

@@ -22,12 +22,14 @@ package org.apache.james.modules;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.SerializableQuota;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -55,62 +57,62 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public SerializableQuota<QuotaCount> getMessageCountQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
         return SerializableQuota.newInstance(quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot)));
     }
 
     @Override
-    public SerializableQuota<QuotaSize> getStorageQuota(String quotaRoot) throws MailboxException {
+    public SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
         return SerializableQuota.newInstance(quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot)));
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot)));
+    public SerializableQuotaLimitValue<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
+        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot)));
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getMaxStorage(String quotaRoot) throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot)));
+    public SerializableQuotaLimitValue<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
+        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot)));
     }
 
     @Override
-    public SerializableQuotaValue<QuotaCount> getGlobalMaxMessageCount() throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
+    public SerializableQuotaLimitValue<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException {
+        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
     }
 
     @Override
-    public SerializableQuotaValue<QuotaSize> getGlobalMaxStorage() throws MailboxException {
-        return SerializableQuotaValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
+    public SerializableQuotaLimitValue<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException {
+        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
     }
 
     @Override
-    public void setMaxMessageCount(String quotaRoot, SerializableQuotaValue<QuotaCount> maxMessageCount) throws MailboxException {
-        maxMessageCount.toValue(QuotaCount::count, QuotaCount.unlimited())
+    public void setMaxMessageCount(String quotaRoot, SerializableQuotaLimitValue<QuotaCountLimit> maxMessageCount) throws MailboxException {
+        maxMessageCount.toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
             .ifPresent(
                 Throwing.consumer(
-                    (QuotaCount value) -> maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), value))
+                    (QuotaCountLimit value) -> maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), value))
                     .sneakyThrow());
     }
 
     @Override
-    public void setMaxStorage(String quotaRoot, SerializableQuotaValue<QuotaSize> maxSize) throws MailboxException {
-        maxSize.toValue(QuotaSize::size, QuotaSize.unlimited())
+    public void setMaxStorage(String quotaRoot, SerializableQuotaLimitValue<QuotaSizeLimit> maxSize) throws MailboxException {
+        maxSize.toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
             .ifPresent(
                 Throwing.consumer(
-                    (QuotaSize value) -> maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), value))
+                    (QuotaSizeLimit value) -> maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), value))
                     .sneakyThrow());
     }
 
     @Override
-    public void setGlobalMaxMessageCount(SerializableQuotaValue<QuotaCount> maxGlobalMessageCount) throws MailboxException {
-        maxGlobalMessageCount.toValue(QuotaCount::count, QuotaCount.unlimited())
+    public void setGlobalMaxMessageCount(SerializableQuotaLimitValue<QuotaCountLimit> maxGlobalMessageCount) throws MailboxException {
+        maxGlobalMessageCount.toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
             .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxMessage).sneakyThrow());
     }
 
     @Override
-    public void setGlobalMaxStorage(SerializableQuotaValue<QuotaSize> maxGlobalSize) throws MailboxException {
-        maxGlobalSize.toValue(QuotaSize::size, QuotaSize.unlimited())
+    public void setGlobalMaxStorage(SerializableQuotaLimitValue<QuotaSizeLimit> maxGlobalSize) throws MailboxException {
+        maxGlobalSize.toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
             .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxStorage).sneakyThrow());
     }
 }

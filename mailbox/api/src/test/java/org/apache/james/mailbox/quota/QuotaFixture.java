@@ -19,91 +19,93 @@
 
 package org.apache.james.mailbox.quota;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 
 public interface QuotaFixture {
     interface Counts {
-        Quota<QuotaCount> _32_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(32))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _32_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(32))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _40_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(40))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _40_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(40))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _52_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(52))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _52_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(52))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _72_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(72))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _72_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(72))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _82_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(82))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _82_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(82))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _85_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(85))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _85_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(85))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _92_PERCENT = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(92))
-            .computedLimit(QuotaCount.count(100))
+        Quota<QuotaCountLimit, QuotaCountUsage> _92_PERCENT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(92))
+            .computedLimit(QuotaCountLimit.count(100))
             .build();
 
-        Quota<QuotaCount> _UNLIMITED = Quota.<QuotaCount>builder()
-            .used(QuotaCount.count(92))
-            .computedLimit(QuotaCount.unlimited())
+        Quota<QuotaCountLimit, QuotaCountUsage> _UNLIMITED = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .used(QuotaCountUsage.count(92))
+            .computedLimit(QuotaCountLimit.unlimited())
             .build();
     }
 
     interface Sizes {
-        Quota<QuotaSize> _30_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(30))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _30_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(30))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
-        Quota<QuotaSize> _42_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(42))
-            .computedLimit(QuotaSize.size(100))
-            .build();
-
-        Quota<QuotaSize> _55_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(55))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _42_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(42))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
 
-        Quota<QuotaSize> _60_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(60))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _55_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(55))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
 
-        Quota<QuotaSize> _75_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(75))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _60_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(60))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
 
-        Quota<QuotaSize> _82_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(82))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _75_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(75))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
 
-        Quota<QuotaSize> _92_PERCENT = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(92))
-            .computedLimit(QuotaSize.size(100))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _82_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(82))
+            .computedLimit(QuotaSizeLimit.size(100))
             .build();
 
-        Quota<QuotaSize> _992_PERTHOUSAND = Quota.<QuotaSize>builder()
-            .used(QuotaSize.size(992))
-            .computedLimit(QuotaSize.size(1000))
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _92_PERCENT = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(92))
+            .computedLimit(QuotaSizeLimit.size(100))
+            .build();
+
+        Quota<QuotaSizeLimit, QuotaSizeUsage> _992_PERTHOUSAND = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+            .used(QuotaSizeUsage.size(992))
+            .computedLimit(QuotaSizeLimit.size(1000))
             .build();
     }
 

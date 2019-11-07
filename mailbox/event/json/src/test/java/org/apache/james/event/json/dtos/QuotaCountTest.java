@@ -24,7 +24,8 @@ import static org.apache.james.event.json.SerializerFixture.DTO_JSON_SERIALIZE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.event.json.DTOs;
 import org.apache.james.mailbox.model.Quota;
 import org.junit.jupiter.api.Nested;
@@ -39,49 +40,79 @@ import scala.math.BigDecimal;
 
 class QuotaCountTest {
     @Test
-    void quotaCountShouldBeWellSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaValueWrites().writes(QuotaCount.count(18)))
+    void quotaCountLimitShouldBeWellSerialized() {
+        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaCountLimit.count(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
     @Test
-    void quotaCountShouldBeWellDeSerialized() {
-        assertThat(DTO_JSON_SERIALIZE.quotaCountReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
-            .isEqualTo(QuotaCount.count(18));
+    void quotaCountLimitShouldBeWellDeSerialized() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountLimitReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
+            .isEqualTo(QuotaCountLimit.count(18));
     }
 
     @Test
-    void quotaCountShouldBeWellSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaValueWrites().writes(QuotaCount.unlimited()))
+    void quotaCountLimitShouldBeWellSerializedWhenUnlimited() {
+        assertThat(DTO_JSON_SERIALIZE.quotaLimitValueWrites().writes(QuotaCountLimit.unlimited()))
             .isEqualTo(JsNull$.MODULE$);
     }
 
     @Test
-    void quotaCountShouldBeWellDeSerializedWhenUnlimited() {
-        assertThat(DTO_JSON_SERIALIZE.quotaCountReads().reads(JsNull$.MODULE$).get())
-            .isEqualTo(QuotaCount.unlimited());
+    void quotaCountLimitShouldBeWellDeSerializedWhenUnlimited() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountLimitReads().reads(JsNull$.MODULE$).get())
+            .isEqualTo(QuotaCountLimit.unlimited());
     }
 
     @Test
-    void quotaCountShouldReturnErrorWhenString() {
-        assertThat(DTO_JSON_SERIALIZE.quotaCountReads().reads(new JsString("18")))
+    void quotaCountLimitShouldReturnErrorWhenString() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountLimitReads().reads(new JsString("18")))
+            .isInstanceOf(JsError.class);
+    }
+
+    @Test
+    void quotaCountUsageShouldBeWellSerialized() {
+        assertThat(DTO_JSON_SERIALIZE.quotaUsageValueWrites().writes(QuotaCountUsage.count(18)))
+            .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
+    }
+
+    @Test
+    void quotaCountUsageShouldBeWellDeSerialized() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountUsageReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
+            .isEqualTo(QuotaCountUsage.count(18));
+    }
+
+    @Test
+    void quotaCountUsageShouldBeWellSerializedWhenUnlimited() {
+        assertThat(DTO_JSON_SERIALIZE.quotaUsageValueWrites().writes(QuotaCountUsage.unlimited()))
+            .isEqualTo(JsNull$.MODULE$);
+    }
+
+    @Test
+    void quotaCountUsageShouldBeWellDeSerializedWhenUnUnlimited() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountUsageReads().reads(JsNull$.MODULE$).get())
+            .isEqualTo(QuotaCountUsage.unlimited());
+    }
+
+    @Test
+    void quotaCountUsageShouldReturnErrorWhenString() {
+        assertThat(DTO_JSON_SERIALIZE.quotaCountUsageReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);
     }
 
     @Nested
     class LimitedQuotaCount {
-        private Quota<QuotaCount> limitedQuotaCountByScopes(Quota.Scope scope) {
-            return Quota.<QuotaCount>builder()
-                .used(QuotaCount.count(12))
-                .computedLimit(QuotaCount.count(100))
-                .limitForScope(QuotaCount.count(100), scope)
+        private Quota<QuotaCountLimit, QuotaCountUsage> limitedQuotaCountByScopes(Quota.Scope scope) {
+            return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+                .used(QuotaCountUsage.count(12))
+                .computedLimit(QuotaCountLimit.count(100))
+                .limitForScope(QuotaCountLimit.count(100), scope)
                 .build();
         }
 
         @Nested
         class LimitedQuotaGlobalScope {
             private final String json = "{\"used\":12,\"limit\":100,\"limits\":{\"Global\":100}}";
-            private final Quota<QuotaCount> quota = limitedQuotaCountByScopes(Quota.Scope.Global);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = limitedQuotaCountByScopes(Quota.Scope.Global);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {
@@ -100,7 +131,7 @@ class QuotaCountTest {
         @Nested
         class LimitedQuotaDomainScope {
             private final String json = "{\"used\":12,\"limit\":100,\"limits\":{\"Domain\":100}}";
-            private final Quota<QuotaCount> quota = limitedQuotaCountByScopes(Quota.Scope.Domain);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = limitedQuotaCountByScopes(Quota.Scope.Domain);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {
@@ -119,7 +150,7 @@ class QuotaCountTest {
         @Nested
         class LimitedQuotaUserScope {
             private final String json = "{\"used\":12,\"limit\":100,\"limits\":{\"User\":100}}";
-            private final Quota<QuotaCount> quota = limitedQuotaCountByScopes(Quota.Scope.User);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = limitedQuotaCountByScopes(Quota.Scope.User);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {
@@ -138,18 +169,18 @@ class QuotaCountTest {
 
     @Nested
     class UnLimitedQuotaCount {
-        private Quota<QuotaCount> unLimitedQuotaCountByScopes(Quota.Scope scope) {
-            return Quota.<QuotaCount>builder()
-                .used(QuotaCount.count(12))
-                .computedLimit(QuotaCount.unlimited())
-                .limitForScope(QuotaCount.unlimited(), scope)
+        private Quota<QuotaCountLimit, QuotaCountUsage> unLimitedQuotaCountByScopes(Quota.Scope scope) {
+            return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+                .used(QuotaCountUsage.count(12))
+                .computedLimit(QuotaCountLimit.unlimited())
+                .limitForScope(QuotaCountLimit.unlimited(), scope)
                 .build();
         }
 
         @Nested
         class UnLimitedQuotaGlobalScope {
             private final String json = "{\"used\":12,\"limit\":null,\"limits\":{\"Global\":null}}";
-            private final Quota<QuotaCount> quota = unLimitedQuotaCountByScopes(Quota.Scope.Global);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = unLimitedQuotaCountByScopes(Quota.Scope.Global);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {
@@ -168,7 +199,7 @@ class QuotaCountTest {
         @Nested
         class UnLimitedQuotaDomainScope {
             private final String json = "{\"used\":12,\"limit\":null,\"limits\":{\"Domain\":null}}";
-            private final Quota<QuotaCount> quota = unLimitedQuotaCountByScopes(Quota.Scope.Domain);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = unLimitedQuotaCountByScopes(Quota.Scope.Domain);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {
@@ -187,7 +218,7 @@ class QuotaCountTest {
         @Nested
         class UnLimitedQuotaUserScope {
             private final String json = "{\"used\":12,\"limit\":null,\"limits\":{\"User\":null}}";
-            private final Quota<QuotaCount> quota = unLimitedQuotaCountByScopes(Quota.Scope.User);
+            private final Quota<QuotaCountLimit, QuotaCountUsage> quota = unLimitedQuotaCountByScopes(Quota.Scope.User);
 
             @Test
             void toJsonShouldSerializeQuotaCount() {

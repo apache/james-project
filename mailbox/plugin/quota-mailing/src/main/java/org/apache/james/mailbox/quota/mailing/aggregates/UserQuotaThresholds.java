@@ -26,8 +26,10 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.AggregateId;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.mailbox.model.Quota;
@@ -142,7 +144,7 @@ public class UserQuotaThresholds {
         return events;
     }
 
-    private List<QuotaThresholdChangedEvent> generateEvents(QuotaThresholds configuration, Duration gracePeriod, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant now) {
+    private List<QuotaThresholdChangedEvent> generateEvents(QuotaThresholds configuration, Duration gracePeriod, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Instant now) {
         QuotaThresholdChange countThresholdChange = new QuotaThresholdChange(configuration.highestExceededThreshold(countQuota), now);
         QuotaThresholdChange sizeThresholdChange = new QuotaThresholdChange(configuration.highestExceededThreshold(sizeQuota), now);
 
@@ -172,7 +174,7 @@ public class UserQuotaThresholds {
                 .collect(Guavate.toImmutableList()));
     }
 
-    private List<QuotaThresholdChangedEvent> generateEvents(HistoryEvolution countHistoryEvolution, HistoryEvolution sizeHistoryEvolution, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota) {
+    private List<QuotaThresholdChangedEvent> generateEvents(HistoryEvolution countHistoryEvolution, HistoryEvolution sizeHistoryEvolution, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota) {
         if (countHistoryEvolution.isChange() || sizeHistoryEvolution.isChange()) {
             return ImmutableList.of(
                 new QuotaThresholdChangedEvent(

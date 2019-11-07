@@ -29,8 +29,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.cassandra.table.CassandraGlobalMaxQuota;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -81,15 +81,15 @@ public class CassandraGlobalMaxQuotaDao {
             .where(eq(CassandraGlobalMaxQuota.TYPE, bindMarker(CassandraGlobalMaxQuota.TYPE)));
     }
 
-    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+    public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
         session.execute(setGlobalMaxStorageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxStorage)));
     }
 
-    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+    public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
         session.execute(setGlobalMaxMessageStatement.bind(QuotaCodec.quotaValueToLong(globalMaxMessageCount)));
     }
 
-    public Optional<QuotaSize> getGlobalMaxStorage() {
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
         ResultSet resultSet = session.execute(getGlobalMaxStatement.bind()
             .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.STORAGE));
         if (resultSet.isExhausted()) {
@@ -99,7 +99,7 @@ public class CassandraGlobalMaxQuotaDao {
         return QuotaCodec.longToQuotaSize(maxStorage);
     }
 
-    public Optional<QuotaCount> getGlobalMaxMessage() {
+    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         ResultSet resultSet = session.execute(getGlobalMaxStatement.bind()
             .setString(CassandraGlobalMaxQuota.TYPE, CassandraGlobalMaxQuota.MESSAGE));
         if (resultSet.isExhausted()) {

@@ -38,13 +38,13 @@ import java.util.List;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -105,7 +105,7 @@ public abstract class QuotaMailingTest {
     public void shouldSendANoticeWhenThresholdExceeded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)
             .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
-                new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
+                new SerializableQuotaLimitValue<>(QuotaSizeLimit.size(100 * 1000)));
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a configured threshold
@@ -131,7 +131,7 @@ public abstract class QuotaMailingTest {
     public void configurationShouldBeWellLoaded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)
             .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
-                new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
+                new SerializableQuotaLimitValue<>(QuotaSizeLimit.size(100 * 1000)));
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a 10% configured threshold

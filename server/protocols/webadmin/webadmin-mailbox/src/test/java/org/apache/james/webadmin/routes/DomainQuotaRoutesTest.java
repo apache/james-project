@@ -27,8 +27,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Map;
 
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.eclipse.jetty.http.HttpStatus;
@@ -80,7 +80,7 @@ class DomainQuotaRoutesTest {
     @Test
     void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
-        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCount.count(value));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(value));
 
         Long actual =
             given()
@@ -133,7 +133,7 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCount.unlimited());
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.unlimited());
     }
 
     @Test
@@ -163,7 +163,7 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCount.count(42));
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.count(42));
     }
 
     @Test
@@ -176,7 +176,7 @@ class DomainQuotaRoutesTest {
 
     @Test
     void deleteCountShouldSetQuotaToEmpty() throws Exception {
-        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCount.count(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(42));
 
         given()
             .delete(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name() + "/" + COUNT)
@@ -205,7 +205,7 @@ class DomainQuotaRoutesTest {
     @Test
     void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
-        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSize.size(value));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(value));
 
         long quota =
             given()
@@ -258,7 +258,7 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSize.unlimited());
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.unlimited());
     }
 
     @Test
@@ -289,7 +289,7 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.size(42));
     }
 
     @Test
@@ -302,7 +302,7 @@ class DomainQuotaRoutesTest {
 
     @Test
     void deleteSizeShouldSetQuotaToEmpty() throws Exception {
-        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(42));
 
         given()
             .delete(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name() + "/" + SIZE)
@@ -338,7 +338,7 @@ class DomainQuotaRoutesTest {
     @Test
     void getQuotaShouldReturnSizeWhenNoCount() throws Exception {
         int maxStorage = 42;
-        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSize.size(maxStorage));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(maxStorage));
 
         String json =
             given()
@@ -360,7 +360,7 @@ class DomainQuotaRoutesTest {
     @Test
     void getQuotaShouldReturnBothWhenNoSize() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCount.count(maxMessage));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(maxMessage));
 
         String json =
             given()
@@ -382,10 +382,10 @@ class DomainQuotaRoutesTest {
     @Test
     void getQuotaShouldDisplayScopesWhenUnlimited() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.unlimited());
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
-        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCount.count(maxMessage));
-        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSize.unlimited());
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.unlimited());
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(maxMessage));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.unlimited());
 
         String json =
             given()
@@ -407,9 +407,9 @@ class DomainQuotaRoutesTest {
     @Test
     void getQuotaShouldDisplayScopedInformation() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCount.count(maxMessage));
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(32));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(36));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(maxMessage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(32));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(36));
 
         String json =
             given()
@@ -444,17 +444,17 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCount.count(52));
-        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.count(52));
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.size(42));
     }
 
     @Test
     void putQuotaWithNegativeCountShouldFail() throws MailboxException {
-        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
-        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(52));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(42));
         Map<String, Object> errors = given()
             .body("{\"count\":-5,\"size\":30}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .put(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name())
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -471,26 +471,26 @@ class DomainQuotaRoutesTest {
 
     @Test
     void putQuotaWithNegativeCountShouldNotUpdatePreviousQuota() throws MailboxException {
-        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
-        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(52));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(42));
         given()
             .body("{\"count\":-5,\"size\":30}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .put(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name())
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON);
 
-        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).contains(QuotaCount.count(52));
-        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.count(52));
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.size(42));
     }
 
     @Test
     void putQuotaWithNegativeSizeShouldFail() throws MailboxException {
-        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
-        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(52));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(42));
         Map<String, Object> errors = given()
             .body("{\"count\":40,\"size\":-19}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .put(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name())
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON)
@@ -507,17 +507,17 @@ class DomainQuotaRoutesTest {
 
     @Test
     void putQuotaWithNegativeSizeShouldNotUpdatePreviousQuota() throws MailboxException {
-        maxQuotaManager.setDomainMaxMessage(TROUVÉ_COM, QuotaCount.count(52));
-        maxQuotaManager.setDomainMaxStorage(TROUVÉ_COM, QuotaSize.size(42));
+        maxQuotaManager.setDomainMaxMessage(FOUND_LOCAL, QuotaCountLimit.count(52));
+        maxQuotaManager.setDomainMaxStorage(FOUND_LOCAL, QuotaSizeLimit.size(42));
         given()
             .body("{\"count\":40,\"size\":-19}")
-            .put(QUOTA_DOMAINS + "/" + TROUVÉ_COM.name())
+            .put(QUOTA_DOMAINS + "/" + FOUND_LOCAL.name())
         .then()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON);
 
-        assertThat(maxQuotaManager.getDomainMaxMessage(TROUVÉ_COM)).contains(QuotaCount.count(52));
-        assertThat(maxQuotaManager.getDomainMaxStorage(TROUVÉ_COM)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.count(52));
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.size(42));
     }
 
     @Test
@@ -554,7 +554,7 @@ class DomainQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).contains(QuotaSizeLimit.size(42));
         assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).isEmpty();
     }
 
@@ -574,7 +574,7 @@ class DomainQuotaRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         assertThat(maxQuotaManager.getDomainMaxStorage(FOUND_LOCAL)).isEmpty();
-        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCount.count(52));
+        assertThat(maxQuotaManager.getDomainMaxMessage(FOUND_LOCAL)).contains(QuotaCountLimit.count(52));
     }
 
 

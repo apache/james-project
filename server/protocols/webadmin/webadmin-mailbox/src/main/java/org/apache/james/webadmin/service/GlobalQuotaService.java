@@ -22,8 +22,8 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
@@ -38,14 +38,14 @@ public class GlobalQuotaService {
     }
 
     public void defineQuota(ValidatedQuotaDTO quota) throws MailboxException {
-        Optional<QuotaCount> count = quota.getCount();
+        Optional<QuotaCountLimit> count = quota.getCount();
         if (count.isPresent()) {
             maxQuotaManager.setGlobalMaxMessage(count.get());
         } else {
             maxQuotaManager.removeGlobalMaxMessage();
         }
 
-        Optional<QuotaSize> size = quota.getSize();
+        Optional<QuotaSizeLimit> size = quota.getSize();
         if (size.isPresent()) {
             maxQuotaManager.setGlobalMaxStorage(size.get());
         } else {
@@ -61,11 +61,11 @@ public class GlobalQuotaService {
             .build();
     }
 
-    public Optional<QuotaSize> getMaxSizeQuota() throws MailboxException {
+    public Optional<QuotaSizeLimit> getMaxSizeQuota() throws MailboxException {
         return maxQuotaManager.getGlobalMaxStorage();
     }
 
-    public void defineMaxSizeQuota(QuotaSize quotaRequest) throws MailboxException {
+    public void defineMaxSizeQuota(QuotaSizeLimit quotaRequest) throws MailboxException {
         maxQuotaManager.setGlobalMaxStorage(quotaRequest);
     }
 
@@ -73,11 +73,11 @@ public class GlobalQuotaService {
         maxQuotaManager.removeGlobalMaxStorage();
     }
 
-    public Optional<QuotaCount> getMaxCountQuota() throws MailboxException {
+    public Optional<QuotaCountLimit> getMaxCountQuota() throws MailboxException {
         return maxQuotaManager.getGlobalMaxMessage();
     }
 
-    public void defineMaxCountQuota(QuotaCount value) throws MailboxException {
+    public void defineMaxCountQuota(QuotaCountLimit value) throws MailboxException {
         maxQuotaManager.setGlobalMaxMessage(value);
     }
 

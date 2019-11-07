@@ -22,9 +22,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaLimitValue;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.core.quota.QuotaUsageValue;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.mailbox.model.QuotaRoot;
 
@@ -84,23 +87,23 @@ public class Quotas {
     }
 
     public static class Quota {
-        private final Map<Type, Value<?>> quota;
+        private final Map<Type, Value<?, ?>> quota;
 
-        public static Quota from(ImmutableMap<Type, Value<?>> quota) {
+        public static Quota from(ImmutableMap<Type, Value<?, ?>> quota) {
             return new Quota(quota);
         }
 
-        public static Quota from(Value<QuotaSize> storage, Value<QuotaCount> message) {
+        public static Quota from(Value<QuotaSizeLimit, QuotaSizeUsage> storage, Value<QuotaCountLimit, QuotaCountUsage> message) {
             return new Quota(ImmutableMap.of(Type.STORAGE, storage,
                 Type.MESSAGE, message));
         }
 
-        private Quota(ImmutableMap<Type, Value<?>> quota) {
+        private Quota(ImmutableMap<Type, Value<?, ?>> quota) {
             this.quota = quota;
         }
 
         @JsonValue
-        public Map<Type, Value<?>> getQuota() {
+        public Map<Type, Value<?, ?>> getQuota() {
             return quota;
         }
     }
@@ -110,7 +113,7 @@ public class Quotas {
         MESSAGE;
     }
 
-    public static class Value<T extends QuotaValue<T>> {
+    public static class Value<T extends QuotaLimitValue<T>, U extends QuotaUsageValue<U, T>> {
         private final Number used;
         private final Optional<Number> max;
         

@@ -24,15 +24,15 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 
 public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
 
-    private Optional<QuotaSize> globalQuota = Optional.empty();
+    private Optional<QuotaSizeLimit> globalQuota = Optional.empty();
 
-    private Map<Username, QuotaSize> userQuota = new ConcurrentHashMap<>();
+    private Map<Username, QuotaSizeLimit> userQuota = new ConcurrentHashMap<>();
 
     @Override
     public synchronized boolean hasDefaultQuota() {
@@ -40,12 +40,12 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public synchronized QuotaSize getDefaultQuota() throws QuotaNotFoundException {
+    public synchronized QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException {
         return globalQuota.orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public synchronized void setDefaultQuota(QuotaSize quota) {
+    public synchronized void setDefaultQuota(QuotaSizeLimit quota) {
         this.globalQuota = Optional.of(quota);
     }
 
@@ -63,19 +63,19 @@ public class InMemorySieveQuotaRepository implements SieveQuotaRepository {
     }
 
     @Override
-    public QuotaSize getQuota(Username username) throws QuotaNotFoundException {
+    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException {
         return Optional.ofNullable(userQuota.get(username))
             .orElseThrow(QuotaNotFoundException::new);
     }
 
     @Override
-    public synchronized void setQuota(Username username, QuotaSize quota) {
+    public synchronized void setQuota(Username username, QuotaSizeLimit quota) {
         userQuota.put(username, quota);
     }
 
     @Override
     public synchronized void removeQuota(Username username) throws QuotaNotFoundException {
-        Optional<QuotaSize> quotaValue = Optional.ofNullable(userQuota.get(username));
+        Optional<QuotaSizeLimit> quotaValue = Optional.ofNullable(userQuota.get(username));
         if (!quotaValue.isPresent()) {
             throw new QuotaNotFoundException();
         }

@@ -16,35 +16,34 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
-package org.apache.james.mailbox.store.quota;
+package org.apache.james.webadmin.dto;
 
 import org.apache.james.core.quota.QuotaCountLimit;
-import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.model.Quota;
-import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.quota.QuotaManager;
+import org.apache.james.webadmin.utils.JsonExtractException;
+import org.apache.james.webadmin.utils.JsonExtractor;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
 
-/**
- * This quota manager is intended to be used when you want to deactivate the Quota feature
- */
-public class NoQuotaManager implements QuotaManager {
+import com.fasterxml.jackson.databind.module.SimpleModule;
 
-    @Override
-    public Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) {
-        return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
-            .used(QuotaCountUsage.count(0))
-            .computedLimit(QuotaCountLimit.unlimited())
-            .build();
+class QuotaLimitValueDeserializerTest {
+
+    @Test
+    void objectDeserializeShouldContainGivenValues() throws JsonExtractException {
+        String payload = "{\"count\":52,\"size\":42}";
+        ValidatedQuotaDTO actual = new JsonExtractor<>(ValidatedQuotaDTO.class,
+            new SimpleModule()
+                .addDeserializer(QuotaCountLimit.class, new QuotaValueDeserializer<>(QuotaCountLimit.unlimited(), QuotaCountLimit::count))
+                .addDeserializer(QuotaSizeLimit.class, new QuotaValueDeserializer<>(QuotaSizeLimit.unlimited(), QuotaSizeLimit::size))
+        ).parse(payload);
+        Assertions.assertThat(actual)
+            .isEqualTo(
+                ValidatedQuotaDTO
+                    .builder()
+                    .count(java.util.Optional.of(QuotaCountLimit.count(52)))
+                    .size(java.util.Optional.of(QuotaSizeLimit.size(42)))
+                    .build());
     }
 
-    @Override
-    public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) {
-        return Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
-            .used(QuotaSizeUsage.size(0))
-            .computedLimit(QuotaSizeLimit.unlimited())
-            .build();
-    }
 }

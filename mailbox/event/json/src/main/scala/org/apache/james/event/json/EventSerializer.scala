@@ -25,7 +25,7 @@ import java.util.{TreeMap => JavaTreeMap}
 import javax.inject.Inject
 import julienrf.json.derived
 import org.apache.james.core.Username
-import org.apache.james.core.quota.{QuotaCount, QuotaSize, QuotaValue}
+import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaLimitValue, QuotaSizeLimit, QuotaSizeUsage, QuotaUsageValue}
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.mailbox.MailboxSession.SessionId
@@ -53,7 +53,7 @@ private object DTO {
   }
 
   case class MailboxDeletion(eventId: EventId, sessionId: SessionId, user: Username, path: MailboxPath, quotaRoot: QuotaRoot,
-                             deletedMessageCount: QuotaCount, totalDeletedSize: QuotaSize, mailboxId: MailboxId) extends Event {
+                             deletedMessageCount: QuotaCountUsage, totalDeletedSize: QuotaSizeUsage, mailboxId: MailboxId) extends Event {
     override def toJava: JavaEvent = new JavaMailboxDeletion(sessionId, user, path.toJava, quotaRoot, deletedMessageCount,
       totalDeletedSize, mailboxId, eventId)
   }
@@ -62,8 +62,8 @@ private object DTO {
     override def toJava: JavaEvent = new JavaMailboxRenamed(sessionId, user, path.toJava, mailboxId, newPath.toJava, eventId)
   }
 
-  case class QuotaUsageUpdatedEvent(eventId: EventId, user: Username, quotaRoot: QuotaRoot, countQuota: Quota[QuotaCount],
-                                    sizeQuota: Quota[QuotaSize], time: Instant) extends Event {
+  case class QuotaUsageUpdatedEvent(eventId: EventId, user: Username, quotaRoot: QuotaRoot, countQuota: Quota[QuotaCountLimit, QuotaCountUsage],
+                                    sizeQuota: Quota[QuotaSizeLimit, QuotaSizeUsage], time: Instant) extends Event {
     override def toJava: JavaEvent = new JavaQuotaUsageUpdatedEvent(eventId, user, quotaRoot, countQuota.toJava, sizeQuota.toJava, time)
   }
 
@@ -205,10 +205,11 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val systemFlagsWrites: Writes[SystemFlag] = Writes.enumNameWrites
   implicit val userWriters: Writes[Username] = (user: Username) => JsString(user.asString)
   implicit val quotaRootWrites: Writes[QuotaRoot] = quotaRoot => JsString(quotaRoot.getValue)
-  implicit val quotaValueWrites: Writes[QuotaValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
+  implicit val quotaUsageValueWrites: Writes[QuotaUsageValue[_, _]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
+  implicit val quotaLimitValueWrites: Writes[QuotaLimitValue[_]] = value => if (value.isUnlimited) JsNull else JsNumber(value.asLong())
   implicit val quotaScopeWrites: Writes[JavaQuota.Scope] = value => JsString(value.name)
-  implicit val quotaCountWrites: Writes[Quota[QuotaCount]] = Json.writes[Quota[QuotaCount]]
-  implicit val quotaSizeWrites: Writes[Quota[QuotaSize]] = Json.writes[Quota[QuotaSize]]
+  implicit val quotaCountWrites: Writes[Quota[QuotaCountLimit, QuotaCountUsage]] = Json.writes[Quota[QuotaCountLimit, QuotaCountUsage]]
+  implicit val quotaSizeWrites: Writes[Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.writes[Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathWrites: Writes[MailboxPath] = Json.writes[MailboxPath]
   implicit val mailboxIdWrites: Writes[MailboxId] = value => JsString(value.serialize())
   implicit val sessionIdWrites: Writes[SessionId] = value => JsNumber(value.getValue)
@@ -238,9 +239,14 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case JsString(serializedMailboxId) => JsSuccess(mailboxIdFactory.fromString(serializedMailboxId))
     case _ => JsError()
   }
-  implicit val quotaCountReads: Reads[QuotaCount] = {
-    case JsNumber(count) => JsSuccess(QuotaCount.count(count.toLong))
-    case JsNull => JsSuccess(QuotaCount.unlimited())
+  implicit val quotaCountLimitReads: Reads[QuotaCountLimit] = {
+    case JsNumber(count) => JsSuccess(QuotaCountLimit.count(count.toLong))
+    case JsNull => JsSuccess(QuotaCountLimit.unlimited())
+    case _ => JsError()
+  }
+  implicit val quotaCountUsageReads: Reads[QuotaCountUsage] = {
+    case JsNumber(count) => JsSuccess(QuotaCountUsage.count(count.toLong))
+    case JsNull => JsSuccess(QuotaCountUsage.unlimited())
     case _ => JsError()
   }
   implicit val quotaRootReads: Reads[QuotaRoot] = {
@@ -251,9 +257,14 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case JsString(value) => JsSuccess(JavaQuota.Scope.valueOf(value))
     case _ => JsError()
   }
-  implicit val quotaSizeReads: Reads[QuotaSize] = {
-    case JsNumber(size) => JsSuccess(QuotaSize.size(size.toLong))
-    case JsNull => JsSuccess(QuotaSize.unlimited())
+  implicit val quotaSizeLimitReads: Reads[QuotaSizeLimit] = {
+    case JsNumber(size) => JsSuccess(QuotaSizeLimit.size(size.toLong))
+    case JsNull => JsSuccess(QuotaSizeLimit.unlimited())
+    case _ => JsError()
+  }
+  implicit val quotaSizeUsageReads: Reads[QuotaSizeUsage] = {
+    case JsNumber(size) => JsSuccess(QuotaSizeUsage.size(size.toLong))
+    case JsNull => JsSuccess(QuotaSizeUsage.unlimited())
     case _ => JsError()
   }
   implicit val sessionIdReads: Reads[SessionId] = {
@@ -314,8 +325,8 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
 
   implicit val flagsReads: Reads[Flags] = Json.reads[Flags]
   implicit val aclDiffReads: Reads[ACLDiff] = Json.reads[ACLDiff]
-  implicit val quotaCReads: Reads[DTOs.Quota[QuotaCount]] = Json.reads[DTOs.Quota[QuotaCount]]
-  implicit val quotaSReads: Reads[DTOs.Quota[QuotaSize]] = Json.reads[DTOs.Quota[QuotaSize]]
+  implicit val quotaCReads: Reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]] = Json.reads[DTOs.Quota[QuotaCountLimit, QuotaCountUsage]]
+  implicit val quotaSReads: Reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]] = Json.reads[DTOs.Quota[QuotaSizeLimit, QuotaSizeUsage]]
   implicit val mailboxPathReads: Reads[DTOs.MailboxPath] = Json.reads[DTOs.MailboxPath]
   implicit val messageMetaDataReads: Reads[DTOs.MessageMetaData] = Json.reads[DTOs.MessageMetaData]
   implicit val updatedFlagsReads: Reads[DTOs.UpdatedFlags] = Json.reads[DTOs.UpdatedFlags]

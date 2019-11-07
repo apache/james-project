@@ -25,13 +25,13 @@ import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._95;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._99;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.QuotaFixture.Sizes;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class QuotaThresholdsTest {
@@ -46,9 +46,9 @@ public class QuotaThresholdsTest {
     public void highestExceededThresholdShouldReturnZeroWhenBelowAllThresholds() {
         assertThat(
             new QuotaThresholds(ImmutableList.of(_50, _80, _95, _99))
-                .highestExceededThreshold(Quota.<QuotaSize>builder()
-                    .used(QuotaSize.size(40))
-                    .computedLimit(QuotaSize.size(100))
+                .highestExceededThreshold(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                    .used(QuotaSizeUsage.size(40))
+                    .computedLimit(QuotaSizeLimit.size(100))
                     .build()))
             .isEqualTo(QuotaThreshold.ZERO);
     }
@@ -81,9 +81,9 @@ public class QuotaThresholdsTest {
     public void highestExceededThresholdShouldReturnZeroWhenUnlimitedQuota() {
         assertThat(
             new QuotaThresholds(ImmutableList.of(_50, _80, _95, _99))
-                .highestExceededThreshold(Quota.<QuotaSize>builder()
-                    .used(QuotaSize.size(992))
-                    .computedLimit(QuotaSize.unlimited())
+                .highestExceededThreshold(Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+                    .used(QuotaSizeUsage.size(992))
+                    .computedLimit(QuotaSizeLimit.unlimited())
                     .build()))
             .isEqualTo(QuotaThreshold.ZERO);
     }

@@ -31,8 +31,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.events.Event;
@@ -89,8 +89,8 @@ public class MailboxAnnotationListenerTest {
             .mailboxId(mailboxId)
             .mailboxPath(MailboxPath.forUser(USER, "name"))
             .quotaRoot(QuotaRoot.quotaRoot("root", Optional.empty()))
-            .quotaCount(QuotaCount.count(123))
-            .quotaSize(QuotaSize.size(456))
+            .quotaCount(QuotaCountUsage.count(123))
+            .quotaSize(QuotaSizeUsage.size(456))
             .build();
 
         when(sessionProvider.createSystemSession(deleteEvent.getUsername()))

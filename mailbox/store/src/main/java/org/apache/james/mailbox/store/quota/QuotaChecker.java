@@ -19,8 +19,10 @@
 
 package org.apache.james.mailbox.store.quota;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -31,8 +33,8 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 
 public class QuotaChecker {
 
-    private final Quota<QuotaCount> messageQuota;
-    private final Quota<QuotaSize> sizeQuota;
+    private final Quota<QuotaCountLimit, QuotaCountUsage> messageQuota;
+    private final Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota;
     private final QuotaRoot quotaRoot;
 
     public QuotaChecker(QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Mailbox mailbox) throws MailboxException {
@@ -41,7 +43,7 @@ public class QuotaChecker {
         this.sizeQuota = quotaManager.getStorageQuota(quotaRoot);
     }
 
-    public QuotaChecker(Quota<QuotaCount> messageQuota, Quota<QuotaSize> sizeQuota, QuotaRoot quotaRoot) {
+    public QuotaChecker(Quota<QuotaCountLimit, QuotaCountUsage> messageQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, QuotaRoot quotaRoot) {
         this.messageQuota = messageQuota;
         this.sizeQuota = sizeQuota;
         this.quotaRoot = quotaRoot;
@@ -53,7 +55,7 @@ public class QuotaChecker {
     }
 
     private void trySizeAddition(long size) throws OverQuotaException {
-        Quota<QuotaSize> afterAdditionQuotaSize = sizeQuota.addValueToQuota(QuotaSize.size(size));
+        Quota<QuotaSizeLimit, QuotaSizeUsage> afterAdditionQuotaSize = sizeQuota.addValueToQuota(QuotaSizeUsage.size(size));
         if (afterAdditionQuotaSize.isOverQuota()) {
             throw new OverQuotaException(
                 "You use too much space in " + quotaRoot.getValue(),
@@ -63,7 +65,7 @@ public class QuotaChecker {
     }
 
     private void tryCountAddition(long count) throws OverQuotaException {
-        Quota<QuotaCount> afterAdditionQuotaCount = messageQuota.addValueToQuota(QuotaCount.count(count));
+        Quota<QuotaCountLimit, QuotaCountUsage> afterAdditionQuotaCount = messageQuota.addValueToQuota(QuotaCountUsage.count(count));
         if (afterAdditionQuotaCount.isOverQuota()) {
             throw new OverQuotaException(
                 "You have too many messages in " + quotaRoot.getValue(),

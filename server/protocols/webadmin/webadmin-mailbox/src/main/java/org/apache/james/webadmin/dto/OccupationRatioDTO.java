@@ -19,14 +19,16 @@
 
 package org.apache.james.webadmin.dto;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRatio;
 
 public class OccupationRatioDTO {
 
-    public static OccupationRatioDTO from(Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota) {
+    public static OccupationRatioDTO from(Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Quota<QuotaCountLimit, QuotaCountUsage> countQuota) {
         return new OccupationRatioDTO(
             sizeQuota.getRatio(),
             countQuota.getRatio(),

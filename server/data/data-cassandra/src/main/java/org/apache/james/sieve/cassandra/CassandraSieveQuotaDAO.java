@@ -33,7 +33,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveClusterQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveQuotaTable;
 import org.apache.james.sieve.cassandra.tables.CassandraSieveSpaceTable;
@@ -114,15 +114,15 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveSpaceTable.USER_NAME, username.asString()));
     }
 
-    public Mono<Optional<QuotaSize>> getQuota() {
+    public Mono<Optional<QuotaSizeLimit>> getQuota() {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             selectClusterQuotaStatement.bind()
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME))
             .map(optional -> optional.map(row ->
-                QuotaSize.size(row.getLong(CassandraSieveClusterQuotaTable.VALUE))));
+                QuotaSizeLimit.size(row.getLong(CassandraSieveClusterQuotaTable.VALUE))));
     }
 
-    public Mono<Void> setQuota(QuotaSize quota) {
+    public Mono<Void> setQuota(QuotaSizeLimit quota) {
         return cassandraAsyncExecutor.executeVoid(
             updateClusterQuotaStatement.bind()
                 .setLong(CassandraSieveClusterQuotaTable.VALUE, quota.asLong())
@@ -135,15 +135,15 @@ public class CassandraSieveQuotaDAO {
                 .setString(CassandraSieveClusterQuotaTable.NAME, CassandraSieveClusterQuotaTable.DEFAULT_NAME));
     }
 
-    public Mono<Optional<QuotaSize>> getQuota(Username username) {
+    public Mono<Optional<QuotaSizeLimit>> getQuota(Username username) {
         return cassandraAsyncExecutor.executeSingleRowOptional(
             selectUserQuotaStatement.bind()
                 .setString(CassandraSieveQuotaTable.USER_NAME, username.asString()))
             .map(optional -> optional.map(row ->
-                QuotaSize.size(row.getLong(CassandraSieveQuotaTable.QUOTA))));
+                QuotaSizeLimit.size(row.getLong(CassandraSieveQuotaTable.QUOTA))));
     }
 
-    public Mono<Void> setQuota(Username username, QuotaSize quota) {
+    public Mono<Void> setQuota(Username username, QuotaSizeLimit quota) {
         return cassandraAsyncExecutor.executeVoid(
             updateUserQuotaStatement.bind()
                 .setLong(CassandraSieveQuotaTable.QUOTA, quota.asLong())

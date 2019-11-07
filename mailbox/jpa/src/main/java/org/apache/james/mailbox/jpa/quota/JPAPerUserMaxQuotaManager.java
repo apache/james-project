@@ -28,8 +28,8 @@ import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -47,22 +47,22 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSize maxStorageQuota) {
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxStorageQuota) {
         dao.setMaxStorage(quotaRoot, Optional.of(maxStorageQuota));
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
         dao.setMaxMessage(quotaRoot, Optional.of(maxMessageCount));
     }
 
     @Override
-    public void setDomainMaxMessage(Domain domain, QuotaCount count) {
+    public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) {
         dao.setDomainMaxMessage(domain, Optional.of(count));
     }
 
     @Override
-    public void setDomainMaxStorage(Domain domain, QuotaSize size) {
+    public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) {
         dao.setDomainMaxStorage(domain, Optional.of(size));
     }
 
@@ -77,12 +77,12 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+    public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
         return dao.getDomainMaxMessage(domain);
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+    public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
         return dao.getDomainMaxStorage(domain);
     }
 
@@ -92,7 +92,7 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setGlobalMaxStorage(QuotaSize globalMaxStorage) {
+    public void setGlobalMaxStorage(QuotaSizeLimit globalMaxStorage) {
         dao.setGlobalMaxStorage(Optional.of(globalMaxStorage));
     }
 
@@ -102,23 +102,23 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setGlobalMaxMessage(QuotaCount globalMaxMessageCount) {
+    public void setGlobalMaxMessage(QuotaCountLimit globalMaxMessageCount) {
         dao.setGlobalMaxMessage(Optional.of(globalMaxMessageCount));
     }
 
     @Override
-    public Optional<QuotaSize> getGlobalMaxStorage() {
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
         return dao.getGlobalMaxStorage();
     }
 
     @Override
-    public Optional<QuotaCount> getGlobalMaxMessage() {
+    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         return dao.getGlobalMaxMessage();
     }
 
     @Override
-    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaCount>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
+    public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaCountLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxMessage(quotaRoot)),
             Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
@@ -128,8 +128,8 @@ public class JPAPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaSize>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
+    public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaSizeLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
         return Stream.of(
             Pair.of(Quota.Scope.User, dao.getMaxStorage(quotaRoot)),
             Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),

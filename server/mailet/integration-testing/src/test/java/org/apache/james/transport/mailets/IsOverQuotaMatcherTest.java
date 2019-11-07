@@ -26,8 +26,8 @@ import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMin
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.MemoryJamesServerMain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
@@ -58,10 +58,10 @@ public class IsOverQuotaMatcherTest {
     private static final String BOUNCE_SENDER = "bounce.sender@" + DEFAULT_DOMAIN;
 
     private static final String OVER_QUOTA_MESSAGE = "The recipient is over quota";
-    private static final QuotaSize SMALL_SIZE = QuotaSize.size(1);
-    private static final QuotaSize LARGE_SIZE = QuotaSize.size(10000);
-    private static final QuotaCount SMALL_COUNT = QuotaCount.count(0);
-    private static final QuotaCount LARGE_COUNT = QuotaCount.count(100);
+    private static final QuotaSizeLimit SMALL_SIZE = QuotaSizeLimit.size(1);
+    private static final QuotaSizeLimit LARGE_SIZE = QuotaSizeLimit.size(10000);
+    private static final QuotaCountLimit SMALL_COUNT = QuotaCountLimit.count(0);
+    private static final QuotaCountLimit LARGE_COUNT = QuotaCountLimit.count(100);
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();

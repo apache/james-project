@@ -21,8 +21,8 @@ package org.apache.james.mpt.host;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mpt.api.ImapFeatures;
@@ -118,7 +118,7 @@ public class ExternalHostSystem extends ExternalSessionFactory implements ImapHo
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) throws Exception {
+    public void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) throws Exception {
         throw new NotImplementedException("Not implemented");
     }
 

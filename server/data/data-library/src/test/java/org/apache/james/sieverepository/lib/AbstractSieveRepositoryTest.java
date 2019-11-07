@@ -29,7 +29,7 @@ import java.time.ZonedDateTime;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.ScriptSummary;
@@ -49,8 +49,8 @@ public abstract class AbstractSieveRepositoryTest {
 
     private static final ScriptName OTHER_SCRIPT_NAME = new ScriptName("other_script");
     private static final ScriptContent OTHER_SCRIPT_CONTENT = new ScriptContent("Other script content");
-    private static final QuotaSize DEFAULT_QUOTA = QuotaSize.size(Long.MAX_VALUE - 1L);
-    private static final QuotaSize USER_QUOTA = QuotaSize.size(Long.MAX_VALUE / 2);
+    private static final QuotaSizeLimit DEFAULT_QUOTA = QuotaSizeLimit.size(Long.MAX_VALUE - 1L);
+    private static final QuotaSizeLimit USER_QUOTA = QuotaSizeLimit.size(Long.MAX_VALUE / 2);
 
     protected SieveRepository sieveRepository;
 
@@ -162,15 +162,15 @@ public abstract class AbstractSieveRepositoryTest {
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenScriptTooBig() throws Exception {
-        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
     @Test(expected = QuotaExceededException.class)
     public void putScriptShouldThrowWhenQuotaChangedInBetween() throws Exception {
-        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length()));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(SCRIPT_CONTENT.length()));
         sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
-        sieveRepository.setDefaultQuota(QuotaSize.size(SCRIPT_CONTENT.length() - 1));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(SCRIPT_CONTENT.length() - 1));
         sieveRepository.putScript(USERNAME, SCRIPT_NAME, SCRIPT_CONTENT);
     }
 
@@ -348,8 +348,8 @@ public abstract class AbstractSieveRepositoryTest {
     @Test
     public void setQuotaShouldOverrideExistingQuota() throws Exception {
         sieveRepository.setQuota(USERNAME, USER_QUOTA);
-        sieveRepository.setQuota(USERNAME, QuotaSize.size(USER_QUOTA.asLong() - 1));
-        assertThat(sieveRepository.getQuota(USERNAME)).isEqualTo(QuotaSize.size(USER_QUOTA.asLong() - 1));
+        sieveRepository.setQuota(USERNAME, QuotaSizeLimit.size(USER_QUOTA.asLong() - 1));
+        assertThat(sieveRepository.getQuota(USERNAME)).isEqualTo(QuotaSizeLimit.size(USER_QUOTA.asLong() - 1));
     }
 
     protected ScriptContent getScriptContent(InputStream inputStream) throws IOException {

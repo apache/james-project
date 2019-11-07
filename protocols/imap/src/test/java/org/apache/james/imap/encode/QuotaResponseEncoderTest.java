@@ -21,8 +21,10 @@ package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
@@ -38,7 +40,7 @@ public class QuotaResponseEncoderTest {
     @Test
     public void quotaMessageResponseShouldBeWellFormatted() throws Exception {
         QuotaResponse response = new QuotaResponse("MESSAGE", "root",
-            Quota.<QuotaCount>builder().used(QuotaCount.count(231)).computedLimit(QuotaCount.count(1024)).build());
+            Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(231)).computedLimit(QuotaCountLimit.count(1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
@@ -50,7 +52,7 @@ public class QuotaResponseEncoderTest {
     @Test
     public void quotaStorageResponseShouldBeWellFormatted() throws Exception {
         QuotaResponse response = new QuotaResponse("STORAGE", "root",
-        Quota.<QuotaSize>builder().used(QuotaSize.size(231 * 1024)).computedLimit(QuotaSize.size(1024 * 1024)).build());
+        Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(231 * 1024)).computedLimit(QuotaSizeLimit.size(1024 * 1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());

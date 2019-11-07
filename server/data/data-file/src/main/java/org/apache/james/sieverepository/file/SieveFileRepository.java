@@ -42,7 +42,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -381,7 +381,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getDefaultQuota() throws QuotaNotFoundException, StorageException {
+    public QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException, StorageException {
         Long quota = null;
         File file = getQuotaFile();
         if (file.exists()) {
@@ -394,7 +394,7 @@ public class SieveFileRepository implements SieveRepository {
         if (null == quota) {
             throw new QuotaNotFoundException("No default quota");
         }
-        return QuotaSize.size(quota);
+        return QuotaSizeLimit.size(quota);
     }
 
     @Override
@@ -411,7 +411,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public synchronized void setDefaultQuota(QuotaSize quota) throws StorageException {
+    public synchronized void setDefaultQuota(QuotaSizeLimit quota) throws StorageException {
         File file = getQuotaFile();
         String content = Long.toString(quota.asLong());
         toFile(file, content);
@@ -427,7 +427,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getQuota(Username username) throws QuotaNotFoundException, StorageException {
+    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException, StorageException {
         Long quota = null;
         File file = getQuotaFile(username);
         if (file.exists()) {
@@ -440,7 +440,7 @@ public class SieveFileRepository implements SieveRepository {
         if (null == quota) {
             throw new QuotaNotFoundException("No quota for user: " + username.asString());
         }
-        return QuotaSize.size(quota);
+        return QuotaSizeLimit.size(quota);
     }
 
     @Override
@@ -459,7 +459,7 @@ public class SieveFileRepository implements SieveRepository {
     }
 
     @Override
-    public void setQuota(Username username, QuotaSize quota) throws StorageException {
+    public void setQuota(Username username, QuotaSizeLimit quota) throws StorageException {
         synchronized (lock) {
             File file = getQuotaFile(username);
             String content = Long.toString(quota.asLong());

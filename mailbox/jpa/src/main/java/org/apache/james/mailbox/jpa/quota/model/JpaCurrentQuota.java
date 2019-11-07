@@ -24,8 +24,8 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 
 @Entity(name = "CurrentQuota")
 @Table(name = "JAMES_QUOTA_CURRENTQUOTA")
@@ -50,12 +50,12 @@ public class JpaCurrentQuota {
         this.size = size;
     }
 
-    public QuotaCount getMessageCount() {
-        return QuotaCount.count(messageCount);
+    public QuotaCountUsage getMessageCount() {
+        return QuotaCountUsage.count(messageCount);
     }
 
-    public QuotaSize getSize() {
-        return QuotaSize.size(size);
+    public QuotaSizeUsage getSize() {
+        return QuotaSizeUsage.size(size);
     }
 
     @Override

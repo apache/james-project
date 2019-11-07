@@ -55,8 +55,8 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
@@ -68,7 +68,7 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.mime4j.dom.Message;
@@ -788,7 +788,7 @@ public abstract class GetMailboxesMethodTest {
     @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnMaxStorageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setGlobalMaxStorage(SerializableQuotaValue.valueOf(Optional.of(QuotaSize.size(42))));
+        quotaProbe.setGlobalMaxStorage(SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(42))));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
@@ -805,7 +805,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnMaxMessageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setGlobalMaxMessageCount(SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(43))));
+        quotaProbe.setGlobalMaxMessageCount(SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(43))));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
@@ -829,8 +829,8 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobMailboxPath = MailboxPath.forUser(BOB, sharedMailboxName);
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup, Right.Read));
 
-        quotaProbe.setMaxMessageCount("#private&alice@domain.tld", SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(42))));
-        quotaProbe.setMaxMessageCount("#private&bob@domain.tld", SerializableQuotaValue.valueOf(Optional.of(QuotaCount.count(43))));
+        quotaProbe.setMaxMessageCount("#private&alice@domain.tld", SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(42))));
+        quotaProbe.setMaxMessageCount("#private&bob@domain.tld", SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(43))));
 
         given()
             .header("Authorization", accessToken.serialize())

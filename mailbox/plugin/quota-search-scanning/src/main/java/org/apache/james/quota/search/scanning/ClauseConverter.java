@@ -26,8 +26,10 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRatio;
@@ -93,8 +95,8 @@ public class ClauseConverter {
     private double retrieveUserRatio(Username username) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.forUser(username);
-            Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
-            Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+            Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotaManager.getStorageQuota(quotaRoot);
+            Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotaManager.getMessageQuota(quotaRoot);
 
             return QuotaRatio.from(storageQuota, messageQuota).max();
         } catch (MailboxException e) {

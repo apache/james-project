@@ -24,14 +24,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSieveQuotaDAOTest {
     private static final Username USERNAME = Username.of("user");
-    private static final QuotaSize QUOTA_SIZE = QuotaSize.size(15L);
+    private static final QuotaSizeLimit QUOTA_SIZE = QuotaSizeLimit.size(15L);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSieveRepositoryModule.MODULE);

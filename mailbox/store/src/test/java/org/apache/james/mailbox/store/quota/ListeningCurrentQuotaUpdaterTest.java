@@ -35,8 +35,8 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventBus;
@@ -144,8 +144,8 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void mailboxDeletionEventShouldDecreaseCurrentQuotaValues() throws Exception {
         MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
-        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(10));
-        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(5));
+        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCountUsage.count(10));
+        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSizeUsage.size(5));
         when(deletion.getMailboxId()).thenReturn(MAILBOX_ID);
         when(deletion.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);
@@ -159,8 +159,8 @@ public class ListeningCurrentQuotaUpdaterTest {
     public void mailboxDeletionEventShouldDoNothingWhenEmptyMailbox() throws Exception {
         MailboxListener.MailboxDeletion deletion = mock(MailboxListener.MailboxDeletion.class);
         when(deletion.getQuotaRoot()).thenReturn(QUOTA_ROOT);
-        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCount.count(0));
-        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSize.size(0));
+        when(deletion.getDeletedMessageCount()).thenReturn(QuotaCountUsage.count(0));
+        when(deletion.getTotalDeletedSize()).thenReturn(QuotaSizeUsage.size(0));
         when(deletion.getMailboxId()).thenReturn(MAILBOX_ID);
         when(deletion.getUsername()).thenReturn(USERNAME_BENWA);
         when(mockedQuotaRootResolver.getQuotaRoot(eq(MAILBOX_ID))).thenReturn(QUOTA_ROOT);

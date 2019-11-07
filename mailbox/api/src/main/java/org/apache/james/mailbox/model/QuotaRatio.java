@@ -20,33 +20,35 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class QuotaRatio {
 
-    public static QuotaRatio from(Quota<QuotaSize> quotaSize, Quota<QuotaCount> quotaCount) {
+    public static QuotaRatio from(Quota<QuotaSizeLimit, QuotaSizeUsage> quotaSize, Quota<QuotaCountLimit, QuotaCountUsage> quotaCount) {
         return new QuotaRatio(quotaSize, quotaCount);
     }
 
-    private final Quota<QuotaSize> quotaSize;
-    private final Quota<QuotaCount> quotaCount;
+    private final Quota<QuotaSizeLimit, QuotaSizeUsage> quotaSize;
+    private final Quota<QuotaCountLimit, QuotaCountUsage> quotaCount;
 
-    private QuotaRatio(Quota<QuotaSize> quotaSize, Quota<QuotaCount> quotaCount) {
+    private QuotaRatio(Quota<QuotaSizeLimit, QuotaSizeUsage> quotaSize, Quota<QuotaCountLimit, QuotaCountUsage> quotaCount) {
         Preconditions.checkNotNull(quotaSize, "'quotaSize' is mandatory");
         Preconditions.checkNotNull(quotaCount, "'quotaCount' is mandatory");
         this.quotaSize = quotaSize;
         this.quotaCount = quotaCount;
     }
 
-    public Quota<QuotaSize> getQuotaSize() {
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> getQuotaSize() {
         return quotaSize;
     }
 
-    public Quota<QuotaCount> getQuotaCount() {
+    public Quota<QuotaCountLimit, QuotaCountUsage> getQuotaCount() {
         return quotaCount;
     }
 

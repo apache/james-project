@@ -25,8 +25,10 @@ import java.util.Map;
 import java.util.SortedMap;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
@@ -154,22 +156,22 @@ public class EventFactory {
 
     @FunctionalInterface
     public interface RequireQuotaCountValue<T> {
-        T quotaCount(QuotaCount quotaCount);
+        T quotaCount(QuotaCountUsage quotaCount);
     }
 
     @FunctionalInterface
     public interface RequireQuotaSizeValue<T> {
-        T quotaSize(QuotaSize quotaSize);
+        T quotaSize(QuotaSizeUsage quotaSize);
     }
 
     @FunctionalInterface
     public interface RequireQuotaCount<T> {
-        T quotaCount(Quota<QuotaCount> quotaCount);
+        T quotaCount(Quota<QuotaCountLimit, QuotaCountUsage> quotaCount);
     }
 
     @FunctionalInterface
     public interface RequireQuotaSize<T> {
-        T quotaSize(Quota<QuotaSize> quotaSize);
+        T quotaSize(Quota<QuotaSizeLimit, QuotaSizeUsage> quotaSize);
     }
 
     @FunctionalInterface
@@ -296,10 +298,10 @@ public class EventFactory {
         private final Username username;
         private final MailboxSession.SessionId sessionId;
         private final QuotaRoot quotaRoot;
-        private final QuotaCount deletedMessageCount;
-        private final QuotaSize totalDeletedSize;
+        private final QuotaCountUsage deletedMessageCount;
+        private final QuotaSizeUsage totalDeletedSize;
 
-        MailboxDeletionFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, QuotaRoot quotaRoot, QuotaCount deletedMessageCount, QuotaSize totalDeletedSize) {
+        MailboxDeletionFinalStage(Event.EventId eventId, MailboxPath path, MailboxId mailboxId, Username username, MailboxSession.SessionId sessionId, QuotaRoot quotaRoot, QuotaCountUsage deletedMessageCount, QuotaSizeUsage totalDeletedSize) {
             this.eventId = eventId;
             this.path = path;
             this.mailboxId = mailboxId;
@@ -385,11 +387,11 @@ public class EventFactory {
         private final Event.EventId eventId;
         private final Username username;
         private final QuotaRoot quotaRoot;
-        private final Quota<QuotaCount> countQuota;
-        private final Quota<QuotaSize> sizeQuota;
+        private final Quota<QuotaCountLimit, QuotaCountUsage> countQuota;
+        private final Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota;
         private final Instant instant;
 
-        QuotaUsageUpdatedFinalStage(Event.EventId eventId, Username username, QuotaRoot quotaRoot, Quota<QuotaCount> countQuota, Quota<QuotaSize> sizeQuota, Instant instant) {
+        QuotaUsageUpdatedFinalStage(Event.EventId eventId, Username username, QuotaRoot quotaRoot, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Instant instant) {
             this.eventId = eventId;
             this.username = username;
             this.quotaRoot = quotaRoot;

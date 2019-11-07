@@ -22,8 +22,10 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.List;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -73,8 +75,8 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
         try {
             QuotaRoot quotaRoot = quotaRootResolver.fromString(request.getQuotaRoot());
             if (hasRight(quotaRoot, session)) {
-                Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
-                Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
+                Quota<QuotaCountLimit, QuotaCountUsage> messageQuota = quotaManager.getMessageQuota(quotaRoot);
+                Quota<QuotaSizeLimit, QuotaSizeUsage> storageQuota = quotaManager.getStorageQuota(quotaRoot);
                 if (messageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
                 }

@@ -20,8 +20,8 @@ package org.apache.james.webadmin.validation;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.webadmin.dto.QuotaDTO;
 import org.apache.james.webadmin.dto.ValidatedQuotaDTO;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -33,9 +33,9 @@ public class QuotaDTOValidator {
 
     public ValidatedQuotaDTO validatedQuotaDTO(QuotaDTO quotaDTO) {
         try {
-            Optional<QuotaCount> count = quotaDTO.getCount()
+            Optional<QuotaCountLimit> count = quotaDTO.getCount()
                 .map(this::getQuotaCount);
-            Optional<QuotaSize> size = quotaDTO.getSize()
+            Optional<QuotaSizeLimit> size = quotaDTO.getSize()
                 .map(this::getQuotaSize);
 
             return ValidatedQuotaDTO.builder()
@@ -52,19 +52,19 @@ public class QuotaDTOValidator {
         }
     }
 
-    private QuotaSize getQuotaSize(Long quotaValue) {
+    private QuotaSizeLimit getQuotaSize(Long quotaValue) {
         if (quotaValue == UNLIMITED) {
-            return QuotaSize.unlimited();
+            return QuotaSizeLimit.unlimited();
         } else {
-            return QuotaSize.size(quotaValue);
+            return QuotaSizeLimit.size(quotaValue);
         }
     }
 
-    private QuotaCount getQuotaCount(Long quotaValue) {
+    private QuotaCountLimit getQuotaCount(Long quotaValue) {
         if (quotaValue == UNLIMITED) {
-            return QuotaCount.unlimited();
+            return QuotaCountLimit.unlimited();
         } else {
-            return QuotaCount.count(quotaValue);
+            return QuotaCountLimit.count(quotaValue);
         }
     }
 }

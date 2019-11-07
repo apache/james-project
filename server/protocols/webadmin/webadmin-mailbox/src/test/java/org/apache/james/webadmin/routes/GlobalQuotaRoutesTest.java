@@ -25,8 +25,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Map;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.assertj.core.api.SoftAssertions;
 import org.eclipse.jetty.http.HttpStatus;
@@ -60,7 +60,7 @@ class GlobalQuotaRoutesTest {
     @Test
     void getCountShouldReturnStoredValue() throws Exception {
         int value = 42;
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(value));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(value));
 
         Long actual =
             when()
@@ -127,7 +127,7 @@ class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.unlimited());
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.unlimited());
     }
 
     @Test
@@ -139,12 +139,12 @@ class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.count(42));
     }
 
     @Test
     void deleteCountShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
 
         when()
             .delete("/quota/count")
@@ -165,7 +165,7 @@ class GlobalQuotaRoutesTest {
     @Test
     void getSizeShouldReturnStoredValue() throws Exception {
         long value = 42;
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(value));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(value));
 
 
         long quota =
@@ -212,7 +212,7 @@ class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.unlimited());
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.unlimited());
     }
 
     @Test
@@ -246,12 +246,12 @@ class GlobalQuotaRoutesTest {
         .then()
             .statusCode(HttpStatus.NO_CONTENT_204);
 
-        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.size(42));
     }
 
     @Test
     void deleteSizeShouldSetQuotaToUnlimited() throws Exception {
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(42));
 
         when()
             .delete("/quota/count")
@@ -265,8 +265,8 @@ class GlobalQuotaRoutesTest {
     void getQuotaShouldReturnBothWhenValueSpecified() throws Exception {
         int maxStorage = 42;
         int maxMessage = 52;
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(maxStorage));
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(maxMessage));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(maxStorage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(maxMessage));
 
         JsonPath jsonPath =
             when()
@@ -302,7 +302,7 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void getQuotaShouldReturnOnlySizeWhenNoCount() throws Exception {
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(42));
 
         JsonPath jsonPath =
             when()
@@ -322,7 +322,7 @@ class GlobalQuotaRoutesTest {
     @Test
     void getQuotaShouldReturnOnlyCountWhenNoSize() throws Exception {
         int maxMessage = 42;
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(maxMessage));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(maxMessage));
 
 
         JsonPath jsonPath =
@@ -350,8 +350,8 @@ class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(52));
-        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(42));
+        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.count(52));
+        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.size(42));
         softly.assertAll();
     }
 
@@ -365,15 +365,15 @@ class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.NO_CONTENT_204);
 
         SoftAssertions softly = new SoftAssertions();
-        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.unlimited());
-        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.unlimited());
+        softly.assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.unlimited());
+        softly.assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.unlimited());
         softly.assertAll();
     }
 
     @Test
     void putQuotaWithNegativeCountShouldFail() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(43));
 
         Map<String, Object> errors = given()
             .body("{\"count\":-2,\"size\":43}")
@@ -395,8 +395,8 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void putQuotaWithNegativeCountShouldNotUpdatePreviousQuota() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(43));
 
         given()
             .body("{\"count\":-2,\"size\":43}")
@@ -406,14 +406,14 @@ class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON);
 
-        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
-        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(43));
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.size(43));
     }
 
     @Test
     void putQuotaWithNegativeSizeShouldFail() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(43));
 
         Map<String, Object> errors = given()
             .body("{\"count\":42,\"size\":-2}")
@@ -435,8 +435,8 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void putQuotaWithNegativeSizeShouldNotUpdatePreviousQuota() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(43));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(43));
 
         given()
             .body("{\"count\":42,\"size\":-2}")
@@ -446,13 +446,13 @@ class GlobalQuotaRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .contentType(ContentType.JSON);
 
-        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCount.count(42));
-        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSize.size(43));
+        assertThat(maxQuotaManager.getGlobalMaxMessage()).contains(QuotaCountLimit.count(42));
+        assertThat(maxQuotaManager.getGlobalMaxStorage()).contains(QuotaSizeLimit.size(43));
     }
 
     @Test
     void putQuotaShouldUnsetCountWhenNull() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
         given()
             .body("{\"count\":null,\"size\":43}")
         .when()
@@ -465,7 +465,7 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void putQuotaShouldUnsetSizeWhenNull() throws Exception {
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(44));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(44));
         given()
             .body("{\"count\":45,\"size\":null}")
         .when()
@@ -478,7 +478,7 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void putQuotaShouldUnsetCountWhenAbsent() throws Exception {
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(42));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(42));
         given()
             .body("{\"size\":43}")
         .when()
@@ -491,7 +491,7 @@ class GlobalQuotaRoutesTest {
 
     @Test
     void putQuotaShouldUnsetSizeWhenAbsent() throws Exception {
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(44));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(44));
         given()
             .body("{\"count\":45}")
         .when()

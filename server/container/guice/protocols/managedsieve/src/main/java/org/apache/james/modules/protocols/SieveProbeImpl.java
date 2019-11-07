@@ -25,7 +25,7 @@ import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.probe.SieveProbe;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
@@ -49,7 +49,7 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public void setSieveQuota(long quota) throws Exception {
-        sieveRepository.setDefaultQuota(QuotaSize.size(quota));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(quota));
     }
 
     @Override
@@ -64,7 +64,7 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
 
     @Override
     public void setSieveQuota(String user, long quota) throws Exception {
-        sieveRepository.setQuota(Username.of(user), QuotaSize.size(quota));
+        sieveRepository.setQuota(Username.of(user), QuotaSizeLimit.size(quota));
     }
 
     @Override

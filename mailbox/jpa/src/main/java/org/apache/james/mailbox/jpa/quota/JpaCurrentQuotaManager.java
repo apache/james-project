@@ -26,8 +26,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.TransactionRunner;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.quota.model.JpaCurrentQuota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -50,19 +50,19 @@ public class JpaCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public QuotaCount getCurrentMessageCount(QuotaRoot quotaRoot) {
+    public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         return Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(JpaCurrentQuota::getMessageCount)
-            .orElse(QuotaCount.count(NO_STORED_BYTES));
+            .orElse(QuotaCountUsage.count(NO_STORED_BYTES));
     }
 
     @Override
-    public QuotaSize getCurrentStorage(QuotaRoot quotaRoot) {
+    public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         return Optional.ofNullable(retrieveUserQuota(entityManager, quotaRoot))
             .map(JpaCurrentQuota::getSize)
-            .orElse(QuotaSize.size(NO_STORED_BYTES));
+            .orElse(QuotaSizeUsage.size(NO_STORED_BYTES));
     }
 
     @Override

@@ -36,7 +36,8 @@ import javax.persistence.PersistenceException;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.sieve.jpa.model.JPASieveQuota;
 import org.apache.james.sieve.jpa.model.JPASieveScript;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -75,24 +76,24 @@ public class JPASieveRepository implements SieveRepository {
                 .mapToLong(JPASieveScript::getScriptSize)
                 .sum();
 
-        QuotaSize quota = limitToUser(username);
+        QuotaSizeLimit quota = limitToUser(username);
         if (overQuotaAfterModification(usedSpace, size, quota)) {
             throw new QuotaExceededException();
         }
     }
 
-    private QuotaSize limitToUser(Username username) throws StorageException {
+    private QuotaSizeLimit limitToUser(Username username) throws StorageException {
         return OptionalUtils.orSuppliers(
                 Throwing.supplier(() -> findQuotaForUser(username.asString())).sneakyThrow(),
                 Throwing.supplier(() -> findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)).sneakyThrow())
                 .map(JPASieveQuota::toQuotaSize)
-                .orElse(QuotaSize.unlimited());
+                .orElse(QuotaSizeLimit.unlimited());
     }
 
-    private boolean overQuotaAfterModification(long usedSpace, long size, QuotaSize quota) {
-        return QuotaSize.size(usedSpace)
+    private boolean overQuotaAfterModification(long usedSpace, long size, QuotaSizeLimit quota) {
+        return QuotaSizeUsage.size(usedSpace)
                 .add(size)
-                .isGreaterThan(quota);
+                .exceedLimit(quota);
     }
 
     @Override
@@ -261,14 +262,14 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getDefaultQuota() throws QuotaNotFoundException, StorageException {
+    public QuotaSizeLimit getDefaultQuota() throws QuotaNotFoundException, StorageException {
         JPASieveQuota jpaSieveQuota = findQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME)
                 .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for default user"));
-        return QuotaSize.size(jpaSieveQuota.getSize());
+        return QuotaSizeLimit.size(jpaSieveQuota.getSize());
     }
 
     @Override
-    public void setDefaultQuota(QuotaSize quota) throws StorageException {
+    public void setDefaultQuota(QuotaSizeLimit quota) throws StorageException {
         setQuotaForUser(DEFAULT_SIEVE_QUOTA_USERNAME, quota);
     }
 
@@ -284,14 +285,14 @@ public class JPASieveRepository implements SieveRepository {
     }
 
     @Override
-    public QuotaSize getQuota(Username username) throws QuotaNotFoundException, StorageException {
+    public QuotaSizeLimit getQuota(Username username) throws QuotaNotFoundException, StorageException {
         JPASieveQuota jpaSieveQuota = findQuotaForUser(username.asString())
                 .orElseThrow(() -> new QuotaNotFoundException("Unable to find quota for user " + username.asString()));
-        return QuotaSize.size(jpaSieveQuota.getSize());
+        return QuotaSizeLimit.size(jpaSieveQuota.getSize());
     }
 
     @Override
-    public void setQuota(Username username, QuotaSize quota) throws StorageException {
+    public void setQuota(Username username, QuotaSizeLimit quota) throws StorageException {
         setQuotaForUser(username.asString(), quota);
     }
 
@@ -321,7 +322,7 @@ public class JPASieveRepository implements SieveRepository {
         }
     }
 
-    private void setQuotaForUser(String username, QuotaSize quota) throws StorageException {
+    private void setQuotaForUser(String username, QuotaSizeLimit quota) throws StorageException {
         transactionRunner.runAndHandleException(Throwing.consumer(entityManager -> {
             Optional<JPASieveQuota> sieveQuota = findQuotaForUser(username, entityManager);
             if (sieveQuota.isPresent()) {

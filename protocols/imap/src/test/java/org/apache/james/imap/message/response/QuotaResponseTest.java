@@ -19,7 +19,8 @@
 
 package org.apache.james.imap.message.response;
 
-import org.apache.james.core.quota.QuotaCount;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.mailbox.model.Quota;
 import org.junit.Test;
 
@@ -28,13 +29,13 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 public class QuotaResponseTest {
     @Test
     public void shouldMatchBeanContract() {
-        Quota<QuotaCount> red = Quota.<QuotaCount>builder()
-            .computedLimit(QuotaCount.count(36))
-            .used(QuotaCount.count(22))
+        Quota<QuotaCountLimit, QuotaCountUsage> red = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .computedLimit(QuotaCountLimit.count(36))
+            .used(QuotaCountUsage.count(22))
             .build();
-        Quota<QuotaCount> black = Quota.<QuotaCount>builder()
-            .computedLimit(QuotaCount.count(32))
-            .used(QuotaCount.count(24))
+        Quota<QuotaCountLimit, QuotaCountUsage> black = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+            .computedLimit(QuotaCountLimit.count(32))
+            .used(QuotaCountUsage.count(24))
             .build();
 
         EqualsVerifier.forClass(QuotaResponse.class)

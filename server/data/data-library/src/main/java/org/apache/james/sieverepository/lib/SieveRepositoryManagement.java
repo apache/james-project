@@ -31,7 +31,7 @@ import javax.management.StandardMBean;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.ScriptContent;
 import org.apache.james.sieverepository.api.ScriptName;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -61,7 +61,7 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
 
     @Override
     public void setQuota(long quota) throws SieveRepositoryException {
-        sieveRepository.setDefaultQuota(QuotaSize.size(quota));
+        sieveRepository.setDefaultQuota(QuotaSizeLimit.size(quota));
     }
 
     @Override
@@ -76,7 +76,7 @@ public class SieveRepositoryManagement extends StandardMBean implements SieveRep
 
     @Override
     public void setQuota(String user, long quota) throws SieveRepositoryException {
-        sieveRepository.setQuota(Username.of(user), QuotaSize.size(quota));
+        sieveRepository.setQuota(Username.of(user), QuotaSizeLimit.size(quota));
     }
 
     @Override

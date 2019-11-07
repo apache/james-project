@@ -28,9 +28,9 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.james.backends.jpa.TransactionRunner;
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaLimitValue;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainMessageCount;
 import org.apache.james.mailbox.jpa.quota.model.MaxDomainStorage;
 import org.apache.james.mailbox.jpa.quota.model.MaxGlobalMessageCount;
@@ -51,7 +51,7 @@ public class JPAPerUserMaxQuotaDAO {
         this.transactionRunner = new TransactionRunner(entityManagerFactory);
     }
 
-    public void setMaxStorage(QuotaRoot quotaRoot, Optional<QuotaSize> maxStorageQuota) {
+    public void setMaxStorage(QuotaRoot quotaRoot, Optional<QuotaSizeLimit> maxStorageQuota) {
         transactionRunner.run(
             entityManager -> {
                 MaxUserStorage storedValue = getMaxUserStorageEntity(entityManager, quotaRoot, maxStorageQuota);
@@ -59,7 +59,7 @@ public class JPAPerUserMaxQuotaDAO {
             });
     }
 
-    private MaxUserStorage getMaxUserStorageEntity(EntityManager entityManager, QuotaRoot quotaRoot, Optional<QuotaSize> maxStorageQuota) {
+    private MaxUserStorage getMaxUserStorageEntity(EntityManager entityManager, QuotaRoot quotaRoot, Optional<QuotaSizeLimit> maxStorageQuota) {
         MaxUserStorage storedValue = entityManager.find(MaxUserStorage.class, quotaRoot.getValue());
         Long value = quotaValueToLong(maxStorageQuota);
         if (storedValue == null) {
@@ -69,7 +69,7 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    public void setMaxMessage(QuotaRoot quotaRoot, Optional<QuotaCount> maxMessageCount) {
+    public void setMaxMessage(QuotaRoot quotaRoot, Optional<QuotaCountLimit> maxMessageCount) {
         transactionRunner.run(
             entityManager -> {
                 MaxUserMessageCount storedValue = getMaxUserMessageEntity(entityManager, quotaRoot, maxMessageCount);
@@ -77,7 +77,7 @@ public class JPAPerUserMaxQuotaDAO {
             });
     }
 
-    private MaxUserMessageCount getMaxUserMessageEntity(EntityManager entityManager, QuotaRoot quotaRoot, Optional<QuotaCount> maxMessageQuota) {
+    private MaxUserMessageCount getMaxUserMessageEntity(EntityManager entityManager, QuotaRoot quotaRoot, Optional<QuotaCountLimit> maxMessageQuota) {
         MaxUserMessageCount storedValue = entityManager.find(MaxUserMessageCount.class, quotaRoot.getValue());
         Long value = quotaValueToLong(maxMessageQuota);
         if (storedValue == null) {
@@ -87,7 +87,7 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    public void setDomainMaxMessage(Domain domain, Optional<QuotaCount> count) {
+    public void setDomainMaxMessage(Domain domain, Optional<QuotaCountLimit> count) {
         transactionRunner.run(
             entityManager -> {
                 MaxDomainMessageCount storedValue = getMaxDomainMessageEntity(entityManager, domain, count);
@@ -96,7 +96,7 @@ public class JPAPerUserMaxQuotaDAO {
     }
 
 
-    public void setDomainMaxStorage(Domain domain, Optional<QuotaSize> size) {
+    public void setDomainMaxStorage(Domain domain, Optional<QuotaSizeLimit> size) {
         transactionRunner.run(
             entityManager -> {
                 MaxDomainStorage storedValue = getMaxDomainStorageEntity(entityManager, domain, size);
@@ -104,7 +104,7 @@ public class JPAPerUserMaxQuotaDAO {
             });
     }
 
-    private MaxDomainMessageCount getMaxDomainMessageEntity(EntityManager entityManager, Domain domain, Optional<QuotaCount> maxMessageQuota) {
+    private MaxDomainMessageCount getMaxDomainMessageEntity(EntityManager entityManager, Domain domain, Optional<QuotaCountLimit> maxMessageQuota) {
         MaxDomainMessageCount storedValue = entityManager.find(MaxDomainMessageCount.class, domain.asString());
         Long value = quotaValueToLong(maxMessageQuota);
         if (storedValue == null) {
@@ -114,7 +114,7 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    private MaxDomainStorage getMaxDomainStorageEntity(EntityManager entityManager, Domain domain, Optional<QuotaSize> maxStorageQuota) {
+    private MaxDomainStorage getMaxDomainStorageEntity(EntityManager entityManager, Domain domain, Optional<QuotaSizeLimit> maxStorageQuota) {
         MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain.asString());
         Long value = quotaValueToLong(maxStorageQuota);
         if (storedValue == null) {
@@ -125,7 +125,7 @@ public class JPAPerUserMaxQuotaDAO {
     }
 
 
-    public void setGlobalMaxStorage(Optional<QuotaSize> globalMaxStorage) {
+    public void setGlobalMaxStorage(Optional<QuotaSizeLimit> globalMaxStorage) {
         transactionRunner.run(
             entityManager -> {
                 MaxGlobalStorage globalMaxStorageEntity = getGlobalMaxStorageEntity(entityManager, globalMaxStorage);
@@ -133,7 +133,7 @@ public class JPAPerUserMaxQuotaDAO {
             });
     }
 
-    private MaxGlobalStorage getGlobalMaxStorageEntity(EntityManager entityManager, Optional<QuotaSize> maxSizeQuota) {
+    private MaxGlobalStorage getGlobalMaxStorageEntity(EntityManager entityManager, Optional<QuotaSizeLimit> maxSizeQuota) {
         MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
         Long value = quotaValueToLong(maxSizeQuota);
         if (storedValue == null) {
@@ -143,7 +143,7 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    public void setGlobalMaxMessage(Optional<QuotaCount> globalMaxMessageCount) {
+    public void setGlobalMaxMessage(Optional<QuotaCountLimit> globalMaxMessageCount) {
         transactionRunner.run(
             entityManager -> {
                 MaxGlobalMessageCount globalMaxMessageEntity = getGlobalMaxMessageEntity(entityManager, globalMaxMessageCount);
@@ -151,7 +151,7 @@ public class JPAPerUserMaxQuotaDAO {
             });
     }
 
-    private MaxGlobalMessageCount getGlobalMaxMessageEntity(EntityManager entityManager, Optional<QuotaCount> maxMessageQuota) {
+    private MaxGlobalMessageCount getGlobalMaxMessageEntity(EntityManager entityManager, Optional<QuotaCountLimit> maxMessageQuota) {
         MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
         Long value = quotaValueToLong(maxMessageQuota);
         if (storedValue == null) {
@@ -161,7 +161,7 @@ public class JPAPerUserMaxQuotaDAO {
         return storedValue;
     }
 
-    public Optional<QuotaSize> getGlobalMaxStorage() {
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxGlobalStorage storedValue = entityManager.find(MaxGlobalStorage.class, MaxGlobalStorage.DEFAULT_KEY);
         if (storedValue == null) {
@@ -170,7 +170,7 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaSize(storedValue.getValue());
     }
 
-    public Optional<QuotaCount> getGlobalMaxMessage() {
+    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxGlobalMessageCount storedValue = entityManager.find(MaxGlobalMessageCount.class, MaxGlobalMessageCount.DEFAULT_KEY);
         if (storedValue == null) {
@@ -179,7 +179,7 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaCount(storedValue.getValue());
     }
 
-    public Optional<QuotaSize> getMaxStorage(QuotaRoot quotaRoot) {
+    public Optional<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxUserStorage storedValue = entityManager.find(MaxUserStorage.class, quotaRoot.getValue());
         if (storedValue == null) {
@@ -188,7 +188,7 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaSize(storedValue.getValue());
     }
 
-    public Optional<QuotaCount> getMaxMessage(QuotaRoot quotaRoot) {
+    public Optional<QuotaCountLimit> getMaxMessage(QuotaRoot quotaRoot) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxUserMessageCount storedValue = entityManager.find(MaxUserMessageCount.class, quotaRoot.getValue());
         if (storedValue == null) {
@@ -197,7 +197,7 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaCount(storedValue.getValue());
     }
 
-    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+    public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxDomainMessageCount storedValue = entityManager.find(MaxDomainMessageCount.class, domain.asString());
         if (storedValue == null) {
@@ -206,7 +206,7 @@ public class JPAPerUserMaxQuotaDAO {
         return longToQuotaCount(storedValue.getValue());
     }
 
-    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+    public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         MaxDomainStorage storedValue = entityManager.find(MaxDomainStorage.class, domain.asString());
         if (storedValue == null) {
@@ -216,7 +216,7 @@ public class JPAPerUserMaxQuotaDAO {
     }
 
 
-    private Long quotaValueToLong(Optional<? extends QuotaValue<?>> maxStorageQuota) {
+    private Long quotaValueToLong(Optional<? extends QuotaLimitValue<?>> maxStorageQuota) {
         return maxStorageQuota.map(value -> {
             if (value.isUnlimited()) {
                 return INFINITE;
@@ -225,15 +225,15 @@ public class JPAPerUserMaxQuotaDAO {
         }).orElse(null);
     }
 
-    private Optional<QuotaSize> longToQuotaSize(Long value) {
-        return longToQuotaValue(value, QuotaSize.unlimited(), QuotaSize::size);
+    private Optional<QuotaSizeLimit> longToQuotaSize(Long value) {
+        return longToQuotaValue(value, QuotaSizeLimit.unlimited(), QuotaSizeLimit::size);
     }
 
-    private Optional<QuotaCount> longToQuotaCount(Long value) {
-        return longToQuotaValue(value, QuotaCount.unlimited(), QuotaCount::count);
+    private Optional<QuotaCountLimit> longToQuotaCount(Long value) {
+        return longToQuotaValue(value, QuotaCountLimit.unlimited(), QuotaCountLimit::count);
     }
 
-    private <T extends QuotaValue<T>> Optional<T> longToQuotaValue(Long value, T infiniteValue, Function<Long, T> quotaFactory) {
+    private <T extends QuotaLimitValue<T>> Optional<T> longToQuotaValue(Long value, T infiniteValue, Function<Long, T> quotaFactory) {
         if (value == null) {
             return Optional.empty();
         }

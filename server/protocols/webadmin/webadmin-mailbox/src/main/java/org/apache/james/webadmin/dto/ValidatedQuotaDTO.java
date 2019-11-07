@@ -23,8 +23,8 @@ package org.apache.james.webadmin.dto;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -39,20 +39,20 @@ public class ValidatedQuotaDTO {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private Optional<QuotaCount> count;
-        private Optional<QuotaSize> size;
+        private Optional<QuotaCountLimit> count;
+        private Optional<QuotaSizeLimit> size;
 
         private Builder() {
             count = Optional.empty();
             size = Optional.empty();
         }
 
-        public Builder count(Optional<QuotaCount> count) {
+        public Builder count(Optional<QuotaCountLimit> count) {
             this.count = count;
             return this;
         }
 
-        public Builder size(Optional<QuotaSize> size) {
+        public Builder size(Optional<QuotaSizeLimit> size) {
             this.size = size;
             return this;
         }
@@ -63,19 +63,19 @@ public class ValidatedQuotaDTO {
     }
 
 
-    private final Optional<QuotaCount> count;
-    private final Optional<QuotaSize> size;
+    private final Optional<QuotaCountLimit> count;
+    private final Optional<QuotaSizeLimit> size;
 
-    private ValidatedQuotaDTO(Optional<QuotaCount> count, Optional<QuotaSize> size) {
+    private ValidatedQuotaDTO(Optional<QuotaCountLimit> count, Optional<QuotaSizeLimit> size) {
         this.count = count;
         this.size = size;
     }
 
-    public Optional<QuotaCount> getCount() {
+    public Optional<QuotaCountLimit> getCount() {
         return count;
     }
 
-    public Optional<QuotaSize> getSize() {
+    public Optional<QuotaSizeLimit> getSize() {
         return size;
     }
 

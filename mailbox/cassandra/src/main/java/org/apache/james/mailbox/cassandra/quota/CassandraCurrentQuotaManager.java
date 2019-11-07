@@ -28,8 +28,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.update;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.cassandra.table.CassandraCurrentQuota;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -80,21 +80,21 @@ public class CassandraCurrentQuotaManager implements StoreCurrentQuotaManager {
     }
 
     @Override
-    public QuotaCount getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaCountUsage getCurrentMessageCount(QuotaRoot quotaRoot) throws MailboxException {
         ResultSet resultSet = session.execute(getCurrentMessageCountStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
-            return QuotaCount.count(0L);
+            return QuotaCountUsage.count(0L);
         }
-        return QuotaCount.count(resultSet.one().getLong(CassandraCurrentQuota.MESSAGE_COUNT));
+        return QuotaCountUsage.count(resultSet.one().getLong(CassandraCurrentQuota.MESSAGE_COUNT));
     }
 
     @Override
-    public QuotaSize getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
+    public QuotaSizeUsage getCurrentStorage(QuotaRoot quotaRoot) throws MailboxException {
         ResultSet resultSet = session.execute(getCurrentStorageStatement.bind(quotaRoot.getValue()));
         if (resultSet.isExhausted()) {
-            return QuotaSize.size(0L);
+            return QuotaSizeUsage.size(0L);
         }
-        return QuotaSize.size(resultSet.one().getLong(CassandraCurrentQuota.STORAGE));
+        return QuotaSizeUsage.size(resultSet.one().getLong(CassandraCurrentQuota.STORAGE));
     }
 
     private void checkArguments(long count, long size) {

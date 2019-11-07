@@ -21,8 +21,10 @@ package org.apache.james.mailbox.quota.mailing.events;
 
 import java.util.Objects;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
 import org.apache.james.mailbox.model.Quota;
@@ -34,11 +36,11 @@ public class QuotaThresholdChangedEvent implements Event {
     private final EventId eventId;
     private final HistoryEvolution sizeHistoryEvolution;
     private final HistoryEvolution countHistoryEvolution;
-    private final Quota<QuotaSize> sizeQuota;
-    private final Quota<QuotaCount> countQuota;
+    private final Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota;
+    private final Quota<QuotaCountLimit, QuotaCountUsage> countQuota;
     private final UserQuotaThresholds.Id aggregateId;
 
-    public QuotaThresholdChangedEvent(EventId eventId, HistoryEvolution sizeHistoryEvolution, HistoryEvolution countHistoryEvolution, Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota, UserQuotaThresholds.Id aggregateId) {
+    public QuotaThresholdChangedEvent(EventId eventId, HistoryEvolution sizeHistoryEvolution, HistoryEvolution countHistoryEvolution, Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Quota<QuotaCountLimit, QuotaCountUsage> countQuota, UserQuotaThresholds.Id aggregateId) {
         this.eventId = eventId;
         this.sizeHistoryEvolution = sizeHistoryEvolution;
         this.countHistoryEvolution = countHistoryEvolution;
@@ -55,11 +57,11 @@ public class QuotaThresholdChangedEvent implements Event {
         return countHistoryEvolution;
     }
 
-    public Quota<QuotaSize> getSizeQuota() {
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> getSizeQuota() {
         return sizeQuota;
     }
 
-    public Quota<QuotaCount> getCountQuota() {
+    public Quota<QuotaCountLimit, QuotaCountUsage> getCountQuota() {
         return countQuota;
     }
 

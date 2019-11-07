@@ -27,8 +27,8 @@ import java.util.Calendar;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -63,8 +63,8 @@ public class ManagerTestProvisionner {
         subFolder = new MailboxPath(inbox, "INBOX.SUB");
 
         MaxQuotaManager maxQuotaManager = integrationResources.getMaxQuotaManager();
-        maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1000));
-        maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(1000000));
+        maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(1000));
+        maxQuotaManager.setGlobalMaxStorage(QuotaSizeLimit.size(1000000));
     }
 
     public void createMailboxes() throws MailboxException {

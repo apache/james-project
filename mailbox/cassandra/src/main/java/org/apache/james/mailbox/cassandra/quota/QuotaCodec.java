@@ -21,31 +21,31 @@ package org.apache.james.mailbox.cassandra.quota;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaLimitValue;
+import org.apache.james.core.quota.QuotaSizeLimit;
 
 public class QuotaCodec {
 
     private static final long INFINITE = -1;
     private static final long NO_RIGHT = 0L;
 
-    static Long quotaValueToLong(QuotaValue<?> value) {
+    static Long quotaValueToLong(QuotaLimitValue<?> value) {
         if (value.isUnlimited()) {
             return INFINITE;
         }
         return value.asLong();
     }
 
-    static Optional<QuotaSize> longToQuotaSize(Long value) {
-        return longToQuotaValue(value, QuotaSize.unlimited(), QuotaSize::size);
+    static Optional<QuotaSizeLimit> longToQuotaSize(Long value) {
+        return longToQuotaValue(value, QuotaSizeLimit.unlimited(), QuotaSizeLimit::size);
     }
 
-    static Optional<QuotaCount> longToQuotaCount(Long value) {
-        return longToQuotaValue(value, QuotaCount.unlimited(), QuotaCount::count);
+    static Optional<QuotaCountLimit> longToQuotaCount(Long value) {
+        return longToQuotaValue(value, QuotaCountLimit.unlimited(), QuotaCountLimit::count);
     }
 
-    private static <T extends QuotaValue<T>> Optional<T> longToQuotaValue(Long value, T infiniteValue, Function<Long, T> quotaFactory) {
+    private static <T extends QuotaLimitValue<T>> Optional<T> longToQuotaValue(Long value, T infiniteValue, Function<Long, T> quotaFactory) {
         if (value == null) {
             return Optional.empty();
         }

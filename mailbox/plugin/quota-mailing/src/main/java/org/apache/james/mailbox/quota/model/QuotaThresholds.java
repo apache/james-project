@@ -43,7 +43,7 @@ public class QuotaThresholds {
             .collect(Guavate.toImmutableList());
     }
 
-    public QuotaThreshold highestExceededThreshold(Quota<?> quota) {
+    public QuotaThreshold highestExceededThreshold(Quota<?, ?> quota) {
         return quotaThresholds.stream()
             .filter(quotaLevel -> quotaLevel.isExceeded(quota))
             .findFirst()

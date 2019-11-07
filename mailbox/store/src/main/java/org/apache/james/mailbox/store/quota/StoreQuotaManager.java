@@ -23,8 +23,10 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.Quota.Scope;
@@ -49,22 +51,22 @@ public class StoreQuotaManager implements QuotaManager {
     }
 
     @Override
-    public Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        Map<Scope, QuotaCount> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
-        return Quota.<QuotaCount>builder()
+    public Quota<QuotaCountLimit, QuotaCountUsage> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaCountLimit> maxMessageDetails = maxQuotaManager.listMaxMessagesDetails(quotaRoot);
+        return Quota.<QuotaCountLimit, QuotaCountUsage>builder()
             .used(currentQuotaManager.getCurrentMessageCount(quotaRoot))
-            .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCount.unlimited()))
+            .computedLimit(maxQuotaManager.getMaxMessage(maxMessageDetails).orElse(QuotaCountLimit.unlimited()))
             .limitsByScope(maxMessageDetails)
             .build();
     }
 
 
     @Override
-    public Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
-        Map<Scope, QuotaSize> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
-        return Quota.<QuotaSize>builder()
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        Map<Scope, QuotaSizeLimit> maxStorageDetails = maxQuotaManager.listMaxStorageDetails(quotaRoot);
+        return Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
             .used(currentQuotaManager.getCurrentStorage(quotaRoot))
-            .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSize.unlimited()))
+            .computedLimit(maxQuotaManager.getMaxStorage(maxStorageDetails).orElse(QuotaSizeLimit.unlimited()))
             .limitsByScope(maxStorageDetails)
             .build();
     }

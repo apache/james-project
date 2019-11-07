@@ -24,54 +24,33 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaLimitValue;
 
 import com.google.common.base.MoreObjects;
 
-public class SerializableQuotaValue<T extends QuotaValue<T>> implements Serializable {
+public class SerializableQuotaLimitValue<T extends QuotaLimitValue<T>> implements Serializable {
 
-    public static <U extends QuotaValue<U>> SerializableQuotaValue<U> valueOf(Optional<U> input) {
-        return new SerializableQuotaValue<>(input.orElse(null));
+    public static <U extends QuotaLimitValue<U>> SerializableQuotaLimitValue<U> valueOf(Optional<U> input) {
+        return new SerializableQuotaLimitValue<>(input.orElse(null));
     }
 
     public static final long UNLIMITED = -1;
 
-    private final Long value;
-
-    public SerializableQuotaValue(T value) {
-        this(encodeAsLong(value));
-    }
-
-    SerializableQuotaValue(Long value) {
-        this.value = value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof SerializableQuotaValue<?>) {
-            SerializableQuotaValue<?> that = (SerializableQuotaValue<?>) o;
-            return Objects.equals(value, that.value);
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
-    }
-
-    @Override
-    public String toString() {
-        return MoreObjects.toStringHelper(this)
-            .add("value", value)
-            .toString();
-    }
-
-    private static <U extends QuotaValue<U>> Long encodeAsLong(U quota) {
+    private static <U extends QuotaLimitValue<U>> Long encodeAsLong(U quota) {
         if (quota.isLimited()) {
             return quota.asLong();
         }
         return UNLIMITED;
+    }
+
+    private final Long value;
+
+    public SerializableQuotaLimitValue(T value) {
+        this(encodeAsLong(value));
+    }
+
+    SerializableQuotaLimitValue(Long value) {
+        this.value = value;
     }
 
     public Long encodeAsLong() {
@@ -87,5 +66,26 @@ public class SerializableQuotaValue<T extends QuotaValue<T>> implements Serializ
             return Optional.of(unlimited);
         }
         return Optional.of(factory.apply(longValue));
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof SerializableQuotaLimitValue<?>) {
+            SerializableQuotaLimitValue<?> that = (SerializableQuotaLimitValue<?>) o;
+            return Objects.equals(value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }

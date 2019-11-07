@@ -22,13 +22,13 @@ package org.apache.james.webadmin.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.junit.jupiter.api.Test;
 
 import spark.HaltException;
 
-class QuotaValueTest {
+class QuotaLimitValueTest {
 
     @Test
     void quotaCountShouldThrowWhenNotANumber() {
@@ -50,7 +50,7 @@ class QuotaValueTest {
 
     @Test
     void quotaCountShouldBeUnlimitedOnMinusOne() {
-        assertThat(Quotas.quotaCount("-1")).isEqualTo(QuotaCount.unlimited());
+        assertThat(Quotas.quotaCount("-1")).isEqualTo(QuotaCountLimit.unlimited());
     }
 
     @Test
@@ -79,7 +79,7 @@ class QuotaValueTest {
 
     @Test
     void quotaSizeShouldBeUnlimitedOnMinusOne() {
-        assertThat(Quotas.quotaSize("-1")).isEqualTo(QuotaSize.unlimited());
+        assertThat(Quotas.quotaSize("-1")).isEqualTo(QuotaSizeLimit.unlimited());
 
     }
 

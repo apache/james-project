@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQ;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
 import org.apache.james.backends.rabbitmq.SimpleConnectionPool;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.event.json.EventSerializer;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
@@ -131,7 +131,7 @@ public class RabbitMQEventBusHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
+    public void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) {
         resources.getMaxQuotaManager().setGlobalMaxMessage(maxMessageQuota);
         resources.getMaxQuotaManager().setGlobalMaxStorage(maxStorageQuota);
     }

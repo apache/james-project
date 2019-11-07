@@ -44,7 +44,7 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         QuotaResponse quotaResponse = (QuotaResponse) acceptableMessage;
 
         String quotaRoot = quotaResponse.getQuotaRoot();
-        Quota<?> quota = quotaResponse.getQuota();
+        Quota<?, ?> quota = quotaResponse.getQuota();
 
         composer.untagged();
         composer.commandName(ImapConstants.QUOTA_RESPONSE_NAME);
@@ -66,12 +66,12 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         composer.end();
     }
 
-    private void writeMessagesSize(ImapResponseComposer composer, Quota<?> quota) throws IOException {
+    private void writeMessagesSize(ImapResponseComposer composer, Quota<?, ?> quota) throws IOException {
         composer.message(quota.getUsed().asLong() / 1024);
         composer.message(quota.getLimit().asLong() / 1024);
     }
 
-    private void writeMessagesCount(ImapResponseComposer composer, Quota<?> quota) throws IOException {
+    private void writeMessagesCount(ImapResponseComposer composer, Quota<?, ?> quota) throws IOException {
         composer.message(quota.getUsed().asLong());
         composer.message(quota.getLimit().asLong());
     }

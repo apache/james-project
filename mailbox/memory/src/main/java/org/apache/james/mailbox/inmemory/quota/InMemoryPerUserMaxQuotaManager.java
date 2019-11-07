@@ -26,8 +26,8 @@ import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Domain;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
@@ -37,27 +37,27 @@ import com.github.steveash.guavate.Guavate;
 
 public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
 
-    private Optional<QuotaCount> maxMessage = Optional.empty();
-    private Optional<QuotaSize> maxStorage = Optional.empty();
+    private Optional<QuotaCountLimit> maxMessage = Optional.empty();
+    private Optional<QuotaSizeLimit> maxStorage = Optional.empty();
 
-    private final Map<Domain, QuotaCount> domainMaxMessage = new ConcurrentHashMap<>();
-    private final Map<Domain, QuotaSize> domainMaxStorage = new ConcurrentHashMap<>();
+    private final Map<Domain, QuotaCountLimit> domainMaxMessage = new ConcurrentHashMap<>();
+    private final Map<Domain, QuotaSizeLimit> domainMaxStorage = new ConcurrentHashMap<>();
 
-    private final Map<String, QuotaSize> userMaxStorage = new ConcurrentHashMap<>();
-    private final Map<String, QuotaCount> userMaxMessage = new ConcurrentHashMap<>();
+    private final Map<String, QuotaSizeLimit> userMaxStorage = new ConcurrentHashMap<>();
+    private final Map<String, QuotaCountLimit> userMaxMessage = new ConcurrentHashMap<>();
 
     @Override
-    public void setGlobalMaxStorage(QuotaSize maxStorage) {
+    public void setGlobalMaxStorage(QuotaSizeLimit maxStorage) {
         this.maxStorage = Optional.of(maxStorage);
     }
 
     @Override
-    public void setDomainMaxMessage(Domain domain, QuotaCount count) {
+    public void setDomainMaxMessage(Domain domain, QuotaCountLimit count) {
         domainMaxMessage.put(domain, count);
     }
 
     @Override
-    public void setDomainMaxStorage(Domain domain, QuotaSize size) {
+    public void setDomainMaxStorage(Domain domain, QuotaSizeLimit size) {
         domainMaxStorage.put(domain, size);
     }
 
@@ -72,8 +72,8 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Map<Quota.Scope, QuotaCount> listMaxMessagesDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaCount>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
+    public Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaCountLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxMessage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, Optional.ofNullable(userMaxMessage.get(quotaRoot.getValue()))),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
@@ -83,8 +83,8 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public Map<Quota.Scope, QuotaSize> listMaxStorageDetails(QuotaRoot quotaRoot) {
-        Function<Domain, Optional<QuotaSize>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
+    public Map<Quota.Scope, QuotaSizeLimit> listMaxStorageDetails(QuotaRoot quotaRoot) {
+        Function<Domain, Optional<QuotaSizeLimit>> domainQuotaFunction = Throwing.function(this::getDomainMaxStorage).sneakyThrow();
         return Stream.of(
                 Pair.of(Quota.Scope.User, Optional.ofNullable(userMaxStorage.get(quotaRoot.getValue()))),
                 Pair.of(Quota.Scope.Domain, quotaRoot.getDomain().flatMap(domainQuotaFunction)),
@@ -94,37 +94,37 @@ public class InMemoryPerUserMaxQuotaManager implements MaxQuotaManager {
     }
 
     @Override
-    public void setGlobalMaxMessage(QuotaCount maxMessage) {
+    public void setGlobalMaxMessage(QuotaCountLimit maxMessage) {
         this.maxMessage = Optional.of(maxMessage);
     }
 
     @Override
-    public Optional<QuotaCount> getDomainMaxMessage(Domain domain) {
+    public Optional<QuotaCountLimit> getDomainMaxMessage(Domain domain) {
         return Optional.ofNullable(domainMaxMessage.get(domain));
     }
 
     @Override
-    public Optional<QuotaSize> getDomainMaxStorage(Domain domain) {
+    public Optional<QuotaSizeLimit> getDomainMaxStorage(Domain domain) {
         return Optional.ofNullable(domainMaxStorage.get(domain));
     }
 
     @Override
-    public void setMaxStorage(QuotaRoot user, QuotaSize maxStorageQuota) {
+    public void setMaxStorage(QuotaRoot user, QuotaSizeLimit maxStorageQuota) {
         userMaxStorage.put(user.getValue(), maxStorageQuota);
     }
 
     @Override
-    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCount maxMessageCount) {
+    public void setMaxMessage(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) {
         userMaxMessage.put(quotaRoot.getValue(), maxMessageCount);
     }
 
     @Override
-    public Optional<QuotaSize> getGlobalMaxStorage() {
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() {
         return maxStorage;
     }
 
     @Override
-    public Optional<QuotaCount> getGlobalMaxMessage() {
+    public Optional<QuotaCountLimit> getGlobalMaxMessage() {
         return maxMessage;
     }
 

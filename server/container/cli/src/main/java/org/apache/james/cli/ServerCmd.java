@@ -44,11 +44,13 @@ import org.apache.james.cli.probe.impl.JmxMailboxProbe;
 import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.probe.impl.JmxSieveProbe;
 import org.apache.james.cli.type.CmdType;
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.core.quota.QuotaValue;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaLimitValue;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.SerializableQuota;
-import org.apache.james.mailbox.model.SerializableQuotaValue;
+import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.probe.DataProbe;
@@ -339,21 +341,21 @@ public class ServerCmd {
         }
     }
 
-    private SerializableQuotaValue<QuotaSize> parseQuotaSize(String argument) throws Exception {
+    private SerializableQuotaLimitValue<QuotaSizeLimit> parseQuotaSize(String argument) throws Exception {
         long convertedValue = Size.parse(argument).asBytes();
-        return longToSerializableQuotaValue(convertedValue, QuotaSize.unlimited(), QuotaSize::size);
+        return longToSerializableQuotaValue(convertedValue, QuotaSizeLimit.unlimited(), QuotaSizeLimit::size);
     }
 
-    private SerializableQuotaValue<QuotaCount> parseQuotaCount(String argument) {
+    private SerializableQuotaLimitValue<QuotaCountLimit> parseQuotaCount(String argument) {
         long value = Long.parseLong(argument);
-        return longToSerializableQuotaValue(value, QuotaCount.unlimited(), QuotaCount::count);
+        return longToSerializableQuotaValue(value, QuotaCountLimit.unlimited(), QuotaCountLimit::count);
     }
 
-    private <T extends QuotaValue<T>> SerializableQuotaValue<T> longToSerializableQuotaValue(long value, T unlimited, Function<Long, T> factory) {
-        return SerializableQuotaValue.valueOf(Optional.of(longToQuotaValue(value, unlimited, factory)));
+    private <T extends QuotaLimitValue<T>> SerializableQuotaLimitValue<T> longToSerializableQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+        return SerializableQuotaLimitValue.valueOf(Optional.of(longToQuotaValue(value, unlimited, factory)));
     }
 
-    private <T extends QuotaValue<T>> T longToQuotaValue(long value, T unlimited, Function<Long, T> factory) {
+    private <T extends QuotaLimitValue<T>> T longToQuotaValue(long value, T unlimited, Function<Long, T> factory) {
         if (value == -1) {
             return unlimited;
         }
@@ -385,14 +387,14 @@ public class ServerCmd {
                 footerBuilder.toString());
     }
 
-    private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSize> quota, PrintStream printStream) {
+    private void printStorageQuota(String quotaRootString, SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> quota, PrintStream printStream) {
         printStream.println(String.format("Storage quota for %s is: %s / %s",
             quotaRootString,
             formatStorageValue(quota.getUsed()),
             formatStorageValue(quota.encodeAsLong())));
     }
 
-    private void printMessageQuota(String quotaRootString, SerializableQuota<QuotaCount> quota, PrintStream printStream) {
+    private void printMessageQuota(String quotaRootString, SerializableQuota<QuotaCountLimit, QuotaCountUsage> quota, PrintStream printStream) {
         printStream.println(String.format("MailboxMessage count quota for %s is: %s / %s",
             quotaRootString,
             formatMessageValue(quota.getUsed()),
@@ -409,9 +411,9 @@ public class ServerCmd {
         return SizeFormat.format(value);
     }
 
-    private String formatStorageValue(SerializableQuotaValue<QuotaSize> value) {
+    private String formatStorageValue(SerializableQuotaLimitValue<QuotaSizeLimit> value) {
         return value
-            .toValue(QuotaSize::size, QuotaSize.unlimited())
+            .toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
             .map(size -> {
             if (size.isUnlimited()) {
                 return Size.UNLIMITED;
@@ -430,9 +432,9 @@ public class ServerCmd {
         return String.valueOf(value);
     }
 
-    private String formatMessageValue(SerializableQuotaValue<QuotaCount> value) {
+    private String formatMessageValue(SerializableQuotaLimitValue<QuotaCountLimit> value) {
         return value
-            .toValue(QuotaCount::count, QuotaCount.unlimited())
+            .toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
             .map(count -> {
             if (count.isUnlimited()) {
                 return Size.UNLIMITED;

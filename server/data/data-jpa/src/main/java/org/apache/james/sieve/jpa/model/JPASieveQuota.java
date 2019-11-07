@@ -28,7 +28,7 @@ import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaSizeLimit;
 
 import com.google.common.base.MoreObjects;
 
@@ -62,12 +62,12 @@ public class JPASieveQuota {
         return size;
     }
 
-    public void setSize(QuotaSize quotaSize) {
+    public void setSize(QuotaSizeLimit quotaSize) {
         this.size = quotaSize.asLong();
     }
 
-    public QuotaSize toQuotaSize() {
-        return QuotaSize.size(size);
+    public QuotaSizeLimit toQuotaSize() {
+        return QuotaSizeLimit.size(size);
     }
 
     @Override

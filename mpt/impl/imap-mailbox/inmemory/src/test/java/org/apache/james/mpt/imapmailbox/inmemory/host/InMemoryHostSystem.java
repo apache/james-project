@@ -20,8 +20,8 @@
 
 package org.apache.james.mpt.imapmailbox.inmemory.host;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.main.DefaultImapEncoderFactory;
 import org.apache.james.imap.main.DefaultImapDecoderFactory;
@@ -83,7 +83,7 @@ public class InMemoryHostSystem extends JamesImapHostSystem {
     }
 
     @Override
-    public void setQuotaLimits(QuotaCount maxMessageQuota, QuotaSize maxStorageQuota) {
+    public void setQuotaLimits(QuotaCountLimit maxMessageQuota, QuotaSizeLimit maxStorageQuota) {
         perUserMaxQuotaManager.setGlobalMaxMessage(maxMessageQuota);
         perUserMaxQuotaManager.setGlobalMaxStorage(maxStorageQuota);
     }

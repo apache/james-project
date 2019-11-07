@@ -22,8 +22,10 @@ package org.apache.james.webadmin.dto;
 
 import java.util.Optional;
 
-import org.apache.james.core.quota.QuotaCount;
-import org.apache.james.core.quota.QuotaSize;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaCountUsage;
+import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.Quota;
 
 import com.google.common.base.Preconditions;
@@ -67,7 +69,7 @@ public class QuotaDetailsDTO {
             return this;
         }
 
-        public Builder occupation(Quota<QuotaSize> sizeQuota, Quota<QuotaCount> countQuota) {
+        public Builder occupation(Quota<QuotaSizeLimit, QuotaSizeUsage> sizeQuota, Quota<QuotaCountLimit, QuotaCountUsage> countQuota) {
             this.occupation = OccupationDTO.from(sizeQuota, countQuota);
             return this;
         }
