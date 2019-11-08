@@ -1,8 +1,0 @@
-Apache James MPT uses Maven 2 (see http://maven.apache.org)
-
-Once Maven has been installed, running
-
-% mvn clean package site
-
-will build MPT from source and generate the site containing
-current documentation.
