@@ -28,22 +28,22 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.util.Host;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ElasticSearchConfigurationTest {
+class ElasticSearchConfigurationTest {
 
     @Test
-    public void elasticSearchConfigurationShouldRespectBeanContract() {
+    void elasticSearchConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(ElasticSearchConfiguration.class)
             .verify();
     }
 
     @Test
-    public void getNbReplicaShouldReturnConfiguredValue() throws ConfigurationException {
+    void getNbReplicaShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
         configuration.addProperty("elasticsearch.nb.replica", value);
@@ -56,7 +56,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getNbReplicaShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getNbReplicaShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -67,7 +67,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getWaitForActiveShardsShouldReturnConfiguredValue() throws ConfigurationException {
+    void getWaitForActiveShardsShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
         configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
@@ -80,7 +80,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getWaitForActiveShardsShouldReturnConfiguredValueWhenZero() throws ConfigurationException {
+    void getWaitForActiveShardsShouldReturnConfiguredValueWhenZero() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 0;
         configuration.addProperty("elasticsearch.index.waitForActiveShards", value);
@@ -93,7 +93,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getWaitForActiveShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getWaitForActiveShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -105,7 +105,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getNbShardsShouldReturnConfiguredValue() throws ConfigurationException {
+    void getNbShardsShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
         configuration.addProperty("elasticsearch.nb.shards", value);
@@ -118,7 +118,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getNbShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getNbShardsShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -129,7 +129,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getMaxRetriesShouldReturnConfiguredValue() throws ConfigurationException {
+    void getMaxRetriesShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
         configuration.addProperty("elasticsearch.retryConnection.maxRetries", value);
@@ -142,7 +142,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getMaxRetriesShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getMaxRetriesShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -153,7 +153,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getMinDelayShouldReturnConfiguredValue() throws ConfigurationException {
+    void getMinDelayShouldReturnConfiguredValue() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         int value = 36;
         configuration.addProperty("elasticsearch.retryConnection.minDelay", value);
@@ -166,7 +166,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getMinDelayShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
+    void getMinDelayShouldReturnDefaultValueWhenMissing() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -177,7 +177,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getHostsShouldReturnConfiguredHostsWhenNoPort() throws ConfigurationException {
+    void getHostsShouldReturnConfiguredHostsWhenNoPort() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.hosts", hostname);
@@ -189,7 +189,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getHostsShouldReturnConfiguredHostsWhenListIsUsed() throws ConfigurationException {
+    void getHostsShouldReturnConfiguredHostsWhenListIsUsed() throws ConfigurationException {
         String hostname = "myHost";
         String hostname2 = "myOtherHost";
         int port = 2154;
@@ -205,7 +205,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getHostsShouldReturnConfiguredHosts() throws ConfigurationException {
+    void getHostsShouldReturnConfiguredHosts() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         int port = 2154;
@@ -218,7 +218,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void getHostsShouldReturnConfiguredMasterHost() throws ConfigurationException {
+    void getHostsShouldReturnConfiguredMasterHost() throws ConfigurationException {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String hostname = "myHost";
         configuration.addProperty("elasticsearch.masterHost", hostname);
@@ -232,7 +232,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() {
+    void validateHostsConfigurationOptionsShouldThrowWhenNoHostSpecify() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.empty(),
@@ -245,7 +245,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoAndMultiHostSpecified() {
+    void validateHostsConfigurationOptionsShouldThrowWhenMonoAndMultiHostSpecified() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
@@ -256,7 +256,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutPort() {
+    void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutPort() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.validateHostsConfigurationOptions(
                 Optional.of("localhost"),
@@ -268,7 +268,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutAddress() {
+    void validateHostsConfigurationOptionsShouldThrowWhenMonoHostWithoutAddress() {
         assertThatThrownBy(() ->
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
@@ -280,7 +280,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldAcceptMonoHostConfiguration() throws Exception {
+    void validateHostsConfigurationOptionsShouldAcceptMonoHostConfiguration() throws Exception {
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.of("localhost"),
             Optional.of(9200),
@@ -288,7 +288,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void validateHostsConfigurationOptionsShouldAcceptMultiHostConfiguration() throws Exception {
+    void validateHostsConfigurationOptionsShouldAcceptMultiHostConfiguration() throws Exception {
         ElasticSearchConfiguration.validateHostsConfigurationOptions(
             Optional.empty(),
             Optional.empty(),
@@ -296,7 +296,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void nbReplicaShouldThrowWhenNegative() {
+    void nbReplicaShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
                 ElasticSearchConfiguration.builder()
                         .nbReplica(-1))
@@ -304,7 +304,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void waitForActiveShardsShouldThrowWhenNegative() {
+    void waitForActiveShardsShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
             ElasticSearchConfiguration.builder()
                 .waitForActiveShards(-1))
@@ -312,7 +312,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void nbShardsShouldThrowWhenNegative() {
+    void nbShardsShouldThrowWhenNegative() {
         assertThatThrownBy(() ->
                 ElasticSearchConfiguration.builder()
                         .nbShards(-1))
@@ -320,7 +320,7 @@ public class ElasticSearchConfigurationTest {
     }
 
     @Test
-    public void nbShardsShouldThrowWhenZero() {
+    void nbShardsShouldThrowWhenZero() {
         assertThatThrownBy(() ->
                 ElasticSearchConfiguration.builder()
                         .nbShards(0))

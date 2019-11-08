@@ -23,33 +23,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableSet;
 
-public class ElasticSearchHealthCheckConnectionTest {
+class ElasticSearchHealthCheckConnectionTest {
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(5);
 
-    @Rule
-    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
+    @RegisterExtension
+    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
     private ElasticSearchHealthCheck elasticSearchHealthCheck;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         RestHighLevelClient client = elasticSearch.getDockerElasticSearch().clientProvider(REQUEST_TIMEOUT).get();
 
         elasticSearchHealthCheck = new ElasticSearchHealthCheck(client, ImmutableSet.of());
     }
 
     @Test
-    public void checkShouldSucceedWhenElasticSearchIsRunning() {
+    void checkShouldSucceedWhenElasticSearchIsRunning() {
         assertThat(elasticSearchHealthCheck.check().isHealthy()).isTrue();
     }
 
     @Test
-    public void checkShouldFailWhenElasticSearchIsPaused() {
+    void checkShouldFailWhenElasticSearchIsPaused() {
 
         elasticSearch.getDockerElasticSearch().pause();
 

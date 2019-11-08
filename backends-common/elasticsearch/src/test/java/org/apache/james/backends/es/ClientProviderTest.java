@@ -21,12 +21,12 @@ package org.apache.james.backends.es;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ClientProviderTest {
+class ClientProviderTest {
 
     @Test
-    public void constructorShouldThrowOnNull() {
+    void constructorShouldThrowOnNull() {
         assertThatThrownBy(() -> new ClientProvider(null))
                 .isInstanceOf(NullPointerException.class);
     }

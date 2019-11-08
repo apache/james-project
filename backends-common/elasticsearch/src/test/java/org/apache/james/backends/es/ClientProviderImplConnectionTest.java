@@ -30,30 +30,50 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ClientProviderImplConnectionTest {
+class ClientProviderImplConnectionTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionTest.class);
     private static final int ES_APPLICATIVE_PORT = 9200;
 
-    @ClassRule
-    public static DockerContainer es1 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
+    static DockerContainer es1 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
 
-    @Rule
-    public DockerContainer es2 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
+    DockerContainer es2 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
         .withEnv("discovery.type", "single-node")
         .withAffinityToContainer()
         .withExposedPorts(ES_APPLICATIVE_PORT);
+
+    @BeforeAll
+    static void setUpClass() {
+        es1.start();
+    }
+
+    @BeforeEach
+    void setUp() {
+        es2.start();
+    }
+
+    @AfterEach
+    void tearDown() {
+        es2.stop();
+    }
+
+    @AfterAll
+    static void tearDownClass() {
+        es1.stop();
+    }
 
     @Test
-    public void connectingASingleServerShouldWork() {
+    void connectingASingleServerShouldWork() {
         ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
             .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
             .build();
@@ -65,7 +85,7 @@ public class ClientProviderImplConnectionTest {
     }
 
     @Test
-    public void connectingAClusterShouldWork() {
+    void connectingAClusterShouldWork() {
         ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
             .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
             .addHost(Host.from(es2.getContainerIp(), ES_APPLICATIVE_PORT))
@@ -78,7 +98,7 @@ public class ClientProviderImplConnectionTest {
     }
 
     @Test
-    public void connectingAClusterWithAFailedNodeShouldWork() {
+    void connectingAClusterWithAFailedNodeShouldWork() {
         String es1Ip = es1.getContainerIp();
         String es2Ip = es2.getContainerIp();
         es2.stop();

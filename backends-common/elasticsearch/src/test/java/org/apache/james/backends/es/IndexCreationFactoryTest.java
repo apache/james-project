@@ -24,35 +24,35 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class IndexCreationFactoryTest {
+class IndexCreationFactoryTest {
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    @Rule
-    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
+    @RegisterExtension
+    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
     private RestHighLevelClient client;
 
-    @Before
-    public void setUp() {
-        client = elasticSearch.clientProvider().get();
+    @BeforeEach
+    void setUp() {
+        client = elasticSearch.getDockerElasticSearch().clientProvider().get();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
             .createIndexAndAliases(client);
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         client.close();
     }
 
     @Test
-    public void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
+    void createIndexAndAliasShouldNotThrowWhenCalledSeveralTime() {
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
             .addAlias(ALIAS_NAME)
@@ -60,7 +60,7 @@ public class IndexCreationFactoryTest {
     }
 
     @Test
-    public void useIndexShouldThrowWhenNull() {
+    void useIndexShouldThrowWhenNull() {
         assertThatThrownBy(() ->
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(null))
@@ -68,7 +68,7 @@ public class IndexCreationFactoryTest {
     }
 
     @Test
-    public void addAliasShouldThrowWhenNull() {
+    void addAliasShouldThrowWhenNull() {
         assertThatThrownBy(() ->
             new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
                 .useIndex(INDEX_NAME)

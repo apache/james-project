@@ -26,22 +26,22 @@ import java.io.IOException;
 
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class NodeMappingFactoryTest {
+class NodeMappingFactoryTest {
     private static final String MESSAGE = "message";
     private static final IndexName INDEX_NAME = new IndexName("index");
     private static final ReadAliasName ALIAS_NAME = new ReadAliasName("alias");
 
-    @Rule
-    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
+    @RegisterExtension
+    public DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
     private RestHighLevelClient client;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         client = elasticSearch.getDockerElasticSearch().clientProvider().get();
         new IndexCreationFactory(ElasticSearchConfiguration.DEFAULT_CONFIGURATION)
             .useIndex(INDEX_NAME)
@@ -52,20 +52,20 @@ public class NodeMappingFactoryTest {
             getMappingsSources());
     }
 
-    @After
-    public void tearDown() throws IOException {
+    @AfterEach
+    void tearDown() throws IOException {
         client.close();
     }
 
     @Test
-    public void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
+    void applyMappingShouldNotThrowWhenCalledSeveralTime() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getMappingsSources());
     }
 
     @Test
-    public void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
+    void applyMappingShouldNotThrowWhenIncrementalChanges() throws Exception {
         NodeMappingFactory.applyMapping(client,
             INDEX_NAME,
             getMappingsSources());

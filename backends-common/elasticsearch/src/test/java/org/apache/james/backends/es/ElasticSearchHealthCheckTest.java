@@ -27,34 +27,34 @@ import org.elasticsearch.cluster.block.ClusterBlocks;
 import org.elasticsearch.cluster.health.ClusterHealthStatus;
 import org.elasticsearch.cluster.node.DiscoveryNodes;
 import org.elasticsearch.cluster.routing.RoutingTable;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
-public class ElasticSearchHealthCheckTest {
+class ElasticSearchHealthCheckTest {
     private ElasticSearchHealthCheck healthCheck;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         healthCheck = new ElasticSearchHealthCheck(null, ImmutableSet.of());
     }
 
     @Test
-    public void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsGreen() {
+    void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsGreen() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.GREEN);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();
     }
 
     @Test
-    public void checkShouldReturnUnHealthyWhenElasticSearchClusterHealthStatusIsRed() {
+    void checkShouldReturnUnHealthyWhenElasticSearchClusterHealthStatusIsRed() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.RED);
 
         assertThat(healthCheck.toHealthCheckResult(response).isUnHealthy()).isTrue();
     }
 
     @Test
-    public void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsYellow() {
+    void checkShouldReturnHealthyWhenElasticSearchClusterHealthStatusIsYellow() {
         FakeClusterHealthResponse response = new FakeClusterHealthResponse(ClusterHealthStatus.YELLOW);
 
         assertThat(healthCheck.toHealthCheckResult(response).isHealthy()).isTrue();
