@@ -100,8 +100,8 @@ public class RandomStoring extends GenericMailet {
         return ThreadLocalRandom
             .current()
             .ints(0, reroutingInfos.size())
-            .mapToObj(reroutingInfos::get)
             .distinct()
+            .mapToObj(reroutingInfos::get)
             .limit(randomRecipientsNumbers.get())
             .collect(Guavate.toImmutableSet());
     }
