@@ -78,9 +78,6 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     /**
      * Use the passed {@link FetchGroup} and calculate the right
      * {@link FetchType} for it
-     * 
-     * @param group
-     * @return fetchType
      */
     private static FetchType getFetchType(FetchGroup group) {
         int content = group.content();

@@ -238,10 +238,8 @@ public class StoreRightManager implements RightManager {
     /**
      * Applies the global ACL (if there are any) to the mailbox ACL.
      *
-     * @param mailboxSession
      * @return the ACL of the present mailbox merged with the global ACL (if
      *         there are any).
-     * @throws UnsupportedRightException
      */
     public MailboxACL getResolvedMailboxACL(Mailbox mailbox, MailboxSession mailboxSession) throws UnsupportedRightException {
         MailboxACL acl = aclResolver.applyGlobalACL(

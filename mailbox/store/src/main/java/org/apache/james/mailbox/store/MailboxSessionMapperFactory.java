@@ -80,9 +80,7 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     /**
      * Create a {@link MessageMapper} instance which will get reused during the whole {@link MailboxSession}
      * 
-     * @param session
      * @return messageMapper
-     * @throws MailboxException
      */
     public abstract MessageMapper createMessageMapper(MailboxSession session) throws MailboxException;
 
@@ -102,16 +100,13 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     /**
      * Create a {@link MailboxMapper} instance which will get reused during the whole {@link MailboxSession}
      * 
-     * @param session
      * @return mailboxMapper
-     * @throws MailboxException
      */
     public abstract MailboxMapper createMailboxMapper(MailboxSession session) throws MailboxException;
 
     /**
      * Create a {@link SubscriptionMapper} instance or return the one which exists for the {@link MailboxSession} already
      * 
-     * @param session
      * @return mapper
      */
     @Override
@@ -126,9 +121,8 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
     
     /**
      * Create a {@link SubscriptionMapper} instance which will get reused during the whole {@link MailboxSession}
-     * @param session
+     *
      * @return subscriptionMapper
-     * @throws SubscriptionException
      */
     public abstract SubscriptionMapper createSubscriptionMapper(MailboxSession session) throws SubscriptionException;
 
@@ -138,8 +132,6 @@ public abstract class MailboxSessionMapperFactory implements RequestAware, Mailb
 
     /**
      * Call endRequest on {@link Mapper} instances
-     * 
-     * @param session
      */
     @Override
     public void endProcessingRequest(MailboxSession session) {

@@ -51,7 +51,6 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
-import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -104,6 +103,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedMap;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -115,9 +115,6 @@ import reactor.core.scheduler.Schedulers;
  * This base class take care of dispatching events to the registered
  * {@link MailboxListener} and so help with handling concurrent
  * {@link MailboxSession}'s.
- * 
- * 
- * 
  */
 public class StoreMessageManager implements MessageManager {
     private static final MailboxCounters ZERO_MAILBOX_COUNTERS = MailboxCounters.builder()
@@ -194,8 +191,6 @@ public class StoreMessageManager implements MessageManager {
     
     /**
      * Return the {@link MailboxPathLocker}
-     * 
-     * @return locker
      */
     protected MailboxPathLocker getLocker() {
         return locker;
@@ -203,9 +198,6 @@ public class StoreMessageManager implements MessageManager {
 
     /**
      * Return the underlying {@link Mailbox}
-     * 
-     * @return mailbox
-     * @throws MailboxException
      */
 
     public Mailbox getMailboxEntity() throws MailboxException {
@@ -224,9 +216,6 @@ public class StoreMessageManager implements MessageManager {
      * override this method and add {@link Flag#USER} to the list of returned
      * {@link Flags}. If only a special set of user flags / keywords should be
      * allowed just add them directly.
-     * 
-     * @param session
-     * @return flags
      */
     protected Flags getPermanentFlags(MailboxSession session) {
 
@@ -253,11 +242,6 @@ public class StoreMessageManager implements MessageManager {
      * 
      * In this implementation, all permanent flags are shared, ergo we simply
      * return {@link #getPermanentFlags(MailboxSession)}
-     *
-     * @see UnionMailboxACLResolver#isReadWrite(MailboxACLRights, Flags)
-     * 
-     * @param session
-     * @return
      */
     protected Flags getSharedPermanentFlags(MailboxSession session) {
         return getPermanentFlags(session);
@@ -618,9 +602,6 @@ public class StoreMessageManager implements MessageManager {
      * {@link Flag#RECENT} flag.
      * 
      * This flag is never removed!
-     * 
-     * @param flags
-     * @param session
      */
     private void trimFlags(Flags flags, MailboxSession session) {
 
@@ -675,11 +656,6 @@ public class StoreMessageManager implements MessageManager {
 
     /**
      * Copy the {@link MessageRange} to the {@link StoreMessageManager}
-     * 
-     * @param set
-     * @param toMailbox
-     * @param session
-     * @throws MailboxException
      */
     public List<MessageRange> copyTo(final MessageRange set, final StoreMessageManager toMailbox, final MailboxSession session) throws MailboxException {
         if (!toMailbox.isWriteable(session)) {
@@ -694,11 +670,6 @@ public class StoreMessageManager implements MessageManager {
 
     /**
      * Move the {@link MessageRange} to the {@link StoreMessageManager}
-     * 
-     * @param set
-     * @param toMailbox
-     * @param session
-     * @throws MailboxException
      */
     public List<MessageRange> moveTo(final MessageRange set, final StoreMessageManager toMailbox, final MailboxSession session) throws MailboxException {
         if (!isWriteable(session)) {

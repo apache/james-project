@@ -27,8 +27,6 @@ import java.io.InputStream;
 /**
  * {@link InputStream} implementation which just consume the the wrapped {@link InputStream} and count
  * the lines which are contained within the wrapped stream
- * 
- *
  */
 public final class CountingInputStream extends InputStream {
 
@@ -75,7 +73,6 @@ public final class CountingInputStream extends InputStream {
     
     /**
      * Reads - and discards - the rest of the stream
-     * @throws IOException
      */
     public void readAll() throws IOException {
         while (read() > 0) {

@@ -29,8 +29,6 @@ import org.apache.james.mailbox.model.MailboxId;
 /**
  * Take care of provide uids for a given {@link Mailbox}. Be aware that implementations
  * need to be thread-safe!
- * 
- *
  */
 public interface UidProvider {
 

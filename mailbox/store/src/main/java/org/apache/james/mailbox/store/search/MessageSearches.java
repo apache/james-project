@@ -128,7 +128,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      *            <code>MailboxMessage</code>, not null
      * @return <code>true</code> if the row matches the given criteria,
      *         <code>false</code> otherwise
-     * @throws MailboxException
      */
     private boolean isMatch(MailboxMessage message) throws MailboxException {
         final List<SearchQuery.Criterion> criteria = query.getCriterias();
@@ -154,7 +153,6 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
      *            collection of recent message uids
      * @return <code>true</code> if the row matches the given criterion,
      *         <code>false</code> otherwise
-     * @throws MailboxException
      */
     public boolean isMatch(SearchQuery.Criterion criterion, MailboxMessage message,
             final Collection<MessageUid> recentMessageUids) throws MailboxException {
@@ -411,13 +409,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
     /**
      * Match against a {@link AddressType} header
-     * 
-     * @param operator
-     * @param headerName
-     * @param message
      * @return containsAddress
-     * @throws MailboxException
-     * @throws IOException
      */
     private boolean matchesAddress(SearchQuery.AddressOperator operator, String headerName,
                                    MailboxMessage message) throws MailboxException, IOException {

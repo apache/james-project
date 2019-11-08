@@ -30,8 +30,6 @@ import org.apache.james.mailbox.model.MailboxId;
 /**
  * Abstract base implementation of {@link UidProvider} which used the given {@link MailboxPathLocker} to 
  * lock the {@link Mailbox} while the next uid is generated
- * 
- *
  */
 public abstract class AbstractLockingUidProvider implements UidProvider {
 

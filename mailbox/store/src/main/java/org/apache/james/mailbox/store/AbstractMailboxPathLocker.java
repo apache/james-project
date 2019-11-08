@@ -41,22 +41,13 @@ public abstract class AbstractMailboxPathLocker implements MailboxPathLocker {
         }
     }
 
-    
     /**
      * Perform lock
-     * 
-     * @param session
-     * @param path
-     * @throws MailboxException
      */
     protected abstract void lock(MailboxSession session, MailboxPath path, boolean writeLock) throws MailboxException;
 
     /**
      * Release lock
-     * 
-     * @param session
-     * @param path
-     * @throws MailboxException
      */
     protected abstract void unlock(MailboxSession session, MailboxPath path, boolean writeLock) throws MailboxException;
 

@@ -33,7 +33,6 @@ import org.apache.james.mailbox.model.MessageResult.Header;
 /**
  * Abstract base class for {@link Content} implementations which hold the headers and 
  * the body a email
- *
  */
 public class FullByteContent implements Content {
 

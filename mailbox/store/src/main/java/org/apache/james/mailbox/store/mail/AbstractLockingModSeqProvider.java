@@ -25,7 +25,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 
-
 /**
  * Abstract base implementation of {@link ModSeqProvider} which uses the given {@link MailboxPathLocker} to lock the {@link Mailbox} during the mod-seq generation.
  */
@@ -52,11 +51,6 @@ public abstract class AbstractLockingModSeqProvider implements ModSeqProvider {
 
     /**
      * Generate the next mod-seq for the given {@link Mailbox} while holding a lock on it.
-     * 
-     * @param session
-     * @param mailbox
-     * @return nextModSeq
-     * @throws MailboxException
      */
     protected abstract long lockedNextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
 

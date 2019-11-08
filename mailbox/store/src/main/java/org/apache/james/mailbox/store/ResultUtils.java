@@ -102,11 +102,8 @@ public class ResultUtils {
     
     /**
      * Return the {@link MessageResult} for the given {@link MailboxMessage} and {@link FetchGroup}
-     * 
-     * @param message
-     * @param fetchGroup
+     *
      * @return result
-     * @throws MailboxException
      */
     public static MessageResult loadMessageResult(MailboxMessage message, FetchGroup fetchGroup) throws MailboxException {
         try {

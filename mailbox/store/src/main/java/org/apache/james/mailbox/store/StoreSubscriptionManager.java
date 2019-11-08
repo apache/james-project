@@ -69,10 +69,6 @@ public class StoreSubscriptionManager implements SubscriptionManager {
      * Create Subscription for the given user and mailbox. By default a {@link SimpleSubscription} will get returned.
      * 
      * If you need something more special just override this method
-     * 
-     * @param session
-     * @param mailbox
-     * @return subscription 
      */
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
         return new SimpleSubscription(session.getUser().asString(), mailbox);

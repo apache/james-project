@@ -34,12 +34,10 @@ public abstract class AbstractMailboxSessionIdGenerator implements MailboxSessio
         }
         return id;
     }
-    
-    
+
     /**
      * Generate the next id to use
-     * 
-     * 
+     *
      * @return id
      */
     protected abstract long generateNextId();

@@ -38,8 +38,6 @@ import org.apache.james.mime4j.util.MimeUtil;
 
 /**
  * Utility class which helps with extracting of data for searches
- * 
- *
  */
 public class SearchUtil {
 
@@ -85,7 +83,6 @@ public class SearchUtil {
      *      o  If none of the above conditions are met, the sort value for the
      *         address is the empty string.
      * </p>
-     * @param mailbox
      * @return display
      */
     public static String getDisplayAddress(Mailbox mailbox) {
@@ -107,8 +104,7 @@ public class SearchUtil {
      * Parse the headerValue and delegate to {@link #getDisplayAddress(Mailbox)}
      * 
      * If no display address is found an empty String is returned
-     * 
-     * @param headerValue
+     *
      * @return display
      */
     public static String getDisplayAddress(String headerValue) {
@@ -137,8 +133,6 @@ public class SearchUtil {
      * See RFC5256 and RFC3501
      * 
      * Which is in fact the LocalPart
-     * @param mailbox
-     * @return addrMailbox
      */
     public static String getMailboxAddress(Mailbox mailbox) {
         return mailbox.getLocalPart();
@@ -149,8 +143,7 @@ public class SearchUtil {
      * Parse the headerValue and delegate to {@link #getMailboxAddress(Mailbox)}
      * 
      * If no mailbox name is found an empty String is returned
-     * 
-     * @param headerValue
+     *
      * @return mailbox
      */
     public static String getMailboxAddress(String headerValue) {
@@ -232,8 +225,6 @@ public class SearchUtil {
      *    (7) The resulting text is the "base subject" used in the SORT.
      * </p>
      *
-     *
-     * @param subject
      * @return baseSubject
      */
     public static String getBaseSubject(String subject) {
@@ -324,9 +315,7 @@ public class SearchUtil {
      * 
      *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
      *     ; any CHAR except '[' and ']' 
-     *     
-     *     
-     * @param subject
+     *
      * @return sub
      */
     private static String removeSubjectBlob(String subject) {
@@ -360,9 +349,7 @@ public class SearchUtil {
      * 
      *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
      *     ; any CHAR except '[' and ']' 
-     *     
-     *     
-     * @param subject
+     *
      * @return sub
      */
     private static String removeSubjLeaders(String subject) {
@@ -415,10 +402,8 @@ public class SearchUtil {
      * remove the remove_subj_trailers
      * 
      *    subj-trailer    = "(fwd)" / WSP
-     *  
-     *  
-     * @param decodedSubject
-     * * @return sub
+     *
+     * @return sub
      */
     private static String removeSubTrailers(String decodedSubject) {
         int subStringStart = 0;
@@ -446,8 +431,7 @@ public class SearchUtil {
      * 
      *     BLOBCHAR = %x01-5a / %x5c / %x5e-7f
      *     ; any CHAR except '[' and ']' 
-     *     
-     * @param subject
+     *
      * @return subj
      */
     private static String removeBlob(String subject) {

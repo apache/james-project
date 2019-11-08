@@ -36,8 +36,6 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 /**
  * A {@link MimeDescriptor} implementation which tries to optimize the way the data
  * is loading by using it in a lazy fashion whenever possible.
- * 
- *
  */
 public class LazyMimeDescriptor implements MimeDescriptor {
 

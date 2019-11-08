@@ -183,8 +183,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     /**
      * Return the {@link MessageSearchIndex} used by this {@link MailboxManager}
-     *
-     * @return index
      */
     public MessageSearchIndex getMessageSearchIndex() {
         return index;
@@ -192,8 +190,6 @@ public class StoreMailboxManager implements MailboxManager {
 
     /**
      * Return the {@link MailboxSessionMapperFactory} used by this {@link MailboxManager}
-     *
-     * @return mailboxSessionMapperFactory
      */
     public MailboxSessionMapperFactory getMapperFactory() {
         return mailboxSessionMapperFactory;
@@ -216,9 +212,7 @@ public class StoreMailboxManager implements MailboxManager {
     }
 
     /**
-     * Generate an return the next uid validity
-     *
-     * @return uidValidity
+     * Generate and return the next uid validity
      */
     protected int randomUidValidity() {
         return Math.abs(RANDOM.nextInt());
@@ -256,8 +250,6 @@ public class StoreMailboxManager implements MailboxManager {
      * Create a {@link MailboxManager} for the given Mailbox. By default this will return a {@link StoreMessageManager}. If
      * your implementation needs something different, just override this method
      *
-     * @param mailbox
-     * @param session
      * @return storeMailbox
      */
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {

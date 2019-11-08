@@ -24,7 +24,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 /**
  *
  * Run Transaction and handle begin, commit and rollback in the right order
- *
  */
 public abstract class TransactionalMapper implements Mapper {
 
@@ -43,22 +42,16 @@ public abstract class TransactionalMapper implements Mapper {
     
     /**
      * Begin transaction
-     * 
-     * @throws StorageException
      */
     protected abstract void begin() throws MailboxException;
 
     /**
      * Commit transaction
-     * 
-     * @throws StorageException
      */
     protected abstract void commit() throws MailboxException;
     
     /**
      * Rollback transaction
-     * 
-     * @throws StorageException
      */
     protected abstract void rollback() throws MailboxException;
 

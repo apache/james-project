@@ -25,9 +25,6 @@ public interface MailboxMapperFactory {
 
     /**
      * Create a {@link MailboxMapper} instance or return the one which exists for the {@link MailboxSession} already
-     * 
-     * @param session
-     * @return mapper
      */
     MailboxMapper getMailboxMapper(MailboxSession session) throws MailboxException;
 }

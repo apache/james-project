@@ -49,10 +49,8 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox The mailbox to search
      * @param set message range for batch processing
-     * @param type
      * @param limit the maximal limit of returned {@link MailboxMessage}'s. Use -1 to set no limit. In any case the caller MUST not expect the limit to get applied in all cases as the implementation
      *              MAY just ignore it
-     * @throws MailboxException
      */
     Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange set, FetchType type, int limit)
             throws MailboxException;
@@ -64,20 +62,12 @@ public interface MessageMapper extends Mapper {
 
     /**
      * Return the count of messages in the mailbox
-     * 
-     * @param mailbox
-     * @return count
-     * @throws MailboxException
      */
     long countMessagesInMailbox(Mailbox mailbox)
             throws MailboxException;
 
     /**
      * Return the count of unseen messages in the mailbox
-     * 
-     * @param mailbox
-     * @return unseenCount
-     * @throws MailboxException
      */
     long countUnseenMessagesInMailbox(Mailbox mailbox)
             throws MailboxException;
@@ -86,10 +76,6 @@ public interface MessageMapper extends Mapper {
 
     /**
      * Delete the given {@link MailboxMessage}
-     * 
-     * @param mailbox
-     * @param message
-     * @throws MailboxException
      */
     void delete(Mailbox mailbox, MailboxMessage message) throws MailboxException;
 
@@ -101,11 +87,6 @@ public interface MessageMapper extends Mapper {
 
     /**
      * Return the uid of the first unseen message. If non can be found null will get returned
-     * 
-     * 
-     * @param mailbox
-     * @return uid or null
-     * @throws MailboxException
      */
     MessageUid findFirstUnseenMessageUid(Mailbox mailbox) throws MailboxException;
 
@@ -119,23 +100,13 @@ public interface MessageMapper extends Mapper {
     /**
      * Add the given {@link MailboxMessage} to the underlying storage. Be aware that implementation may choose to replace the uid of the given message while storing.
      * So you should only depend on the returned uid.
-     * 
-     * 
-     * @param mailbox
-     * @param message
-     * @return uid
-     * @throws MailboxException
      */
     MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException;
     
     /**
      * Update flags for the given {@link MessageRange}. Only the flags may be modified after a message was saved to a mailbox.
-     * 
-     * @param mailbox
+     *
      * @param flagsUpdateCalculator How to update flags
-     * @param set
-     * @return updatedFlags
-     * @throws MailboxException
      */
     Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
             final MessageRange set) throws MailboxException;
@@ -146,7 +117,6 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox the Mailbox to copy to
      * @param original the original to copy
-     * @throws MailboxException
      */
     MessageMetaData copy(Mailbox mailbox,MailboxMessage original) throws MailboxException;
     
@@ -156,7 +126,6 @@ public interface MessageMapper extends Mapper {
      * 
      * @param mailbox the Mailbox to move to
      * @param original the original to move
-     * @throws MailboxException
      */
     MessageMetaData move(Mailbox mailbox,MailboxMessage original) throws MailboxException;
     

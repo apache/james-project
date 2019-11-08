@@ -25,9 +25,6 @@ public interface SubscriptionMapperFactory {
 
     /**
      * Create a {@link SubscriptionMapper} instance or return the one which exists for the {@link MailboxSession} already
-     * 
-     * @param session
-     * @return mapper
      */
     SubscriptionMapper getSubscriptionMapper(MailboxSession session) throws SubscriptionException;
 }

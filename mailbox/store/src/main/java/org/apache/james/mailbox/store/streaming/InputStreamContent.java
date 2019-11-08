@@ -26,7 +26,6 @@ import org.apache.james.mailbox.store.mail.model.Message;
 
 /**
  * {@link Content} which is stored in a {@link InputStream}
- *
  */
 public final class InputStreamContent implements Content {
 
