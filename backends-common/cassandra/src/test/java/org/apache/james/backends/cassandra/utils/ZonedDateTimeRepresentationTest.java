@@ -23,16 +23,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.ZonedDateTime;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ZonedDateTimeRepresentationTest {
+class ZonedDateTimeRepresentationTest {
 
     private static final ZonedDateTime ZONED_DATE_TIME_VN = ZonedDateTime.parse("2016-04-13T12:04:40.906+07:00[Asia/Vientiane]");
     private static final ZonedDateTime ZONED_DATE_TIME_FR = ZonedDateTime.parse("2016-04-13T07:04:40.906+02:00");
     private static final long INSTANT = 1460523880906L;
 
     @Test
-    public void zonedDateTimeRepresentationShouldBeReversible() {
+    void zonedDateTimeRepresentationShouldBeReversible() {
         ZonedDateTimeRepresentation originalValue = ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_VN);
 
         ZonedDateTimeRepresentation generatedValue = ZonedDateTimeRepresentation.fromDate(originalValue.getDate(), originalValue.getSerializedZoneId());
@@ -41,25 +41,25 @@ public class ZonedDateTimeRepresentationTest {
     }
 
     @Test
-    public void getSerializedZoneIdShouldReturnTheRightZone() {
+    void getSerializedZoneIdShouldReturnTheRightZone() {
         assertThat(ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_VN).getSerializedZoneId())
             .isEqualTo("Asia/Vientiane");
     }
 
     @Test
-    public void getDateShouldReturnTheRightDate() {
+    void getDateShouldReturnTheRightDate() {
         assertThat(ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_VN).getDate().getTime())
             .isEqualTo(INSTANT);
     }
 
     @Test
-    public void getSerializedZoneIdShouldWorkWithFrTimeZone() {
+    void getSerializedZoneIdShouldWorkWithFrTimeZone() {
         assertThat(ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_FR).getSerializedZoneId())
             .isEqualTo("+02:00");
     }
 
     @Test
-    public void getDateShouldWorkWithFrTimeZone() {
+    void getDateShouldWorkWithFrTimeZone() {
         assertThat(ZonedDateTimeRepresentation.fromZonedDateTime(ZONED_DATE_TIME_FR).getDate().getTime())
             .isEqualTo(INSTANT);
     }

@@ -27,19 +27,19 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CassandraConfigurationReadingTest {
+class CassandraConfigurationReadingTest {
 
     @Test
-    public void provideCassandraConfigurationShouldReturnDefaultOnEmptyConfigurationFile() {
+    void provideCassandraConfigurationShouldReturnDefaultOnEmptyConfigurationFile() {
         CassandraConfiguration configuration = CassandraConfiguration.from(new PropertiesConfiguration());
 
         assertThat(configuration).isEqualTo(CassandraConfiguration.DEFAULT_CONFIGURATION);
     }
 
     @Test
-    public void provideCassandraConfigurationShouldReturnRightConfigurationFile() throws ConfigurationException {
+    void provideCassandraConfigurationShouldReturnRightConfigurationFile() throws ConfigurationException {
         FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
             .configure(new Parameters()
                 .fileBased()

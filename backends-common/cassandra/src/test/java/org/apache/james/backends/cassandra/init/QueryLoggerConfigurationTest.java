@@ -23,12 +23,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.backends.cassandra.init.configuration.QueryLoggerConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class QueryLoggerConfigurationTest {
+class QueryLoggerConfigurationTest {
 
     @Test
-    public void fromShouldNotThrowWithMinimalConfigAboutAConstantThresholdSlowQueryLogger() {
+    void fromShouldNotThrowWithMinimalConfigAboutAConstantThresholdSlowQueryLogger() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("cassandra.query.logger.constant.threshold", 100);
 
@@ -37,7 +37,7 @@ public class QueryLoggerConfigurationTest {
     }
 
     @Test
-    public void fromShouldNotThrowWithPersonalizedConfigAboutPercentileSlowQuerryLogger() {
+    void fromShouldNotThrowWithPersonalizedConfigAboutPercentileSlowQuerryLogger() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
 
         configuration.addProperty("cassandra.query.slow.query.latency.threshold.percentile", 90);
@@ -50,7 +50,7 @@ public class QueryLoggerConfigurationTest {
     }
 
     @Test
-    public void fromShouldThrowIfConfigAboutLoggerIsInvalid() {
+    void fromShouldThrowIfConfigAboutLoggerIsInvalid() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("cassandra.query.slow.query.latency.threshold.percentile", 90);
         configuration.addProperty("cassandra.query.logger.constant.threshold", 100);

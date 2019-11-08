@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerCassandraExtension.class)
-public class CassandraHealthCheckTest {
+class CassandraHealthCheckTest {
 
     private CassandraHealthCheck healthCheck;
     private CassandraCluster cassandra;
