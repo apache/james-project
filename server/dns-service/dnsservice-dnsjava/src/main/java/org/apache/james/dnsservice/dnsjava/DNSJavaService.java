@@ -106,8 +106,11 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
 
     /**
      * The MX Comparator used in the MX sort.
+     *
+     * RFC 2821 section 5 requires that we sort the MX records by their
+     * preference.
      */
-    private final Comparator<MXRecord> mxComparator = new MXRecordComparator();
+    private final Comparator<MXRecord> mxComparator = Comparator.comparing(MXRecord::getPriority);
 
     /**
      * If true register this service as the default resolver/cache for DNSJava
@@ -400,22 +403,7 @@ public class DNSJavaService implements DNSService, DNSServiceMBean, Configurable
         }
     }
 
-    /*
-     * RFC 2821 section 5 requires that we sort the MX records by their
-     * preference. Reminder for maintainers: the return value on a Comparator
-     * can be counter-intuitive for those who aren't used to the old C strcmp
-     * function:
-     * 
-     * < 0 ==> a < b = 0 ==> a = b > 0 ==> a > b
-     */
-    private static class MXRecordComparator implements Comparator<MXRecord> {
-        @Override
-        public int compare(MXRecord a, MXRecord b) {
-            int pa = a.getPriority();
-            int pb = b.getPriority();
-            return pa - pb;
-        }
-    }
+
 
     /*
      * java.net.InetAddress.get[All]ByName(String) allows an IP literal to be
