@@ -24,7 +24,6 @@ import java.nio.charset.Charset;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
@@ -79,25 +78,6 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer continuationResponse(String message) throws IOException {
         writeASCII(CONTINUATION + SP + message);
-        end();
-        return this;
-    }
-
-
-
-    @Override
-    public ImapResponseComposer commandResponse(ImapCommand command, String message) throws IOException {
-        untagged();
-        commandName(command.getName());
-        message(message);
-        end();
-        return this;
-    }
-
-    @Override
-    public ImapResponseComposer taggedResponse(String message, String tag) throws IOException {
-        tag(tag);
-        message(message);
         end();
         return this;
     }
@@ -200,16 +180,6 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     @Override
     public ImapResponseComposer nil() throws IOException {
         message(NIL);
-        return this;
-    }
-
-    @Override
-    public ImapResponseComposer upperCaseAscii(String message) throws IOException {
-        if (message == null) {
-            nil();
-        } else {
-            upperCaseAscii(message, false);
-        }
         return this;
     }
 

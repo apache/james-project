@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -54,24 +53,6 @@ public interface ImapResponseComposer {
      * Composes a <code>NIL</code>.
      */
     ImapResponseComposer nil() throws IOException;
-
-    /**
-     * Compose a response which contains the {@link ImapCommand} to which the
-     * response belongs
-     *
-     * @param message
-     * @return self
-     */
-    ImapResponseComposer commandResponse(ImapCommand command, String message) throws IOException;
-
-    /**
-     * Writes the message provided to the client, prepended with the request
-     * tag.
-     * 
-     * @param message
-     *            The message to write to the client.
-     */
-    ImapResponseComposer taggedResponse(String message, String tag) throws IOException;
 
     /**
      * Writes the message provided to the client, prepended with the untagged
@@ -183,18 +164,6 @@ public interface ImapResponseComposer {
      * @throws IOException
      */
     ImapResponseComposer closeParen() throws IOException;
-
-    /**
-     * Appends the given message after conversion to upper case. The message may
-     * be assumed to be ASCII encoded. Conversion of characters MUST NOT be
-     * performed according to the current locale but as per ASCII.
-     * 
-     * @param message
-     *            ASCII encoded, not null
-     * @return self, not null
-     * @throws IOException
-     */
-    ImapResponseComposer upperCaseAscii(String message) throws IOException;
 
     /**
      * Appends the given message after conversion to upper case. The message may

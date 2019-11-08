@@ -18,7 +18,6 @@ package org.apache.james.imap.utils;
  */
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 
@@ -215,19 +214,6 @@ public class FastByteArrayOutputStream extends OutputStream {
             expand(1);
         }
         buf[count++] = (byte) oneByte;
-    }
-
-    /**
-     * Takes the contents of this stream and writes it to the output stream
-     * {@code out}.
-     * 
-     * @param out
-     *            an OutputStream on which to write the contents of this stream.
-     * @throws IOException
-     *             if an error occurs while writing to {@code out}.
-     */
-    public void writeTo(OutputStream out) throws IOException {
-        out.write(buf, 0, count);
     }
 }
 
