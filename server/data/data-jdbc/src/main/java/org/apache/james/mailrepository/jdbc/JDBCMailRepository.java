@@ -296,13 +296,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
         theJDBCUtil = new JDBCUtil();
 
-        // Test the connection to the database, by getting the DatabaseMetaData.
-        Connection conn = datasource.getConnection();
-        PreparedStatement createStatement = null;
-
-        try {
+        try (Connection conn = datasource.getConnection()) {
             // Initialise the sql strings.
-
             InputStream sqlFile;
             try {
                 sqlFile = fileSystem.getResource(sqlFileName);
@@ -332,17 +327,14 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             // Try UPPER, lower, and MixedCase, to see if the table is there.
             if (!(theJDBCUtil.tableExists(dbMetaData, tableName))) {
                 // Users table doesn't exist - create it.
-                createStatement = conn.prepareStatement(sqlQueries.getSqlString("createTable", true));
-                createStatement.execute();
+                try (PreparedStatement createStatement = conn.prepareStatement(sqlQueries.getSqlString("createTable", true))) {
+                    createStatement.execute();
+                }
 
                 LOGGER.info("JdbcMailRepository: Created table '{}'.", tableName);
             }
 
             checkJdbcAttributesSupport(dbMetaData);
-
-        } finally {
-            theJDBCUtil.closeJDBCStatement(createStatement);
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 
@@ -442,9 +434,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     }
 
     private void internalStore(Mail mc) throws IOException, MessagingException {
-        Connection conn = null;
-        try {
-            conn = datasource.getConnection();
+        try (Connection conn = datasource.getConnection()) {
             // Need to determine whether need to insert this record, or update
             // it.
 
@@ -531,9 +521,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                     PreparedStatement updateMessageAttr = null;
                     try {
                         updateMessageAttr = conn.prepareStatement(updateMessageAttrSql);
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ObjectOutputStream oos = new ObjectOutputStream(baos);
-                        try {
+                        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
@@ -542,20 +531,11 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                                             attribute -> attribute.getName().asString(),
                                             attribute -> (Serializable) attribute.getValue().value()
                                     ));
-
                                 oos.writeObject(temp);
                             }
                             oos.flush();
                             ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
                             updateMessageAttr.setBinaryStream(1, attrInputStream, baos.size());
-                        } finally {
-                            try {
-                                if (oos != null) {
-                                    oos.close();
-                                }
-                            } catch (IOException ioe) {
-                                LOGGER.debug("JDBCMailRepository: Unexpected exception while closing output stream.", ioe);
-                            }
                         }
                         updateMessageAttr.setString(2, mc.getName());
                         updateMessageAttr.setString(3, repositoryName);
@@ -620,9 +600,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
                     // Store attributes
                     if (numberOfParameters > 11) {
-                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                        ObjectOutputStream oos = new ObjectOutputStream(baos);
-                        try {
+                        try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
                             if (mc instanceof MailImpl) {
                                 oos.writeObject(((MailImpl) mc).getAttributesRaw());
                             } else {
@@ -637,14 +616,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                             oos.flush();
                             ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
                             insertMessage.setBinaryStream(12, attrInputStream, baos.size());
-                        } finally {
-                            try {
-                                if (oos != null) {
-                                    oos.close();
-                                }
-                            } catch (IOException ioe) {
-                                LOGGER.debug("JDBCMailRepository: Unexpected exception while closing output stream.", ioe);
-                            }
                         }
                     }
 
@@ -659,8 +630,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
         } catch (SQLException e) {
             LOGGER.debug("Failed to store internal mail", e);
             throw new IOException(e.getMessage());
-        } finally {
-            theJDBCUtil.closeJDBCConnection(conn);
         }
     }
 
