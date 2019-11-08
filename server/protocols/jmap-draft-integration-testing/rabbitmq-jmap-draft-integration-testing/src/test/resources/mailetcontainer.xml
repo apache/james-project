@@ -63,7 +63,9 @@
                 <errorProcessor>rrt-error</errorProcessor>
             </mailet>
             <mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.VacationMailet"/>
-            <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" />
+            <mailet match="mdn-matcher" class="org.apache.james.jmap.mailet.ExtractMDNOriginalJMAPMessageId" >
+                <onMailetException>ignore</onMailetException>
+            </mailet>
             <mailet match="RecipientIsLocal" class="Sieve"/>
             <mailet match="RecipientIsLocal" class="SpamAssassin">
                 <onMailetException>ignore</onMailetException>
