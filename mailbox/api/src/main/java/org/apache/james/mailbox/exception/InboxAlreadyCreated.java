@@ -23,24 +23,12 @@ package org.apache.james.mailbox.exception;
 /**
  * Indicates that the operation failed since INBOX already exists.
  */
-public class InboxAlreadyCreated extends MailboxException {
+public class InboxAlreadyCreated extends MailboxExistsException {
 
     private static final long serialVersionUID = -486251759505030366L;
 
-    private final String mailboxName;
-
     public InboxAlreadyCreated(String mailboxName) {
-        super("The mailbox '" + mailboxName + "' already exists as 'INBOX'");
-        this.mailboxName = mailboxName;
-    }
-
-    /**
-     * Gets the name of the mailbox which already exists.
-     *
-     * @return the mailboxName, not null
-     */
-    public final String getMailboxName() {
-        return mailboxName;
+        super(mailboxName);
     }
 
     public String toString() {

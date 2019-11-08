@@ -148,12 +148,6 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                     .type(SetError.Type.INVALID_ARGUMENTS)
                     .description(e.getMessage())
                     .build());
-        } catch (MailboxExistsException e) {
-            String message = String.format("The mailbox '%s' already exists.", mailboxCreationId.getCreationId());
-            builder.notCreated(mailboxCreationId, SetError.builder()
-                    .type(SetError.Type.INVALID_ARGUMENTS)
-                    .description(message)
-                    .build());
         } catch (InboxAlreadyCreated e) {
             String message = String.format("The mailbox '%s' already exists as 'INBOX'", e.getMailboxName());
             LOGGER.error(message, e);
@@ -161,6 +155,12 @@ public class SetMailboxesCreationProcessor implements SetMailboxesProcessor {
                 .type(SetError.Type.INVALID_ARGUMENTS)
                 .description(message)
                 .build());
+        } catch (MailboxExistsException e) {
+            String message = String.format("The mailbox '%s' already exists.", mailboxCreationId.getCreationId());
+            builder.notCreated(mailboxCreationId, SetError.builder()
+                    .type(SetError.Type.INVALID_ARGUMENTS)
+                    .description(message)
+                    .build());
         } catch (MailboxException e) {
             String message = String.format("An error occurred when creating the mailbox '%s'", mailboxCreationId.getCreationId());
             LOGGER.error(message, e);
