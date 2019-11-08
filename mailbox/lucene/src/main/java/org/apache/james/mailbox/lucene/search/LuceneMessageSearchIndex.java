@@ -125,10 +125,6 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * Lucene based {@link ListeningMessageSearchIndex} which offers message searching via a Lucene index
- * 
- * 
-
- * @param 
  */
 public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     public static class LuceneMessageSearchIndexGroup extends org.apache.james.mailbox.events.Group {
@@ -416,8 +412,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Set the max count of results which will get returned from a query. The default is {@link #DEFAULT_MAX_QUERY_RESULTS}
-     * 
-     * @param maxQueryResults
      */
     public void setMaxQueryResults(int maxQueryResults) {
         this.maxQueryResults = maxQueryResults;
@@ -435,10 +429,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Create a {@link Analyzer} which is used to index the {@link MailboxMessage}'s
-     * 
-     * @param lenient 
-     * 
-     * @return analyzer
      */
     protected Analyzer createAnalyzer(boolean lenient) {
         if (lenient) {
@@ -454,9 +444,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * set this to true. 
      * 
      * The default is false for performance reasons
-     * 
-     * 
-     * @param suffixMatch
      */
     public void setEnableSuffixMatch(boolean suffixMatch) {
         this.suffixMatch = suffixMatch;
@@ -541,9 +528,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
      * Create a new {@link Document} for the given {@link MailboxMessage}. This Document does not contain any flags data. The {@link Flags} are stored in a seperate Document.
      * 
      * See {@link #createFlagsDocument(MailboxMessage)}
-     * 
-     * @param membership
-     * @return document
      */
     private Document createMessageDocument(final MailboxSession session, final MailboxMessage membership) throws IOException, MimeException {
         final Document doc = new Document();
@@ -794,10 +778,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.InternalDateCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createInternalDateQuery(SearchQuery.InternalDateCriterion crit) throws UnsupportedSearchException {
         DateOperator dop = crit.getOperator();
@@ -808,10 +788,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.SizeCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createSizeQuery(SearchQuery.SizeCriterion crit) throws UnsupportedSearchException {
         NumericOperator op = crit.getOperator();
@@ -829,10 +805,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * This method will return the right {@link Query} depending if {@link #suffixMatch} is enabled
-     * 
-     * @param fieldName
-     * @param value
-     * @return query
      */
     private Query createTermQuery(String fieldName, String value) {
         if (suffixMatch) {
@@ -844,10 +816,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.HeaderCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createHeaderQuery(SearchQuery.HeaderCriterion crit) throws UnsupportedSearchException {
         HeaderOperator op = crit.getOperator();
@@ -928,10 +896,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.UidCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createModSeqQuery(SearchQuery.ModSeqCriterion crit) throws UnsupportedSearchException {
         NumericOperator op = crit.getOperator();
@@ -953,10 +917,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.FlagCriterion}. This is kind of a hack
-     * as it will do a search for the flags in this method and 
-     *
-     * @return query
-     * @throws MailboxException
+     * as it will do a search for the flags in this method and
      */
     private Query createFlagQuery(String flag, boolean isSet, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         BooleanQuery query = new BooleanQuery();
@@ -1090,9 +1051,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
 
     /**
      * Convert the given {@link Flag} to a String
-     * 
-     * @param flag
-     * @return flagString
      */
     private String toString(Flag flag) {
         if (Flag.ANSWERED.equals(flag)) {
@@ -1114,10 +1072,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.TextCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createTextQuery(SearchQuery.TextCriterion crit) throws UnsupportedSearchException {
         String value = crit.getOperator().getValue().toUpperCase(Locale.US);
@@ -1136,10 +1090,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.AllCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createAllQuery(SearchQuery.AllCriterion crit) throws UnsupportedSearchException {
         BooleanQuery query = new BooleanQuery();
@@ -1152,10 +1102,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is build based on the given {@link SearchQuery.ConjunctionCriterion}
-     * 
-     * @param crit
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createConjunctionQuery(SearchQuery.ConjunctionCriterion crit, Query inMailboxes, Collection<MessageUid> recentUids) throws UnsupportedSearchException, MailboxException {
         List<Criterion> crits = crit.getCriteria();
@@ -1188,10 +1134,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Return a {@link Query} which is builded based on the given {@link Criterion}
-     * 
-     * @param criterion
-     * @return query
-     * @throws UnsupportedSearchException
      */
     private Query createQuery(Criterion criterion, Query inMailboxes, Collection<MessageUid> recentUids) throws MailboxException {
         if (criterion instanceof SearchQuery.InternalDateCriterion) {
@@ -1286,9 +1228,6 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     
     /**
      * Add the given {@link Flags} to the {@link Document}
-     * 
-     * @param doc
-     * @param f
      */
     private void indexFlags(Document doc, Flags f) {
         List<String> fString = new ArrayList<>();
