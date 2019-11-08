@@ -51,10 +51,6 @@ import org.apache.james.protocols.pop3.core.WelcomeMessageHandler;
  */
 public class POP3ProtocolHandlerChain extends ProtocolHandlerChainImpl {
 
-    public POP3ProtocolHandlerChain() {
-        super();
-    }
-
     /**
      * The {@link AbstractPassCmdHandler}'s to use. If at least one {@link AbstractPassCmdHandler} is given, the {@link POP3ProtocolHandlerChain}
      * will add all default handlers
