@@ -865,77 +865,6 @@ public class SearchQuery implements Serializable {
      * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
      * unlimited in either direction.
      */
-    public static class NumericRange implements Serializable {
-        private static final long serialVersionUID = 1L;
-
-        private final long lowValue;
-
-        private final long highValue;
-
-        public NumericRange(long value) {
-            super();
-            this.lowValue = value;
-            this.highValue = value;
-        }
-
-        public NumericRange(long lowValue, long highValue) {
-            super();
-            this.lowValue = lowValue;
-            this.highValue = highValue;
-        }
-
-        public long getHighValue() {
-            return highValue;
-        }
-
-        public long getLowValue() {
-            return lowValue;
-        }
-
-        /**
-         * Is the given value in this range?
-         * 
-         * @param value
-         *            value to be tested
-         * @return true if the value is in range, false otherwise
-         */
-        public boolean isIn(long value) {
-            if (lowValue == Long.MAX_VALUE) {
-                return highValue >= value;
-            }
-            return lowValue <= value && highValue >= value;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(lowValue, highValue);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof NumericRange) {
-                NumericRange that = (NumericRange) obj;
-                return Objects.equal(this.lowValue, that.lowValue)
-                    && Objects.equal(this.highValue, that.highValue);
-            }
-            return false;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("lowValue", lowValue)
-                .add("highValue", highValue)
-                .toString();
-        }
-
-    }
-
-    /**
-     * Numbers within a particular range. Range includes both high and low
-     * boundaries. May be a single value. {@link Long#MAX_VALUE} represents
-     * unlimited in either direction.
-     */
     public static class UidRange implements Serializable {
 
         private final MessageUid lowValue;
@@ -1909,9 +1838,9 @@ public class SearchQuery implements Serializable {
 
         /**
          * Gets the operator type.
-         * 
+         *
          * @return the type, either {@link DateComparator#BEFORE},
-         *         {@link DateComparator#AFTER} or {@link DateComparator#ON}
+         * {@link DateComparator#AFTER} or {@link DateComparator#ON}
          */
         public DateComparator getType() {
             return type;
@@ -1940,62 +1869,6 @@ public class SearchQuery implements Serializable {
                 .add("date", date)
                 .add("dateResolution", dateResolution)
                 .add("type", type)
-                .toString();
-        }
-
-    }
-
-    /**
-     * Search for numbers within set of ranges.
-     */
-    public static class InOperator implements Operator {
-        private static final long serialVersionUID = 1L;
-
-        private final NumericRange[] range;
-
-        public InOperator(NumericRange[] range) {
-            super();
-            this.range = range;
-        }
-
-        /**
-         * Gets the filtering ranges. Values falling within these ranges will be
-         * selected.
-         * 
-         * @return the <code>NumericRange</code>'s search on, not null
-         */
-        public NumericRange[] getRange() {
-            return range;
-        }
-
-        @Override
-        public int hashCode() {
-            return range.length;
-        }
-
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final InOperator other = (InOperator) obj;
-            if (!Arrays.equals(range, other.range)) {
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        public String toString() {
-            return MoreObjects.toStringHelper(this)
-                .add("range", Arrays.toString(range))
                 .toString();
         }
 
