@@ -74,14 +74,6 @@ public abstract class AbstractAsyncServer implements ProtocolServer {
         }
         this.ioWorker = ioWorker;
     }
-    
-    /**
-     * Return the IO worker thread count to use
-     */
-    public int getIoWorkerCount() {
-        return ioWorker;
-    }
-    
 
     @Override
     public synchronized void bind() throws Exception {

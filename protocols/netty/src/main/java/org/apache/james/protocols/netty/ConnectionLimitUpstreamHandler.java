@@ -42,15 +42,7 @@ public class ConnectionLimitUpstreamHandler extends SimpleChannelUpstreamHandler
     public ConnectionLimitUpstreamHandler(int maxConnections) {
         this.maxConnections = maxConnections;
     }
-    
-    public int getConnections() {
-        return connections.get();
-    }
-    
-    public void setMaxConnections(int maxConnections) {
-        this.maxConnections = maxConnections;
-    }
-    
+
     @Override
     public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e) throws Exception {
         if (maxConnections > 0) {

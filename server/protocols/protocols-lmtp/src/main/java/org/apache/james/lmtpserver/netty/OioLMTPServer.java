@@ -39,17 +39,6 @@ public class OioLMTPServer extends LMTPServer {
     }
 
     /**
-     * Return -1 as it is not known
-     * 
-     * 
-     */
-    @Override
-    public int getIoWorkerCount() {
-        return -1;
-    }
-
-
-    /**
      * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
      * 
      */

@@ -41,12 +41,6 @@ public abstract class AbstractChannelPipelineFactory implements ChannelPipelineF
     private final int timeout;
     private final ExecutionHandler eHandler;
     private final ChannelHandlerFactory frameHandlerFactory;
-
-    public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels,
-                                          HashedWheelTimer hashedWheelTimer) {
-        this(timeout, maxConnections, maxConnectsPerIp, channels, null,
-            new LineDelimiterBasedChannelHandlerFactory(MAX_LINE_LENGTH), hashedWheelTimer);
-    }
     
     public AbstractChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp, ChannelGroup channels,
                                           ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory,

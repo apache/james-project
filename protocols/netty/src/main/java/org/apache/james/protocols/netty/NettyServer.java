@@ -25,12 +25,10 @@ import javax.net.ssl.SSLContext;
 
 import org.apache.james.protocols.api.Encryption;
 import org.apache.james.protocols.api.Protocol;
-import org.apache.james.protocols.api.handler.ProtocolHandler;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
-import org.jboss.netty.handler.execution.OrderedMemoryAwareThreadPoolExecutor;
 import org.jboss.netty.util.HashedWheelTimer;
 
 import com.google.common.base.Preconditions;
@@ -99,45 +97,6 @@ public class NettyServer extends AbstractAsyncServer {
         this.secure = secure;
         this.frameHandlerFactory = frameHandlerFactory;
         this.hashedWheelTimer = hashedWheelTimer;
-    }
-    
-    protected ExecutionHandler createExecutionHandler(int size) {
-        return new ExecutionHandler(new OrderedMemoryAwareThreadPoolExecutor(size, 0, 0));
-    }
-    
-    
-    /**
-     * Set true if an ExecutionHandler should be used to hand over the tasks. This should be done if you have some {@link ProtocolHandler}'s which need to full fill some blocking operation.
-     * 
-     * @param useHandler <code>true</code> if an ExecutionHandler should be used
-     * @param size the thread count to use
-     */
-    public void setUseExecutionHandler(boolean useHandler, int size) {
-        if (isBound()) {
-            throw new IllegalStateException("Server running already");
-        }
-        if (useHandler) {
-            eHandler = createExecutionHandler(size);
-        } else {
-            if (eHandler != null) {
-                eHandler.releaseExternalResources();
-            }
-            eHandler = null;
-        }
-    }
-    
-    public void setMaxConcurrentConnections(int maxCurConnections) {
-        if (isBound()) {
-            throw new IllegalStateException("Server running already");
-        }
-        this.maxCurConnections = maxCurConnections;
-    }
-  
-    public void setMaxConcurrentConnectionsPerIP(int maxCurConnectionsPerIP) {
-        if (isBound()) {
-            throw new IllegalStateException("Server running already");
-        }
-        this.maxCurConnectionsPerIP = maxCurConnectionsPerIP;
     }
     
     protected ChannelUpstreamHandler createCoreHandler() {
