@@ -293,7 +293,6 @@ public class MaildirMessageName {
     
     /**
      * Sets new flags for this message name.
-     * @param flags
      */
     public void setFlags(Flags flags) {
         if (this.flags != flags) {

@@ -61,7 +61,6 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * %fulluser
      * variables.
      * @param maildirLocation A String with variables
-     * @param locker
      */
     public MaildirStore(String maildirLocation, MailboxPathLocker locker) {
         this.maildirLocation = maildirLocation;
@@ -79,7 +78,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     
     /**
      * Create a {@link MaildirFolder} for a mailbox
-     * @param mailbox
+     *
      * @return The MaildirFolder
      */
     public MaildirFolder createMaildirFolder(Mailbox mailbox) {
@@ -282,7 +281,6 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * Returns whether the names of message files in this store are parsed in
      * a strict manner ({@code true}), which means a size field and flags are
      * expected.
-     * @return
      */
     public boolean isMessageNameStrictParse() {
         return messageNameStrictParse;
@@ -294,8 +292,6 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
      * expected.
      *
      * Default is {@code false}.
-     *
-     * @param messageNameStrictParse
      */
     public void setMessageNameStrictParse(boolean messageNameStrictParse) {
         this.messageNameStrictParse = messageNameStrictParse;

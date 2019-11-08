@@ -115,7 +115,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * Read the subscriptions for a particular user
      * @param user The user to get the subscriptions for
      * @return A Set of names of subscribed mailboxes of the user
-     * @throws SubscriptionException
      */
     private Set<String> readSubscriptionsForUser(String user) throws SubscriptionException { 
         File userRoot = new File(store.userRoot(user));
@@ -130,7 +129,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * Read the names of the mailboxes which are subscribed from the specified folder
      * @param mailboxFolder The folder which contains the subscription file
      * @return A Set of names of subscribed mailboxes
-     * @throws IOException
      */
     private Set<String> readSubscriptions(File mailboxFolder) throws IOException {
         File subscriptionFile = new File(mailboxFolder, FILE_SUBSCRIPTION);
@@ -150,7 +148,6 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * Write the set of mailbox names into the subscriptions file in the specified folder
      * @param mailboxFolder Folder which contains the subscriptions file
      * @param subscriptions Set of names of subscribed mailboxes
-     * @throws IOException
      */
     private void writeSubscriptions(File mailboxFolder, Set<String> subscriptions) throws IOException {
         List<String> sortedSubscriptions = new ArrayList<>(subscriptions);

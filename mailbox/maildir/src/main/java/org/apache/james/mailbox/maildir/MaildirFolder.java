@@ -112,8 +112,6 @@ public class MaildirFolder {
      * Returns whether the names of message files in this folder are parsed in
      * a strict manner ({@code true}), which means a size field and flags are
      * expected.
-     *
-     * @return
      */
     public boolean isMessageNameStrictParse() {
         return messageNameStrictParse;
@@ -124,7 +122,6 @@ public class MaildirFolder {
      * a strict manner ({@code true}), which means a size field and flags are
      * expected.
      *
-     * @param messageNameStrictParse
      */
     public void setMessageNameStrictParse(boolean messageNameStrictParse) {
         this.messageNameStrictParse = messageNameStrictParse;
@@ -220,8 +217,7 @@ public class MaildirFolder {
 
     /**
      * Read the lastUid of the given mailbox from the file system.
-     * 
-     * @param session
+     *
      * @throws MailboxException if there are problems with the uidList file
      */
     private void readLastUid(MailboxSession session) throws MailboxException {
@@ -251,7 +247,6 @@ public class MaildirFolder {
     /**
      * Returns the uidValidity of this mailbox
      * @return The uidValidity
-     * @throws IOException
      */
     public long getUidValidity() throws IOException {
         if (uidValidity == -1) {
@@ -262,8 +257,6 @@ public class MaildirFolder {
     
     /**
      * Sets the uidValidity for this mailbox and writes it to the file system
-     * @param uidValidity
-     * @throws IOException
      */
     public void setUidValidity(long uidValidity) throws IOException {
         saveUidValidity(uidValidity);
@@ -292,8 +285,6 @@ public class MaildirFolder {
 
     /**
      * Save the given uidValidity to the file system
-     * @param uidValidity
-     * @throws IOException
      */
     private void saveUidValidity(long uidValidity) throws IOException {
         File validityFile = new File(rootFolder, VALIDITY_FILE);
@@ -307,8 +298,6 @@ public class MaildirFolder {
 
     /**
      * Sets the mailboxId for this mailbox and writes it to the file system
-     * @param mailboxId
-     * @throws IOException
      */
     public void setMailboxId(MaildirId mailboxId) throws IOException {
         saveMailboxId(mailboxId);
@@ -335,8 +324,6 @@ public class MaildirFolder {
 
     /**
      * Save the given MaildirId to the file system
-     * @param id
-     * @throws IOException
      */
     private void saveMailboxId(MaildirId id) throws IOException {
         if (!mailboxIdFile.createNewFile()) {
@@ -350,7 +337,6 @@ public class MaildirFolder {
     /**
      * Sets and returns a new uidValidity for this folder.
      * @return the new uidValidity
-     * @throws IOException
      */
     private long resetUidValidity() throws IOException {
         // using the timestamp as uidValidity
@@ -362,10 +348,9 @@ public class MaildirFolder {
     /**
      * Searches the uid list for a certain uid and returns the according {@link MaildirMessageName}
      * 
-     * @param session
      * @param uid The uid to search for
      * @return The {@link MaildirMessageName} that belongs to the uid
-     * @throws IOException If the uidlist file cannot be found or read
+     * @throws MailboxException If the uidlist file cannot be found or read
      */
     public MaildirMessageName getMessageNameByUid(final MailboxSession session, final MessageUid uid) throws MailboxException {
        
@@ -405,7 +390,6 @@ public class MaildirFolder {
      * Reads all uids between the two boundaries from the folder and returns them as
      * a sorted map together with their corresponding {@link MaildirMessageName}s.
      *
-     * @param session
      * @param from The lower uid limit
      * @param to The upper uid limit. <code>-1</code> disables the upper limit
      * @return a {@link Map} whith all uids in the given range and associated {@link MaildirMessageName}s
@@ -455,9 +439,7 @@ public class MaildirFolder {
     /**
      * Reads all uids from the uid list file which match the given filter
      * and returns as many of them as a sorted map as the limit specifies.
-     * 
-     * 
-     * @param session
+     *
      * @param filter The file names of all returned items match the filter. 
      * The dir argument to {@link FilenameFilter}.accept(dir, name) will always be null.
      * @param limit The number of items; a limit smaller then 1 disables the limit
@@ -487,8 +469,7 @@ public class MaildirFolder {
     
     /**
      * Creates a map of recent messages.
-     * 
-     * @param session
+     *
      * @return A {@link Map} with all uids and associated {@link MaildirMessageName}s of recent messages
      * @throws MailboxException If there is a problem with the uid list file
      */
@@ -717,7 +698,6 @@ public class MaildirFolder {
      * Parses the header line in uid list files.
      * The format is: version lastUid messageCount (e.g. 1 615 273)
      * @param line The raw header line
-     * @throws IOException
      */
     private void readUidListHeader(String line) throws IOException {
         if (line == null) {
@@ -765,7 +745,7 @@ public class MaildirFolder {
 
     /**
      * Appends a message to the uidlist and returns its uid.
-     * @param session
+     *
      * @param name The name of the message's file
      * @return The uid of the message
      */
@@ -835,10 +815,6 @@ public class MaildirFolder {
 
     /**
      * Updates an entry in the uid list.
-     * @param session
-     * @param uid
-     * @param messageName
-     * @throws MailboxException
      */
     public void update(MailboxSession session, final MessageUid uid, final String messageName) throws MailboxException {
         locker.executeWithLock(session, path, (LockAwareExecution<Void>) () -> {
@@ -941,8 +917,7 @@ public class MaildirFolder {
 
     /**
      * Read the ACL of the given mailbox from the file system.
-     * 
-     * @param session
+     *
      * @throws MailboxException if there are problems with the aclFile file
      */
     private MailboxACL readACL(MailboxSession session) throws MailboxException {
