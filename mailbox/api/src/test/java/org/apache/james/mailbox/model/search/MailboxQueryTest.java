@@ -130,18 +130,6 @@ public class MailboxQueryTest {
     }
 
     @Test
-    public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxesWithNullUser() {
-        MailboxPath base = new MailboxPath("namespace", null, "name");
-
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .userAndNamespaceFrom(base)
-            .build();
-
-        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
-            .isTrue();
-    }
-
-    @Test
     public void belongsToNamespaceAndUserShouldReturnTrueWithIdenticalMailboxesWithNullNamespace() {
         MailboxPath mailboxPath = new MailboxPath(null, "user", "name");
 
@@ -150,16 +138,6 @@ public class MailboxQueryTest {
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(mailboxPath))
-            .isTrue();
-    }
-
-    @Test
-    public void belongsToNamespaceAndUserShouldReturnTrueWithMailboxWithSameNamespaceAndUserWithNullUser() {
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .userAndNamespaceFrom(new MailboxPath("namespace", null, "name"))
-            .build();
-
-        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null, "name")))
             .isTrue();
     }
 
@@ -194,32 +172,12 @@ public class MailboxQueryTest {
     }
     
     @Test
-    public void belongsToNamespaceAndUserShouldReturnFalseWithOneOfTheUserNull() {
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
-            .build();
-
-        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", null, "name")))
-            .isFalse();
-    }
-
-    @Test
     public void belongsToNamespaceAndUserShouldReturnFalseWhenDifferentUser() {
         MailboxQuery mailboxQuery = MailboxQuery.builder()
             .userAndNamespaceFrom(new MailboxPath("namespace", CURRENT_USER, "name"))
             .build();
 
         assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace", "other", "name")))
-            .isFalse();
-    }
-
-    @Test
-    public void belongsToNamespaceAndUserShouldReturnFalseIfNamespaceAreDifferentWithNullUser() {
-        MailboxQuery mailboxQuery = MailboxQuery.builder()
-            .userAndNamespaceFrom(new MailboxPath("namespace", null, "name"))
-            .build();
-
-        assertThat(mailboxQuery.belongsToRequestedNamespaceAndUser(new MailboxPath("namespace2", null, "name")))
             .isFalse();
     }
 }

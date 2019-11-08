@@ -60,18 +60,6 @@ public abstract class MailboxMapperTest {
     private Mailbox bobyMailbox;
     private MailboxPath bobyMailboxPath;
     private Mailbox bobInboxMailbox;
-    private MailboxPath esnDevGroupInboxPath;
-    private Mailbox esnDevGroupInboxMailbox;
-    private MailboxPath esnDevGroupHublinPath;
-    private Mailbox esnDevGroupHublinMailbox;
-    private MailboxPath esnDevGroupJamesPath;
-    private Mailbox esnDevGroupJamesMailbox;
-    private MailboxPath obmTeamGroupInboxPath;
-    private Mailbox obmTeamGroupInboxMailbox;
-    private MailboxPath obmTeamGroupOPushPath;
-    private Mailbox obmTeamGroupOPushMailbox;
-    private MailboxPath obmTeamGroupRoundCubePath;
-    private Mailbox obmTeamGroupRoundCubeMailbox;
     private MailboxPath bobDifferentNamespacePath;
     private Mailbox bobDifferentNamespaceMailbox;
 
@@ -111,20 +99,12 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    public void saveWithNullUserShouldPersistTheMailbox() throws MailboxException {
-        mailboxMapper.save(esnDevGroupInboxMailbox);
-        MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(esnDevGroupInboxPath)).isEqualTo(esnDevGroupInboxMailbox);
-    }
-
-    @Test
     public void listShouldRetrieveAllMailbox() throws MailboxException {
         saveAll();
         List<Mailbox> mailboxes = mailboxMapper.list();
 
         assertMailboxes(mailboxes)
             .containOnly(benwaInboxMailbox, benwaWorkMailbox, benwaWorkTodoMailbox, benwaPersoMailbox, benwaWorkDoneMailbox, 
-                esnDevGroupInboxMailbox, esnDevGroupHublinMailbox, esnDevGroupJamesMailbox, 
-                obmTeamGroupInboxMailbox, obmTeamGroupOPushMailbox, obmTeamGroupRoundCubeMailbox, 
                 bobyMailbox, bobDifferentNamespaceMailbox, bobInboxMailbox);
     }
     
@@ -138,18 +118,6 @@ public abstract class MailboxMapperTest {
     public void hasChildrenShouldReturnTrueWhenChildrenExists() throws MailboxException {
         saveAll();
         assertThat(mailboxMapper.hasChildren(benwaInboxMailbox, DELIMITER)).isTrue();
-    }
-
-    @Test
-    public void hasChildrenWithNullUserShouldReturnFalseWhenNoChildrenExists() throws MailboxException {
-        saveAll();
-        assertThat(mailboxMapper.hasChildren(esnDevGroupHublinMailbox, DELIMITER)).isFalse();
-    }
-
-    @Test
-    public void hasChildrenWithNullUserShouldReturnTrueWhenChildrenExists() throws MailboxException {
-        saveAll();
-        assertThat(mailboxMapper.hasChildren(esnDevGroupInboxMailbox, DELIMITER)).isTrue();
     }
 
     @Test
@@ -177,15 +145,6 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    public void deleteWithNullUserShouldEraseTheGivenMailbox() throws MailboxException {
-        saveAll();
-        mailboxMapper.delete(esnDevGroupJamesMailbox);
-
-        assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(esnDevGroupJamesPath))
-            .isInstanceOf(MailboxNotFoundException.class);
-    }
-
-    @Test
     public void findMailboxWithPathLikeWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
         MailboxPath regexPath = new MailboxPath(benwaWorkPath.getNamespace(), benwaWorkPath.getUser(), benwaWorkPath.getName() + WILDCARD);
@@ -195,33 +154,17 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    public void findMailboxWithPathLikeWithNullUserWithChildRegexShouldRetrieveChildren() throws MailboxException {
-        saveAll();
-        MailboxPath regexPath = new MailboxPath(obmTeamGroupInboxPath.getNamespace(), obmTeamGroupInboxPath.getUser(), obmTeamGroupInboxPath.getName() + WILDCARD);
-
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(regexPath);
-
-        assertMailboxes(mailboxes).containOnly(obmTeamGroupInboxMailbox, obmTeamGroupOPushMailbox, obmTeamGroupRoundCubeMailbox);
-    }
-    
-    @Test
     public void findMailboxWithPathLikeWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
         saveAll();
-        MailboxPath regexPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), WILDCARD + "X");
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(benwaWorkPath)
+            .expression(new ExactName("INBOX"))
+            .build()
+            .asUserBound();
 
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(regexPath);
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
 
         assertMailboxes(mailboxes).containOnly(benwaInboxMailbox);
-    }
-
-    @Test
-    public void findMailboxWithPathLikeWithNullUserWithRegexShouldRetrieveCorrespondingMailbox() throws MailboxException {
-        saveAll();
-        MailboxPath regexPath = new MailboxPath(esnDevGroupInboxPath.getNamespace(), esnDevGroupInboxPath.getUser(), WILDCARD + "X");
-
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(regexPath);
-
-        assertMailboxes(mailboxes).containOnly(esnDevGroupInboxMailbox);
     }
 
     @Test
@@ -256,12 +199,6 @@ public abstract class MailboxMapperTest {
         bobInboxPath = MailboxPath.forUser("bob", "INBOX");
         bobyMailboxPath = MailboxPath.forUser("boby", "INBOX.that.is.a.trick");
         bobDifferentNamespacePath = new MailboxPath("#private_bob", "bob", "INBOX.bob");
-        esnDevGroupInboxPath = new MailboxPath("#community_ESN_DEV", null, "INBOX");
-        esnDevGroupHublinPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "hublin");
-        esnDevGroupJamesPath = new MailboxPath("#community_ESN_DEV", null, "INBOX" + DELIMITER + "james");
-        obmTeamGroupInboxPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX");
-        obmTeamGroupOPushPath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "OPush");
-        obmTeamGroupRoundCubePath = new MailboxPath("#community_OBM_Core_Team", null, "INBOX" + DELIMITER + "roundCube");
 
         benwaInboxMailbox = createMailbox(benwaInboxPath);
         benwaWorkMailbox = createMailbox(benwaWorkPath);
@@ -269,12 +206,6 @@ public abstract class MailboxMapperTest {
         benwaPersoMailbox = createMailbox(benwaPersoPath);
         benwaWorkDoneMailbox = createMailbox(benwaWorkDonePath);
         bobInboxMailbox = createMailbox(bobInboxPath);
-        esnDevGroupInboxMailbox = createMailbox(esnDevGroupInboxPath);
-        esnDevGroupHublinMailbox = createMailbox(esnDevGroupHublinPath);
-        esnDevGroupJamesMailbox = createMailbox(esnDevGroupJamesPath);
-        obmTeamGroupInboxMailbox = createMailbox(obmTeamGroupInboxPath);
-        obmTeamGroupOPushMailbox = createMailbox(obmTeamGroupOPushPath);
-        obmTeamGroupRoundCubeMailbox = createMailbox(obmTeamGroupRoundCubePath);
         bobyMailbox = createMailbox(bobyMailboxPath);
         bobDifferentNamespaceMailbox = createMailbox(bobDifferentNamespacePath);
     }
@@ -285,12 +216,6 @@ public abstract class MailboxMapperTest {
         mailboxMapper.save(benwaWorkTodoMailbox);
         mailboxMapper.save(benwaPersoMailbox);
         mailboxMapper.save(benwaWorkDoneMailbox);
-        mailboxMapper.save(esnDevGroupInboxMailbox);
-        mailboxMapper.save(esnDevGroupHublinMailbox);
-        mailboxMapper.save(esnDevGroupJamesMailbox);
-        mailboxMapper.save(obmTeamGroupInboxMailbox);
-        mailboxMapper.save(obmTeamGroupOPushMailbox);
-        mailboxMapper.save(obmTeamGroupRoundCubeMailbox);
         mailboxMapper.save(bobyMailbox);
         mailboxMapper.save(bobDifferentNamespaceMailbox);
         mailboxMapper.save(bobInboxMailbox);

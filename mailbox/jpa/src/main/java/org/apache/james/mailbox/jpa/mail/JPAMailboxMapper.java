@@ -202,16 +202,10 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     private TypedQuery<JPAMailbox> findMailboxWithPathLikeTypedQuery(MailboxPath path) {
-        if (path.getUser() == null) {
-            return getEntityManager().createNamedQuery("findMailboxWithNameLike", JPAMailbox.class)
-                .setParameter("nameParam", path.getName())
-                .setParameter("namespaceParam", path.getNamespace());
-        } else {
-            return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser", JPAMailbox.class)
-                .setParameter("nameParam", path.getName())
-                .setParameter("namespaceParam", path.getNamespace())
-                .setParameter("userParam", path.getUser());
-        }
+        return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser", JPAMailbox.class)
+            .setParameter("nameParam", path.getName())
+            .setParameter("namespaceParam", path.getNamespace())
+            .setParameter("userParam", path.getUser().asId());
     }
 
     public void deleteAllMemberships() throws MailboxException {
@@ -234,11 +228,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
         final String name = mailbox.getName() + delimiter + SQL_WILDCARD_CHAR; 
         final Long numberOfChildMailboxes;
-        if (mailbox.getUser() == null) {
-            numberOfChildMailboxes = (Long) getEntityManager().createNamedQuery("countMailboxesWithNameLike").setParameter("nameParam", name).setParameter("namespaceParam", mailbox.getNamespace()).getSingleResult();
-        } else {
-            numberOfChildMailboxes = (Long) getEntityManager().createNamedQuery("countMailboxesWithNameLikeWithUser").setParameter("nameParam", name).setParameter("namespaceParam", mailbox.getNamespace()).setParameter("userParam", mailbox.getUser()).getSingleResult();
-        }
+        numberOfChildMailboxes = (Long) getEntityManager().createNamedQuery("countMailboxesWithNameLikeWithUser").setParameter("nameParam", name).setParameter("namespaceParam", mailbox.getNamespace()).setParameter("userParam", mailbox.getUser()).getSingleResult();
         return numberOfChildMailboxes != null && numberOfChildMailboxes > 0;
     }
 
