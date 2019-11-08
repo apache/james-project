@@ -74,6 +74,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -120,12 +121,14 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     /**
      * The table name parsed from the destination URL
      */
-    protected String tableName;
+    @VisibleForTesting
+    String tableName;
 
     /**
      * The repository name parsed from the destination URL
      */
-    protected String repositoryName;
+    @VisibleForTesting
+    String repositoryName;
 
     /**
      * The name of the SQL configuration file to be used to configure this
@@ -141,27 +144,28 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     /**
      * The JDBC datasource that provides the JDBC connection
      */
-    protected DataSource datasource;
+    private DataSource datasource;
 
     /**
      * The name of the datasource used by this repository
      */
-    protected String datasourceName;
+    private String datasourceName;
 
     /**
      * Contains all of the sql strings for this component.
      */
-    protected SqlResources sqlQueries;
+    @VisibleForTesting
+    SqlResources sqlQueries;
 
     /**
      * The JDBCUtil helper class
      */
-    protected JDBCUtil theJDBCUtil;
+    private JDBCUtil theJDBCUtil;
 
     /**
      * "Support for Mail Attributes under JDBC repositories is ready" indicator.
      */
-    protected boolean jdbcMailAttributesReady = false;
+    private boolean jdbcMailAttributesReady = false;
 
     /**
      * The size threshold for in memory handling of storing operations
@@ -175,12 +179,14 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     private String destination;
 
     @Inject
-    public void setDatasource(DataSource datasource) {
+    @VisibleForTesting
+    void setDatasource(DataSource datasource) {
         this.datasource = datasource;
     }
 
     @Inject
-    public void setFileSystem(FileSystem fileSystem) {
+    @VisibleForTesting
+    void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 
@@ -822,7 +828,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
         }
     }
 
-    protected void internalRemove(MailKey key) throws MessagingException {
+    private void internalRemove(MailKey key) throws MessagingException {
         Connection conn = null;
         PreparedStatement removeMessage = null;
         try {
@@ -889,7 +895,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
      * @throws SQLException
      *             if there is an issue with getting the connection
      */
-    protected Connection getConnection() throws SQLException {
+    @VisibleForTesting
+    Connection getConnection() throws SQLException {
         return datasource.getConnection();
     }
 
