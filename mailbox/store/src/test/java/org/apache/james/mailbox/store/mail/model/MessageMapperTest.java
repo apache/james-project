@@ -131,7 +131,7 @@ public abstract class MessageMapperTest {
     @Test
     public void getMailboxCountersShouldReturnStoredValue() throws MailboxException {
         saveMessages();
-        assertThat(messageMapper.getMailboxCounters(ImmutableList.of(benwaInboxMailbox.getMailboxId(), benwaWorkMailbox.getMailboxId())))
+        assertThat(messageMapper.getMailboxCounters(ImmutableList.of(benwaInboxMailbox, benwaWorkMailbox)))
             .containsExactlyInAnyOrder(
                 MailboxCounters.builder()
                     .mailboxId(benwaInboxMailbox.getMailboxId())

@@ -36,7 +36,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -46,7 +45,6 @@ import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.maildir.mail.model.MaildirMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -153,8 +151,10 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) {
-        throw new NotImplementedException("Not available as maildir relies on mailboxPath");
+    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
+        return mailboxes.stream()
+            .map(Throwing.<Mailbox, MailboxCounters>function(this::getMailboxCounters).sneakyThrow())
+            .collect(Guavate.toImmutableList());
     }
 
     @Override

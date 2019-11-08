@@ -99,8 +99,9 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) {
-        return mailboxIds.stream()
+    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) {
+        return mailboxes.stream()
+            .map(Mailbox::getMailboxId)
             .map(id -> MailboxCounters.builder()
                 .mailboxId(id)
                 .count(countMessagesInMailbox(id))

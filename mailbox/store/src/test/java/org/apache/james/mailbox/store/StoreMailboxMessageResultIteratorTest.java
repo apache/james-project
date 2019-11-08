@@ -99,7 +99,7 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) throws MailboxException {
+        public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) {
             throw new UnsupportedOperationException();
         }
 

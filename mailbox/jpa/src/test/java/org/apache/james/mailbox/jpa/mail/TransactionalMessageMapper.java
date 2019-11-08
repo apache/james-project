@@ -156,7 +156,7 @@ public class TransactionalMessageMapper implements MessageMapper {
     }
 
     @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) throws MailboxException {
-        throw new NotImplementedException("not implemented");
+    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
+        return messageMapper.getMailboxCounters(mailboxes);
     }
 }

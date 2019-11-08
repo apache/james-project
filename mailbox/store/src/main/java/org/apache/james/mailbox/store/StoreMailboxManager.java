@@ -794,7 +794,6 @@ public class StoreMailboxManager implements MailboxManager {
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
         return messageMapper.getMailboxCounters(mailboxes.stream()
             .filter(Throwing.<Mailbox>predicate(mailbox -> storeRightManager.hasRight(mailbox, Right.Read, session)).sneakyThrow())
-            .map(Mailbox::getMailboxId)
             .collect(Guavate.toImmutableList()));
     }
 }

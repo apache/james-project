@@ -42,7 +42,6 @@ import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAMailboxMessage;
 import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -154,16 +153,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     @Override
-    public List<MailboxCounters> getMailboxCounters(Collection<MailboxId> mailboxIds) throws MailboxException {
-        return mailboxIds.stream()
-            .map(id -> (JPAId) id)
-            .map(Throwing.<JPAId, MailboxCounters>function(
-                id -> MailboxCounters.builder()
-                    .mailboxId(id)
-                    .count(countMessagesInMailbox(id))
-                    .unseen(countUnseenMessagesInMailbox(id))
-                    .build())
-                .sneakyThrow())
+    public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) throws MailboxException {
+        return mailboxes.stream()
+            .map(Throwing.<Mailbox, MailboxCounters>function(this::getMailboxCounters).sneakyThrow())
             .collect(Guavate.toImmutableList());
     }
 
