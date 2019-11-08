@@ -142,13 +142,15 @@ public class SmtpRandomStoringTest {
     }
 
     private void sendMails() throws Exception {
-        SMTPMessageSender authenticatedSmtpConnection = messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .authenticate(FROM, PASSWORD);
+        try (SMTPMessageSender authenticatedSmtpConnection = messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())) {
 
-        IntStream.range(0, NUMBER_OF_MAILS)
-            .forEach(Throwing.intConsumer(index ->
-                authenticatedSmtpConnection
-                    .sendMessage(buildMail("Message " + index))).sneakyThrow());
+            authenticatedSmtpConnection.authenticate(FROM, PASSWORD);
+
+            IntStream.range(0, NUMBER_OF_MAILS)
+                .forEach(Throwing.intConsumer(index ->
+                    authenticatedSmtpConnection
+                        .sendMessage(buildMail("Message " + index))).sneakyThrow());
+        }
     }
 
     @After
