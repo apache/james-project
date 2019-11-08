@@ -25,10 +25,6 @@ public class WiringException extends Exception {
 
     private static final long serialVersionUID = 8824880646965171467L;
 
-    public WiringException() {
-        super();
-    }
-
     public WiringException(String message, Throwable t) {
         super(message, t);
     }
