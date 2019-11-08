@@ -51,19 +51,19 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
     private static Comparator<MailboxMessage> toComparator(Sort sort) {
         switch (sort.getSortClause()) {
             case Arrival:
-                return InternalDateComparator.INTERNALDATE;
+                return MessageComparators.INTERNAL_DATE_COMPARATOR;
             case MailboxCc:
                 return HeaderMailboxComparator.CC_COMPARATOR;
             case MailboxFrom:
                 return HeaderMailboxComparator.FROM_COMPARATOR;
             case Size:
-                return SizeComparator.SIZE;
+                return MessageComparators.SIZE_COMPARATOR;
             case BaseSubject:
                 return BaseSubjectComparator.BASESUBJECT;
             case MailboxTo:
                 return HeaderMailboxComparator.TO_COMPARATOR;
             case Uid:
-                return UidComparator.UID;
+                return MessageComparators.UID_COMPARATOR;
             case SentDate:
                 return SentDateComparator.SENTDATE;
             case DisplayFrom:
@@ -71,7 +71,7 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
             case DisplayTo:
                 return HeaderDisplayComparator.TO_COMPARATOR;
             case Id:
-                return MessageIdComparator.MESSAGE_ID_COMPARATOR;
+                return MessageComparators.MESSAGE_ID_COMPARATOR;
             default:
                 throw new NotImplementedException("Combined comparator does not support sort " + sort.getSortClause());
         }
@@ -79,7 +79,7 @@ public class CombinedComparator implements Comparator<MailboxMessage> {
 
     private static Comparator<MailboxMessage> optionalResverse(Comparator<MailboxMessage> comparator, boolean isReverse) {
         if (isReverse) {
-            return new ReverseComparator(comparator);
+            return comparator.reversed();
         }
         return comparator;
     }

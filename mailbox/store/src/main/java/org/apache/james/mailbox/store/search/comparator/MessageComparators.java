@@ -16,21 +16,18 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.mailbox.store.search.comparator;
 
 import java.util.Comparator;
+import java.util.Locale;
 
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
-/**
- * {@link Comparator} which compares {@link MailboxMessage}'s with their {@link MailboxMessage#getUid()} value
- */
-public class UidComparator implements Comparator<MailboxMessage> {
-    public static final Comparator<MailboxMessage> UID = new UidComparator();
-
-    @Override
-    public int compare(MailboxMessage o1, MailboxMessage o2) {
-        return o1.getUid().compareTo(o2.getUid());
-    }
-
+public interface MessageComparators {
+    Comparator<MailboxMessage> UID_COMPARATOR = Comparator.comparing(MailboxMessage::getUid);
+    Comparator<MailboxMessage> SIZE_COMPARATOR = Comparator.comparing(MailboxMessage::getFullContentOctets);
+    Comparator<MailboxMessage> INTERNAL_DATE_COMPARATOR = Comparator.comparing(MailboxMessage::getInternalDate);
+    Comparator<MailboxMessage> MESSAGE_ID_COMPARATOR = Comparator.comparing(mailboxMessage ->
+        mailboxMessage.getMessageId().serialize().toLowerCase(Locale.US));
 }
