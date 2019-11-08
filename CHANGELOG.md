@@ -17,6 +17,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
   - JDBCRecipientRewriteTable implementation. Please use JPARecipientRewriteTable instead.
   - JamesUsersJdbcRepository, DefaultUsersJdbcRepository. Please use JpaUsersRepository instead.
   - MailboxQuotaFixed matcher. Please use IsOverQuota instead.
+- UsersFileRepository, which was marked as deprecated for years
 
 ### Third party softwares
  - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.

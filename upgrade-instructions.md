@@ -16,9 +16,22 @@ Changes to apply between 3.4.x and 3.5.x will be reported here.
 
 Change list:
 
+ - [UsersFileRepository](#usersfilerepository)
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
  
+#### UsersFileRepository
+
+Date 08/11/2019
+
+SHA-1 0f8ee6ce2a
+
+This specific user store was deprecated for years. It relied on Java serialization to store directly core.User object.
+
+If you are still using it, you should instead use an [other user repository](https://james.apache.org/server/config-users.html).
+
+If you need to export data from it, please [contact us](http://james.apache.org/#second), it could be possible to write a little extraction tool.
+
 ### ElasticSearch performance enhancements
 
 Date 10/10/2019
