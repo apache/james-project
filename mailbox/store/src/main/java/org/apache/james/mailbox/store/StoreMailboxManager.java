@@ -40,7 +40,6 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MetadataWithMailboxId;
-import org.apache.james.mailbox.StandardMailboxMetaDataComparator;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
@@ -589,7 +588,7 @@ public class StoreMailboxManager implements MailboxManager {
             .stream()
             .filter(mailboxQuery::matches)
             .map(mailbox -> toMailboxMetadata(session, mailboxes, mailbox))
-            .sorted(new StandardMailboxMetaDataComparator())
+            .sorted(MailboxMetaData.COMPARATOR)
             .collect(Guavate.toImmutableList());
     }
 
