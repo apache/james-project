@@ -128,20 +128,12 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     @Override
     public Mailbox findMailboxByPath(MailboxPath mailboxPath) throws MailboxException, MailboxNotFoundException {
         try {
-            if (mailboxPath.getUser() == null) {
-                return getEntityManager().createNamedQuery("findMailboxByName", JPAMailbox.class)
-                    .setParameter("nameParam", mailboxPath.getName())
-                    .setParameter("namespaceParam", mailboxPath.getNamespace())
-                    .getSingleResult()
-                    .toMailbox();
-            } else {
-                return getEntityManager().createNamedQuery("findMailboxByNameWithUser", JPAMailbox.class)
-                    .setParameter("nameParam", mailboxPath.getName())
-                    .setParameter("namespaceParam", mailboxPath.getNamespace())
-                    .setParameter("userParam", mailboxPath.getUser())
-                    .getSingleResult()
-                    .toMailbox();
-            }
+            return getEntityManager().createNamedQuery("findMailboxByNameWithUser", JPAMailbox.class)
+                .setParameter("nameParam", mailboxPath.getName())
+                .setParameter("namespaceParam", mailboxPath.getNamespace())
+                .setParameter("userParam", mailboxPath.getUser().asString())
+                .getSingleResult()
+                .toMailbox();
         } catch (NoResultException e) {
             throw new MailboxNotFoundException(mailboxPath);
         } catch (PersistenceException e) {

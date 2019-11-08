@@ -33,7 +33,6 @@ import static org.apache.james.user.cassandra.tables.CassandraUserTable.REALNAME
 import static org.apache.james.user.cassandra.tables.CassandraUserTable.TABLE_NAME;
 
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -117,9 +116,8 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public User getUserByName(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
-                    .setString(NAME, name.asString().toLowerCase(Locale.US)))
+                    .setString(NAME, name.asId()))
             .map(row -> new DefaultUser(Username.of(row.getString(REALNAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
-            .filter(user -> user.hasUsername(name))
             .blockOptional()
             .orElse(null);
     }
@@ -133,7 +131,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
-                    .setString(NAME, defaultUser.getUserName().asString().toLowerCase(Locale.US)))
+                    .setString(NAME, defaultUser.getUserName().asId()))
             .block();
 
         if (!executed) {
@@ -196,7 +194,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
             insertStatement.bind()
-                .setString(NAME, user.getUserName().asString().toLowerCase(Locale.US))
+                .setString(NAME, user.getUserName().asId())
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))

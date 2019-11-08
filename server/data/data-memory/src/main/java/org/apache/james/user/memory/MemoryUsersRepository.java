@@ -21,7 +21,6 @@ package org.apache.james.user.memory;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 
@@ -73,12 +72,12 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
     protected void doAddUser(Username username, String password) throws UsersRepositoryException {
         DefaultUser user = new DefaultUser(username, algo);
         user.setPassword(password);
-        userByName.put(toKey(username), user);
+        userByName.put(username.asId(), user);
     }
 
     @Override
     public User getUserByName(Username name) throws UsersRepositoryException {
-        return userByName.get(toKey(name));
+        return userByName.get(name.asId());
     }
 
     @Override
@@ -87,24 +86,24 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         if (existingUser == null) {
             throw new UsersRepositoryException("Please provide an existing user to update");
         }
-        userByName.put(toKey(user.getUserName()), user);
+        userByName.put(user.getUserName().asId(), user);
     }
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
-        if (userByName.remove(toKey(name)) == null) {
+        if (userByName.remove(name.asId()) == null) {
             throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
         }
     }
 
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
-        return userByName.containsKey(toKey(name));
+        return userByName.containsKey(name.asId());
     }
 
     @Override
     public boolean test(Username name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(toKey(name)))
+        return Optional.ofNullable(userByName.get(name.asId()))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }
@@ -116,13 +115,9 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     public Iterator<Username> list() throws UsersRepositoryException {
-        return userByName.values()
+        return userByName.keySet()
             .stream()
-            .map(User::getUserName)
+            .map(Username::of)
             .iterator();
-    }
-
-    private String toKey(Username username) {
-        return username.asString().toLowerCase(Locale.US);
     }
 }

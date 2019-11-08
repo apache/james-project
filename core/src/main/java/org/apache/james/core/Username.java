@@ -20,6 +20,7 @@
 package org.apache.james.core;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -117,6 +118,10 @@ public class Username {
     public String asString() {
         return domainPart.map(domain -> localPart + "@" + domain.asString())
             .orElse(localPart);
+    }
+
+    public String asId() {
+        return asString().toLowerCase(Locale.US);
     }
 
     public MailAddress asMailAddress() throws AddressException {

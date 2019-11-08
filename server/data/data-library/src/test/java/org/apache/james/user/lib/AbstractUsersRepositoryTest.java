@@ -179,13 +179,14 @@ public abstract class AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void getUserByNameShouldReturnNullWhenDifferentCase() throws UsersRepositoryException {
+    public void getUserByNameShouldReturnUserWhenDifferentCase() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(login("username"), "password");
         //When
         User actual = usersRepository.getUserByName(login("uSERNAMe"));
         //Then
-        assertThat(actual).isNull();
+        assertThat(actual).isNotNull();
+        assertThat(actual.getUserName()).isEqualTo(user1);
     }
    
     @Test
@@ -243,13 +244,13 @@ public abstract class AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void testShouldReturnFalseWhenAUserHasAnIncorrectCaseName() throws UsersRepositoryException {
+    public void testShouldReturnTrueWhenAUserHasAnIncorrectCaseName() throws UsersRepositoryException {
         //Given
         usersRepository.addUser(login("username"), "password");
         //When
         boolean actual = usersRepository.test(login("userName"), "password");
         //Then
-        assertThat(actual).isFalse();
+        assertThat(actual).isTrue();
     }
 
     @Test
