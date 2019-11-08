@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -55,8 +56,11 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.james.core.MailAddress;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailKey;
-import org.apache.james.mailrepository.lib.AbstractMailRepository;
+import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.lib.Lock;
+import org.apache.james.repository.api.Initializable;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
@@ -68,6 +72,7 @@ import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
@@ -98,8 +103,19 @@ import com.google.common.collect.ImmutableList;
  * @version CVS $Revision$ $Date: 2010-12-29 21:47:46 +0100 (Wed, 29
  *          Dec 2010) $
  */
-public class JDBCMailRepository extends AbstractMailRepository {
+public class JDBCMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
+
+    /**
+     * Whether 'deep debugging' is turned on.
+     */
+    private static final boolean DEEP_DEBUG = false;
+
+    /**
+     * A lock used to control access to repository elements, locking access
+     * based on the key
+     */
+    private final Lock lock = new Lock();
 
     /**
      * The table name parsed from the destination URL
@@ -169,8 +185,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
-        super.doConfigure(configuration);
+    public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
         LOGGER.debug("{}.configure()", getClass().getName());
         destination = configuration.getString("[@destinationURL]");
 
@@ -223,6 +238,33 @@ public class JDBCMailRepository extends AbstractMailRepository {
         sqlFileName = configuration.getString("sqlFile");
 
     }
+
+    /**
+     * Releases a lock on a message identified the key
+     *
+     * @param key
+     *            the key of the message to be unlocked
+     *
+     * @return true if successfully released the lock, false otherwise
+     */
+    @Override
+    public boolean unlock(MailKey key) {
+        return lock.unlock(key);
+    }
+
+    /**
+     * Obtains a lock on a message identified by key
+     *
+     * @param key
+     *            the key of the message to be locked
+     *
+     * @return true if successfully obtained the lock, false otherwise
+     */
+    @Override
+    public boolean lock(MailKey key) {
+        return lock.lock(key);
+    }
+
 
     /**
      * Initialises the JDBC repository.
@@ -328,7 +370,7 @@ public class JDBCMailRepository extends AbstractMailRepository {
      * @throws SQLException
      *             if a fatal situation is met
      */
-    protected void checkJdbcAttributesSupport(DatabaseMetaData dbMetaData) throws SQLException {
+    private void checkJdbcAttributesSupport(DatabaseMetaData dbMetaData) throws SQLException {
         String attributesColumnName = "message_attributes";
         boolean hasUpdateMessageAttributesSQL = false;
         boolean hasRetrieveMessageAttributesSQL = false;
@@ -381,7 +423,37 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void internalStore(Mail mc) throws IOException, MessagingException {
+    public MailKey store(Mail mc) throws MessagingException {
+        boolean wasLocked = true;
+        MailKey key = MailKey.forMail(mc);
+        try {
+            synchronized (this) {
+                wasLocked = lock.isLocked(key);
+                if (!wasLocked) {
+                    // If it wasn't locked, we want a lock during the store
+                    lock(key);
+                }
+            }
+            internalStore(mc);
+            return key;
+        } catch (MessagingException e) {
+            LOGGER.error("Exception caught while storing mail {}", key, e);
+            throw e;
+        } catch (Exception e) {
+            LOGGER.error("Exception caught while storing mail {}", key, e);
+            throw new MessagingException("Exception caught while storing mail " + key, e);
+        } finally {
+            if (!wasLocked) {
+                // If it wasn't locked, we need to unlock now
+                unlock(key);
+                synchronized (this) {
+                    notify();
+                }
+            }
+        }
+    }
+
+    private void internalStore(Mail mc) throws IOException, MessagingException {
         Connection conn = null;
         try {
             conn = datasource.getConnection();
@@ -726,6 +798,30 @@ public class JDBCMailRepository extends AbstractMailRepository {
     }
 
     @Override
+    public void remove(Mail mail) throws MessagingException {
+        remove(MailKey.forMail(mail));
+    }
+
+    @Override
+    public void remove(Collection<Mail> mails) throws MessagingException {
+        for (Mail mail : mails) {
+            remove(mail);
+        }
+    }
+
+    @Override
+    public void remove(MailKey key) throws MessagingException {
+        if (lock(key)) {
+            try {
+                internalRemove(key);
+            } finally {
+                unlock(key);
+            }
+        } else {
+            throw new MessagingException("Cannot lock " + key + " to remove it");
+        }
+    }
+
     protected void internalRemove(MailKey key) throws MessagingException {
         Connection conn = null;
         PreparedStatement removeMessage = null;
@@ -806,6 +902,12 @@ public class JDBCMailRepository extends AbstractMailRepository {
         // the equals equation
         JDBCMailRepository repository = (JDBCMailRepository) obj;
         return ((repository.tableName.equals(tableName)) || ((repository.tableName != null) && repository.tableName.equals(tableName))) && ((repository.repositoryName.equals(repositoryName)) || ((repository.repositoryName != null) && repository.repositoryName.equals(repositoryName)));
+    }
+
+    @Override
+    public void removeAll() throws MessagingException {
+        ImmutableList.copyOf(list())
+            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
     }
 
     @Override
