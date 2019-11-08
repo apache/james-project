@@ -59,7 +59,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.search.comparator.UidComparator;
 import org.apache.james.mime4j.MimeException;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
@@ -98,7 +97,7 @@ import com.google.common.base.Objects;
 @MappedSuperclass
 public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
 
-    private static final Comparator<MailboxMessage> MESSAGE_UID_COMPARATOR = new UidComparator();
+    private static final Comparator<MailboxMessage> MESSAGE_UID_COMPARATOR = Comparator.comparing(MailboxMessage::getUid);
     private static final String TOSTRING_SEPARATOR = " ";
 
     /** Identifies composite key */
