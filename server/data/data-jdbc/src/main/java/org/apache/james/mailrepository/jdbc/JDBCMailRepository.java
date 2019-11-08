@@ -476,7 +476,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
             PreparedStatement checkMessageExists = null;
             ResultSet rsExists = null;
-            boolean exists = false;
+            boolean exists;
             try {
                 checkMessageExists = conn.prepareStatement(sqlQueries.getSqlString("checkMessageExistsSQL", true));
                 checkMessageExists.setString(1, mc.getName());
@@ -521,7 +521,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
                 } finally {
                     Statement localUpdateMessage = updateMessage;
                     // Clear reference to statement
-                    updateMessage = null;
                     theJDBCUtil.closeJDBCStatement(localUpdateMessage);
                 }
 
