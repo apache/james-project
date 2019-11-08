@@ -100,16 +100,10 @@ import com.google.common.collect.ImmutableList;
  * <p>
  * Requires a logger called MailRepository.
  * </p>
- * 
- * @version CVS $Revision$ $Date: 2010-12-29 21:47:46 +0100 (Wed, 29
- *          Dec 2010) $
  */
 public class JDBCMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
 
-    /**
-     * Whether 'deep debugging' is turned on.
-     */
     private static final boolean DEEP_DEBUG = false;
 
     /**
@@ -141,25 +135,13 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
      */
     private FilePersistentStreamRepository sr = null;
 
-    /**
-     * The JDBC datasource that provides the JDBC connection
-     */
     private DataSource datasource;
 
-    /**
-     * The name of the datasource used by this repository
-     */
     private String datasourceName;
 
-    /**
-     * Contains all of the sql strings for this component.
-     */
     @VisibleForTesting
     SqlResources sqlQueries;
 
-    /**
-     * The JDBCUtil helper class
-     */
     private JDBCUtil theJDBCUtil;
 
     /**
