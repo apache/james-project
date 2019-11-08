@@ -40,8 +40,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 /**
- * This class represent an AbstractMailRepository. All MailRepositories should
- * extend this class.
+ * This class represents an AbstractMailRepository that may help implementing MailRepository interface
  */
 public abstract class AbstractMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailRepository.class);
