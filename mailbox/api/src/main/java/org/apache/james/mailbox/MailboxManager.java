@@ -146,8 +146,7 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     /**
      * Creates a new mailbox. Any intermediary mailboxes missing from the
      * hierarchy should be created.
-     * 
-     * @param mailboxPath
+     *
      * @param mailboxSession
      *            the context for this call, not null
      * @throws MailboxException
@@ -159,10 +158,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
 
     /**
      * Delete the mailbox with the name
-     * 
-     * @param mailboxPath
-     * @param session
-     * @throws MailboxException
      */
     void deleteMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
@@ -227,7 +222,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            not null
      * @param session
      *            the context for this call, not null
-     * @throws MailboxException
      */
     List<MailboxMetaData> search(MailboxQuery expression, MailboxSession session) throws MailboxException;
 
@@ -238,7 +232,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            not null
      * @param session
      *            the context for this call, not null
-     * @throws MailboxException
      */
     List<MessageId> search(MultimailboxesSearchQuery expression, MailboxSession session, long limit) throws MailboxException;
 
@@ -251,7 +244,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            the context for this call, not null
      * @return true when the mailbox exists and is accessible for the given
      *            user, false otherwise
-     * @throws MailboxException
      */
     boolean mailboxExists(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
@@ -262,7 +254,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      *            the context for this call, not null
      * @return true when the INBOX exists and is accessible for the given
      *            user, false otherwise
-     * @throws MailboxException
      */
     default boolean hasInbox(MailboxSession session) throws MailboxException {
         return mailboxExists(MailboxPath.inbox(session), session);
@@ -349,10 +340,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
 
     /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects
-     * 
-     * @param session
-     * @return pathList
-     * @throws MailboxException
      */
     List<MailboxPath> list(MailboxSession session) throws MailboxException;
 

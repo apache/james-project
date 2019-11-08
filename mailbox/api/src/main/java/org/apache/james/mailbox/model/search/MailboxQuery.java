@@ -116,13 +116,6 @@ public final class MailboxQuery {
 
     /**
      * Constructs an expression determining a set of mailbox names.
-     * 
-     * @param base
-     *            base reference name, not null
-     * @param expression
-     *            mailbox match expression, not null
-     * @param pathDelimiter
-     *            path delimiter to use
      */
     @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
         this.namespace = namespace;

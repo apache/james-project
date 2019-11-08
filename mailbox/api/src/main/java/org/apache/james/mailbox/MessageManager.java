@@ -134,7 +134,6 @@ public interface MessageManager {
      * @param set the range of messages
      * @param mailboxSession not null
      * @return new flags indexed by UID
-     * @throws MailboxException
      */
     Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
 
@@ -272,23 +271,17 @@ public interface MessageManager {
      * the-hood in batches so the caller should check if
      * {@link MessageResultIterator#getException()} returns <code>null</code>
      * after {@link MessageResultIterator#hasNext()} returns <code>false</code>.
-     * 
-     * 
-     * @param set
+     *
      * @param fetchGroup
      *            data to fetch
      * @param mailboxSession
      *            not null
      * @return MessageResult with the fields defined by FetchGroup
-     * @throws MailboxException
      */
     MessageResultIterator getMessages(MessageRange set, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException;
 
     /**
      * Return the underlying {@link Mailbox}
-     *
-     * @return mailbox
-     * @throws MailboxException
      */
     Mailbox getMailboxEntity() throws MailboxException;
 

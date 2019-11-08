@@ -66,7 +66,7 @@ public class MessageRange implements Iterable<MessageUid> {
 
     /**
      * Constructs an inclusive ranges of messages. The parameters will be
-     * checked and {@link #from(long)} used where appropriate.
+     * checked and {@link #from(MessageUid)} used where appropriate.
      * 
      * @param from
      *            first message UID

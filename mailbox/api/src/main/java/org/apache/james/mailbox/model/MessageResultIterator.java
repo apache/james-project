@@ -25,8 +25,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 /**
  * A special {@link Iterator} which allows to access the {@link MailboxException} if one was thrown while try to lazy fetch the {@link MessageResult}'s in batches
- * 
- *
  */
 public interface MessageResultIterator extends Iterator<MessageResult> {
 

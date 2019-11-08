@@ -26,11 +26,9 @@ import java.util.Set;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
-
 /**
  * In memory {@link GroupMembershipResolver} implementation. There is no
  * persistence. You will get only what you add.
- * 
  */
 public class SimpleGroupMembershipResolver implements GroupMembershipResolver {
 

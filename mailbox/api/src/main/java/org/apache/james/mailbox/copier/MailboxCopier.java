@@ -26,7 +26,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 /**
  * Interface that exposes a method aimed to copy all mailboxes from a source
  * mailbox manager to a destination mailbox manager.
- * 
  */
 public interface MailboxCopier {
 
@@ -34,9 +33,6 @@ public interface MailboxCopier {
      * Copy the mailboxes from a mailbox manager to another mailbox manager. The
      * implementation is responsible to read all mailboxes form the injected
      * srcMailboxManager and to copy all its contents to the dstMailboxManager.
-     * 
-     * @param src
-     * @param dest
      */
     void copyMailboxes(MailboxManager src, MailboxManager dest) throws MailboxException, IOException;
 

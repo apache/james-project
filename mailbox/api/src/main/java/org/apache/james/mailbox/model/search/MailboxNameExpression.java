@@ -43,9 +43,6 @@ public interface MailboxNameExpression {
      * Get combined name formed by adding the expression to the base using the
      * given hierarchy delimiter. Note that the wildcards are retained in the
      * combined name.
-     *
-     * @return {@link #getBase()} combined with {@link #getExpression()},
-     *         notnull
      */
     String getCombinedName();
 

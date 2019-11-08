@@ -25,10 +25,6 @@ public interface GroupMembershipResolver {
 
     /**
      * Tests if the given user is a member of the given group.
-     * 
-     * @param user
-     * @param group
-     * @return
      */
     boolean isMember(String user, String group);
 

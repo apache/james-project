@@ -100,8 +100,6 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
 
     /**
      * Return the delimiter
-     * 
-     * @return delimiter
      */
     public char getHierarchyDelimiter() {
         return delimiter;
@@ -110,8 +108,6 @@ public class MailboxMetaData implements Comparable<MailboxMetaData> {
 
     /**
      * Return the MailboxPath
-     * 
-     * @return path
      */
     public MailboxPath getPath() {
         return path;

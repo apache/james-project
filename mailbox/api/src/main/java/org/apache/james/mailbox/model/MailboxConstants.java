@@ -21,8 +21,6 @@ package org.apache.james.mailbox.model;
 
 /**
  * Constants which are used within the mailbox api and implementations
- * 
- *
  */
 public interface MailboxConstants {
 

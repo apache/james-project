@@ -254,8 +254,6 @@ public class MailboxACL {
          * {@link MailboxACL.Rfc4314Rights}. However, implementations may decide to
          * return this or toRemove parameter value in case the result would be
          * equal to the respective one of those.
-         *
-         * @throws UnsupportedRightException
          */
         public Rfc4314Rights except(Rfc4314Rights toRemove) throws UnsupportedRightException {
             EnumSet<Right> copy = copyOf(value);
@@ -276,7 +274,6 @@ public class MailboxACL {
         /**
          * Tells whether the implementation supports the given right.
          *
-         * @param right
          * @return true if this supports the given right.
          */
         public boolean isSupported(Right right) {
@@ -323,9 +320,7 @@ public class MailboxACL {
          * Implementations must return a new unmodifiable instance of
          * {@link MailboxACL.Rfc4314Rights}.
          *
-         * @param toAdd
          * @return union of this and toAdd
-         * @throws UnsupportedRightException
          *
          */
         public Rfc4314Rights union(Rfc4314Rights toAdd) throws UnsupportedRightException {
@@ -389,8 +384,6 @@ public class MailboxACL {
          * serialized {@link String}. It supposes that negative rights are
          * marked with {@link MailboxACL#DEFAULT_NEGATIVE_MARKER} and that
          * groups are marked with {@link MailboxACL#DEFAULT_GROUP_MARKER}.
-         * 
-         * @param serialized
          */
         public static EntryKey deserialize(String serialized) {
             Preconditions.checkNotNull(serialized, "Cannot parse null");
@@ -472,8 +465,6 @@ public class MailboxACL {
          *
          * Note that {@link Entry#getKey()} ()} does not start with "-"
          * when {@link Entry#getValue()} returns true.
-         *
-         * @return
          */
         public boolean isNegative() {
             return negative;
@@ -686,8 +677,6 @@ public class MailboxACL {
     /**
      * Creates a new instance of SimpleMailboxACL from the given array of
      * entries.
-     * 
-     * @param entries
      */
     @SafeVarargs
     public MailboxACL(Map.Entry<EntryKey, Rfc4314Rights>... entries) {
@@ -701,8 +690,6 @@ public class MailboxACL {
     /**
      * Creates a new instance of SimpleMailboxACL from the given {@link Map} of
      * entries.
-     *
-     * @param entries
      */
     public MailboxACL(Map<EntryKey, Rfc4314Rights> entries) {
         Preconditions.checkNotNull(entries);
@@ -715,9 +702,6 @@ public class MailboxACL {
      * keys and values from the <code>props</code> parameter are parsed by the
      * {@link String} constructors of {@link EntryKey} and
      * {@link Rfc4314Rights} respectively.
-     * 
-     * @param props
-     * @throws UnsupportedRightException
      */
     public MailboxACL(Properties props) throws UnsupportedRightException {
         this(toMap(props));
@@ -740,7 +724,6 @@ public class MailboxACL {
      *
      * @param aclUpdate Update to perform
      * @return Copy of current ACL updated
-     * @throws UnsupportedRightException
      */
     public MailboxACL apply(ACLCommand aclUpdate) throws UnsupportedRightException {
         switch (aclUpdate.getEditMode()) {

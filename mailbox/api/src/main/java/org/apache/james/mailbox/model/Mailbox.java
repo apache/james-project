@@ -131,8 +131,6 @@ public class Mailbox {
 
     /**
      * Gets the current ACL for this mailbox.
-     *
-     * @return ACL
      */
     public MailboxACL getACL() {
         return acl;
@@ -140,8 +138,6 @@ public class Mailbox {
 
     /**
      * Sets the current ACL for this mailbox.
-     *
-     * @param acl
      */
     public void setACL(MailboxACL acl) {
         this.acl = acl;

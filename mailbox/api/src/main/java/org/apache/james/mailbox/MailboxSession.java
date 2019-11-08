@@ -129,8 +129,6 @@ public class MailboxSession {
 
     /**
      * Return if the {@link MailboxSession} is of type {@link SessionType#User} or {@link SessionType#System}
-     * 
-     * @return type
      */
     public SessionType getType() {
         return type;
@@ -138,8 +136,6 @@ public class MailboxSession {
     
     /**
      * Gets the session ID.
-     * 
-     * @return session id
      */
     public SessionId getSessionId() {
         return sessionId;
@@ -220,8 +216,6 @@ public class MailboxSession {
 
     /**
      * Return the stored attributes for this {@link MailboxSession}.
-     * 
-     * @return attributes
      */
     public Map<Object, Object> getAttributes() {
         return attributes;
@@ -229,8 +223,6 @@ public class MailboxSession {
 
     /**
      * Return server side, folder path separator
-     * 
-     * @return path separator
      */
     public char getPathDelimiter() {
         return pathSeparator;

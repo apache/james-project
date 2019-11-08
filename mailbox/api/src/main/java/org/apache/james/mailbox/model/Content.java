@@ -29,13 +29,8 @@ import org.apache.james.mailbox.exception.MailboxException;
  * This interface allows direct writing whilst exposing total size.
  */
 public interface Content {
-
-
     /**
      * Return the content as {@link InputStream}
-     * 
-     * @return content
-     * @throws IOException
      */
     InputStream getInputStream() throws IOException;
     
@@ -43,7 +38,6 @@ public interface Content {
      * Size (in octets) of the content.
      * 
      * @return number of octets to be written
-     * @throws MessagingException
      */
     long size() throws MailboxException;
 }

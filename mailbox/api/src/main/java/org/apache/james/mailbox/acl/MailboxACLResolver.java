@@ -45,11 +45,6 @@ public interface MailboxACLResolver {
      * Applies global ACL to the given <code>resourceACL</code>. From RFC 4314:
      * An implementation [...] MAY force rights to always or never be granted to
      * particular identifiers.
-     * 
-     * @param resourceACL
-     * @param resourceOwnerIsGroup
-     * @return
-     * @throws UnsupportedRightException
      */
     MailboxACL applyGlobalACL(MailboxACL resourceACL, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
@@ -61,18 +56,16 @@ public interface MailboxACLResolver {
      * 
      * @param key
      *            the identifier from the LISTRIGHTS command
-     * @param groupMembershipResolver
      * @param resourceOwner
      *            the owner of the mailbox named in the LISTRIGHTS command. User
      *            name or group name.
      * @param resourceOwnerIsGroup
      *            true if the {@code resourceOwner} is a group of users, false
      *            otherwise.
-     * @return an array of {@link MailboxACLRights}. The first element is the
+     * @return an array of {@link MailboxACL.Rfc4314Rights}. The first element is the
      *         set of implicit (global) rights which does not need to be set
      *         explicitly for the given identifier. Further elements are groups
      *         of rights which can be set for the given identifier and resource.
-     * @throws UnsupportedRightException
      */
     MailboxACL.Rfc4314Rights[] listRights(MailboxACL.EntryKey key, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 
@@ -97,7 +90,6 @@ public interface MailboxACLResolver {
      *            true if the resourceOwner is a group of users, false
      *            otherwise.
      * @return the rights applicable for the given user and resource.
-     * @throws UnsupportedRightException
      */
     MailboxACL.Rfc4314Rights resolveRights(String requestUser, GroupMembershipResolver groupMembershipResolver, MailboxACL resourceACL, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException;
 

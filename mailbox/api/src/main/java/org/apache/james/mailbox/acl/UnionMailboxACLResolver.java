@@ -87,10 +87,8 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
     /**
      * Creates a new instance of UnionMailboxACLResolver with the given
      * globalACL.
-     * 
-     * @param groupGlobalACL
-     * 
-     * @param globalACL
+     *
+     * @param userGlobalACL
      *            see {@link #userGlobalACL}, cannot be null.
      * @throws NullPointerException
      *             when globalACL is null.
@@ -128,13 +126,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * proper subset of the cases handled in (2). See the javadoc on
      * {@link #listRights(EntryKey, GroupMembershipResolver, String, boolean)}
      * for more details.
-     * 
-     * @param aclKey
-     * @param queryKey
-     * @param groupMembershipResolver
-     * @param resourceOwner
-     * @param resourceOwnerIsGroup
-     * @return
      */
     protected static boolean applies(EntryKey aclKey, EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) {
         final String aclKeyName = aclKey.getName();
@@ -272,8 +263,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
      * performed only either with user == null (only "anybody" rights will
      * apply) or with a user name which is there only after the user was
      * authenticated.
-     * 
-     * @see org.apache.james.mailbox.acl.MailboxACLResolver#listRightsDefault(boolean)
      */
     @Override
     public Rfc4314Rights[] listRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, String resourceOwner, boolean resourceOwnerIsGroup) throws UnsupportedRightException {
@@ -316,14 +305,6 @@ public class UnionMailboxACLResolver implements MailboxACLResolver {
 
     /**
      * What needs to be done for both global ACL and the given mailboxe's ACL.
-     * 
-     * @param requestUser
-     * @param groupMembershipResolver
-     * @param entries
-     * @param resourceOwner
-     * @param resourceOwnerIsGroup
-     * @param positiveNegativePair
-     * @throws UnsupportedRightException
      */
     private void resolveRights(EntryKey queryKey, GroupMembershipResolver groupMembershipResolver, Map<EntryKey, Rfc4314Rights> entries, String resourceOwner, boolean resourceOwnerIsGroup, Rfc4314Rights[] positiveNegativePair)
             throws UnsupportedRightException {

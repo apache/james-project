@@ -36,8 +36,6 @@ public interface QuotaManager {
      * bound to a user)
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
-     * @return quota
-     * @throws MailboxException
      */
     Quota<QuotaCount> getMessageQuota(QuotaRoot quotaRoot) throws MailboxException;
 
@@ -47,8 +45,6 @@ public interface QuotaManager {
      * bound to a user)
      *
      * @param quotaRoot Quota root argument from RFC 2087 ( correspond to the user owning this mailbox )
-     * @return quota
-     * @throws MailboxException
      */
     Quota<QuotaSize> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException;
 }

@@ -172,8 +172,6 @@ public class SearchQuery implements Serializable {
 
         /**
          * Create a new {@link Sort} which is NOT {@link #order}
-         * 
-         * @param sortClause
          */
         public Sort(SortClause sortClause) {
             this(sortClause, Order.NATURAL);
@@ -181,8 +179,6 @@ public class SearchQuery implements Serializable {
 
         /**
          * Return true if the sort should be in reverse order
-         * 
-         * @return reverse
          */
         public boolean isReverse() {
             return order == Order.REVERSE;
@@ -190,8 +186,6 @@ public class SearchQuery implements Serializable {
 
         /**
          * Return the {@link SortClause}
-         * 
-         * @return clause
          */
         public SortClause getSortClause() {
             return sortClause;
@@ -449,9 +443,7 @@ public class SearchQuery implements Serializable {
      * Creates a filter matching messages whose Address header contains the
      * given address. The address header of the message MUST get canonicalized
      * before try to match it.
-     * 
-     * @param type
-     * @param address
+     *
      * @return <code>Criterion</code>
      */
     public static Criterion address(AddressType type, String address) {
@@ -795,8 +787,6 @@ public class SearchQuery implements Serializable {
 
     /**
      * Set the {@link Sort}'s to use
-     * 
-     * @param sorts
      */
     public void setSorts(List<Sort> sorts) {
         if (sorts == null || sorts.isEmpty()) {

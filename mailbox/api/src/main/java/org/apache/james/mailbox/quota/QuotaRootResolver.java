@@ -34,7 +34,6 @@ public interface QuotaRootResolver extends QuotaRootDeserializer {
      *
      * @param mailboxPath The name of the mailbox
      * @return QuotaRoot ruling this mailbox ( we uses user owning this mailbox name )
-     * @throws MailboxException
      */
     QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException;
 

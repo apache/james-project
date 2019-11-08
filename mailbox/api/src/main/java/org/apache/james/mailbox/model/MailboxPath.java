@@ -36,9 +36,6 @@ public class MailboxPath {
     /**
      * Return a {@link MailboxPath} which represent the INBOX of the given
      * session
-     *
-     * @param session
-     * @return inbox
      */
     public static MailboxPath inbox(MailboxSession session) {
         return MailboxPath.forUser(session.getUser().asString(), MailboxConstants.INBOX);
@@ -73,8 +70,6 @@ public class MailboxPath {
 
     /**
      * Get the namespace this mailbox is in
-     * 
-     * @return The namespace
      */
     public String getNamespace() {
         return namespace;
@@ -83,8 +78,6 @@ public class MailboxPath {
     /**
      * Get the name of the user who owns the mailbox. This can be null e.g. for
      * shared mailboxes.
-     * 
-     * @return The username
      */
     public String getUser() {
         return user;
@@ -93,8 +86,6 @@ public class MailboxPath {
     /**
      * Get the name of the mailbox. This is the pure name without user or
      * namespace, so this is what a user would see in his client.
-     * 
-     * @return The name string
      */
     public String getName() {
         return name;
@@ -113,8 +104,7 @@ public class MailboxPath {
      * INBOX.main
      * INBOX.main.sub
      * </pre>
-     * 
-     * @param delimiter
+     *
      * @return list of hierarchy levels
      */
     public List<MailboxPath> getHierarchyLevels(char delimiter) {
@@ -187,9 +177,7 @@ public class MailboxPath {
 
     /**
      * Return the full name of the {@link MailboxPath}, which is constructed via the {@link #namespace} and {@link #name}
-     * 
-     * @param delimiter
-     * @return fullName
+     *
      * @deprecated Use {@link MailboxPath#asString()} instead.
      */
     @Deprecated

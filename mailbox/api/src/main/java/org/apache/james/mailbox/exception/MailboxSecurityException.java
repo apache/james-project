@@ -23,13 +23,8 @@ package org.apache.james.mailbox.exception;
 
 /**
  * Parent for security related exceptions.
- * 
  */
 public class MailboxSecurityException extends MailboxException {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 4186633460326902649L;
 
     public MailboxSecurityException() {

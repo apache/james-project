@@ -24,13 +24,8 @@ package org.apache.james.mailbox.exception;
 /**
  * Thrown when the rights granted to the given authenticated user do not suffice
  * for the given action.
- * 
  */
 public class InsufficientRightsException extends MailboxSecurityException {
-
-    /**
-     * 
-     */
     private static final long serialVersionUID = 7310501567640913596L;
 
     public InsufficientRightsException() {

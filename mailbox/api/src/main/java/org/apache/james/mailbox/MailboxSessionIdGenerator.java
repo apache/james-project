@@ -22,8 +22,6 @@ package org.apache.james.mailbox;
 
 /**
  * Generator for id's which should used for new {@link MailboxSession} instances
- * 
- *
  */
 public interface MailboxSessionIdGenerator {
 
@@ -32,8 +30,6 @@ public interface MailboxSessionIdGenerator {
      * while the server is running and can be any long except {@link MailboxSession#SYSTEM_SESSION_ID}.
      * 
      * The returned ids can be in any specific order.
-     * 
-     * @return id
      */
     long nextId();
 }

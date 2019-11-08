@@ -33,8 +33,6 @@ import com.google.common.base.Preconditions;
 
 /**
  * Represent a Flag update for a message
- * 
- *
  */
 public class UpdatedFlags {
 
@@ -143,8 +141,6 @@ public class UpdatedFlags {
     
     /**
      * Return the old {@link Flags} for the message
-     * 
-     * @return oldFlags
      */
     public Flags getOldFlags() {
         return oldFlags;
@@ -164,8 +160,6 @@ public class UpdatedFlags {
 
     /**
      * Return the new {@link Flags} for the message
-     * 
-     * @return newFlags
      */
     public Flags getNewFlags() {
         return newFlags;
@@ -173,8 +167,6 @@ public class UpdatedFlags {
     
     /**
      * Return the uid for the message whichs {@link Flags} was updated
-     * 
-     * @return uid
      */
     public MessageUid getUid() {
         return uid;
@@ -204,8 +196,6 @@ public class UpdatedFlags {
     
     /**
      * Return the new mod-sequence for the message
-     * 
-     * @return mod-seq
      */
     public long getModSeq() {
         return modSeq;

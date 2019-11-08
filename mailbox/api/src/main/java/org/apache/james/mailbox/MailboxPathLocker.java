@@ -42,14 +42,7 @@ public interface MailboxPathLocker {
     /**
      * Execute the {@link LockAwareExecution} while holding a lock on the
      * {@link MailboxPath}. If writeLock is true the implementation need to make sure that no other threads can read and write while the lock
-     * is hold. The contract is the same as documented in {@link ReadWriteLock}. 
-     * 
-     * @param session
-     * @param path
-     * @param execution
-     * @param writeLock
-     * 
-     * @throws MailboxException
+     * is hold. The contract is the same as documented in {@link ReadWriteLock}.
      */
     <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException;
 
@@ -60,8 +53,6 @@ public interface MailboxPathLocker {
 
         /**
          * Execute code block
-         * 
-         * @throws MailboxException
          */
         T execute() throws MailboxException;
     }
