@@ -117,7 +117,7 @@ public final class MailboxQuery {
     /**
      * Constructs an expression determining a set of mailbox names.
      */
-    @VisibleForTesting MailboxQuery(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
+    private MailboxQuery(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
         this.namespace = namespace;
         this.user = user;
         this.mailboxNameExpression = mailboxNameExpression;
