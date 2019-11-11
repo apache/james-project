@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 ## [Unreleased]
 
 ### Added
-- Distributed task management for Guice cassandra-rabbitmq product. This enables two James servers to share a consistent view
+- Distributed task management for Guice cassandra-rabbitmq product. This enables several James servers to share a consistent view
 of tasks being currently executed.
 - JAMES-2563 Health check for ElasticSearch
 - JAMES-2904 Authentication and SSL support for Cassandra backend
