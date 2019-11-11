@@ -23,28 +23,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Locale;
 import java.util.Optional;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class RoleTest {
+class RoleTest {
 
     @Test
-    public void fromShouldReturnEmptyWhenUnknownValue() {
+    void fromShouldReturnEmptyWhenUnknownValue() {
         assertThat(Role.from("jjjj")).isEqualTo(Optional.empty());
     }
 
     @Test
-    public void fromShouldReturnSomethingWhenXPrefixedRole() {
+    void fromShouldReturnSomethingWhenXPrefixedRole() {
         assertThat(Role.from("x-client-specific-role")).isEqualTo(Optional.of(new Role("x-client-specific-role")));
     }
 
     @Test
-    public void isSystemRoleShouldReturnFalseWhenXPrefixedRole() {
+    void isSystemRoleShouldReturnFalseWhenXPrefixedRole() {
         Role role = Role.from("x-client-specific-role").get();
         assertThat(role.isSystemRole()).isFalse();
     }
 
     @Test
-    public void fromShouldReturnInboxWhenContainsUppercaseValueInTurkish() {
+    void fromShouldReturnInboxWhenContainsUppercaseValueInTurkish() {
         Locale previousLocale = Locale.getDefault();
         Locale.setDefault(Locale.forLanguageTag("tr"));
         try {
@@ -55,124 +55,124 @@ public class RoleTest {
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenInbox() {
+    void isSystemRoleShouldBeTrueWhenInbox() {
         assertThat(Role.INBOX.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenArchive() {
+    void isSystemRoleShouldBeTrueWhenArchive() {
         assertThat(Role.ARCHIVE.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenDrafts() {
+    void isSystemRoleShouldBeTrueWhenDrafts() {
         assertThat(Role.DRAFTS.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenOutbox() {
+    void isSystemRoleShouldBeTrueWhenOutbox() {
         assertThat(Role.OUTBOX.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenSent() {
+    void isSystemRoleShouldBeTrueWhenSent() {
         assertThat(Role.SENT.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenTrash() {
+    void isSystemRoleShouldBeTrueWhenTrash() {
         assertThat(Role.TRASH.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenSpam() {
+    void isSystemRoleShouldBeTrueWhenSpam() {
         assertThat(Role.SPAM.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenTemplates() {
+    void isSystemRoleShouldBeTrueWhenTemplates() {
         assertThat(Role.TEMPLATES.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeTrueWhenRestoredMessages() {
+    void isSystemRoleShouldBeTrueWhenRestoredMessages() {
         assertThat(Role.RESTORED_MESSAGES.isSystemRole()).isTrue();
     }
 
     @Test
-    public void isSystemRoleShouldBeFalseWhenUserDefinedRole() {
+    void isSystemRoleShouldBeFalseWhenUserDefinedRole() {
         Role userRole = Role.from(Role.USER_DEFINED_ROLE_PREFIX + "myRole").get();
         assertThat(userRole.isSystemRole()).isFalse();
     }
 
     @Test
-    public void theINBOXMailboxNameShouldBeASystemMailbox() {
+    void theINBOXMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("INBOX").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theInBoXMailboxNameShouldBeASystemMailbox() {
+    void theInBoXMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("InBoX").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theDraftsMailboxNameShouldBeASystemMailbox() {
+    void theDraftsMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("Drafts").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theDrAfTsMailboxNameShouldNotBeASystemMailbox() {
+    void theDrAfTsMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("DrAfTs");
         assertThat(role).isEmpty();
     }
 
     @Test
-    public void theOutboxMailboxNameShouldBeASystemMailbox() {
+    void theOutboxMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("Outbox").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theOuTbOxMailboxNameShouldNotBeASystemMailbox() {
+    void theOuTbOxMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("OuTbOx");
         assertThat(role).isEmpty();
     }
 
     @Test
-    public void theSentMailboxNameShouldBeASystemMailbox() {
+    void theSentMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("Sent").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theSeNtMailboxNameShouldNotBeASystemMailbox() {
+    void theSeNtMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("SeNt");
         assertThat(role).isEmpty();
     }
 
     @Test
-    public void theTrashMailboxNameShouldBeASystemMailbox() {
+    void theTrashMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("Trash").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theTrAsHMailboxNameShouldNotBeASystemMailbox() {
+    void theTrAsHMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("TrAsH");
         assertThat(role).isEmpty();
     }
 
     @Test
-    public void theRestoredMessagesMailboxNameShouldBeASystemMailbox() {
+    void theRestoredMessagesMailboxNameShouldBeASystemMailbox() {
         Role role = Role.from("Restored-Messages").get();
         assertThat(role.isSystemRole()).isTrue();
     }
 
     @Test
-    public void theReStOrEdMeSsAgEsMailboxNameShouldNotBeASystemMailbox() {
+    void theReStOrEdMeSsAgEsMailboxNameShouldNotBeASystemMailbox() {
         Optional<Role> role = Role.from("ReStOrEd-MeSsAgEs");
         assertThat(role).isEmpty();
     }

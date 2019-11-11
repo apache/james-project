@@ -20,14 +20,14 @@
 package org.apache.james.mailbox;
 
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ComposedMessageIdTest {
+class ComposedMessageIdTest {
 
     @Test
-    public void composedMessageIdShouldRespectBeanContract() {
+    void composedMessageIdShouldRespectBeanContract() {
         EqualsVerifier.forClass(ComposedMessageId.class)
             .verify();
     }

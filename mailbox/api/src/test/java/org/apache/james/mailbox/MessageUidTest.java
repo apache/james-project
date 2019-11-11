@@ -19,14 +19,11 @@
 package org.apache.james.mailbox;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class MessageUidTest {
-
-    @Rule public ExpectedException exception = ExpectedException.none();
+class MessageUidTest {
     
     private static final MessageUid _1 = MessageUid.of(1);
     private static final MessageUid _2 = MessageUid.of(2);
@@ -34,24 +31,24 @@ public class MessageUidTest {
     private static final MessageUid _4 = MessageUid.of(4);
 
     @Test
-    public void distanceShouldReturnZeroWhenSameValue() {
+    void distanceShouldReturnZeroWhenSameValue() {
         assertThat(_1.distance(_1)).isEqualTo(0);
     }
 
     @Test
-    public void distanceShouldThrowWhenNullArgument() {
-        exception.expect(NullPointerException.class);
-        _1.distance(null);
+    void distanceShouldThrowWhenNullArgument() {
+        assertThatThrownBy(() -> _1.distance(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
 
     @Test
-    public void distanceShouldReturnPositiveDistanceWhenGreaterArgument() {
+    void distanceShouldReturnPositiveDistanceWhenGreaterArgument() {
         assertThat(_1.distance(_4)).isEqualTo(3);
     }
     
     @Test
-    public void distanceShouldReturnNegativeDistanceWhenSmallerArgument() {
+    void distanceShouldReturnNegativeDistanceWhenSmallerArgument() {
         assertThat(_3.distance(_2)).isEqualTo(-1);
     }
 }

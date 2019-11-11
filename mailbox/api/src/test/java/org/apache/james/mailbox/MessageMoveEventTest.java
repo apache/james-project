@@ -26,31 +26,27 @@ import org.apache.james.mailbox.events.MessageMoveEvent;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MessageMoveEventTest {
-
-    @Rule
-    public JUnitSoftAssertions softly = new JUnitSoftAssertions();
+class MessageMoveEventTest {
 
     @Test
-    public void shouldRespectBeanContract() {
+    void shouldRespectBeanContract() {
         EqualsVerifier.forClass(MessageMoveEvent.class).verify();
     }
 
     @Test
-    public void builderShouldThrowWhenSessionIsNull() {
+    void builderShouldThrowWhenSessionIsNull() {
         assertThatThrownBy(() -> MessageMoveEvent.builder()
                 .build())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void builderShouldThrowWhenMessageMovesIsNull() {
+    void builderShouldThrowWhenMessageMovesIsNull() {
         assertThatThrownBy(() -> MessageMoveEvent.builder()
                 .session(MailboxSessionUtil.create("user@james.org"))
                 .build())
@@ -58,7 +54,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void builderShouldReturnNoopWhenMessagesIsEmpty() {
+    void builderShouldReturnNoopWhenMessagesIsEmpty() {
         assertThat(MessageMoveEvent.builder()
                 .session(MailboxSessionUtil.create("user@james.org"))
                 .messageMoves(MessageMoves.builder()
@@ -70,7 +66,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void builderShouldNotBeNoopWhenFieldsAreGiven() {
+    void builderShouldNotBeNoopWhenFieldsAreGiven() {
         MailboxSession session = MailboxSessionUtil.create("user@james.org");
         MessageMoves messageMoves = MessageMoves.builder()
             .targetMailboxIds(TestId.of(2))
@@ -87,7 +83,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void builderShouldBuildWhenFieldsAreGiven() {
+    void builderShouldBuildWhenFieldsAreGiven() {
         String username = "user@james.org";
         MailboxSession session = MailboxSessionUtil.create(username);
         MessageMoves messageMoves = MessageMoves.builder()
@@ -102,13 +98,15 @@ public class MessageMoveEventTest {
             .messageId(messageId)
             .build();
 
-        softly.assertThat(event.getUsername()).isEqualTo(Username.of(username));
-        softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
-        softly.assertThat(event.getMessageIds()).containsExactly(messageId);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(event.getUsername()).isEqualTo(Username.of(username));
+            softly.assertThat(event.getMessageMoves()).isEqualTo(messageMoves);
+            softly.assertThat(event.getMessageIds()).containsExactly(messageId);
+        });
     }
 
     @Test
-    public void isMoveToShouldReturnFalseWhenMailboxIdIsNotInAddedMailboxIds() {
+    void isMoveToShouldReturnFalseWhenMailboxIdIsNotInAddedMailboxIds() {
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(MailboxSessionUtil.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
@@ -121,7 +119,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void isMoveToShouldReturnTrueWhenMailboxIdIsInAddedMailboxIds() {
+    void isMoveToShouldReturnTrueWhenMailboxIdIsInAddedMailboxIds() {
         TestId mailboxId = TestId.of(123);
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(MailboxSessionUtil.create("user@james.org"))
@@ -135,7 +133,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void isMoveFromShouldReturnFalseWhenMailboxIdIsNotInRemovedMailboxIds() {
+    void isMoveFromShouldReturnFalseWhenMailboxIdIsNotInRemovedMailboxIds() {
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(MailboxSessionUtil.create("user@james.org"))
             .messageMoves(MessageMoves.builder()
@@ -148,7 +146,7 @@ public class MessageMoveEventTest {
     }
 
     @Test
-    public void isMoveFromShouldReturnTrueWhenMailboxIdIsInRemovedMailboxIds() {
+    void isMoveFromShouldReturnTrueWhenMailboxIdIsInRemovedMailboxIds() {
         TestId mailboxId = TestId.of(123);
         MessageMoveEvent event = MessageMoveEvent.builder()
             .session(MailboxSessionUtil.create("user@james.org"))

@@ -21,25 +21,25 @@ package org.apache.james.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Ensure that {@link MailboxException} construction is correct.
  */
-public class MailboxExceptionTest {
+class MailboxExceptionTest {
     
     private static final String EXCEPTION_MESSAGE = "this is an exception message";
     private static final String CAUSE_MESSAGE = "this is a cause";
     private static final Exception EXCEPTION_CAUSE = new Exception(CAUSE_MESSAGE);
     
     @Test
-    public void testMailboxExceptionMessage() {
+    void testMailboxExceptionMessage() {
         MailboxException mbe = new MailboxException(EXCEPTION_MESSAGE);
         assertThat(mbe).hasMessage(EXCEPTION_MESSAGE);
     }
 
     @Test
-    public void testMailboxExceptionCause() {
+    void testMailboxExceptionCause() {
         MailboxException mbe = new MailboxException(EXCEPTION_MESSAGE, EXCEPTION_CAUSE);
         assertThat(mbe).hasMessage(EXCEPTION_MESSAGE).hasCauseExactlyInstanceOf(Exception.class);
         assertThat(mbe.getCause()).hasMessage(CAUSE_MESSAGE);
