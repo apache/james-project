@@ -23,9 +23,7 @@ import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -52,10 +50,10 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected void processMessage(SetQuotaRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(SetQuotaRequest message, ImapSession session, Responder responder) {
         Object[] params = new Object[]{
             "Full admin rights",
-            command.getName(),
+            message.getCommand().getName(),
             "Can not perform SETQUOTA commands"
         };
         HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);

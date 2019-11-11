@@ -22,10 +22,8 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -61,7 +59,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     }
 
     @Override
-    protected void processMessage(DeleteACLRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(DeleteACLRequest message, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
@@ -88,7 +86,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
                 /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
-                        command.getName(),
+                        message.getCommand().getName(),
                         mailboxName
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
@@ -130,7 +128,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
         } catch (MailboxNotFoundException e) {
             no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
             no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

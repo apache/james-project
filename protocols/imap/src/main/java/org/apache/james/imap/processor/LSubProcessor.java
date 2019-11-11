@@ -23,9 +23,7 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -54,7 +52,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
     }
 
     @Override
-    protected void doProcessRequest(LsubRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void doProcessRequest(LsubRequest request, ImapSession session, Responder responder) {
         String referenceName = request.getBaseReferenceName();
         String mailboxPattern = request.getMailboxPattern();
 

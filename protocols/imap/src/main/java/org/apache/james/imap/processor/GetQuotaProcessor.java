@@ -24,10 +24,8 @@ import java.util.List;
 
 import org.apache.james.core.quota.QuotaCount;
 import org.apache.james.core.quota.QuotaSize;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -71,7 +69,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     @Override
-    protected void processMessage(GetQuotaRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(GetQuotaRequest message, ImapSession session, Responder responder) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.fromString(message.getQuotaRoot());
             if (hasRight(quotaRoot, session)) {
@@ -87,7 +85,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
             } else {
                 Object[] params = new Object[]{
                         MailboxACL.Right.Read.toString(),
-                        command.getName(),
+                        message.getCommand().getName(),
                         "Any mailbox of this user USER"
                 };
                 HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);

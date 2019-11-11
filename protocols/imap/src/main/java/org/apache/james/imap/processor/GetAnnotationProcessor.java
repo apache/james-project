@@ -27,10 +27,8 @@ import java.util.Set;
 import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -70,12 +68,11 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected void processMessage(GetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
-                                  Responder responder) {
+    protected void processMessage(GetAnnotationRequest message, ImapSession session, Responder responder) {
         try {
             proceed(message, session, responder);
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
+            LOGGER.info("The command: {} is failed because not found mailbox {}", message.getCommand().getName(), message.getMailboxName());
             no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
             LOGGER.error("GetAnnotation on mailbox {} failed for user {}", message.getMailboxName(), ImapSessionUtils.getUserName(session), e);

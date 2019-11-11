@@ -23,8 +23,6 @@ import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -49,7 +47,7 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     }
 
     @Override
-    protected void processMessage(LoginRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(LoginRequest request, ImapSession session, Responder responder) {
             // check if the login is allowed with LOGIN command. See IMAP-304
             if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
                 no(request, responder, HumanReadableText.DISABLED_LOGIN);

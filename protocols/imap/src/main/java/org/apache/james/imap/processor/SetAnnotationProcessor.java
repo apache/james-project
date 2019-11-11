@@ -22,10 +22,8 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -60,8 +58,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected void processMessage(SetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
-                                  Responder responder) {
+    protected void processMessage(SetAnnotationRequest message, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final String mailboxName = message.getMailboxName();
@@ -72,13 +69,13 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
 
             okComplete(message, responder);
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
+            LOGGER.info("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
             no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
         } catch (AnnotationException e) {
-            LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
+            LOGGER.info("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
             no(message, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
             no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }

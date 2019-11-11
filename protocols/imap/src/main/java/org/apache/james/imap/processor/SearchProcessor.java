@@ -29,10 +29,8 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags.Flag;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -83,7 +81,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected void processMessage(SearchRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(SearchRequest request, ImapSession session, Responder responder) {
         final SearchOperation operation = request.getSearchOperation();
         final SearchKey searchKey = operation.getSearchKey();
         final boolean useUids = request.isUseUids();
@@ -173,7 +171,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
                             SearchResUtil.saveSequenceSet(session, savedRanges.toArray(new IdRange[0]));
                         }
                     }
-                    response = new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, tag, useUids, resultOptions);
+                    response = new ESearchResponse(min, max, count, idRanges, uidRanges, highestModSeq, request.getTag(), useUids, resultOptions);
                 } else {
                     // Just save the returned sequence-set as this is not SEARCHRES + ESEARCH
                     SearchResUtil.saveSequenceSet(session, idRanges);

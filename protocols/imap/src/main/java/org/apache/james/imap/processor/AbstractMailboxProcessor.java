@@ -109,7 +109,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
             } else {
                 getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
-                processMessage(message, session, tag, command, responder);
+                processMessage(message, session, responder);
 
                 getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
@@ -370,7 +370,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected abstract void processMessage(M message, ImapSession session, Tag tag, ImapCommand command, Responder responder);
+    protected abstract void processMessage(M message, ImapSession session, Responder responder);
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string

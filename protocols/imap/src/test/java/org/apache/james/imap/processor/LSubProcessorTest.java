@@ -114,7 +114,7 @@ public class LSubProcessorTest {
 
         LsubRequest request = new LsubRequest(command, "", PARENT
                 + HIERARCHY_DELIMITER + "%", TAG);
-        processor.doProcessRequest(request, session, TAG, command, responderImpl);
+        processor.doProcessRequest(request, session, responderImpl);
 
         verify(responder).respond(new LSubResponse(CHILD_ONE, false, HIERARCHY_DELIMITER));
         verify(responder).respond(new LSubResponse(CHILD_TWO, false, HIERARCHY_DELIMITER));
@@ -136,7 +136,7 @@ public class LSubProcessorTest {
 
         LsubRequest request = new LsubRequest(command, "", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
-        processor.doProcessRequest(request, session, TAG, command, responderImpl);
+        processor.doProcessRequest(request, session, responderImpl);
 
         verify(responder).respond(new LSubResponse(PARENT, true, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
@@ -158,7 +158,7 @@ public class LSubProcessorTest {
 
         LsubRequest request = new LsubRequest(command, "", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
-        processor.doProcessRequest(request, session, TAG, command, responderImpl);
+        processor.doProcessRequest(request, session, responderImpl);
 
         verify(responder).respond(new LSubResponse(PARENT, false, HIERARCHY_DELIMITER));
         verify(responder).respond(statusResponse);
@@ -174,7 +174,7 @@ public class LSubProcessorTest {
             .thenReturn(statusResponse);
 
         LsubRequest request = new LsubRequest(command, "", "*", TAG);
-        processor.doProcessRequest(request, session, TAG, command, responderImpl);
+        processor.doProcessRequest(request, session, responderImpl);
 
         verify(responder).respond(new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER));
         verify(responder).respond(new LSubResponse(MAILBOX_B, false, HIERARCHY_DELIMITER));

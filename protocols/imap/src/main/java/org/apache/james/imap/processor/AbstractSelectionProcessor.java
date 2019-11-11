@@ -22,11 +22,9 @@ package org.apache.james.imap.processor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -79,7 +77,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
     }
 
     @Override
-    protected void processMessage(M request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(M request, ImapSession session, Responder responder) {
         final String mailboxName = request.getMailboxName();
         try {
             final MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -89,7 +87,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             
         } catch (MailboxNotFoundException e) {
             LOGGER.debug("Select failed as mailbox does not exist {}", mailboxName, e);
-            responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
+            responder.respond(statusResponseFactory.taggedNo(request.getTag(), request.getCommand(), HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
             LOGGER.error("Select failed for mailbox {}", mailboxName, e);
             no(request, responder, HumanReadableText.SELECT);

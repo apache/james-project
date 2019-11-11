@@ -23,10 +23,8 @@ import java.io.Closeable;
 import java.util.Collections;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -60,7 +58,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     }
 
     @Override
-    protected void processMessage(MyRightsRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(MyRightsRequest message, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
@@ -102,7 +100,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
         } catch (MailboxNotFoundException e) {
             no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
+            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
             no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 

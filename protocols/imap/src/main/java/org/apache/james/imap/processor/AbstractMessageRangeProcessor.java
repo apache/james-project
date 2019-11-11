@@ -22,9 +22,7 @@ package org.apache.james.imap.processor;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -62,7 +60,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
     protected abstract String getOperationName();
 
     @Override
-    protected void processMessage(M request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(M request, ImapSession session, Responder responder) {
         final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();

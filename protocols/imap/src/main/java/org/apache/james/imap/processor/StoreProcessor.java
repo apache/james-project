@@ -32,7 +32,6 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -76,11 +75,11 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     @Override
-    protected void processMessage(StoreRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(StoreRequest request, ImapSession session, Responder responder) {
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();
         final long unchangedSince = request.getUnchangedSince();
-        ImapCommand imapCommand = command;
+        ImapCommand imapCommand = request.getCommand();
         
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
@@ -104,7 +103,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                         //       Use of UNCHANGEDSINCE with a modification sequence of 0 always
                         //       fails if the metadata item exists.  A system flag MUST always be
                         //       considered existent, whether it was set or not.
-                        final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idSet));
+                        final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idSet));
                         responder.respond(response);
                         return;
                     }
@@ -195,7 +194,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     // we need to return the failed sequences
                     //
                     // See RFC4551 3.2. STORE and UID STORE Commands
-                    final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
+                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(idRanges));
                     responder.respond(response);
                 } else {
                     List<IdRange> ranges = new ArrayList<>();
@@ -204,7 +203,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                     }
                     IdRange[] failedRanges = IdRange.mergeRanges(ranges).toArray(new IdRange[0]);
                     // See RFC4551 3.2. STORE and UID STORE Commands
-                    final StatusResponse response = getStatusResponseFactory().taggedOk(tag, command, HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
+                    final StatusResponse response = getStatusResponseFactory().taggedOk(request.getTag(), request.getCommand(), HumanReadableText.FAILED, ResponseCode.condStore(failedRanges));
                     responder.respond(response);
                     
                 }

@@ -21,9 +21,7 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -52,7 +50,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     @Override
-    protected void processMessage(StatusRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(StatusRequest request, ImapSession session, Responder responder) {
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         StatusDataItems statusDataItems = request.getStatusDataItems();
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

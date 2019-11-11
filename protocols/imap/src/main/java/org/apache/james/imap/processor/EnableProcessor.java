@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -69,7 +67,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
 
     @Override
-    protected void processMessage(EnableRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(EnableRequest request, ImapSession session, Responder responder) {
         try {
 
             List<String> caps = request.getCapabilities();

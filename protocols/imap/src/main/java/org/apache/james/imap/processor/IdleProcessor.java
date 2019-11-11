@@ -30,10 +30,8 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -86,7 +84,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected void processMessage(IdleRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(IdleRequest message, ImapSession session, Responder responder) {
         SelectedMailbox sm = session.getSelected();
         Registration registration;
         if (sm != null) {
@@ -112,7 +110,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 }
                 session.popLineHandler();
                 if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                    StatusResponse response = getStatusResponseFactory().taggedBad(tag, command, HumanReadableText.INVALID_COMMAND);
+                    StatusResponse response = getStatusResponseFactory().taggedBad(message.getTag(), message.getCommand(), HumanReadableText.INVALID_COMMAND);
                     responder.respond(response);
                 } else {
                     okComplete(message, responder);

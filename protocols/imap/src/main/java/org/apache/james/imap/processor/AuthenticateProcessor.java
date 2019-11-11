@@ -26,8 +26,6 @@ import java.util.Base64;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -57,7 +55,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    protected void processMessage(AuthenticateRequest request, ImapSession session, final Tag tag, final ImapCommand command, final Responder responder) {
+    protected void processMessage(AuthenticateRequest request, ImapSession session, final Responder responder) {
         final String authType = request.getAuthType();
         if (authType.equalsIgnoreCase(PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
