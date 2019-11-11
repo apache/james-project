@@ -28,10 +28,10 @@ import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class UnionMailboxACLResolverTest {
+class UnionMailboxACLResolverTest {
 
     private static final String GROUP_1 = "group1";
     private static final String GROUP_2 = "group2";
@@ -60,8 +60,8 @@ public class UnionMailboxACLResolverTest {
     private EntryKey group1Key;
     private EntryKey group2Key;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         user1Key = EntryKey.createUserEntryKey(USER_1);
         user2Key = EntryKey.createUserEntryKey(USER_2);
         group1Key = EntryKey.createGroupEntryKey(GROUP_1);
@@ -99,7 +99,7 @@ public class UnionMailboxACLResolverTest {
     }
 
     @Test
-    public void testAppliesNullUser() throws UnsupportedRightException {
+    void testAppliesNullUser() throws UnsupportedRightException {
 
         assertThat(UnionMailboxACLResolver.applies(user1Key, null, groupMembershipResolver, USER_1, false)).isFalse();
         assertThat(UnionMailboxACLResolver.applies(user2Key, null, groupMembershipResolver, USER_1, false)).isFalse();
@@ -111,7 +111,7 @@ public class UnionMailboxACLResolverTest {
     }
 
     @Test
-    public void testAppliesUser() throws UnsupportedRightException {
+    void testAppliesUser() throws UnsupportedRightException {
         /* requester is the resource owner */
         assertThat(UnionMailboxACLResolver.applies(user1Key, user1Key, groupMembershipResolver, USER_1, false)).isTrue();
         assertThat(UnionMailboxACLResolver.applies(user2Key, user1Key, groupMembershipResolver, USER_1, false)).isFalse();
@@ -160,7 +160,7 @@ public class UnionMailboxACLResolverTest {
     }
 
     @Test
-    public void testResolveRightsNullUser() throws UnsupportedRightException {
+    void testResolveRightsNullUser() throws UnsupportedRightException {
 
         assertThat(
             anyoneReadListGlobal.resolveRights(null, groupMembershipResolver, user1Read, USER_1, false)
@@ -399,7 +399,7 @@ public class UnionMailboxACLResolverTest {
     }
 
     @Test
-    public void testResolveRightsNullUserGlobals() throws UnsupportedRightException {
+    void testResolveRightsNullUserGlobals() throws UnsupportedRightException {
         assertThat(
             anyoneReadListGlobal.resolveRights(null, groupMembershipResolver, user1Read, USER_2, false)
                 .contains(MailboxACL.Right.Read))
@@ -424,7 +424,7 @@ public class UnionMailboxACLResolverTest {
 
 
     @Test
-    public void testResolveRightsUserSelfOwner() throws UnsupportedRightException {
+    void testResolveRightsUserSelfOwner() throws UnsupportedRightException {
 
         assertThat(
             anyoneReadListGlobal.resolveRights(USER_1, groupMembershipResolver, user1Read, USER_1, false)
@@ -659,7 +659,7 @@ public class UnionMailboxACLResolverTest {
 
 
     @Test
-    public void testResolveRightsUserNotOwner() throws UnsupportedRightException {
+    void testResolveRightsUserNotOwner() throws UnsupportedRightException {
 
         assertThat(
             anyoneReadListGlobal.resolveRights(USER_1, groupMembershipResolver, user1Read, USER_2, false)
@@ -893,7 +893,7 @@ public class UnionMailboxACLResolverTest {
     }
 
     @Test
-    public void testResolveRightsUserMemberOfOwnerGroup() throws UnsupportedRightException {
+    void testResolveRightsUserMemberOfOwnerGroup() throws UnsupportedRightException {
 
         assertThat(
             anyoneReadListGlobal.resolveRights(USER_1, groupMembershipResolver, user1Read, GROUP_1, true)
@@ -1128,7 +1128,7 @@ public class UnionMailboxACLResolverTest {
 
 
     @Test
-    public void testResolveRightsUserNotMemberOfOwnerGroup() throws UnsupportedRightException {
+    void testResolveRightsUserNotMemberOfOwnerGroup() throws UnsupportedRightException {
 
         assertThat(
             anyoneReadListGlobal.resolveRights(USER_1, groupMembershipResolver, user1Read, GROUP_2, true)

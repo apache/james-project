@@ -23,14 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ACLDiffTest {
+class ACLDiffTest {
     private static final MailboxACL.EntryKey ENTRY_KEY = MailboxACL.EntryKey.createGroupEntryKey("any", false);
     private static final MailboxACL.Rfc4314Rights RIGHTS = new MailboxACL.Rfc4314Rights(MailboxACL.Right.Administer);
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenSameACL() {
+    void addedEntriesShouldReturnEmptyWhenSameACL() {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -39,7 +39,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void addedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(ENTRY_KEY)
@@ -52,7 +52,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenSameACL() {
+    void removedEntriesShouldReturnEmptyWhenSameACL() {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -61,7 +61,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void removedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(ENTRY_KEY)
@@ -74,7 +74,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenSameACL() {
+    void changedEntriesShouldReturnEmptyWhenSameACL() {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -83,7 +83,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void changedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(ENTRY_KEY)
@@ -96,7 +96,7 @@ public class ACLDiffTest {
     }
     
     @Test
-    public void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
+    void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -110,7 +110,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
+    void changedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -124,7 +124,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
+    void removedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -138,7 +138,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
+    void addedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -152,7 +152,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
+    void changedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -166,7 +166,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEntryWhenRemovedEntry() throws Exception {
+    void removedEntriesShouldReturnEntryWhenRemovedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -180,7 +180,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
+    void removedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -198,7 +198,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
+    void addedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -216,7 +216,7 @@ public class ACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEntryWhenChangedEntry() throws Exception {
+    void changedEntriesShouldReturnEntryWhenChangedEntry() throws Exception {
         ACLDiff aclDiff = ACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()

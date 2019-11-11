@@ -19,14 +19,14 @@
 
 package org.apache.james.mailbox.acl;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class PositiveUserACLChangedTest {
+class PositiveUserACLChangedTest {
 
     @Test
-    public void shouldMatchBeanContact() {
+    void shouldMatchBeanContact() {
         EqualsVerifier.forClass(PositiveUserACLChanged.class)
             .verify();
     }

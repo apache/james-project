@@ -26,9 +26,9 @@ import org.apache.james.mailbox.model.MailboxACL.Entry;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class PositiveUserACLDiffTest {
+class PositiveUserACLDiffTest {
 
     private static final EntryKey USER_ENTRY_KEY = EntryKey.createUserEntryKey("user");
     private static final EntryKey NEGATIVE_USER_ENTRY_KEY = EntryKey.createUserEntryKey("user", true);
@@ -36,7 +36,7 @@ public class PositiveUserACLDiffTest {
     private static final Rfc4314Rights RIGHTS = new Rfc4314Rights(Right.Administer);
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenSameACL() {
+    void addedEntriesShouldReturnEmptyWhenSameACL() {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -45,7 +45,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void addedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(USER_ENTRY_KEY)
@@ -58,7 +58,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenSameACL() {
+    void removedEntriesShouldReturnEmptyWhenSameACL() {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -67,7 +67,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void removedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(USER_ENTRY_KEY)
@@ -80,7 +80,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenSameACL() {
+    void changedEntriesShouldReturnEmptyWhenSameACL() {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY);
@@ -89,7 +89,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
+    void changedEntriesShouldReturnEmptyWhenSameNonEmptyACL() throws UnsupportedRightException {
         MailboxACL mailboxACL = MailboxACL.EMPTY.apply(
             MailboxACL.command()
                 .key(USER_ENTRY_KEY)
@@ -102,7 +102,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
+    void addedEntriesShouldReturnNewEntryWhenAddedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -116,7 +116,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldFilterNonUserEntryKey() throws Exception {
+    void addedEntriesShouldFilterNonUserEntryKey() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -130,7 +130,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldFilterNegativeUserEntryKey() throws Exception {
+    void addedEntriesShouldFilterNegativeUserEntryKey() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -144,7 +144,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
+    void changedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -158,7 +158,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
+    void removedEntriesShouldReturnEmptyWhenAddedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY,
             MailboxACL.EMPTY.apply(
@@ -172,7 +172,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
+    void addedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -186,7 +186,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
+    void changedEntriesShouldReturnEmptyWhenRemovedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -200,7 +200,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEntryWhenRemovedEntry() throws Exception {
+    void removedEntriesShouldReturnEntryWhenRemovedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -214,7 +214,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldFilterNonUserEntry() throws Exception {
+    void removedEntriesShouldFilterNonUserEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -228,7 +228,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldFilterNegativeUserEntry() throws Exception {
+    void removedEntriesShouldFilterNegativeUserEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -242,7 +242,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void removedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
+    void removedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -260,7 +260,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void addedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
+    void addedEntriesShouldReturnEmptyWhenChangedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -278,7 +278,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldReturnEntryWhenChangedEntry() throws Exception {
+    void changedEntriesShouldReturnEntryWhenChangedEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -296,7 +296,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldFilterNonUserEntry() throws Exception {
+    void changedEntriesShouldFilterNonUserEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()
@@ -314,7 +314,7 @@ public class PositiveUserACLDiffTest {
     }
 
     @Test
-    public void changedEntriesShouldFilterNegativeUserEntry() throws Exception {
+    void changedEntriesShouldFilterNegativeUserEntry() throws Exception {
         PositiveUserACLDiff positiveUserAclDiff = PositiveUserACLDiff.computeDiff(
             MailboxACL.EMPTY.apply(
                 MailboxACL.command()

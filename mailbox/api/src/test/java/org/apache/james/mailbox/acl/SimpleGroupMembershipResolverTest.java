@@ -22,20 +22,20 @@ package org.apache.james.mailbox.acl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SimpleGroupMembershipResolverTest {
+class SimpleGroupMembershipResolverTest {
 
     private SimpleGroupMembershipResolver simpleGroupMembershipResolver;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
        simpleGroupMembershipResolver = new SimpleGroupMembershipResolver();
     }
 
     @Test
-    public void isMemberShouldReturnFalseWhenEmptyResolver() throws Exception {
+    void isMemberShouldReturnFalseWhenEmptyResolver() {
         //When
         boolean actual = simpleGroupMembershipResolver.isMember("user", "group");
         //Then
@@ -43,7 +43,7 @@ public class SimpleGroupMembershipResolverTest {
     }
 
     @Test
-    public void isMemberShouldReturnTrueWhenTheSearchedMembershipIsPresent() throws Exception {
+    void isMemberShouldReturnTrueWhenTheSearchedMembershipIsPresent() {
         //Given
         simpleGroupMembershipResolver.addMembership("group", "user");
         //When
@@ -53,7 +53,7 @@ public class SimpleGroupMembershipResolverTest {
     }
 
     @Test
-    public void addMembershipShouldAddAMembershipWhenNonNullUser() throws Exception {
+    void addMembershipShouldAddAMembershipWhenNonNullUser() {
         //When
         simpleGroupMembershipResolver.addMembership("group", "user");
         boolean actual = simpleGroupMembershipResolver.isMember("user", "group");
@@ -62,7 +62,7 @@ public class SimpleGroupMembershipResolverTest {
     }
 
     @Test
-    public void addMembershipShouldAddAMembershipWithANullUser() throws Exception {
+    void addMembershipShouldAddAMembershipWithANullUser() {
         //Given
         String userAdded = null;
         //When
