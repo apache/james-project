@@ -3,6 +3,7 @@ dependency-reduced-pom.xml
 dockerfiles/run/**/*.lib
 dockerfiles/run/**/*.jar
 dockerfiles/run/**/keystore
+dockerfiles/run/**/glowroot
 .m2
 test-run.log
 build
