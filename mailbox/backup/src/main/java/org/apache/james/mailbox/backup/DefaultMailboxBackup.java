@@ -46,6 +46,7 @@ import org.slf4j.LoggerFactory;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -138,6 +139,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
     @VisibleForTesting
     List<MailAccountContent> getAccountContentForUser(MailboxSession session) throws MailboxException {
         MailboxQuery queryUser = MailboxQuery.builder()
+            .privateNamespace()
             .user(session.getUser())
             .build();
         Stream<MailboxPath> paths = mailboxManager.search(queryUser, session)
