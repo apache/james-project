@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -59,7 +60,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     }
 
     @Override
-    protected void doProcess(MyRightsRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(MyRightsRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

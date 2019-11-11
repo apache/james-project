@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.message.request.XListRequest;
 
 /**
@@ -33,7 +34,7 @@ public class XListCommandParser extends ListCommandParser {
     }
 
     @Override
-    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, String tag) {
+    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, Tag tag) {
         return new XListRequest(command, referenceName, mailboxPattern, tag);
     }
 }

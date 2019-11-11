@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -100,7 +101,7 @@ public class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        replaceAclRequest = new SetACLRequest("TAG", ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, SET_RIGHTS);
+        replaceAclRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, SET_RIGHTS);
 
         user1Key = EntryKey.deserialize(USER_1);
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
@@ -108,7 +109,7 @@ public class SetACLProcessorTest {
     
     @Test
     public void testUnsupportedRight() throws Exception {
-        SetACLRequest setACLRequest = new SetACLRequest("TAG", ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, UNSUPPORTED_RIGHT);
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, UNSUPPORTED_RIGHT);
 
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
@@ -180,7 +181,7 @@ public class SetACLProcessorTest {
             .thenReturn(true);
 
 
-        SetACLRequest r = new SetACLRequest("TAG", ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, prefix + SET_RIGHTS);
+        SetACLRequest r = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1, prefix + SET_RIGHTS);
         subject.doProcess(r, responder, imapSession);
 
         verify(mailboxManager).applyRightsCommand(path,

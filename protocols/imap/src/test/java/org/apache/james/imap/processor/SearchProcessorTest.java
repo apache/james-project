@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -86,8 +87,6 @@ public class SearchProcessorTest {
     private static final String KEYWORD = "BD3";
 
     private static final long[] EMPTY = {};
-
-    private static final String TAG = "TAG";
 
     private static final String ADDRESS = "John Smith <john@example.org>";
 

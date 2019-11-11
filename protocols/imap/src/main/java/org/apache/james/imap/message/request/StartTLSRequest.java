@@ -19,13 +19,14 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 /**
  * Request for STARTTLS
  */
 public class StartTLSRequest extends AbstractImapRequest {
 
-    public StartTLSRequest(String tag, ImapCommand command) {
+    public StartTLSRequest(Tag tag, ImapCommand command) {
         super(tag, command);
     }
 

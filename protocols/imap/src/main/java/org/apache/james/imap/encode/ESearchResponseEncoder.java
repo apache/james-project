@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
@@ -41,7 +42,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
     @Override
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         ESearchResponse response = (ESearchResponse) acceptableMessage;
-        String tag = response.getTag();
+        Tag tag = response.getTag();
         long min = response.getMinUid();
         long max = response.getMaxUid();
         long count = response.getCount();
@@ -51,7 +52,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         Long highestModSeq = response.getHighestModSeq();
         List<SearchResultOption> options = response.getSearchResultOptions();
         
-        composer.untagged().message("ESEARCH").openParen().message("TAG").quote(tag).closeParen();
+        composer.untagged().message("ESEARCH").openParen().message("TAG").quote(tag.asString()).closeParen();
         if (useUid) {
             composer.message("UID");
         }

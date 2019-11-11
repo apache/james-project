@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 /**
  * MYRIGHTS Request.
@@ -27,7 +28,7 @@ import org.apache.james.imap.api.ImapCommand;
 public class MyRightsRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public MyRightsRequest(String tag, ImapCommand command, String mailboxName) {
+    public MyRightsRequest(Tag tag, ImapCommand command, String mailboxName) {
         super(tag, command);
         this.mailboxName = mailboxName;
     }

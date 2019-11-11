@@ -19,13 +19,14 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 public class RenameRequest extends AbstractImapRequest {
     private final String existingName;
 
     private final String newName;
 
-    public RenameRequest(ImapCommand command, String existingName, String newName, String tag) {
+    public RenameRequest(ImapCommand command, String existingName, String newName, Tag tag) {
         super(tag, command);
         this.existingName = existingName;
         this.newName = newName;

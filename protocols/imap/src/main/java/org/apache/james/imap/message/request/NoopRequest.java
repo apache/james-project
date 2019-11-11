@@ -19,10 +19,11 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 public class NoopRequest extends AbstractImapRequest {
 
-    public NoopRequest(ImapCommand command, String tag) {
+    public NoopRequest(ImapCommand command, Tag tag) {
         super(tag, command);
     }
 }

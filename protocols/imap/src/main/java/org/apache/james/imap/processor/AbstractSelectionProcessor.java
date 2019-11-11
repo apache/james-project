@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -77,7 +78,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
     }
 
     @Override
-    protected void doProcess(M request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(M request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final String mailboxName = request.getMailboxName();
         try {
             final MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -94,7 +95,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         } 
     }
 
-    private void respond(String tag, ImapCommand command, ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
+    private void respond(Tag tag, ImapCommand command, ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
         
         Long lastKnownUidValidity = request.getLastKnownUidValidity();
         Long modSeq = request.getKnownModSeq();
@@ -331,7 +332,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         responder.respond(untaggedOk);
     }
 
-    private void taggedOk(Responder responder, String tag, ImapCommand command, MetaData metaData, HumanReadableText text) {
+    private void taggedOk(Responder responder, Tag tag, ImapCommand command, MetaData metaData, HumanReadableText text) {
         final boolean writeable = metaData.isWriteable() && !openReadOnly;
         final ResponseCode code;
         if (writeable) {

@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
 /**
@@ -26,11 +27,11 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  */
 public abstract class AbstractImapRequest implements ImapRequest {
 
-    private final String tag;
+    private final Tag tag;
 
     private final ImapCommand command;
 
-    public AbstractImapRequest(String tag, ImapCommand command) {
+    public AbstractImapRequest(Tag tag, ImapCommand command) {
         this.tag = tag;
         this.command = command;
     }
@@ -47,7 +48,7 @@ public abstract class AbstractImapRequest implements ImapRequest {
      * Gets the prefix tag identifying this request.
      */
     @Override
-    public final String getTag() {
+    public final Tag getTag() {
         return tag;
     }
 

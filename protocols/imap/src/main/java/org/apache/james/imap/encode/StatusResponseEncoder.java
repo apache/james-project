@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.Locales;
 import org.apache.james.imap.api.display.Localizer;
@@ -50,7 +51,7 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
         final String type = asString(serverResponseType);
         final ResponseCode responseCode = response.getResponseCode();
         final String code = asString(responseCode);
-        final String tag = response.getTag();
+        final Tag tag = response.getTag();
         final ImapCommand command = response.getCommand();
         final HumanReadableText textKey = response.getTextKey();
         final String text = asString(textKey, session);

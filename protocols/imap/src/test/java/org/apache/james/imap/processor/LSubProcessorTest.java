@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -67,7 +68,6 @@ public class LSubProcessorTest {
 
     private static final String MAILBOX_A = "A.MAILBOX";
 
-    private static final String TAG = "TAG";
     public static final String USER = "test";
 
     LSubProcessor processor;

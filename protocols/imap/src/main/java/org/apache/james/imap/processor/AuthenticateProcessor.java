@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -55,7 +56,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    protected void doProcess(AuthenticateRequest request, ImapSession session, final String tag, final ImapCommand command, final Responder responder) {
+    protected void doProcess(AuthenticateRequest request, ImapSession session, final Tag tag, final ImapCommand command, final Responder responder) {
         final String authType = request.getAuthType();
         if (authType.equalsIgnoreCase(PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
@@ -87,7 +88,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     /**
      * Parse the initialClientResponse and do a PLAIN AUTH with it
      */
-    protected void doPlainAuth(String initialClientResponse, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doPlainAuth(String initialClientResponse, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         AuthenticationAttempt authenticationAttempt = parseDelegationAttempt(initialClientResponse);
         if (authenticationAttempt.isDelegation()) {
             doAuthWithDelegation(authenticationAttempt, session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);

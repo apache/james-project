@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -55,7 +56,7 @@ public class UidCommandParser extends AbstractImapCommandParser implements Deleg
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         // TODO: check the logic against the specification:
         // TODO: suspect that it is now bust
         // TODO: the command written may be wrong

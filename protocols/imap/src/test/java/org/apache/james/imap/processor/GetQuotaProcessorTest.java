@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -90,7 +91,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnValidRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
@@ -120,7 +121,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnExceptionThrown() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
@@ -145,7 +146,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnNoRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))

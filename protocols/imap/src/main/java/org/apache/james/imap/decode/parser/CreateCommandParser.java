@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -43,7 +44,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String mailboxName = request.mailbox();
 
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

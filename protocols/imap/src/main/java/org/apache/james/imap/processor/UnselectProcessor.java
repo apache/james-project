@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -48,7 +49,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected void doProcess(UnselectRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(UnselectRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         if (session.getSelected() != null) {
             session.deselect();
             okComplete(command, tag, responder);

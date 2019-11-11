@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.MessageFlags;
@@ -70,7 +71,7 @@ public interface StatusResponse extends ImapResponseMessage {
      * 
      * @return if tagged response, the tag. Otherwise null.
      */
-    String getTag();
+    Tag getTag();
 
     /**
      * Gets the command.

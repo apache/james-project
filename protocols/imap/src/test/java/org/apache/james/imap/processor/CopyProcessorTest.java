@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -32,6 +33,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -57,7 +59,6 @@ import org.junit.Test;
 import com.google.common.collect.Lists;
 
 public class CopyProcessorTest {
-    public static final String TAG = "TAG";
     private static final Username USERNAME = Username.of("username");
 
     private CopyProcessor testee;
@@ -98,7 +99,7 @@ public class CopyProcessorTest {
         when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
         when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
+        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
         when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mailboxSession)).thenReturn(Lists.<MessageRange>newArrayList(MessageRange.range(MessageUid.of(4), MessageUid.of(6))));
 
         testee.process(copyRequest, mockResponder, mockImapSession);
@@ -132,7 +133,7 @@ public class CopyProcessorTest {
         when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
         when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN)).thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
         StatusResponse okResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
+        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
@@ -163,7 +164,7 @@ public class CopyProcessorTest {
         when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(false);
 
         StatusResponse noResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedNo(any(String.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(noResponse);
+        when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(noResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 
@@ -190,7 +191,7 @@ public class CopyProcessorTest {
         when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenThrow(new MailboxException());
 
         StatusResponse noResponse = mock(StatusResponse.class);
-        when(mockStatusResponseFactory.taggedNo(any(String.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(noResponse);
+        when(mockStatusResponseFactory.taggedNo(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class))).thenReturn(noResponse);
 
         testee.process(copyRequest, mockResponder, mockImapSession);
 

@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -37,7 +38,7 @@ public class NamespaceCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         return new NamespaceRequest(command, tag);
     }
 }

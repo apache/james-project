@@ -23,6 +23,7 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -45,7 +46,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     }
 
     @Override
-    protected void doProcess(LogoutRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(LogoutRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
             getMailboxManager().logout(mailboxSession, false);

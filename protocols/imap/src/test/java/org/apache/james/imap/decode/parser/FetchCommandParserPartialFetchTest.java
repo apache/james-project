@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
@@ -27,6 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
@@ -56,7 +58,7 @@ public class FetchCommandParserPartialFetchTest  {
         FetchData data = new FetchData();
         data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
                 null, 0L, 100L), false);
-        check("1 (BODY[]<0.100>)\r\n", ranges, false, data, "A01");
+        check("1 (BODY[]<0.100>)\r\n", ranges, false, data, TAG);
     }
 
     @Test
@@ -65,7 +67,7 @@ public class FetchCommandParserPartialFetchTest  {
         FetchData data = new FetchData();
         data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
                 null, 20L, 12342348L), false);
-        check("1 (BODY[]<20.12342348>)\r\n", ranges, false, data, "A01");
+        check("1 (BODY[]<20.12342348>)\r\n", ranges, false, data, TAG);
     }
 
     @Test
@@ -74,12 +76,12 @@ public class FetchCommandParserPartialFetchTest  {
                 new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
                         .getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());
 
-        assertThatThrownBy(() -> parser.decode(command, reader, "A01", false, session))
+        assertThatThrownBy(() -> parser.decode(command, reader, TAG, false, session))
             .isInstanceOf(DecodingException.class);
     }
 
     private void check(String input, IdRange[] idSet,
-            boolean useUids, FetchData data, String tag) throws Exception {
+            boolean useUids, FetchData data, Tag tag) throws Exception {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());

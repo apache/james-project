@@ -17,36 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.request;
+package org.apache.james.imap.api;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
+import org.junit.jupiter.api.Test;
 
-/**
- * SETACL Request.
- */
-public class SetACLRequest extends AbstractImapRequest {
-    private final String identifier;
-    private final String mailboxName;
-    private final String rights;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public SetACLRequest(Tag tag, ImapCommand command, String mailboxName, String identifier, String rights) {
-        super(tag, command);
-        this.mailboxName = mailboxName;
-        this.identifier = identifier;
-        this.rights = rights;
+class TagTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Tag.class)
+            .verify();
     }
-
-    public String getIdentifier() {
-        return identifier;
-    }
-
-    public String getMailboxName() {
-        return mailboxName;
-    }
-
-    public String getRights() {
-        return rights;
-    }
-
 }

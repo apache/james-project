@@ -22,6 +22,7 @@ package org.apache.james.imap.processor.base;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -46,7 +47,7 @@ public class UnknownRequestProcessor implements ImapProcessor {
         final ImapResponseMessage result;
         if (message instanceof ImapRequest) {
             ImapRequest request = (ImapRequest) message;
-            final String tag = request.getTag();
+            final Tag tag = request.getTag();
             final ImapCommand command = request.getCommand();
             result = factory.taggedBad(tag, command, HumanReadableText.UNKNOWN_COMMAND);
         } else {

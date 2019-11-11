@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -85,7 +86,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected void doProcess(IdleRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(IdleRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         SelectedMailbox sm = session.getSelected();
         Registration registration;
         if (sm != null) {

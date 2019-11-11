@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
@@ -28,7 +29,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 public class ExpungeRequest extends AbstractImapRequest {
     private final IdRange[] uidRange;
 
-    public ExpungeRequest(ImapCommand command, String tag, IdRange[] uidRange) {
+    public ExpungeRequest(ImapCommand command, Tag tag, IdRange[] uidRange) {
         super(tag, command);
         this.uidRange = uidRange;
     }

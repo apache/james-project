@@ -21,12 +21,13 @@ package org.apache.james.imap.message.request;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 public class EnableRequest extends AbstractImapRequest {
 
     private final List<String> capabilities;
 
-    public EnableRequest(String tag, ImapCommand command, List<String> capabilities) {
+    public EnableRequest(Tag tag, ImapCommand command, List<String> capabilities) {
         super(tag, command);
         this.capabilities = capabilities;
     }

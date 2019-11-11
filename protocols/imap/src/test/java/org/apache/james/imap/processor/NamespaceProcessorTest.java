@@ -18,8 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -34,6 +34,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -73,7 +74,7 @@ public class NamespaceProcessorTest {
         imapSessionStub = mock(ImapSession.class);
         mailboxSession = mock(MailboxSession.class);
      
-        namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), "TAG");
+        namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), TAG);
        
     }
 
@@ -89,7 +90,7 @@ public class NamespaceProcessorTest {
         when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
         when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
-        when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))
+        when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(mock(StatusResponse.class));
 
         final NamespaceResponse response = buildResponse(null);
@@ -114,7 +115,7 @@ public class NamespaceProcessorTest {
         when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
         when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
-        when(statusResponseStub.taggedOk(anyString(), any(ImapCommand.class), any(HumanReadableText.class)))
+        when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(mock(StatusResponse.class));
         
         final List<NamespaceResponse.Namespace> sharedSpaces = new ArrayList<>();

@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.base;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -70,7 +71,7 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
      * @return <code>ImapCommandMessage</code>, not null
      */
     @Override
-    public final ImapMessage parse(ImapRequestLineReader request, String tag, ImapSession session) {
+    public final ImapMessage parse(ImapRequestLineReader request, Tag tag, ImapSession session) {
         ImapMessage result;
         if (!command.validForState(session.getState())) {
             result = statusResponseFactory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
@@ -101,6 +102,6 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
      * @throws DecodingException
      *             if the request cannot be parsed
      */
-    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException;
+    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException;
 
 }

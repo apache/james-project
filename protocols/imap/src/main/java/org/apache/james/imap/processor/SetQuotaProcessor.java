@@ -25,6 +25,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -51,7 +52,7 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected void doProcess(SetQuotaRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(SetQuotaRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         Object[] params = new Object[]{
             "Full admin rights",
             command.getName(),

@@ -30,6 +30,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -68,7 +69,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected void doProcess(GetAnnotationRequest message, ImapSession session, String tag, ImapCommand command,
+    protected void doProcess(GetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
                              Responder responder) {
         try {
             proceed(message, session, tag, command, responder);
@@ -81,7 +82,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         }
     }
 
-    private void proceed(GetAnnotationRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) throws MailboxException {
+    private void proceed(GetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) throws MailboxException {
         String mailboxName = message.getMailboxName();
         Optional<Integer> maxsize = message.getMaxsize();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -92,7 +93,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         respond(tag, command, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize);
     }
 
-    private void respond(String tag, ImapCommand command, Responder responder, String mailboxName,
+    private void respond(Tag tag, ImapCommand command, Responder responder, String mailboxName,
                          List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize, Optional<Integer> maximumOversizedSize) {
         if (maximumOversizedSize.isPresent()) {
             responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));

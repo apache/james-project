@@ -31,6 +31,7 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -92,14 +93,14 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
 
     protected final void process(M message, Responder responder, ImapSession session) {
         ImapCommand command = message.getCommand();
-        String tag = message.getTag();
+        Tag tag = message.getTag();
 
         TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + command.getName());
         doProcess(message, command, tag, responder, session);
         timeMetric.stopAndPublish();
     }
 
-    final void doProcess(M message, ImapCommand command, String tag, Responder responder, ImapSession session) {
+    final void doProcess(M message, ImapCommand command, Tag tag, Responder responder, ImapSession session) {
         try {
             if (!command.validForState(session.getState())) {
                 ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
@@ -333,27 +334,27 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected void okComplete(ImapCommand command, String tag, ImapProcessor.Responder responder) {
+    protected void okComplete(ImapCommand command, Tag tag, ImapProcessor.Responder responder) {
         final StatusResponse response = factory.taggedOk(tag, command, HumanReadableText.COMPLETED);
         responder.respond(response);
     }
 
-    protected void okComplete(ImapCommand command, String tag, ResponseCode code, ImapProcessor.Responder responder) {
+    protected void okComplete(ImapCommand command, Tag tag, ResponseCode code, ImapProcessor.Responder responder) {
         final StatusResponse response = factory.taggedOk(tag, command, HumanReadableText.COMPLETED, code);
         responder.respond(response);
     }
 
-    protected void no(ImapCommand command, String tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey) {
+    protected void no(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey) {
         final StatusResponse response = factory.taggedNo(tag, command, displayTextKey);
         responder.respond(response);
     }
 
-    protected void no(ImapCommand command, String tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey, StatusResponse.ResponseCode responseCode) {
+    protected void no(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey, StatusResponse.ResponseCode responseCode) {
         final StatusResponse response = factory.taggedNo(tag, command, displayTextKey, responseCode);
         responder.respond(response);
     }
 
-    protected void taggedBad(ImapCommand command, String tag, ImapProcessor.Responder responder, HumanReadableText e) {
+    protected void taggedBad(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText e) {
         StatusResponse response = factory.taggedBad(tag, command, e);
 
         responder.respond(response);
@@ -369,7 +370,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected abstract void doProcess(M message, ImapSession session, String tag, ImapCommand command, Responder responder);
+    protected abstract void doProcess(M message, ImapSession session, Tag tag, ImapCommand command, Responder responder);
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string

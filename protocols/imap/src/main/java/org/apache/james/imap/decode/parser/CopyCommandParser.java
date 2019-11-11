@@ -20,6 +20,7 @@ package org.apache.james.imap.decode.parser;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.message.request.CopyRequest;
 
@@ -33,7 +34,7 @@ public class CopyCommandParser extends AbstractMessageRangeCommandParser {
     }
 
     @Override
-    protected CopyRequest createRequest(ImapCommand command, String tag, boolean useUids, IdRange[] idSet, String mailboxName) {
+    protected CopyRequest createRequest(ImapCommand command, Tag tag, boolean useUids, IdRange[] idSet, String mailboxName) {
         return new CopyRequest(command, idSet, mailboxName, useUids, tag);
     }
 

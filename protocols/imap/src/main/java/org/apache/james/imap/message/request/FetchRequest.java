@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 
@@ -29,7 +30,7 @@ public class FetchRequest extends AbstractImapRequest {
 
     private final FetchData fetch;
 
-    public FetchRequest(ImapCommand command, boolean useUids, IdRange[] idSet, FetchData fetch, String tag) {
+    public FetchRequest(ImapCommand command, boolean useUids, IdRange[] idSet, FetchData fetch, Tag tag) {
         super(tag, command);
         this.useUids = useUids;
         this.idSet = idSet;

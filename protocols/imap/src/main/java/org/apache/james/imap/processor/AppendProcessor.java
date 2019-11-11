@@ -31,6 +31,7 @@ import javax.mail.Flags;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -63,7 +64,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     }
 
     @Override
-    protected void doProcess(AppendRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(AppendRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final String mailboxName = request.getMailboxName();
         final InputStream messageIn = request.getMessage();
         final Date datetime = request.getDatetime();
@@ -122,13 +123,13 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
      * @param e
      *            not null
      */
-    private void tryCreate(ImapSession session, String tag, ImapCommand command, Responder responder, MailboxNotFoundException e) {
+    private void tryCreate(ImapSession session, Tag tag, ImapCommand command, Responder responder, MailboxNotFoundException e) {
         LOGGER.debug("Cannot open mailbox: ", e);
 
         no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
 
-    private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, String tag, ImapCommand command, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
+    private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, Tag tag, ImapCommand command, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
         try {
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
             final SelectedMailbox selectedMailbox = session.getSelected();

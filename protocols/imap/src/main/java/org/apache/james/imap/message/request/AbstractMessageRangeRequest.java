@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 
 import com.google.common.base.Objects;
@@ -33,7 +34,7 @@ public abstract class AbstractMessageRangeRequest extends AbstractImapRequest {
     private final String mailboxName;
     private final boolean useUids;
 
-    public AbstractMessageRangeRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
+    public AbstractMessageRangeRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, Tag tag) {
         super(tag, command);
         this.idSet = idSet;
         this.mailboxName = mailboxName;

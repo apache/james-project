@@ -20,6 +20,7 @@ package org.apache.james.imap.decode.main;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
@@ -62,7 +63,7 @@ public class DefaultImapDecoder implements ImapDecoder {
     public ImapMessage decode(ImapRequestLineReader request, ImapSession session) {
         ImapMessage message;
         try {
-            final String tag = request.tag();
+            final Tag tag = request.tag();
             message = decodeCommandTagged(request, tag, session);
         } catch (DecodingException e) {
             LOGGER.debug("Cannot parse tag", e);
@@ -71,7 +72,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage decodeCommandTagged(ImapRequestLineReader request, String tag, ImapSession session) {
+    private ImapMessage decodeCommandTagged(ImapRequestLineReader request, Tag tag, ImapSession session) {
         ImapMessage message;
         LOGGER.debug("Got <tag>: {}", tag);
         try {
@@ -84,7 +85,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage unknownCommand(String tag, ImapSession session) {
+    private ImapMessage unknownCommand(Tag tag, ImapSession session) {
         ImapMessage message;
         Object c = session.getAttribute(INVALID_COMMAND_COUNT);
         int count = 0;
@@ -108,7 +109,7 @@ public class DefaultImapDecoder implements ImapDecoder {
         return message;
     }
 
-    private ImapMessage decodeCommandNamed(ImapRequestLineReader request, String tag, String commandName, ImapSession session) {
+    private ImapMessage decodeCommandNamed(ImapRequestLineReader request, Tag tag, String commandName, ImapSession session) {
         ImapMessage message;
         LOGGER.debug("Got <command>: {}", commandName);
         final ImapCommandParser command = imapCommands.getParser(commandName);

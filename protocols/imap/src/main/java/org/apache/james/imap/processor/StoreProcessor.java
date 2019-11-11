@@ -32,6 +32,7 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -75,7 +76,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     @Override
-    protected void doProcess(StoreRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(StoreRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();
         final long unchangedSince = request.getUnchangedSince();
@@ -163,10 +164,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                         }
                         List<MessageRange> mRanges = MessageRange.toRanges(uids);
                         for (MessageRange mRange : mRanges) {
-                            setFlags(request, mailboxSession, mailbox, mRange, session, tag, imapCommand, responder);
+                            setFlags(request, mailboxSession, mailbox, mRange, session, responder);
                         }
                     } else {
-                        setFlags(request, mailboxSession, mailbox, messageSet, session, tag, imapCommand, responder);
+                        setFlags(request, mailboxSession, mailbox, messageSet, session, responder);
                     }
 
                 }
@@ -219,18 +220,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     
     /**
      * Set the flags for given messages
-     * 
-     * @param request
-     * @param mailboxSession
-     * @param mailbox
-     * @param messageSet
-     * @param selected
-     * @param tag
-     * @param command
-     * @param responder
-     * @throws MailboxException
      */
-    private void setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, String tag, ImapCommand command, Responder responder) throws MailboxException {
+    private void setFlags(StoreRequest request, MailboxSession mailboxSession, MessageManager mailbox, MessageRange messageSet, ImapSession session, Responder responder) throws MailboxException {
         
         final Flags flags = request.getFlags();
         final boolean useUids = request.isUseUids();

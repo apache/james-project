@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -69,7 +70,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * reference is non-rooted or is an empty string.
      */
     @Override
-    protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(ListRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

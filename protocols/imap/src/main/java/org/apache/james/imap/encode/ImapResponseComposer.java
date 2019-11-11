@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -128,7 +129,7 @@ public interface ImapResponseComposer {
      * @return composer
      * @throws IOException
      */
-    ImapResponseComposer tag(String tag) throws IOException;
+    ImapResponseComposer tag(Tag tag) throws IOException;
 
     /**
      * Write a quoted message

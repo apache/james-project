@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -61,7 +62,7 @@ public class SetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnNoRights() {
-        SetQuotaRequest setQuotaRequest = new SetQuotaRequest("A004", ImapCommand.anyStateCommand("Name"), "quotaRoot");
+        SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), "quotaRoot");
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))

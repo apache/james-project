@@ -22,6 +22,7 @@ package org.apache.james.imap.message.request;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 
 import com.google.common.collect.ImmutableList;
@@ -30,7 +31,7 @@ public class SetAnnotationRequest extends AbstractImapRequest {
     private final String mailboxName;
     private final List<MailboxAnnotation> mailboxAnnotations;
 
-    public SetAnnotationRequest(String tag, ImapCommand command, String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
+    public SetAnnotationRequest(Tag tag, ImapCommand command, String mailboxName, List<MailboxAnnotation> mailboxAnnotations) {
         super(tag, command);
         this.mailboxName = mailboxName;
         this.mailboxAnnotations = ImmutableList.copyOf(mailboxAnnotations);

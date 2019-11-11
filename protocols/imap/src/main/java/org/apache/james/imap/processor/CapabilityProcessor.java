@@ -33,6 +33,7 @@ import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConfiguration;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -79,7 +80,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     }
 
     @Override
-    protected void doProcess(CapabilityRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(CapabilityRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final CapabilityResponse result = new CapabilityResponse(getSupportedCapabilities(session));        
         responder.respond(result);
         unsolicitedResponses(session, responder, false);

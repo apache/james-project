@@ -23,6 +23,7 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.process.ImapSession;
@@ -43,7 +44,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         final IdRange[] idSet = request.parseIdRange(session);
         final Boolean sign;
         boolean silent = false;

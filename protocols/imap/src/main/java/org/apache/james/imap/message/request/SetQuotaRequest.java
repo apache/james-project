@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
@@ -61,7 +62,7 @@ public class SetQuotaRequest extends AbstractImapRequest {
     private final String quotaRoot;
     private final List<ResourceLimit> resourceLimits;
 
-    public SetQuotaRequest(String tag, ImapCommand command, String quotaRoot) {
+    public SetQuotaRequest(Tag tag, ImapCommand command, String quotaRoot) {
         super(tag, command);
         this.quotaRoot = quotaRoot;
         this.resourceLimits = new ArrayList<>();

@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -33,14 +34,14 @@ abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         return decode(command, request, tag, false, session);
     }
 
-    public ImapMessage decode(ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+    public ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         final ImapCommand command = getCommand();
         return decode(command, request, tag, useUids, session);
     }
 
-    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException;
+    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException;
 }

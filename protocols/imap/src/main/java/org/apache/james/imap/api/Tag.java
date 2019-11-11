@@ -17,36 +17,44 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.message.request;
+package org.apache.james.imap.api;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.Tag;
+import java.util.Objects;
 
-/**
- * SETACL Request.
- */
-public class SetACLRequest extends AbstractImapRequest {
-    private final String identifier;
-    private final String mailboxName;
-    private final String rights;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-    public SetACLRequest(Tag tag, ImapCommand command, String mailboxName, String identifier, String rights) {
-        super(tag, command);
-        this.mailboxName = mailboxName;
-        this.identifier = identifier;
-        this.rights = rights;
+public class Tag {
+    private final String value;
+
+    public Tag(String value) {
+        Preconditions.checkNotNull(value);
+        this.value = value;
     }
 
-    public String getIdentifier() {
-        return identifier;
+    public String asString() {
+        return value;
     }
 
-    public String getMailboxName() {
-        return mailboxName;
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Tag) {
+            Tag tag = (Tag) o;
+
+            return Objects.equals(this.value, tag.value);
+        }
+        return false;
     }
 
-    public String getRights() {
-        return rights;
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

@@ -19,12 +19,13 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 public class CompressRequest extends AbstractImapRequest {
 
     private final String algorithm;
 
-    public CompressRequest(String tag, ImapCommand command, String algorithm) {
+    public CompressRequest(Tag tag, ImapCommand command, String algorithm) {
         super(tag, command);
         this.algorithm = algorithm;
     }

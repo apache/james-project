@@ -32,6 +32,7 @@ import javax.mail.Flags.Flag;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -82,7 +83,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected void doProcess(SearchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(SearchRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final SearchOperation operation = request.getSearchOperation();
         final SearchKey searchKey = operation.getSearchKey();
         final boolean useUids = request.isUseUids();

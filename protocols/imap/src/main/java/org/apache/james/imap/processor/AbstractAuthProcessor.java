@@ -22,6 +22,7 @@ import java.util.Optional;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -58,7 +59,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
-    protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, String tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(!authenticationAttempt.isDelegation());
         try {
             boolean authFailure = false;
@@ -87,7 +88,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         }
     }
 
-    protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, String tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
         try {
             boolean authFailure = false;
@@ -138,7 +139,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         }
     }
 
-    protected void manageFailureCount(ImapSession session, String tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void manageFailureCount(ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
         final Integer currentNumberOfFailures = (Integer) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
         final int failures;
         if (currentNumberOfFailures == null) {

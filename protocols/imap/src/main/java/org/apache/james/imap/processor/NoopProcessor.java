@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -38,7 +39,7 @@ public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
     }
 
     @Override
-    protected void doProcess(NoopRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(NoopRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         // So, unsolicated responses are returned to check for new mail
         unsolicitedResponses(session, responder, false);
         okComplete(command, tag, responder);

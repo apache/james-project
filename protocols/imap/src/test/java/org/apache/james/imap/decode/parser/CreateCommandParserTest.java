@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -43,7 +44,6 @@ import org.junit.Test;
 public class CreateCommandParserTest {
     private static final OutputStream outputStream = null;
     private static final ImapCommand command = ImapCommand.anyStateCommand("Command");
-    private static final String TAG = "A1";
 
     private ImapSession mockImapSession;
     private MailboxSession mailboxSession;

@@ -22,6 +22,7 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -38,7 +39,7 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     }
 
     @Override
-    protected void doProcess(CheckRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(CheckRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         unsolicitedResponses(session, responder, false);
         okComplete(command, tag, responder);
     }

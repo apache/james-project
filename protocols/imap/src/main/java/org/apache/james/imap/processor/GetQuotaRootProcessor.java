@@ -27,6 +27,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -71,7 +72,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     }
 
     @Override
-    protected void doProcess(GetQuotaRootRequest message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(GetQuotaRootRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final MailboxManager mailboxManager = getMailboxManager();
 

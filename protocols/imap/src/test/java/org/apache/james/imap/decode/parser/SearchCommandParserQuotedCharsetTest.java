@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.ArgumentMatchers.eq;
@@ -47,9 +48,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SearchCommandParserQuotedCharsetTest {
-
-    private static final String TAG = "A1";
-
     private static final String ASCII_SEARCH_TERM = "A Search Term";
 
     private static final String NON_ASCII_SEARCH_TERM = "как Дела?";

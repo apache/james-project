@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
@@ -49,8 +50,6 @@ public class SearchCommandParserCharsetTest {
     private static final Charset UTF8 = Charset.forName("UTF-8");
 
     private static final Charset ASCII = Charset.forName("US-ASCII");
-
-    private static final String TAG = "A1";
 
     private static final String ASCII_SEARCH_TERM = "A Search Term";
 

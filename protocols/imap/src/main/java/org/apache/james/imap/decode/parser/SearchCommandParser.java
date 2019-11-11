@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -901,7 +902,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private ImapMessage unsupportedCharset(String tag, ImapCommand command) {
+    private ImapMessage unsupportedCharset(Tag tag, ImapCommand command) {
         final StatusResponseFactory factory = getStatusResponseFactory();
         final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset();
         return factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
@@ -968,7 +969,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     }
     
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;
             List<SearchResultOption> options = null;

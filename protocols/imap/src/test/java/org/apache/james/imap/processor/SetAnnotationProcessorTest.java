@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,6 +35,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -61,8 +63,6 @@ import org.mockito.MockitoAnnotations;
 import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationProcessorTest {
-
-    private static final String TAG = "TAG";
     private static final int FIRST_ELEMENT_INDEX = 0;
 
     @InjectMocks
@@ -125,7 +125,7 @@ public class SetAnnotationProcessorTest {
 
         processor.process(request, mockResponder, mockImapSession);
 
-        verify(mockStatusResponseFactory, times(1)).taggedNo(any(String.class), any(ImapCommand.class),
+        verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class),
                 humanTextCaptor.capture(), any(StatusResponse.ResponseCode.class));
 
         assertThat(humanTextCaptor.getAllValues()).containsOnly(HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
@@ -137,21 +137,21 @@ public class SetAnnotationProcessorTest {
 
         processor.process(request, mockResponder, mockImapSession);
 
-        verify(mockStatusResponseFactory, times(1)).taggedNo(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
+        verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
         assertThat(humanTextCaptor.getAllValues()).containsOnly(HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
     }
 
     @Test
     public void processShouldWorkWithCompleteResponse() throws Exception {
-        when(mockStatusResponseFactory.taggedOk(any(String.class), any(ImapCommand.class), any(HumanReadableText.class)))
+        when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(okResponse);
 
         processor.process(request, mockResponder, mockImapSession);
 
         verify(mockMailboxManager).updateAnnotations(inbox, mockMailboxSession, mailboxAnnotations);
         verify(mockResponder).respond(okResponse);
-        verify(mockStatusResponseFactory, times(1)).taggedOk(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
+        verify(mockStatusResponseFactory, times(1)).taggedOk(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
         assertThat(humanTextCaptor.getAllValues()).containsOnly(HumanReadableText.COMPLETED);
     }
@@ -162,7 +162,7 @@ public class SetAnnotationProcessorTest {
 
         processor.process(request, mockResponder, mockImapSession);
 
-        verify(mockStatusResponseFactory, times(1)).taggedNo(any(String.class), any(ImapCommand.class), humanTextCaptor.capture());
+        verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
         assertThat(humanTextCaptor.getAllValues().get(FIRST_ELEMENT_INDEX).getKey()).isEqualTo(HumanReadableText.MAILBOX_ANNOTATION_KEY);
 

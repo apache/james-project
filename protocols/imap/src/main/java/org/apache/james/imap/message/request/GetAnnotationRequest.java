@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 
 import com.google.common.base.Preconditions;
@@ -30,7 +31,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class GetAnnotationRequest extends AbstractImapRequest {
     public static class Builder {
-        private String tag;
+        private Tag tag;
         private ImapCommand command;
         private String mailboxName;
         private Set<MailboxAnnotationKey> keys;
@@ -43,7 +44,7 @@ public class GetAnnotationRequest extends AbstractImapRequest {
             keys = ImmutableSet.of();
         }
 
-        public Builder tag(String tag) {
+        public Builder tag(Tag tag) {
             this.tag = tag;
             return this;
         }

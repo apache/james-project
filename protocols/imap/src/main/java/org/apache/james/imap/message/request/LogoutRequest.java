@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
 /**
@@ -26,7 +27,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  */
 public class LogoutRequest extends AbstractImapRequest {
 
-    public LogoutRequest(ImapCommand command, String tag) {
+    public LogoutRequest(ImapCommand command, Tag tag) {
         super(tag, command);
     }
 

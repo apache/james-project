@@ -23,6 +23,7 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -48,7 +49,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     }
 
     @Override
-    protected void doProcess(CreateRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(CreateRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();

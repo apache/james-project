@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -42,8 +43,8 @@ public class GetQuotaParserTest {
         String commandString = "quotaRoot \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        GetQuotaRequest request = (GetQuotaRequest) parser.decode(command, lineReader, "A003", null);
-        GetQuotaRequest expected = new GetQuotaRequest("A003", command, "quotaRoot");
+        GetQuotaRequest request = (GetQuotaRequest) parser.decode(command, lineReader, TAG, null);
+        GetQuotaRequest expected = new GetQuotaRequest(TAG, command, "quotaRoot");
         assertThat(request.getQuotaRoot()).isEqualTo(expected.getQuotaRoot());
     }
 }

@@ -20,6 +20,7 @@
 package org.apache.james.imap.decode;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.process.ImapSession;
 
 /**
@@ -42,5 +43,5 @@ public interface ImapCommandParser {
      *            the {@link ImapSession}
      * @return <code>ImapCommandMessage</code>
      */
-    ImapMessage parse(ImapRequestLineReader request, String tag, ImapSession session);
+    ImapMessage parse(ImapRequestLineReader request, Tag tag, ImapSession session);
 }

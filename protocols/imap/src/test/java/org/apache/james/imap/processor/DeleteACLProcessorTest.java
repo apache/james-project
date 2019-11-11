@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -95,7 +96,7 @@ public class DeleteACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        deleteACLRequest = new DeleteACLRequest("TAG",
+        deleteACLRequest = new DeleteACLRequest(TAG,
             ImapCommand.anyStateCommand("Name"),
             MAILBOX_NAME,
             USER_1);

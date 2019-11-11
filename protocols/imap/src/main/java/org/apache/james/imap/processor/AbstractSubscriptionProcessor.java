@@ -20,6 +20,7 @@ package org.apache.james.imap.processor;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -53,7 +54,7 @@ public abstract class AbstractSubscriptionProcessor<M extends ImapRequest> exten
     }
 
     @Override
-    protected final void doProcess(M message, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected final void doProcess(M message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
 
         // take care of calling the start/end processing
         MailboxSession mSession = ImapSessionUtils.getMailboxSession(session);
@@ -71,6 +72,6 @@ public abstract class AbstractSubscriptionProcessor<M extends ImapRequest> exten
      * @param command
      * @param responder
      */
-    protected abstract void doProcessRequest(M message, ImapSession session, String tag, ImapCommand command, Responder responder);
+    protected abstract void doProcessRequest(M message, ImapSession session, Tag tag, ImapCommand command, Responder responder);
 
 }

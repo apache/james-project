@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -41,8 +42,8 @@ public class CopyParserTest {
 
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        CopyRequest request = (CopyRequest) parser.decode(command, lineReader, "A003", null);
-        CopyRequest expected = new CopyRequest(command, new IdRange[] {new IdRange(42, 69)}, "foo", false, "A003");
+        CopyRequest request = (CopyRequest) parser.decode(command, lineReader, TAG, null);
+        CopyRequest expected = new CopyRequest(command, new IdRange[] {new IdRange(42, 69)}, "foo", false, TAG);
 
         assertThat(request).isEqualTo(expected);
     }

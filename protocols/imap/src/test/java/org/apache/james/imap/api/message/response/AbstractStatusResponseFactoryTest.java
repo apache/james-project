@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.api.message.response;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -26,8 +27,6 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.junit.jupiter.api.Test;
 
 public interface AbstractStatusResponseFactoryTest {
-
-    String TAG = "ATAG";
     HumanReadableText KEY = new HumanReadableText("KEY", "TEXT");
     StatusResponse.ResponseCode CODE = StatusResponse.ResponseCode.alert();
     ImapCommand COMMAND = ImapCommand.anyStateCommand("Command");

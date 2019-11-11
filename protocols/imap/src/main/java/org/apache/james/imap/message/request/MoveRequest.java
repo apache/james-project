@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
@@ -28,7 +29,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  */
 public class MoveRequest extends AbstractMessageRangeRequest {
 
-    public MoveRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, String tag) {
+    public MoveRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, Tag tag) {
         super(command, idSet, mailboxName, useUids, tag);
     }
 

@@ -35,6 +35,7 @@ import java.util.List;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
@@ -191,9 +192,9 @@ public abstract class ImapRequestLineReader {
     /**
      * Reads a command "tag" from the request.
      */
-    public String tag() throws DecodingException {
+    public Tag tag() throws DecodingException {
         CharacterValidator validator = new TagCharValidator();
-        return consumeWord(validator);
+        return new Tag(consumeWord(validator));
     }
 
     /**

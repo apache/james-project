@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -44,7 +45,7 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
 
     
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         boolean condstore = false;
         Long lastKnownUidValidity = null;
@@ -223,5 +224,5 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     /**
      * Create a new {@link AbstractMailboxSelectionRequest} for the given arguments
      */
-    protected abstract AbstractMailboxSelectionRequest createRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, String tag);
+    protected abstract AbstractMailboxSelectionRequest createRequest(ImapCommand command, String mailboxName, boolean condstore, Long lastKnownUidValidity, Long knownModSeq, UidRange[] uidSet, UidRange[] knownUidSet, IdRange[] knownSequenceSet, Tag tag);
 }

@@ -24,6 +24,7 @@ import java.util.Optional;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -48,7 +49,7 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader requestReader, String tag, ImapSession session)
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader requestReader, Tag tag, ImapSession session)
         throws DecodingException {
         try {
             return buildAnnotationRequest(command, requestReader, tag);
@@ -57,7 +58,7 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
         }
     }
 
-    private ImapMessage buildAnnotationRequest(ImapCommand command, ImapRequestLineReader requestReader, String tag) throws DecodingException {
+    private ImapMessage buildAnnotationRequest(ImapCommand command, ImapRequestLineReader requestReader, Tag tag) throws DecodingException {
         GetAnnotationRequest.Builder builder = GetAnnotationRequest.builder().tag(tag).command(command);
         builder.mailboxName(requestReader.mailbox());
 

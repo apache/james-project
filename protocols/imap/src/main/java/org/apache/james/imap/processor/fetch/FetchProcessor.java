@@ -27,6 +27,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
@@ -64,7 +65,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     }
 
     @Override
-    protected void doProcess(FetchRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(FetchRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final boolean useUids = request.isUseUids();
         final IdRange[] idSet = request.getIdSet();
         final FetchData fetch = request.getFetch();

@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -61,7 +62,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     }
 
     @Override
-    protected void doProcess(ExpungeRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(ExpungeRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

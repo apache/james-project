@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.ByteArrayInputStream;
@@ -36,7 +37,6 @@ import org.junit.Test;
 public class SetAnnotationCommandParserTest {
 
     private static final String INBOX = "anyMailboxName";
-    private static final String TAG = "A1";
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
 

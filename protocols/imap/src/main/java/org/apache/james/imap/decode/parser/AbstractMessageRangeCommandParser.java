@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -34,13 +35,13 @@ public abstract class AbstractMessageRangeCommandParser extends AbstractUidComma
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         IdRange[] idSet = request.parseIdRange(session);
         String mailboxName = request.mailbox();
         request.eol();
         return createRequest(command, tag, useUids, idSet, mailboxName);
     }
 
-    protected abstract AbstractMessageRangeRequest createRequest(ImapCommand command, String tag, boolean useUids, IdRange[] idSet, String mailboxName);
+    protected abstract AbstractMessageRangeRequest createRequest(ImapCommand command, Tag tag, boolean useUids, IdRange[] idSet, String mailboxName);
 
 }

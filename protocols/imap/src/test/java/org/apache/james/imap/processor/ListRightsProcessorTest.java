@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -98,7 +99,7 @@ public class ListRightsProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        listRightsRequest = new ListRightsRequest("TAG", ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1);
+        listRightsRequest = new ListRightsRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1);
 
         user1Key = EntryKey.deserialize(USER_1);
         listRights = new Rfc4314Rights[] {Rfc4314Rights.fromSerializedRfc4314Rights("ae"), Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k")};

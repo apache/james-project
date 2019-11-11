@@ -21,6 +21,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -70,14 +71,14 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, String tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         String referenceName = request.mailbox();
         String mailboxPattern = listMailbox(request);
         request.eol();
         return createMessage(command, referenceName, mailboxPattern, tag);
     }
 
-    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, String tag) {
+    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, Tag tag) {
         return new ListRequest(command, referenceName, mailboxPattern, tag);
     }
 }

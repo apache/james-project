@@ -21,6 +21,7 @@ package org.apache.james.imap.message.request;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 
 public class StoreRequest extends AbstractImapRequest {
@@ -39,7 +40,7 @@ public class StoreRequest extends AbstractImapRequest {
 
     private final long unchangedSince;
 
-    public StoreRequest(ImapCommand command, IdRange[] idSet, boolean silent, Flags flags, boolean useUids, String tag, Boolean sign, long unchangedSince) {
+    public StoreRequest(ImapCommand command, IdRange[] idSet, boolean silent, Flags flags, boolean useUids, Tag tag, Boolean sign, long unchangedSince) {
         super(tag, command);
         this.idSet = idSet;
         this.silent = silent;

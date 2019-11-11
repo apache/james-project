@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -84,7 +85,7 @@ public class GetACLProcessorTest {
         metaData = mock(MetaData.class);
         responder = mock(Responder.class);
 
-        getACLRequest = new GetACLRequest("TAG", ImapCommand.anyStateCommand("Name"), MAILBOX_NAME);
+        getACLRequest = new GetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME);
 
         when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
             .thenReturn(mailboxSession);

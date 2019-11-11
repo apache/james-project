@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.response;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -30,7 +31,7 @@ public abstract class AbstractStatusResponseFactory implements StatusResponseFac
     AbstractStatusResponseFactory() {
     }
 
-    protected abstract StatusResponse createResponse(StatusResponse.Type type, String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code);
+    protected abstract StatusResponse createResponse(StatusResponse.Type type, Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code);
 
     @Override
     public StatusResponse bye(HumanReadableText displayTextKey, ResponseCode code) {
@@ -53,32 +54,32 @@ public abstract class AbstractStatusResponseFactory implements StatusResponseFac
     }
 
     @Override
-    public StatusResponse taggedBad(String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
+    public StatusResponse taggedBad(Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
         return createResponse(StatusResponse.Type.BAD, tag, command, displayTextKey, code);
     }
 
     @Override
-    public StatusResponse taggedBad(String tag, ImapCommand command, HumanReadableText displayTextKey) {
+    public StatusResponse taggedBad(Tag tag, ImapCommand command, HumanReadableText displayTextKey) {
         return taggedBad(tag, command, displayTextKey, null);
     }
 
     @Override
-    public StatusResponse taggedNo(String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
+    public StatusResponse taggedNo(Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
         return createResponse(StatusResponse.Type.NO, tag, command, displayTextKey, code);
     }
 
     @Override
-    public StatusResponse taggedNo(String tag, ImapCommand command, HumanReadableText displayTextKey) {
+    public StatusResponse taggedNo(Tag tag, ImapCommand command, HumanReadableText displayTextKey) {
         return taggedNo(tag, command, displayTextKey, null);
     }
 
     @Override
-    public StatusResponse taggedOk(String tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
+    public StatusResponse taggedOk(Tag tag, ImapCommand command, HumanReadableText displayTextKey, ResponseCode code) {
         return createResponse(StatusResponse.Type.OK, tag, command, displayTextKey, code);
     }
 
     @Override
-    public StatusResponse taggedOk(String tag, ImapCommand command, HumanReadableText displayTextKey) {
+    public StatusResponse taggedOk(Tag tag, ImapCommand command, HumanReadableText displayTextKey) {
         return taggedOk(tag, command, displayTextKey, null);
     }
 

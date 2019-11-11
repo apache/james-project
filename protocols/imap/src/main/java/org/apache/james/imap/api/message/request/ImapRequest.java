@@ -21,6 +21,7 @@ package org.apache.james.imap.api.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.Tag;
 
 /**
  * The actual Imap request
@@ -39,6 +40,6 @@ public interface ImapRequest extends ImapMessage {
      * 
      * @return the tag identifying the client request, not null
      */
-    String getTag();
+    Tag getTag();
 
 }

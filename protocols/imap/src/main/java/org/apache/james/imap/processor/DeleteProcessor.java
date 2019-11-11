@@ -23,6 +23,7 @@ import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -50,7 +51,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     }
 
     @Override
-    protected void doProcess(DeleteRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    protected void doProcess(DeleteRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final SelectedMailbox selected = session.getSelected();

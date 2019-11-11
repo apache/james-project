@@ -19,12 +19,13 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 
 public class AuthenticateRequest extends AbstractImapRequest {
 
     private final String authType;
 
-    public AuthenticateRequest(ImapCommand command, String authType, String tag) {
+    public AuthenticateRequest(ImapCommand command, String authType, Tag tag) {
         super(tag, command);
         this.authType = authType;
     }

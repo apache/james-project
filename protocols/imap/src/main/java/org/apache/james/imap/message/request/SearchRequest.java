@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.SearchOperation;
 
 public class SearchRequest extends AbstractImapRequest {
@@ -27,7 +28,7 @@ public class SearchRequest extends AbstractImapRequest {
 
     private final boolean useUids;
 
-    public SearchRequest(ImapCommand command, SearchOperation operation, boolean useUids, String tag) {
+    public SearchRequest(ImapCommand command, SearchOperation operation, boolean useUids, Tag tag) {
         super(tag, command);
         this.operation = operation;
         this.useUids = useUids;

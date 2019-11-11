@@ -20,6 +20,7 @@
 package org.apache.james.imap.api.message.response;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 
 /**
@@ -41,7 +42,7 @@ public interface StatusResponseFactory {
      *            <code>ResponseCode</code>, not null
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedOk(String tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
+    StatusResponse taggedOk(Tag tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
 
     /**
      * Creates a tagged NO status response.
@@ -56,7 +57,7 @@ public interface StatusResponseFactory {
      *            <code>ResponseCode</code>, not null
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedNo(String tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
+    StatusResponse taggedNo(Tag tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
 
     /**
      * Creates a tagged BAD status response.
@@ -71,7 +72,7 @@ public interface StatusResponseFactory {
      *            <code>ResponseCode</code>, not null
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedBad(String tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
+    StatusResponse taggedBad(Tag tag, ImapCommand command, HumanReadableText displayTextKey, StatusResponse.ResponseCode code);
 
     /**
      * Creates a untagged OK status response.
@@ -139,7 +140,7 @@ public interface StatusResponseFactory {
      *            key to the human readable code to be displayed
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedOk(String tag, ImapCommand command, HumanReadableText displayTextKey);
+    StatusResponse taggedOk(Tag tag, ImapCommand command, HumanReadableText displayTextKey);
 
     /**
      * Creates a tagged NO status response.
@@ -152,7 +153,7 @@ public interface StatusResponseFactory {
      *            key to the human readable code to be displayed
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedNo(String tag, ImapCommand command, HumanReadableText displayTextKey);
+    StatusResponse taggedNo(Tag tag, ImapCommand command, HumanReadableText displayTextKey);
 
     /**
      * Creates a tagged BAD status response.
@@ -165,7 +166,7 @@ public interface StatusResponseFactory {
      *            key to the human readable code to be displayed
      * @return <code>StatusResponse</code>, not null
      */
-    StatusResponse taggedBad(String tag, ImapCommand command, HumanReadableText displayTextKey);
+    StatusResponse taggedBad(Tag tag, ImapCommand command, HumanReadableText displayTextKey);
 
     /**
      * Creates a untagged OK status response.

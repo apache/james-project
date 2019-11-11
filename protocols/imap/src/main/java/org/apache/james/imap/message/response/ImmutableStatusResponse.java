@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.response;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 
@@ -34,13 +35,13 @@ public class ImmutableStatusResponse implements StatusResponse {
 
     private final Type serverResponseType;
 
-    private final String tag;
+    private final Tag tag;
 
     private final HumanReadableText textKey;
 
     private final ImapCommand command;
 
-    public ImmutableStatusResponse(Type serverResponseType, String tag, ImapCommand command, HumanReadableText textKey, ResponseCode responseCode) {
+    public ImmutableStatusResponse(Type serverResponseType, Tag tag, ImapCommand command, HumanReadableText textKey, ResponseCode responseCode) {
         super();
         this.responseCode = responseCode;
         this.serverResponseType = serverResponseType;
@@ -60,7 +61,7 @@ public class ImmutableStatusResponse implements StatusResponse {
     }
 
     @Override
-    public String getTag() {
+    public Tag getTag() {
         return tag;
     }
 

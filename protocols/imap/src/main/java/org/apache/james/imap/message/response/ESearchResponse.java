@@ -21,6 +21,7 @@ package org.apache.james.imap.message.response;
 
 import java.util.List;
 
+import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
@@ -32,13 +33,13 @@ public class ESearchResponse implements ImapResponseMessage {
     private final long maxUid;
     private final long count;
     private final IdRange[] all;
-    private final String tag;
+    private final Tag tag;
     private final boolean useUid;
     private final List<SearchResultOption> options;
     private final Long highestModSeq;
     private UidRange[] allUids;
 
-    public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, UidRange[] allUids, Long highestModSeq, String tag, boolean useUid, List<SearchResultOption> options) {
+    public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, UidRange[] allUids, Long highestModSeq, Tag tag, boolean useUid, List<SearchResultOption> options) {
         super();
         this.options = options;
         this.minUid = minUid;
@@ -71,7 +72,7 @@ public class ESearchResponse implements ImapResponseMessage {
         return allUids;
     }
     
-    public String getTag() {
+    public Tag getTag() {
         return tag;
     }
     
