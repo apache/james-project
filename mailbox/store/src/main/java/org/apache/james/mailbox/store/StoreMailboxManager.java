@@ -68,8 +68,8 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.model.search.MailboxNameExpression;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.event.EventFactory;
@@ -85,7 +85,6 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
@@ -510,13 +509,17 @@ public class StoreMailboxManager implements MailboxManager {
             .block();
 
         // rename submailboxes
-        MailboxPath children = new MailboxPath(from.getNamespace(), from.getUser(), from.getName() + getDelimiter() + "%");
-        locker.executeWithLock(session, children, (LockAwareExecution<Void>) () -> {
-            List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(children);
+        MailboxQuery.UserBound query = MailboxQuery.builder()
+            .userAndNamespaceFrom(from)
+            .expression(new PrefixedWildcard(from.getName() + getDelimiter()))
+            .build()
+            .asUserBound();
+        locker.executeWithLock(session, from, (LockAwareExecution<Void>) () -> {
+            List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(query);
             for (Mailbox sub : subMailboxes) {
                 String subOriginalName = sub.getName();
                 String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
-                MailboxPath fromPath = new MailboxPath(children, subOriginalName);
+                MailboxPath fromPath = new MailboxPath(from, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
                 eventBus.dispatch(EventFactory.mailboxRenamed()
@@ -574,7 +577,7 @@ public class StoreMailboxManager implements MailboxManager {
     private List<MailboxMetaData> searchMailboxes(MailboxQuery mailboxExpression, MailboxSession session, Right right) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Stream<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(getPathLike(mailboxExpression, session))
+            .findMailboxWithPathLike(toSingleUserQuery(mailboxExpression, session))
             .stream();
         Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, right, session);
         List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
@@ -591,18 +594,15 @@ public class StoreMailboxManager implements MailboxManager {
             .collect(Guavate.toImmutableList());
     }
 
-    @VisibleForTesting
-    public static MailboxPath getPathLike(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
+    public static MailboxQuery.UserBound toSingleUserQuery(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
         MailboxNameExpression nameExpression = mailboxQuery.getMailboxNameExpression();
-        String combinedName = nameExpression.getCombinedName()
-            .replace(nameExpression.getFreeWildcard(), SQL_WILDCARD_CHAR)
-            .replace(nameExpression.getLocalWildcard(), SQL_WILDCARD_CHAR)
-            + SQL_WILDCARD_CHAR;
-        MailboxPath base = new MailboxPath(
-            mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE),
-            mailboxQuery.getUser().orElse(mailboxSession.getUser().asString()),
-            combinedName);
-        return new MailboxPath(base, combinedName);
+
+        return MailboxQuery.builder()
+            .namespace(mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE))
+            .username(mailboxQuery.getUser().orElse(mailboxSession.getUser().asString()))
+            .expression(nameExpression)
+            .build()
+            .asUserBound();
     }
 
     private Stream<Mailbox> getDelegatedMailboxes(MailboxMapper mailboxMapper, MailboxQuery mailboxQuery,

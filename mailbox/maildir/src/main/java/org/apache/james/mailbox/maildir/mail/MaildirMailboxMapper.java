@@ -42,11 +42,15 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
+import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
@@ -119,34 +123,39 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
     
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
-            throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
+        String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
         final Pattern searchPattern = Pattern.compile("[" + MaildirStore.maildirDelimiter + "]"
-                + mailboxPath.getName().replace(".", "\\.").replace(MaildirStore.WILDCARD, ".*"));
+                + pathLike.replace(".", "\\.").replace(MaildirStore.WILDCARD, ".*"));
         FilenameFilter filter = MaildirMessageName.createRegexFilter(searchPattern);
-        File root = maildirStore.getMailboxRootForUser(mailboxPath.getUser());
+        File root = maildirStore.getMailboxRootForUser(query.getFixedUser());
         File[] folders = root.listFiles(filter);
         ArrayList<Mailbox> mailboxList = new ArrayList<>();
         for (File folder : folders) {
             if (folder.isDirectory()) {
-                Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), folder.getName());
+                Mailbox mailbox = maildirStore.loadMailbox(session, root, query.getFixedNamespace(), query.getFixedUser(), folder.getName());
                 mailboxList.add(mailbox);
             }
         }
         // INBOX is in the root of the folder
-        if (Pattern.matches(mailboxPath.getName().replace(MaildirStore.WILDCARD, ".*"), MailboxConstants.INBOX)) {
-            Mailbox mailbox = maildirStore.loadMailbox(session, root, mailboxPath.getNamespace(), mailboxPath.getUser(), "");
+        if (Pattern.matches(pathLike.replace(MaildirStore.WILDCARD, ".*"), MailboxConstants.INBOX)) {
+            Mailbox mailbox = maildirStore.loadMailbox(session, root, query.getFixedNamespace(), query.getFixedUser(), "");
             mailboxList.add(0, mailbox);
         }
-        return mailboxList;
+        return mailboxList.stream()
+            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
     public boolean hasChildren(Mailbox mailbox, char delimiter) throws MailboxException, MailboxNotFoundException {
-        String searchString = mailbox.getName() + MaildirStore.maildirDelimiter + MaildirStore.WILDCARD;
         List<Mailbox> mailboxes = findMailboxWithPathLike(
-                new MailboxPath(mailbox.getNamespace(), mailbox.getUser(), searchString));
-        return (mailboxes.size() > 0);
+            MailboxQuery.builder()
+            .userAndNamespaceFrom(mailbox.generateAssociatedPath())
+            .expression(new PrefixedWildcard(mailbox.getName() + delimiter))
+            .build()
+            .asUserBound());
+        return mailboxes.size() > 0;
     }
 
     @Override

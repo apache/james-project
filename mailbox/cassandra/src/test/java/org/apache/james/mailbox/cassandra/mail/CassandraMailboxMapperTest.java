@@ -37,8 +37,9 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.Wildcard;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -55,9 +56,7 @@ public class CassandraMailboxMapperTest {
 
     private static final CassandraId MAILBOX_ID_2 = CassandraId.timeBased();
 
-
     private static final Mailbox MAILBOX_BIS = new Mailbox(MAILBOX_PATH, UID_VALIDITY, MAILBOX_ID_2);
-    private static final String WILDCARD = "%";
 
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
         CassandraMailboxModule.MODULE,
@@ -236,7 +235,12 @@ public class CassandraMailboxMapperTest {
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
     
-        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, WILDCARD));
+        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(MailboxQuery.builder()
+            .privateNamespace()
+            .username(USER)
+            .expression(Wildcard.INSTANCE)
+            .build()
+            .asUserBound());
 
         assertThat(mailboxes).containsOnly(MAILBOX);
     }
@@ -250,7 +254,12 @@ public class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
 
-        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, WILDCARD));
+        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(MailboxQuery.builder()
+            .privateNamespace()
+            .username(USER)
+            .expression(Wildcard.INSTANCE)
+            .build()
+            .asUserBound());
 
         assertThat(mailboxes).containsOnly(MAILBOX);
     }
@@ -262,7 +271,12 @@ public class CassandraMailboxMapperTest {
         mailboxPathV2DAO.save(MAILBOX_PATH, MAILBOX_ID)
             .block();
     
-        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, WILDCARD));
+        List<Mailbox> mailboxes = testee.findMailboxWithPathLike(MailboxQuery.builder()
+            .privateNamespace()
+            .username(USER)
+            .expression(Wildcard.INSTANCE)
+            .build()
+            .asUserBound());
 
         assertThat(mailboxes).containsOnly(MAILBOX);
     }
@@ -335,7 +349,12 @@ public class CassandraMailboxMapperTest {
         mailboxPathDAO.save(MAILBOX_PATH, MAILBOX_ID_2).block();
 
         assertThat(testee.findMailboxWithPathLike(
-            new MailboxPath(MailboxConstants.USER_NAMESPACE, USER, WILDCARD)))
+            MailboxQuery.builder()
+                .privateNamespace()
+                .username(USER)
+                .expression(Wildcard.INSTANCE)
+                .build()
+                .asUserBound()))
             .containsOnly(MAILBOX);
     }
 }

@@ -38,6 +38,7 @@ import org.apache.james.mailbox.exception.NotAdminException;
 import org.apache.james.mailbox.exception.UserDoesNotExistException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
+import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -195,7 +196,7 @@ public class StoreMailboxManagerTest {
     }
 
     @Test
-    public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() throws Exception {
+    public void getPathLikeShouldReturnUserPathLikeWhenNoPrefixDefined() {
         //Given
         MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
@@ -203,12 +204,17 @@ public class StoreMailboxManagerTest {
         //When
         MailboxQuery mailboxQuery = testee.build();
 
-        assertThat(StoreMailboxManager.getPathLike(mailboxQuery, session))
-            .isEqualTo(MailboxPath.forUser("user", "abc%"));
+        assertThat(StoreMailboxManager.toSingleUserQuery(mailboxQuery, session))
+            .isEqualTo(MailboxQuery.builder()
+                .namespace(MailboxConstants.USER_NAMESPACE)
+                .username("user")
+                .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()))
+                .build()
+                .asUserBound());
     }
 
     @Test
-    public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() throws Exception {
+    public void getPathLikeShouldReturnUserPathLikeWhenPrefixDefined() {
         //Given
         MailboxSession session = MailboxSessionUtil.create("user");
         MailboxQuery.Builder testee = MailboxQuery.builder()
@@ -217,8 +223,13 @@ public class StoreMailboxManagerTest {
         //When
         MailboxQuery mailboxQuery = testee.build();
 
-        assertThat(StoreMailboxManager.getPathLike(mailboxQuery, session))
-            .isEqualTo(MailboxPath.forUser("user", "prefix.abc%"));
+        assertThat(StoreMailboxManager.toSingleUserQuery(mailboxQuery, session))
+            .isEqualTo(MailboxQuery.builder()
+                .namespace(MailboxConstants.USER_NAMESPACE)
+                .username("user")
+                .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()))
+                .build()
+                .asUserBound());
     }
 }
 

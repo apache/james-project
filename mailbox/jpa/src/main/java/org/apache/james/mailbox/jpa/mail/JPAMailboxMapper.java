@@ -40,6 +40,8 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.steveash.guavate.Guavate;
@@ -189,23 +191,25 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
         try {
-            return findMailboxWithPathLikeTypedQuery(path)
+            String pathLike = MailboxExpressionBackwardCompatibility.getPathLike(query);
+            return findMailboxWithPathLikeTypedQuery(query.getFixedNamespace(), query.getFixedUser(), pathLike)
                 .getResultList()
                 .stream()
                 .map(JPAMailbox::toMailbox)
+                .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
                 .collect(Guavate.toImmutableList());
         } catch (PersistenceException e) {
-            throw new MailboxException("Search of mailbox " + path + " failed", e);
+            throw new MailboxException("Search of mailbox " + query + " failed", e);
         }
     }
 
-    private TypedQuery<JPAMailbox> findMailboxWithPathLikeTypedQuery(MailboxPath path) {
+    private TypedQuery<JPAMailbox> findMailboxWithPathLikeTypedQuery(String namespace, String user, String pathLike) {
         return getEntityManager().createNamedQuery("findMailboxWithNameLikeWithUser", JPAMailbox.class)
-            .setParameter("nameParam", path.getName())
-            .setParameter("namespaceParam", path.getNamespace())
-            .setParameter("userParam", path.getUser().asId());
+            .setParameter("nameParam", pathLike)
+            .setParameter("namespaceParam", namespace)
+            .setParameter("userParam", user);
     }
 
     public void deleteAllMemberships() throws MailboxException {

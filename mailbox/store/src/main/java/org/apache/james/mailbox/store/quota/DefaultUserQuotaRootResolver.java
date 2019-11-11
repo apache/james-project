@@ -32,6 +32,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.QuotaRoot;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
@@ -113,6 +114,11 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
         String namespace = parts.get(0);
         String user = parts.get(1);
         return factory.getMailboxMapper(mailboxSession)
-            .findMailboxWithPathLike(new MailboxPath(namespace, user, "%"));
+            .findMailboxWithPathLike(MailboxQuery.builder()
+                .namespace(namespace)
+                .user(Username.of(user))
+                .matchesAllMailboxNames()
+                .build()
+                .asUserBound());
     }
 }

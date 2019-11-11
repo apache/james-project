@@ -28,6 +28,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
 /**
@@ -68,7 +69,7 @@ public interface MailboxMapper extends Mapper {
     /**
      * Return a List of {@link Mailbox} which name is like the given name
      */
-    List<Mailbox> findMailboxWithPathLike(MailboxPath mailboxPath)
+    List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query)
             throws MailboxException;
 
     /**

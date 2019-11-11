@@ -35,6 +35,7 @@ import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.steveash.guavate.Guavate;
@@ -81,19 +82,12 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxPath path) throws MailboxException {
-        final String regex = path.getName().replace("%", ".*");
+    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
         return mailboxesByPath.values()
             .stream()
-            .filter(mailbox -> mailboxMatchesRegex(mailbox, path, regex))
+            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
             .map(Mailbox::new)
             .collect(Guavate.toImmutableList());
-    }
-
-    private boolean mailboxMatchesRegex(Mailbox mailbox, MailboxPath path, String regex) {
-        return Objects.equal(mailbox.getNamespace(), path.getNamespace())
-            && Objects.equal(mailbox.getUser(), path.getUser())
-            && mailbox.getName().matches(regex);
     }
 
     @Override

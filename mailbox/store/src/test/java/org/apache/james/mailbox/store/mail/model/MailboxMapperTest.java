@@ -32,6 +32,9 @@ import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAssert;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.search.ExactName;
+import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.model.search.PrefixedWildcard;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.Test;
 
@@ -129,8 +132,13 @@ public abstract class MailboxMapperTest {
     @Test
     public void findMailboxWithPathLikeShouldBeLimitedToUserAndNamespace() throws MailboxException {
         saveAll();
-        MailboxPath mailboxPathQuery = new MailboxPath(bobInboxMailbox.getNamespace(), bobInboxMailbox.getUser(), "IN" + WILDCARD);
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxPathQuery);
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(bobInboxPath)
+            .expression(new PrefixedWildcard("IN"))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
 
         assertMailboxes(mailboxes).containOnly(bobInboxMailbox);
     }
@@ -147,8 +155,13 @@ public abstract class MailboxMapperTest {
     @Test
     public void findMailboxWithPathLikeWithChildRegexShouldRetrieveChildren() throws MailboxException {
         saveAll();
-        MailboxPath regexPath = new MailboxPath(benwaWorkPath.getNamespace(), benwaWorkPath.getUser(), benwaWorkPath.getName() + WILDCARD);
-        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(regexPath);
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(benwaWorkPath)
+            .expression(new PrefixedWildcard(benwaWorkPath.getName()))
+            .build()
+            .asUserBound();
+
+        List<Mailbox> mailboxes = mailboxMapper.findMailboxWithPathLike(mailboxQuery);
 
         assertMailboxes(mailboxes).containOnly(benwaWorkMailbox, benwaWorkDoneMailbox, benwaWorkTodoMailbox);
     }
@@ -170,8 +183,13 @@ public abstract class MailboxMapperTest {
     @Test
     public void findMailboxWithPathLikeShouldEscapeMailboxName() throws MailboxException {
         saveAll();
-        MailboxPath regexPath = new MailboxPath(benwaInboxPath.getNamespace(), benwaInboxPath.getUser(), "INB?X");
-        assertThat(mailboxMapper.findMailboxWithPathLike(regexPath)).isEmpty();
+        MailboxQuery.UserBound mailboxQuery = MailboxQuery.builder()
+            .userAndNamespaceFrom(benwaInboxPath)
+            .expression(new ExactName("INB?X"))
+            .build()
+            .asUserBound();
+
+        assertThat(mailboxMapper.findMailboxWithPathLike(mailboxQuery)).isEmpty();
     }
 
     @Test

@@ -34,7 +34,7 @@ import com.google.common.base.Preconditions;
 /**
  * Expresses select criteria for mailboxes.
  */
-public final class MailboxQuery {
+public class MailboxQuery {
 
     public static Builder builder() {
         return new Builder();
@@ -110,8 +110,24 @@ public final class MailboxQuery {
         }
     }
 
-    private final Optional<String> namespace;
-    private final Optional<String> user;
+    public static class UserBound extends MailboxQuery {
+        private UserBound(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
+            super(namespace, user, mailboxNameExpression);
+            Preconditions.checkArgument(namespace.isPresent());
+            Preconditions.checkArgument(user.isPresent());
+        }
+
+        public String getFixedNamespace() {
+            return namespace.get();
+        }
+
+        public String getFixedUser() {
+            return user.get();
+        }
+    }
+
+    protected final Optional<String> namespace;
+    protected final Optional<String> user;
     private final MailboxNameExpression mailboxNameExpression;
 
     /**
@@ -160,6 +176,10 @@ public final class MailboxQuery {
     public boolean isPathMatch(MailboxPath mailboxPath) {
         return belongsToRequestedNamespaceAndUser(mailboxPath)
             && isExpressionMatch(mailboxPath.getName());
+    }
+
+    public UserBound asUserBound() {
+        return new UserBound(namespace, user, mailboxNameExpression);
     }
 
     public String toString() {
