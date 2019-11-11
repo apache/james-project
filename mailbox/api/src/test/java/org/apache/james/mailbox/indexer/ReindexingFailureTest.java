@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ReindexingFailureTest {
+class ReindexingFailureTest {
 
     @Test
     void shouldRespectBeanContract() {
