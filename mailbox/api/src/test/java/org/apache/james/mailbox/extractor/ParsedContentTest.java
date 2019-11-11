@@ -19,14 +19,14 @@
 
 package org.apache.james.mailbox.extractor;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ParsedContentTest {
+class ParsedContentTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(ParsedContent.class)
             .verify();
     }
