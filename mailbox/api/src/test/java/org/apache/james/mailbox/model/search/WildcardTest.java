@@ -22,36 +22,36 @@ package org.apache.james.mailbox.model.search;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class WildcardTest {
+class WildcardTest {
 
     @Test
-    public void isWildShouldBeTrue() {
+    void isWildShouldBeTrue() {
         assertThat(Wildcard.INSTANCE.isWild())
             .isTrue();
     }
 
     @Test
-    public void getCombinedNameShouldReturnWildcard() {
+    void getCombinedNameShouldReturnWildcard() {
         assertThat(Wildcard.INSTANCE.getCombinedName())
             .isEqualTo(String.valueOf(MailboxNameExpression.FREEWILDCARD));
     }
 
     @Test
-    public void isExpressionMatchShouldMatchAnyValue() {
+    void isExpressionMatchShouldMatchAnyValue() {
         assertThat(Wildcard.INSTANCE.isExpressionMatch("any"))
             .isTrue();
     }
 
     @Test
-    public void isExpressionMatchShouldMatchEmptyValue() {
+    void isExpressionMatchShouldMatchEmptyValue() {
         assertThat(Wildcard.INSTANCE.isExpressionMatch(""))
             .isTrue();
     }
 
     @Test
-    public void isExpressionMatchShouldThrowOnNullValue() {
+    void isExpressionMatchShouldThrowOnNullValue() {
         assertThatThrownBy(() -> Wildcard.INSTANCE.isExpressionMatch(null))
             .isInstanceOf(NullPointerException.class);
     }

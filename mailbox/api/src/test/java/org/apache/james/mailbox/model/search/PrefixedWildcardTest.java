@@ -22,7 +22,7 @@ package org.apache.james.mailbox.model.search;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
@@ -30,49 +30,49 @@ public class PrefixedWildcardTest {
     public static final String NAME = "toto";
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(PrefixedWildcard.class)
             .verify();
     }
 
     @Test
-    public void constructorShouldThrowOnNullName() {
+    void constructorShouldThrowOnNullName() {
         assertThatThrownBy(() -> new PrefixedWildcard(null))
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void isWildShouldReturnTrue() {
+    void isWildShouldReturnTrue() {
         assertThat(new PrefixedWildcard(NAME).isWild())
             .isTrue();
     }
 
     @Test
-    public void getCombinedNameShouldReturnName() {
+    void getCombinedNameShouldReturnName() {
         assertThat(new PrefixedWildcard(NAME).getCombinedName())
             .isEqualTo(NAME + MailboxNameExpression.FREEWILDCARD);
     }
 
     @Test
-    public void isExpressionMatchShouldReturnTrueWhenName() {
+    void isExpressionMatchShouldReturnTrueWhenName() {
         assertThat(new PrefixedWildcard(NAME).isExpressionMatch(NAME))
             .isTrue();
     }
 
     @Test
-    public void isExpressionMatchShouldReturnTrueWhenNameAndPostfix() {
+    void isExpressionMatchShouldReturnTrueWhenNameAndPostfix() {
         assertThat(new PrefixedWildcard(NAME).isExpressionMatch(NAME + "any"))
             .isTrue();
     }
 
     @Test
-    public void isExpressionMatchShouldReturnFalseWhenOtherValue() {
+    void isExpressionMatchShouldReturnFalseWhenOtherValue() {
         assertThat(new PrefixedWildcard(NAME).isExpressionMatch("other"))
             .isFalse();
     }
 
     @Test
-    public void isExpressionMatchShouldThrowOnNullValue() {
+    void isExpressionMatchShouldThrowOnNullValue() {
         assertThatThrownBy(() -> new PrefixedWildcard(NAME).isExpressionMatch(null))
             .isInstanceOf(NullPointerException.class);
     }
