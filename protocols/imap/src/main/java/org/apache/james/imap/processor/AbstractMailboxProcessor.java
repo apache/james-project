@@ -28,10 +28,8 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -88,40 +86,27 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
 
     @Override
     protected final void doProcess(M acceptableMessage, Responder responder, ImapSession session) {
-        process(acceptableMessage, responder, session);
-    }
-
-    protected final void process(M message, Responder responder, ImapSession session) {
-        ImapCommand command = message.getCommand();
-        Tag tag = message.getTag();
-
-        TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + command.getName());
-        doProcess(message, command, tag, responder, session);
-        timeMetric.stopAndPublish();
-    }
-
-    final void doProcess(M message, ImapCommand command, Tag tag, Responder responder, ImapSession session) {
+        TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + acceptableMessage.getCommand().getName());
         try {
-            if (!command.validForState(session.getState())) {
-                ImapResponseMessage response = factory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
+            if (!acceptableMessage.getCommand().validForState(session.getState())) {
+                ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
                 responder.respond(response);
 
             } else {
                 getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
 
-                processMessage(message, session, responder);
+                processMessage(acceptableMessage, session, responder);
 
                 getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
-
             }
         } catch (DeniedAccessOnSharedMailboxException e) {
-            no(message, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+            no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
         } catch (Exception unexpectedException) {
             LOGGER.error("Unexpected error during IMAP processing", unexpectedException);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(acceptableMessage, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+        timeMetric.stopAndPublish();
     }
-
 
     protected void flags(Responder responder, SelectedMailbox selected) {
         responder.respond(new FlagsResponse(selected.getApplicableFlags()));
