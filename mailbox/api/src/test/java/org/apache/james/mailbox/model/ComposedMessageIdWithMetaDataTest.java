@@ -19,44 +19,48 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ComposedMessageIdWithMetaDataTest {
+class ComposedMessageIdWithMetaDataTest {
 
-    public static final TestId TEST_ID = TestId.of(1L);
-    public static final TestMessageId TEST_MESSAGE_ID = new TestMessageId("2");
-    public static final MessageUid MESSAGE_UID = MessageUid.of(3);
-    public static final ComposedMessageId COMPOSED_MESSAGE_ID = new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID);
+    private static final TestId TEST_ID = TestId.of(1L);
+    private static final TestMessageId TEST_MESSAGE_ID = new TestMessageId("2");
+    private static final MessageUid MESSAGE_UID = MessageUid.of(3);
+    private static final ComposedMessageId COMPOSED_MESSAGE_ID = new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID);
 
-    @Test(expected = NullPointerException.class)
-    public void buildShoudThrownWhenComposedMessageIdIsNull() {
-        ComposedMessageIdWithMetaData.builder().build();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void buildShoudThrownWhenFlagsIsNull() {
-        ComposedMessageIdWithMetaData.builder()
-            .composedMessageId(COMPOSED_MESSAGE_ID)
-            .build();
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void buildShoudThrownWhenModSeqIsNull() {
-        ComposedMessageIdWithMetaData.builder()
-            .composedMessageId(COMPOSED_MESSAGE_ID)
-            .flags(new Flags())
-            .build();
+    @Test
+    void buildShoudThrownWhenComposedMessageIdIsNull() {
+        assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder().build())
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void buildShoudWork() {
+    void buildShoudThrownWhenFlagsIsNull() {
+        assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(COMPOSED_MESSAGE_ID)
+                .build())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void buildShoudThrownWhenModSeqIsNull() {
+        assertThatThrownBy(() -> ComposedMessageIdWithMetaData.builder()
+                .composedMessageId(COMPOSED_MESSAGE_ID)
+                .flags(new Flags())
+                .build())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void buildShoudWork() {
         Flags flags = new Flags(Flag.RECENT);
         long modSeq = 1;
 
@@ -72,7 +76,7 @@ public class ComposedMessageIdWithMetaDataTest {
     }
 
     @Test
-    public void isMatchingShouldReturnTrueWhenSameMessageId() {
+    void isMatchingShouldReturnTrueWhenSameMessageId() {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID))
                 .flags(new Flags(Flag.RECENT))
@@ -83,7 +87,7 @@ public class ComposedMessageIdWithMetaDataTest {
     }
 
     @Test
-    public void isMatchingShouldReturnFalseWhenOtherMessageId() {
+    void isMatchingShouldReturnFalseWhenOtherMessageId() {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(COMPOSED_MESSAGE_ID)
                 .flags(new Flags(Flag.RECENT))
@@ -94,7 +98,7 @@ public class ComposedMessageIdWithMetaDataTest {
     }
 
     @Test
-    public void shouldRespectJavaBeanContract() {
+    void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(ComposedMessageIdWithMetaData.class)
             .verify();
     }

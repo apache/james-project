@@ -36,10 +36,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.exception.UnsupportedRightException;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class Rfc4314RightsTest {
+class Rfc4314RightsTest {
     
     private Rfc4314Rights aeik;
     private Rfc4314Rights lprs;
@@ -47,8 +47,8 @@ public class Rfc4314RightsTest {
     private Rfc4314Rights full;
     private Rfc4314Rights none;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         aeik = Rfc4314Rights.fromSerializedRfc4314Rights("aeik");
         lprs = Rfc4314Rights.fromSerializedRfc4314Rights("lprs");
         twx = Rfc4314Rights.fromSerializedRfc4314Rights("twx");
@@ -56,55 +56,56 @@ public class Rfc4314RightsTest {
         none = MailboxACL.NO_RIGHTS;
     }
     
-    @Test(expected = NullPointerException.class)
-    public void newInstanceShouldThrowWhenNullString() throws UnsupportedRightException {
-        Rfc4314Rights.fromSerializedRfc4314Rights((String) null);
+    @Test
+    void newInstanceShouldThrowWhenNullString() throws UnsupportedRightException {
+        assertThatThrownBy(() -> Rfc4314Rights.fromSerializedRfc4314Rights((String) null))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
-    public void newInstanceShouldHaveNoRightsWhenEmptyString() throws UnsupportedRightException {
+    void newInstanceShouldHaveNoRightsWhenEmptyString() throws UnsupportedRightException {
         Rfc4314Rights rights = Rfc4314Rights.fromSerializedRfc4314Rights("");
         assertThat(rights.list()).isEmpty();
     }
     
     @Test
-    public void containsShouldReturnFalseWhenNotMatching() throws UnsupportedRightException {
+    void containsShouldReturnFalseWhenNotMatching() throws UnsupportedRightException {
         assertThat(aeik.contains('x')).isFalse();
     }
     
     @Test
-    public void containsShouldReturnTrueWhenMatching() throws UnsupportedRightException {
+    void containsShouldReturnTrueWhenMatching() throws UnsupportedRightException {
         assertThat(aeik.contains('e')).isTrue();
     }
     
     @Test
-    public void exceptShouldRemoveAllWhenChaining() throws UnsupportedRightException {
+    void exceptShouldRemoveAllWhenChaining() throws UnsupportedRightException {
         assertThat(full.except(aeik).except(lprs).except(twx)).isEqualTo(none);
     }
     
     @Test
-    public void exceptShouldReturnOriginWhenExceptingNull() throws UnsupportedRightException {
+    void exceptShouldReturnOriginWhenExceptingNull() throws UnsupportedRightException {
         assertThat(aeik.except(null)).isEqualTo(aeik);
     }
     
     @Test
-    public void exceptShouldReturnOriginWhenExceptingNonExistent() throws UnsupportedRightException {
+    void exceptShouldReturnOriginWhenExceptingNonExistent() throws UnsupportedRightException {
         assertThat(aeik.except(lprs)).isEqualTo(aeik);
     }
 
     @Test
-    public void rfc4314RightsShouldThrowWhenUnknownFlag() throws UnsupportedRightException {
+    void rfc4314RightsShouldThrowWhenUnknownFlag() {
         assertThatThrownBy(() -> Rfc4314Rights.fromSerializedRfc4314Rights("z"))
             .isInstanceOf(UnsupportedRightException.class);
     }
     
     @Test
-    public void exceptShouldReturnOriginWhenExceptingEmpty() throws UnsupportedRightException {
+    void exceptShouldReturnOriginWhenExceptingEmpty() throws UnsupportedRightException {
         assertThat(aeik.except(none)).isEqualTo(aeik);
     }
     
     @Test
-    public void fullRightsShouldContainsAllRights() {
+    void fullRightsShouldContainsAllRights() {
         assertThat(full.list()).containsOnly(
             Administer,
             PerformExpunge,
@@ -120,12 +121,12 @@ public class Rfc4314RightsTest {
     }
     
     @Test
-    public void noneRightsShouldContainsNoRights() {
+    void noneRightsShouldContainsNoRights() {
         assertThat(none.list()).isEmpty();
     }
     
     @Test
-    public void rightsShouldContainsSpecificRightsWhenAEIK() {
+    void rightsShouldContainsSpecificRightsWhenAEIK() {
         assertThat(aeik.list()).containsOnly(
             Administer,
             PerformExpunge,
@@ -134,7 +135,7 @@ public class Rfc4314RightsTest {
     }
     
     @Test
-    public void rightsShouldContainsSpecificRightsWhenLPRS() {
+    void rightsShouldContainsSpecificRightsWhenLPRS() {
         assertThat(lprs.list()).containsOnly(
             Lookup,
             Post,
@@ -143,7 +144,7 @@ public class Rfc4314RightsTest {
     }
     
     @Test
-    public void rightsShouldContainsSpecificRightsWhenTWX() {
+    void rightsShouldContainsSpecificRightsWhenTWX() {
         assertThat(twx.list()).containsOnly(
             DeleteMessages,
             Write,
@@ -151,92 +152,92 @@ public class Rfc4314RightsTest {
     }
 
     @Test
-    public void getValueShouldReturnSigmaWhenAeik() throws UnsupportedRightException {
+    void getValueShouldReturnSigmaWhenAeik() {
         assertThat(aeik.list()).containsExactly(Administer, PerformExpunge, Insert, CreateMailbox);
     }
 
     @Test
-    public void getValueShouldReturnSigmaWhenLprs() throws UnsupportedRightException {
+    void getValueShouldReturnSigmaWhenLprs() {
         assertThat(lprs.list()).containsExactly(Lookup, Post, Read, WriteSeenFlag);
     }
 
     @Test
-    public void getValueShouldReturnSigmaWhenTwx() throws UnsupportedRightException {
+    void getValueShouldReturnSigmaWhenTwx() {
         assertThat(twx.list()).containsExactly(DeleteMessages, Write, DeleteMailbox);
     }
 
     @Test
-    public void getValueShouldReturnEmptyWhenNone() throws UnsupportedRightException {
+    void getValueShouldReturnEmptyWhenNone() throws UnsupportedRightException {
         assertThat(Rfc4314Rights.fromSerializedRfc4314Rights("").list()).isEmpty();
     }
 
     @Test
-    public void serializeShouldReturnStringWhenAeik() throws UnsupportedRightException {
+    void serializeShouldReturnStringWhenAeik() {
         assertThat(aeik.serialize()).isEqualTo("aeik");
     }
 
     @Test
-    public void serializeShouldReturnStringWhenLprs() throws UnsupportedRightException {
+    void serializeShouldReturnStringWhenLprs() {
         assertThat(lprs.serialize()).isEqualTo("lprs");
     }
 
     @Test
-    public void serializeShouldReturnStringWhenTwx() throws UnsupportedRightException {
+    void serializeShouldReturnStringWhenTwx() {
         assertThat(twx.serialize()).isEqualTo("twx");
     }
     
     @Test
-    public void serializeShouldReturnStringWhenAeiklprstwx() throws UnsupportedRightException {
+    void serializeShouldReturnStringWhenAeiklprstwx() {
         assertThat(full.serialize()).isEqualTo("aeiklprstwx");
     }
 
     @Test
-    public void serializeShouldReturnEmptyStringWhenEmpty() throws UnsupportedRightException {
+    void serializeShouldReturnEmptyStringWhenEmpty() {
         assertThat(none.serialize()).isEmpty();
     }
     
     @Test
-    public void unionShouldReturnFullWhenChaining() throws UnsupportedRightException {
+    void unionShouldReturnFullWhenChaining() throws UnsupportedRightException {
         assertThat(aeik.union(lprs).union(twx)).isEqualTo(full);
     }
     
     @Test
-    public void unionShouldReturnOriginWhenAppliedWithEmpty() throws UnsupportedRightException {
+    void unionShouldReturnOriginWhenAppliedWithEmpty() throws UnsupportedRightException {
         assertThat(lprs.union(none)).isEqualTo(lprs);
     }
     
     @Test
-    public void unionShouldThrowWhenAppliedWithNull() throws UnsupportedRightException {
+    void unionShouldThrowWhenAppliedWithNull() {
         assertThatThrownBy(() -> lprs.union(null)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void containsShouldReturnFalseWhenRightNotPresent() throws UnsupportedRightException {
+    void containsShouldReturnFalseWhenRightNotPresent() {
         assertThat(lprs.contains(Write)).isFalse();
     }
 
     @Test
-    public void containsShouldReturnFalseWhenAtLeastOneRightNotPresent() throws UnsupportedRightException {
+    void containsShouldReturnFalseWhenAtLeastOneRightNotPresent() {
         assertThat(lprs.contains(Lookup, Write)).isFalse();
     }
 
     @Test
-    public void containsShouldReturnTrueWhenAllRightsPresent() throws UnsupportedRightException {
+    void containsShouldReturnTrueWhenAllRightsPresent() {
         assertThat(lprs.contains(Lookup, Post)).isTrue();
     }
 
     @Test
-    public void containsShouldReturnTrueWhenNonRightsPresent() throws UnsupportedRightException {
+    void containsShouldReturnTrueWhenNonRightsPresent() {
         assertThat(lprs.contains()).isTrue();
     }
 
     @Test
-    public void allExceptShouldReturnFullWhenProvidedEmpty() throws UnsupportedRightException {
+    void allExceptShouldReturnFullWhenProvidedEmpty() throws UnsupportedRightException {
         assertThat(Rfc4314Rights.allExcept()).isEqualTo(MailboxACL.FULL_RIGHTS);
     }
 
     @Test
-    public void allExceptShouldReturnAllButProvidedRight() throws UnsupportedRightException {
+    void allExceptShouldReturnAllButProvidedRight() throws UnsupportedRightException {
         assertThat(Rfc4314Rights.allExcept(Lookup))
             .isEqualTo(new Rfc4314Rights(
                 DeleteMessages,
@@ -252,7 +253,7 @@ public class Rfc4314RightsTest {
     }
 
     @Test
-    public void allExceptShouldReturnAllButProvidedRights() throws UnsupportedRightException {
+    void allExceptShouldReturnAllButProvidedRights() throws UnsupportedRightException {
         assertThat(Rfc4314Rights.allExcept(Lookup, Read))
             .isEqualTo(new Rfc4314Rights(
                 DeleteMessages,
@@ -267,7 +268,7 @@ public class Rfc4314RightsTest {
     }
 
     @Test
-    public void allExceptShouldReturnEmptyWhenProvidedAllRights() throws UnsupportedRightException {
+    void allExceptShouldReturnEmptyWhenProvidedAllRights() throws UnsupportedRightException {
         assertThat(
             Rfc4314Rights.allExcept(
                 Lookup,

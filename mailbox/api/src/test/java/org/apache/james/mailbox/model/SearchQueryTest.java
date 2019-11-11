@@ -22,21 +22,21 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class SearchQueryTest {
+class SearchQueryTest {
 
     @Test
-    public void searchQueryShouldRespectBeanContract() {
+    void searchQueryShouldRespectBeanContract() {
         EqualsVerifier.forClass(SearchQuery.class)
             .withOnlyTheseFields("criterias")
             .verify();
     }
 
     @Test
-    public void equalsShouldCompareCriteria() {
+    void equalsShouldCompareCriteria() {
         SearchQuery searchQuery1 = new SearchQuery();
         SearchQuery searchQuery2 = new SearchQuery();
         searchQuery1.andCriteria(SearchQuery.all());

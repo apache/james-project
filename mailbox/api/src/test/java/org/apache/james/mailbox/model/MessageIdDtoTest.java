@@ -21,11 +21,11 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MessageIdDtoTest {
+class MessageIdDtoTest {
 
     private static final TestMessageId.Factory factory = new TestMessageId.Factory();
     private static final Long SAMPLE_ID_VALUE = 42L;
@@ -33,37 +33,38 @@ public class MessageIdDtoTest {
     private static final TestMessageId SAMPLE_ID = TestMessageId.of(SAMPLE_ID_VALUE);
 
     @Test
-    public void shouldRespectJavaBeanContract() {
+    void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(MessageIdDto.class).verify();
     }
 
     @Test
-    public void shouldAcceptStringAndGiveItBack() {
+    void shouldAcceptStringAndGiveItBack() {
         assertThat(new MessageIdDto(SAMPLE_ID_STRING).asString())
             .isEqualTo(SAMPLE_ID_STRING);
     }
 
     @Test
-    public void shouldAcceptMessageIdAndGiveTheRightString() {
+    void shouldAcceptMessageIdAndGiveTheRightString() {
         assertThat(new MessageIdDto(SAMPLE_ID).asString())
             .isEqualTo(SAMPLE_ID_STRING);
     }
 
     @Test
-    public void shouldAcceptMessageIdAndGiveItBack() {
+    void shouldAcceptMessageIdAndGiveItBack() {
         assertThat(new MessageIdDto(SAMPLE_ID).instantiate(factory))
             .isEqualTo(SAMPLE_ID);
     }
 
     @Test
-    public void shouldAcceptStringAndGiveAnInstantiatedMessageId() {
+    void shouldAcceptStringAndGiveAnInstantiatedMessageId() {
         assertThat(new MessageIdDto(SAMPLE_ID_STRING).instantiate(factory))
             .isEqualTo(SAMPLE_ID);
     }
 
     @Test
-    public void shouldThrowAnExceptionOnWronglyFormattedString() {
+    void shouldThrowAnExceptionOnWronglyFormattedString() {
         MessageIdDto messageIdDto = new MessageIdDto("Definitively not a number");
+
         assertThatThrownBy(() -> messageIdDto.instantiate(factory))
             .isInstanceOf(Exception.class);
     }

@@ -20,14 +20,14 @@
 
 package org.apache.james.mailbox.model;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MailboxCountersTest {
+class MailboxCountersTest {
 
     @Test
-    public void mailboxCountersShouldRespectBeanContract() {
+    void mailboxCountersShouldRespectBeanContract() {
         EqualsVerifier.forClass(MailboxCounters.class).verify();
     }
 }

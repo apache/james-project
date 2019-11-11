@@ -23,20 +23,20 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class MailboxPathTest {
+class MailboxPathTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MailboxPath.class)
             .verify();
     }
 
     @Test
-    public void getHierarchyLevelsShouldBeOrdered() {
+    void getHierarchyLevelsShouldBeOrdered() {
         assertThat(MailboxPath.forUser("user", "inbox.folder.subfolder")
             .getHierarchyLevels('.'))
             .containsExactly(
@@ -46,7 +46,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void getHierarchyLevelsShouldReturnPathWhenOneLevel() {
+    void getHierarchyLevelsShouldReturnPathWhenOneLevel() {
         assertThat(MailboxPath.forUser("user", "inbox")
             .getHierarchyLevels('.'))
             .containsExactly(
@@ -54,7 +54,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void getHierarchyLevelsShouldReturnPathWhenEmptyName() {
+    void getHierarchyLevelsShouldReturnPathWhenEmptyName() {
         assertThat(MailboxPath.forUser("user", "")
             .getHierarchyLevels('.'))
             .containsExactly(
@@ -62,7 +62,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void getHierarchyLevelsShouldReturnPathWhenNullName() {
+    void getHierarchyLevelsShouldReturnPathWhenNullName() {
         assertThat(MailboxPath.forUser("user", null)
             .getHierarchyLevels('.'))
             .containsExactly(
@@ -70,7 +70,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldNotThrowOnNullMailboxName() {
+    void sanitizeShouldNotThrowOnNullMailboxName() {
         assertThat(MailboxPath.forUser("user", null)
             .sanitize('.'))
             .isEqualTo(
@@ -78,7 +78,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldReturnEmptyWhenEmpty() {
+    void sanitizeShouldReturnEmptyWhenEmpty() {
         assertThat(MailboxPath.forUser("user", "")
             .sanitize('.'))
             .isEqualTo(
@@ -86,7 +86,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldRemoveMaximumOneTrailingDelimiterWhenAlone() {
+    void sanitizeShouldRemoveMaximumOneTrailingDelimiterWhenAlone() {
         assertThat(MailboxPath.forUser("user", ".")
             .sanitize('.'))
             .isEqualTo(
@@ -94,7 +94,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldPreserveHeadingDelimiter() {
+    void sanitizeShouldPreserveHeadingDelimiter() {
         assertThat(MailboxPath.forUser("user", ".a")
             .sanitize('.'))
             .isEqualTo(
@@ -102,7 +102,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldRemoveTrailingDelimiter() {
+    void sanitizeShouldRemoveTrailingDelimiter() {
         assertThat(MailboxPath.forUser("user", "a.")
             .sanitize('.'))
             .isEqualTo(
@@ -110,7 +110,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldRemoveMaximumOneTrailingDelimiter() {
+    void sanitizeShouldRemoveMaximumOneTrailingDelimiter() {
         assertThat(MailboxPath.forUser("user", "a..")
             .sanitize('.'))
             .isEqualTo(
@@ -118,7 +118,7 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void sanitizeShouldPreserveRedundantDelimiters() {
+    void sanitizeShouldPreserveRedundantDelimiters() {
         assertThat(MailboxPath.forUser("user", "a..a")
             .sanitize('.'))
             .isEqualTo(
@@ -126,75 +126,75 @@ public class MailboxPathTest {
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeFalseIfSingleLevelPath() {
+    void hasEmptyNameInHierarchyShouldBeFalseIfSingleLevelPath() {
         assertThat(MailboxPath.forUser("user", "a")
             .hasEmptyNameInHierarchy('.'))
             .isFalse();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeFalseIfNestedLevelWithNonEmptyNames() {
+    void hasEmptyNameInHierarchyShouldBeFalseIfNestedLevelWithNonEmptyNames() {
         assertThat(MailboxPath.forUser("user", "a.b.c")
             .hasEmptyNameInHierarchy('.'))
             .isFalse();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfEmptyPath() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfEmptyPath() {
         assertThat(MailboxPath.forUser("user", "")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTwoEmptyNames() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTwoEmptyNames() {
         assertThat(MailboxPath.forUser("user", ".")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithAnEmptyNameBetweenTwoNames() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfPathWithAnEmptyNameBetweenTwoNames() {
         assertThat(MailboxPath.forUser("user", "a..b")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithHeadingEmptyNames() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfPathWithHeadingEmptyNames() {
         assertThat(MailboxPath.forUser("user", "..a")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithATrailingEmptyName() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfPathWithATrailingEmptyName() {
         assertThat(MailboxPath.forUser("user", "a.")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTrailingEmptyNames() {
+    void hasEmptyNameInHierarchyShouldBeTrueIfPathWithTrailingEmptyNames() {
         assertThat(MailboxPath.forUser("user", "a..")
             .hasEmptyNameInHierarchy('.'))
             .isTrue();
     }
 
     @Test
-    public void isInboxShouldReturnTrueWhenINBOX() {
+    void isInboxShouldReturnTrueWhenINBOX() {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", DefaultMailboxes.INBOX);
         assertThat(mailboxPath.isInbox()).isTrue();
     }
 
     @Test
-    public void isInboxShouldReturnTrueWhenINBOXWithOtherCase() {
+    void isInboxShouldReturnTrueWhenINBOXWithOtherCase() {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", "InBoX");
         assertThat(mailboxPath.isInbox()).isTrue();
     }
 
     @Test
-    public void isInboxShouldReturnFalseWhenOtherThanInbox() {
+    void isInboxShouldReturnFalseWhenOtherThanInbox() {
         MailboxPath mailboxPath = new MailboxPath(MailboxConstants.USER_NAMESPACE, "user", DefaultMailboxes.ARCHIVE);
         assertThat(mailboxPath.isInbox()).isFalse();
     }

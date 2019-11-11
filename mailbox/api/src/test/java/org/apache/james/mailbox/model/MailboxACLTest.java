@@ -32,12 +32,12 @@ import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.assertj.core.data.MapEntry;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
-public class MailboxACLTest {
+class MailboxACLTest {
 
     private static final String USER_1 = "user1";
     private static final String USER_2 = "user2";
@@ -53,8 +53,8 @@ public class MailboxACLTest {
 
     private MailboxACL u1u2g1g2ACL;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
 
         u1u2g1g2Properties = new Properties();
 
@@ -68,7 +68,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testUnionACLNew() throws UnsupportedRightException {
+    void testUnionACLNew() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS);
@@ -82,7 +82,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testUnionEntryNew() throws UnsupportedRightException {
+    void testUnionEntryNew() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(MailboxACL.OWNER_KEY, MailboxACL.FULL_RIGHTS);
@@ -95,7 +95,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testUnionACLExisting() throws UnsupportedRightException {
+    void testUnionACLExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(aeik + lprs));
@@ -109,7 +109,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testUnionEntryExisting() throws UnsupportedRightException {
+    void testUnionEntryExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(aeik + lprs));
@@ -122,17 +122,17 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testUnionACLZero() throws UnsupportedRightException {
+    void testUnionACLZero() throws UnsupportedRightException {
 
     }
 
     @Test
-    public void testUnionEntryZero() throws UnsupportedRightException {
+    void testUnionEntryZero() throws UnsupportedRightException {
 
     }
 
     @Test
-    public void testExceptACLNew() throws UnsupportedRightException {
+    void testExceptACLNew() throws UnsupportedRightException {
 
         /* actually no change expected */
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
@@ -146,7 +146,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testExceptEntryNew() throws UnsupportedRightException {
+    void testExceptEntryNew() throws UnsupportedRightException {
 
         /* actually no change expected */
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
@@ -159,7 +159,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testExceptACLExisting() throws UnsupportedRightException {
+    void testExceptACLExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(ik));
@@ -173,7 +173,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testExceptEntryExisting() throws UnsupportedRightException {
+    void testExceptEntryExisting() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.put(EntryKey.deserialize(USER_1), Rfc4314Rights.fromSerializedRfc4314Rights(ik));
@@ -186,7 +186,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testExceptACLFull() throws UnsupportedRightException {
+    void testExceptACLFull() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.remove(EntryKey.deserialize(USER_1));
@@ -200,7 +200,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void testExceptEntryFull() throws UnsupportedRightException {
+    void testExceptEntryFull() throws UnsupportedRightException {
 
         Map<EntryKey, Rfc4314Rights> expectedEntries = new HashMap<>(u1u2g1g2ACL.getEntries());
         expectedEntries.remove(EntryKey.deserialize(USER_1));
@@ -213,26 +213,26 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void propertiesConstructorShouldAcceptNullValues() throws Exception {
+    void propertiesConstructorShouldAcceptNullValues() throws Exception {
         assertThat(new MailboxACL((Properties) null))
             .isEqualTo(MailboxACL.EMPTY);
     }
 
     @Test
-    public void applyShouldNotThrowWhenRemovingANonExistingEntry() throws Exception {
+    void applyShouldNotThrowWhenRemovingANonExistingEntry() throws Exception {
         assertThat(MailboxACL.EMPTY
             .apply(MailboxACL.command().forUser("bob").noRights().asReplacement()))
             .isEqualTo(MailboxACL.EMPTY);
     }
 
     @Test
-    public void usersACLShouldReturnEmptyMapWhenEmpty() {
+    void usersACLShouldReturnEmptyMapWhenEmpty() {
         assertThat(MailboxACL.EMPTY.ofPositiveNameType(NameType.user))
             .isEmpty();
     }
 
     @Test
-    public void usersACLShouldReturnEmptyMapWhenNoUserEntry() {
+    void usersACLShouldReturnEmptyMapWhenNoUserEntry() {
         MailboxACL mailboxACL = new MailboxACL(
                 ImmutableMap.of(EntryKey.createGroupEntryKey("group"), MailboxACL.FULL_RIGHTS,
                     EntryKey.createGroupEntryKey("group2"), MailboxACL.NO_RIGHTS));
@@ -241,7 +241,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void usersACLShouldReturnOnlyUsersMapWhenSomeUserEntries() throws Exception {
+    void usersACLShouldReturnOnlyUsersMapWhenSomeUserEntries() throws Exception {
         MailboxACL.Rfc4314Rights rights = MailboxACL.Rfc4314Rights.fromSerializedRfc4314Rights("aei");
         MailboxACL mailboxACL = new MailboxACL(
             ImmutableMap.of(EntryKey.createUserEntryKey("user1"), MailboxACL.FULL_RIGHTS,
@@ -255,7 +255,7 @@ public class MailboxACLTest {
     }
 
     @Test
-    public void ofPositiveNameTypeShouldFilterOutNegativeEntries() throws Exception {
+    void ofPositiveNameTypeShouldFilterOutNegativeEntries() throws Exception {
         MailboxACL mailboxACL = new MailboxACL(
             ImmutableMap.of(EntryKey.createUserEntryKey("user1", NEGATIVE), MailboxACL.FULL_RIGHTS));
         assertThat(mailboxACL.ofPositiveNameType(NameType.user))

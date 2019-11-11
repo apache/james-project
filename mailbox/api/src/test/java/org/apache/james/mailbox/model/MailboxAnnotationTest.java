@@ -20,63 +20,61 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MailboxAnnotationTest {
+class MailboxAnnotationTest {
     private static final MailboxAnnotationKey ANNOTATION_KEY = new MailboxAnnotationKey("/private/comment");
     private static final String ANNOTATION_VALUE = "anyValue";
 
     @Test
-    public void sizeOfAnnotationShouldBeReturnLengthOfValue() throws Exception {
+    void sizeOfAnnotationShouldBeReturnLengthOfValue() {
         MailboxAnnotation mailboxAnnotation = MailboxAnnotation.newInstance(ANNOTATION_KEY, ANNOTATION_VALUE);
 
         assertThat(mailboxAnnotation.size()).isEqualTo(8);
     }
 
     @Test
-    public void sizeOfNilAnnotationShouldBeZero() throws Exception {
+    void sizeOfNilAnnotationShouldBeZero() {
         MailboxAnnotation mailboxAnnotation = MailboxAnnotation.nil(ANNOTATION_KEY);
 
         assertThat(mailboxAnnotation.size()).isEqualTo(0);
     }
     
-    @Test(expected = NullPointerException.class)
-    public void newInstanceShouldThrowsExceptionWithNullKey() throws Exception {
-        MailboxAnnotation.newInstance(null, null);
-    }
-
-    @Test(expected = NullPointerException.class)
-    public void newInstanceShouldThrowsExceptionWithNullValue() throws Exception {
-        MailboxAnnotation.newInstance(ANNOTATION_KEY, null);
+    @Test
+    void newInstanceShouldThrowsExceptionWithNullKey() {
+        assertThatThrownBy(() -> MailboxAnnotation.newInstance(null, null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void nilInstanceShouldReturnAbsentValue() throws Exception {
+    void newInstanceShouldThrowsExceptionWithNullValue() {
+        assertThatThrownBy(() -> MailboxAnnotation.newInstance(ANNOTATION_KEY, null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void nilInstanceShouldReturnAbsentValue() {
         MailboxAnnotation annotation = MailboxAnnotation.nil(ANNOTATION_KEY);
 
         assertThat(annotation.getValue()).isEmpty();
     }
 
     @Test
-    public void isNilShouldReturnTrueForNilObject() throws Exception {
+    void isNilShouldReturnTrueForNilObject() {
         MailboxAnnotation nilAnnotation = MailboxAnnotation.nil(ANNOTATION_KEY);
         assertThat(nilAnnotation.isNil()).isTrue();
     }
 
     @Test
-    public void isNilShouldReturnFalseForNotNilObject() throws Exception {
+    void isNilShouldReturnFalseForNotNilObject() {
         MailboxAnnotation nilAnnotation = MailboxAnnotation.newInstance(ANNOTATION_KEY, ANNOTATION_VALUE);
         assertThat(nilAnnotation.isNil()).isFalse();
     }
 
-    @Test(expected = NullPointerException.class)
-    public void newInstanceMailboxAnnotationShouldThrowExceptionWithNullValue() throws Exception {
-        MailboxAnnotation.newInstance(ANNOTATION_KEY, null);
-    }
-
     @Test
-    public void newInstanceMailboxAnnotationShouldCreateNewInstance() throws Exception {
+    void newInstanceMailboxAnnotationShouldCreateNewInstance() {
         MailboxAnnotation annotation = MailboxAnnotation.newInstance(ANNOTATION_KEY, ANNOTATION_VALUE);
 
         assertThat(annotation.getKey()).isEqualTo(ANNOTATION_KEY);

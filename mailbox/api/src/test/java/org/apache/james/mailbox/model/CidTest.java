@@ -20,75 +20,72 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CidTest {
-
-    @Rule public ExpectedException expectedException = ExpectedException.none();
+class CidTest {
 
     @Test
-    public void fromShouldThrowWhenNull() {
-        expectedException.expect(IllegalArgumentException.class);
-        Cid.from(null);
+    void fromShouldThrowWhenNull() {
+        assertThatThrownBy(() -> Cid.from(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenEmpty() {
-        expectedException.expect(IllegalArgumentException.class);
-        Cid.from("");
+    void fromShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> Cid.from(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenBlank() {
-        expectedException.expect(IllegalArgumentException.class);
-        Cid.from("    ");
+    void fromShouldThrowWhenBlank() {
+        assertThatThrownBy(() -> Cid.from("    "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenEmptyAfterRemoveTags() {
-        expectedException.expect(IllegalArgumentException.class);
-        Cid.from("<>");
+    void fromShouldThrowWhenEmptyAfterRemoveTags() {
+        assertThatThrownBy(() -> Cid.from("<>"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenBlankAfterRemoveTags() {
-        expectedException.expect(IllegalArgumentException.class);
-        Cid.from("<   >");
+    void fromShouldThrowWhenBlankAfterRemoveTags() {
+        assertThatThrownBy(() -> Cid.from("<   >"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromShouldRemoveTagsWhenExists() {
+    void fromShouldRemoveTagsWhenExists() {
         Cid cid = Cid.from("<123>");
         assertThat(cid.getValue()).isEqualTo("123");
     }
 
     @Test
-    public void fromShouldNotRemoveTagsWhenNone() {
+    void fromShouldNotRemoveTagsWhenNone() {
         Cid cid = Cid.from("123");
         assertThat(cid.getValue()).isEqualTo("123");
     }
 
     @Test
-    public void fromShouldNotRemoveTagsWhenNotEndTag() {
+    void fromShouldNotRemoveTagsWhenNotEndTag() {
         Cid cid = Cid.from("<123");
         assertThat(cid.getValue()).isEqualTo("<123");
     }
 
     @Test
-    public void fromShouldNotRemoveTagsWhenNotStartTag() {
+    void fromShouldNotRemoveTagsWhenNotStartTag() {
         Cid cid = Cid.from("123>");
         assertThat(cid.getValue()).isEqualTo("123>");
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldReturnAbsentWhenNull() {
+    void fromRelaxedNoUnwrapShouldReturnAbsentWhenNull() {
         assertThat(Cid.parser()
             .relaxed()
             .parse(null))
@@ -96,7 +93,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldReturnAbsentWhenEmpty() {
+    void fromRelaxedNoUnwrapShouldReturnAbsentWhenEmpty() {
         assertThat(Cid.parser()
             .relaxed()
             .parse(""))
@@ -104,7 +101,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldReturnAbsentWhenBlank() {
+    void fromRelaxedNoUnwrapShouldReturnAbsentWhenBlank() {
         assertThat(Cid.parser()
             .relaxed()
             .parse("     "))
@@ -112,7 +109,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldReturnCidWhenEmptyAfterRemoveTags() {
+    void fromRelaxedNoUnwrapShouldReturnCidWhenEmptyAfterRemoveTags() {
         Optional<Cid> actual = Cid.parser()
             .relaxed()
             .parse("<>");
@@ -121,7 +118,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldReturnCidWhenBlankAfterRemoveTags() {
+    void fromRelaxedNoUnwrapShouldReturnCidWhenBlankAfterRemoveTags() {
         Optional<Cid> actual = Cid.parser()
             .relaxed()
             .parse("<   >");
@@ -130,7 +127,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenExists() {
+    void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenExists() {
         Optional<Cid> actual = Cid.parser()
             .relaxed()
             .parse("<123>");
@@ -139,7 +136,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNone() {
+    void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNone() {
         assertThat(Cid.parser()
             .relaxed()
             .parse("123"))
@@ -147,7 +144,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNotEndTag() {
+    void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNotEndTag() {
         assertThat(Cid.parser()
             .relaxed()
             .parse("<123"))
@@ -155,7 +152,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNotStartTag() {
+    void fromRelaxedNoUnwrapShouldNotRemoveTagsWhenNotStartTag() {
         assertThat(Cid.parser()
             .relaxed()
             .parse("123>"))
@@ -164,7 +161,7 @@ public class CidTest {
 
 
     @Test
-    public void fromRelaxedUnwrapShouldReturnAbsentWhenNull() {
+    void fromRelaxedUnwrapShouldReturnAbsentWhenNull() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -173,7 +170,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldReturnAbsentWhenEmpty() {
+    void fromRelaxedUnwrapShouldReturnAbsentWhenEmpty() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -182,7 +179,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldReturnAbsentWhenBlank() {
+    void fromRelaxedUnwrapShouldReturnAbsentWhenBlank() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -191,7 +188,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldReturnAbsentWhenEmptyAfterRemoveTags() {
+    void fromRelaxedUnwrapShouldReturnAbsentWhenEmptyAfterRemoveTags() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -200,7 +197,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldReturnAbsentWhenBlankAfterRemoveTags() {
+    void fromRelaxedUnwrapShouldReturnAbsentWhenBlankAfterRemoveTags() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -209,7 +206,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldRemoveTagsWhenExists() {
+    void fromRelaxedUnwrapShouldRemoveTagsWhenExists() {
         Optional<Cid> actual = Cid.parser()
             .relaxed()
             .unwrap()
@@ -219,7 +216,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldNotRemoveTagsWhenNone() {
+    void fromRelaxedUnwrapShouldNotRemoveTagsWhenNone() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -228,7 +225,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldNotRemoveTagsWhenNotEndTag() {
+    void fromRelaxedUnwrapShouldNotRemoveTagsWhenNotEndTag() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -237,7 +234,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromRelaxedUnwrapShouldNotRemoveTagsWhenNotStartTag() {
+    void fromRelaxedUnwrapShouldNotRemoveTagsWhenNotStartTag() {
         assertThat(Cid.parser()
             .relaxed()
             .unwrap()
@@ -246,34 +243,31 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldThrowWhenNull() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Cid.parser()
-            .strict()
-            .parse(null);
+    void fromStrictNoUnwrapShouldThrowWhenNull() {
+        assertThatThrownBy(() -> Cid.parser()
+                .strict()
+                .parse(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldThrowWhenEmpty() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Cid.parser()
-            .strict()
-            .parse("");
+    void fromStrictNoUnwrapShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> Cid.parser()
+                .strict()
+                .parse(""))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromStrinctNoUnwrapShouldThrowWhenBlank() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        Cid.parser()
-            .strict()
-            .parse("   ");
+    void fromStrinctNoUnwrapShouldThrowWhenBlank() {
+        assertThatThrownBy(() -> Cid.parser()
+                .strict()
+                .parse("   "))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagWhenEmptyAfterRemoveTags() {
+    void fromStrictNoUnwrapShouldNotRemoveTagWhenEmptyAfterRemoveTags() {
         Optional<Cid> actual = Cid.parser()
             .strict()
             .parse("<>");
@@ -282,7 +276,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagWhenBlankAfterRemoveTags() {
+    void fromStrictNoUnwrapShouldNotRemoveTagWhenBlankAfterRemoveTags() {
         Optional<Cid> actual = Cid.parser()
             .strict()
             .parse("<   >");
@@ -291,7 +285,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagsWhenExists() {
+    void fromStrictNoUnwrapShouldNotRemoveTagsWhenExists() {
         Optional<Cid> actual = Cid.parser()
             .strict()
             .parse("<123>");
@@ -300,7 +294,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagsWhenNone() {
+    void fromStrictNoUnwrapShouldNotRemoveTagsWhenNone() {
         assertThat(Cid.parser()
             .strict()
             .parse("123"))
@@ -308,7 +302,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagsWhenNotEndTag() {
+    void fromStrictNoUnwrapShouldNotRemoveTagsWhenNotEndTag() {
         assertThat(Cid.parser()
             .strict()
             .parse("<123"))
@@ -316,7 +310,7 @@ public class CidTest {
     }
 
     @Test
-    public void fromStrictNoUnwrapShouldNotRemoveTagsWhenNotStartTag() {
+    void fromStrictNoUnwrapShouldNotRemoveTagsWhenNotStartTag() {
         assertThat(Cid.parser()
             .strict()
             .parse("123>"))
@@ -324,7 +318,7 @@ public class CidTest {
     }
 
     @Test
-    public void shouldRespectJavaBeanContract() {
+    void shouldRespectJavaBeanContract() {
         EqualsVerifier.forClass(Cid.class).verify();
     }
 }

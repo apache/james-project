@@ -20,109 +20,123 @@
 package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class MailboxAnnotationKeyTest {
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyDoesNotStartWithSlash() throws Exception {
-        new MailboxAnnotationKey("shared");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyContainsAsterisk() throws Exception {
-        new MailboxAnnotationKey("/private/key*comment");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyContainsPercent() throws Exception {
-        new MailboxAnnotationKey("/private/key%comment");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsTwoConsecutiveSlash() throws Exception {
-        new MailboxAnnotationKey("/private//keycomment");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyEndsWithSlash() throws Exception {
-        new MailboxAnnotationKey("/private/keycomment/");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsNonASCII() throws Exception {
-        new MailboxAnnotationKey("/private/key┬ácomment");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void validKeyShouldThrowsExceptionWhenKeyContainsTabCharacter() throws Exception {
-        new MailboxAnnotationKey("/private/key\tcomment");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWithEmptyKey() throws Exception {
-        new MailboxAnnotationKey("");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWithBlankKey() throws Exception {
-        new MailboxAnnotationKey("    ");
+class MailboxAnnotationKeyTest {
+    @Test
+    void newInstanceShouldThrowsExceptionWhenKeyDoesNotStartWithSlash() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("shared"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void newInstanceShouldReturnRightKeyValue() throws Exception {
+    void newInstanceShouldThrowsExceptionWhenKeyContainsAsterisk() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/key*comment"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newInstanceShouldThrowsExceptionWhenKeyContainsPercent() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/key%comment"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validKeyShouldThrowsExceptionWhenKeyContainsTwoConsecutiveSlash() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private//keycomment"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validKeyShouldThrowsExceptionWhenKeyEndsWithSlash() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/keycomment/"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validKeyShouldThrowsExceptionWhenKeyContainsNonASCII() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/key┬ácomment"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void validKeyShouldThrowsExceptionWhenKeyContainsTabCharacter() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/key\tcomment"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newInstanceShouldThrowsExceptionWithEmptyKey() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newInstanceShouldThrowsExceptionWithBlankKey() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("    "))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void newInstanceShouldReturnRightKeyValue() {
         MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/comment");
         assertThat(annotationKey.asString()).isEqualTo("/private/comment");
     }
 
     @Test
-    public void keyValueShouldBeCaseInsensitive() throws Exception {
+    void keyValueShouldBeCaseInsensitive() {
         MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey anotherAnnotationKey = new MailboxAnnotationKey("/PRIVATE/COMMENT");
 
         assertThat(annotationKey).isEqualTo(anotherAnnotationKey);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void newInstanceShouldThrowsExceptionWhenKeyContainsPunctuationCharacters() throws Exception {
-        new MailboxAnnotationKey("/private/+comment");
+    @Test
+    void newInstanceShouldThrowsExceptionWhenKeyContainsPunctuationCharacters() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/+comment"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void countSlashShouldReturnRightNumberOfSlash() throws Exception {
+    void countSlashShouldReturnRightNumberOfSlash() {
         MailboxAnnotationKey annotationKey = new MailboxAnnotationKey("/private/comment/user/name");
         assertThat(annotationKey.countComponents()).isEqualTo(4);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void keyMustContainAtLeastTwoComponents() throws Exception {
-        new MailboxAnnotationKey("/private");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void keyVendorShouldThrowsExceptionWithTwoComponents() throws Exception {
-        new MailboxAnnotationKey("/private/vendor");
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void keyVendorShouldThrowsExceptionWithThreeComponents() throws Exception {
-        new MailboxAnnotationKey("/shared/vendor/token");
+    @Test
+    void keyMustContainAtLeastTwoComponents() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void keyVendorShouldOKWithFourComponents() throws Exception {
+    void keyVendorShouldThrowsExceptionWithTwoComponents() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/private/vendor"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void keyVendorShouldThrowsExceptionWithThreeComponents() {
+        assertThatThrownBy(() -> new MailboxAnnotationKey("/shared/vendor/token"))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void keyVendorShouldOKWithFourComponents() {
         new MailboxAnnotationKey("/shared/vendor/token/comment");
     }
 
     @Test
-    public void isParentOrIsEqualShouldReturnTrueWhenSameKey() {
+    void isParentOrIsEqualShouldReturnTrueWhenSameKey() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
 
         assertThat(key1.isParentOrIsEqual(key1)).isTrue();
     }
 
     @Test
-    public void isParentOrIsEqualShouldReturnTrueWhenParent() {
+    void isParentOrIsEqualShouldReturnTrueWhenParent() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
 
@@ -130,7 +144,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isParentOrIsEqualShouldReturnFalseWhenChild() {
+    void isParentOrIsEqualShouldReturnFalseWhenChild() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
 
@@ -138,7 +152,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isParentOrIsEqualShouldReturnFalseWhenGrandParent() {
+    void isParentOrIsEqualShouldReturnFalseWhenGrandParent() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
 
@@ -146,7 +160,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isParentOrIsEqualShouldReturnFalseWhenCousin() {
+    void isParentOrIsEqualShouldReturnFalseWhenCousin() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
 
@@ -155,14 +169,14 @@ public class MailboxAnnotationKeyTest {
 
 
     @Test
-    public void isAncestorOrIsEqualShouldReturnTrueWhenSameKey() {
+    void isAncestorOrIsEqualShouldReturnTrueWhenSameKey() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
 
         assertThat(key1.isAncestorOrIsEqual(key1)).isTrue();
     }
 
     @Test
-    public void isAncestorOrIsEqualShouldReturnTrueWhenParent() {
+    void isAncestorOrIsEqualShouldReturnTrueWhenParent() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
 
@@ -170,7 +184,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isAncestorOrIsEqualShouldReturnFalseWhenChild() {
+    void isAncestorOrIsEqualShouldReturnFalseWhenChild() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto");
 
@@ -178,7 +192,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isAncestorOrIsEqualShouldReturnTrueWhenGrandParent() {
+    void isAncestorOrIsEqualShouldReturnTrueWhenGrandParent() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
 
@@ -186,7 +200,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isAncestorOrIsEqualShouldReturnFalseWhenCousin() {
+    void isAncestorOrIsEqualShouldReturnFalseWhenCousin() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/toto/tata");
 
@@ -194,7 +208,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isAncestorOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
+    void isAncestorOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
 
@@ -202,7 +216,7 @@ public class MailboxAnnotationKeyTest {
     }
 
     @Test
-    public void isParentOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
+    void isParentOrIsEqualShouldWorkOnCousinKeyUsingKeyAsAPrefix() {
         MailboxAnnotationKey key1 = new MailboxAnnotationKey("/private/comment/tutu");
         MailboxAnnotationKey key2 = new MailboxAnnotationKey("/private/comment/tututata");
 

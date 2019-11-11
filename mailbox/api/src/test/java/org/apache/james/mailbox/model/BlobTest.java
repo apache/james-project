@@ -24,25 +24,25 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class BlobTest {
+class BlobTest {
 
     public static final BlobId ID = BlobId.fromString("123");
     public static final String CONTENT_TYPE = "text/plain";
     public static final byte[] PAYLOAD = "abc".getBytes(StandardCharsets.UTF_8);
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(Blob.class)
             .withIgnoredFields("payload", "size")
             .verify();
     }
 
     @Test
-    public void buildShouldConstructValidBlob() {
+    void buildShouldConstructValidBlob() {
         assertThat(
             Blob.builder()
                 .id(ID)
@@ -54,7 +54,7 @@ public class BlobTest {
     }
 
     @Test
-    public void buildShouldThrowOnMissingBlobId() {
+    void buildShouldThrowOnMissingBlobId() {
         assertThatThrownBy(() ->
             Blob.builder()
                 .contentType(CONTENT_TYPE)
@@ -64,7 +64,7 @@ public class BlobTest {
     }
 
     @Test
-    public void buildShouldThrowOnMissingContentType() {
+    void buildShouldThrowOnMissingContentType() {
         assertThatThrownBy(() ->
             Blob.builder()
                 .id(ID)
@@ -74,7 +74,7 @@ public class BlobTest {
     }
 
     @Test
-    public void buildShouldThrowOnMissingPayload() {
+    void buildShouldThrowOnMissingPayload() {
         assertThatThrownBy(() ->
             Blob.builder()
                 .id(ID)

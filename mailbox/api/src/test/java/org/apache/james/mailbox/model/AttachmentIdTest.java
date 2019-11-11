@@ -24,50 +24,50 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class AttachmentIdTest {
+class AttachmentIdTest {
 
     @Test
-    public void randomShouldGenerateDifferentIds() {
+    void randomShouldGenerateDifferentIds() {
         AttachmentId attachmentId = AttachmentId.random();
         AttachmentId attachmentId2 = AttachmentId.random();
         assertThat(attachmentId.getId()).isNotEqualTo(attachmentId2.getId());
     }
 
     @Test
-    public void fromShouldThrowWhenIdIsNull() {
+    void fromShouldThrowWhenIdIsNull() {
         String value = null;
         assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenBlobIdIsNull() {
+    void fromShouldThrowWhenBlobIdIsNull() {
         BlobId value = null;
         assertThatThrownBy(() -> AttachmentId.from(value)).isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void fromShouldThrowWhenIdIsEmpty() {
+    void fromShouldThrowWhenIdIsEmpty() {
         assertThatThrownBy(() -> AttachmentId.from("")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void fromStringShouldWork() {
+    void fromStringShouldWork() {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
         AttachmentId attachmentId = AttachmentId.from(expectedId);
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
     @Test
-    public void fromBlobIdShouldWork() {
+    void fromBlobIdShouldWork() {
         String expectedId = "f07e5a815613c5abeddc4b682247a4c42d8a95df";
         AttachmentId attachmentId = AttachmentId.from(BlobId.fromString(expectedId));
         assertThat(attachmentId.getId()).isEqualTo(expectedId);
     }
 
     @Test
-    public void asUUIDShouldReturnAValidUUID() {
+    void asUUIDShouldReturnAValidUUID() {
         AttachmentId attachmentId = AttachmentId.from("magic");
 
         assertThat(attachmentId.asUUID())
