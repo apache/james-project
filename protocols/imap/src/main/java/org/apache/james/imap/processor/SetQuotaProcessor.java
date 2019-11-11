@@ -59,7 +59,7 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
             "Can not perform SETQUOTA commands"
         };
         HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-        no(command, tag, responder, humanReadableText);
+        no(message, responder, humanReadableText);
     }
 
     @Override

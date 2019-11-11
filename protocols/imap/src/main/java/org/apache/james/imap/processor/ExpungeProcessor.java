@@ -71,7 +71,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
             MetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
 
             if (!mdata.isWriteable()) {
-                no(command, tag, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
+                no(request, responder, HumanReadableText.MAILBOX_IS_READ_ONLY);
             } else {
                 IdRange[] ranges = request.getUidSet();
                 if (ranges == null) {
@@ -95,17 +95,17 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
                 //
                 // See RFC5162 3.3 EXPUNGE Command 3.5. UID EXPUNGE Command
                 if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)  && expunged > 0) {
-                    okComplete(command, tag, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
+                    okComplete(request, ResponseCode.highestModSeq(mdata.getHighestModSeq()), responder);
                 } else {
-                    okComplete(command, tag, responder);
+                    okComplete(request, responder);
                 }
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("Expunge failed", e);
-            taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
+            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("Expunge failed for mailbox {}", session.getSelected().getMailboxId(), e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 

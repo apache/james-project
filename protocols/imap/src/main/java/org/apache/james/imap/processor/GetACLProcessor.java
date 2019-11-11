@@ -84,29 +84,29 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
              * existence information, much less the mailbox’s ACL.
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
                 /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
-                        command.getName(),
+                        message.getCommand().getName(),
                         mailboxName
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(command, tag, responder, text);
+                no(message, responder, text);
             } else {
                 MetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                 responder.respond(aclResponse);
-                okComplete(command, tag, responder);
+                okComplete(message, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
         } catch (MailboxNotFoundException e) {
-            no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }

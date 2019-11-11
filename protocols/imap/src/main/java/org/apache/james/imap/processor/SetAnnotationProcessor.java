@@ -70,16 +70,16 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
 
             mailboxManager.updateAnnotations(mailboxPath, mailboxSession, message.getMailboxAnnotations());
 
-            okComplete(command, tag, responder);
+            okComplete(message, responder);
         } catch (MailboxNotFoundException e) {
             LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+            no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
         } catch (AnnotationException e) {
             LOGGER.info("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
+            no(message, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
             LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 

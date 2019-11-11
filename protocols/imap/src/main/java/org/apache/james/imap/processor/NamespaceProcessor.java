@@ -61,7 +61,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
         final NamespaceResponse response = new NamespaceResponse(personalNamespaces, otherUsersNamespaces, sharedNamespaces);
         responder.respond(response);
         unsolicitedResponses(session, responder, false);
-        okComplete(command, tag, responder);
+        okComplete(request, responder);
     }
 
     /**

@@ -115,10 +115,10 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
 
             }
         } catch (DeniedAccessOnSharedMailboxException e) {
-            no(command, tag, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
+            no(message, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
         } catch (Exception unexpectedException) {
             LOGGER.error("Unexpected error during IMAP processing", unexpectedException);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
@@ -334,28 +334,28 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected void okComplete(ImapCommand command, Tag tag, ImapProcessor.Responder responder) {
-        final StatusResponse response = factory.taggedOk(tag, command, HumanReadableText.COMPLETED);
+    protected void okComplete(ImapRequest request, ImapProcessor.Responder responder) {
+        final StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.COMPLETED);
         responder.respond(response);
     }
 
-    protected void okComplete(ImapCommand command, Tag tag, ResponseCode code, ImapProcessor.Responder responder) {
-        final StatusResponse response = factory.taggedOk(tag, command, HumanReadableText.COMPLETED, code);
+    protected void okComplete(ImapRequest request,  ResponseCode code, ImapProcessor.Responder responder) {
+        final StatusResponse response = factory.taggedOk(request.getTag(), request.getCommand(), HumanReadableText.COMPLETED, code);
         responder.respond(response);
     }
 
-    protected void no(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey) {
-        final StatusResponse response = factory.taggedNo(tag, command, displayTextKey);
+    protected void no(ImapRequest request, ImapProcessor.Responder responder, HumanReadableText displayTextKey) {
+        StatusResponse response = factory.taggedNo(request.getTag(), request.getCommand(), displayTextKey);
         responder.respond(response);
     }
 
-    protected void no(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText displayTextKey, StatusResponse.ResponseCode responseCode) {
-        final StatusResponse response = factory.taggedNo(tag, command, displayTextKey, responseCode);
+    protected void no(ImapRequest request, ImapProcessor.Responder responder, HumanReadableText displayTextKey, StatusResponse.ResponseCode responseCode) {
+        StatusResponse response = factory.taggedNo(request.getTag(), request.getCommand(), displayTextKey, responseCode);
         responder.respond(response);
     }
 
-    protected void taggedBad(ImapCommand command, Tag tag, ImapProcessor.Responder responder, HumanReadableText e) {
-        StatusResponse response = factory.taggedBad(tag, command, e);
+    protected void taggedBad(ImapRequest request, ImapProcessor.Responder responder, HumanReadableText e) {
+        StatusResponse response = factory.taggedBad(request.getTag(), request.getCommand(), e);
 
         responder.respond(response);
     }

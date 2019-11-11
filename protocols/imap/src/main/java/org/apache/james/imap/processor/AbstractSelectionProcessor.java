@@ -30,6 +30,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -83,7 +84,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         try {
             final MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-            respond(tag, command, session, fullMailboxPath, request, responder);
+            respond(session, fullMailboxPath, request, responder);
            
             
         } catch (MailboxNotFoundException e) {
@@ -91,11 +92,11 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
             responder.respond(statusResponseFactory.taggedNo(tag, command, HumanReadableText.FAILURE_NO_SUCH_MAILBOX));
         } catch (MailboxException e) {
             LOGGER.error("Select failed for mailbox {}", mailboxName, e);
-            no(command, tag, responder, HumanReadableText.SELECT);
+            no(request, responder, HumanReadableText.SELECT);
         } 
     }
 
-    private void respond(Tag tag, ImapCommand command, ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
+    private void respond(ImapSession session, MailboxPath fullMailboxPath, AbstractMailboxSelectionRequest request, Responder responder) throws MailboxException, MessageRangeException {
         
         Long lastKnownUidValidity = request.getLastKnownUidValidity();
         Long modSeq = request.getKnownModSeq();
@@ -112,7 +113,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         //    and the client hasn't issued "ENABLE QRESYNC" in the current
         //    connection.
         if (lastKnownUidValidity != null && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
-            taggedBad(command, tag, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
+            taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
             return;
         }
 
@@ -299,13 +300,13 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
                     //
                     respondVanished(mailboxSession, mailbox, ranges, modSeq, metaData, responder);
                 }
-                taggedOk(responder, tag, command, metaData, HumanReadableText.SELECT);
+                taggedOk(responder, request, metaData, HumanReadableText.SELECT);
             } else {
                 
-                taggedOk(responder, tag, command, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
+                taggedOk(responder, request, metaData, HumanReadableText.QRESYNC_UIDVALIDITY_MISMATCH);
             }
         } else {
-            taggedOk(responder, tag, command, metaData, HumanReadableText.SELECT);
+            taggedOk(responder, request, metaData, HumanReadableText.SELECT);
         }
 
         // Reset the saved sequence-set after successful SELECT / EXAMINE
@@ -332,7 +333,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         responder.respond(untaggedOk);
     }
 
-    private void taggedOk(Responder responder, Tag tag, ImapCommand command, MetaData metaData, HumanReadableText text) {
+    private void taggedOk(Responder responder, ImapRequest request, MetaData metaData, HumanReadableText text) {
         final boolean writeable = metaData.isWriteable() && !openReadOnly;
         final ResponseCode code;
         if (writeable) {
@@ -340,7 +341,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
         } else {
             code = ResponseCode.readOnly();
         }
-        final StatusResponse taggedOk = statusResponseFactory.taggedOk(tag, command, text, code);
+        final StatusResponse taggedOk = statusResponseFactory.taggedOk(request.getTag(), request.getCommand(), text, code);
         responder.respond(taggedOk);
     }
 

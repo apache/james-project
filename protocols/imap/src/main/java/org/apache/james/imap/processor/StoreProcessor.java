@@ -92,7 +92,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                 if (metaData.isModSeqPermanent() == false) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
-                    taggedBad(command, tag, responder, HumanReadableText.NO_MOD_SEQ);
+                    taggedBad(request, responder, HumanReadableText.NO_MOD_SEQ);
                     return;
                 } else if (unchangedSince == 0) {
                     Flags.Flag[] systemFlags = flags.getSystemFlags();
@@ -179,7 +179,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             
             // check if we had some failed uids which didn't pass the UNCHANGEDSINCE filter
             if (failed.isEmpty() && failedMsns.isEmpty()) {
-                okComplete(imapCommand, tag, responder);
+                okComplete(request, responder);
             } else {
                 if (useUids) {
                     List<MessageRange> ranges = MessageRange.toRanges(failed);
@@ -211,10 +211,10 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("Store failed for mailbox {} because of an invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            taggedBad(imapCommand, tag, responder, HumanReadableText.INVALID_MESSAGESET);
+            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("Store failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            no(imapCommand, tag, responder, HumanReadableText.SAVE_FAILED);
+            no(request, responder, HumanReadableText.SAVE_FAILED);
         }
     }
     

@@ -75,7 +75,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
             final MailboxManager mailboxManager = getMailboxManager();
             final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
-            appendToMailbox(messageIn, datetime, flags, session, tag, command, mailbox, responder, mailboxPath);
+            appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath);
         } catch (MailboxNotFoundException e) {
             // consume message on exception
             consume(messageIn);
@@ -84,7 +84,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             
             // Indicates that the mailbox does not exist
             // So TRY CREATE
-            tryCreate(session, tag, command, responder, e);
+            tryCreate(request, responder, e);
 
         } catch (MailboxException e) {
             // consume message on exception
@@ -93,7 +93,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             LOGGER.error("Append failed for mailbox {}", mailboxPath, e);
             
             // Some other issue
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
 
         }
 
@@ -112,24 +112,20 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     /**
      * Issues a TRY CREATE response.
      * 
-     * @param session
-     *            not null
-     * @param tag
-     *            not null
-     * @param command
+     * @param request
      *            not null
      * @param responder
      *            not null
      * @param e
      *            not null
      */
-    private void tryCreate(ImapSession session, Tag tag, ImapCommand command, Responder responder, MailboxNotFoundException e) {
+    private void tryCreate(AppendRequest request, Responder responder, MailboxNotFoundException e) {
         LOGGER.debug("Cannot open mailbox: ", e);
 
-        no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+        no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
     }
 
-    private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, Tag tag, ImapCommand command, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
+    private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
         try {
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
             final SelectedMailbox selectedMailbox = session.getSelected();
@@ -146,15 +142,15 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             unsolicitedResponses(session, responder, false);
 
             // in case of MULTIAPPEND support we will push more then one UID here
-            okComplete(command, tag, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
+            okComplete(request, ResponseCode.appendUid(uidValidity, new UidRange[] { new UidRange(messageId.getUid()) }), responder);
         } catch (MailboxNotFoundException e) {
             // Indicates that the mailbox does not exist
             // So TRY CREATE
-            tryCreate(session, tag, command, responder, e);
+            tryCreate(request, responder, e);
         } catch (MailboxException e) {
             LOGGER.error("Unable to append message to mailbox {}", mailboxPath, e);
             // Some other issue
-            no(command, tag, responder, HumanReadableText.SAVE_FAILED);
+            no(request, responder, HumanReadableText.SAVE_FAILED);
         }
     }
 

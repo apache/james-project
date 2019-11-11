@@ -83,7 +83,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
                 if (storageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
                 }
-                okComplete(command, tag, responder);
+                okComplete(message, responder);
             } else {
                 Object[] params = new Object[]{
                         MailboxACL.Right.Read.toString(),
@@ -91,10 +91,10 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
                         "Any mailbox of this user USER"
                 };
                 HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(command, tag, responder, humanReadableText);
+                no(message, responder, humanReadableText);
             }
         } catch (MailboxException me) {
-            taggedBad(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+            taggedBad(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         }
     }
 

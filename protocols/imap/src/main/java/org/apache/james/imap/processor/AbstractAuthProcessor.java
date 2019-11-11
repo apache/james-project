@@ -20,9 +20,7 @@ package org.apache.james.imap.processor;
 
 import java.util.Optional;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -59,7 +57,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
-    protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void doAuth(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(!authenticationAttempt.isDelegation());
         try {
             boolean authFailure = false;
@@ -74,21 +72,21 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
-                    okComplete(command, tag, responder);
+                    okComplete(request, responder);
                 } catch (BadCredentialsException e) {
                     authFailure = true;
                 }
             }
             if (authFailure) {
-                manageFailureCount(session, tag, command, responder, failed);
+                manageFailureCount(session, request, responder, failed);
             }
         } catch (MailboxException e) {
             LOGGER.error("Error encountered while login", e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
-    protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void doAuthWithDelegation(AuthenticationAttempt authenticationAttempt, ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         Preconditions.checkArgument(authenticationAttempt.isDelegation());
         try {
             boolean authFailure = false;
@@ -104,23 +102,23 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
-                    okComplete(command, tag, responder);
+                    okComplete(request, responder);
                 } catch (BadCredentialsException e) {
                     authFailure = true;
                 }
             }
             if (authFailure) {
-                manageFailureCount(session, tag, command, responder, failed);
+                manageFailureCount(session, request, responder, failed);
             }
         } catch (UserDoesNotExistException e) {
             LOGGER.info("User {} does not exist", authenticationAttempt.getAuthenticationId(), e);
-            no(command, tag, responder, HumanReadableText.USER_DOES_NOT_EXIST);
+            no(request, responder, HumanReadableText.USER_DOES_NOT_EXIST);
         } catch (NotAdminException e) {
             LOGGER.info("User {} is not an admin", authenticationAttempt.getDelegateUserName(), e);
-            no(command, tag, responder, HumanReadableText.NOT_AN_ADMIN);
+            no(request, responder, HumanReadableText.NOT_AN_ADMIN);
         } catch (MailboxException e) {
             LOGGER.info("Login failed", e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
@@ -139,7 +137,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         }
     }
 
-    protected void manageFailureCount(ImapSession session, Tag tag, ImapCommand command, Responder responder, HumanReadableText failed) {
+    protected void manageFailureCount(ImapSession session, ImapRequest request, Responder responder, HumanReadableText failed) {
         final Integer currentNumberOfFailures = (Integer) session.getAttribute(ATTRIBUTE_NUMBER_OF_FAILURES);
         final int failures;
         if (currentNumberOfFailures == null) {
@@ -149,7 +147,7 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
         }
         if (failures < MAX_FAILURES) {
             session.setAttribute(ATTRIBUTE_NUMBER_OF_FAILURES, failures);
-            no(command, tag, responder, failed);
+            no(request, responder, failed);
         } else {
             LOGGER.info("Too many authentication failures. Closing connection.");
             bye(responder, HumanReadableText.TOO_MANY_FAILURES);

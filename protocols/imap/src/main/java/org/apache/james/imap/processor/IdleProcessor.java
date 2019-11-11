@@ -115,7 +115,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                     StatusResponse response = getStatusResponseFactory().taggedBad(tag, command, HumanReadableText.INVALID_COMMAND);
                     responder.respond(response);
                 } else {
-                    okComplete(command, tag, responder);
+                    okComplete(message, responder);
 
                 }
                 idleActive.set(false);

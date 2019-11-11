@@ -55,16 +55,16 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
             final MailboxManager mailboxManager = getMailboxManager();
             mailboxManager.createMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
             unsolicitedResponses(session, responder, false);
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
         } catch (MailboxExistsException e) {
             LOGGER.debug("Create failed for mailbox {} as it already exists", mailboxPath, e);
-            no(command, tag, responder, HumanReadableText.MAILBOX_EXISTS);
+            no(request, responder, HumanReadableText.MAILBOX_EXISTS);
         } catch (TooLongMailboxNameException e) {
             LOGGER.debug("The mailbox name length is over limit: {}", mailboxPath.getName(), e);
-            taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
+            taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
             LOGGER.error("Create failed for mailbox {}", mailboxPath, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 

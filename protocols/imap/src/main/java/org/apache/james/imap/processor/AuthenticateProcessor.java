@@ -29,6 +29,7 @@ import java.util.StringTokenizer;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -61,18 +62,18 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
         if (authType.equalsIgnoreCase(PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304
             if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
-                no(command, tag, responder, HumanReadableText.DISABLED_LOGIN);
+                no(request, responder, HumanReadableText.DISABLED_LOGIN);
             } else {
                 if (request instanceof IRAuthenticateRequest) {
                     IRAuthenticateRequest irRequest = (IRAuthenticateRequest) request;
-                    doPlainAuth(irRequest.getInitialClientResponse(), session, tag, command, responder);
+                    doPlainAuth(irRequest.getInitialClientResponse(), session, request, responder);
                 } else {
                     responder.respond(new AuthenticateResponse());
                     session.pushLineHandler((requestSession, data) -> {
                         // cut of the CRLF
                         String initialClientResponse = new String(data, 0, data.length - 2, Charset.forName("US-ASCII"));
 
-                        doPlainAuth(initialClientResponse, requestSession, tag, command, responder);
+                        doPlainAuth(initialClientResponse, requestSession, request, responder);
 
                         // remove the handler now
                         requestSession.popLineHandler();
@@ -81,19 +82,19 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             }
         } else {
             LOGGER.debug("Unsupported authentication mechanism '{}'", authType);
-            no(command, tag, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
+            no(request, responder, HumanReadableText.UNSUPPORTED_AUTHENTICATION_MECHANISM);
         }
     }
 
     /**
      * Parse the initialClientResponse and do a PLAIN AUTH with it
      */
-    protected void doPlainAuth(String initialClientResponse, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void doPlainAuth(String initialClientResponse, ImapSession session, ImapRequest request, Responder responder) {
         AuthenticationAttempt authenticationAttempt = parseDelegationAttempt(initialClientResponse);
         if (authenticationAttempt.isDelegation()) {
-            doAuthWithDelegation(authenticationAttempt, session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            doAuthWithDelegation(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
         } else {
-            doAuth(authenticationAttempt, session, tag, command, responder, HumanReadableText.AUTHENTICATION_FAILED);
+            doAuth(authenticationAttempt, session, request, responder, HumanReadableText.AUTHENTICATION_FAILED);
         }
     }
 

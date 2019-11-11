@@ -69,10 +69,11 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             }
             responder.respond(response);
             unsolicitedResponses(session, responder, false);
-            okComplete(command, tag, responder);
+
+            okComplete(request, responder);
         } catch (MailboxException e) {
             LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
-            no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+            no(request, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
 

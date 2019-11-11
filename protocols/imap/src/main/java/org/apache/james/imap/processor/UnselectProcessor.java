@@ -52,9 +52,9 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     protected void doProcess(UnselectRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         if (session.getSelected() != null) {
             session.deselect();
-            okComplete(command, tag, responder);
+            okComplete(message, responder);
         } else {
-            taggedBad(command, tag, responder, HumanReadableText.UNSELECT);
+            taggedBad(message, responder, HumanReadableText.UNSELECT);
         }
 
     }

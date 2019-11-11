@@ -54,12 +54,12 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
             getSubscriptionManager().subscribe(mailboxSession, mailboxName);
 
             unsolicitedResponses(session, responder, false);
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
 
         } catch (SubscriptionException e) {
             LOGGER.info("Subscribe failed for mailbox {}", mailboxName, e);
             unsolicitedResponses(session, responder, false);
-            no(command, tag, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
+            no(request, responder, HumanReadableText.GENERIC_SUBSCRIPTION_FAILURE);
         }
     }
 

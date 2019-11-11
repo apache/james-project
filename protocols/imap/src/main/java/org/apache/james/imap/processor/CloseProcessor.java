@@ -60,13 +60,13 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
                 //
                 // See http://www.rfc-editor.org/errata_search.php?rfc=5162
-                okComplete(command, tag, responder);
+                okComplete(message, responder);
                
             }
 
         } catch (MailboxException e) {
             LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 

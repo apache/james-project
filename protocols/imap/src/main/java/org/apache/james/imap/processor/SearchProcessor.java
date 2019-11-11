@@ -186,13 +186,13 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
 
             boolean omitExpunged = (!useUids);
             unsolicitedResponses(session, responder, omitExpunged, useUids);
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
         } catch (MessageRangeException e) {
             LOGGER.debug("Search failed in mailbox {} because of an invalid sequence-set ", session.getSelected().getMailboxId(), e);
-            taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
+            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("Search failed in mailbox {}", session.getSelected().getMailboxId(), e);
-            no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+            no(request, responder, HumanReadableText.SEARCH_FAILED);
             
             if (resultOptions.contains(SearchResultOption.SAVE)) {
                 // Reset the saved sequence-set on a BAD response if the SAVE option was used.

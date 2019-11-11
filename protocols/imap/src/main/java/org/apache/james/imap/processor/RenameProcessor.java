@@ -64,20 +64,20 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
             if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && !mailboxManager.mailboxExists(existingPath, mailboxsession)) {
                 mailboxManager.createMailbox(existingPath, mailboxsession);
             }
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
             unsolicitedResponses(session, responder, false);
         } catch (MailboxExistsException e) {
             LOGGER.debug("Rename from {} to {} failed because the target mailbox exists", existingPath, newPath, e);
-            no(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_EXISTS);
+            no(request, responder, HumanReadableText.FAILURE_MAILBOX_EXISTS);
         } catch (MailboxNotFoundException e) {
             LOGGER.debug("Rename from {} to {} failed because the source mailbox doesn't exist", existingPath, newPath, e);
-            no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (TooLongMailboxNameException e) {
             LOGGER.debug("The mailbox name length is over limit: {}", newPath.getName(), e);
-            taggedBad(command, tag, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
+            taggedBad(request, responder, HumanReadableText.FAILURE_MAILBOX_NAME);
         } catch (MailboxException e) {
             LOGGER.error("Rename from {} to {} failed", existingPath, newPath, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 

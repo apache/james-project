@@ -85,7 +85,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
              * existence information, much less the mailbox’s ACL.
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
                 /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
@@ -94,7 +94,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                         mailboxName
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(command, tag, responder, text);
+                no(message, responder, text);
             } else {
                 
                 EntryKey key = EntryKey.deserialize(identifier);
@@ -112,15 +112,15 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
                 Rfc4314Rights[] rights = mailboxManager.listRights(mailboxPath, key, mailboxSession);
                 ListRightsResponse aclResponse = new ListRightsResponse(mailboxName, identifier, rights);
                 responder.respond(aclResponse);
-                okComplete(command, tag, responder);
+                okComplete(message, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
         } catch (MailboxNotFoundException e) {
-            no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
             LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }

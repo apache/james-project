@@ -81,10 +81,10 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
             } else {
                 respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession);
             }
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
         } catch (MailboxException e) {
             LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e);
-            no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+            no(request, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
 

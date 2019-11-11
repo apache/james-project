@@ -73,7 +73,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
             final boolean mailboxExists = mailboxManager.mailboxExists(targetMailbox, mailboxSession);
 
             if (!mailboxExists) {
-                no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+                no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
             } else {
 
                 final MessageManager mailbox = mailboxManager.getMailbox(targetMailbox, mailboxSession);
@@ -104,16 +104,16 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
                 Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
 
                 unsolicitedResponses(session, responder, useUids);
-                okComplete(command, tag, StatusResponse.ResponseCode.copyUid(uidValidity, idSet, resultUids), responder);
+                okComplete(request, StatusResponse.ResponseCode.copyUid(uidValidity, idSet, resultUids), responder);
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
                     getOperationName(), currentMailbox.getMailboxId(), targetMailbox, idSet, e);
-            taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
+            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
                     getOperationName(), currentMailbox.getMailboxId(), targetMailbox, idSet, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 }

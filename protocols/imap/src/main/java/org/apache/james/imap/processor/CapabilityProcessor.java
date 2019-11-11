@@ -84,7 +84,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
         final CapabilityResponse result = new CapabilityResponse(getSupportedCapabilities(session));        
         responder.respond(result);
         unsolicitedResponses(session, responder, false);
-        okComplete(command, tag, responder);
+        okComplete(request, responder);
     }
 
     /**

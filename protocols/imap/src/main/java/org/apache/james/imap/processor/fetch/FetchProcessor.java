@@ -81,12 +81,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
             final boolean vanished = fetch.getVanished();
             if (vanished && !EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
-                taggedBad(command, tag, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
+                taggedBad(request, responder, HumanReadableText.QRESYNC_NOT_ENABLED);
                 return;
             }
            
             if (vanished && changedSince == -1) {
-                taggedBad(command, tag, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
+                taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
                 return;
             }
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
@@ -124,13 +124,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             // processor. See IMAP-284
             final boolean omitExpunged = (!useUids);
             unsolicitedResponses(session, responder, omitExpunged, useUids);
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
         } catch (MessageRangeException e) {
             LOGGER.debug("Fetch failed for mailbox {} because of invalid sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            taggedBad(command, tag, responder, HumanReadableText.INVALID_MESSAGESET);
+            taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("Fetch failed for mailbox {} and sequence-set {}", session.getSelected().getMailboxId(), idSet, e);
-            no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+            no(request, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
 

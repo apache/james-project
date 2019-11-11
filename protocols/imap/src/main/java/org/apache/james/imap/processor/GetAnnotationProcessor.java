@@ -32,6 +32,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -72,17 +73,17 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     protected void doProcess(GetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
                              Responder responder) {
         try {
-            proceed(message, session, tag, command, responder);
+            proceed(message, session, responder);
         } catch (MailboxNotFoundException e) {
             LOGGER.info("The command: {} is failed because not found mailbox {}", command.getName(), message.getMailboxName());
-            no(command, tag, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
+            no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
             LOGGER.error("GetAnnotation on mailbox {} failed for user {}", message.getMailboxName(), ImapSessionUtils.getUserName(session), e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
-    private void proceed(GetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) throws MailboxException {
+    private void proceed(GetAnnotationRequest message, ImapSession session, Responder responder) throws MailboxException {
         String mailboxName = message.getMailboxName();
         Optional<Integer> maxsize = message.getMaxsize();
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -90,17 +91,17 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
         List<MailboxAnnotation> mailboxAnnotations = getMailboxAnnotations(session, message.getKeys(), message.getDepth(), mailboxPath);
         Optional<Integer> maximumOversizedSize = getMaxSizeValue(mailboxAnnotations, maxsize);
 
-        respond(tag, command, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize);
+        respond(message, responder, mailboxName, mailboxAnnotations, maxsize, maximumOversizedSize);
     }
 
-    private void respond(Tag tag, ImapCommand command, Responder responder, String mailboxName,
+    private void respond(ImapRequest request, Responder responder, String mailboxName,
                          List<MailboxAnnotation> mailboxAnnotations, Optional<Integer> maxsize, Optional<Integer> maximumOversizedSize) {
         if (maximumOversizedSize.isPresent()) {
             responder.respond(new AnnotationResponse(mailboxName, filterItemsBySize(mailboxAnnotations, maxsize)));
-            okComplete(command, tag, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
+            okComplete(request, ResponseCode.longestMetadataEntry(maximumOversizedSize.get()), responder);
         } else {
             responder.respond(new AnnotationResponse(mailboxName, mailboxAnnotations));
-            okComplete(command, tag, responder);
+            okComplete(request, responder);
         }
     }
 

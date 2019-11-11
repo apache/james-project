@@ -91,19 +91,19 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
                     && !myRights.contains(MailboxACL.Right.CreateMailbox)
                     && !myRights.contains(MailboxACL.Right.DeleteMailbox)
                     && !myRights.contains(MailboxACL.Right.Administer)) {
-                no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else {
                 MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);
                 responder.respond(myRightsResponse);
-                okComplete(command, tag, responder);
+                okComplete(message, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
         } catch (MailboxNotFoundException e) {
-            no(command, tag, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
             LOGGER.error("{} failed for mailbox {}", command.getName(), mailboxName, e);
-            no(command, tag, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }
