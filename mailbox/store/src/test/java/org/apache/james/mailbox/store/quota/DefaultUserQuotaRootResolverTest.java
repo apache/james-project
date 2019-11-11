@@ -89,7 +89,7 @@ public class DefaultUserQuotaRootResolverTest {
         when(mockedFactory.getMailboxMapper(MAILBOX_SESSION)).thenReturn(mockedMapper);
         when(mockedMapper.findMailboxWithPathLike(PATH_LIKE)).thenReturn(Lists.newArrayList(MAILBOX, MAILBOX_2));
 
-        assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX_PATH, MAILBOX_PATH_2);
+        assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX, MAILBOX_2);
     }
 
     @Test(expected = MailboxException.class)

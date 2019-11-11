@@ -39,7 +39,6 @@ import org.apache.james.mailbox.store.SessionProvider;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.collect.Lists;
 
 public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
 
@@ -109,12 +108,11 @@ public class DefaultUserQuotaRootResolver implements UserQuotaRootResolver {
     }
 
     @Override
-    public List<MailboxPath> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
+    public List<Mailbox> retrieveAssociatedMailboxes(QuotaRoot quotaRoot, MailboxSession mailboxSession) throws MailboxException {
         List<String> parts = QUOTA_ROOT_DESERIALIZER.toParts(quotaRoot.getValue());
         String namespace = parts.get(0);
         String user = parts.get(1);
-        return Lists.transform(factory.getMailboxMapper(mailboxSession)
-            .findMailboxWithPathLike(new MailboxPath(namespace, user, "%")),
-            Mailbox::generateAssociatedPath);
+        return factory.getMailboxMapper(mailboxSession)
+            .findMailboxWithPathLike(new MailboxPath(namespace, user, "%"));
     }
 }

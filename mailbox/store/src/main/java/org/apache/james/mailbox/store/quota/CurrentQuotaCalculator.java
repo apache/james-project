@@ -29,16 +29,12 @@ import javax.inject.Inject;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-
-import com.google.common.collect.Lists;
 
 public class CurrentQuotaCalculator {
 
@@ -53,7 +49,7 @@ public class CurrentQuotaCalculator {
     }
 
     public CurrentQuotas recalculateCurrentQuotas(QuotaRoot quotaRoot, MailboxSession session) throws MailboxException {
-        List<Mailbox> mailboxes = retrieveMailboxes(quotaRoot, session);
+        List<Mailbox> mailboxes = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session);
         MessageMapper mapper = factory.getMessageMapper(session);
         long messagesSizes = 0;
         long messageCount = 0;
@@ -65,18 +61,6 @@ public class CurrentQuotaCalculator {
             }
         }
         return new CurrentQuotas(messageCount, messagesSizes);
-    }
-
-    private List<Mailbox> retrieveMailboxes(QuotaRoot quotaRoot, MailboxSession session) throws MailboxException {
-        List<MailboxPath> paths = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, session);
-        final MailboxMapper mapper = factory.getMailboxMapper(session);
-        return Lists.transform(paths, mailboxPath -> {
-            try {
-                return mapper.findMailboxByPath(mailboxPath);
-            } catch (MailboxException e) {
-                throw new RuntimeException(e);
-            }
-        });
     }
 
     public static class CurrentQuotas {
