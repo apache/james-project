@@ -71,7 +71,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     @Override
-    protected void doProcess(GetQuotaRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(GetQuotaRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         try {
             QuotaRoot quotaRoot = quotaRootResolver.fromString(message.getQuotaRoot());
             if (hasRight(quotaRoot, session)) {

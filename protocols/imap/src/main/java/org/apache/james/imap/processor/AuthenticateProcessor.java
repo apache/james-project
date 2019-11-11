@@ -57,7 +57,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    protected void doProcess(AuthenticateRequest request, ImapSession session, final Tag tag, final ImapCommand command, final Responder responder) {
+    protected void processMessage(AuthenticateRequest request, ImapSession session, final Tag tag, final ImapCommand command, final Responder responder) {
         final String authType = request.getAuthType();
         if (authType.equalsIgnoreCase(PLAIN)) {
             // See if AUTH=PLAIN is allowed. See IMAP-304

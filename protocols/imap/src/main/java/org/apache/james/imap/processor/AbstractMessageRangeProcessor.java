@@ -62,7 +62,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
     protected abstract String getOperationName();
 
     @Override
-    protected void doProcess(M request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(M request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();

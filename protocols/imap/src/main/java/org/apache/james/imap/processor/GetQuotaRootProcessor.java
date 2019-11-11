@@ -72,7 +72,7 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     }
 
     @Override
-    protected void doProcess(GetQuotaRootRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(GetQuotaRootRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final MailboxManager mailboxManager = getMailboxManager();
 

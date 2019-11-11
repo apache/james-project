@@ -49,7 +49,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected void doProcess(UnselectRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(UnselectRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         if (session.getSelected() != null) {
             session.deselect();
             okComplete(message, responder);

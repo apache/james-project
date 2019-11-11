@@ -60,8 +60,8 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected void doProcess(SetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
-                             Responder responder) {
+    protected void processMessage(SetAnnotationRequest message, ImapSession session, Tag tag, ImapCommand command,
+                                  Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final String mailboxName = message.getMailboxName();

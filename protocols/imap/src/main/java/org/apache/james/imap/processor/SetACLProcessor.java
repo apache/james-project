@@ -62,7 +62,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    protected void doProcess(SetACLRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(SetACLRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

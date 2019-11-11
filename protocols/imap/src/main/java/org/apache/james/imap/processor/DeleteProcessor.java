@@ -51,7 +51,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     }
 
     @Override
-    protected void doProcess(DeleteRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(DeleteRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final SelectedMailbox selected = session.getSelected();

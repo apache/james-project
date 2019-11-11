@@ -76,7 +76,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
     }
 
     @Override
-    protected void doProcess(StoreRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(StoreRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();
         final long unchangedSince = request.getUnchangedSince();

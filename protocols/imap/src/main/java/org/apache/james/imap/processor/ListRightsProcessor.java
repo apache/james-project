@@ -62,7 +62,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     }
 
     @Override
-    protected void doProcess(ListRightsRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(ListRightsRequest message, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

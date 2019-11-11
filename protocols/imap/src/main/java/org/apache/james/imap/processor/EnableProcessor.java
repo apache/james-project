@@ -69,7 +69,7 @@ public class EnableProcessor extends AbstractMailboxProcessor<EnableRequest> imp
 
 
     @Override
-    protected void doProcess(EnableRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(EnableRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         try {
 
             List<String> caps = request.getCapabilities();

@@ -49,7 +49,7 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     }
 
     @Override
-    protected void doProcess(LoginRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(LoginRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
             // check if the login is allowed with LOGIN command. See IMAP-304
             if (session.isPlainAuthDisallowed() && session.isTLSActive() == false) {
                 no(request, responder, HumanReadableText.DISABLED_LOGIN);

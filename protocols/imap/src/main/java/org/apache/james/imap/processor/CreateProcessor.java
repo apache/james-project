@@ -49,7 +49,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     }
 
     @Override
-    protected void doProcess(CreateRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
+    protected void processMessage(CreateRequest request, ImapSession session, Tag tag, ImapCommand command, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();
