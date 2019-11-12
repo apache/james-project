@@ -29,6 +29,8 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchConfiguration.Credential;
 import org.apache.james.backends.es.ElasticSearchConfiguration.HostScheme;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,141 @@ class ElasticSearchConfigurationTest {
         void shouldMatchBeanContact() {
             EqualsVerifier.forClass(Credential.class)
                 .verify();
+        }
+    }
+
+    @Nested
+    class SSLTrustConfigurationTest {
+
+        @Test
+        void sslTrustStoreShouldMatchBeanContact() {
+            EqualsVerifier.forClass(SSLTrustStore.class)
+                .verify();
+        }
+
+        @Test
+        void shouldMatchBeanContact() {
+            EqualsVerifier.forClass(SSLTrustConfiguration.class)
+                .verify();
+        }
+
+        @Nested
+        class WithSSLValidationStrategy {
+
+            @Test
+            void getSSLConfigurationShouldReturnDefaultValueWhenEmpty() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslTrustConfiguration())
+                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
+            }
+
+            @Test
+            void getSSLConfigurationShouldAcceptCaseInsensitiveStrategy() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "DEfault");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslTrustConfiguration())
+                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
+            }
+
+            @Test
+            void fromPropertiesShouldThrowWhenInvalidStrategy() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "invalid");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("invalid strategy 'invalid'");
+            }
+        }
+
+        @Nested
+        class WhenDefault {
+
+            @Test
+            void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "default");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslTrustConfiguration())
+                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
+            }
+        }
+
+        @Nested
+        class WhenIgnore {
+
+            @Test
+            void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "ignore");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslTrustConfiguration())
+                    .isEqualTo(SSLTrustConfiguration.ignore());
+            }
+        }
+
+        @Nested
+        class WhenOverride {
+
+            @Test
+            void fromPropertiesShouldThrowWhenOnlyTrustStorePathProvided() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("password cannot be null when filePath is specified");
+            }
+
+            @Test
+            void fromPropertiesShouldThrowWhenOnlyTrustStorePasswordProvided() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "secret");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(NullPointerException.class)
+                    .hasMessage("filePath cannot be null when password is specified");
+            }
+
+            @Test
+            void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                String strategy = "override";
+                String trustStorePath = "/home/james/ServerTrustStore.jks";
+                String trustStorePassword = "secret";
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", strategy);
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", trustStorePath);
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslTrustConfiguration())
+                    .isEqualTo(SSLTrustConfiguration.override(
+                        SSLTrustStore.of(trustStorePath, trustStorePassword)));
+            }
         }
     }
 

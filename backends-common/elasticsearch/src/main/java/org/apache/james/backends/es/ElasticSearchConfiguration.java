@@ -19,15 +19,20 @@
 
 package org.apache.james.backends.es;
 
+import static org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy.OVERRIDE;
+
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy;
 import org.apache.james.util.Host;
 
 import com.github.steveash.guavate.Guavate;
@@ -98,6 +103,115 @@ public class ElasticSearchConfiguration {
         }
     }
 
+    public static class SSLTrustConfiguration {
+
+        public enum SSLValidationStrategy {
+            DEFAULT,
+            IGNORE,
+            OVERRIDE;
+
+            static SSLValidationStrategy from(String rawValue) {
+                Preconditions.checkNotNull(rawValue);
+
+                return Stream.of(values())
+                    .filter(strategy -> strategy.name().equalsIgnoreCase(rawValue))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException(String.format("invalid strategy '%s'", rawValue)));
+
+            }
+        }
+
+        public static class SSLTrustStore {
+
+            public static SSLTrustStore of(String filePath, String password) {
+                return new SSLTrustStore(filePath, password);
+            }
+
+            private final String filePath;
+            private final String password;
+
+            private SSLTrustStore(String filePath, String password) {
+                Preconditions.checkNotNull(filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " is specified");
+                Preconditions.checkNotNull(password, ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " is specified");
+
+                this.filePath = filePath;
+                this.password = password;
+            }
+
+            public String getFilePath() {
+                return filePath;
+            }
+
+            public String getPassword() {
+                return password;
+            }
+
+            @Override
+            public final boolean equals(Object o) {
+                if (o instanceof SSLTrustStore) {
+                    SSLTrustStore that = (SSLTrustStore) o;
+
+                    return Objects.equals(this.filePath, that.filePath)
+                        && Objects.equals(this.password, that.password);
+                }
+                return false;
+            }
+
+            @Override
+            public final int hashCode() {
+                return Objects.hash(filePath, password);
+            }
+        }
+
+        static SSLTrustConfiguration defaultBehavior() {
+            return new SSLTrustConfiguration(SSLValidationStrategy.DEFAULT, Optional.empty());
+        }
+
+        static SSLTrustConfiguration ignore() {
+            return new SSLTrustConfiguration(SSLValidationStrategy.IGNORE, Optional.empty());
+        }
+
+        static SSLTrustConfiguration override(SSLTrustStore sslTrustStore) {
+            return new SSLTrustConfiguration(OVERRIDE, Optional.of(sslTrustStore));
+        }
+
+        private final SSLValidationStrategy strategy;
+        private final Optional<SSLTrustStore> trustStore;
+
+        private SSLTrustConfiguration(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore) {
+            Preconditions.checkNotNull(strategy);
+            Preconditions.checkNotNull(trustStore);
+            Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(), "OVERRIDE strategy requires trustStore to be present");
+
+            this.strategy = strategy;
+            this.trustStore = trustStore;
+        }
+
+        public SSLValidationStrategy getStrategy() {
+            return strategy;
+        }
+
+        public Optional<SSLTrustStore> getTrustStore() {
+            return trustStore;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof SSLTrustConfiguration) {
+                SSLTrustConfiguration that = (SSLTrustConfiguration) o;
+
+                return Objects.equals(this.strategy, that.strategy)
+                    && Objects.equals(this.trustStore, that.trustStore);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(strategy, trustStore);
+        }
+    }
+
     public static class Builder {
 
         private final ImmutableList.Builder<Host> hosts;
@@ -109,6 +223,7 @@ public class ElasticSearchConfiguration {
         private Optional<Duration> requestTimeout;
         private Optional<HostScheme> hostScheme;
         private Optional<Credential> credential;
+        private Optional<SSLTrustConfiguration> sslTrustConfiguration;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -120,6 +235,7 @@ public class ElasticSearchConfiguration {
             requestTimeout = Optional.empty();
             hostScheme = Optional.empty();
             credential = Optional.empty();
+            sslTrustConfiguration = Optional.empty();
         }
 
         public Builder addHost(Host host) {
@@ -175,6 +291,16 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
+        public Builder sslTrustConfiguration(SSLTrustConfiguration sslTrustConfiguration) {
+            this.sslTrustConfiguration = Optional.ofNullable(sslTrustConfiguration);
+            return this;
+        }
+
+        public Builder sslTrustConfiguration(Optional<SSLTrustConfiguration> sslTrustStore) {
+            this.sslTrustConfiguration = sslTrustStore;
+            return this;
+        }
+
         public ElasticSearchConfiguration build() {
             ImmutableList<Host> hosts = this.hosts.build();
             Preconditions.checkState(!hosts.isEmpty(), "You need to specify ElasticSearch host");
@@ -187,7 +313,8 @@ public class ElasticSearchConfiguration {
                 maxRetries.orElse(DEFAULT_CONNECTION_MAX_RETRIES),
                 requestTimeout.orElse(DEFAULT_REQUEST_TIMEOUT),
                 hostScheme.orElse(DEFAULT_SCHEME),
-                credential);
+                credential,
+                sslTrustConfiguration.orElse(DEFAULT_SSL_TRUST_CONFIGURATION));
         }
     }
 
@@ -199,6 +326,9 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_MASTER_HOST = "elasticsearch.masterHost";
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     public static final String ELASTICSEARCH_HOST_SCHEME = "elasticsearch.hostScheme";
+    public static final String ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY = "elasticsearch.hostScheme.https.sslValidationStrategy";
+    public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PATH = "elasticsearch.hostScheme.https.trustStorePath";
+    public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD = "elasticsearch.hostScheme.https.trustStorePassword";
     public static final String ELASTICSEARCH_USER = "elasticsearch.user";
     public static final String ELASTICSEARCH_PASSWORD = "elasticsearch.password";
     public static final String ELASTICSEARCH_NB_REPLICA = "elasticsearch.nb.replica";
@@ -217,6 +347,7 @@ public class ElasticSearchConfiguration {
     public static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
     public static final HostScheme DEFAULT_SCHEME = HostScheme.HTTP;
+    public static final SSLTrustConfiguration DEFAULT_SSL_TRUST_CONFIGURATION = SSLTrustConfiguration.defaultBehavior();
 
     public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = builder()
         .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
@@ -227,12 +358,30 @@ public class ElasticSearchConfiguration {
             .addHosts(getHosts(configuration))
             .hostScheme(getHostScheme(configuration))
             .credential(getCredential(configuration))
+            .sslTrustConfiguration(sslTrustConfiguration(configuration))
             .nbShards(configuration.getInteger(ELASTICSEARCH_NB_SHARDS, DEFAULT_NB_SHARDS))
             .nbReplica(configuration.getInteger(ELASTICSEARCH_NB_REPLICA, DEFAULT_NB_REPLICA))
             .waitForActiveShards(configuration.getInteger(WAIT_FOR_ACTIVE_SHARDS, DEFAULT_WAIT_FOR_ACTIVE_SHARDS))
             .minDelay(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MIN_DELAY, null)))
             .maxRetries(Optional.ofNullable(configuration.getInteger(ELASTICSEARCH_RETRY_CONNECTION_MAX_RETRIES, null)))
             .build();
+    }
+
+    private static Optional<SSLTrustConfiguration> sslTrustConfiguration(Configuration configuration) {
+        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY))
+            .map(SSLValidationStrategy::from)
+            .map(strategy -> new SSLTrustConfiguration(strategy, getSSLTrustStore(configuration)));
+    }
+
+    private static Optional<SSLTrustStore> getSSLTrustStore(Configuration configuration) {
+        String trustStorePath = configuration.getString(ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
+        String trustStorePassword = configuration.getString(ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD);
+
+        if (trustStorePath == null && trustStorePassword == null) {
+            return Optional.empty();
+        }
+
+        return Optional.of(SSLTrustStore.of(trustStorePath, trustStorePassword));
     }
 
     private static Optional<HostScheme> getHostScheme(Configuration configuration) {
@@ -295,9 +444,10 @@ public class ElasticSearchConfiguration {
     private final Duration requestTimeout;
     private final HostScheme hostScheme;
     private final Optional<Credential> credential;
+    private final SSLTrustConfiguration sslTrustConfiguration;
 
     private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
-                                       HostScheme hostScheme, Optional<Credential> credential) {
+                                       HostScheme hostScheme, Optional<Credential> credential, SSLTrustConfiguration sslTrustConfiguration) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -307,6 +457,7 @@ public class ElasticSearchConfiguration {
         this.requestTimeout = requestTimeout;
         this.hostScheme = hostScheme;
         this.credential = credential;
+        this.sslTrustConfiguration = sslTrustConfiguration;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -345,6 +496,10 @@ public class ElasticSearchConfiguration {
         return credential;
     }
 
+    public SSLTrustConfiguration getSslTrustConfiguration() {
+        return sslTrustConfiguration;
+    }
+
     @Override
     public final boolean equals(Object o) {
         if (o instanceof ElasticSearchConfiguration) {
@@ -358,13 +513,15 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.hosts, that.hosts)
                 && Objects.equals(this.requestTimeout, that.requestTimeout)
                 && Objects.equals(this.hostScheme, that.hostScheme)
-                && Objects.equals(this.credential, that.credential);
+                && Objects.equals(this.credential, that.credential)
+                && Objects.equals(this.sslTrustConfiguration, that.sslTrustConfiguration);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout, hostScheme, credential);
+        return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout,
+            hostScheme, credential, sslTrustConfiguration);
     }
 }
