@@ -84,8 +84,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         String user = ImapSessionUtils.getUserName(session);
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
-            // Should the namespace section be returned or not?
-            final boolean isRelative;
 
             if (mailboxName.length() == 0) {
                 // An empty mailboxName signifies a request for the hierarchy
@@ -94,7 +92,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                 String referenceRoot;
                 if (referenceName.length() > 0 && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
                     // A qualified reference name - get the root element
-                    isRelative = false;
                     int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
                     if (firstDelimiter == -1) {
                         referenceRoot = referenceName;
@@ -106,7 +103,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     // A relative reference name, return "" to indicate it is
                     // non-rooted
                     referenceRoot = "";
-                    isRelative = true;
                 }
 
                 responder.respond(createResponse(
@@ -123,7 +119,8 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     finalReferencename = "";
                 }
                 // Is the interpreted (combined) pattern relative?
-                isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+                // Should the namespace section be returned or not?
+                boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
                 finalReferencename = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
 
