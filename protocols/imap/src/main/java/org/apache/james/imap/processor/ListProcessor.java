@@ -59,8 +59,8 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
 
     @Override
     protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        final String baseReferenceName = request.getBaseReferenceName();
-        final String mailboxPatternString = request.getMailboxPattern();
+        String baseReferenceName = request.getBaseReferenceName();
+        String mailboxPatternString = request.getMailboxPattern();
         doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder, null);
     }
 
@@ -162,7 +162,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     }
 
     private void processResult(Responder responder, boolean relative, MailboxMetaData listResult, MailboxType mailboxType) {
-        final String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
+        String mailboxName = mailboxName(relative, listResult.getPath(), listResult.getHierarchyDelimiter());
 
         ImapResponseMessage response =
             createResponse(
