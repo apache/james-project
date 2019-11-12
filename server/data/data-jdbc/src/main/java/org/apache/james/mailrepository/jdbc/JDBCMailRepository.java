@@ -32,7 +32,6 @@ import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -478,10 +477,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     }
 
     private void insertMessage(Mail mc, Connection conn, MessageInputStream is) throws SQLException, IOException {
-        PreparedStatement insertMessage = null;
-        try {
-            String insertMessageSQL = sqlQueries.getSqlString("insertMessageSQL", true);
-            insertMessage = conn.prepareStatement(insertMessageSQL);
+        String insertMessageSQL = sqlQueries.getSqlString("insertMessageSQL", true);
+        try (PreparedStatement insertMessage = conn.prepareStatement(insertMessageSQL)) {
             int numberOfParameters = insertMessage.getParameterMetaData().getParameterCount();
             insertMessage.setString(1, mc.getName());
             insertMessage.setString(2, repositoryName);
@@ -534,62 +531,47 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             }
 
             insertMessage.execute();
-        } finally {
-            theJDBCUtil.closeJDBCStatement(insertMessage);
         }
     }
 
     private void updateMessageBody(Mail mc, Connection conn, MessageInputStream is) throws SQLException {
-        PreparedStatement updateMessageBody = conn.prepareStatement(sqlQueries.getSqlString("updateMessageBodySQL", true));
-        try {
+        try (PreparedStatement updateMessageBody = conn.prepareStatement(sqlQueries.getSqlString("updateMessageBodySQL", true))) {
             updateMessageBody.setBinaryStream(1, is, (int) is.getSize());
             updateMessageBody.setString(2, mc.getName());
             updateMessageBody.setString(3, repositoryName);
             updateMessageBody.execute();
-
-        } finally {
-            theJDBCUtil.closeJDBCStatement(updateMessageBody);
         }
     }
 
     private void updateMailAttributes(Mail mc, Connection conn) throws IOException {
         String updateMessageAttrSql = sqlQueries.getSqlString("updateMessageAttributesSQL", false);
-        PreparedStatement updateMessageAttr = null;
-        try {
-            updateMessageAttr = conn.prepareStatement(updateMessageAttrSql);
-            try (ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                 ObjectOutputStream oos = new ObjectOutputStream(baos)) {
-                if (mc instanceof MailImpl) {
-                    oos.writeObject(((MailImpl) mc).getAttributesRaw());
-                } else {
-                    Map<String, Serializable> temp = mc.attributes()
-                        .collect(Guavate.toImmutableMap(
-                                attribute -> attribute.getName().asString(),
-                                attribute -> (Serializable) attribute.getValue().value()
-                        ));
-                    oos.writeObject(temp);
-                }
-                oos.flush();
-                ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
-                updateMessageAttr.setBinaryStream(1, attrInputStream, baos.size());
+        try (PreparedStatement updateMessageAttr = conn.prepareStatement(updateMessageAttrSql);
+             ByteArrayOutputStream baos = new ByteArrayOutputStream();
+             ObjectOutputStream oos = new ObjectOutputStream(baos)) {
+            if (mc instanceof MailImpl) {
+                oos.writeObject(((MailImpl) mc).getAttributesRaw());
+            } else {
+                Map<String, Serializable> temp = mc.attributes()
+                    .collect(Guavate.toImmutableMap(
+                            attribute -> attribute.getName().asString(),
+                            attribute -> (Serializable) attribute.getValue().value()
+                    ));
+                oos.writeObject(temp);
             }
+            oos.flush();
+            ByteArrayInputStream attrInputStream = new ByteArrayInputStream(baos.toByteArray());
+            updateMessageAttr.setBinaryStream(1, attrInputStream, baos.size());
             updateMessageAttr.setString(2, mc.getName());
             updateMessageAttr.setString(3, repositoryName);
             updateMessageAttr.execute();
         } catch (SQLException sqle) {
             LOGGER.info("JDBCMailRepository: Trying to update mail attributes failed.", sqle);
-
-        } finally {
-            theJDBCUtil.closeJDBCStatement(updateMessageAttr);
         }
     }
 
     private void updateMessage(Mail mc, Connection conn) throws SQLException {
         // Update the existing record
-        PreparedStatement updateMessage = null;
-
-        try {
-            updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true));
+        try (PreparedStatement updateMessage = conn.prepareStatement(sqlQueries.getSqlString("updateMessageSQL", true))) {
             updateMessage.setString(1, mc.getState());
             updateMessage.setString(2, mc.getErrorMessage());
             if (mc.getMaybeSender().isNullSender()) {
@@ -611,28 +593,16 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
             updateMessage.setString(8, mc.getName());
             updateMessage.setString(9, repositoryName);
             updateMessage.execute();
-        } finally {
-            Statement localUpdateMessage = updateMessage;
-            // Clear reference to statement
-            theJDBCUtil.closeJDBCStatement(localUpdateMessage);
         }
     }
 
     private boolean checkMessageExists(Mail mc, Connection conn) throws SQLException {
-        PreparedStatement checkMessageExists = null;
-        ResultSet rsExists = null;
-        boolean exists;
-        try {
-            checkMessageExists = conn.prepareStatement(sqlQueries.getSqlString("checkMessageExistsSQL", true));
+        try (PreparedStatement checkMessageExists = conn.prepareStatement(sqlQueries.getSqlString("checkMessageExistsSQL", true))) {
             checkMessageExists.setString(1, mc.getName());
             checkMessageExists.setString(2, repositoryName);
-            rsExists = checkMessageExists.executeQuery();
-            exists = rsExists.next() && rsExists.getInt(1) > 0;
-        } finally {
-            theJDBCUtil.closeJDBCResultSet(rsExists);
-            theJDBCUtil.closeJDBCStatement(checkMessageExists);
+            ResultSet rsExists = checkMessageExists.executeQuery();
+            return rsExists.next() && rsExists.getInt(1) > 0;
         }
-        return exists;
     }
 
     private boolean saveBodyRequired(Mail mc) throws MessagingException {
