@@ -72,18 +72,17 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
-        String user = ImapSessionUtils.getUserName(session);
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
         try {
             if (mailboxPatternString.length() == 0) {
                 respondNamespace(baseReferenceName, responder, mailboxSession);
             } else {
-                respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, user, mailboxSession);
+                respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, mailboxSession);
             }
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("List failed for mailboxName {} and user {}", mailboxPatternString, user, e);
+            LOGGER.error("List failed for mailboxName {}", mailboxPatternString, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
     }
@@ -121,7 +120,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         }
     }
 
-    private void respondMailboxList(String referenceName, String mailboxName, ImapSession session, Responder responder, String user, MailboxSession mailboxSession) throws MailboxException {
+    private void respondMailboxList(String referenceName, String mailboxName, ImapSession session, Responder responder, MailboxSession mailboxSession) throws MailboxException {
         // If the mailboxPattern is fully qualified, ignore the
         // reference name.
         String finalReferencename = referenceName;
@@ -132,7 +131,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         // Should the namespace section be returned or not?
         boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
 
-        MailboxPath basePath = computeBasePath(session, user, finalReferencename, isRelative);
+        MailboxPath basePath = computeBasePath(session, finalReferencename, isRelative);
 
         List<MailboxMetaData> results = getMailboxManager().search(
                 MailboxQuery.builder()
@@ -148,10 +147,10 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         }
     }
 
-    private MailboxPath computeBasePath(ImapSession session, String user, String finalReferencename, boolean isRelative) {
+    private MailboxPath computeBasePath(ImapSession session, String finalReferencename, boolean isRelative) {
         String decodedName = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
         if (isRelative) {
-            return MailboxPath.forUser(user, decodedName);
+            return MailboxPath.forUser(ImapSessionUtils.getUserName(session), decodedName);
         } else {
             return PathConverter.forSession(session).buildFullPath(decodedName);
         }
