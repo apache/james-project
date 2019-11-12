@@ -42,8 +42,6 @@ import org.apache.james.mailbox.model.MailboxPath;
         query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user is NULL and mailbox.namespace= :namespaceParam"),
     @NamedQuery(name = "findMailboxByNameWithUser",
         query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name = :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
-    @NamedQuery(name = "deleteAllMailboxes",
-        query = "DELETE FROM Mailbox mailbox"),
     @NamedQuery(name = "findMailboxWithNameLikeWithUser",
         query = "SELECT mailbox FROM Mailbox mailbox WHERE mailbox.name LIKE :nameParam and mailbox.user= :userParam and mailbox.namespace= :namespaceParam"),
     @NamedQuery(name = "findMailboxWithNameLike",

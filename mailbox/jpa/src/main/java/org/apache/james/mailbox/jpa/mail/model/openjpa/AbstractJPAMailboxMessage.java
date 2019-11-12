@@ -91,8 +91,8 @@ import com.google.common.base.Objects;
         @NamedQuery(name = "countMessagesInMailbox", query = "SELECT COUNT(message) FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam"),
         @NamedQuery(name = "deleteMessages", query = "DELETE FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam"),
         @NamedQuery(name = "findLastUidInMailbox", query = "SELECT message.uid FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.uid DESC"),
-        @NamedQuery(name = "findHighestModSeqInMailbox", query = "SELECT message.modSeq FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.modSeq DESC"),
-        @NamedQuery(name = "deleteAllMemberships", query = "DELETE FROM MailboxMessage message") })
+        @NamedQuery(name = "findHighestModSeqInMailbox", query = "SELECT message.modSeq FROM MailboxMessage message WHERE message.mailbox.mailboxId = :idParam ORDER BY message.modSeq DESC")
+})
 @MappedSuperclass
 public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     private static final String TOSTRING_SEPARATOR = " ";

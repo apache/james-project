@@ -162,15 +162,6 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         }
     }
 
-    public boolean exists(MailboxId id) throws MailboxException, MailboxNotFoundException {
-        try {
-            loadJpaMailbox(id);
-            return true;
-        } catch (MailboxNotFoundException e) {
-            return false;
-        }
-    }
-
     @Override
     public void delete(Mailbox mailbox) throws MailboxException {
         try {  
@@ -203,22 +194,6 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
             .setParameter("nameParam", pathLike)
             .setParameter("namespaceParam", namespace)
             .setParameter("userParam", username.asString());
-    }
-
-    public void deleteAllMemberships() throws MailboxException {
-        try {
-            getEntityManager().createNamedQuery("deleteAllMemberships").executeUpdate();
-        } catch (PersistenceException e) {
-            throw new MailboxException("Delete of mailboxes failed", e);
-        } 
-    }
-    
-    public void deleteAllMailboxes() throws MailboxException {
-        try {
-            getEntityManager().createNamedQuery("deleteAllMailboxes").executeUpdate();
-        } catch (PersistenceException e) {
-            throw new MailboxException("Delete of mailboxes failed", e);
-        } 
     }
     
     @Override
