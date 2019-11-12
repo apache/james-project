@@ -21,61 +21,25 @@ package org.apache.james.backends.es;
 
 import java.util.concurrent.TimeUnit;
 
-import org.apache.james.util.Host;
-import org.apache.james.util.docker.DockerContainer;
-import org.apache.james.util.docker.Images;
+import org.apache.james.backends.es.ElasticSearchClusterExtension.ElasticSearchCluster;
 import org.awaitility.Awaitility;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class ClientProviderImplConnectionTest {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionTest.class);
-    private static final int ES_APPLICATIVE_PORT = 9200;
+interface ClientProviderImplConnectionContract {
 
-    static DockerContainer es1 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
-        .withEnv("discovery.type", "single-node")
-        .withAffinityToContainer()
-        .withExposedPorts(ES_APPLICATIVE_PORT);
-
-    DockerContainer es2 = DockerContainer.fromName(Images.ELASTICSEARCH_6)
-        .withEnv("discovery.type", "single-node")
-        .withAffinityToContainer()
-        .withExposedPorts(ES_APPLICATIVE_PORT);
-
-    @BeforeAll
-    static void setUpClass() {
-        es1.start();
-    }
-
-    @BeforeEach
-    void setUp() {
-        es2.start();
-    }
-
-    @AfterEach
-    void tearDown() {
-        es2.stop();
-    }
-
-    @AfterAll
-    static void tearDownClass() {
-        es1.stop();
-    }
+    Logger LOGGER = LoggerFactory.getLogger(ClientProviderImplConnectionContract.class);
 
     @Test
-    void connectingASingleServerShouldWork() {
-        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
-            .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
+    default void connectingASingleServerShouldWork(ElasticSearchCluster esCluster) {
+        ElasticSearchConfiguration configuration = configurationBuilder()
+            .addHost(esCluster.es1.getHttpHost())
             .build();
 
         Awaitility.await()
@@ -85,10 +49,9 @@ class ClientProviderImplConnectionTest {
     }
 
     @Test
-    void connectingAClusterShouldWork() {
-        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
-            .addHost(Host.from(es1.getContainerIp(), ES_APPLICATIVE_PORT))
-            .addHost(Host.from(es2.getContainerIp(), ES_APPLICATIVE_PORT))
+    default void connectingAClusterShouldWork(ElasticSearchCluster esCluster) {
+        ElasticSearchConfiguration configuration = configurationBuilder()
+            .addHosts(esCluster.getHosts())
             .build();
 
         Awaitility.await()
@@ -98,15 +61,12 @@ class ClientProviderImplConnectionTest {
     }
 
     @Test
-    void connectingAClusterWithAFailedNodeShouldWork() {
-        String es1Ip = es1.getContainerIp();
-        String es2Ip = es2.getContainerIp();
-        es2.stop();
-
-        ElasticSearchConfiguration configuration = ElasticSearchConfiguration.builder()
-            .addHost(Host.from(es1Ip, ES_APPLICATIVE_PORT))
-            .addHost(Host.from(es2Ip, ES_APPLICATIVE_PORT))
+    default void connectingAClusterWithAFailedNodeShouldWork(ElasticSearchCluster esCluster) {
+        ElasticSearchConfiguration configuration = configurationBuilder()
+            .addHosts(esCluster.getHosts())
             .build();
+
+        esCluster.es2.stop();
 
         Awaitility.await()
             .atMost(1, TimeUnit.MINUTES)
@@ -114,7 +74,7 @@ class ClientProviderImplConnectionTest {
             .until(() -> isConnected(new ClientProvider(configuration)));
     }
 
-    private boolean isConnected(ClientProvider clientProvider) {
+    default boolean isConnected(ClientProvider clientProvider) {
         try (RestHighLevelClient client = clientProvider.get()) {
             client.search(
                 new SearchRequest()
@@ -126,4 +86,9 @@ class ClientProviderImplConnectionTest {
             return false;
         }
     }
+
+    default ElasticSearchConfiguration.Builder configurationBuilder() {
+        return ElasticSearchConfiguration.builder();
+    }
 }
+
