@@ -63,7 +63,7 @@ public class UserMailboxesService {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         try {
             mailboxManager.createMailbox(
-                convertToMailboxPath(username, mailboxName.asString(), mailboxSession),
+                convertToMailboxPath(username, mailboxName),
                 mailboxSession);
         } catch (MailboxExistsException e) {
             LOGGER.info("Attempt to create mailbox {} for user {} that already exists", mailboxName, username);
@@ -90,14 +90,14 @@ public class UserMailboxesService {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         return mailboxManager.mailboxExists(
-            convertToMailboxPath(username, mailboxName.asString(), mailboxSession),
+            convertToMailboxPath(username, mailboxName),
             mailboxSession);
     }
 
     public void deleteMailbox(String username, MailboxName mailboxName) throws MailboxException, UsersRepositoryException, MailboxHaveChildrenException {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        MailboxPath mailboxPath = convertToMailboxPath(username, mailboxName.asString(), mailboxSession);
+        MailboxPath mailboxPath = convertToMailboxPath(username, mailboxName);
         listChildren(mailboxPath, mailboxSession)
             .forEach(Throwing.consumer(path -> deleteMailbox(mailboxSession, path)));
     }
@@ -121,8 +121,8 @@ public class UserMailboxesService {
         Preconditions.checkState(usersRepository.contains(username));
     }
 
-    private MailboxPath convertToMailboxPath(String username, String mailboxName, MailboxSession mailboxSession) {
-        return MailboxPath.forUser(username, mailboxName);
+    private MailboxPath convertToMailboxPath(String username, MailboxName mailboxName) {
+        return MailboxPath.forUser(username, mailboxName.asString());
     }
 
     private Stream<MailboxMetaData> listUserMailboxes(MailboxSession mailboxSession) throws MailboxException {
