@@ -82,73 +82,82 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      */
     protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder, MailboxTyper mailboxTyper) {
         String user = ImapSessionUtils.getUserName(session);
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
-
             if (mailboxName.length() == 0) {
-                // An empty mailboxName signifies a request for the hierarchy
-                // delimiter and root name of the referenceName argument
-
-                String referenceRoot;
-                if (referenceName.length() > 0 && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-                    // A qualified reference name - get the root element
-                    int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
-                    if (firstDelimiter == -1) {
-                        referenceRoot = referenceName;
-                    } else {
-                        referenceRoot = referenceName.substring(0, firstDelimiter);
-                    }
-                    referenceRoot = ModifiedUtf7.decodeModifiedUTF7(referenceRoot);
-                } else {
-                    // A relative reference name, return "" to indicate it is
-                    // non-rooted
-                    referenceRoot = "";
-                }
-
-                responder.respond(createResponse(
-                    MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN,
-                    MailboxMetaData.Selectability.NOSELECT,
-                    referenceRoot,
-                    mailboxSession.getPathDelimiter(),
-                    MailboxType.OTHER));
+                respondNamespace(referenceName, responder, mailboxSession);
             } else {
-                // If the mailboxPattern is fully qualified, ignore the
-                // reference name.
-                String finalReferencename = referenceName;
-                if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
-                    finalReferencename = "";
-                }
-                // Is the interpreted (combined) pattern relative?
-                // Should the namespace section be returned or not?
-                boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
-
-                finalReferencename = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
-
-                MailboxPath basePath = null;
-                if (isRelative) {
-                    basePath = MailboxPath.forUser(user, finalReferencename);
-                } else {
-                    basePath = PathConverter.forSession(session).buildFullPath(finalReferencename);
-                }
-
-                List<MailboxMetaData> results = getMailboxManager().search(
-                        MailboxQuery.builder()
-                            .userAndNamespaceFrom(basePath)
-                            .expression(new PrefixedRegex(
-                                basePath.getName(),
-                                ModifiedUtf7.decodeModifiedUTF7(mailboxName),
-                                mailboxSession.getPathDelimiter()))
-                            .build(), mailboxSession);
-                for (MailboxMetaData metaData : results) {
-                    processResult(responder, isRelative, metaData, getMailboxType(session, mailboxTyper, metaData.getPath()));
-                }
+                respondMailboxList(referenceName, mailboxName, session, responder, mailboxTyper, user, mailboxSession);
             }
-
-
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
             LOGGER.error("List failed for mailboxName {} and user {}", mailboxName, user, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+        }
+    }
+
+    private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
+        // An empty mailboxName signifies a request for the hierarchy
+        // delimiter and root name of the referenceName argument
+        String referenceRoot = ModifiedUtf7.decodeModifiedUTF7(computeReferenceRoot(referenceName, mailboxSession));
+
+        responder.respond(createResponse(
+            MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN,
+            MailboxMetaData.Selectability.NOSELECT,
+            referenceRoot,
+            mailboxSession.getPathDelimiter(),
+            MailboxType.OTHER));
+    }
+
+    private String computeReferenceRoot(String referenceName, MailboxSession mailboxSession) {
+        if (referenceName.length() > 0 && referenceName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+            // A qualified reference name - get the root element
+            int firstDelimiter = referenceName.indexOf(mailboxSession.getPathDelimiter());
+            if (firstDelimiter == -1) {
+                 return referenceName;
+            } else {
+                return referenceName.substring(0, firstDelimiter);
+            }
+        } else {
+            // A relative reference name, return "" to indicate it is
+            // non-rooted
+            return "";
+        }
+    }
+
+    private void respondMailboxList(String referenceName, String mailboxName, ImapSession session, Responder responder, MailboxTyper mailboxTyper, String user, MailboxSession mailboxSession) throws MailboxException {
+        // If the mailboxPattern is fully qualified, ignore the
+        // reference name.
+        String finalReferencename = referenceName;
+        if (mailboxName.charAt(0) == MailboxConstants.NAMESPACE_PREFIX_CHAR) {
+            finalReferencename = "";
+        }
+        // Is the interpreted (combined) pattern relative?
+        // Should the namespace section be returned or not?
+        boolean isRelative = ((finalReferencename + mailboxName).charAt(0) != MailboxConstants.NAMESPACE_PREFIX_CHAR);
+
+        MailboxPath basePath = computeBasePath(session, user, finalReferencename, isRelative);
+
+        List<MailboxMetaData> results = getMailboxManager().search(
+                MailboxQuery.builder()
+                    .userAndNamespaceFrom(basePath)
+                    .expression(new PrefixedRegex(
+                        basePath.getName(),
+                        ModifiedUtf7.decodeModifiedUTF7(mailboxName),
+                        mailboxSession.getPathDelimiter()))
+                    .build(), mailboxSession);
+
+        for (MailboxMetaData metaData : results) {
+            processResult(responder, isRelative, metaData, getMailboxType(session, mailboxTyper, metaData.getPath()));
+        }
+    }
+
+    private MailboxPath computeBasePath(ImapSession session, String user, String finalReferencename, boolean isRelative) {
+        String decodedName = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
+        if (isRelative) {
+            return MailboxPath.forUser(user, decodedName);
+        } else {
+            return PathConverter.forSession(session).buildFullPath(decodedName);
         }
     }
 
