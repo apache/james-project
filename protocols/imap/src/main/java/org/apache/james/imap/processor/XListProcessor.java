@@ -36,6 +36,7 @@ import org.apache.james.imap.message.request.XListRequest;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 
 import com.google.common.collect.ImmutableList;
@@ -75,11 +76,16 @@ public class XListProcessor extends ListProcessor implements CapabilityImplement
         final XListRequest request = (XListRequest) message;
         final String baseReferenceName = request.getBaseReferenceName();
         final String mailboxPatternString = request.getMailboxPattern();
-        doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder, mailboxTyper);
+        doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder);
     }
 
     @Override
     protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
         return new XListResponse(children, selectability, name, hierarchyDelimiter, type);
+    }
+
+    @Override
+    protected MailboxType getMailboxType(ImapSession session, MailboxPath path) {
+        return mailboxTyper.getMailboxType(session, path);
     }
 }
