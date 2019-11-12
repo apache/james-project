@@ -111,7 +111,6 @@ public class StoreRequest extends AbstractImapRequest {
         }
         if (isSilent()) {
             builder.append("SILENT ");
-
         }
         if (isSignedPlus()) {
             builder.append("+ ");
@@ -135,7 +134,7 @@ public class StoreRequest extends AbstractImapRequest {
             builder.append(" SEEN");
         }
         if (flags.contains(Flags.Flag.RECENT)) {
-            builder.append(" RECEN");
+            builder.append(" RECENT");
         }
         return builder.toString();
     }
