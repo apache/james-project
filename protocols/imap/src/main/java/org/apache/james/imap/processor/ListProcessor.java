@@ -187,11 +187,10 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * @return MailboxType value
      */
     private MailboxType getMailboxType(ImapSession session, MailboxTyper mailboxTyper, MailboxPath path) {
-        MailboxType result = MailboxType.OTHER;
         if (mailboxTyper != null) {
-            result = mailboxTyper.getMailboxType(session, path);
+            return mailboxTyper.getMailboxType(session, path);
         }
-        return result;
+        return MailboxType.OTHER;
     }
 
     @Override
