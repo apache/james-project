@@ -49,6 +49,7 @@ public class DockerCassandraRule implements GuiceModuleTestRule {
             .toInstance(ClusterConfiguration.builder()
                 .host(cassandraContainer.getHost())
                 .keyspace("testing")
+                .createKeyspace()
                 .replicationFactor(1)
                 .maxRetry(20)
                 .minDelay(5000)

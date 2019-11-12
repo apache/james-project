@@ -128,6 +128,7 @@ class CassandraNodeConfTest {
         return ClusterConfiguration.builder()
             .hosts(hosts)
             .keyspace("apache_james")
+            .createKeyspace()
             .replicationFactor(1)
             .maxRetry(10)
             .minDelay(5000)

@@ -67,6 +67,7 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
                     ClusterConfiguration.builder()
                         .host(cassandraHost)
                         .keyspace("testing")
+                        .createKeyspace()
                         .replicationFactor(1)
                         .build()),
                 binder -> binder.bind(DNSService.class).toInstance(dnsService),

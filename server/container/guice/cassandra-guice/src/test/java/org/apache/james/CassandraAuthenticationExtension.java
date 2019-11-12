@@ -64,6 +64,7 @@ public class CassandraAuthenticationExtension implements GuiceModuleTestExtensio
                 .toInstance(configurationBuilder
                     .host(authenticatedCassandra.getHost())
                     .keyspace("testing")
+                    .createKeyspace()
                     .username("cassandra")
                     .replicationFactor(1)
                     .build()),

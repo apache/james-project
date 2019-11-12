@@ -68,6 +68,7 @@ class AuthenticatedCassandraJamesServerTest {
                 .toInstance(ClusterConfiguration.builder()
                     .host(cassandraExtension.getCassandra().getHost())
                     .keyspace("testing")
+                    .createKeyspace()
                     .replicationFactor(1)
                     .maxRetry(1)
                     .minDelay(100)

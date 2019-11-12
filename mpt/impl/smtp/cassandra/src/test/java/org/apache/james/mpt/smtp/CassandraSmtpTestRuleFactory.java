@@ -55,6 +55,7 @@ public final class CassandraSmtpTestRuleFactory {
                     ClusterConfiguration.builder()
                         .host(cassandraHost)
                         .keyspace("testing")
+                        .createKeyspace()
                         .replicationFactor(1)
                         .build()),
                 binder -> binder.bind(DNSService.class).toInstance(dnsService));

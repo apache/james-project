@@ -26,6 +26,12 @@ import com.datastax.driver.core.Session;
 
 public class KeyspaceFactory {
     public static void createKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
+        if (clusterConfiguration.shouldCreateKeyspace()) {
+            doCreateKeyspace(clusterConfiguration, cluster);
+        }
+    }
+
+    private static void doCreateKeyspace(ClusterConfiguration clusterConfiguration, Cluster cluster) {
         try (Session session = cluster.connect()) {
             session.execute("CREATE KEYSPACE IF NOT EXISTS " + clusterConfiguration.getKeyspace()
                 + " WITH replication = {'class':'SimpleStrategy', 'replication_factor':" + clusterConfiguration.getReplicationFactor() + "}"

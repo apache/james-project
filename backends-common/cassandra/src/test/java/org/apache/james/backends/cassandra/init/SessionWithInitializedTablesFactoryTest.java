@@ -123,6 +123,7 @@ class SessionWithInitializedTablesFactoryTest {
         ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
             .host(cassandraServer.getHost())
             .keyspace(KEYSPACE)
+            .createKeyspace()
             .replicationFactor(1)
             .disableDurableWrites()
             .build();

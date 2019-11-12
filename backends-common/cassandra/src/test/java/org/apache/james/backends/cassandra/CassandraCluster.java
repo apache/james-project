@@ -60,6 +60,7 @@ public final class CassandraCluster implements AutoCloseable {
             ClusterConfiguration clusterConfiguration = ClusterConfiguration.builder()
                 .host(host)
                 .keyspace(KEYSPACE)
+                .createKeyspace()
                 .disableDurableWrites()
                 .build();
             cluster = ClusterFactory.create(clusterConfiguration);
