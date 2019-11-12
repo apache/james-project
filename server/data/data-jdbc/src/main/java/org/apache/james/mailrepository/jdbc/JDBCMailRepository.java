@@ -58,7 +58,6 @@ import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
-import org.apache.james.mailrepository.lib.Lock;
 import org.apache.james.repository.api.Initializable;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MailImpl;
@@ -104,12 +103,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
     private static final Logger LOGGER = LoggerFactory.getLogger(JDBCMailRepository.class);
 
     private static final boolean DEEP_DEBUG = false;
-
-    /**
-     * A lock used to control access to repository elements, locking access
-     * based on the key
-     */
-    private final Lock lock = new Lock();
 
     /**
      * The table name parsed from the destination URL
@@ -226,30 +219,21 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
     }
 
+
     /**
-     * Releases a lock on a message identified the key
-     *
-     * @param key
-     *            the key of the message to be unlocked
-     *
-     * @return true if successfully released the lock, false otherwise
+     * JDBC uses transaction, it doesn't need locks
      */
     @Override
     public boolean unlock(MailKey key) {
-        return lock.unlock(key);
+        return false;
     }
 
     /**
-     * Obtains a lock on a message identified by key
-     *
-     * @param key
-     *            the key of the message to be locked
-     *
-     * @return true if successfully obtained the lock, false otherwise
+     * JDBC uses transaction, it doesn't need locks
      */
     @Override
     public boolean lock(MailKey key) {
-        return lock.lock(key);
+        return false;
     }
 
 
@@ -403,16 +387,8 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public MailKey store(Mail mc) throws MessagingException {
-        boolean wasLocked = true;
         MailKey key = MailKey.forMail(mc);
         try {
-            synchronized (this) {
-                wasLocked = lock.isLocked(key);
-                if (!wasLocked) {
-                    // If it wasn't locked, we want a lock during the store
-                    lock(key);
-                }
-            }
             internalStore(mc);
             return key;
         } catch (MessagingException e) {
@@ -421,14 +397,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
         } catch (Exception e) {
             LOGGER.error("Exception caught while storing mail {}", key, e);
             throw new MessagingException("Exception caught while storing mail " + key, e);
-        } finally {
-            if (!wasLocked) {
-                // If it wasn't locked, we need to unlock now
-                unlock(key);
-                synchronized (this) {
-                    notify();
-                }
-            }
         }
     }
 
@@ -760,15 +728,7 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public void remove(MailKey key) throws MessagingException {
-        if (lock(key)) {
-            try {
-                internalRemove(key);
-            } finally {
-                unlock(key);
-            }
-        } else {
-            throw new MessagingException("Cannot lock " + key + " to remove it");
-        }
+        internalRemove(key);
     }
 
     private void internalRemove(MailKey key) throws MessagingException {
