@@ -155,7 +155,7 @@ class DTOTest {
 
     @Test
     void shouldDeserializeQuotaThresholdChangedEvent() throws Exception {
-        assertThatJson(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
+        assertThat(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
             .deserialize(EVENT_JSON))
             .isEqualTo(EVENT);
     }
@@ -169,7 +169,7 @@ class DTOTest {
 
     @Test
     void shouldDeserializeEvent2() throws Exception {
-        assertThatJson(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
+        assertThat(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
             .deserialize(EVENT_JSON_2))
             .isEqualTo(EVENT_2);
     }
@@ -183,7 +183,7 @@ class DTOTest {
 
     @Test
     void shouldDeserializeEvent3() throws Exception {
-        assertThatJson(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
+        assertThat(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
             .deserialize(EVENT_JSON_3))
             .isEqualTo(EVENT_3);
     }
@@ -197,7 +197,7 @@ class DTOTest {
 
     @Test
     void shouldDeserializeEvent4() throws Exception {
-        assertThatJson(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
+        assertThat(new JsonEventSerializer(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE)
             .deserialize(EVENT_JSON_4))
             .isEqualTo(EVENT_4);
     }
