@@ -23,15 +23,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.assertj.core.api.JUnitJupiterSoftAssertions;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class CassandraConfigurationTest {
-    @RegisterExtension
-    JUnitJupiterSoftAssertions softly = new JUnitJupiterSoftAssertions();
 
     @Test
     void cassandraConfigurationShouldRespectBeanContract() {
@@ -213,17 +210,19 @@ class CassandraConfigurationTest {
             .messageAttachmentIdsReadTimeout(messageAttachmentIdReadTimeout)
             .build();
 
-        softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
-        softly.assertThat(configuration.getModSeqMaxRetry()).isEqualTo(modSeqMaxRetry);
-        softly.assertThat(configuration.getUidMaxRetry()).isEqualTo(uidMaxRetry);
-        softly.assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
-        softly.assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
-        softly.assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
-        softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
-        softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
-        softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
-        softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);
-        softly.assertThat(configuration.getMessageAttachmentIdsReadTimeout()).isEqualTo(messageAttachmentIdReadTimeout);
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(configuration.getAclMaxRetry()).isEqualTo(aclMaxRetry);
+            softly.assertThat(configuration.getModSeqMaxRetry()).isEqualTo(modSeqMaxRetry);
+            softly.assertThat(configuration.getUidMaxRetry()).isEqualTo(uidMaxRetry);
+            softly.assertThat(configuration.getFetchNextPageInAdvanceRow()).isEqualTo(fetchNextPageInAdvanceRow);
+            softly.assertThat(configuration.getFlagsUpdateMessageMaxRetry()).isEqualTo(flagsUpdateMessageMaxRetry);
+            softly.assertThat(configuration.getFlagsUpdateMessageIdMaxRetry()).isEqualTo(flagsUpdateMessageIdMaxRetry);
+            softly.assertThat(configuration.getMessageReadChunkSize()).isEqualTo(messageReadChunkSize);
+            softly.assertThat(configuration.getExpungeChunkSize()).isEqualTo(expungeChunkSize);
+            softly.assertThat(configuration.getBlobPartSize()).isEqualTo(blobPartSize);
+            softly.assertThat(configuration.getAttachmentV2MigrationReadTimeout()).isEqualTo(attachmentV2MigrationReadTimeout);
+            softly.assertThat(configuration.getMessageAttachmentIdsReadTimeout()).isEqualTo(messageAttachmentIdReadTimeout);
+        });
     }
 
 }
