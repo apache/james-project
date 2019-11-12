@@ -23,10 +23,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class PrefixedRegexTest {
     private static final char PATH_DELIMITER = '.';
     private static final String PREFIX = "name";
     private static final String EMPTY_PREFIX = "";
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(PrefixedRegex.class)
+            .withIgnoredFields("pattern")
+            .verify();
+    }
 
     @Test
     public void isWildShouldReturnTrueWhenOnlyFreeWildcard() throws Exception {

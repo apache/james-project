@@ -27,6 +27,8 @@ import org.apache.james.mailbox.model.search.MailboxQuery.Builder;
 import org.junit.Before;
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class MailboxQueryTest {
     private static final String CURRENT_USER = "user";
 
@@ -35,6 +37,12 @@ public class MailboxQueryTest {
     @Before
     public void setUp() {
         mailboxPath = new MailboxPath("namespace", "user", "name");
+    }
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MailboxQuery.class)
+            .verify();
     }
 
     @Test

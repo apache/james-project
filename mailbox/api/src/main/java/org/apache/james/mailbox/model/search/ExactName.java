@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model.search;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 public class ExactName implements MailboxNameExpression {
@@ -44,5 +46,20 @@ public class ExactName implements MailboxNameExpression {
     @Override
     public boolean isWild() {
         return false;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof ExactName) {
+            ExactName exactName = (ExactName) o;
+
+            return Objects.equals(this.name, exactName.name);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(name);
     }
 }

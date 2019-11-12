@@ -24,8 +24,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 public class PrefixedWildcardTest {
     public static final String NAME = "toto";
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(PrefixedWildcard.class)
+            .verify();
+    }
 
     @Test
     public void constructorShouldThrowOnNullName() {

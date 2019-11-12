@@ -24,9 +24,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.Test;
 
-public class ExactNameTest {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
+public class ExactNameTest {
     public static final String NAME = "toto";
+
+    @Test
+    public void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(ExactName.class)
+            .verify();
+    }
 
     @Test
     public void constructorShouldThrowOnNullName() {

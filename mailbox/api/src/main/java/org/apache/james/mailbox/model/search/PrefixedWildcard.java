@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model.search;
 
+import java.util.Objects;
+
 import com.google.common.base.Preconditions;
 
 public class PrefixedWildcard implements MailboxNameExpression {
@@ -43,5 +45,20 @@ public class PrefixedWildcard implements MailboxNameExpression {
     @Override
     public boolean isWild() {
         return true;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof PrefixedWildcard) {
+            PrefixedWildcard that = (PrefixedWildcard) o;
+
+            return Objects.equals(this.prefix, that.prefix);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(prefix);
     }
 }

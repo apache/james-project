@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model.search;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
@@ -180,6 +181,23 @@ public class MailboxQuery {
 
     public UserBound asUserBound() {
         return new UserBound(namespace, user, mailboxNameExpression);
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MailboxQuery) {
+            MailboxQuery that = (MailboxQuery) o;
+
+            return Objects.equals(this.namespace, that.namespace)
+                && Objects.equals(this.user, that.user)
+                && Objects.equals(this.mailboxNameExpression, that.mailboxNameExpression);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(namespace, user, mailboxNameExpression);
     }
 
     public String toString() {
