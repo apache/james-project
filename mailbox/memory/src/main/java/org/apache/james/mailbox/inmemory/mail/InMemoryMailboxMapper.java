@@ -82,10 +82,10 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) throws MailboxException {
+    public List<Mailbox> findMailboxWithPathLike(MailboxQuery.UserBound query) {
         return mailboxesByPath.values()
             .stream()
-            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
+            .filter(query::matches)
             .map(Mailbox::new)
             .collect(Guavate.toImmutableList());
     }

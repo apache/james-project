@@ -143,7 +143,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             mailboxList.add(0, mailbox);
         }
         return mailboxList.stream()
-            .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
+            .filter(query::matches)
             .collect(Guavate.toImmutableList());
     }
 

@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -177,6 +178,10 @@ public class MailboxQuery {
     public boolean isPathMatch(MailboxPath mailboxPath) {
         return belongsToRequestedNamespaceAndUser(mailboxPath)
             && isExpressionMatch(mailboxPath.getName());
+    }
+
+    public boolean matches(Mailbox mailbox) {
+        return isPathMatch(mailbox.generateAssociatedPath());
     }
 
     public UserBound asUserBound() {

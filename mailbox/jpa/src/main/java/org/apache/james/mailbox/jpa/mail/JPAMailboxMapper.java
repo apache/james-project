@@ -198,7 +198,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
                 .getResultList()
                 .stream()
                 .map(JPAMailbox::toMailbox)
-                .filter(mailbox -> query.isPathMatch(mailbox.generateAssociatedPath()))
+                .filter(query::matches)
                 .collect(Guavate.toImmutableList());
         } catch (PersistenceException e) {
             throw new MailboxException("Search of mailbox " + query + " failed", e);
