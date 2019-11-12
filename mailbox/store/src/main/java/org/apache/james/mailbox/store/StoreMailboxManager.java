@@ -42,13 +42,11 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
-import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
 import org.apache.james.mailbox.exception.InboxAlreadyCreated;
 import org.apache.james.mailbox.exception.InsufficientRightsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
-import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -322,16 +320,10 @@ public class StoreMailboxManager implements MailboxManager {
             LOGGER.warn("Ignoring mailbox with empty name");
         } else {
             MailboxPath sanitizedMailboxPath = mailboxPath.sanitize(mailboxSession.getPathDelimiter());
-            if (isMailboxNameTooLong(mailboxPath)) {
-                throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
-            }
+            sanitizedMailboxPath.assertAcceptable(mailboxSession.getPathDelimiter());
 
             if (mailboxExists(sanitizedMailboxPath, mailboxSession)) {
                 throw new MailboxExistsException(sanitizedMailboxPath.asString());
-            }
-
-            if (sanitizedMailboxPath.hasEmptyNameInHierarchy(mailboxSession.getPathDelimiter())) {
-                throw new HasEmptyMailboxNameInHierarchyException(sanitizedMailboxPath.asString());
             }
 
             List<MailboxId> mailboxIds = createMailboxesForPath(mailboxSession, sanitizedMailboxPath);
@@ -468,12 +460,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxExists(sanitizedMailboxPath, session)) {
             throw new MailboxExistsException(sanitizedMailboxPath.toString());
         }
-        if (isMailboxNameTooLong(sanitizedMailboxPath)) {
-            throw new TooLongMailboxNameException("Mailbox name exceed maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
-        }
-        if (sanitizedMailboxPath.hasEmptyNameInHierarchy(session.getPathDelimiter())) {
-            throw new HasEmptyMailboxNameInHierarchyException(to.asString());
-        }
+        sanitizedMailboxPath.assertAcceptable(session.getPathDelimiter());
 
         assertIsOwner(session, from);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);

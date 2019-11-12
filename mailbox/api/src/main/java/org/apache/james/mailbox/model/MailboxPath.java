@@ -26,7 +26,11 @@ import java.util.Optional;
 
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.HasEmptyMailboxNameInHierarchyException;
+import org.apache.james.mailbox.exception.MailboxNameException;
+import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -47,6 +51,11 @@ public class MailboxPath {
     public static MailboxPath forUser(String username, String mailboxName) {
         return new MailboxPath(MailboxConstants.USER_NAMESPACE, username, mailboxName);
     }
+
+    private static final String INVALID_CHARS = "%*&#";
+    private static final CharMatcher INVALID_CHARS_MATCHER = CharMatcher.anyOf(INVALID_CHARS);
+    // This is the size that all mailbox backend should support
+    public  static final int MAX_MAILBOX_NAME_LENGTH = 200;
 
     private final String namespace;
     private final String user;
@@ -136,7 +145,27 @@ public class MailboxPath {
         return this;
     }
 
-    public boolean hasEmptyNameInHierarchy(char pathDelimiter) {
+    public void assertAcceptable(char pathDelimiter) throws MailboxNameException {
+        if (hasEmptyNameInHierarchy(pathDelimiter)) {
+            throw new HasEmptyMailboxNameInHierarchyException(asString());
+        }
+        if (nameContainsForbiddenCharacters()) {
+            throw new MailboxNameException(asString() + " contains one of the forbidden characters " + INVALID_CHARS);
+        }
+        if (isMailboxNameTooLong()) {
+            throw new TooLongMailboxNameException("Mailbox name exceeds maximum size of " + MAX_MAILBOX_NAME_LENGTH + " characters");
+        }
+    }
+
+    private boolean nameContainsForbiddenCharacters() {
+        return INVALID_CHARS_MATCHER.matchesAnyOf(name);
+    }
+
+    private boolean isMailboxNameTooLong() {
+        return name.length() > MAX_MAILBOX_NAME_LENGTH;
+    }
+
+    boolean hasEmptyNameInHierarchy(char pathDelimiter) {
         String delimiterString = String.valueOf(pathDelimiter);
         return this.name.isEmpty()
             || this.name.contains(delimiterString + delimiterString)
