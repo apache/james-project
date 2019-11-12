@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -41,7 +40,6 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
@@ -88,7 +86,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         try {
             // Should the namespace section be returned or not?
             final boolean isRelative;
-            final List<MailboxMetaData> results;
 
             if (mailboxName.length() == 0) {
                 // An empty mailboxName signifies a request for the hierarchy
@@ -111,12 +108,13 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     referenceRoot = "";
                     isRelative = true;
                 }
-                // Get the mailbox for the reference name.
-                MailboxPath rootPath = new MailboxPath(referenceRoot, "", "");
-                MailboxId mailboxId = null;
-                results = new ArrayList<>(1);
-                results.add(new MailboxMetaData(rootPath, mailboxId, mailboxSession.getPathDelimiter(),
-                    MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN, MailboxMetaData.Selectability.NOSELECT));
+
+                responder.respond(createResponse(
+                    MailboxMetaData.Children.CHILDREN_ALLOWED_BUT_UNKNOWN,
+                    MailboxMetaData.Selectability.NOSELECT,
+                    referenceRoot,
+                    mailboxSession.getPathDelimiter(),
+                    MailboxType.OTHER));
             } else {
                 // If the mailboxPattern is fully qualified, ignore the
                 // reference name.
@@ -136,7 +134,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                     basePath = PathConverter.forSession(session).buildFullPath(finalReferencename);
                 }
 
-                results = getMailboxManager().search(
+                List<MailboxMetaData> results = getMailboxManager().search(
                         MailboxQuery.builder()
                             .userAndNamespaceFrom(basePath)
                             .expression(new PrefixedRegex(
@@ -144,11 +142,11 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
                                 ModifiedUtf7.decodeModifiedUTF7(mailboxName),
                                 mailboxSession.getPathDelimiter()))
                             .build(), mailboxSession);
+                for (MailboxMetaData metaData : results) {
+                    processResult(responder, isRelative, metaData, getMailboxType(session, mailboxTyper, metaData.getPath()));
+                }
             }
 
-            for (MailboxMetaData metaData : results) {
-                processResult(responder, isRelative, metaData, getMailboxType(session, mailboxTyper, metaData.getPath()));
-            }
 
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
