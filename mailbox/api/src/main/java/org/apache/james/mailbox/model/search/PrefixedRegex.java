@@ -54,6 +54,11 @@ public class PrefixedRegex implements MailboxNameExpression {
     }
 
     @Override
+    public MailboxNameExpression includeChildren() {
+        return new PrefixedRegex(prefix, regex + "*", pathDelimiter);
+    }
+
+    @Override
     public String getCombinedName() {
         if (prefix != null && prefix.length() > 0) {
             final int baseLength = prefix.length();

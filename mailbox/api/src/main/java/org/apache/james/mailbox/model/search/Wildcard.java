@@ -47,6 +47,11 @@ public class Wildcard implements MailboxNameExpression {
     }
 
     @Override
+    public MailboxNameExpression includeChildren() {
+        return this;
+    }
+
+    @Override
     public final boolean equals(Object o) {
         return o instanceof Wildcard;
     }

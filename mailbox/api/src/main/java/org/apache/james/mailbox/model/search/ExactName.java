@@ -49,6 +49,11 @@ public class ExactName implements MailboxNameExpression {
     }
 
     @Override
+    public MailboxNameExpression includeChildren() {
+        return new PrefixedWildcard(name);
+    }
+
+    @Override
     public final boolean equals(Object o) {
         if (o instanceof ExactName) {
             ExactName exactName = (ExactName) o;

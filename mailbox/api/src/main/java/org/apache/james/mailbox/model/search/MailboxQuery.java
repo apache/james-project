@@ -112,10 +112,10 @@ public class MailboxQuery {
     }
 
     public static class UserBound extends MailboxQuery {
-        private UserBound(Optional<String> namespace, Optional<String> user, MailboxNameExpression mailboxNameExpression) {
-            super(namespace, user, mailboxNameExpression);
-            Preconditions.checkArgument(namespace.isPresent());
-            Preconditions.checkArgument(user.isPresent());
+        private UserBound(String namespace, String user, MailboxNameExpression mailboxNameExpression) {
+            super(Optional.of(namespace), Optional.of(user), mailboxNameExpression);
+            Preconditions.checkNotNull(namespace);
+            Preconditions.checkNotNull(user);
         }
 
         public String getFixedNamespace() {
@@ -180,7 +180,9 @@ public class MailboxQuery {
     }
 
     public UserBound asUserBound() {
-        return new UserBound(namespace, user, mailboxNameExpression);
+        Preconditions.checkState(namespace.isPresent(), "This MailboxQuery is not user bound as namespace is missing");
+        Preconditions.checkState(user.isPresent(), "This MailboxQuery is not user bound as user is missing");
+        return new UserBound(namespace.get(), user.get(), mailboxNameExpression);
     }
 
     @Override

@@ -208,7 +208,7 @@ public class StoreMailboxManagerTest {
             .isEqualTo(MailboxQuery.builder()
                 .namespace(MailboxConstants.USER_NAMESPACE)
                 .username("user")
-                .expression(new PrefixedRegex(EMPTY_PREFIX, "abc", session.getPathDelimiter()))
+                .expression(new PrefixedRegex(EMPTY_PREFIX, "abc*", session.getPathDelimiter()))
                 .build()
                 .asUserBound());
     }
@@ -227,7 +227,7 @@ public class StoreMailboxManagerTest {
             .isEqualTo(MailboxQuery.builder()
                 .namespace(MailboxConstants.USER_NAMESPACE)
                 .username("user")
-                .expression(new PrefixedRegex("prefix.", "abc", session.getPathDelimiter()))
+                .expression(new PrefixedRegex("prefix.", "abc*", session.getPathDelimiter()))
                 .build()
                 .asUserBound());
     }

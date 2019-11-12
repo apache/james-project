@@ -574,33 +574,31 @@ public class StoreMailboxManager implements MailboxManager {
         return searchMailboxes(mailboxExpression, session, Right.Lookup);
     }
 
-    private List<MailboxMetaData> searchMailboxes(MailboxQuery mailboxExpression, MailboxSession session, Right right) throws MailboxException {
+    private List<MailboxMetaData> searchMailboxes(MailboxQuery mailboxQuery, MailboxSession session, Right right) throws MailboxException {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         Stream<Mailbox> baseMailboxes = mailboxMapper
-            .findMailboxWithPathLike(toSingleUserQuery(mailboxExpression, session))
+            .findMailboxWithPathLike(toSingleUserQuery(mailboxQuery, session))
             .stream();
-        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxExpression, right, session);
-        List<Mailbox> mailboxes = Stream.concat(baseMailboxes,
-                delegatedMailboxes)
+        Stream<Mailbox> delegatedMailboxes = getDelegatedMailboxes(mailboxMapper, mailboxQuery, right, session);
+        List<Mailbox> mailboxes = Stream.concat(baseMailboxes, delegatedMailboxes)
             .distinct()
             .filter(Throwing.predicate(mailbox -> storeRightManager.hasRight(mailbox, right, session)))
             .collect(Guavate.toImmutableList());
 
         return mailboxes
             .stream()
-            .filter(mailbox -> mailboxExpression.isPathMatch(mailbox.generateAssociatedPath()))
+            .filter(mailboxQuery::matches)
             .map(mailbox -> toMailboxMetadata(session, mailboxes, mailbox))
             .sorted(new StandardMailboxMetaDataComparator())
             .collect(Guavate.toImmutableList());
     }
 
     public static MailboxQuery.UserBound toSingleUserQuery(MailboxQuery mailboxQuery, MailboxSession mailboxSession) {
-        MailboxNameExpression nameExpression = mailboxQuery.getMailboxNameExpression();
-
         return MailboxQuery.builder()
             .namespace(mailboxQuery.getNamespace().orElse(MailboxConstants.USER_NAMESPACE))
             .username(mailboxQuery.getUser().orElse(mailboxSession.getUser().asString()))
-            .expression(nameExpression)
+            .expression(mailboxQuery.getMailboxNameExpression()
+                .includeChildren())
             .build()
             .asUserBound();
     }

@@ -48,6 +48,11 @@ public class PrefixedWildcard implements MailboxNameExpression {
     }
 
     @Override
+    public MailboxNameExpression includeChildren() {
+        return this;
+    }
+
+    @Override
     public final boolean equals(Object o) {
         if (o instanceof PrefixedWildcard) {
             PrefixedWildcard that = (PrefixedWildcard) o;

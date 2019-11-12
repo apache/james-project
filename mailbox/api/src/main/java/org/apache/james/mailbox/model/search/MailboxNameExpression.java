@@ -53,6 +53,8 @@ public interface MailboxNameExpression {
      */
     boolean isWild();
 
+    MailboxNameExpression includeChildren();
+
     /**
      * Gets wildcard character that matches any series of characters.
      *
