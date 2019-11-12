@@ -68,7 +68,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * reference is non-rooted or is an empty string.
      */
     @Override
-    protected void processMessage(ListRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(ListRequest request, ImapSession session, Responder responder) {
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

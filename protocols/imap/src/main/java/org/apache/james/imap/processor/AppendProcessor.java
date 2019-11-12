@@ -62,7 +62,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
     }
 
     @Override
-    protected void processMessage(AppendRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(AppendRequest request, ImapSession session, Responder responder) {
         final String mailboxName = request.getMailboxName();
         final InputStream messageIn = request.getMessage();
         final Date datetime = request.getDatetime();

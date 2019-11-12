@@ -473,7 +473,7 @@ public class SearchProcessorTest {
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
 
         SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<>()), false, TAG);
-        processor.processMessage(message, session, responder);
+        processor.processRequest(message, session, responder);
     }
 
     private void expectOk() {

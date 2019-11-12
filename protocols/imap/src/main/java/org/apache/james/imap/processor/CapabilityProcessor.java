@@ -78,7 +78,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     }
 
     @Override
-    protected void processMessage(CapabilityRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(CapabilityRequest request, ImapSession session, Responder responder) {
         final CapabilityResponse result = new CapabilityResponse(getSupportedCapabilities(session));        
         responder.respond(result);
         unsolicitedResponses(session, responder, false);

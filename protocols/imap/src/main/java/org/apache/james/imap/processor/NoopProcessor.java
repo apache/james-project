@@ -37,7 +37,7 @@ public class NoopProcessor extends AbstractMailboxProcessor<NoopRequest> {
     }
 
     @Override
-    protected void processMessage(NoopRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(NoopRequest message, ImapSession session, Responder responder) {
         // So, unsolicated responses are returned to check for new mail
         unsolicitedResponses(session, responder, false);
         okComplete(message, responder);

@@ -59,7 +59,7 @@ public class DeleteACLProcessor extends AbstractMailboxProcessor<DeleteACLReques
     }
 
     @Override
-    protected void processMessage(DeleteACLRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(DeleteACLRequest message, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

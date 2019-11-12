@@ -68,7 +68,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected void processMessage(GetAnnotationRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(GetAnnotationRequest message, ImapSession session, Responder responder) {
         try {
             proceed(message, session, responder);
         } catch (MailboxNotFoundException e) {

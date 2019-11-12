@@ -84,7 +84,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected void processMessage(IdleRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(IdleRequest message, ImapSession session, Responder responder) {
         SelectedMailbox sm = session.getSelected();
         Registration registration;
         if (sm != null) {

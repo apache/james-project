@@ -44,7 +44,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     }
 
     @Override
-    protected void processMessage(LogoutRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(LogoutRequest request, ImapSession session, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         try {
             getMailboxManager().logout(mailboxSession, false);

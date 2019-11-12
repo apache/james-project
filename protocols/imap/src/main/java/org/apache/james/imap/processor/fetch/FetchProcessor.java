@@ -63,7 +63,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     }
 
     @Override
-    protected void processMessage(FetchRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(FetchRequest request, ImapSession session, Responder responder) {
         final boolean useUids = request.isUseUids();
         final IdRange[] idSet = request.getIdSet();
         final FetchData fetch = request.getFetch();

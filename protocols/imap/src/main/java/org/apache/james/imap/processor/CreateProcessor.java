@@ -47,7 +47,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
     }
 
     @Override
-    protected void processMessage(CreateRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(CreateRequest request, ImapSession session, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();

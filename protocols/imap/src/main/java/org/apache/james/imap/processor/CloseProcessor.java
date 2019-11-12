@@ -47,7 +47,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     }
 
     @Override
-    protected void processMessage(CloseRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(CloseRequest message, ImapSession session, Responder responder) {
         try {
             MessageManager mailbox = getSelectedMailbox(session);
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

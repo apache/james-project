@@ -50,7 +50,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
     }
 
     @Override
-    protected void processMessage(RenameRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(RenameRequest request, ImapSession session, Responder responder) {
         PathConverter pathConverter = PathConverter.forSession(session);
         MailboxPath existingPath = pathConverter.buildFullPath(request.getExistingName());
         MailboxPath newPath = pathConverter.buildFullPath(request.getNewName());

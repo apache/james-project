@@ -49,7 +49,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
     }
 
     @Override
-    protected void processMessage(DeleteRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(DeleteRequest request, ImapSession session, Responder responder) {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final SelectedMailbox selected = session.getSelected();

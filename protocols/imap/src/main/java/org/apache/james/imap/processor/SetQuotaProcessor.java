@@ -50,7 +50,7 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected void processMessage(SetQuotaRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(SetQuotaRequest message, ImapSession session, Responder responder) {
         Object[] params = new Object[]{
             "Full admin rights",
             message.getCommand().getName(),

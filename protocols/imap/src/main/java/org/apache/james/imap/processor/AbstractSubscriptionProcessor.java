@@ -52,7 +52,7 @@ public abstract class AbstractSubscriptionProcessor<M extends ImapRequest> exten
     }
 
     @Override
-    protected final void processMessage(M message, ImapSession session, Responder responder) {
+    protected final void processRequest(M message, ImapSession session, Responder responder) {
 
         // take care of calling the start/end processing
         MailboxSession mSession = ImapSessionUtils.getMailboxSession(session);

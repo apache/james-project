@@ -37,7 +37,7 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     }
 
     @Override
-    protected void processMessage(CheckRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(CheckRequest message, ImapSession session, Responder responder) {
         unsolicitedResponses(session, responder, false);
         okComplete(message, responder);
     }

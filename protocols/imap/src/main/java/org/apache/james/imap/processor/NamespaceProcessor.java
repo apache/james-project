@@ -51,7 +51,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     }
 
     @Override
-    protected void processMessage(NamespaceRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(NamespaceRequest request, ImapSession session, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final List<NamespaceResponse.Namespace> personalNamespaces = buildPersonalNamespaces(mailboxSession, session);
         final List<NamespaceResponse.Namespace> otherUsersNamespaces = buildOtherUsersSpaces(mailboxSession, session);

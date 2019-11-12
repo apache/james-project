@@ -50,7 +50,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     @Override
-    protected void processMessage(StatusRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(StatusRequest request, ImapSession session, Responder responder) {
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         StatusDataItems statusDataItems = request.getStatusDataItems();
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);

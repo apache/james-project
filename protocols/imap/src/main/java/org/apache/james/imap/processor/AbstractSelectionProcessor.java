@@ -77,7 +77,7 @@ abstract class AbstractSelectionProcessor<M extends AbstractMailboxSelectionRequ
     }
 
     @Override
-    protected void processMessage(M request, ImapSession session, Responder responder) {
+    protected void processRequest(M request, ImapSession session, Responder responder) {
         final String mailboxName = request.getMailboxName();
         try {
             final MailboxPath fullMailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);

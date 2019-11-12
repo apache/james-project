@@ -81,7 +81,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected void processMessage(SearchRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(SearchRequest request, ImapSession session, Responder responder) {
         final SearchOperation operation = request.getSearchOperation();
         final SearchKey searchKey = operation.getSearchKey();
         final boolean useUids = request.isUseUids();

@@ -60,7 +60,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     }
 
     @Override
-    protected void processMessage(ExpungeRequest request, ImapSession session, Responder responder) {
+    protected void processRequest(ExpungeRequest request, ImapSession session, Responder responder) {
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
