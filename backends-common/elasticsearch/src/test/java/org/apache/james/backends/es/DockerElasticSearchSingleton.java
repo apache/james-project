@@ -20,7 +20,7 @@
 package org.apache.james.backends.es;
 
 public class DockerElasticSearchSingleton {
-    public static DockerElasticSearch INSTANCE = new DockerElasticSearch();
+    public static DockerElasticSearch INSTANCE = new DockerElasticSearch.NoAuth();
 
     static {
         INSTANCE.start();

@@ -27,5 +27,5 @@ class ES2ReporterTest extends ESReporterContract {
 
     @RegisterExtension
     static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(
-        new DockerElasticSearch(Images.ELASTICSEARCH_2));
+        new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_2));
 }

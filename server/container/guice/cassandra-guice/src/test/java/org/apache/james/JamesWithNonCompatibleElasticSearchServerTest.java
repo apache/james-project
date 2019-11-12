@@ -39,7 +39,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
 
     private static final int LIMIT_MAX_MESSAGES = 10;
 
-    static DockerElasticSearch dockerES2 = new DockerElasticSearch(Images.ELASTICSEARCH_2);
+    static DockerElasticSearch dockerES2 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_2);
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()

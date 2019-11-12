@@ -25,5 +25,5 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ES6ReporterTest extends ESReporterContract {
 
     @RegisterExtension
-    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch());
+    static DockerElasticSearchExtension testExtension = new DockerElasticSearchExtension(new DockerElasticSearch.NoAuth());
 }
