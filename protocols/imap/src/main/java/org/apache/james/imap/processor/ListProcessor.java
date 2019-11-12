@@ -56,17 +56,6 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
         super(ListRequest.class, next, mailboxManager, factory, metricFactory);
     }
 
-    @Override
-    protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
-        String baseReferenceName = request.getBaseReferenceName();
-        String mailboxPatternString = request.getMailboxPattern();
-        doProcess(baseReferenceName, mailboxPatternString, session, tag, command, responder);
-    }
-
-    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
-        return new ListResponse(children, selectability, name, hierarchyDelimiter);
-    }
-
     /**
      * (from rfc3501)<br>
      * The LIST command returns a subset of names from the complete set of all
@@ -79,20 +68,28 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
      * reference. The value returned as the root MAY be the empty string if the
      * reference is non-rooted or is an empty string.
      */
-    protected final void doProcess(String referenceName, String mailboxName, ImapSession session, String tag, ImapCommand command, Responder responder) {
+    @Override
+    protected void doProcess(ListRequest request, ImapSession session, String tag, ImapCommand command, Responder responder) {
+        String baseReferenceName = request.getBaseReferenceName();
+        String mailboxPatternString = request.getMailboxPattern();
         String user = ImapSessionUtils.getUserName(session);
         MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+
         try {
-            if (mailboxName.length() == 0) {
-                respondNamespace(referenceName, responder, mailboxSession);
+            if (mailboxPatternString.length() == 0) {
+                respondNamespace(baseReferenceName, responder, mailboxSession);
             } else {
-                respondMailboxList(referenceName, mailboxName, session, responder, user, mailboxSession);
+                respondMailboxList(baseReferenceName, mailboxPatternString, session, responder, user, mailboxSession);
             }
             okComplete(command, tag, responder);
         } catch (MailboxException e) {
-            LOGGER.error("List failed for mailboxName {} and user {}", mailboxName, user, e);
+            LOGGER.error("List failed for mailboxName {} and user {}", mailboxPatternString, user, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
+    }
+
+    protected ImapResponseMessage createResponse(MailboxMetaData.Children children, MailboxMetaData.Selectability selectability, String name, char hierarchyDelimiter, MailboxType type) {
+        return new ListResponse(children, selectability, name, hierarchyDelimiter);
     }
 
     private void respondNamespace(String referenceName, Responder responder, MailboxSession mailboxSession) {
