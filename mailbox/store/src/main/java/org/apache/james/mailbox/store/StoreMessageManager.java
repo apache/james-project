@@ -185,17 +185,6 @@ public class StoreMessageManager implements MessageManager {
         this.preDeletionHooks = preDeletionHooks;
     }
 
-    protected Factory getMessageIdFactory() {
-        return messageIdFactory;
-    }
-    
-    /**
-     * Return the {@link MailboxPathLocker}
-     */
-    protected MailboxPathLocker getLocker() {
-        return locker;
-    }
-
     /**
      * Return the underlying {@link Mailbox}
      */

@@ -38,8 +38,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
-import org.apache.james.mailbox.store.mail.model.FlagsFactory;
-import org.apache.james.mailbox.store.mail.model.FlagsFilter;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.base.MoreObjects;
@@ -295,16 +293,6 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         recent = flags.contains(Flags.Flag.RECENT);
         seen = flags.contains(Flags.Flag.SEEN);
         userFlags = flags.getUserFlags();
-    }
-
-    public SimpleMailboxMessage filterFlags(FlagsFilter filter) throws MailboxException {
-        Flags flags = FlagsFactory
-            .builder()
-            .flags(createFlags())
-            .addUserFlags(createUserFlags())
-            .filteringFlags(filter)
-            .build();
-        return from(this).flags(flags).build();
     }
 
     @Override

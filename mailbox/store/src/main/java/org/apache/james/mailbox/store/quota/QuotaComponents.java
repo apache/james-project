@@ -32,21 +32,18 @@ public class QuotaComponents {
         return new QuotaComponents(
             new NoMaxQuotaManager(),
             new NoQuotaManager(),
-            new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory),
-            new NoQuotaUpdater());
+            new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory));
     }
 
     private final MaxQuotaManager maxQuotaManager;
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
-    private final QuotaUpdater quotaUpdater;
 
     @Inject
-    public QuotaComponents(MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, QuotaUpdater quotaUpdater) {
+    public QuotaComponents(MaxQuotaManager maxQuotaManager, QuotaManager quotaManager, QuotaRootResolver quotaRootResolver) {
         this.maxQuotaManager = maxQuotaManager;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
-        this.quotaUpdater = quotaUpdater;
     }
 
     public MaxQuotaManager getMaxQuotaManager() {
@@ -59,9 +56,5 @@ public class QuotaComponents {
 
     public QuotaRootResolver getQuotaRootResolver() {
         return quotaRootResolver;
-    }
-
-    public QuotaUpdater getQuotaUpdater() {
-        return quotaUpdater;
     }
 }

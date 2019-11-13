@@ -23,9 +23,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 
 public class MailboxIdDeserialisationException extends MailboxException {
 
-    public MailboxIdDeserialisationException() {
-    }
-
     public MailboxIdDeserialisationException(String message) {
         super(message);
     }

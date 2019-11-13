@@ -108,10 +108,6 @@ public class FixedMaxQuotaManager implements MaxQuotaManager {
         return Optional.empty();
     }
 
-    public Optional<QuotaCount> getMaxMessage() {
-        return Optional.empty();
-    }
-
     @Override
     public void removeDomainMaxMessage(Domain domain) throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Can not modify domain specific upper limit for FixedMaxQuotaManager");

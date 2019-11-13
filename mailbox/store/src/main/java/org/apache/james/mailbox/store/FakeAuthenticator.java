@@ -37,8 +37,4 @@ public class FakeAuthenticator implements Authenticator {
     public void addUser(String user, String password) {
         users.put(user, password);
     }
-
-    public void clear() {
-        users.clear();
-    }
 }

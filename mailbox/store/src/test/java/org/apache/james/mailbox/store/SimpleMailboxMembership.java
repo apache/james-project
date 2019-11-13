@@ -27,7 +27,6 @@ import java.io.SequenceInputStream;
 import java.io.Writer;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -134,10 +133,6 @@ public class SimpleMailboxMembership implements MailboxMessage {
     @Override
     public boolean isSeen() {
         return seen;
-    }
-
-    public void unsetRecent() {
-        recent = false;
     }
 
     @Override

@@ -55,8 +55,6 @@ public interface MapperProvider {
 
     AttachmentMapper createAttachmentMapper() throws MailboxException;
 
-    AnnotationMapper createAnnotationMapper() throws MailboxException;
-
     MailboxId generateId();
 
     MessageUid generateMessageUid();

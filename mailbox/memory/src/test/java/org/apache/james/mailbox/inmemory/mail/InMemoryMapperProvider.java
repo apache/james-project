@@ -31,7 +31,6 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -91,11 +90,6 @@ public class InMemoryMapperProvider implements MapperProvider {
     @Override
     public boolean supportPartialAttachmentFetch() {
         return false;
-    }
-
-    @Override
-    public AnnotationMapper createAnnotationMapper() throws MailboxException {
-        return inMemoryMailboxSessionMapperFactory.createAnnotationMapper(MAILBOX_SESSION);
     }
     
     @Override

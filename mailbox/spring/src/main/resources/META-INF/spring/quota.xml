@@ -62,7 +62,6 @@
         <constructor-arg index="0" ref="maxQuotaManager"/>
         <constructor-arg index="1" ref="quotaManager"/>
         <constructor-arg index="2" ref="quotaRootResolver"/>
-        <constructor-arg index="3" ref="quotaUpdater"/>
     </bean>
 
 </beans>

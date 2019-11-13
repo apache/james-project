@@ -19,7 +19,6 @@
 package org.apache.james.mailbox.store.streaming;
 
 import java.io.File;
-import java.io.FileDescriptor;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -37,18 +36,6 @@ public class LimitingFileInputStream extends FileInputStream {
     public LimitingFileInputStream(File file, long limit) throws FileNotFoundException {
         super(file);
         this.limit = limit;
-    }
-
-    public LimitingFileInputStream(FileDescriptor fdObj, long limit) {
-        super(fdObj);
-        this.limit = limit;
-
-    }
-
-    public LimitingFileInputStream(String name, long limit) throws FileNotFoundException {
-        super(name);
-        this.limit = limit;
-
     }
 
     @Override

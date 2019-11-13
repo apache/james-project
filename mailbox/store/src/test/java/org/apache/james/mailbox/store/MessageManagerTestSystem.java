@@ -40,5 +40,4 @@ public abstract class MessageManagerTestSystem {
 
     public abstract Mailbox createMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
 
-    public abstract void deleteMailbox(MailboxId mailboxId, MailboxSession session);
 }
