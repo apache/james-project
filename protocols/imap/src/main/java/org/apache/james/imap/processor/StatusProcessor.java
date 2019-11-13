@@ -64,27 +64,29 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
             MessageManager.MetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
             MessageManager.MetaData metaData = mailbox.getMetaData(false, mailboxSession, fetchGroup);
+            MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
 
-            Long messages = messages(statusDataItems, metaData);
-            Long recent = recent(statusDataItems, metaData);
-            MessageUid uidNext = uidNext(statusDataItems, metaData);
-            Long uidValidity = uidValidity(statusDataItems, metaData);
-            Long unseen = unseen(statusDataItems, metaData);
-            Long highestModSeq = highestModSeq(statusDataItems, metaData);
-            
             // Enable CONDSTORE as this is a CONDSTORE enabling command
-            if (highestModSeq != null) {
+            if (response.getHighestModSeq() != null) {
                 condstoreEnablingCommand(session, responder, metaData, false); 
             }
-            MailboxStatusResponse response = new MailboxStatusResponse(messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
             responder.respond(response);
             unsolicitedResponses(session, responder, false);
             okComplete(command, tag, responder);
-
         } catch (MailboxException e) {
             LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
+    }
+
+    private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
+        Long messages = messages(statusDataItems, metaData);
+        Long recent = recent(statusDataItems, metaData);
+        MessageUid uidNext = uidNext(statusDataItems, metaData);
+        Long uidValidity = uidValidity(statusDataItems, metaData);
+        Long unseen = unseen(statusDataItems, metaData);
+        Long highestModSeq = highestModSeq(statusDataItems, metaData);
+        return new MailboxStatusResponse(messages, recent, uidNext, highestModSeq, uidValidity, unseen, request.getMailboxName());
     }
 
     private MessageManager.MetaData.FetchGroup computeFetchGroup(StatusDataItems statusDataItems) {
@@ -111,7 +113,6 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-
     private Long highestModSeq(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isHighestModSeq()) {
             return metaData.getHighestModSeq();
@@ -119,7 +120,6 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             return null;
         }
     }
-
     
     private MessageUid uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isUidNext()) {
