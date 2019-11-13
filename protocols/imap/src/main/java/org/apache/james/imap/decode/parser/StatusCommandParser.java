@@ -45,6 +45,14 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         super(ImapCommand.authenticatedStateCommand(ImapConstants.STATUS_COMMAND_NAME));
     }
 
+    @Override
+    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+        String mailboxName = request.mailbox();
+        StatusDataItems statusDataItems = statusDataItems(request);
+        request.eol();
+        return new StatusRequest(command, mailboxName, statusDataItems, tag);
+    }
+
     private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
         ImmutableList<String> words = splitWords(request);
 
@@ -93,13 +101,5 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         } else {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + nextWord + "'");
         }
-    }
-
-    @Override
-        protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        String mailboxName = request.mailbox();
-        StatusDataItems statusDataItems = statusDataItems(request);
-        request.eol();
-        return new StatusRequest(command, mailboxName, statusDataItems, tag);
     }
 }
