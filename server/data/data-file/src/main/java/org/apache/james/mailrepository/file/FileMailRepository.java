@@ -232,7 +232,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     private void internalStore(Mail mc) throws MessagingException, IOException {
         String key = mc.getName();
-        if (keys != null && !keys.contains(key)) {
+        if (keys != null) {
             keys.add(key);
         }
         boolean saveStream = true;
