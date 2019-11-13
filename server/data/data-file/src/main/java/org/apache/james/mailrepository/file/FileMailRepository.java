@@ -73,13 +73,6 @@ import com.google.common.collect.Iterators;
 public class FileMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailRepository.class);
 
-
-    /**
-     * Whether 'deep debugging' is turned on.
-     */
-    private static final boolean DEEP_DEBUG = false;
-
-
     private FilePersistentStreamRepository streamRepository;
     private FilePersistentObjectRepository objectRepository;
     private String destination;
@@ -246,12 +239,9 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
         }
         if (message instanceof MimeMessageWrapper) {
             MimeMessageWrapper wrapper = (MimeMessageWrapper) message;
-            if (DEEP_DEBUG) {
-                System.out.println("Retrieving from: " + wrapper.getSourceId());
-                String debugBuffer = "Saving to:       " + destination + "/" + mc.getName();
-                System.out.println(debugBuffer);
-                System.out.println("Modified: " + wrapper.isModified());
-            }
+            LOGGER.trace("Retrieving from: {}", wrapper.getSourceId());
+            LOGGER.trace("Saving to:       {}/{}", destination, mc.getName());
+            LOGGER.trace("Modified: {}", wrapper.isModified());
             String destinationBuffer = destination + "/" + mc.getName();
             if (destinationBuffer.equals(wrapper.getSourceId())) {
                 if (!wrapper.isModified()) {
