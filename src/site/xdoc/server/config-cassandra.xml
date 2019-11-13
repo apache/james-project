@@ -35,6 +35,11 @@
         <dt><strong>cassandra.nodes</strong></dt>
         <dd>List of some nodes of the cassandra's cluster in following format host:port or host, if the port is not specified we use 9042</dd>
 
+        <dt><strong>cassandra.keyspace.create</strong></dt>
+        <dd>Indicate if the keyspace should be created by James. Optional, default value: <b>false</b><br />
+            If set to true James will attempt to create the keyspace when starting up.<br />
+        </dd>
+
         <dt><strong>cassandra.keyspace</strong></dt>
         <dd>Is the name of the keyspace used by James. Optional, default value: <b>apache_james</b></dd>
 
