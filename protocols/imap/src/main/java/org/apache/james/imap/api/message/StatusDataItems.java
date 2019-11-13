@@ -18,78 +18,59 @@
  ****************************************************************/
 package org.apache.james.imap.api.message;
 
+import java.util.EnumSet;
+
 import com.google.common.base.MoreObjects;
 
 public class StatusDataItems {
-    private boolean messages;
-
-    private boolean recent;
-
-    private boolean uidNext;
-
-    private boolean uidValidity;
-
-    private boolean unseen;
-
-    private boolean highestModSeq;
-
-    public boolean isMessages() {
-        return messages;
+    public enum StatusItem {
+        MESSAGES,
+        RECENT,
+        UID_NEXT,
+        UID_VALIDITY,
+        UNSEEN,
+        HIGHEST_MODSEQ
     }
 
-    public void setMessages(boolean messages) {
-        this.messages = messages;
+    private final EnumSet<StatusItem> statusItems;
+
+    public StatusDataItems(EnumSet<StatusItem> statusItems) {
+        this.statusItems = statusItems;
+    }
+
+    public boolean isMessages() {
+        return statusItems.contains(StatusItem.MESSAGES);
     }
 
     public boolean isRecent() {
-        return recent;
-    }
-
-    public void setRecent(boolean recent) {
-        this.recent = recent;
+        return statusItems.contains(StatusItem.RECENT);
     }
 
     public boolean isUidNext() {
-        return uidNext;
-    }
-
-    public void setUidNext(boolean uidNext) {
-        this.uidNext = uidNext;
+        return statusItems.contains(StatusItem.UID_NEXT);
     }
 
     public boolean isUidValidity() {
-        return uidValidity;
-    }
-
-    public void setUidValidity(boolean uidValidity) {
-        this.uidValidity = uidValidity;
+        return statusItems.contains(StatusItem.UID_VALIDITY);
     }
 
     public boolean isUnseen() {
-        return unseen;
-    }
-
-    public void setUnseen(boolean unseen) {
-        this.unseen = unseen;
-    }
-
-    public void setHighestModSeq(boolean highestModSeq) {
-        this.highestModSeq = highestModSeq;
+        return statusItems.contains(StatusItem.UNSEEN);
     }
     
     public boolean isHighestModSeq() {
-        return highestModSeq;
+        return statusItems.contains(StatusItem.HIGHEST_MODSEQ);
     }
 
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
-            .add("messages", messages)
-            .add("recent", recent)
-            .add("uidNext", uidNext)
-            .add("uidValidity", uidValidity)
-            .add("unseen", unseen)
-            .add("highestModSeq", highestModSeq)
+            .add("messages", isMessages())
+            .add("recent", isRecent())
+            .add("uidNext", isUidNext())
+            .add("uidValidity", isUidValidity())
+            .add("unseen", isUnseen())
+            .add("highestModSeq", isHighestModSeq())
             .toString();
     }
 }

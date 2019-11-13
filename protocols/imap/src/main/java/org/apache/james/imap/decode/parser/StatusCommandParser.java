@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import java.util.EnumSet;
+
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -40,7 +42,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     }
 
     private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
-        StatusDataItems items = new StatusDataItems();
+        EnumSet<StatusDataItems.StatusItem> items = EnumSet.noneOf(StatusDataItems.StatusItem.class);
 
         request.nextWordChar();
         request.consumeChar('(');
@@ -48,33 +50,33 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         String nextWord = request.consumeWord(validator);
 
         while (!nextWord.endsWith(")")) {
-            addItem(nextWord, items);
+            items.add(parseStatus(nextWord));
             nextWord = request.consumeWord(validator);
         }
         // Got the closing ")", may be attached to a word.
         if (nextWord.length() > 1) {
-            addItem(nextWord.substring(0, nextWord.length() - 1), items);
+            items.add(parseStatus(nextWord.substring(0, nextWord.length() - 1)));
         }
 
-        return items;
+        return new StatusDataItems(items);
     }
 
-    private void addItem(String nextWord, StatusDataItems items) throws DecodingException {
+    private StatusDataItems.StatusItem parseStatus(String nextWord) throws DecodingException {
         // All the matching must be done in a case-insensitive fashion.
         // See rfc3501 9. Formal Syntax and IMAP-282
         if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_MESSAGES)) {
-            items.setMessages(true);
+            return StatusDataItems.StatusItem.MESSAGES;
         } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_RECENT)) {
-            items.setRecent(true);
+            return StatusDataItems.StatusItem.RECENT;
         } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UIDNEXT)) {
-            items.setUidNext(true);
+            return StatusDataItems.StatusItem.UID_NEXT;
         } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UIDVALIDITY)) {
-            items.setUidValidity(true);
+            return StatusDataItems.StatusItem.UID_VALIDITY;
         } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_UNSEEN)) {
-            items.setUnseen(true);
+            return StatusDataItems.StatusItem.UNSEEN;
         } else if (nextWord.equalsIgnoreCase(ImapConstants.STATUS_HIGHESTMODSEQ)) {
             // HIGHESTMODSEQ status item as defined in RFC4551 3.6 HIGHESTMODSEQ Status Data Items
-            items.setHighestModSeq(true);
+            return StatusDataItems.StatusItem.HIGHEST_MODSEQ;
         } else {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown status item: '" + nextWord + "'");
         }
