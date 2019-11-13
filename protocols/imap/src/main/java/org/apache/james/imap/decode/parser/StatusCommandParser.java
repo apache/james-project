@@ -39,7 +39,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         super(ImapCommand.authenticatedStateCommand(ImapConstants.STATUS_COMMAND_NAME));
     }
 
-    StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
+    private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
         StatusDataItems items = new StatusDataItems();
 
         request.nextWordChar();
