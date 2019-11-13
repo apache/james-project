@@ -21,13 +21,13 @@ package org.apache.james.repository.api;
 
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Iterator;
+import java.util.stream.Stream;
 
 public interface StreamRepository extends Repository {
 
     InputStream get(String key);
 
-    Iterator<String> list();
+    Stream<String> list();
 
     OutputStream put(String key);
 

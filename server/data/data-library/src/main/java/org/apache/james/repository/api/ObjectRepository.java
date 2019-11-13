@@ -19,7 +19,7 @@
 
 package org.apache.james.repository.api;
 
-import java.util.Iterator;
+import java.util.stream.Stream;
 
 public interface ObjectRepository extends Repository {
 
@@ -29,7 +29,7 @@ public interface ObjectRepository extends Repository {
 
     Object get(String key, ClassLoader loader);
 
-    Iterator<String> list();
+    Stream<String> list();
 
     void put(String key, Object value);
 

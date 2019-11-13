@@ -27,6 +27,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -51,7 +53,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 /**
@@ -152,14 +153,9 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
             }
 
             // Finds non-matching pairs and deletes the extra files
-            HashSet<String> streamKeys = new HashSet<>();
-            for (Iterator<String> i = streamRepository.list(); i.hasNext(); ) {
-                streamKeys.add(i.next());
-            }
-            HashSet<String> objectKeys = new HashSet<>();
-            for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
-                objectKeys.add(i.next());
-            }
+
+            HashSet<String> streamKeys = streamRepository.list().collect(Collectors.toCollection(HashSet::new));
+            HashSet<String> objectKeys = objectRepository.list().collect(Collectors.toCollection(HashSet::new));
 
             @SuppressWarnings("unchecked")
             Collection<String> strandedStreams = (Collection<String>) streamKeys.clone();
@@ -181,9 +177,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
                 // Next get a list from the object repository
                 // and use that for the list of keys
                 keys.clear();
-                for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
-                    keys.add(i.next());
-                }
+                objectRepository.list().forEach(keys::add);
             }
             LOGGER.debug("{} created in {}", getClass().getName(), destination);
         } catch (Exception e) {
@@ -313,9 +307,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public void remove(Collection<Mail> mails) throws MessagingException {
-        for (Mail mail : mails) {
-            remove(mail);
-        }
+        mails.forEach(Throwing.<Mail>consumer(this::remove).sneakyThrow());
     }
 
     @Override
@@ -338,7 +330,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public void removeAll() {
-        ImmutableList.copyOf(list())
+        listStream()
             .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
     }
 
@@ -352,6 +344,11 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
 
     @Override
     public Iterator<MailKey> list() {
+        return listStream()
+            .iterator();
+    }
+
+    private Stream<MailKey> listStream() {
         // Fix ConcurrentModificationException by cloning
         // the keyset before getting an iterator
         final ArrayList<String> clone;
@@ -360,17 +357,14 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
                 clone = new ArrayList<>(keys);
             }
         } else {
-            clone = new ArrayList<>();
-            for (Iterator<String> i = objectRepository.list(); i.hasNext(); ) {
-                clone.add(i.next());
-            }
+            clone = objectRepository.list().collect(Collectors.toCollection(ArrayList::new));
         }
         if (fifo) {
             Collections.sort(clone); // Keys is a HashSet; impose FIFO for apps
         }
         // that need it
-        return clone.stream()
-            .map(MailKey::new)
-            .iterator();
+        return clone
+            .stream()
+            .map(MailKey::new);
     }
 }

@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.inject.Inject;
@@ -283,13 +283,11 @@ public abstract class AbstractFileRepository implements Repository, Configurable
     /**
      * Returns the list of used keys.
      */
-    public Iterator<String> list() {
+    public Stream<String> list() {
         final File storeDir = new File(baseDirectory.getAbsolutePath());
         final String[] names = storeDir.list(filter);
 
-        return Arrays.stream(names)
-            .map(this::decode)
-            .iterator();
+        return Arrays.stream(names).map(this::decode);
     }
 
     /**
