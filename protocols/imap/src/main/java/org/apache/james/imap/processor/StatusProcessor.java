@@ -60,9 +60,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         try {
             LOGGER.debug("Status called on mailbox named {}", mailboxPath);
 
-            MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
-            MessageManager.MetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
-            MessageManager.MetaData metaData = mailbox.getMetaData(false, mailboxSession, fetchGroup);
+            MessageManager.MetaData metaData = retrieveMetadata(mailboxPath, statusDataItems, mailboxSession);
             MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
 
             // Enable CONDSTORE as this is a CONDSTORE enabling command
@@ -76,6 +74,12 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
             LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
         }
+    }
+
+    private MessageManager.MetaData retrieveMetadata(MailboxPath mailboxPath, StatusDataItems statusDataItems, MailboxSession mailboxSession) throws MailboxException {
+        MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, mailboxSession);
+        MessageManager.MetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
+        return mailbox.getMetaData(false, mailboxSession, fetchGroup);
     }
 
     private MailboxStatusResponse computeStatusResponse(StatusRequest request, StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
