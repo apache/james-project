@@ -37,8 +37,11 @@ import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.lifecycle.api.Configurable;
 import org.apache.james.mailrepository.api.MailKey;
-import org.apache.james.mailrepository.lib.AbstractMailRepository;
+import org.apache.james.mailrepository.api.MailRepository;
+import org.apache.james.mailrepository.lib.Lock;
+import org.apache.james.repository.api.Initializable;
 import org.apache.james.repository.file.FilePersistentObjectRepository;
 import org.apache.james.repository.file.FilePersistentStreamRepository;
 import org.apache.james.server.core.MimeMessageCopyOnWriteProxy;
@@ -46,6 +49,10 @@ import org.apache.james.server.core.MimeMessageWrapper;
 import org.apache.mailet.Mail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterators;
 
 /**
  * <p>
@@ -63,8 +70,15 @@ import org.slf4j.LoggerFactory;
  * Requires a logger called MailRepository.
  * </p>
  */
-public class FileMailRepository extends AbstractMailRepository {
+public class FileMailRepository implements MailRepository, Configurable, Initializable {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileMailRepository.class);
+
+
+    /**
+     * Whether 'deep debugging' is turned on.
+     */
+    private static final boolean DEEP_DEBUG = false;
+
 
     private FilePersistentStreamRepository streamRepository;
     private FilePersistentObjectRepository objectRepository;
@@ -76,14 +90,46 @@ public class FileMailRepository extends AbstractMailRepository {
     // repositories such as spam and error
     private FileSystem fileSystem;
 
+    /**
+     * A lock used to control access to repository elements, locking access
+     * based on the key
+     */
+    private final Lock accessControlLock = new Lock();
+
+    /**
+     * Releases a lock on a message identified the key
+     *
+     * @param key
+     *            the key of the message to be unlocked
+     *
+     * @return true if successfully released the lock, false otherwise
+     */
+    @Override
+    public boolean unlock(MailKey key) {
+        return accessControlLock.unlock(key);
+    }
+
+    /**
+     * Obtains a lock on a message identified by key
+     *
+     * @param key
+     *            the key of the message to be locked
+     *
+     * @return true if successfully obtained the lock, false otherwise
+     */
+    @Override
+    public boolean lock(MailKey key) {
+        return accessControlLock.lock(key);
+    }
+
+
     @Inject
     public void setFileSystem(FileSystem fileSystem) {
         this.fileSystem = fileSystem;
     }
 
     @Override
-    protected void doConfigure(HierarchicalConfiguration<ImmutableNode> config) throws org.apache.commons.configuration2.ex.ConfigurationException {
-        super.doConfigure(config);
+    public void configure(HierarchicalConfiguration<ImmutableNode> config) {
         destination = config.getString("[@destinationURL]");
         LOGGER.debug("FileMailRepository.destinationURL: {}", destination);
         fifo = config.getBoolean("[@FIFO]", false);
@@ -154,7 +200,37 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void internalStore(Mail mc) throws MessagingException, IOException {
+    public MailKey store(Mail mc) throws MessagingException {
+        boolean wasLocked = true;
+        MailKey key = MailKey.forMail(mc);
+        try {
+            synchronized (this) {
+                wasLocked = accessControlLock.isLocked(key);
+                if (!wasLocked) {
+                    // If it wasn't locked, we want a lock during the store
+                    lock(key);
+                }
+            }
+            internalStore(mc);
+            return key;
+        } catch (MessagingException e) {
+            LOGGER.error("Exception caught while storing mail {}", key, e);
+            throw e;
+        } catch (Exception e) {
+            LOGGER.error("Exception caught while storing mail {}", key, e);
+            throw new MessagingException("Exception caught while storing mail " + key, e);
+        } finally {
+            if (!wasLocked) {
+                // If it wasn't locked, we need to unlock now
+                unlock(key);
+                synchronized (this) {
+                    notify();
+                }
+            }
+        }
+    }
+
+    private void internalStore(Mail mc) throws MessagingException, IOException {
         String key = mc.getName();
         if (keys != null && !keys.contains(key)) {
             keys.add(key);
@@ -245,7 +321,42 @@ public class FileMailRepository extends AbstractMailRepository {
     }
 
     @Override
-    protected void internalRemove(MailKey key) throws MessagingException {
+    public void remove(Mail mail) throws MessagingException {
+        remove(MailKey.forMail(mail));
+    }
+
+    @Override
+    public void remove(Collection<Mail> mails) throws MessagingException {
+        for (Mail mail : mails) {
+            remove(mail);
+        }
+    }
+
+    @Override
+    public void remove(MailKey key) throws MessagingException {
+        if (lock(key)) {
+            try {
+                internalRemove(key);
+            } finally {
+                unlock(key);
+            }
+        } else {
+            throw new MessagingException("Cannot lock " + key + " to remove it");
+        }
+    }
+
+    @Override
+    public long size() {
+        return Iterators.size(list());
+    }
+
+    @Override
+    public void removeAll() {
+        ImmutableList.copyOf(list())
+            .forEach(Throwing.<MailKey>consumer(this::remove).sneakyThrow());
+    }
+
+    private void internalRemove(MailKey key) {
         if (keys != null) {
             keys.remove(key.asString());
         }
