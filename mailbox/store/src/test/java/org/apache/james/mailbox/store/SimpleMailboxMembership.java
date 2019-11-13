@@ -282,11 +282,6 @@ public class SimpleMailboxMembership implements MailboxMessage {
     }
 
     @Override
-    public int compareTo(MailboxMessage other) {
-        return getUid().compareTo(other.getUid());
-    }
-
-    @Override
     public long getModSeq() {
         return modSeq;
     }

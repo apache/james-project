@@ -159,11 +159,6 @@ public class ListMessageAssertTest {
             }
 
             @Override
-            public int compareTo(MailboxMessage o) {
-                return 0;
-            }
-
-            @Override
             public long getHeaderOctets() {
                 return bodyStart;
             }
