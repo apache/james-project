@@ -96,15 +96,4 @@ public interface MailRepository {
      */
     void removeAll() throws MessagingException;
 
-    /**
-     * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
-     */
-    @Deprecated
-    boolean lock(MailKey key) throws MessagingException;
-
-    /**
-     * @deprecated This method is implementation dependent, it has been moved to org.apache.james.mailrepository.lib.AbstractMailRepository
-     */
-    @Deprecated
-    boolean unlock(MailKey key) throws MessagingException;
 }

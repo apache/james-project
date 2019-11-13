@@ -154,14 +154,4 @@ public class CassandraMailRepository implements MailRepository {
             .then()
             .block();
     }
-
-    @Override
-    public boolean lock(MailKey key) {
-        return false;
-    }
-
-    @Override
-    public boolean unlock(MailKey key) {
-        return false;
-    }
 }

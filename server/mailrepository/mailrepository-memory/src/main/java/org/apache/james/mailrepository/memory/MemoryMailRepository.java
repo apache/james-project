@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.mailrepository.api.MailKey;
@@ -69,16 +70,6 @@ public class MemoryMailRepository implements MailRepository {
     @Override
     public void remove(MailKey key) {
         mails.remove(key);
-    }
-
-    @Override
-    public boolean lock(MailKey key) {
-        return false;
-    }
-
-    @Override
-    public boolean unlock(MailKey key) {
-        return false;
     }
 
     @Override

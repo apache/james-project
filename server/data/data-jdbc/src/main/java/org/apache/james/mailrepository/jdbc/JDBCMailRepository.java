@@ -219,24 +219,6 @@ public class JDBCMailRepository implements MailRepository, Configurable, Initial
 
     }
 
-
-    /**
-     * JDBC uses transaction, it doesn't need locks
-     */
-    @Override
-    public boolean unlock(MailKey key) {
-        return false;
-    }
-
-    /**
-     * JDBC uses transaction, it doesn't need locks
-     */
-    @Override
-    public boolean lock(MailKey key) {
-        return false;
-    }
-
-
     /**
      * Initialises the JDBC repository.
      * <ol>

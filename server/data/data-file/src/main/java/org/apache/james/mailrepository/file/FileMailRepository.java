@@ -98,8 +98,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
      *
      * @return true if successfully released the lock, false otherwise
      */
-    @Override
-    public boolean unlock(MailKey key) {
+    private boolean unlock(MailKey key) {
         return accessControlLock.unlock(key);
     }
 
@@ -111,8 +110,7 @@ public class FileMailRepository implements MailRepository, Configurable, Initial
      *
      * @return true if successfully obtained the lock, false otherwise
      */
-    @Override
-    public boolean lock(MailKey key) {
+    private boolean lock(MailKey key) {
         return accessControlLock.lock(key);
     }
 
