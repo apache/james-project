@@ -28,6 +28,7 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO
 import org.apache.james.json.DTOConverter
 import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO
+import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.eventsourcing._
 import org.apache.james.task.eventsourcing.distributed.distributed.AdditionalInformationConverter
 import org.apache.james.task.{Hostname, Task, TaskExecutionDetails, TaskId}
@@ -36,6 +37,12 @@ import scala.compat.java8.OptionConverters._
 
 package object distributed {
   type AdditionalInformationConverter = DTOConverter[TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO]
+}
+
+class NestedAdditionalInformationDTODeserializerNotFound(val dto: AdditionalInformationDTO) extends RuntimeException("Unable to find a deserializer for " + dto) {
+}
+
+class NestedAdditionalInformationDTOSerializerNotFound(val domainObject: AdditionalInformation) extends RuntimeException("Unable to find a serializer for " + domainObject) {
 }
 
 sealed abstract class TaskEventDTO(val getType: String, val getAggregate: String, val getEvent: Int) extends EventDTO {
@@ -91,7 +98,8 @@ case class CompletedDTO(@JsonProperty("type") typeName: String,
                         @JsonProperty("additionalInformation") getAdditionalInformation: Optional[AdditionalInformationDTO])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Completed = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation
+      .map(dto => additionalInformationConverter.toDomainObject(dto).orElseThrow(() => new NestedAdditionalInformationDTODeserializerNotFound(dto)))
     Completed(domainAggregateId, domainEventId, domainResult, additionalInformation.asScala)
   }
   private def domainResult: Task.Result = getResult match {
@@ -102,7 +110,10 @@ case class CompletedDTO(@JsonProperty("type") typeName: String,
 
 object CompletedDTO {
   def fromDomainObject(dtoConverter: AdditionalInformationConverter)(event: Completed, typeName: String): CompletedDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.toDTO(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event
+      .additionalInformation
+      .asJava
+      .map(domainObject => dtoConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
     CompletedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), resultToString(event.result), additionalInformationDTO)
   }
 
@@ -120,14 +131,17 @@ case class FailedDTO(@JsonProperty("type") typeName: String,
                      @JsonProperty("exception") getException: Optional[String])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Failed = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation
+      .map(dto => additionalInformationConverter.toDomainObject(dto).orElseThrow(() => new NestedAdditionalInformationDTODeserializerNotFound(dto)))
     Failed(domainAggregateId, domainEventId, additionalInformation.asScala, getErrorMessage.asScala, getException.asScala)
   }
 }
 
 object FailedDTO {
   def fromDomainObject(dtoConverter: AdditionalInformationConverter)(event: Failed, typeName: String): FailedDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(dtoConverter.toDTO(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event
+      .additionalInformation
+      .asJava.map(domainObject => dtoConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
     FailedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO, event.errorMessage.asJava, event.exception.asJava)
   }
 }
@@ -138,14 +152,18 @@ case class CancelledDTO(@JsonProperty("type") typeName: String,
                         @JsonProperty("additionalInformation") getAdditionalInformation: Optional[AdditionalInformationDTO])
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): Cancelled = {
-    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation.map(additionalInformationConverter.toDomainObject(_).orElseThrow())
+    val additionalInformation: Optional[TaskExecutionDetails.AdditionalInformation] = getAdditionalInformation
+      .map(dto => additionalInformationConverter.toDomainObject(dto).orElseThrow(() => new NestedAdditionalInformationDTODeserializerNotFound(dto)))
     Cancelled(domainAggregateId, domainEventId, additionalInformation.asScala)
   }
 }
 
 object CancelledDTO {
   def fromDomainObject(additionalInformationConverter: AdditionalInformationConverter)(event: Cancelled, typeName: String): CancelledDTO = {
-    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event.additionalInformation.asJava.map(additionalInformationConverter.toDTO(_).orElseThrow())
+    val additionalInformationDTO: Optional[AdditionalInformationDTO] = event
+      .additionalInformation
+      .asJava
+      .map(domainObject => additionalInformationConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
     CancelledDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
   }
 }
@@ -156,16 +174,18 @@ case class AdditionalInformationUpdatedDTO(@JsonProperty("type") typeName: Strin
                      @JsonProperty("additionalInformation") getAdditionalInformation: AdditionalInformationDTO)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
   def toDomainObject(additionalInformationConverter: AdditionalInformationConverter): AdditionalInformationUpdated = {
-    val additionalInformation = additionalInformationConverter.toDomainObject(getAdditionalInformation)
-        .orElseThrow()
+    val additionalInformation = additionalInformationConverter
+        .toDomainObject(getAdditionalInformation)
+        .orElseThrow(() => new NestedAdditionalInformationDTODeserializerNotFound(getAdditionalInformation))
     AdditionalInformationUpdated(domainAggregateId, domainEventId, additionalInformation)
   }
 }
 
 object AdditionalInformationUpdatedDTO {
   def fromDomainObject(additionalInformationConverter: AdditionalInformationConverter)(event: AdditionalInformationUpdated, typeName: String): AdditionalInformationUpdatedDTO = {
-    val additionalInformationDTO = additionalInformationConverter.toDTO(event.additionalInformation)
-        .orElseThrow()
+    val additionalInformationDTO = additionalInformationConverter
+        .toDTO(event.additionalInformation)
+        .orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(event.additionalInformation))
     AdditionalInformationUpdatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
   }
 }
