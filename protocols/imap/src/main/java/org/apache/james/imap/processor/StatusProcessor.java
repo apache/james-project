@@ -93,65 +93,53 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     private Long unseen(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long unseen;
         if (statusDataItems.isUnseen()) {
-            unseen = metaData.getUnseenCount();
+            return metaData.getUnseenCount();
         } else {
-            unseen = null;
+            return null;
         }
-        return unseen;
     }
 
     private Long uidValidity(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long uidValidity;
         if (statusDataItems.isUidValidity()) {
-            uidValidity = metaData.getUidValidity();
+            return metaData.getUidValidity();
         } else {
-            uidValidity = null;
+            return null;
         }
-        return uidValidity;
     }
 
 
     private Long highestModSeq(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long highestModSeq;
         if (statusDataItems.isHighestModSeq()) {
-            highestModSeq = metaData.getHighestModSeq();
+            return metaData.getHighestModSeq();
         } else {
-            highestModSeq = null;
+            return null;
         }
-        return highestModSeq;
     }
 
     
     private MessageUid uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final MessageUid uidNext;
         if (statusDataItems.isUidNext()) {
-            uidNext = metaData.getUidNext();
+            return metaData.getUidNext();
         } else {
-            uidNext = null;
+            return null;
         }
-        return uidNext;
     }
 
     private Long recent(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long recent;
         if (statusDataItems.isRecent()) {
-            recent = metaData.countRecent();
+            return metaData.countRecent();
         } else {
-            recent = null;
+            return null;
         }
-        return recent;
     }
 
     private Long messages(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
-        final Long messages;
         if (statusDataItems.isMessages()) {
-            messages = metaData.getMessageCount();
+           return metaData.getMessageCount();
         } else {
-            messages = null;
+            return null;
         }
-        return messages;
     }
 
     @Override
