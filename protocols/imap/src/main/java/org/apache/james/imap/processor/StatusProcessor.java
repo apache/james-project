@@ -60,8 +60,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         try {
             LOGGER.debug("Status called on mailbox named {}", mailboxPath);
 
-            MailboxManager mailboxManager = getMailboxManager();
-            MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
+            MessageManager mailbox = getMailboxManager().getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
             MessageManager.MetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
             MessageManager.MetaData metaData = mailbox.getMetaData(false, mailboxSession, fetchGroup);
             MailboxStatusResponse response = computeStatusResponse(request, statusDataItems, metaData);
