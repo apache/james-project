@@ -58,34 +58,34 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    protected void processRequest(SetAnnotationRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(SetAnnotationRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        final String mailboxName = message.getMailboxName();
+        final String mailboxName = request.getMailboxName();
         try {
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
 
-            mailboxManager.updateAnnotations(mailboxPath, mailboxSession, message.getMailboxAnnotations());
+            mailboxManager.updateAnnotations(mailboxPath, mailboxSession, request.getMailboxAnnotations());
 
-            okComplete(message, responder);
+            okComplete(request, responder);
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
+            LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
         } catch (AnnotationException e) {
-            LOGGER.info("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
+            LOGGER.info("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, new HumanReadableText(HumanReadableText.MAILBOX_ANNOTATION_KEY, e.getMessage()));
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
     @Override
-    protected Closeable addContextToMDC(SetAnnotationRequest message) {
+    protected Closeable addContextToMDC(SetAnnotationRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "SET_ANNOTATION")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("annotations", message.getMailboxAnnotations())
+            .addContext("mailbox", request.getMailboxName())
+            .addContext("annotations", request.getMailboxAnnotations())
             .build();
     }
 }

@@ -37,13 +37,13 @@ public class CheckProcessor extends AbstractMailboxProcessor<CheckRequest> {
     }
 
     @Override
-    protected void processRequest(CheckRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(CheckRequest request, ImapSession session, Responder responder) {
         unsolicitedResponses(session, responder, false);
-        okComplete(message, responder);
+        okComplete(request, responder);
     }
 
     @Override
-    protected Closeable addContextToMDC(CheckRequest message) {
+    protected Closeable addContextToMDC(CheckRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "CHECK")
             .build();

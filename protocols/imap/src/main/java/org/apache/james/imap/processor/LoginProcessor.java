@@ -68,10 +68,10 @@ public class LoginProcessor extends AbstractAuthProcessor<LoginRequest> implemen
     }
 
     @Override
-    protected Closeable addContextToMDC(LoginRequest message) {
+    protected Closeable addContextToMDC(LoginRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "LOGIN")
-            .addContext(MDCBuilder.USER, message.getUserid())
+            .addContext(MDCBuilder.USER, request.getUserid())
             .build();
     }
 }

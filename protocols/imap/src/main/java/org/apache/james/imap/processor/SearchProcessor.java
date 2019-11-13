@@ -503,11 +503,11 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(SearchRequest message) {
+    protected Closeable addContextToMDC(SearchRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "SEARCH")
-            .addContext("useUid", message.isUseUids())
-            .addContext("searchOperation", message.getSearchOperation())
+            .addContext("useUid", request.isUseUids())
+            .addContext("searchOperation", request.getSearchOperation())
             .build();
     }
 }

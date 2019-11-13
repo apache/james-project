@@ -188,11 +188,11 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(ListRequest message) {
+    protected Closeable addContextToMDC(ListRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "LIST")
-            .addContext("base", message.getBaseReferenceName())
-            .addContext("pattern", message.getMailboxPattern())
+            .addContext("base", request.getBaseReferenceName())
+            .addContext("pattern", request.getMailboxPattern())
             .build();
     }
 }

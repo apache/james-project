@@ -58,7 +58,7 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(LogoutRequest message) {
+    protected Closeable addContextToMDC(LogoutRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "LOGOUT")
             .build();

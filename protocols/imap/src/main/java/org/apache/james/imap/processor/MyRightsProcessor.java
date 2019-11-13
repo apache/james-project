@@ -58,11 +58,11 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     }
 
     @Override
-    protected void processRequest(MyRightsRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(MyRightsRequest request, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        final String mailboxName = message.getMailboxName();
+        final String mailboxName = request.getMailboxName();
         try {
 
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -89,19 +89,19 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
                     && !myRights.contains(MailboxACL.Right.CreateMailbox)
                     && !myRights.contains(MailboxACL.Right.DeleteMailbox)
                     && !myRights.contains(MailboxACL.Right.Administer)) {
-                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else {
                 MyRightsResponse myRightsResponse = new MyRightsResponse(mailboxName, myRights);
                 responder.respond(myRightsResponse);
-                okComplete(message, responder);
+                okComplete(request, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
         } catch (MailboxNotFoundException e) {
-            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }
@@ -112,10 +112,10 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(MyRightsRequest message) {
+    protected Closeable addContextToMDC(MyRightsRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "MYRIGHTS")
-            .addContext("mailbox", message.getMailboxName())
+            .addContext("mailbox", request.getMailboxName())
             .build();
     }
 }

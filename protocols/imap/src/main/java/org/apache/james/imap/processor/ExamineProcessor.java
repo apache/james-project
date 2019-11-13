@@ -39,16 +39,16 @@ public class ExamineProcessor extends AbstractSelectionProcessor<ExamineRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(ExamineRequest message) {
+    protected Closeable addContextToMDC(ExamineRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "EXAMINE")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("condstore", Boolean.toString(message.getCondstore()))
-            .addContext("knownModseq", message.getKnownModSeq())
-            .addContext("knownUids", UidRange.toString(message.getKnownUidSet()))
-            .addContext("knownIdRange", IdRange.toString(message.getKnownSequenceSet()))
-            .addContext("lastKnownUidValidity", message.getLastKnownUidValidity())
-            .addContext("uidSet", UidRange.toString(message.getUidSet()))
+            .addContext("mailbox", request.getMailboxName())
+            .addContext("condstore", Boolean.toString(request.getCondstore()))
+            .addContext("knownModseq", request.getKnownModSeq())
+            .addContext("knownUids", UidRange.toString(request.getKnownUidSet()))
+            .addContext("knownIdRange", IdRange.toString(request.getKnownSequenceSet()))
+            .addContext("lastKnownUidValidity", request.getLastKnownUidValidity())
+            .addContext("uidSet", UidRange.toString(request.getUidSet()))
             .build();
     }
 }

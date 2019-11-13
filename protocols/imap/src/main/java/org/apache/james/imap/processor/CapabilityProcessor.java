@@ -116,7 +116,7 @@ public class CapabilityProcessor extends AbstractMailboxProcessor<CapabilityRequ
     }
 
     @Override
-    protected Closeable addContextToMDC(CapabilityRequest message) {
+    protected Closeable addContextToMDC(CapabilityRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "CAPABILITY")
             .build();

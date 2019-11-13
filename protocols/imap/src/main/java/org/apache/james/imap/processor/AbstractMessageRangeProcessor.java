@@ -43,11 +43,11 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<M> {
+public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
 
-    public AbstractMessageRangeProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+    public AbstractMessageRangeProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+                                         MetricFactory metricFactory) {
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
@@ -60,7 +60,7 @@ public abstract class AbstractMessageRangeProcessor<M extends AbstractMessageRan
     protected abstract String getOperationName();
 
     @Override
-    protected void processRequest(M request, ImapSession session, Responder responder) {
+    protected void processRequest(R request, ImapSession session, Responder responder) {
         final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         final IdRange[] idSet = request.getIdSet();
         final boolean useUids = request.isUseUids();

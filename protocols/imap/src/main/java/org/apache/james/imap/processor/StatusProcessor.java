@@ -148,11 +148,11 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(StatusRequest message) {
+    protected Closeable addContextToMDC(StatusRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "STATUS")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("parameters", message.getStatusDataItems())
+            .addContext("mailbox", request.getMailboxName())
+            .addContext("parameters", request.getStatusDataItems())
             .build();
     }
 }

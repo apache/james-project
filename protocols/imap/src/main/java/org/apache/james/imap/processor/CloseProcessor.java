@@ -47,7 +47,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     }
 
     @Override
-    protected void processRequest(CloseRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(CloseRequest request, ImapSession session, Responder responder) {
         try {
             MessageManager mailbox = getSelectedMailbox(session);
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
@@ -58,18 +58,18 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
                 // Don't send HIGHESTMODSEQ when close. Like correct in the ERRATA of RFC5162
                 //
                 // See http://www.rfc-editor.org/errata_search.php?rfc=5162
-                okComplete(message, responder);
+                okComplete(request, responder);
                
             }
 
         } catch (MailboxException e) {
             LOGGER.error("Close failed for mailbox {}", session.getSelected().getMailboxId(), e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
     @Override
-    protected Closeable addContextToMDC(CloseRequest message) {
+    protected Closeable addContextToMDC(CloseRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "CLOSE")
             .build();

@@ -56,12 +56,12 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
     }
 
     @Override
-    protected Closeable addContextToMDC(CopyRequest message) {
+    protected Closeable addContextToMDC(CopyRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "COPY")
-            .addContext("targetMailbox", message.getMailboxName())
-            .addContext("uidEnabled", message.isUseUids())
-            .addContext("idSet", IdRange.toString(message.getIdSet()))
+            .addContext("targetMailbox", request.getMailboxName())
+            .addContext("uidEnabled", request.isUseUids())
+            .addContext("idSet", IdRange.toString(request.getIdSet()))
             .build();
     }
 }

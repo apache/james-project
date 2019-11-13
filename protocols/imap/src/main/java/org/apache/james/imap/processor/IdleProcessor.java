@@ -84,7 +84,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    protected void processRequest(IdleRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(IdleRequest request, ImapSession session, Responder responder) {
         SelectedMailbox sm = session.getSelected();
         Registration registration;
         if (sm != null) {
@@ -110,10 +110,10 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
                 }
                 session.popLineHandler();
                 if (!DONE.equals(line.toUpperCase(Locale.US))) {
-                    StatusResponse response = getStatusResponseFactory().taggedBad(message.getTag(), message.getCommand(), HumanReadableText.INVALID_COMMAND);
+                    StatusResponse response = getStatusResponseFactory().taggedBad(request.getTag(), request.getCommand(), HumanReadableText.INVALID_COMMAND);
                     responder.respond(response);
                 } else {
-                    okComplete(message, responder);
+                    okComplete(request, responder);
 
                 }
                 idleActive.set(false);

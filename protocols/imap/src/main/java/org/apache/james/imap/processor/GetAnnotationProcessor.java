@@ -68,15 +68,15 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected void processRequest(GetAnnotationRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(GetAnnotationRequest request, ImapSession session, Responder responder) {
         try {
-            proceed(message, session, responder);
+            proceed(request, session, responder);
         } catch (MailboxNotFoundException e) {
-            LOGGER.info("The command: {} is failed because not found mailbox {}", message.getCommand().getName(), message.getMailboxName());
-            no(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
+            LOGGER.info("The command: {} is failed because not found mailbox {}", request.getCommand().getName(), request.getMailboxName());
+            no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
-            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", message.getMailboxName(), ImapSessionUtils.getUserName(session), e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), ImapSessionUtils.getUserName(session), e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
 
@@ -156,13 +156,13 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    protected Closeable addContextToMDC(GetAnnotationRequest message) {
+    protected Closeable addContextToMDC(GetAnnotationRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_ANNOTATION")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("depth", message.getDepth())
-            .addContext("maxSize", message.getMaxsize())
-            .addContext("keys", message.getKeys())
+            .addContext("mailbox", request.getMailboxName())
+            .addContext("depth", request.getDepth())
+            .addContext("maxSize", request.getMaxsize())
+            .addContext("keys", request.getKeys())
             .build();
     }
 }

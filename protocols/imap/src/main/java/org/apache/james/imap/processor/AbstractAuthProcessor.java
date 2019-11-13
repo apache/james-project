@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-public abstract class AbstractAuthProcessor<M extends ImapRequest> extends AbstractMailboxProcessor<M> {
+public abstract class AbstractAuthProcessor<R extends ImapRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractAuthProcessor.class);
 
     private static final String ATTRIBUTE_NUMBER_OF_FAILURES = "org.apache.james.imap.processor.imap4rev1.NUMBER_OF_FAILURES";
@@ -52,8 +52,8 @@ public abstract class AbstractAuthProcessor<M extends ImapRequest> extends Abstr
     // TODO: this should be configurable
     private static final int MAX_FAILURES = 3;
     
-    public AbstractAuthProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+    public AbstractAuthProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+                                 MetricFactory metricFactory) {
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 

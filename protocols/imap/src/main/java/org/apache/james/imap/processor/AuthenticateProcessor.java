@@ -146,10 +146,10 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    protected Closeable addContextToMDC(AuthenticateRequest message) {
+    protected Closeable addContextToMDC(AuthenticateRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "AUTHENTICATE")
-            .addContext("authType", message.getAuthType())
+            .addContext("authType", request.getAuthType())
             .build();
     }
 }

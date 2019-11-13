@@ -60,17 +60,17 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    protected void processRequest(SetACLRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(SetACLRequest request, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        final String mailboxName = message.getMailboxName();
-        final String identifier = message.getIdentifier();
+        final String mailboxName = request.getMailboxName();
+        final String identifier = request.getIdentifier();
         try {
             
             /* parsing the rights is the the cheapest thing to begin with */
             EditMode editMode = EditMode.REPLACE;
-            String rights = message.getRights();
+            String rights = request.getRights();
             if (rights != null && rights.length() > 0) {
                 switch (rights.charAt(0)) {
                 case MailboxACL.ADD_RIGHTS_MARKER:
@@ -100,16 +100,16 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
              * existence information, much less the mailbox’s ACL.
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
                 /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
-                        message.getCommand().getName(),
+                        request.getCommand().getName(),
                         mailboxName
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(message, responder, text);
+                no(request, responder, text);
             } else {
                 
                 EntryKey key = EntryKey.deserialize(identifier);
@@ -128,7 +128,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
                     MailboxACL.command().key(key).mode(editMode).rights(mailboxAclRights).build(),
                     mailboxSession);
 
-                okComplete(message, responder);
+                okComplete(request, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
@@ -141,12 +141,12 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
              * */
             Object[] params = new Object[] {e.getUnsupportedRight()};
             HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUPPORTED_RIGHT_KEY, HumanReadableText.UNSUPPORTED_RIGHT_DEFAULT_VALUE, params);
-            taggedBad(message, responder, text);
+            taggedBad(request, responder, text);
         } catch (MailboxNotFoundException e) {
-            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }
@@ -157,12 +157,12 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(SetACLRequest message) {
+    protected Closeable addContextToMDC(SetACLRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "SET_ACL")
-            .addContext("mailbox", message.getMailboxName())
-            .addContext("identifier", message.getIdentifier())
-            .addContext("rights", message.getRights())
+            .addContext("mailbox", request.getMailboxName())
+            .addContext("identifier", request.getIdentifier())
+            .addContext("rights", request.getRights())
             .build();
     }
 }

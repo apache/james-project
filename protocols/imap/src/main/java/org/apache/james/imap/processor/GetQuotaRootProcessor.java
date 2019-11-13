@@ -70,11 +70,11 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
     }
 
     @Override
-    protected void processRequest(GetQuotaRootRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(GetQuotaRootRequest request, ImapSession session, Responder responder) {
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
         final MailboxManager mailboxManager = getMailboxManager();
 
-        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(message.getMailboxName());
+        final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
 
         // First check mailbox exists
         try {
@@ -82,34 +82,34 @@ public class GetQuotaRootProcessor extends AbstractMailboxProcessor<GetQuotaRoot
                 QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
                 Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
-                responder.respond(new QuotaRootResponse(message.getMailboxName(), quotaRoot.getValue()));
+                responder.respond(new QuotaRootResponse(request.getMailboxName(), quotaRoot.getValue()));
                 if (messageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.MESSAGE_QUOTA_RESOURCE, quotaRoot.getValue(), messageQuota));
                 }
                 if (storageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
                 }
-                okComplete(message, responder);
+                okComplete(request, responder);
             } else {
                 Object[] params = new Object[]{
                         MailboxACL.Right.Read.toString(),
-                        message.getCommand().getName(),
-                        message.getMailboxName()
+                        request.getCommand().getName(),
+                        request.getMailboxName()
                 };
                 HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(message, responder, humanReadableText);
+                no(request, responder, humanReadableText);
             }
         } catch (MailboxException me) {
-            taggedBad(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+            taggedBad(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         }
 
     }
 
     @Override
-    protected Closeable addContextToMDC(GetQuotaRootRequest message) {
+    protected Closeable addContextToMDC(GetQuotaRootRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_QUOTA_ROOT")
-            .addContext("mailbox", message.getMailboxName())
+            .addContext("mailbox", request.getMailboxName())
             .build();
     }
 }

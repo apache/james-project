@@ -50,22 +50,22 @@ public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest>
     }
 
     @Override
-    protected void processRequest(SetQuotaRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(SetQuotaRequest request, ImapSession session, Responder responder) {
         Object[] params = new Object[]{
             "Full admin rights",
-            message.getCommand().getName(),
+            request.getCommand().getName(),
             "Can not perform SETQUOTA commands"
         };
         HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-        no(message, responder, humanReadableText);
+        no(request, responder, humanReadableText);
     }
 
     @Override
-    protected Closeable addContextToMDC(SetQuotaRequest message) {
+    protected Closeable addContextToMDC(SetQuotaRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "SET_QUOTA")
-            .addContext("quotaRoot", message.getQuotaRoot())
-            .addContext("limits", message.getResourceLimits())
+            .addContext("quotaRoot", request.getQuotaRoot())
+            .addContext("limits", request.getResourceLimits())
             .build();
     }
 }

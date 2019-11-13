@@ -47,12 +47,12 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected void processRequest(UnselectRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(UnselectRequest request, ImapSession session, Responder responder) {
         if (session.getSelected() != null) {
             session.deselect();
-            okComplete(message, responder);
+            okComplete(request, responder);
         } else {
-            taggedBad(message, responder, HumanReadableText.UNSELECT);
+            taggedBad(request, responder, HumanReadableText.UNSELECT);
         }
 
     }
@@ -63,7 +63,7 @@ public class UnselectProcessor extends AbstractMailboxProcessor<UnselectRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(UnselectRequest message) {
+    protected Closeable addContextToMDC(UnselectRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "UNSELECT")
             .build();

@@ -68,7 +68,7 @@ import org.apache.james.metrics.api.TimeMetric;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends AbstractChainedProcessor<M> {
+public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends AbstractChainedProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMailboxProcessor.class);
 
     public static final String IMAP_PREFIX = "IMAP-";
@@ -76,8 +76,8 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     private final StatusResponseFactory factory;
     private final MetricFactory metricFactory;
 
-    public AbstractMailboxProcessor(Class<M> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
-            MetricFactory metricFactory) {
+    public AbstractMailboxProcessor(Class<R> acceptableClass, ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
+                                    MetricFactory metricFactory) {
         super(acceptableClass, next);
         this.mailboxManager = mailboxManager;
         this.factory = factory;
@@ -85,7 +85,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
     }
 
     @Override
-    protected final void doProcess(M acceptableMessage, Responder responder, ImapSession session) {
+    protected final void doProcess(R acceptableMessage, Responder responder, ImapSession session) {
         TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + acceptableMessage.getCommand().getName());
         try {
             if (!acceptableMessage.getCommand().validForState(session.getState())) {
@@ -355,7 +355,7 @@ public abstract class AbstractMailboxProcessor<M extends ImapRequest> extends Ab
         responder.respond(response);
     }
 
-    protected abstract void processRequest(M message, ImapSession session, Responder responder);
+    protected abstract void processRequest(R request, ImapSession session, Responder responder);
 
     /**
      * Joins the elements of a mailboxPath together and returns them as a string

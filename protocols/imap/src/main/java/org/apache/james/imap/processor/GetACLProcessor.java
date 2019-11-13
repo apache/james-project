@@ -61,11 +61,11 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     }
 
     @Override
-    protected void processRequest(GetACLRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(GetACLRequest request, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
         final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        final String mailboxName = message.getMailboxName();
+        final String mailboxName = request.getMailboxName();
         try {
 
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
@@ -82,29 +82,29 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
              * existence information, much less the mailbox’s ACL.
              */
             if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Lookup, mailboxSession)) {
-                no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+                no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
             } else if (!mailboxManager.hasRight(mailboxPath, MailboxACL.Right.Administer, mailboxSession)) {
                 /* RFC 4314 section 4. */
                 Object[] params = new Object[] {
                         MailboxACL.Right.Administer.toString(),
-                        message.getCommand().getName(),
+                        request.getCommand().getName(),
                         mailboxName
                 };
                 HumanReadableText text = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(message, responder, text);
+                no(request, responder, text);
             } else {
                 MetaData metaData = messageManager.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
                 ACLResponse aclResponse = new ACLResponse(mailboxName, metaData.getACL());
                 responder.respond(aclResponse);
-                okComplete(message, responder);
+                okComplete(request, responder);
                 // FIXME should we send unsolicited responses here?
                 // unsolicitedResponses(session, responder, false);
             }
         } catch (MailboxNotFoundException e) {
-            no(message, responder, HumanReadableText.MAILBOX_NOT_FOUND);
+            no(request, responder, HumanReadableText.MAILBOX_NOT_FOUND);
         } catch (MailboxException e) {
-            LOGGER.error("{} failed for mailbox {}", message.getCommand().getName(), mailboxName, e);
-            no(message, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
+            LOGGER.error("{} failed for mailbox {}", request.getCommand().getName(), mailboxName, e);
+            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
 
     }
@@ -115,10 +115,10 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     }
 
     @Override
-    protected Closeable addContextToMDC(GetACLRequest message) {
+    protected Closeable addContextToMDC(GetACLRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_ACL")
-            .addContext("mailbox", message.getMailboxName())
+            .addContext("mailbox", request.getMailboxName())
             .build();
     }
 }

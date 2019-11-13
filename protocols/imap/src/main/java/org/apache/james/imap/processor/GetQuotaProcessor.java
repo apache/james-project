@@ -69,9 +69,9 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     @Override
-    protected void processRequest(GetQuotaRequest message, ImapSession session, Responder responder) {
+    protected void processRequest(GetQuotaRequest request, ImapSession session, Responder responder) {
         try {
-            QuotaRoot quotaRoot = quotaRootResolver.fromString(message.getQuotaRoot());
+            QuotaRoot quotaRoot = quotaRootResolver.fromString(request.getQuotaRoot());
             if (hasRight(quotaRoot, session)) {
                 Quota<QuotaCount> messageQuota = quotaManager.getMessageQuota(quotaRoot);
                 Quota<QuotaSize> storageQuota = quotaManager.getStorageQuota(quotaRoot);
@@ -81,18 +81,18 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
                 if (storageQuota.getLimit().isLimited()) {
                     responder.respond(new QuotaResponse(ImapConstants.STORAGE_QUOTA_RESOURCE, quotaRoot.getValue(), storageQuota));
                 }
-                okComplete(message, responder);
+                okComplete(request, responder);
             } else {
                 Object[] params = new Object[]{
                         MailboxACL.Right.Read.toString(),
-                        message.getCommand().getName(),
+                        request.getCommand().getName(),
                         "Any mailbox of this user USER"
                 };
                 HumanReadableText humanReadableText = new HumanReadableText(HumanReadableText.UNSUFFICIENT_RIGHTS_KEY, HumanReadableText.UNSUFFICIENT_RIGHTS_DEFAULT_VALUE, params);
-                no(message, responder, humanReadableText);
+                no(request, responder, humanReadableText);
             }
         } catch (MailboxException me) {
-            taggedBad(message, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
+            taggedBad(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX);
         }
     }
 
@@ -109,10 +109,10 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     @Override
-    protected Closeable addContextToMDC(GetQuotaRequest message) {
+    protected Closeable addContextToMDC(GetQuotaRequest request) {
         return MDCBuilder.create()
             .addContext(MDCBuilder.ACTION, "GET_QUOTA")
-            .addContext("quotaRoot", message.getQuotaRoot())
+            .addContext("quotaRoot", request.getQuotaRoot())
             .build();
     }
 }
