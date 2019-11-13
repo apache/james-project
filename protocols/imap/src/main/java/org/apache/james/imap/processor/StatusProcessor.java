@@ -92,7 +92,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-    private Long unseen(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private Long unseen(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isUnseen()) {
             return metaData.getUnseenCount();
         } else {
@@ -100,7 +100,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-    private Long uidValidity(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private Long uidValidity(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isUidValidity()) {
             return metaData.getUidValidity();
         } else {
@@ -109,7 +109,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
 
-    private Long highestModSeq(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private Long highestModSeq(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isHighestModSeq()) {
             return metaData.getHighestModSeq();
         } else {
@@ -118,7 +118,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     }
 
     
-    private MessageUid uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private MessageUid uidNext(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isUidNext()) {
             return metaData.getUidNext();
         } else {
@@ -126,7 +126,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-    private Long recent(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private Long recent(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isRecent()) {
             return metaData.countRecent();
         } else {
@@ -134,7 +134,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         }
     }
 
-    private Long messages(StatusDataItems statusDataItems, MessageManager.MetaData metaData) throws MailboxException {
+    private Long messages(StatusDataItems statusDataItems, MessageManager.MetaData metaData) {
         if (statusDataItems.isMessages()) {
            return metaData.getMessageCount();
         } else {
