@@ -21,8 +21,8 @@ package org.apache.james.backends.es;
 
 import java.util.Optional;
 
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements ClientProviderImplConnectionContract {
@@ -40,7 +40,9 @@ public class ClientProviderImplConnectionAuthESOverrideTrustStoreTest implements
         return ElasticSearchConfiguration.builder()
             .credential(Optional.of(DockerElasticSearch.WithAuth.DEFAULT_CREDENTIAL))
             .hostScheme(Optional.of(ElasticSearchConfiguration.HostScheme.HTTPS))
-            .sslTrustConfiguration(SSLTrustConfiguration.override(
-                SSLTrustStore.of(TRUST_STORE_FILE_PATH, TRUST_STORE_PASSWORD)));
+            .sslTrustConfiguration(SSLConfiguration.builder()
+                .strategyOverride(SSLTrustStore.of(TRUST_STORE_FILE_PATH, TRUST_STORE_PASSWORD))
+                .acceptAnyHostNameVerifier()
+                .build());
     }
 }

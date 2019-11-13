@@ -252,6 +252,21 @@
               Once you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
             </dd>
         </dl>
+
+        <p>
+            During SSL handshaking, the client can determine whether accept or reject connecting to a remote server by its hostname.
+            You can configure to use which HostNameVerifier in the client.
+        </p>
+        <dl>
+            <dt><strong>elasticsearch.hostScheme.https.hostNameVerifier</strong></dt>
+            <dd>
+              Optional. Default is <strong>default</strong>.
+            </dd>
+            <dd>
+              default: using the default hostname verifier provided by apache http client.
+              accept_any_hostname: accept any host (not recommended).
+            </dd>
+        </dl>
     </section>
 </body>
 

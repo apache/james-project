@@ -29,8 +29,8 @@ import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.backends.es.ElasticSearchConfiguration.Credential;
 import org.apache.james.backends.es.ElasticSearchConfiguration.HostScheme;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -62,7 +62,7 @@ class ElasticSearchConfigurationTest {
     }
 
     @Nested
-    class SSLTrustConfigurationTest {
+    class SSLConfigurationTest {
 
         @Test
         void sslTrustStoreShouldMatchBeanContact() {
@@ -72,22 +72,43 @@ class ElasticSearchConfigurationTest {
 
         @Test
         void shouldMatchBeanContact() {
-            EqualsVerifier.forClass(SSLTrustConfiguration.class)
+            EqualsVerifier.forClass(SSLConfiguration.class)
                 .verify();
+        }
+
+        @Test
+        void getSSLConfigurationShouldReturnDefaultValueWhenEmpty() throws Exception {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+            assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                    .getSslConfiguration())
+                .isEqualTo(SSLConfiguration.defaultBehavior());
+        }
+
+        @Test
+        void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
+            PropertiesConfiguration configuration = new PropertiesConfiguration();
+            configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+            String trustStorePath = "src/test/resources/auth-es/server.jks";
+            String trustStorePassword = "secret";
+
+            configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+            configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", trustStorePath);
+            configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
+            configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
+
+            assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                    .getSslConfiguration())
+                .isEqualTo(SSLConfiguration.builder()
+                    .strategyOverride(SSLTrustStore.of(trustStorePath, trustStorePassword))
+                    .defaultHostNameVerifier()
+                    .build());
         }
 
         @Nested
         class WithSSLValidationStrategy {
-
-            @Test
-            void getSSLConfigurationShouldReturnDefaultValueWhenEmpty() throws Exception {
-                PropertiesConfiguration configuration = new PropertiesConfiguration();
-                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
-
-                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
-                        .getSslTrustConfiguration())
-                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
-            }
 
             @Test
             void getSSLConfigurationShouldAcceptCaseInsensitiveStrategy() throws Exception {
@@ -97,8 +118,8 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "DEfault");
 
                 assertThat(ElasticSearchConfiguration.fromProperties(configuration)
-                        .getSslTrustConfiguration())
-                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.defaultBehavior());
             }
 
             @Test
@@ -115,6 +136,52 @@ class ElasticSearchConfigurationTest {
         }
 
         @Nested
+        class WithHostNameVerifier {
+
+            @Test
+            void getSSLConfigurationShouldReturnConfiguredValue() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "DEFAULT");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.builder()
+                        .strategyDefault()
+                        .defaultHostNameVerifier()
+                        .build());
+            }
+
+            @Test
+            void getSSLConfigurationShouldAcceptCaseInsensitiveVerifier() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "Accept_Any_Hostname");
+
+                assertThat(ElasticSearchConfiguration.fromProperties(configuration)
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.builder()
+                        .strategyDefault()
+                        .acceptAnyHostNameVerifier()
+                        .build());
+            }
+
+            @Test
+            void fromPropertiesShouldThrowWhenInvalidVerifier() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "invalid");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("invalid HostNameVerifier 'invalid'");
+            }
+        }
+
+        @Nested
         class WhenDefault {
 
             @Test
@@ -125,8 +192,8 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "default");
 
                 assertThat(ElasticSearchConfiguration.fromProperties(configuration)
-                        .getSslTrustConfiguration())
-                    .isEqualTo(SSLTrustConfiguration.defaultBehavior());
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.defaultBehavior());
             }
         }
 
@@ -141,8 +208,11 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "ignore");
 
                 assertThat(ElasticSearchConfiguration.fromProperties(configuration)
-                        .getSslTrustConfiguration())
-                    .isEqualTo(SSLTrustConfiguration.ignore());
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.builder()
+                        .strategyIgnore()
+                        .defaultHostNameVerifier()
+                        .build());
             }
         }
 
@@ -206,18 +276,20 @@ class ElasticSearchConfigurationTest {
                 PropertiesConfiguration configuration = new PropertiesConfiguration();
                 configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
-                String strategy = "override";
                 String trustStorePath = "src/test/resources/auth-es/server.jks";
                 String trustStorePassword = "secret";
 
-                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", strategy);
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", trustStorePath);
                 configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", trustStorePassword);
+                configuration.addProperty("elasticsearch.hostScheme.https.hostNameVerifier", "default");
 
                 assertThat(ElasticSearchConfiguration.fromProperties(configuration)
-                        .getSslTrustConfiguration())
-                    .isEqualTo(SSLTrustConfiguration.override(
-                        SSLTrustStore.of(trustStorePath, trustStorePassword)));
+                        .getSslConfiguration())
+                    .isEqualTo(SSLConfiguration.builder()
+                        .strategyOverride(SSLTrustStore.of(trustStorePath, trustStorePassword))
+                        .defaultHostNameVerifier()
+                        .build());
             }
         }
     }

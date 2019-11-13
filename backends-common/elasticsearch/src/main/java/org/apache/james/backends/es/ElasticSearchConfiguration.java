@@ -19,7 +19,7 @@
 
 package org.apache.james.backends.es;
 
-import static org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy.OVERRIDE;
+import static org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy.OVERRIDE;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -35,8 +35,9 @@ import java.util.stream.Stream;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.HostNameVerifier;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.apache.james.util.Host;
 
 import com.github.steveash.guavate.Guavate;
@@ -110,7 +111,7 @@ public class ElasticSearchConfiguration {
         }
     }
 
-    public static class SSLTrustConfiguration {
+    public static class SSLConfiguration {
 
         public enum SSLValidationStrategy {
             DEFAULT,
@@ -124,6 +125,21 @@ public class ElasticSearchConfiguration {
                     .filter(strategy -> strategy.name().equalsIgnoreCase(rawValue))
                     .findAny()
                     .orElseThrow(() -> new IllegalArgumentException(String.format("invalid strategy '%s'", rawValue)));
+
+            }
+        }
+
+        public enum HostNameVerifier {
+            DEFAULT,
+            ACCEPT_ANY_HOSTNAME;
+
+            static HostNameVerifier from(String rawValue) {
+                Preconditions.checkNotNull(rawValue);
+
+                return Stream.of(values())
+                    .filter(verifier -> verifier.name().equalsIgnoreCase(rawValue))
+                    .findAny()
+                    .orElseThrow(() -> new IllegalArgumentException(String.format("invalid HostNameVerifier '%s'", rawValue)));
 
             }
         }
@@ -174,28 +190,79 @@ public class ElasticSearchConfiguration {
             }
         }
 
-        static SSLTrustConfiguration defaultBehavior() {
-            return new SSLTrustConfiguration(SSLValidationStrategy.DEFAULT, Optional.empty());
+        static class Builder {
+
+            interface RequireSSLStrategyTrustStore {
+                RequireHostNameVerifier sslStrategy(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore);
+
+                default RequireHostNameVerifier strategyIgnore() {
+                    return sslStrategy(SSLValidationStrategy.IGNORE, Optional.empty());
+                }
+
+                default RequireHostNameVerifier strategyOverride(SSLTrustStore trustStore) {
+                    return sslStrategy(SSLValidationStrategy.OVERRIDE, Optional.of(trustStore));
+                }
+
+                default RequireHostNameVerifier strategyDefault() {
+                    return sslStrategy(SSLValidationStrategy.DEFAULT, Optional.empty());
+                }
+            }
+
+            interface RequireHostNameVerifier {
+                ReadyToBuild hostNameVerifier(HostNameVerifier hostNameVerifier);
+
+                default ReadyToBuild acceptAnyHostNameVerifier() {
+                    return hostNameVerifier(HostNameVerifier.ACCEPT_ANY_HOSTNAME);
+                }
+
+                default ReadyToBuild defaultHostNameVerifier() {
+                    return hostNameVerifier(HostNameVerifier.DEFAULT);
+                }
+            }
+
+            static class ReadyToBuild {
+                private final SSLValidationStrategy sslValidationStrategy;
+                private final HostNameVerifier hostNameVerifier;
+                private Optional<SSLTrustStore> sslTrustStore;
+
+                private ReadyToBuild(SSLValidationStrategy sslValidationStrategy, HostNameVerifier hostNameVerifier, Optional<SSLTrustStore> sslTrustStore) {
+                    this.sslValidationStrategy = sslValidationStrategy;
+                    this.hostNameVerifier = hostNameVerifier;
+                    this.sslTrustStore = sslTrustStore;
+                }
+
+                public ReadyToBuild sslTrustStore(SSLTrustStore sslTrustStore) {
+                    this.sslTrustStore = Optional.of(sslTrustStore);
+                    return this;
+                }
+
+                public SSLConfiguration build() {
+                    return new SSLConfiguration(sslValidationStrategy, hostNameVerifier, sslTrustStore);
+                }
+            }
         }
 
-        static SSLTrustConfiguration ignore() {
-            return new SSLTrustConfiguration(SSLValidationStrategy.IGNORE, Optional.empty());
+        static SSLConfiguration defaultBehavior() {
+            return new SSLConfiguration(SSLValidationStrategy.DEFAULT, HostNameVerifier.DEFAULT, Optional.empty());
         }
 
-        static SSLTrustConfiguration override(SSLTrustStore sslTrustStore) {
-            return new SSLTrustConfiguration(OVERRIDE, Optional.of(sslTrustStore));
+        static Builder.RequireSSLStrategyTrustStore builder() {
+            return (strategy, trustStore) -> hostNameVerifier -> new Builder.ReadyToBuild(strategy, hostNameVerifier, trustStore);
         }
 
         private final SSLValidationStrategy strategy;
+        private final HostNameVerifier hostNameVerifier;
         private final Optional<SSLTrustStore> trustStore;
 
-        private SSLTrustConfiguration(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore) {
+        private SSLConfiguration(SSLValidationStrategy strategy, HostNameVerifier hostNameVerifier, Optional<SSLTrustStore> trustStore) {
             Preconditions.checkNotNull(strategy);
             Preconditions.checkNotNull(trustStore);
+            Preconditions.checkNotNull(hostNameVerifier);
             Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(), OVERRIDE.name() + " strategy requires trustStore to be present");
 
             this.strategy = strategy;
             this.trustStore = trustStore;
+            this.hostNameVerifier = hostNameVerifier;
         }
 
         public SSLValidationStrategy getStrategy() {
@@ -206,20 +273,25 @@ public class ElasticSearchConfiguration {
             return trustStore;
         }
 
+        public HostNameVerifier getHostNameVerifier() {
+            return hostNameVerifier;
+        }
+
         @Override
         public final boolean equals(Object o) {
-            if (o instanceof SSLTrustConfiguration) {
-                SSLTrustConfiguration that = (SSLTrustConfiguration) o;
+            if (o instanceof SSLConfiguration) {
+                SSLConfiguration that = (SSLConfiguration) o;
 
                 return Objects.equals(this.strategy, that.strategy)
-                    && Objects.equals(this.trustStore, that.trustStore);
+                    && Objects.equals(this.trustStore, that.trustStore)
+                    && Objects.equals(this.hostNameVerifier, that.hostNameVerifier);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(strategy, trustStore);
+            return Objects.hash(strategy, trustStore, hostNameVerifier);
         }
     }
 
@@ -234,7 +306,7 @@ public class ElasticSearchConfiguration {
         private Optional<Duration> requestTimeout;
         private Optional<HostScheme> hostScheme;
         private Optional<Credential> credential;
-        private Optional<SSLTrustConfiguration> sslTrustConfiguration;
+        private Optional<SSLConfiguration> sslTrustConfiguration;
 
         public Builder() {
             hosts = ImmutableList.builder();
@@ -302,12 +374,12 @@ public class ElasticSearchConfiguration {
             return this;
         }
 
-        public Builder sslTrustConfiguration(SSLTrustConfiguration sslTrustConfiguration) {
-            this.sslTrustConfiguration = Optional.of(sslTrustConfiguration);
+        public Builder sslTrustConfiguration(SSLConfiguration sslConfiguration) {
+            this.sslTrustConfiguration = Optional.of(sslConfiguration);
             return this;
         }
 
-        public Builder sslTrustConfiguration(Optional<SSLTrustConfiguration> sslTrustStore) {
+        public Builder sslTrustConfiguration(Optional<SSLConfiguration> sslTrustStore) {
             this.sslTrustConfiguration = sslTrustStore;
             return this;
         }
@@ -338,6 +410,7 @@ public class ElasticSearchConfiguration {
     public static final String ELASTICSEARCH_PORT = "elasticsearch.port";
     public static final String ELASTICSEARCH_HOST_SCHEME = "elasticsearch.hostScheme";
     public static final String ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY = "elasticsearch.hostScheme.https.sslValidationStrategy";
+    public static final String ELASTICSEARCH_HTTPS_HOSTNAME_VERIFIER = "elasticsearch.hostScheme.https.hostNameVerifier";
     public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PATH = "elasticsearch.hostScheme.https.trustStorePath";
     public static final String ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD = "elasticsearch.hostScheme.https.trustStorePassword";
     public static final String ELASTICSEARCH_USER = "elasticsearch.user";
@@ -358,7 +431,7 @@ public class ElasticSearchConfiguration {
     public static final String LOCALHOST = "127.0.0.1";
     public static final Optional<Integer> DEFAULT_PORT_AS_OPTIONAL = Optional.of(DEFAULT_PORT);
     public static final HostScheme DEFAULT_SCHEME = HostScheme.HTTP;
-    public static final SSLTrustConfiguration DEFAULT_SSL_TRUST_CONFIGURATION = SSLTrustConfiguration.defaultBehavior();
+    public static final SSLConfiguration DEFAULT_SSL_TRUST_CONFIGURATION = SSLConfiguration.defaultBehavior();
 
     public static final ElasticSearchConfiguration DEFAULT_CONFIGURATION = builder()
         .addHost(Host.from(LOCALHOST, DEFAULT_PORT))
@@ -378,10 +451,21 @@ public class ElasticSearchConfiguration {
             .build();
     }
 
-    private static Optional<SSLTrustConfiguration> sslTrustConfiguration(Configuration configuration) {
-        return Optional.ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY))
+    private static SSLConfiguration sslTrustConfiguration(Configuration configuration) {
+        SSLValidationStrategy sslStrategy = Optional
+            .ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_SSL_VALIDATION_STRATEGY))
             .map(SSLValidationStrategy::from)
-            .map(strategy -> new SSLTrustConfiguration(strategy, getSSLTrustStore(configuration)));
+            .orElse(SSLValidationStrategy.DEFAULT);
+
+        HostNameVerifier hostNameVerifier = Optional
+            .ofNullable(configuration.getString(ELASTICSEARCH_HTTPS_HOSTNAME_VERIFIER))
+            .map(HostNameVerifier::from)
+            .orElse(HostNameVerifier.DEFAULT);
+
+        return SSLConfiguration.builder()
+            .sslStrategy(sslStrategy, getSSLTrustStore(configuration))
+            .hostNameVerifier(hostNameVerifier)
+            .build();
     }
 
     private static Optional<SSLTrustStore> getSSLTrustStore(Configuration configuration) {
@@ -455,10 +539,10 @@ public class ElasticSearchConfiguration {
     private final Duration requestTimeout;
     private final HostScheme hostScheme;
     private final Optional<Credential> credential;
-    private final SSLTrustConfiguration sslTrustConfiguration;
+    private final SSLConfiguration sslConfiguration;
 
     private ElasticSearchConfiguration(ImmutableList<Host> hosts, int nbShards, int nbReplica, int waitForActiveShards, int minDelay, int maxRetries, Duration requestTimeout,
-                                       HostScheme hostScheme, Optional<Credential> credential, SSLTrustConfiguration sslTrustConfiguration) {
+                                       HostScheme hostScheme, Optional<Credential> credential, SSLConfiguration sslConfiguration) {
         this.hosts = hosts;
         this.nbShards = nbShards;
         this.nbReplica = nbReplica;
@@ -468,7 +552,7 @@ public class ElasticSearchConfiguration {
         this.requestTimeout = requestTimeout;
         this.hostScheme = hostScheme;
         this.credential = credential;
-        this.sslTrustConfiguration = sslTrustConfiguration;
+        this.sslConfiguration = sslConfiguration;
     }
 
     public ImmutableList<Host> getHosts() {
@@ -507,8 +591,8 @@ public class ElasticSearchConfiguration {
         return credential;
     }
 
-    public SSLTrustConfiguration getSslTrustConfiguration() {
-        return sslTrustConfiguration;
+    public SSLConfiguration getSslConfiguration() {
+        return sslConfiguration;
     }
 
     @Override
@@ -525,7 +609,7 @@ public class ElasticSearchConfiguration {
                 && Objects.equals(this.requestTimeout, that.requestTimeout)
                 && Objects.equals(this.hostScheme, that.hostScheme)
                 && Objects.equals(this.credential, that.credential)
-                && Objects.equals(this.sslTrustConfiguration, that.sslTrustConfiguration);
+                && Objects.equals(this.sslConfiguration, that.sslConfiguration);
         }
         return false;
     }
@@ -533,6 +617,6 @@ public class ElasticSearchConfiguration {
     @Override
     public final int hashCode() {
         return Objects.hash(hosts, nbShards, nbReplica, waitForActiveShards, minDelay, maxRetries, requestTimeout,
-            hostScheme, credential, sslTrustConfiguration);
+            hostScheme, credential, sslConfiguration);
     }
 }

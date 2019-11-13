@@ -38,13 +38,15 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.conn.ssl.DefaultHostnameVerifier;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.ssl.TrustStrategy;
 import org.apache.james.backends.es.ElasticSearchConfiguration.HostScheme;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLTrustStore;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.HostNameVerifier;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLTrustStore;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration.SSLValidationStrategy;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
@@ -60,7 +62,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
     private static class HttpAsyncClientConfigurer {
 
         private static final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
-        private static final HostnameVerifier ACCEPT_ANY_HOST = (hostname, sslSession) -> true;
+        private static final HostnameVerifier ACCEPT_ANY_HOSTNAME = (hostname, sslSession) -> true;
 
         private final ElasticSearchConfiguration configuration;
 
@@ -94,7 +96,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
             try {
                 builder
                     .setSSLContext(sslContext())
-                    .setSSLHostnameVerifier(ACCEPT_ANY_HOST);
+                    .setSSLHostnameVerifier(hostnameVerifier());
             } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException | IOException e) {
                 throw new RuntimeException("Cannot set SSL options to the builder", e);
             }
@@ -105,7 +107,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
 
             SSLContextBuilder sslContextBuilder = new SSLContextBuilder();
 
-            SSLValidationStrategy strategy = configuration.getSslTrustConfiguration()
+            SSLValidationStrategy strategy = configuration.getSslConfiguration()
                 .getStrategy();
 
             switch (strategy) {
@@ -123,10 +125,25 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
             }
         }
 
+        private HostnameVerifier hostnameVerifier() {
+            HostNameVerifier hostnameVerifier = configuration.getSslConfiguration()
+                .getHostNameVerifier();
+
+            switch (hostnameVerifier) {
+                case DEFAULT:
+                    return new DefaultHostnameVerifier();
+                case ACCEPT_ANY_HOSTNAME:
+                    return ACCEPT_ANY_HOSTNAME;
+                default:
+                    throw new NotImplementedException(
+                        String.format("unrecognized HostNameVerifier '%s'", hostnameVerifier.name()));
+            }
+        }
+
         private SSLContextBuilder applyTrustStore(SSLContextBuilder sslContextBuilder) throws CertificateException, NoSuchAlgorithmException,
             KeyStoreException, IOException {
 
-            SSLTrustStore trustStore = configuration.getSslTrustConfiguration()
+            SSLTrustStore trustStore = configuration.getSslConfiguration()
                 .getTrustStore()
                 .orElseThrow(() -> new IllegalStateException("SSLTrustStore cannot to be empty"));
 

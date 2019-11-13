@@ -24,7 +24,7 @@ import static org.apache.james.backends.es.ElasticSearchClusterExtension.Elastic
 import java.util.Optional;
 
 import org.apache.james.backends.es.ElasticSearchConfiguration.HostScheme;
-import org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration;
+import org.apache.james.backends.es.ElasticSearchConfiguration.SSLConfiguration;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ClientProviderImplConnectionAuthESIgnoreSSLCheckTest implements ClientProviderImplConnectionContract {
@@ -39,6 +39,9 @@ class ClientProviderImplConnectionAuthESIgnoreSSLCheckTest implements ClientProv
         return ElasticSearchConfiguration.builder()
             .credential(Optional.of(DockerElasticSearch.WithAuth.DEFAULT_CREDENTIAL))
             .hostScheme(Optional.of(HostScheme.HTTPS))
-            .sslTrustConfiguration(SSLTrustConfiguration.ignore());
+            .sslTrustConfiguration(SSLConfiguration.builder()
+                .strategyIgnore()
+                .acceptAnyHostNameVerifier()
+                .build());
     }
 }
