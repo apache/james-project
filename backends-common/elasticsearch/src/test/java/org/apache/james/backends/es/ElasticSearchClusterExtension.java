@@ -58,8 +58,8 @@ class ElasticSearchClusterExtension implements AfterAllCallback, BeforeAllCallba
                         es1.cleanUpData();
                 }},
                 () -> {
-                    if (es1.isRunning()) {
-                        es1.cleanUpData();
+                    if (es2.isRunning()) {
+                        es2.cleanUpData();
                 }});
         }
 

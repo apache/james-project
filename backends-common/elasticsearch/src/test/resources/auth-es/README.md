@@ -4,7 +4,7 @@
 
 Contains nginx configuration files:
  - reverse_elasticsearch.conf: allow nginx to be the proxy connecting to ElasticSearch
- - passwd: Nginx credentials file store, each record follow the format: `username:encrypted-password`
+ - passwd: Nginx credentials file store, each record follows the format: `username:encrypted-password`
 
 ### default.crt & default.key
 

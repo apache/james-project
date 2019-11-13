@@ -21,10 +21,14 @@ package org.apache.james.backends.es;
 
 import static org.apache.james.backends.es.ElasticSearchConfiguration.SSLTrustConfiguration.SSLValidationStrategy.OVERRIDE;
 
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -47,8 +51,11 @@ public class ElasticSearchConfiguration {
         HTTPS("https");
 
         public static HostScheme of(String schemeValue) {
+            Preconditions.checkNotNull(schemeValue);
+
             return Arrays.stream(values())
-                .filter(hostScheme -> hostScheme.value.equalsIgnoreCase(schemeValue))
+                .filter(hostScheme -> hostScheme.value.toLowerCase(Locale.US)
+                    .equals(schemeValue.toLowerCase(Locale.US)))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException(
                     String.format("Unknown HostScheme '%s'", schemeValue)));
@@ -68,21 +75,21 @@ public class ElasticSearchConfiguration {
         }
 
         private final String username;
-        private final String password;
+        private final char[] password;
 
         private Credential(String username, String password) {
             Preconditions.checkNotNull(username, "username cannot be null when password is specified");
             Preconditions.checkNotNull(password, "password cannot be null when username is specified");
 
             this.username = username;
-            this.password = password;
+            this.password = password.toCharArray();
         }
 
         public String getUsername() {
             return username;
         }
 
-        public String getPassword() {
+        public char[] getPassword() {
             return password;
         }
 
@@ -92,14 +99,14 @@ public class ElasticSearchConfiguration {
                 Credential that = (Credential) o;
 
                 return Objects.equals(this.username, that.username)
-                    && Objects.equals(this.password, that.password);
+                    && Arrays.equals(this.password, that.password);
             }
             return false;
         }
 
         @Override
         public final int hashCode() {
-            return Objects.hash(username, password);
+            return Objects.hash(username, Arrays.hashCode(password));
         }
     }
 
@@ -127,22 +134,26 @@ public class ElasticSearchConfiguration {
                 return new SSLTrustStore(filePath, password);
             }
 
-            private final String filePath;
-            private final String password;
+            private final File file;
+            private final char[] password;
 
             private SSLTrustStore(String filePath, String password) {
-                Preconditions.checkNotNull(filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " is specified");
-                Preconditions.checkNotNull(password, ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " is specified");
+                Preconditions.checkNotNull(filePath,
+                    ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " is specified");
+                Preconditions.checkNotNull(password,
+                    ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " is specified");
+                Preconditions.checkArgument(Files.exists(Paths.get(filePath)),
+                     String.format("the file '%s' from property '%s' doesn't exist", filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH));
 
-                this.filePath = filePath;
-                this.password = password;
+                this.file = new File(filePath);
+                this.password = password.toCharArray();
             }
 
-            public String getFilePath() {
-                return filePath;
+            public File getFile() {
+                return file;
             }
 
-            public String getPassword() {
+            public char[] getPassword() {
                 return password;
             }
 
@@ -151,15 +162,15 @@ public class ElasticSearchConfiguration {
                 if (o instanceof SSLTrustStore) {
                     SSLTrustStore that = (SSLTrustStore) o;
 
-                    return Objects.equals(this.filePath, that.filePath)
-                        && Objects.equals(this.password, that.password);
+                    return Objects.equals(this.file, that.file)
+                        && Arrays.equals(this.password, that.password);
                 }
                 return false;
             }
 
             @Override
             public final int hashCode() {
-                return Objects.hash(filePath, password);
+                return Objects.hash(file, Arrays.hashCode(password));
             }
         }
 
@@ -181,7 +192,7 @@ public class ElasticSearchConfiguration {
         private SSLTrustConfiguration(SSLValidationStrategy strategy, Optional<SSLTrustStore> trustStore) {
             Preconditions.checkNotNull(strategy);
             Preconditions.checkNotNull(trustStore);
-            Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(), "OVERRIDE strategy requires trustStore to be present");
+            Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(), OVERRIDE.name() + " strategy requires trustStore to be present");
 
             this.strategy = strategy;
             this.trustStore = trustStore;
@@ -292,7 +303,7 @@ public class ElasticSearchConfiguration {
         }
 
         public Builder sslTrustConfiguration(SSLTrustConfiguration sslTrustConfiguration) {
-            this.sslTrustConfiguration = Optional.ofNullable(sslTrustConfiguration);
+            this.sslTrustConfiguration = Optional.of(sslTrustConfiguration);
             return this;
         }
 

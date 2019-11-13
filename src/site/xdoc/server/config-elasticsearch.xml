@@ -205,21 +205,24 @@
             <dd>
                 default: Use the default SSL TrustStore of the system.
                 ignore: Ignore SSL Validation check (not recommended).
-                override: Override the SSL Context to use a custome TrustStore containing ES server's certificate.
+                override: Override the SSL Context to use a custom TrustStore containing ES server's certificate.
             </dd>
         </dl>
 
         <p>
-            In some cases, you want to secure ES to protect it from unauthorized requests,
-            assuming with the ES is using <strong>https</strong> with a self signed certificate.
-            Which means you should configure the ES RestHighLevelClient to trust your self signed certificate.
-
-            There are two ways on client side: ignoring SSL check or configure to trust the server's certificate.
+            In some cases, you want to secure the connection from clients to ES by setting up a <strong>https</strong> protocol
+            with a self signed certificate. And you prefer to left the system ca-certificates un touch.
+            There are possible solutions to let the ES RestHighLevelClient to trust your self signed certificate.
+        </p>
+        <p>
+            First solution: ignoring SSL check.
             In case you want to ignore the SSL check, simply, just don't specify below options. Otherwise, configuring the trust
             requires some prerequisites and they are explained in below block.
-
+        </p>
+        <p>
+            Second solution: importing a TrustStore containing the certificate into SSL context.
             A certificate normally contains two parts: a public part in .crt file, another private part in .key file.
-            To trust the server, the client need to be acknowledged that the server's certificate is in the list of
+            To trust the server, the client needs to be acknowledged that the server's certificate is in the list of
             client's TrustStore. Basically, you can create a local TrustStore file containing the public part of a remote server
             by execute this command:
         </p>
@@ -239,14 +242,14 @@
             <dd>
               Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
               Configure Elasticsearch rest client to use this trustStore file to recognize nginx's ssl certificate.
-              Once, you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
+              Once you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
             </dd>
 
             <dt><strong>elasticsearch.hostScheme.https.trustStorePassword</strong></dt>
             <dd>
               Optional. Use it when https is configured in elasticsearch.hostScheme, and sslValidationStrategy is <strong>override</strong>
               Configure Elasticsearch rest client to use this trustStore file with the specified password.
-              Once, you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
+              Once you chose <strong>override</strong>, you need to specify both trustStorePath and trustStorePassword.
             </dd>
         </dl>
     </section>

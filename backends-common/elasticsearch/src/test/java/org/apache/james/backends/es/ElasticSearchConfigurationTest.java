@@ -159,7 +159,7 @@ class ElasticSearchConfigurationTest {
 
                 assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("password cannot be null when filePath is specified");
+                    .hasMessage("elasticsearch.hostScheme.https.trustStorePassword cannot be null when elasticsearch.hostScheme.https.trustStorePath is specified");
             }
 
             @Test
@@ -172,7 +172,33 @@ class ElasticSearchConfigurationTest {
 
                 assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
                     .isInstanceOf(NullPointerException.class)
-                    .hasMessage("filePath cannot be null when password is specified");
+                    .hasMessage("elasticsearch.hostScheme.https.trustStorePath cannot be null when elasticsearch.hostScheme.https.trustStorePassword is specified");
+            }
+
+            @Test
+            void fromPropertiesShouldThrowWhenTrustStoreIsNotProvided() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("OVERRIDE strategy requires trustStore to be present");
+            }
+
+            @Test
+            void fromPropertiesShouldThrowWhenTrustStorePathDoesntExist() throws Exception {
+                PropertiesConfiguration configuration = new PropertiesConfiguration();
+                configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
+
+                configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", "override");
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePath", "/home/james/ServerTrustStore.jks");
+                configuration.addProperty("elasticsearch.hostScheme.https.trustStorePassword", "password");
+
+                assertThatThrownBy(() -> ElasticSearchConfiguration.fromProperties(configuration))
+                    .isInstanceOf(IllegalArgumentException.class)
+                    .hasMessage("the file '/home/james/ServerTrustStore.jks' from property 'elasticsearch.hostScheme.https.trustStorePath' doesn't exist");
             }
 
             @Test
@@ -181,7 +207,7 @@ class ElasticSearchConfigurationTest {
                 configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
                 String strategy = "override";
-                String trustStorePath = "/home/james/ServerTrustStore.jks";
+                String trustStorePath = "src/test/resources/auth-es/server.jks";
                 String trustStorePassword = "secret";
 
                 configuration.addProperty("elasticsearch.hostScheme.https.sslValidationStrategy", strategy);

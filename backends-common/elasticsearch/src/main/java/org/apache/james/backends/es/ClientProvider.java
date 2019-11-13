@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.backends.es;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -30,6 +29,7 @@ import java.time.LocalDateTime;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Provider;
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLContext;
 
 import org.apache.commons.lang3.NotImplementedException;
@@ -38,7 +38,6 @@ import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.nio.client.HttpAsyncClientBuilder;
 import org.apache.http.ssl.SSLContextBuilder;
@@ -61,6 +60,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
     private static class HttpAsyncClientConfigurer {
 
         private static final TrustStrategy TRUST_ALL = (x509Certificates, authType) -> true;
+        private static final HostnameVerifier ACCEPT_ANY_HOST = (hostname, sslSession) -> true;
 
         private final ElasticSearchConfiguration configuration;
 
@@ -94,7 +94,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
             try {
                 builder
                     .setSSLContext(sslContext())
-                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+                    .setSSLHostnameVerifier(ACCEPT_ANY_HOST);
             } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException | CertificateException | IOException e) {
                 throw new RuntimeException("Cannot set SSL options to the builder", e);
             }
@@ -131,7 +131,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
                 .orElseThrow(() -> new IllegalStateException("SSLTrustStore cannot to be empty"));
 
             return sslContextBuilder
-                .loadTrustMaterial(new File(trustStore.getFilePath()), trustStore.getPassword().toCharArray());
+                .loadTrustMaterial(trustStore.getFile(), trustStore.getPassword());
         }
 
         private void configureAuthentication(HttpAsyncClientBuilder builder) {
@@ -139,7 +139,7 @@ public class ClientProvider implements Provider<RestHighLevelClient> {
                 .ifPresent(credential -> {
                     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
                     credentialsProvider.setCredentials(AuthScope.ANY,
-                        new UsernamePasswordCredentials(credential.getUsername(), credential.getPassword()));
+                        new UsernamePasswordCredentials(credential.getUsername(), String.valueOf(credential.getPassword())));
                     builder.setDefaultCredentialsProvider(credentialsProvider);
                 });
         }
