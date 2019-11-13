@@ -62,12 +62,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
 
             MailboxManager mailboxManager = getMailboxManager();
             MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
-            MessageManager.MetaData.FetchGroup fetchGroup;
-            if (statusDataItems.isUnseen()) {
-                fetchGroup = MessageManager.MetaData.FetchGroup.UNSEEN_COUNT;
-            } else {
-                fetchGroup = MessageManager.MetaData.FetchGroup.NO_UNSEEN;
-            }
+            MessageManager.MetaData.FetchGroup fetchGroup = computeFetchGroup(statusDataItems);
             MessageManager.MetaData metaData = mailbox.getMetaData(false, mailboxSession, fetchGroup);
 
             Long messages = messages(statusDataItems, metaData);
@@ -89,6 +84,14 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
         } catch (MailboxException e) {
             LOGGER.error("Status failed for mailbox {}", mailboxPath, e);
             no(command, tag, responder, HumanReadableText.SEARCH_FAILED);
+        }
+    }
+
+    private MessageManager.MetaData.FetchGroup computeFetchGroup(StatusDataItems statusDataItems) {
+        if (statusDataItems.isUnseen()) {
+            return MessageManager.MetaData.FetchGroup.UNSEEN_COUNT;
+        } else {
+            return MessageManager.MetaData.FetchGroup.NO_UNSEEN;
         }
     }
 
