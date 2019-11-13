@@ -33,6 +33,10 @@ import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.StatusRequest;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+
 /**
  * Parse STATUS commands
  */
@@ -42,7 +46,17 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     }
 
     private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {
-        EnumSet<StatusDataItems.StatusItem> items = EnumSet.noneOf(StatusDataItems.StatusItem.class);
+        ImmutableList<String> words = splitWords(request);
+
+        EnumSet<StatusDataItems.StatusItem> items = EnumSet.copyOf(words.stream()
+            .map(Throwing.function(this::parseStatus).sneakyThrow())
+            .collect(Guavate.toImmutableList()));
+
+        return new StatusDataItems(items);
+    }
+
+    private ImmutableList<String> splitWords(ImapRequestLineReader request) throws DecodingException {
+        ImmutableList.Builder<String> words = ImmutableList.builder();
 
         request.nextWordChar();
         request.consumeChar('(');
@@ -50,15 +64,14 @@ public class StatusCommandParser extends AbstractImapCommandParser {
         String nextWord = request.consumeWord(validator);
 
         while (!nextWord.endsWith(")")) {
-            items.add(parseStatus(nextWord));
+            words.add(nextWord);
             nextWord = request.consumeWord(validator);
         }
         // Got the closing ")", may be attached to a word.
         if (nextWord.length() > 1) {
-            items.add(parseStatus(nextWord.substring(0, nextWord.length() - 1)));
+            words.add(nextWord.substring(0, nextWord.length() - 1));
         }
-
-        return new StatusDataItems(items);
+        return words.build();
     }
 
     private StatusDataItems.StatusItem parseStatus(String nextWord) throws DecodingException {
