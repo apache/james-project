@@ -25,17 +25,16 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class JpaMailboxManagerStressTest extends MailboxManagerStressTest<OpenJPAMailboxManager> {
+class JpaMailboxManagerStressTest extends MailboxManagerStressTest<OpenJPAMailboxManager> {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         super.setUp();
     }
     
@@ -52,8 +51,8 @@ public class JpaMailboxManagerStressTest extends MailboxManagerStressTest<OpenJP
         return mailboxManager.getEventBus();
     }
 
-    @After
-    public void tearDown() {
+    @AfterEach
+    void tearDown() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

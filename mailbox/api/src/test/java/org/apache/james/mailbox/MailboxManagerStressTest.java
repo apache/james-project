@@ -40,7 +40,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -54,12 +54,12 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
 
     protected abstract EventBus retrieveEventBus(T mailboxManager);
     
-    public void setUp() throws Exception {
+    protected void setUp() throws Exception {
         this.mailboxManager = provideManager();
     }
 
     @Test
-    public void testStressTest() throws InterruptedException, MailboxException {
+    void testStressTest() throws InterruptedException, MailboxException {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);

@@ -22,13 +22,12 @@ package org.apache.james.mailbox.inmemory;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.extension.PreDeletionHook;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
-public class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InMemoryMailboxManager> {
-    
-    @Override
-    @Before
-    public void setUp() throws Exception {
+class MemoryMailboxManagerStressTest extends MailboxManagerStressTest<InMemoryMailboxManager> {
+
+    @BeforeEach
+    void setup() throws Exception {
         super.setUp();
     }
     

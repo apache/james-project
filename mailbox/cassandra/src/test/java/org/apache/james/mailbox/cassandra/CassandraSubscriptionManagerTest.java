@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobStore;
@@ -47,34 +47,32 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.exception.SubscriptionException;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 /**
  * Test Cassandra subscription against some general purpose written code.
  */
-public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSubscriptionModule.MODULE);
 
-    private CassandraCluster cassandra;
-
-    @Before
-    public void init() {
-        cassandra = CassandraCluster.create(CassandraSubscriptionModule.MODULE, cassandraServer.getHost());
+    @BeforeEach
+    void init() {
         super.setup();
     }
 
-    @After
-    public void close() throws SubscriptionException {
+    @AfterEach
+    void close() throws SubscriptionException {
         super.teardown();
-        cassandra.clearTables();
-        cassandra.closeCluster();
     }
 
     @Override
-    public SubscriptionManager createSubscriptionManager() {
+    protected SubscriptionManager createSubscriptionManager() {
         CassandraMessageIdToImapUidDAO imapUidDAO = null;
         CassandraMessageDAO messageDAO = null;
         CassandraMessageIdDAO messageIdDAO = null;
@@ -99,7 +97,7 @@ public class CassandraSubscriptionManagerTest extends AbstractSubscriptionManage
             new CassandraMailboxSessionMapperFactory(
                 uidProvider,
                 modSeqProvider,
-                cassandra.getConf(),
+                cassandraCluster.getCassandraCluster().getConf(),
                 messageDAO,
                 messageIdDAO,
                 imapUidDAO,

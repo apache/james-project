@@ -21,7 +21,7 @@ package org.apache.james.mailbox;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.exception.SubscriptionException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 /**
  * Abstract base class to test {@link SubscriptionManager} implementations
@@ -36,35 +36,35 @@ public abstract class AbstractSubscriptionManagerTest {
     private SubscriptionManager manager;
     private MailboxSession session;
 
-    public abstract SubscriptionManager createSubscriptionManager();
+    protected abstract SubscriptionManager createSubscriptionManager();
 
-    public void setup() {
+    protected void setup() {
         manager = createSubscriptionManager();
         session = MailboxSessionUtil.create(USER1);
         manager.startProcessingRequest(session);
     }
     
-    public void teardown() throws SubscriptionException {
+    protected void teardown() throws SubscriptionException {
         manager.unsubscribe(session, MAILBOX1);
         manager.unsubscribe(session, MAILBOX2);
         manager.endProcessingRequest(session);
     }
     
     @Test
-    public void user1ShouldNotHaveAnySubscriptionByDefault() throws SubscriptionException {
+    void user1ShouldNotHaveAnySubscriptionByDefault() throws SubscriptionException {
         assertThat(manager.subscriptions(session)).isEmpty();
     }
     
     
     @Test
-    public void user1ShouldBeAbleToSubscribeOneMailbox() throws SubscriptionException {
+    void user1ShouldBeAbleToSubscribeOneMailbox() throws SubscriptionException {
         manager.subscribe(session, MAILBOX1);
 
         assertThat(manager.subscriptions(session)).containsExactly(MAILBOX1);
     }
 
     @Test
-    public void subscribeShouldBeIdempotent() throws SubscriptionException {
+    void subscribeShouldBeIdempotent() throws SubscriptionException {
         manager.subscribe(session, MAILBOX1);
         manager.subscribe(session, MAILBOX1);
         
@@ -72,7 +72,7 @@ public abstract class AbstractSubscriptionManagerTest {
     }
     
     @Test
-    public void user1ShouldBeAbleToSubscribeTwoMailbox() throws SubscriptionException {
+    void user1ShouldBeAbleToSubscribeTwoMailbox() throws SubscriptionException {
         manager.subscribe(session, MAILBOX1);
         manager.subscribe(session, MAILBOX2);
         
@@ -80,7 +80,7 @@ public abstract class AbstractSubscriptionManagerTest {
     }
     
     @Test
-    public void user1ShouldBeAbleToUnsubscribeOneMailbox() throws SubscriptionException {
+    void user1ShouldBeAbleToUnsubscribeOneMailbox() throws SubscriptionException {
         manager.subscribe(session, MAILBOX1);
         manager.subscribe(session, MAILBOX2);
 
@@ -90,7 +90,7 @@ public abstract class AbstractSubscriptionManagerTest {
     }
     
     @Test
-    public void unsubscribeShouldBeIdempotent() throws SubscriptionException {
+    void unsubscribeShouldBeIdempotent() throws SubscriptionException {
         manager.subscribe(session, MAILBOX1);
         manager.subscribe(session, MAILBOX2);
         manager.unsubscribe(session, MAILBOX1);

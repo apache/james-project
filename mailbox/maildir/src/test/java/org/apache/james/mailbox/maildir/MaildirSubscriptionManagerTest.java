@@ -18,26 +18,27 @@
  ****************************************************************/
 package org.apache.james.mailbox.maildir;
 
+import java.io.File;
+
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
-public class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
+class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
-    @Rule
-    public TemporaryFolder tmpFolder = new TemporaryFolder();
+    @TempDir
+    File tmpFolder;
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         super.setup();
     }
     
     @Override
-    public SubscriptionManager createSubscriptionManager() {
+    protected SubscriptionManager createSubscriptionManager() {
         MaildirStore store = new MaildirStore(tmpFolder + "/Maildir/%domain/%user", new JVMMailboxPathLocker());
         MaildirMailboxSessionMapperFactory factory = new MaildirMailboxSessionMapperFactory(store);
         return new StoreSubscriptionManager(factory);

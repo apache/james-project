@@ -19,20 +19,20 @@
 
 package org.apache.james.mailbox.maildir;
 
+import java.io.File;
+
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.io.TempDir;
 
-public class DomainUserMaildirMailboxManagerStressTest extends MailboxManagerStressTest<StoreMailboxManager> {
-    @Rule
-    public TemporaryFolder tmpFolder = new TemporaryFolder();
-    
-    @Override
-    @Before
-    public void setUp() throws Exception {
+class DomainUserMaildirMailboxManagerStressTest extends MailboxManagerStressTest<StoreMailboxManager> {
+    @TempDir
+    File tmpFolder;
+
+    @BeforeEach
+    void setup() throws Exception {
         super.setUp();
     }
     

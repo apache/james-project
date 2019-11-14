@@ -23,24 +23,23 @@ import javax.persistence.EntityManagerFactory;
 import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
-import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest {
+class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void init() {
         super.setup();
     }
     
     @Override
-    public SubscriptionManager createSubscriptionManager() {
+    protected SubscriptionManager createSubscriptionManager() {
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
@@ -51,9 +50,8 @@ public class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest 
         return new JPASubscriptionManager(mf);
     }
 
-    @Override
-    @After
-    public void teardown() throws SubscriptionException {
+    @AfterEach
+    void close() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }
