@@ -126,10 +126,8 @@ public class ResultUtils {
 
     }
 
-    private static void addPartContent(FetchGroup fetchGroup,
-                                       MailboxMessage message, MessageResultImpl messageResult)
-            throws MailboxException, IOException,
-            MimeException {
+    private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
+            throws MailboxException, IOException, MimeException {
         Collection<FetchGroup.PartContentDescriptor> partContent = fetchGroup.getPartContentDescriptors();
         if (partContent != null) {
             for (FetchGroup.PartContentDescriptor descriptor: partContent) {
@@ -138,10 +136,8 @@ public class ResultUtils {
         }
     }
 
-    private static void addPartContent(
-            FetchGroup.PartContentDescriptor descriptor, MailboxMessage message,
-            MessageResultImpl messageResult) throws 
-            MailboxException, IOException, MimeException {
+    private static void addPartContent(FetchGroup.PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
+            throws MailboxException, IOException, MimeException {
         final MimePath mimePath = descriptor.path();
         final int content = descriptor.content();
         if ((content & MessageResult.FetchGroup.FULL_CONTENT) > 0) {
@@ -190,8 +186,7 @@ public class ResultUtils {
         return result;
     }
 
-    private static void addHeaders(MailboxMessage message,
-            MessageResultImpl messageResult, MimePath mimePath)
+    private static void addHeaders(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
         final int[] path = path(mimePath);
         if (path != null) {
@@ -202,8 +197,7 @@ public class ResultUtils {
         }
     }
 
-    private static void addMimeHeaders(MailboxMessage message,
-            MessageResultImpl messageResult, MimePath mimePath)
+    private static void addMimeHeaders(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
         final int[] path = path(mimePath);
         if (path != null) {
@@ -213,8 +207,8 @@ public class ResultUtils {
         }
     }
 
-    private static void addBodyContent(MailboxMessage message,
-            MessageResultImpl messageResult, MimePath mimePath) throws IOException, MimeException {
+    private static void addBodyContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
+            throws IOException, MimeException {
         final int[] path = path(mimePath);
         if (path != null) {
             final PartContentBuilder builder = build(path, message);
@@ -223,8 +217,7 @@ public class ResultUtils {
         }
     }
 
-    private static void addMimeBodyContent(MailboxMessage message,
-            MessageResultImpl messageResult, MimePath mimePath)
+    private static void addMimeBodyContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
         final int[] path = path(mimePath);
         final PartContentBuilder builder = build(path, message);
@@ -232,10 +225,8 @@ public class ResultUtils {
         messageResult.setMimeBodyContent(mimePath, content);
     }
 
-    private static void addFullContent(MailboxMessage message,
-            MessageResultImpl messageResult, MimePath mimePath)
-            throws MailboxException, IOException,
-            MimeException {
+    private static void addFullContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
+            throws MailboxException, IOException, MimeException {
         final int[] path = path(mimePath);
         if (path != null) {
             final PartContentBuilder builder = build(path, message);
