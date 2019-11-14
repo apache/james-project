@@ -243,7 +243,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     private PartContent getPartContent(MimePath path) {
-        PartContent result = (PartContent) partsByPath.get(path);
+        PartContent result = partsByPath.get(path);
         if (result == null) {
             result = new PartContent();
             partsByPath.put(path, result);
