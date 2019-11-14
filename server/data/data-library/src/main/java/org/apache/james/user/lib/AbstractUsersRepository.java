@@ -70,7 +70,8 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         this.domainList = domainList;
     }
 
-    protected void isValidUsername(Username username) throws UsersRepositoryException {
+    @Override
+    public void assertValid(Username username) throws UsersRepositoryException {
         if (supportVirtualHosting()) {
             // need a @ in the username
             if (!username.hasDomainPart()) {
@@ -97,7 +98,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     public void addUser(Username username, String password) throws UsersRepositoryException {
 
         if (!contains(username)) {
-            isValidUsername(username);
+            assertValid(username);
             doAddUser(username, password);
         } else {
             throw new AlreadyExistInUsersRepositoryException("User with username " + username + " already exists!");

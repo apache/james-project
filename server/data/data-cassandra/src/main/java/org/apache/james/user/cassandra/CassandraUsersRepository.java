@@ -184,7 +184,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
 
     @Override
     public void addUser(Username username, String password) throws UsersRepositoryException {
-        isValidUsername(username);
+        assertValid(username);
         doAddUser(username, password);
     }
 

@@ -31,6 +31,8 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.user.api.UsersRepository;
+import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -40,22 +42,31 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
     private final JwtTokenVerifier tokenManager;
     private final MailboxManager mailboxManager;
     private final HeadersAuthenticationExtractor authenticationExtractor;
+    private final UsersRepository usersRepository;
 
     @Inject
     @VisibleForTesting
-    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor) {
+    JWTAuthenticationStrategy(JwtTokenVerifier tokenManager, MailboxManager mailboxManager, HeadersAuthenticationExtractor authenticationExtractor, UsersRepository usersRepository) {
         this.tokenManager = tokenManager;
         this.mailboxManager = mailboxManager;
         this.authenticationExtractor = authenticationExtractor;
+        this.usersRepository = usersRepository;
     }
 
     @Override
     public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
 
         Stream<Username> userLoginStream = extractTokensFromAuthHeaders(authenticationExtractor.authHeaders(httpRequest))
-                .filter(tokenManager::verify)
-                .map(tokenManager::extractLogin)
-                .map(Username::of);
+            .filter(tokenManager::verify)
+            .map(tokenManager::extractLogin)
+            .map(Username::of)
+            .peek(username -> {
+                try {
+                    usersRepository.assertValid(username);
+                } catch (UsersRepositoryException e) {
+                    throw new MailboxSessionCreationException(e);
+                }
+            });
 
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
                 .map(login -> {

@@ -156,4 +156,9 @@ public interface UsersRepository {
      */
     boolean isReadOnly();
 
+    default void assertValid(Username username) throws UsersRepositoryException {
+        if (username.getDomainPart().isPresent() != supportVirtualHosting()) {
+            throw new UsersRepositoryException(username.asString() + " username candidate do not match the virtualHosting strategy");
+        }
+    }
 }

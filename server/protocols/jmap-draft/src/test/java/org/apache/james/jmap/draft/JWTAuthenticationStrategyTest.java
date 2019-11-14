@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.JWTAuthenticationStrategy;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
@@ -37,11 +36,9 @@ import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.user.api.model.User;
-
+import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
-
 
 public class JWTAuthenticationStrategyTest {
 
@@ -57,13 +54,14 @@ public class JWTAuthenticationStrategyTest {
         mockedMailboxManager = mock(MailboxManager.class);
         mockAuthenticationExtractor = mock(HeadersAuthenticationExtractor.class);
         request = mock(HttpServletRequest.class);
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
 
-        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, mockAuthenticationExtractor);
+        testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, mockAuthenticationExtractor, usersRepository);
     }
 
 
     @Test
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() throws Exception {
+    public void createMailboxSessionShouldThrowWhenAuthHeaderIsEmpty() {
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.empty());
 
@@ -91,7 +89,7 @@ public class JWTAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() throws Exception {
+    public void createMailboxSessionShouldReturnEmptyWhenAuthHeaderIsInvalid() {
         when(mockAuthenticationExtractor.authHeaders(request))
             .thenReturn(Stream.of("bad"));
 
@@ -133,5 +131,24 @@ public class JWTAuthenticationStrategyTest {
 
         MailboxSession result = testee.createMailboxSession(request);
         assertThat(result).isEqualTo(fakeMailboxSession);
+    }
+
+    @Test
+    public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() throws Exception {
+        String username = "123456789@domain.tld";
+        String validAuthHeader = "valid";
+        String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
+        MailboxSession fakeMailboxSession = mock(MailboxSession.class);
+
+        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
+        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
+        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
+                .thenReturn(fakeMailboxSession);
+        when(mockAuthenticationExtractor.authHeaders(request))
+            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
+
+
+        assertThatThrownBy(() -> testee.createMailboxSession(request))
+            .isInstanceOf(MailboxSessionCreationException.class);
     }
 }

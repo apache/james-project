@@ -19,6 +19,7 @@
 package org.apache.james.jmap.draft;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -86,17 +87,14 @@ public class UserProvisioningFilterTest {
     }
 
     @Test
-    public void filterShouldAddUsernameWhenNoVirtualHostingAndMailboxSessionContainsMail() throws Exception {
+    public void filterShouldFailOnInvalidVirtualHosting() {
         usersRepository.setEnableVirtualHosting(false);
         MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
             .thenReturn(mailboxSession);
 
-        sut.doFilter(request, response, chain);
-
-        verify(chain).doFilter(request, response);
-        assertThat(usersRepository.list()).toIterable()
-            .contains(USERNAME);
+        assertThatThrownBy(() -> sut.doFilter(request, response, chain))
+            .hasCauseInstanceOf(UsersRepositoryException.class);
     }
 
     @Test
