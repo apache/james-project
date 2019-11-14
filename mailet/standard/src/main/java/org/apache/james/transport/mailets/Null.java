@@ -23,15 +23,20 @@ package org.apache.james.transport.mailets;
 
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.GenericMailet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simplest Mailet which destroys any incoming messages
  * by setting their state to GHOST
  */
 public class Null extends GenericMailet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(Null.class);
 
     @Override
     public void service(Mail mail) {
+        LOGGER.debug("Null mailet is destroying mail {} from {} for {}", mail.getName(), mail.getMaybeSender(),
+                mail.getRecipients());
         mail.setState(Mail.GHOST);
     }
 
