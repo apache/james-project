@@ -61,7 +61,7 @@ public final class ResultHeader implements MessageResult.Header {
     }
 
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream getInputStream() {
         return new ByteArrayInputStream((name + ": " + value).getBytes(US_ASCII));
     }
 }
