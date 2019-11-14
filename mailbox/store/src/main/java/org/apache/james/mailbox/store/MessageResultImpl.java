@@ -54,11 +54,9 @@ public class MessageResultImpl implements MessageResult {
     private static final String TAB = " ";
 
     private final Map<MimePath, PartContent> partsByPath = new HashMap<>();
-
-    private MimeDescriptor mimeDescriptor;
-
     private final MailboxMessage message;
 
+    private MimeDescriptor mimeDescriptor;
     private HeadersImpl headers;
     private Content fullContent;
     private Content bodyContent;
