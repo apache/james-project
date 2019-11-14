@@ -342,6 +342,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
                 } else {
                     // default matcher is All
                     matcher = matcherLoader.getMatcher(createMatcherConfig("All"));
+                    LOGGER.debug("Mailet {} has no 'match' attribute. Defaulting to match all mails.", mailetClassName);
                 }
 
                 // The matcher itself should log that it's been inited.
