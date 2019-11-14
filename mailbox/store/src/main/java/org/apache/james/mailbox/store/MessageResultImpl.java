@@ -187,27 +187,27 @@ public class MessageResultImpl implements MessageResult {
         return partContent.getMimeHeaders();
     }
 
-    public void setBodyContent(MimePath path, Content content) {
+    void setBodyContent(MimePath path, Content content) {
         final PartContent partContent = getPartContent(path);
         partContent.setBody(content);
     }
 
-    public void setMimeBodyContent(MimePath path, Content content) {
+    void setMimeBodyContent(MimePath path, Content content) {
         final PartContent partContent = getPartContent(path);
         partContent.setMimeBody(content);
     }
 
-    public void setFullContent(MimePath path, Content content) {
+    void setFullContent(MimePath path, Content content) {
         final PartContent partContent = getPartContent(path);
         partContent.setFull(content);
     }
 
-    public void setHeaders(MimePath path, Iterator<Header> headers) {
+    void setHeaders(MimePath path, Iterator<Header> headers) {
         final PartContent partContent = getPartContent(path);
         partContent.setHeaders(headers);
     }
 
-    public void setMimeHeaders(MimePath path, Iterator<Header> headers) {
+    void setMimeHeaders(MimePath path, Iterator<Header> headers) {
         final PartContent partContent = getPartContent(path);
         partContent.setMimeHeaders(headers);
     }
@@ -243,11 +243,11 @@ public class MessageResultImpl implements MessageResult {
             this.body = body;
         }
 
-        public Content getMimeBody() {
+        Content getMimeBody() {
             return mimeBody;
         }
 
-        public void setMimeBody(Content mimeBody) {
+        void setMimeBody(Content mimeBody) {
             content = content | FetchGroup.MIME_CONTENT;
             this.mimeBody = mimeBody;
         }
@@ -270,11 +270,11 @@ public class MessageResultImpl implements MessageResult {
             this.headers = headers;
         }
 
-        public Iterator<Header> getMimeHeaders() {
+        Iterator<Header> getMimeHeaders() {
             return mimeHeaders;
         }
 
-        public void setMimeHeaders(Iterator<Header> mimeHeaders) {
+        void setMimeHeaders(Iterator<Header> mimeHeaders) {
             content = content | FetchGroup.MIME_HEADERS;
             this.mimeHeaders = mimeHeaders;
         }
@@ -317,7 +317,7 @@ public class MessageResultImpl implements MessageResult {
         private final Message msg;
         private List<Header> headers;
         
-        public HeadersImpl(Message msg) {
+        private HeadersImpl(Message msg) {
             this.msg = msg;
         }
 
