@@ -50,6 +50,7 @@ import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.MessageAppender;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -61,12 +62,12 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Iterables;
+
 import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 
@@ -109,9 +110,9 @@ public abstract class SendMDNMethodTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"headers\":{\"Disposition-Notification-To\":\"" + BART + "\"}," +
-            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
-            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
+            "        \"headers\":{\"Disposition-Notification-To\":\"" + BART.asString() + "\"}," +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER.asString() + "\"}]," +
             "        \"subject\": \"Message with an attachment\"," +
             "        \"textBody\": \"Test body, plain text version\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
@@ -143,8 +144,8 @@ public abstract class SendMDNMethodTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
-            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER.asString() + "\"}]," +
             "        \"subject\": \"Message with an attachment\"," +
             "        \"textBody\": \"Test body, plain text version\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +
@@ -309,8 +310,8 @@ public abstract class SendMDNMethodTest {
             .post("/jmap")
         .then()
             .statusCode(200)
-            .body(firstMessage + ".from.email", is(HOMER))
-            .body(firstMessage + ".to.email", contains(BART))
+            .body(firstMessage + ".from.email", is(HOMER.asString()))
+            .body(firstMessage + ".to.email", contains(BART.asString()))
             .body(firstMessage + ".hasAttachment", is(true))
             .body(firstMessage + ".textBody", is("Read confirmation"))
             .body(firstMessage + ".subject", is("subject"))

@@ -258,7 +258,7 @@ public class EventDeadLettersIntegrationTest {
             .body("MailboxAdded.mailboxId", is(mailboxId.serialize()))
             .body("MailboxAdded.user", is(BOB))
             .body("MailboxAdded.mailboxPath.namespace", is(BOB_INBOX_PATH.getNamespace()))
-            .body("MailboxAdded.mailboxPath.user", is(BOB_INBOX_PATH.getUser()))
+            .body("MailboxAdded.mailboxPath.user", is(BOB_INBOX_PATH.getUser().asString()))
             .body("MailboxAdded.mailboxPath.name", is(BOB_INBOX_PATH.getName()));
     }
 

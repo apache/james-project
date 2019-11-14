@@ -44,13 +44,13 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -328,8 +328,8 @@ public abstract class VacationIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + mailId + "\" : {" +
-            "        \"from\": { \"email\": \"" + USER_2 + "\"}," +
-            "        \"to\": [{ \"name\": \"Benwa\", \"email\": \"" + USER_1 + "\"}]," +
+            "        \"from\": { \"email\": \"" + USER_2.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Benwa\", \"email\": \"" + USER_1.asString() + "\"}]," +
             "        \"subject\": \"Thank you for joining example.com!\"," +
             "        \"textBody\": \"" + ORIGINAL_MESSAGE_TEXT_BODY + "\"," +
             "        \"mailboxIds\": [\"" + outboxId + "\"]" +

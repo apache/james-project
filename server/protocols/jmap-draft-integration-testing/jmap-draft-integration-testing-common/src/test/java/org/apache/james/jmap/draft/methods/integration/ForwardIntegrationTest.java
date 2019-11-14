@@ -45,9 +45,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -97,7 +97,7 @@ public abstract class ForwardIntegrationTest {
     @Category(BasicFeature.class)
     @Test
     public void messageShouldBeForwardedWhenDefinedInRESTAPI() {
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         String messageCreationId = "creationId1337";
@@ -106,8 +106,8 @@ public abstract class ForwardIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"isUnread\": true," +
             "        \"isFlagged\": true," +
@@ -144,8 +144,8 @@ public abstract class ForwardIntegrationTest {
 
     @Test
     public void messageShouldBeForwardedWhenBaseRecipientWhenInDestination() {
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, ALICE));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), ALICE.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
@@ -155,8 +155,8 @@ public abstract class ForwardIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"isUnread\": true," +
             "        \"isFlagged\": true," +
@@ -204,8 +204,8 @@ public abstract class ForwardIntegrationTest {
 
     @Test
     public void recursiveForwardShouldWork() {
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, CEDRIC));
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", CEDRIC, BOB));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), CEDRIC.asString()));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", CEDRIC.asString(), BOB.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         String messageCreationId = "creationId1337";
@@ -214,8 +214,8 @@ public abstract class ForwardIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"isUnread\": true," +
             "        \"isFlagged\": true," +
@@ -252,9 +252,9 @@ public abstract class ForwardIntegrationTest {
 
     @Test
     public void recursiveWithRecipientCopyForwardShouldWork() {
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, ALICE));
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", BOB, CEDRIC));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), ALICE.asString()));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", BOB.asString(), CEDRIC.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
@@ -264,8 +264,8 @@ public abstract class ForwardIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"isUnread\": true," +
             "        \"isFlagged\": true," +
@@ -301,7 +301,7 @@ public abstract class ForwardIntegrationTest {
 
     @Test
     public void baseRecipientShouldNotReceiveEmailOnDefaultForward() {
-        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE, BOB));
+        webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapServer), CEDRIC, CEDRIC_PASSWORD);
         AccessToken aliceAccessToken = authenticateJamesUser(baseUri(jmapServer), ALICE, ALICE_PASSWORD);
@@ -311,8 +311,8 @@ public abstract class ForwardIntegrationTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC + "\"}," +
-            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + CEDRIC.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"isUnread\": true," +
             "        \"isFlagged\": true," +

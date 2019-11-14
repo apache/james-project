@@ -48,12 +48,12 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.JmapCommonRequests;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -710,7 +710,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + BOB + "\"" +
+                "        \"value\": \"" + BOB.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -731,8 +731,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -763,7 +763,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"to\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -784,8 +784,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -818,7 +818,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"cc\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -839,9 +839,9 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
-            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
+            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -874,7 +874,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"recipient\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -895,9 +895,9 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
-            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
+            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -930,7 +930,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"recipient\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -951,9 +951,9 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + CEDRIC + "\"}]," +
-            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
+            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1007,8 +1007,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"matchme\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1042,7 +1042,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1063,8 +1063,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1097,7 +1097,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"to\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1118,8 +1118,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1152,7 +1152,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"cc\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1173,9 +1173,9 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
-            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + BOB + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
+            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + BOB.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1208,7 +1208,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"recipient\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + CEDRIC + "\"" +
+                "        \"value\": \"" + CEDRIC.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1229,9 +1229,9 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
-            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + BOB + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
+            "      \"cc\": [{ \"name\": \"Cedric\", \"email\": \"" + BOB.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1285,8 +1285,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"nomatch\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1341,8 +1341,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"},{ \"name\": \"Cedric\", \"email\": \"" + CEDRIC.asString() + "\"}]," +
             "      \"subject\": \"DIFFERENT CASE VALUE\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1396,8 +1396,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1451,8 +1451,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1506,8 +1506,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1540,7 +1540,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"exactly-equals\"," +
-                "        \"value\": \"" + BOB + "\"" +
+                "        \"value\": \"" + BOB.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1561,8 +1561,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1595,7 +1595,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"exactly-equals\"," +
-                "        \"value\": \"Bob <" + BOB + ">\"" +
+                "        \"value\": \"Bob <" + BOB.asString() + ">\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1616,8 +1616,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1672,8 +1672,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1727,8 +1727,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1782,8 +1782,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1837,8 +1837,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1892,8 +1892,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1926,7 +1926,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"not-exactly-equals\"," +
-                "        \"value\": \"" + BOB + "\"" +
+                "        \"value\": \"" + BOB.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -1947,8 +1947,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -1981,7 +1981,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"not-exactly-equals\"," +
-                "        \"value\": \"Bob <" + BOB + ">\"" +
+                "        \"value\": \"Bob <" + BOB.asString() + ">\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -2002,8 +2002,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Bob\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -2057,8 +2057,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -2091,7 +2091,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + BOB + "\"" +
+                "        \"value\": \"" + BOB.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -2105,7 +2105,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"to\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + ALICE + "\"" +
+                "        \"value\": \"" + ALICE.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -2126,8 +2126,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -2172,7 +2172,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"to\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + ALICE + "\"" +
+                "        \"value\": \"" + ALICE.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -2193,8 +2193,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -2225,7 +2225,7 @@ public abstract class FilterTest {
                 "      \"condition\": {" +
                 "        \"field\": \"from\"," +
                 "        \"comparator\": \"contains\"," +
-                "        \"value\": \"" + BOB + "\"" +
+                "        \"value\": \"" + BOB.asString() + "\"" +
                 "      }," +
                 "      \"action\": {" +
                 "        \"appendIn\": {" +
@@ -2246,8 +2246,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +
@@ -2300,8 +2300,8 @@ public abstract class FilterTest {
             "  \"setMessages\"," +
             "  {" +
             "    \"create\": { \"" + messageCreationId  + "\" : {" +
-            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB + "\"}," +
-            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE + "\"}]," +
+            "      \"from\": { \"name\": \"Me\", \"email\": \"" + BOB.asString() + "\"}," +
+            "      \"to\": [{ \"name\": \"Alice\", \"email\": \"" + ALICE.asString() + "\"}]," +
             "      \"subject\": \"subject\"," +
             "      \"mailboxIds\": [\"" + getOutboxId(bobAccessToken) + "\"]" +
             "    }}" +

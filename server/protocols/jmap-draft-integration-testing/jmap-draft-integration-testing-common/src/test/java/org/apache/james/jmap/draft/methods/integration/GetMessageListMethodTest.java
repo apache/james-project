@@ -237,7 +237,7 @@ public abstract class GetMessageListMethodTest {
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
             "        \"from\": { \"name\": \"" + fromName + "\", \"email\": \"" + fromAddress + "\"}," +
-            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
             "        \"subject\": \"Thank you for joining example.com!\"," +
             "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
             "        \"mailboxIds\": [\"" + getOutboxId(aliceAccessToken) + "\"]" +

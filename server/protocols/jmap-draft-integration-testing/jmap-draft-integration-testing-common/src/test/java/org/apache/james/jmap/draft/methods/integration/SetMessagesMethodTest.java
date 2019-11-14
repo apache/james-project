@@ -2116,7 +2116,7 @@ public abstract class SetMessagesMethodTest {
             "    {" +
             "      \"create\": { \"" + draftCreationId  + "\" : {" +
             "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"keywords\": {\"$Draft\": true}," +
             "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
@@ -2168,7 +2168,7 @@ public abstract class SetMessagesMethodTest {
             "    {" +
             "      \"create\": { \"" + draftCreationId  + "\" : {" +
             "        \"from\": { \"name\": \"Me\", \"email\": \"" + fromAddress + "\"}," +
-            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB + "\"}]," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
             "        \"subject\": \"subject\"," +
             "        \"keywords\": {\"$Draft\": true}," +
             "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +

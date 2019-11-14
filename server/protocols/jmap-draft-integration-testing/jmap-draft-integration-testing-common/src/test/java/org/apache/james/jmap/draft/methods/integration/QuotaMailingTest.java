@@ -41,6 +41,7 @@ import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSize;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.SerializableQuotaValue;
@@ -49,7 +50,6 @@ import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.After;
@@ -104,7 +104,7 @@ public abstract class QuotaMailingTest {
     @Test
     public void shouldSendANoticeWhenThresholdExceeded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)
-            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER,
+            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
                 new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
 
         bartSendMessageToHomer();
@@ -130,7 +130,7 @@ public abstract class QuotaMailingTest {
     @Test
     public void configurationShouldBeWellLoaded() throws Exception {
         jmapServer.getProbe(QuotaProbesImpl.class)
-            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER,
+            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
                 new SerializableQuotaValue<>(QuotaSize.size(100 * 1000)));
 
         bartSendMessageToHomer();
@@ -167,9 +167,9 @@ public abstract class QuotaMailingTest {
             "    \"setMessages\"," +
             "    {" +
             "      \"create\": { \"" + messageCreationId  + "\" : {" +
-            "        \"headers\":{\"Disposition-Notification-To\":\"" + BART + "\"}," +
-            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART + "\"}," +
-            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER + "\"}]," +
+            "        \"headers\":{\"Disposition-Notification-To\":\"" + BART.asString() + "\"}," +
+            "        \"from\": { \"name\": \"Bob\", \"email\": \"" + BART.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"User\", \"email\": \"" + HOMER.asString() + "\"}]," +
             "        \"subject\": \"Message without an attachment\"," +
             "        \"textBody\": \"" + bigEnoughBody + "\"," +
             "        \"htmlBody\": \"Test <b>body</b>, HTML version\"," +

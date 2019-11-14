@@ -41,10 +41,10 @@ import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -107,7 +107,7 @@ public abstract class GetVacationResponseTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("vacationResponse"))
-            .body(ARGUMENTS + ".accountId", equalTo(ALICE))
+            .body(ARGUMENTS + ".accountId", equalTo(ALICE.asString()))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
             .body(ARGUMENTS + ".list[0].fromDate", nullValue())
@@ -143,7 +143,7 @@ public abstract class GetVacationResponseTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("vacationResponse"))
-            .body(ARGUMENTS + ".accountId", equalTo(ALICE))
+            .body(ARGUMENTS + ".accountId", equalTo(ALICE.asString()))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
             .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00Z"))
@@ -176,7 +176,7 @@ public abstract class GetVacationResponseTest {
         .then()
             .statusCode(200)
             .body(NAME, equalTo("vacationResponse"))
-            .body(ARGUMENTS + ".accountId", equalTo(ALICE))
+            .body(ARGUMENTS + ".accountId", equalTo(ALICE.asString()))
             .body(ARGUMENTS + ".list", hasSize(1))
             .body(ARGUMENTS + ".list[0].id", equalTo("singleton"))
             .body(ARGUMENTS + ".list[0].fromDate", equalTo("2014-09-30T14:10:00+02:00"))
