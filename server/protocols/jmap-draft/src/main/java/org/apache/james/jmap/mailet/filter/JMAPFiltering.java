@@ -45,7 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * Example:
  *
- *  &lt;mailet matcher="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/&gt;
+ *  &lt;mailet match="RecipientIsLocal" class="org.apache.james.jmap.mailet.filter.JMAPFiltering"/&gt;
  */
 public class JMAPFiltering extends GenericMailet {
 

@@ -45,7 +45,7 @@ import com.google.common.base.Strings;
  *
  *  Example:
  *
- *  <mailet matcher="IsMarkedAsSpam" class="WithStorageDirective">
+ *  <mailet match="IsMarkedAsSpam" class="WithStorageDirective">
  *      <targetFolderName>Spam</targetFolderName>
  *  </mailet>
  */
