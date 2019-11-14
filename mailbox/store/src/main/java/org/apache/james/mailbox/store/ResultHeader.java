@@ -25,7 +25,6 @@ package org.apache.james.mailbox.store;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.james.mailbox.model.MessageResult;
