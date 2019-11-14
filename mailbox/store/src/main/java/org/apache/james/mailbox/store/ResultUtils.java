@@ -42,16 +42,7 @@ import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.mime4j.util.ContentUtil;
 
-/**
- *
- */
 public class ResultUtils {
-
-    public static final byte[] BYTES_NEW_LINE = { 0x0D, 0x0A };
-
-    public static final byte[] BYTES_HEADER_FIELD_VALUE_SEP = { 0x3A, 0x20 };
-
-    static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public static List<MessageResult.Header> createHeaders(MailboxMessage document) throws IOException {
         final List<MessageResult.Header> results = new ArrayList<>();
@@ -96,9 +87,6 @@ public class ResultUtils {
         }
         return results;
     }
-
-  
-  
     
     /**
      * Return the {@link MessageResult} for the given {@link MailboxMessage} and {@link FetchGroup}
