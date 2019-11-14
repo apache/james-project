@@ -20,6 +20,7 @@ package org.apache.james.mailbox.store.user;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
@@ -38,8 +39,7 @@ public interface SubscriptionMapper extends Mapper {
      * @return <code>Subscription</code>, 
      * or null when the user is not subscribed to the given mailbox
      */
-    Subscription findMailboxSubscriptionForUser(
-        final String user, String mailbox) throws SubscriptionException;
+    Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException;
 
     /**
      * Saves the given subscription.
@@ -52,7 +52,7 @@ public interface SubscriptionMapper extends Mapper {
      * @param user not null
      * @return not null
      */
-    List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException;
+    List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException;
 
     /**
      * Deletes the given subscription.

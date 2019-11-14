@@ -54,7 +54,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().asString(), mailbox);
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser(), mailbox);
                 if (subscription == null) {
                     Subscription newSubscription = createSubscription(session, mailbox);
                     mapper.save(newSubscription);
@@ -71,13 +71,13 @@ public class StoreSubscriptionManager implements SubscriptionManager {
      * If you need something more special just override this method
      */
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new SimpleSubscription(session.getUser().asString(), mailbox);
+        return new SimpleSubscription(session.getUser(), mailbox);
     }
 
     @Override
     public Collection<String> subscriptions(MailboxSession session) throws SubscriptionException {
         return mapperFactory.getSubscriptionMapper(session)
-            .findSubscriptionsForUser(session.getUser().asString())
+            .findSubscriptionsForUser(session.getUser())
             .stream()
             .map(Subscription::getMailbox)
             .collect(Collectors.toCollection(() -> new HashSet<>(INITIAL_SIZE)));
@@ -88,7 +88,7 @@ public class StoreSubscriptionManager implements SubscriptionManager {
         final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser().asString(), mailbox);
+                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser(), mailbox);
                 if (subscription != null) {
                     mapper.delete(subscription);
                 }

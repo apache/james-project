@@ -18,16 +18,17 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.user.model.impl;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
 import com.google.common.base.Objects;
 
 public class SimpleSubscription implements Subscription {
 
-    private final String user;
+    private final Username user;
     private final String mailbox;
     
-    public SimpleSubscription(String user, String mailbox) {
+    public SimpleSubscription(Username user, String mailbox) {
         this.user = user;
         this.mailbox = mailbox;
     }
@@ -38,7 +39,7 @@ public class SimpleSubscription implements Subscription {
     }
 
     @Override
-    public String getUser() {
+    public Username getUser() {
         return user;
     }
 

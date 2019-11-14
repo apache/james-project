@@ -58,7 +58,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(Username.of(subscription.getUser()))), newSubscriptions);
+                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -66,7 +66,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     }
 
     @Override
-    public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
+    public List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException {
         Set<String> subscriptionNames = readSubscriptionsForUser(user);
         return subscriptionNames.stream()
             .map(subscription -> new SimpleSubscription(user, subscription))
@@ -74,8 +74,8 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     }
 
     @Override
-    public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
-        File userRoot = new File(store.userRoot(Username.of(user)));
+    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException {
+        File userRoot = new File(store.userRoot(user));
         Set<String> subscriptionNames;
         try {
             subscriptionNames = readSubscriptions(userRoot);
@@ -99,7 +99,7 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
         boolean changed = subscriptionNames.size() != newSubscriptions.size();
         if (changed) {
             try {
-                writeSubscriptions(new File(store.userRoot(Username.of(subscription.getUser()))), newSubscriptions);
+                writeSubscriptions(new File(store.userRoot(subscription.getUser())), newSubscriptions);
             } catch (IOException e) {
                 throw new SubscriptionException(e);
             }
@@ -117,8 +117,8 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
      * @param user The user to get the subscriptions for
      * @return A Set of names of subscribed mailboxes of the user
      */
-    private Set<String> readSubscriptionsForUser(String user) throws SubscriptionException { 
-        File userRoot = new File(store.userRoot(Username.of(user)));
+    private Set<String> readSubscriptionsForUser(Username user) throws SubscriptionException {
+        File userRoot = new File(store.userRoot(user));
         try {
             return readSubscriptions(userRoot);
         } catch (IOException e) {

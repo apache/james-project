@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
@@ -30,8 +31,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class SubscriptionMapperTest {
-    private static final String USER_1 = "user1";
-    private static final String USER_2 = "user2";
+    private static final Username USER_1 = Username.of("user1");
+    private static final Username USER_2 = Username.of("user2");
     private static final String MAILBOX_1 = "mailbox1";
     private static final String MAILBOX_2 = "mailbox2";
 

@@ -38,6 +38,6 @@ public class JPASubscriptionManager extends StoreSubscriptionManager {
     
     @Override
     protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new JPASubscription(session.getUser().asString(), mailbox);
+        return new JPASubscription(session.getUser(), mailbox);
     }
 }

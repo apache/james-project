@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.user.model;
 
+import org.apache.james.core.Username;
+
 /**
  * 
  * Subscription of a mailbox to a user
@@ -40,6 +42,6 @@ public interface Subscription {
      * 
      * @return not null
      */
-    String getUser();
+    Username getUser();
 
 }

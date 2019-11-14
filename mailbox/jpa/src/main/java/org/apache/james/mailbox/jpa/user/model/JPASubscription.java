@@ -28,6 +28,7 @@ import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
 /**
@@ -81,9 +82,9 @@ public class JPASubscription implements Subscription {
      * @param username not null
      * @param mailbox not null
      */
-    public JPASubscription(String username, String mailbox) {
+    public JPASubscription(Username username, String mailbox) {
         super();
-        this.username = username;
+        this.username = username.asString();
         this.mailbox = mailbox;
     }
 
@@ -93,8 +94,8 @@ public class JPASubscription implements Subscription {
     }
     
     @Override
-    public String getUser() {
-        return username;
+    public Username getUser() {
+        return Username.of(username);
     }
 
     @Override

@@ -20,6 +20,7 @@ package org.apache.james.mailbox.inmemory.user;
 
 import java.util.List;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
@@ -31,7 +32,7 @@ import com.google.common.collect.Multimaps;
 
 public class InMemorySubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
     
-    private final ListMultimap<String, Subscription> subscriptionsByUser;
+    private final ListMultimap<Username, Subscription> subscriptionsByUser;
     
     public InMemorySubscriptionMapper() {
         subscriptionsByUser = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
@@ -43,7 +44,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
     }
 
     @Override
-    public Subscription findMailboxSubscriptionForUser(String user, String mailbox) {
+    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) {
         final List<Subscription> subscriptions = ImmutableList.copyOf(subscriptionsByUser.get(user));
         if (subscriptions != null) {
             return subscriptions.stream()
@@ -55,7 +56,7 @@ public class InMemorySubscriptionMapper extends NonTransactionalMapper implement
     }
 
     @Override
-    public List<Subscription> findSubscriptionsForUser(String user) {
+    public List<Subscription> findSubscriptionsForUser(Username user) {
         final List<Subscription> subcriptions = subscriptionsByUser.get(user);
         if (subcriptions == null) {
             return ImmutableList.of();

@@ -24,6 +24,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 
+import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
@@ -40,10 +41,12 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
 
     
     @Override
-    public Subscription findMailboxSubscriptionForUser(String user, String mailbox) throws SubscriptionException {
+    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException {
         try {
             return (Subscription) getEntityManager().createNamedQuery("findFindMailboxSubscriptionForUser")
-            .setParameter("userParam", user).setParameter("mailboxParam", mailbox).getSingleResult();
+            .setParameter("userParam", user.asString())
+                .setParameter("mailboxParam", mailbox)
+                .getSingleResult();
         } catch (NoResultException e) {
             return null;
         } catch (PersistenceException e) {
@@ -62,9 +65,11 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
 
     @Override
     @SuppressWarnings("unchecked")
-    public List<Subscription> findSubscriptionsForUser(String user) throws SubscriptionException {
+    public List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException {
         try {
-            return (List<Subscription>) getEntityManager().createNamedQuery("findSubscriptionsForUser").setParameter("userParam", user).getResultList();
+            return (List<Subscription>) getEntityManager().createNamedQuery("findSubscriptionsForUser")
+                .setParameter("userParam", user.asString())
+                .getResultList();
         } catch (PersistenceException e) {
             throw new SubscriptionException(e);
         }
