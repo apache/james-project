@@ -186,37 +186,21 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     }
 
     private final long bodyOctets;
-
     private final String contentDescription;
-
     private final String contentId;
-
     private final long lines;
-
     private final String subType;
-
     private final String type;
-
     private final String transferEncoding;
-
     private final List<String> languages;
-
     private final Collection<MessageResult.Header> headers;
-
     private final Map<String, String> contentTypeParameters;
-
     private final String disposition;
-
     private final Map<String, String> dispositionParams;
-
     private final MimeDescriptor embeddedMessage;
-
     private final Collection<MimeDescriptor> parts;
-
     private final String location;
-
     private final String md5;
-
 
     public MimeDescriptorImpl(long bodyOctets,
             String contentDescription, String contentId,
