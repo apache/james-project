@@ -37,6 +37,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import javax.mail.internet.MimeMessage;
@@ -49,12 +50,12 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.Mail;
 import org.apache.mailet.PerRecipientHeaders;
 import org.apache.mailet.base.test.FakeMail;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Strings;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -508,6 +509,38 @@ public interface MailQueueContract {
                 .map(Mail::getName)
                 .distinct())
             .hasSize(totalDequeuedMessages);
+    }
+
+    @Test
+    default void dequeueShouldBeConcurrent() {
+        MailQueue testee = getMailQueue();
+        int NB_MAILS = 1000;
+        IntStream.range(0, NB_MAILS)
+            .forEach(Throwing.intConsumer(i -> testee.enQueue(defaultMail()
+                .name("name" + i)
+                .build())));
+
+        ConcurrentLinkedDeque<Mail> dequeuedMails = new ConcurrentLinkedDeque<>();
+
+        Flux.from(testee.deQueue())
+            .flatMap(item -> Mono.defer(() -> {
+                    dequeuedMails.add(item.getMail());
+                    try {
+                        Thread.sleep(100);
+                        item.done(true);
+                        return Mono.empty();
+                    } catch (MailQueue.MailQueueException | InterruptedException e) {
+                        return Mono.error(e);
+                    }
+                }).subscribeOn(Schedulers.elastic()), 1000
+            )
+            .subscribeOn(Schedulers.newSingle("foo"))
+            .subscribe();
+
+        Awaitility.await()
+            .atMost(org.awaitility.Duration.ONE_MINUTE)
+            .until(() -> dequeuedMails.size() >= NB_MAILS);
+
     }
 
     class SerializableAttribute implements Serializable {

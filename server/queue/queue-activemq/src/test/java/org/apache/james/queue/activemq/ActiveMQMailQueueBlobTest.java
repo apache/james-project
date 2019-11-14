@@ -27,6 +27,7 @@ import java.io.InputStream;
 import java.time.temporal.ChronoUnit;
 
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.ActiveMQPrefetchPolicy;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.filesystem.api.FileSystem;
@@ -65,6 +66,9 @@ public class ActiveMQMailQueueBlobTest implements DelayedManageableMailQueueCont
     public void setUp(BrokerService broker, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem) {
         fileSystem = new MyFileSystem();
         ActiveMQConnectionFactory connectionFactory = createConnectionFactory();
+        ActiveMQPrefetchPolicy prefetchPolicy = new ActiveMQPrefetchPolicy();
+        prefetchPolicy.setQueuePrefetch(0);
+        connectionFactory.setPrefetchPolicy(prefetchPolicy);
         FileSystemBlobTransferPolicy policy = new FileSystemBlobTransferPolicy();
         policy.setFileSystem(fileSystem);
         policy.setDefaultUploadUrl(BASE_DIR);
