@@ -107,8 +107,7 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         LOGGER.info("Queue={}", queue);
 
         disposable = Flux.from(queue.deQueue())
-            .publishOn(spooler)
-            .flatMap(this::handleOnQueueItem)
+            .flatMap(item -> handleOnQueueItem(item).subscribeOn(spooler))
             .onErrorContinue((throwable, item) -> LOGGER.error("Exception processing mail while spooling {}", item, throwable))
             .subscribeOn(Schedulers.boundedElastic())
             .subscribe();
