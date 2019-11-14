@@ -40,7 +40,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.streaming.InputStreamContent;
 import org.apache.james.mailbox.store.streaming.InputStreamContent.Type;
 import org.apache.james.mime4j.MimeException;
@@ -211,12 +210,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     private PartContent getPartContent(MimePath path) {
-        PartContent result = partsByPath.get(path);
-        if (result == null) {
-            result = new PartContent();
-            partsByPath.put(path, result);
-        }
-        return result;
+        return partsByPath.computeIfAbsent(path, any -> new PartContent());
     }
 
     private static final class PartContent {
