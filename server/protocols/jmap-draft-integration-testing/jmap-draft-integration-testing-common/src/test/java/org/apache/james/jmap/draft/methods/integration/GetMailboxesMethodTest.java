@@ -351,12 +351,12 @@ public abstract class GetMailboxesMethodTest {
     @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnDefaultMailboxesWhenAuthenticatedUserDoesntHaveAnAccountYet() {
-        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzM3QGRvbWFpbi50bGQiLCJuYW1lIjoiTmV3IFVzZXIif"
-                + "Q.fxNWNzksXyCij2ooVi-QfGe9vTicF2N9FDtWSJdjWTjhwoQ_i0dgiT8clp4dtOJzy78hB2UkAW-iq7z3PR_Gz0qFah7EbYoEs"
-                + "5lQs1UlhNGCRTvIsyR8qHUXtA6emw9x0nuMnswtyXhzoA-cEHCArrMxMeWhTYi2l4od3G8Irrvu1Yc5hKLwLgPdnImbKyB5a89T"
-                + "vzuZE8-FVyMmhlaJA2T1GpbsaUnfE1ki_bBzqMHTD_Ob7oSVzz2UOiOeL-ombn1X9GbYQ2I-Ob4V84WHONYxw0VjPHlj9saZ2n7"
-                + "2RJTBsIo6flJT-MchaEvTYBvuV_wlCCQYjI1g7mdeD6aXfw";
-        
+        String token = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMzM3QGRvbWFpbi50bGQiLCJuYW1lIjoiTmV3IFVzZXIif" +
+            "Q.bPeoAWAOyu4teilj27cL4uZ9jBO9zJOus3mJdqZYEeDe9OZeweopqkIE7ljuh-iTxBDE-f3OqaEqGa_mi6eOYT7XXAEPolcEAe4EooU" +
+            "lI8anYMrSlbMPBKGymH-QTWIcPS5P8XNFnIn94XheuEIXeaRHNvO5-SgENbFYS19kgyzOV54umQtIAewLyMdvG6aooLSk6lEy3AhVPIfl" +
+            "QJm6MLOsNzHMj7F7mM0Wm6QBfYeWIHzQLtEgGFFLyqeSXyzbgbbec2WYpVjXHNyWhAFcq7OMjOb2UEmb9gKr1fkL_XZgXna2CW46hzwaG" +
+            "jNO-6ZWpHjLfDEP7oHui51Hn_wJfw";
+
         given()
             .header("Authorization", "Bearer " + token)
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
