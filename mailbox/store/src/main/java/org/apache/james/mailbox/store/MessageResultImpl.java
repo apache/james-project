@@ -51,6 +51,7 @@ import com.google.common.base.Objects;
  * Bean based implementation.
  */
 public class MessageResultImpl implements MessageResult {
+    private static final String TAB = " ";
 
     private final Map<MimePath, PartContent> partsByPath = new HashMap<>();
 
@@ -152,9 +153,8 @@ public class MessageResultImpl implements MessageResult {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        final String TAB = " ";
-
-        return "MessageResultImpl ( " + "uid = " + getUid() + TAB + "flags = " + getFlags() + TAB + "size = " + getSize() + TAB + "internalDate = " + getInternalDate() + ")";
+        return "MessageResultImpl ( " + "uid = " + getUid() + TAB + "flags = " + getFlags() + TAB + "size = " + getSize()
+            + TAB + "internalDate = " + getInternalDate() + ")";
     }
 
     @Override
@@ -188,27 +188,27 @@ public class MessageResultImpl implements MessageResult {
     }
 
     void setBodyContent(MimePath path, Content content) {
-        final PartContent partContent = getPartContent(path);
+        PartContent partContent = getPartContent(path);
         partContent.setBody(content);
     }
 
     void setMimeBodyContent(MimePath path, Content content) {
-        final PartContent partContent = getPartContent(path);
+        PartContent partContent = getPartContent(path);
         partContent.setMimeBody(content);
     }
 
     void setFullContent(MimePath path, Content content) {
-        final PartContent partContent = getPartContent(path);
+        PartContent partContent = getPartContent(path);
         partContent.setFull(content);
     }
 
     void setHeaders(MimePath path, Iterator<Header> headers) {
-        final PartContent partContent = getPartContent(path);
+        PartContent partContent = getPartContent(path);
         partContent.setHeaders(headers);
     }
 
     void setMimeHeaders(MimePath path, Iterator<Header> headers) {
-        final PartContent partContent = getPartContent(path);
+        PartContent partContent = getPartContent(path);
         partContent.setMimeHeaders(headers);
     }
 
