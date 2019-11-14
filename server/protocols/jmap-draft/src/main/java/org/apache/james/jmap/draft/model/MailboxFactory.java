@@ -130,7 +130,7 @@ public class MailboxFactory {
 
         private MailboxId computeMailboxId() {
             int idCount = Booleans.countTrue(id.isPresent(), mailboxMetaData.isPresent());
-            Preconditions.checkState(idCount == 1, "You need exectly one 'id' 'mailboxMetaData'");
+            Preconditions.checkState(idCount == 1, "You need exactly one 'id' 'mailboxMetaData'");
             return OptionalUtils.or(
                 id,
                 mailboxMetaData.map(MailboxMetaData::getId))
