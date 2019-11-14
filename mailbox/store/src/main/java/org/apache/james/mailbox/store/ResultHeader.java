@@ -22,10 +22,11 @@
  */
 package org.apache.james.mailbox.store;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 
 import org.apache.james.mailbox.model.MessageResult;
 
@@ -35,7 +36,6 @@ public final class ResultHeader implements MessageResult.Header {
     private final String value;
 
     private final long size;
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     public ResultHeader(String name, String value) {
         this.name = name;
