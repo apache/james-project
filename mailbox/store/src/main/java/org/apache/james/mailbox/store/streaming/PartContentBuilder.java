@@ -136,7 +136,6 @@ public class PartContentBuilder {
                 case T_END_BODYPART:
                 case T_END_HEADER:
                 case T_END_MESSAGE:
-                case T_END_MULTIPART:
                 case T_EPILOGUE:
                 case T_FIELD:
                 case T_PREAMBLE:
