@@ -71,8 +71,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         return createDescriptor(parser);
     }
 
-    private static MimeDescriptorImpl createDescriptor(
-            final MimeTokenStream parser) throws IOException, MimeException {
+    private static MimeDescriptorImpl createDescriptor(MimeTokenStream parser) throws IOException, MimeException {
         EntityState next = parser.next();
         final Collection<MessageResult.Header> headers = new ArrayList<>();
         while (next != EntityState.T_BODY
@@ -101,8 +100,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         return mimeDescriptorImpl;
     }
 
-    private static MimeDescriptorImpl compositePartDescriptor(
-            final MimeTokenStream parser, Collection<MessageResult.Header> headers)
+    private static MimeDescriptorImpl compositePartDescriptor(MimeTokenStream parser, Collection<MessageResult.Header> headers)
             throws IOException, MimeException {
         MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser
                 .getBodyDescriptor();
@@ -119,8 +117,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         return mimeDescriptor;
     }
 
-    private static MimeDescriptorImpl simplePartDescriptor(
-            final MimeTokenStream parser, Collection<MessageResult.Header> headers)
+    private static MimeDescriptorImpl simplePartDescriptor(MimeTokenStream parser, Collection<MessageResult.Header> headers)
             throws IOException, MimeException {
         MaximalBodyDescriptor descriptor = (MaximalBodyDescriptor) parser
                 .getBodyDescriptor();
@@ -152,8 +149,7 @@ public class MimeDescriptorImpl implements MimeDescriptor {
         return mimeDescriptorImpl;
     }
 
-    private static MimeDescriptorImpl createDescriptor(long bodyOctets,
-            long lines, MaximalBodyDescriptor descriptor,
+    private static MimeDescriptorImpl createDescriptor(long bodyOctets, long lines, MaximalBodyDescriptor descriptor,
             MimeDescriptor embeddedMessage, Collection<MessageResult.Header> headers) {
         final String contentDescription = descriptor.getContentDescription();
         final String contentId = descriptor.getContentId();
