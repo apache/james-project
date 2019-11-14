@@ -32,15 +32,13 @@ import org.apache.james.mailbox.model.MessageResult;
 
 public final class ResultHeader implements MessageResult.Header {
     private final String name;
-
     private final String value;
-
     private final long size;
 
     public ResultHeader(String name, String value) {
         this.name = name;
         this.value = value;
-        size = name.length() + value.length() + 2;
+        this.size = name.length() + value.length() + 2;
     }
 
     @Override
