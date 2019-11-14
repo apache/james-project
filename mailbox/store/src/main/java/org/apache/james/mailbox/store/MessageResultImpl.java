@@ -159,62 +159,32 @@ public class MessageResultImpl implements MessageResult {
 
     @Override
     public Content getBody(MimePath path) {
-        final Content result;
-        final PartContent partContent = getPartContent(path);
-        if (partContent == null) {
-            result = null;
-        } else {
-            result = partContent.getBody();
-        }
-        return result;
+        PartContent partContent = getPartContent(path);
+        return partContent.getBody();
     }
 
     @Override
     public Content getMimeBody(MimePath path) {
-        final Content result;
-        final PartContent partContent = getPartContent(path);
-        if (partContent == null) {
-            result = null;
-        } else {
-            result = partContent.getMimeBody();
-        }
-        return result;
+        PartContent partContent = getPartContent(path);
+        return partContent.getMimeBody();
     }
 
     @Override
     public Content getFullContent(MimePath path) {
-        final Content result;
-        final PartContent partContent = getPartContent(path);
-        if (partContent == null) {
-            result = null;
-        } else {
-            result = partContent.getFull();
-        }
-        return result;
+        PartContent partContent = getPartContent(path);
+        return partContent.getFull();
     }
 
     @Override
     public Iterator<Header> iterateHeaders(MimePath path) {
-        final Iterator<Header> result;
-        final PartContent partContent = getPartContent(path);
-        if (partContent == null) {
-            result = null;
-        } else {
-            result = partContent.getHeaders();
-        }
-        return result;
+        PartContent partContent = getPartContent(path);
+        return partContent.getHeaders();
     }
 
     @Override
     public Iterator<Header> iterateMimeHeaders(MimePath path) {
-        final Iterator<Header> result;
-        final PartContent partContent = getPartContent(path);
-        if (partContent == null) {
-            result = null;
-        } else {
-            result = partContent.getMimeHeaders();
-        }
-        return result;
+        PartContent partContent = getPartContent(path);
+        return partContent.getMimeHeaders();
     }
 
     public void setBodyContent(MimePath path, Content content) {
