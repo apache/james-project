@@ -24,9 +24,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
-import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -54,7 +54,7 @@ public class NotTest {
         recipient2 = new MailAddress("other@apahe.org");
         recipient3 = new MailAddress("bis@apache.org");
         recipient4 = new MailAddress("yet@apache.org");
-        mail = FakeMail.builder().name("name").recipients(recipient1, recipient2, recipient3, recipient4).build();
+        mail = MailImpl.builder().name("name").addRecipients(recipient1, recipient2, recipient3, recipient4).build();
     }
 
     @Test

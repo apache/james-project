@@ -28,9 +28,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.server.core.MailImpl;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
-import org.apache.mailet.base.test.FakeMail;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class OrTest {
 
         testee = new Or();
 
-        mail = FakeMail.builder().name("name").recipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2, OTHER_AT_JAMES2).build();
+        mail = MailImpl.builder().name("name").addRecipients(ANY_AT_JAMES, OTHER_AT_JAMES, ANY_AT_JAMES2, OTHER_AT_JAMES2).build();
     }
 
     @Test
