@@ -45,8 +45,8 @@ import org.apache.james.mime4j.util.ContentUtil;
 public class ResultUtils {
 
     public static List<MessageResult.Header> createHeaders(MailboxMessage document) throws IOException {
-        final List<MessageResult.Header> results = new ArrayList<>();
-        final MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
+        List<MessageResult.Header> results = new ArrayList<>();
+        MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentHandler(new AbstractContentHandler() {
             @Override
             public void endHeader() {
@@ -76,7 +76,7 @@ public class ResultUtils {
                     fieldValue = fieldValue.substring(1);
                 }
                 
-                final ResultHeader resultHeader = new ResultHeader(field.getName(), fieldValue);
+                ResultHeader resultHeader = new ResultHeader(field.getName(), fieldValue);
                 results.add(resultHeader);
             }
         });
@@ -138,8 +138,8 @@ public class ResultUtils {
 
     private static void addPartContent(FetchGroup.PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
             throws MailboxException, IOException, MimeException {
-        final MimePath mimePath = descriptor.path();
-        final int content = descriptor.content();
+        MimePath mimePath = descriptor.path();
+        int content = descriptor.content();
         if ((content & MessageResult.FetchGroup.FULL_CONTENT) > 0) {
             addFullContent(message, messageResult, mimePath);
         }
@@ -159,7 +159,7 @@ public class ResultUtils {
 
     private static PartContentBuilder build(int[] path, MailboxMessage message)
             throws IOException, MimeException {
-        final InputStream stream = message.getFullContent();
+        InputStream stream = message.getFullContent();
         PartContentBuilder result = new PartContentBuilder();
         result.parse(stream);
         try {
@@ -173,64 +173,59 @@ public class ResultUtils {
         }
         return result;
     }
-   
-
   
     private static int[] path(MimePath mimePath) {
-        final int[] result;
         if (mimePath == null) {
-            result = null;
+            return null;
         } else {
-            result = mimePath.getPositions();
+            return mimePath.getPositions();
         }
-        return result;
     }
 
     private static void addHeaders(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
-        final int[] path = path(mimePath);
+        int[] path = path(mimePath);
         if (path != null) {
-       
-            final PartContentBuilder builder = build(path, message);
-            final List<MessageResult.Header> headers = builder.getMessageHeaders();
+            PartContentBuilder builder = build(path, message);
+            List<MessageResult.Header> headers = builder.getMessageHeaders();
             messageResult.setHeaders(mimePath, headers.iterator());
         }
     }
 
     private static void addMimeHeaders(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
-        final int[] path = path(mimePath);
+        int[] path = path(mimePath);
         if (path != null) {
-            final PartContentBuilder builder = build(path, message);
-            final List<MessageResult.Header> headers = builder.getMimeHeaders();
+            PartContentBuilder builder = build(path, message);
+            List<MessageResult.Header> headers = builder.getMimeHeaders();
             messageResult.setMimeHeaders(mimePath, headers.iterator());
         }
     }
 
     private static void addBodyContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
-        final int[] path = path(mimePath);
+        int[] path = path(mimePath);
         if (path != null) {
-            final PartContentBuilder builder = build(path, message);
-            final Content content = builder.getMessageBodyContent();
+            PartContentBuilder builder = build(path, message);
+            Content content = builder.getMessageBodyContent();
             messageResult.setBodyContent(mimePath, content);
         }
     }
 
     private static void addMimeBodyContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws IOException, MimeException {
-        final int[] path = path(mimePath);
-        final PartContentBuilder builder = build(path, message);
-        final Content content = builder.getMimeBodyContent();
+        int[] path = path(mimePath);
+        PartContentBuilder builder = build(path, message);
+        Content content = builder.getMimeBodyContent();
         messageResult.setMimeBodyContent(mimePath, content);
     }
 
     private static void addFullContent(MailboxMessage message, MessageResultImpl messageResult, MimePath mimePath)
             throws MailboxException, IOException, MimeException {
-        final int[] path = path(mimePath);
+        int[] path = path(mimePath);
         if (path != null) {
-            final PartContentBuilder builder = build(path, message);
-            final Content content = builder.getFullContent();
+            PartContentBuilder builder = build(path, message);
+            Content content = builder.getFullContent();
             messageResult.setFullContent(mimePath, content);
         }
     }
