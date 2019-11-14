@@ -46,6 +46,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraModSeqProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -80,7 +81,7 @@ class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
         BlobStore blobStore = null;
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
-        return new CassandraSubscriptionManager(
+        return new StoreSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
                 uidProvider,
                 modSeqProvider,
