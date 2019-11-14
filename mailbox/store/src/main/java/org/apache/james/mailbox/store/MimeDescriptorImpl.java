@@ -19,10 +19,11 @@
 
 package org.apache.james.mailbox.store;
 
+import static java.nio.charset.StandardCharsets.US_ASCII;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -43,8 +44,6 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
 public class MimeDescriptorImpl implements MimeDescriptor {
-
-    private static final Charset US_ASCII = Charset.forName("US-ASCII");
 
     /**
      * Is this a composite media type (as per RFC2045)?
