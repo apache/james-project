@@ -132,19 +132,19 @@ public class PartContentBuilder {
                 case T_START_MULTIPART:
                     ignoreInnerMessage();
                     break;
-            case T_BODY:
-            case T_END_BODYPART:
-            case T_END_HEADER:
-            case T_END_MESSAGE:
-            case T_END_MULTIPART:
-            case T_EPILOGUE:
-            case T_FIELD:
-            case T_PREAMBLE:
-            case T_RAW_ENTITY:
-            case T_START_BODYPART:
-            case T_START_HEADER:
-            case T_START_MESSAGE:
-                break;
+                case T_BODY:
+                case T_END_BODYPART:
+                case T_END_HEADER:
+                case T_END_MESSAGE:
+                case T_END_MULTIPART:
+                case T_EPILOGUE:
+                case T_FIELD:
+                case T_PREAMBLE:
+                case T_RAW_ENTITY:
+                case T_START_BODYPART:
+                case T_START_HEADER:
+                case T_START_MESSAGE:
+                    break;
             }
         }
     }
