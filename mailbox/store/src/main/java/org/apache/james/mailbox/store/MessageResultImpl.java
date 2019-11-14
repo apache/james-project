@@ -62,8 +62,7 @@ public class MessageResultImpl implements MessageResult {
     private Content fullContent;
     private Content bodyContent;
 
-    
-    public MessageResultImpl(MailboxMessage message) throws IOException {
+    public MessageResultImpl(MailboxMessage message) {
         this.message = message;
         this.headers = new HeadersImpl(message);
     }
@@ -159,7 +158,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
-    public Content getBody(MimePath path) throws MailboxException {
+    public Content getBody(MimePath path) {
         final Content result;
         final PartContent partContent = getPartContent(path);
         if (partContent == null) {
@@ -171,7 +170,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
-    public Content getMimeBody(MimePath path) throws MailboxException {
+    public Content getMimeBody(MimePath path) {
         final Content result;
         final PartContent partContent = getPartContent(path);
         if (partContent == null) {
@@ -183,7 +182,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
-    public Content getFullContent(MimePath path) throws MailboxException {
+    public Content getFullContent(MimePath path) {
         final Content result;
         final PartContent partContent = getPartContent(path);
         if (partContent == null) {
@@ -195,7 +194,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
-    public Iterator<Header> iterateHeaders(MimePath path) throws MailboxException {
+    public Iterator<Header> iterateHeaders(MimePath path) {
         final Iterator<Header> result;
         final PartContent partContent = getPartContent(path);
         if (partContent == null) {
@@ -207,7 +206,7 @@ public class MessageResultImpl implements MessageResult {
     }
 
     @Override
-    public Iterator<Header> iterateMimeHeaders(MimePath path) throws MailboxException {
+    public Iterator<Header> iterateMimeHeaders(MimePath path) {
         final Iterator<Header> result;
         final PartContent partContent = getPartContent(path);
         if (partContent == null) {
@@ -331,7 +330,7 @@ public class MessageResultImpl implements MessageResult {
     }
     
     @Override
-    public Headers getHeaders() throws MailboxException {
+    public Headers getHeaders() {
         if (headers == null) {
             headers = new HeadersImpl(message);
         }
@@ -339,7 +338,7 @@ public class MessageResultImpl implements MessageResult {
     }
     
     @Override
-    public List<MessageAttachment> getAttachments() throws MailboxException {
+    public List<MessageAttachment> getAttachments() {
         return message.getAttachments();
     }
     
