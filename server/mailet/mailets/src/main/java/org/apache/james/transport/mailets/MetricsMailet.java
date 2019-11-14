@@ -36,7 +36,7 @@ import com.google.common.base.Preconditions;
  *
  * Example :
  *
- * &lt;mailet matcher="all" class="MetricsMailet"&gt;
+ * &lt;mailet match="all" class="MetricsMailet"&gt;
  *     &lt;metricName&gt;relayDenied&lt;/metricName&gt;
  * &lt;/mailet&gt;
  *

@@ -78,7 +78,7 @@ import net.fortuna.ical4j.model.Calendar;
  *
  * <pre>
  *     <code>
- *         &lt;mailet matcher=??? class=ICALToJsonAttribute&gt;
+ *         &lt;mailet match=??? class=ICALToJsonAttribute&gt;
  *             &lt;sourceAttribute&gt;icalendars&lt;/sourceAttribute&gt;
  *             &lt;destinationAttribute&gt;icalendarJson&lt;/destinationAttribute&gt;
  *         &lt;/mailet&gt;

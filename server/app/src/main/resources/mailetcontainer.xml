@@ -56,13 +56,13 @@
        <!-- Important check to avoid looping -->
        <mailet match="RelayLimit=30" class="Null"/>
 
-        <mailet matcher="All" class="WithPriority">
+        <mailet match="All" class="WithPriority">
             <priority>8</priority>
         </mailet>
 
-        <mailet matcher="HasPriority=8" class="Null"/>
-        <mailet matcher="AtLeastPriority=8" class="Null"/>
-        <mailet matcher="AtMostPriority=8" class="Null"/>
+        <mailet match="HasPriority=8" class="Null"/>
+        <mailet match="AtLeastPriority=8" class="Null"/>
+        <mailet match="AtMostPriority=8" class="Null"/>
 
 
         <!-- Check attachment extensions for possible viruses -->

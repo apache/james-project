@@ -53,7 +53,7 @@ import net.fortuna.ical4j.model.component.VEvent;
  *
  * <pre>
  *     <code>
- *         &lt;mailet matcher=??? class=ICALToHeader&gt;
+ *         &lt;mailet match=??? class=ICALToHeader&gt;
  *             &lt;attribute&gt;icalendars&lt;/attribute&gt;
  *         &lt;/mailet&gt;
  *     </code>
