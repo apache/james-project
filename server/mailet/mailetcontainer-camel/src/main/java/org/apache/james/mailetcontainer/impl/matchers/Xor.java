@@ -19,9 +19,9 @@
 
 package org.apache.james.mailetcontainer.impl.matchers;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.mail.MessagingException;
 
@@ -29,6 +29,7 @@ import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
 
@@ -42,29 +43,27 @@ import com.google.common.collect.Sets;
 public class Xor extends GenericCompositeMatcher {
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        Collection<MailAddress> finalResult = null;
-        boolean first = true;
-        for (Matcher matcher: getMatchers()) {
-            Collection<MailAddress> matchedAddresses = Optional.ofNullable(matcher.match(mail)).orElse(new ArrayList<>());
+    public Collection<MailAddress> match(Mail mail) {
+        Set<MailAddress> recipients = getMatchers().stream()
+            .map(Throwing.<Matcher, Set<MailAddress>>function(matcher -> applyMatcher(mail, matcher)).sneakyThrow())
+            .reduce(ImmutableSet.of(), this::performXor);
 
-            if (first) {
-                finalResult = matchedAddresses;
-                first = false;
-            } else {
-                finalResult = performXor(finalResult, matchedAddresses);
-            }
+        if (recipients.isEmpty()) {
+            return null;
         }
-        return finalResult;
+        return recipients;
     }
 
-    private Collection<MailAddress> performXor(Collection<MailAddress> collection1, Collection<MailAddress> collection2) {
-        ImmutableSet<MailAddress> set1 = ImmutableSet.copyOf(collection1);
-        ImmutableSet<MailAddress> set2 = ImmutableSet.copyOf(collection2);
+    private Set<MailAddress> applyMatcher(Mail mail, Matcher matcher) throws MessagingException {
+        return Optional.ofNullable(matcher.match(mail))
+            .map(ImmutableSet::copyOf)
+            .orElse(ImmutableSet.of());
+    }
+
+    private Set<MailAddress> performXor(Set<MailAddress> set1, Set<MailAddress> set2) {
         return Sets.difference(
             Sets.union(set1, set2),
-            Sets.intersection(set1, set2))
-            .immutableCopy();
+            Sets.intersection(set1, set2));
     }
 
 }
