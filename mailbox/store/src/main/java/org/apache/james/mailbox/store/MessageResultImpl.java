@@ -279,7 +279,7 @@ public class MessageResultImpl implements MessageResult {
         // it can be relative expensive on big messages and slow mailbox implementations
         if (mimeDescriptor == null) {
             try {
-                if (MimeDescriptorImpl.isComposite(message.getMediaType())) {
+                if (isComposite(message.getMediaType())) {
                     mimeDescriptor = MimeDescriptorImpl.build(getFullContent().getInputStream());
                 } else {
                     mimeDescriptor = new LazyMimeDescriptor(this, message);
@@ -289,6 +289,18 @@ public class MessageResultImpl implements MessageResult {
             }
         }
         return mimeDescriptor;
+    }
+
+    /**
+     * Is this a composite media type (as per RFC2045)?
+     *
+     * TODO: Move to Mime4j
+     * @param mediaType possibly null
+     * @return true when the type is composite,
+     * false otherwise
+     */
+    private boolean isComposite(String mediaType) {
+        return "message".equalsIgnoreCase(mediaType) || "multipart".equalsIgnoreCase(mediaType);
     }
     
     @Override

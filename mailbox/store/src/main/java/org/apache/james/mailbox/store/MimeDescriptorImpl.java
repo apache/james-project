@@ -45,18 +45,6 @@ import org.apache.james.mime4j.stream.RecursionMode;
 
 public class MimeDescriptorImpl implements MimeDescriptor {
 
-    /**
-     * Is this a composite media type (as per RFC2045)?
-     * 
-     * TODO: Move to Mime4j
-     * @param mediaType possibly null
-     * @return true when the type is composite,
-     * false otherwise
-     */
-    public static boolean isComposite(String mediaType) {
-        return "message".equalsIgnoreCase(mediaType) || "multipart".equalsIgnoreCase(mediaType);
-    }
-
     public static MimeDescriptorImpl build(InputStream stream) throws IOException, MimeException {
         // Disable line length limit
         // See https://issues.apache.org/jira/browse/IMAP-132
