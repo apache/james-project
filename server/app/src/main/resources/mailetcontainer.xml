@@ -56,14 +56,22 @@
        <!-- Important check to avoid looping -->
        <mailet match="RelayLimit=30" class="Null"/>
 
+        <!-- The WithPriority mailet allows to set a priority attribute on the mail. If the
+             attribute is set and priority handling is enabled it will take care of moving the
+             Mails with higher priority to the head of the queue (so the mails are faster handled). -->
+        <!--
         <mailet match="All" class="WithPriority">
             <priority>8</priority>
         </mailet>
-
+        -->
+        <!-- Using the following three matchers you can control the mail processing flow based
+             on the priority attribute. Note that if a mail's priority is set to 8, then all of
+             the below will match. -->
+        <!--
         <mailet match="HasPriority=8" class="Null"/>
         <mailet match="AtLeastPriority=8" class="Null"/>
         <mailet match="AtMostPriority=8" class="Null"/>
-
+        -->
 
         <!-- Check attachment extensions for possible viruses -->
        <!-- The "-z" option requests the check to be non-recursively applied -->
