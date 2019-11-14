@@ -36,11 +36,11 @@ import com.google.common.collect.Sets;
  * This is the Xor CompositeMatcher - consider it to be the inequality
  * operator for recipients. If any recipients match other matcher results
  * then the result does not include that recipient.
+ *
+ * It returns Recipients from the Xor composition of the child matchers.
  */
 public class Xor extends GenericCompositeMatcher {
-    /**
-     * @return Collection of Recipients from the Xor composition of the child matchers.
-     */
+
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> finalResult = null;
