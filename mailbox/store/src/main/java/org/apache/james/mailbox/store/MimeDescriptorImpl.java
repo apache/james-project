@@ -189,14 +189,14 @@ public class MimeDescriptorImpl implements MimeDescriptor {
     private final String location;
     private final String md5;
 
-    public MimeDescriptorImpl(long bodyOctets,
-            String contentDescription, String contentId,
-            long lines, String subType, String type,
-            String transferEncoding, Collection<MessageResult.Header> headers,
-            Map<String, String> contentTypeParameters, List<String> languages,
-            String disposition, Map<String, String> dispositionParams,
-            MimeDescriptor embeddedMessage, Collection<MimeDescriptor> parts,
-            String location, String md5) {
+    private MimeDescriptorImpl(long bodyOctets,
+                               String contentDescription, String contentId,
+                               long lines, String subType, String type,
+                               String transferEncoding, Collection<MessageResult.Header> headers,
+                               Map<String, String> contentTypeParameters, List<String> languages,
+                               String disposition, Map<String, String> dispositionParams,
+                               MimeDescriptor embeddedMessage, Collection<MimeDescriptor> parts,
+                               String location, String md5) {
         super();
         this.type = type;
         this.bodyOctets = bodyOctets;
