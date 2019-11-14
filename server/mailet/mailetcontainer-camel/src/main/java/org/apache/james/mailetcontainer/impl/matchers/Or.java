@@ -20,13 +20,17 @@
 package org.apache.james.mailetcontainer.impl.matchers;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
+
+import com.github.fge.lambdas.Throwing;
 
 /**
  * This is the Or CompositeMatcher - consider it to be a union of the
@@ -37,18 +41,17 @@ import org.apache.mailet.Matcher;
 public class Or extends GenericCompositeMatcher {
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
-        HashSet<MailAddress> result = new HashSet<>();
-        for (Matcher matcher : getMatchers()) {
-            Collection<MailAddress> matchResult = matcher.match(mail);
-            if (matchResult != null) {
-                result.addAll(matchResult);
-            }
-            if (result.size() == mail.getRecipients().size()) {
-                break;
-            }
-        }
-        return result;
+    public Collection<MailAddress> match(Mail mail) {
+        return getMatchers().stream()
+            .flatMap(Throwing.<Matcher, Stream<MailAddress>>function(matcher -> applyMatcher(matcher, mail))
+                .sneakyThrow())
+            .collect(Collectors.toSet());
+    }
+
+    private Stream<MailAddress> applyMatcher(Matcher matcher, Mail mail) throws MessagingException {
+        return Optional.ofNullable(matcher.match(mail))
+            .map(Collection::stream)
+            .orElse(Stream.of());
     }
 
 }
