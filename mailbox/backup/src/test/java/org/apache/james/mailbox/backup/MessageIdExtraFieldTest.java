@@ -35,14 +35,14 @@ import com.google.common.base.Charsets;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class MessageIdExtraFieldTest {
+class MessageIdExtraFieldTest {
 
     private static final String DEFAULT_MESSAGE_ID = "123456789ABCDEF0";
     private static final byte[] DEFAULT_MESSAGE_ID_BYTE_ARRAY = new byte[] {0x31, 0x32, 0x33, 0x34, 0x35, 0x36, 0x37, 0x38, 0x39, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46, 0x30};
     private static final byte [] EMPTY_BYTE_ARRAY = {};
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MessageIdExtraField.class)
             .suppress(Warning.NONFINAL_FIELDS)
             .verify();

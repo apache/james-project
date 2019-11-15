@@ -33,10 +33,11 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Charsets;
 import com.google.common.primitives.Bytes;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class InternalDateExtraFieldTest {
+class InternalDateExtraFieldTest {
     private static final byte[] ZERO_AS_BYTE_ARRAY = {0, 0, 0, 0, 0, 0, 0, 0};
     private static final byte[] _123456789ABCDEF0_AS_LE_BYTE_ARRAY = new byte[] {(byte) 0xF0, (byte) 0xDE, (byte) 0xBC, (byte) 0x9A, 0x78, 0x56, 0x34, 0x12};
     private static final byte[] FEDCBA9876543210_AS_LE_BYTE_ARRAY = new byte[] {0x10, 0x32, 0x54, 0x76, (byte) 0x98, (byte) 0xBA, (byte) 0xDC, (byte) 0xFE};
@@ -47,7 +48,7 @@ public class InternalDateExtraFieldTest {
     private static final Date DEFAULT_DATE = new Date(DEFAULT_DATE_TIMESTAMP);
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(InternalDateExtraField.class)
             .suppress(Warning.NONFINAL_FIELDS)
             .verify();

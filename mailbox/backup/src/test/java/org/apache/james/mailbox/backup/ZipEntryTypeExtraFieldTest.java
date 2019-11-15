@@ -32,10 +32,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Charsets;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class ZipEntryTypeExtraFieldTest {
+class ZipEntryTypeExtraFieldTest {
     private static final byte[] ZERO_AS_BYTE_ARRAY = {0, 0, 0, 0, 0, 0, 0, 0};
     private static final byte[] ONE_AS_BYTE_ARRAY = {1, 0, 0, 0, 0, 0, 0, 0};
     private static final byte[] TWO_AS_BYTE_ARRAY = {2, 0, 0, 0, 0, 0, 0, 0};

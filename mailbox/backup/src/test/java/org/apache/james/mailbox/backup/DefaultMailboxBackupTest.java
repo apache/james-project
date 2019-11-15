@@ -41,11 +41,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Mono;
 
 class DefaultMailboxBackupTest implements MailboxMessageFixture {
     private static final int BUFFER_SIZE = 4096;
-    public static final String EXPECTED_ANNOTATIONS_DIR = "annotations";
+    private static final String EXPECTED_ANNOTATIONS_DIR = "annotations";
 
     private final ArchiveService archiveService = new Zipper();
     private final MailArchivesLoader archiveLoader = new ZipArchivesLoader();

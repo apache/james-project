@@ -37,10 +37,10 @@ import com.google.common.base.Charsets;
 import nl.jqno.equalsverifier.EqualsVerifier;
 import nl.jqno.equalsverifier.Warning;
 
-public class FlagExtraFieldTest {
+class FlagExtraFieldTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FlagsExtraField.class)
             .suppress(Warning.NONFINAL_FIELDS)
             .verify();

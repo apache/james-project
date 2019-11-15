@@ -41,7 +41,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 
-public class ZipArchivesLoaderTest implements MailboxMessageFixture {
+class ZipArchivesLoaderTest implements MailboxMessageFixture {
     private static final int BUFFER_SIZE = 4096;
 
     private final ArchiveService archiveService = new Zipper();
