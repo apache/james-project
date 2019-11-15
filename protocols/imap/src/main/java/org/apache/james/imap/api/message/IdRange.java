@@ -78,14 +78,6 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         this.highVal = highVal;
     }
 
-    /**
-     * Return true if the {@link IdRange} includes the given value
-     *
-     */
-    public boolean includes(long value) {
-        return lowVal <= value && value <= highVal;
-    }
-
     @Override
     public int hashCode() {
         final int PRIME = 31;
