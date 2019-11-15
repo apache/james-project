@@ -52,6 +52,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.store.MailboxMetaData;
@@ -114,8 +115,9 @@ public class MoveProcessorTest {
         when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN))
-            .thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
+        Mailbox mailbox = mock(Mailbox.class);
+        when(mailbox.getUidValidity()).thenReturn(58L);
+        when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
         when(mockMailboxManager.moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mailboxSession))
@@ -128,7 +130,7 @@ public class MoveProcessorTest {
         verify(mockMailboxManager).mailboxExists(inbox, mailboxSession);
         verify(mockMailboxManager).getMailbox(inbox, mailboxSession);
         verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(4), MessageUid.of(6)), selected, inbox, mailboxSession);
-        verify(targetMessageManager).getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
+        verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
     }
@@ -150,8 +152,9 @@ public class MoveProcessorTest {
         when(mockMailboxManager.mailboxExists(inbox, mailboxSession)).thenReturn(true);
         MessageManager targetMessageManager = mock(MessageManager.class);
         when(mockMailboxManager.getMailbox(inbox, mailboxSession)).thenReturn(targetMessageManager);
-        when(targetMessageManager.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN))
-            .thenReturn(new MailboxMetaData(null, null, 58L, MessageUid.of(18), 8L, 8L, 8L, MessageUid.of(8), true, true, null));
+        Mailbox mailbox = mock(Mailbox.class);
+        when(mailbox.getUidValidity()).thenReturn(58L);
+        when(targetMessageManager.getMailboxEntity()).thenReturn(mailbox);
         StatusResponse okResponse = mock(StatusResponse.class);
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class), any(StatusResponse.ResponseCode.class))).thenReturn(okResponse);
 
@@ -163,7 +166,7 @@ public class MoveProcessorTest {
         verify(mockMailboxManager).getMailbox(inbox, mailboxSession);
         verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(5), MessageUid.of(6)), selected, inbox, mailboxSession);
         verify(mockMailboxManager).moveMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(3)), selected, inbox, mailboxSession);
-        verify(targetMessageManager).getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN);
+        verify(targetMessageManager).getMailboxEntity();
         verify(mockResponder).respond(okResponse);
         verifyNoMoreInteractions(mockMailboxManager, targetMessageManager, mockResponder, mockNextProcessor);
     }
