@@ -96,9 +96,11 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
                 range -> messageRange(session.getSelected(), range, request.isUseUids()))
                 .sneakyThrow())
             .filter(Objects::nonNull)
-            .flatMap(Throwing.<MessageRange, Stream<IdRange>>function(
-                range -> handleRange(session, targetMailbox, mailboxSession, range))
+            .flatMap(Throwing.<MessageRange, Stream<MessageRange>>function(
+                range -> process(targetMailbox, session.getSelected(), mailboxSession, range)
+                    .stream())
                 .sneakyThrow())
+            .map(IdRange::from)
             .collect(Guavate.toImmutableList()))
             .toArray(new IdRange[0]);
 
@@ -106,11 +108,5 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
         Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
 
         return StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), resultUids);
-    }
-
-    private Stream<IdRange> handleRange(ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession, MessageRange range) throws MailboxException {
-        return process(targetMailbox, session.getSelected(), mailboxSession, range)
-            .stream()
-            .map(IdRange::from);
     }
 }

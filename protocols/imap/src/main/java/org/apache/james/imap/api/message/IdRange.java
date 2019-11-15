@@ -47,8 +47,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             messageRange.getUidTo().asLong());
     }
 
-    private long lowVal;
-
+    private final long lowVal;
     private long highVal;
 
     public IdRange(long singleVal) {
@@ -70,13 +69,6 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
 
     public long getHighVal() {
         return highVal;
-    }
-
-    public void setLowVal(long lowVal) {
-        if (lowVal > highVal) {
-            throw new IllegalArgumentException("LowVal must be <= HighVal");
-        }
-        this.lowVal = lowVal;
     }
 
     public void setHighVal(long highVal) {
