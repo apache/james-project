@@ -43,7 +43,6 @@ import org.apache.james.imap.message.request.AppendRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -135,7 +134,9 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             }
 
             // get folder UIDVALIDITY
-            Long uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession).getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).getUidValidity();
+            Long uidValidity = mailboxManager.getMailbox(mailboxPath, mailboxSession)
+                .getMailboxEntity()
+                .getUidValidity();
 
             unsolicitedResponses(session, responder, false);
 

@@ -192,7 +192,7 @@ public class MailboxAdapter implements Mailbox {
     public String getIdentifier() throws IOException {
         try {
             mailboxManager.startProcessingRequest(session);
-            long validity = manager.getMetaData(false, session, MessageManager.MetaData.FetchGroup.NO_COUNT)
+            long validity = manager.getMailboxEntity()
                     .getUidValidity();
             return Long.toString(validity);
         } catch (MailboxException e) {
