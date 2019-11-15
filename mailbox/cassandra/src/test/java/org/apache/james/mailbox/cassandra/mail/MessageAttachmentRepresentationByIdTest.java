@@ -20,31 +20,32 @@
 package org.apache.james.mailbox.cassandra.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Optional;
 
-import org.apache.james.mailbox.cassandra.mail.MessageAttachmentRepresentation;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
-import org.junit.Test;
+import org.apache.james.mailbox.model.MessageAttachment;
+import org.junit.jupiter.api.Test;
 
 
-public class MessageAttachmentRepresentationByIdTest {
+class MessageAttachmentRepresentationByIdTest {
 
-    @Test(expected = IllegalStateException.class)
-    public void buildShouldThrowWhenAttachmentIsNotGiven() {
-        org.apache.james.mailbox.model.MessageAttachment.builder()
-            .build();
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void builderShouldThrowWhenAttachmentIsNull() {
-        org.apache.james.mailbox.model.MessageAttachment.builder()
-            .attachment(null);
+    @Test
+    void buildShouldThrowWhenAttachmentIsNotGiven() {
+        assertThatThrownBy(() -> MessageAttachment.builder().build())
+            .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    public void buildShouldWorkWhenMandatoryAttributesAreGiven() {
+    void builderShouldThrowWhenAttachmentIsNull() {
+        assertThatThrownBy(() -> MessageAttachment.builder().attachment(null))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void buildShouldWorkWhenMandatoryAttributesAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), false);
 
@@ -56,7 +57,7 @@ public class MessageAttachmentRepresentationByIdTest {
     }
 
     @Test
-    public void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
+    void buildShouldSetIsInlineDefaultValueWhenNotGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
         MessageAttachmentRepresentation messageAttachmentRepresentation = MessageAttachmentRepresentation.builder()
@@ -67,7 +68,7 @@ public class MessageAttachmentRepresentationByIdTest {
     }
 
     @Test
-    public void buildShouldAcceptInlineAndWithoutCid() {
+    void buildShouldAcceptInlineAndWithoutCid() {
         AttachmentId attachmentId = AttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.empty(), Optional.empty(), true);
 
@@ -80,7 +81,7 @@ public class MessageAttachmentRepresentationByIdTest {
     }
 
     @Test
-    public void buildShouldSetAttributesWhenAllAreGiven() {
+    void buildShouldSetAttributesWhenAllAreGiven() {
         AttachmentId attachmentId = AttachmentId.from("1");
         MessageAttachmentRepresentation expectedMessageAttachmentRepresentation = new MessageAttachmentRepresentation(attachmentId, Optional.of("name"), Optional.of(Cid.from("cid")), true);
 

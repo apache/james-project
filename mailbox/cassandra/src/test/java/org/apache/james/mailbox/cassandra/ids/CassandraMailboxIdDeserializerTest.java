@@ -20,14 +20,15 @@
 package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class CassandraMailboxIdDeserializerTest {
+class CassandraMailboxIdDeserializerTest {
 
     private static final String UUID_STRING = "5530370f-44c6-4647-990e-7768ce5131d4";
     private static final String MALFORMED_UUID_STRING = "xyz";
@@ -35,19 +36,20 @@ public class CassandraMailboxIdDeserializerTest {
 
     private CassandraMailboxIdDeserializer mailboxIdDeserializer;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailboxIdDeserializer = new CassandraMailboxIdDeserializer();
     }
 
     @Test
-    public void deserializeShouldWork() throws Exception {
+    void deserializeShouldWork() throws Exception {
         assertThat(mailboxIdDeserializer.deserialize(UUID_STRING)).isEqualTo(CASSANDRA_ID);
     }
 
-    @Test(expected = MailboxIdDeserialisationException.class)
-    public void deserializeShouldThrowOnMalformedData() throws Exception {
-        mailboxIdDeserializer.deserialize(MALFORMED_UUID_STRING);
+    @Test
+    void deserializeShouldThrowOnMalformedData() {
+        assertThatThrownBy(() -> mailboxIdDeserializer.deserialize(MALFORMED_UUID_STRING))
+            .isInstanceOf(MailboxIdDeserialisationException.class);
     }
 
 }

@@ -19,28 +19,24 @@
 package org.apache.james.mailbox.cassandra.ids;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.UUID;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraIdTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class CassandraIdTest {
 
     @Test
-    public void beanShouldRespectBeanContract() {
+    void beanShouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraId.class)
             .verify();
     }
 
     @Test
-    public void fromStringShouldWorkWhenParameterIsAnUUID() {
+    void fromStringShouldWorkWhenParameterIsAnUUID() {
         UUID id = UUID.randomUUID();
 
         CassandraId cassandraId = new CassandraId.Factory().fromString(id.toString());
@@ -49,8 +45,8 @@ public class CassandraIdTest {
     }
 
     @Test
-    public void fromStringShouldThrowWhenParameterIsNotAnUUID() {
-        expectedException.expect(IllegalArgumentException.class);
-        new CassandraId.Factory().fromString("not an UUID");
+    void fromStringShouldThrowWhenParameterIsNotAnUUID() {
+        assertThatThrownBy(() -> new CassandraId.Factory().fromString("not an UUID"))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 }

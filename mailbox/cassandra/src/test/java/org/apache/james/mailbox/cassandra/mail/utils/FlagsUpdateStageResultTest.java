@@ -25,23 +25,23 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.UpdatedFlags;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class FlagsUpdateStageResultTest {
+class FlagsUpdateStageResultTest {
 
-    public static final MessageUid UID = MessageUid.of(1L);
-    public static final MessageUid OTHER_UID = MessageUid.of(2L);
-    public static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
+    private static final MessageUid UID = MessageUid.of(1L);
+    private static final MessageUid OTHER_UID = MessageUid.of(2L);
+    private static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
         .modSeq(18L)
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.SEEN))
         .build();
-    public static final UpdatedFlags OTHER_UPDATED_FLAGS = UpdatedFlags.builder()
+    private static final UpdatedFlags OTHER_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(OTHER_UID)
         .modSeq(18L)
         .oldFlags(new Flags())
@@ -49,66 +49,66 @@ public class FlagsUpdateStageResultTest {
         .build();
 
     @Test
-    public void classShouldRespectBeanContract() {
+    void classShouldRespectBeanContract() {
         EqualsVerifier.forClass(FlagsUpdateStageResult.class);
     }
 
     @Test
-    public void noneShouldCreateResultWithoutSuccessOrFails() {
+    void noneShouldCreateResultWithoutSuccessOrFails() {
         assertThat(FlagsUpdateStageResult.none())
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of()));
     }
 
     @Test
-    public void failShouldCreateResultWithFailedUid() {
+    void failShouldCreateResultWithFailedUid() {
         assertThat(FlagsUpdateStageResult.fail(UID))
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(UID), ImmutableList.of()));
     }
 
     @Test
-    public void successShouldCreateResultWithSucceededUpdatedFlags() {
+    void successShouldCreateResultWithSucceededUpdatedFlags() {
         assertThat(FlagsUpdateStageResult.success(UPDATED_FLAGS))
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of(UPDATED_FLAGS)));
     }
 
     @Test
-    public void noneShouldBeWellMergedWithNone() {
+    void noneShouldBeWellMergedWithNone() {
         assertThat(FlagsUpdateStageResult.none().merge(FlagsUpdateStageResult.none()))
             .isEqualTo(FlagsUpdateStageResult.none());
     }
 
     @Test
-    public void noneShouldBeWellMergedWithFail() {
+    void noneShouldBeWellMergedWithFail() {
         assertThat(FlagsUpdateStageResult.none().merge(FlagsUpdateStageResult.fail(UID)))
             .isEqualTo(FlagsUpdateStageResult.fail(UID));
     }
 
     @Test
-    public void noneShouldBeWellMergedWithSuccess() {
+    void noneShouldBeWellMergedWithSuccess() {
         assertThat(FlagsUpdateStageResult.none().merge(FlagsUpdateStageResult.success(UPDATED_FLAGS)))
             .isEqualTo(FlagsUpdateStageResult.success(UPDATED_FLAGS));
     }
 
     @Test
-    public void failShouldBeWellMergedWithFail() {
+    void failShouldBeWellMergedWithFail() {
         assertThat(FlagsUpdateStageResult.fail(UID).merge(FlagsUpdateStageResult.fail(OTHER_UID)))
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(UID, OTHER_UID), ImmutableList.of()));
     }
 
     @Test
-    public void successShouldBeWellMergedWithFail() {
+    void successShouldBeWellMergedWithFail() {
         assertThat(FlagsUpdateStageResult.success(UPDATED_FLAGS).merge(FlagsUpdateStageResult.fail(UID)))
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(UID), ImmutableList.of(UPDATED_FLAGS)));
     }
 
     @Test
-    public void successShouldBeWellMergedWithSuccess() {
+    void successShouldBeWellMergedWithSuccess() {
         assertThat(FlagsUpdateStageResult.success(UPDATED_FLAGS).merge(FlagsUpdateStageResult.success(OTHER_UPDATED_FLAGS)))
             .isEqualTo(new FlagsUpdateStageResult(ImmutableList.of(), ImmutableList.of(UPDATED_FLAGS, OTHER_UPDATED_FLAGS)));
     }
 
     @Test
-    public void getFailedShouldReturnFailedUid() {
+    void getFailedShouldReturnFailedUid() {
         FlagsUpdateStageResult flagsUpdateStageResult = new FlagsUpdateStageResult(ImmutableList.of(UID), ImmutableList.of(UPDATED_FLAGS));
 
         assertThat(flagsUpdateStageResult.getFailed())
@@ -116,7 +116,7 @@ public class FlagsUpdateStageResultTest {
     }
 
     @Test
-    public void getSucceededShouldReturnSucceedUpdatedFlags() {
+    void getSucceededShouldReturnSucceedUpdatedFlags() {
         FlagsUpdateStageResult flagsUpdateStageResult = new FlagsUpdateStageResult(ImmutableList.of(UID), ImmutableList.of(UPDATED_FLAGS));
 
         assertThat(flagsUpdateStageResult.getSucceeded())
@@ -124,7 +124,7 @@ public class FlagsUpdateStageResultTest {
     }
 
     @Test
-    public void keepSuccessShouldDiscardFailedUids() {
+    void keepSuccessShouldDiscardFailedUids() {
         FlagsUpdateStageResult flagsUpdateStageResult = new FlagsUpdateStageResult(ImmutableList.of(UID), ImmutableList.of(UPDATED_FLAGS));
 
         assertThat(flagsUpdateStageResult.keepSucceded())
@@ -132,14 +132,14 @@ public class FlagsUpdateStageResultTest {
     }
 
     @Test
-    public void containsFailedResultsShouldReturnTrueWhenFailed() {
+    void containsFailedResultsShouldReturnTrueWhenFailed() {
         assertThat(FlagsUpdateStageResult.fail(UID).containsFailedResults())
             .isTrue();
     }
 
 
     @Test
-    public void containsFailedResultsShouldReturnFalseWhenSucceeded() {
+    void containsFailedResultsShouldReturnFalseWhenSucceeded() {
         assertThat(FlagsUpdateStageResult.success(UPDATED_FLAGS).containsFailedResults())
             .isFalse();
     }

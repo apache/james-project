@@ -22,20 +22,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.UUID;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class CassandraMessageIdTest {
+class CassandraMessageIdTest {
 
     @Test
-    public void beanShouldRespectBeanContract() {
+    void beanShouldRespectBeanContract() {
         EqualsVerifier.forClass(CassandraMessageId.class)
             .verify();
     }
 
     @Test
-    public void generateShouldReturnAValidCassandraMesssageId() {
+    void generateShouldReturnAValidCassandraMesssageId() {
         CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
 
         CassandraMessageId cassandraMessageId = testee.generate();
@@ -43,7 +43,7 @@ public class CassandraMessageIdTest {
     }
 
     @Test
-    public void ofShouldReturnAValidCassandraMesssageId() {
+    void ofShouldReturnAValidCassandraMesssageId() {
         CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
 
         UUID expectedUuid = UUID.randomUUID();
@@ -53,7 +53,7 @@ public class CassandraMessageIdTest {
     }
 
     @Test
-    public void serializeShouldReturnTheUuidAsString() {
+    void serializeShouldReturnTheUuidAsString() {
         CassandraMessageId.Factory testee = new CassandraMessageId.Factory();
 
         UUID uuid = UUID.randomUUID();
@@ -64,7 +64,7 @@ public class CassandraMessageIdTest {
     }
 
     @Test
-    public void shouldBeSerializable() {
+    void shouldBeSerializable() {
         assertThat(new CassandraMessageId.Factory().generate().isSerializable()).isTrue();
     }
 }

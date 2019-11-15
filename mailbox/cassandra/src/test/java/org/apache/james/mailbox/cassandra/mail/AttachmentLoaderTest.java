@@ -29,25 +29,26 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 
-public class AttachmentLoaderTest {
+class AttachmentLoaderTest {
 
     private CassandraAttachmentMapper attachmentMapper;
     private AttachmentLoader testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         attachmentMapper = mock(CassandraAttachmentMapper.class);
         testee = new AttachmentLoader(attachmentMapper);
     }
 
     @Test
-    public void getAttachmentsShouldWorkWithDuplicatedAttachments() {
+    void getAttachmentsShouldWorkWithDuplicatedAttachments() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
         Attachment attachment = Attachment.builder()
@@ -73,7 +74,7 @@ public class AttachmentLoaderTest {
     }
 
     @Test
-    public void getAttachmentsShouldWorkWithDuplicatedIds() {
+    void getAttachmentsShouldWorkWithDuplicatedIds() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
         Attachment attachment = Attachment.builder()
@@ -101,7 +102,7 @@ public class AttachmentLoaderTest {
     }
 
     @Test
-    public void getAttachmentsShouldReturnMultipleAttachmentWhenSeveralAttachmentsRepresentation() {
+    void getAttachmentsShouldReturnMultipleAttachmentWhenSeveralAttachmentsRepresentation() {
         AttachmentId attachmentId1 = AttachmentId.from("1");
         AttachmentId attachmentId2 = AttachmentId.from("2");
 
@@ -137,7 +138,7 @@ public class AttachmentLoaderTest {
     }
 
     @Test
-    public void getAttachmentsShouldReturnEmptyByDefault() {
+    void getAttachmentsShouldReturnEmptyByDefault() {
         AttachmentId attachmentId = AttachmentId.from("1");
 
         Attachment attachment = Attachment.builder()
