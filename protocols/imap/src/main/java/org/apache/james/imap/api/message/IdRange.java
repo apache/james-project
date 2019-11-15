@@ -37,7 +37,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
     /**
      * {@link Iterator} of a range of msn/uid
      */
-    private final class RangeIterator implements Iterator<Long> {
+    private static final class RangeIterator implements Iterator<Long> {
 
         private final long to;
         private long current;
