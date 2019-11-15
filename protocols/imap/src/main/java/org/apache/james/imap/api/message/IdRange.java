@@ -42,7 +42,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         private final long to;
         private long current;
 
-        public RangeIterator(long from, long to) {
+        RangeIterator(long from, long to) {
             this.to = to;
             this.current = from;
         }
@@ -143,7 +143,7 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return highVal;
     }
 
-    public void setHighVal(long highVal) {
+    private void setHighVal(long highVal) {
         if (lowVal > highVal) {
             throw new IllegalArgumentException("HighVal must be >= LowVal");
         }
