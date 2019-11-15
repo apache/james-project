@@ -19,6 +19,19 @@ Change list:
  - [UsersFileRepository](#usersfilerepository)
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
+ - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
+
+#### Cassandra keyspace creation configuration
+
+Date 15/11/2019
+
+SHA-1 bcf4d36500
+
+In order to allow the usage of cassandra credentials limited to a keyspace, the default behaviour of James is now to NOT
+create the keyspace during start-up.
+
+The automatic creation of the cassandra keyspace by James could be enabled by setting
+ `cassandra.keyspace.create=true` in the `cassandra.properties` configuration file.
  
 #### UsersFileRepository
 
