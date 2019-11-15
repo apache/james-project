@@ -34,6 +34,78 @@ import com.google.common.collect.ImmutableList;
  * Represents a range of UID or MSN values.
  */
 public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
+    /**
+     * {@link Iterator} of a range of msn/uid
+     */
+    private final class RangeIterator implements Iterator<Long> {
+
+        private final long to;
+        private long current;
+
+        public RangeIterator(long from, long to) {
+            this.to = to;
+            this.current = from;
+        }
+
+        @Override
+        public boolean hasNext() {
+            return current <= to;
+        }
+
+        @Override
+        public Long next() {
+            if (hasNext()) {
+                return current++;
+            } else {
+                throw new NoSuchElementException("Highest id of " + to + " was reached before");
+            }
+        }
+
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("Read-Only");
+        }
+
+    }
+
+    /**
+     * Utility method which will copy the given {@link List} and try to merge
+     * the {@link IdRange} in the copy before return it.
+     *
+     * @return mergedRanges
+     */
+    public static List<IdRange> mergeRanges(List<IdRange> ranges) {
+        List<IdRange> copy = new ArrayList<>(ranges);
+        Collections.sort(copy);
+
+        boolean lastUid = false;
+
+        for (int i = 0; i < copy.size() - 1; i++) {
+            IdRange current = copy.get(i);
+            IdRange next = copy.get(i + 1);
+            if (next.getLowVal() == Long.MAX_VALUE && next.getHighVal() == Long.MAX_VALUE) {
+                if (lastUid) {
+                    copy.remove(next);
+                    i--;
+                } else {
+                    lastUid = true;
+                }
+            } else {
+                // Make sure we handle the "*" and "*:*" correctly and don't
+                // remove ranges by error. See IMAP-289
+                if ((current.getLowVal() != Long.MAX_VALUE && current.getHighVal() != Long.MAX_VALUE) && (current.getHighVal() >= next.getLowVal() - 1)) {
+                    if (next.getHighVal() > current.getHighVal()) {
+                        current.setHighVal(next.getHighVal());
+                    }
+                    // remove the merged id range and decrease the count
+                    copy.remove(next);
+                    i--;
+                }
+            }
+
+        }
+        return copy;
+    }
 
     public static String toString(IdRange[] ranges) {
         return Optional.ofNullable(ranges)
@@ -78,6 +150,51 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         this.highVal = highVal;
     }
 
+    /**
+     * Renders text suitable for logging.
+     * 
+     * @return a <code>String</code> representation of this object.
+     */
+    public String toString() {
+        return "IdRange ( " + this.lowVal + "->" + this.highVal + " )";
+    }
+
+    public String getFormattedString() {
+        if (this.lowVal == this.highVal) {
+            return Long.toString(this.lowVal);
+        } else {
+            return this.lowVal + ":" + this.highVal;
+        }
+    }
+
+    /**
+     * Return a read-only {@link Iterator} which contains all msn/uid which fail in the specified range.
+     */
+    @Override
+    public Iterator<Long> iterator() {
+        long from = getLowVal();
+        if (from == Long.MAX_VALUE) {
+            from = 1;
+        }
+        long to = getHighVal();
+        return new RangeIterator(from, to);
+    }
+
+    @Override
+    public int compareTo(IdRange range2) {
+        // Correctly sort and respect "*" and "*:*" ranges. See IMAP-289
+        if (getLowVal() == Long.MAX_VALUE && getHighVal() == Long.MAX_VALUE && range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {
+            return 0;
+        }
+        if (getLowVal() == Long.MAX_VALUE && getHighVal() == Long.MAX_VALUE) {
+            return 1;
+        } else if (range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {
+            return -1;
+        } else {
+            return (int) (getLowVal() - range2.getLowVal());
+        }
+    }
+
     @Override
     public int hashCode() {
         final int PRIME = 31;
@@ -106,126 +223,6 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Renders text suitable for logging.
-     * 
-     * @return a <code>String</code> representation of this object.
-     */
-    public String toString() {
-        return "IdRange ( " + this.lowVal + "->" + this.highVal + " )";
-    }
-
-    public String getFormattedString() {
-        if (this.lowVal == this.highVal) {
-            return Long.toString(this.lowVal);
-        } else {
-            return this.lowVal + ":" + this.highVal;
-        }
-    }
-
-    /**
-     * Utility method which will copy the given {@link List} and try to merge
-     * the {@link IdRange} in the copy before return it.
-     *
-     * @return mergedRanges
-     */
-    public static List<IdRange> mergeRanges(List<IdRange> ranges) {
-        List<IdRange> copy = new ArrayList<>(ranges);
-        Collections.sort(copy);
-
-        boolean lastUid = false;
-
-        for (int i = 0; i < copy.size() - 1; i++) {
-            IdRange current = copy.get(i);
-            IdRange next = copy.get(i + 1);
-            if (next.getLowVal() == Long.MAX_VALUE && next.getHighVal() == Long.MAX_VALUE) {
-                if (lastUid) {
-                    copy.remove(next);
-                    i--;
-                } else {
-                    lastUid = true;
-                }
-            } else {
-                // Make sure we handle the "*" and "*:*" correctly and don't
-                // remove ranges by error. See IMAP-289
-                if ((current.getLowVal() != Long.MAX_VALUE && current.getHighVal() != Long.MAX_VALUE) && (current.getHighVal() >= next.getLowVal() - 1)) {
-                    if (next.getHighVal() > current.getHighVal()) {
-                        current.setHighVal(next.getHighVal());
-                    }
-                    // remove the merged id range and decrease the count
-                    copy.remove(next);
-                    i--;
-                }
-            }
-
-        }
-        return copy;
-
-    }
-
-
-    /**
-     * Return a read-only {@link Iterator} which contains all msn/uid which fail in the specified range.
-     */
-    @Override
-    public Iterator<Long> iterator() {
-        long from = getLowVal();
-        if (from == Long.MAX_VALUE) {
-            from = 1;
-        }
-        long to = getHighVal();
-        return new RangeIterator(from, to);
-    }
-    
-    /**
-     * {@link Iterator} of a range of msn/uid
-     */
-    private final class RangeIterator implements Iterator<Long> {
-
-        private final long to;
-        private long current;
-        
-        public RangeIterator(long from, long to) {
-            this.to = to;
-            this.current = from;
-        }
-        
-        @Override
-        public boolean hasNext() {
-            return current <= to;
-        }
-
-        @Override
-        public Long next() {
-            if (hasNext()) {
-                return current++;
-            } else {
-                throw new NoSuchElementException("Highest id of " + to + " was reached before");
-            }
-        }
-
-        @Override
-        public void remove() {
-            throw new UnsupportedOperationException("Read-Only");
-        }
-        
-    }
-
-    @Override
-    public int compareTo(IdRange range2) {
-        // Correctly sort and respect "*" and "*:*" ranges. See IMAP-289
-        if (getLowVal() == Long.MAX_VALUE && getHighVal() == Long.MAX_VALUE && range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {
-            return 0;
-        }
-        if (getLowVal() == Long.MAX_VALUE && getHighVal() == Long.MAX_VALUE) {
-            return 1;
-        } else if (range2.getLowVal() == Long.MAX_VALUE && range2.getHighVal() == Long.MAX_VALUE) {
-            return -1;
-        } else {
-            return (int) (getLowVal() - range2.getLowVal());
-        }
     }
 
 }
