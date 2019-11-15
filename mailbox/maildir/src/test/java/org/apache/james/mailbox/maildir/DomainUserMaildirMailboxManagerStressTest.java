@@ -24,17 +24,11 @@ import java.io.File;
 import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
 class DomainUserMaildirMailboxManagerStressTest extends MailboxManagerStressTest<StoreMailboxManager> {
     @TempDir
     File tmpFolder;
-
-    @BeforeEach
-    void setup() throws Exception {
-        super.setUp();
-    }
     
     @Override
     protected StoreMailboxManager provideManager() {

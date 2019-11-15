@@ -24,18 +24,12 @@ import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
 class MaildirSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
     @TempDir
     File tmpFolder;
-    
-    @BeforeEach
-    void setUp() {
-        super.setup();
-    }
     
     @Override
     protected SubscriptionManager createSubscriptionManager() {

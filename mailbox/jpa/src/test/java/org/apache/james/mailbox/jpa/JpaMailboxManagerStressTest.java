@@ -26,17 +26,11 @@ import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 
 class JpaMailboxManagerStressTest extends MailboxManagerStressTest<OpenJPAMailboxManager> {
 
     private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
     private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
-
-    @BeforeEach
-    void setup() throws Exception {
-        super.setUp();
-    }
     
     @Override
     protected OpenJPAMailboxManager provideManager() {

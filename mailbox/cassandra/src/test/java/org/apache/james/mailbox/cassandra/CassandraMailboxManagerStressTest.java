@@ -25,7 +25,6 @@ import org.apache.james.mailbox.MailboxManagerStressTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,11 +33,6 @@ class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<Cassand
 
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
-    
-    @BeforeEach
-    void setup() throws Exception {
-        super.setUp();
-    }
     
     @Override
     protected CassandraMailboxManager provideManager() {
