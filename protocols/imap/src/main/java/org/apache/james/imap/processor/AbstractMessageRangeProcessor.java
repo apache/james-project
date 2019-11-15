@@ -19,8 +19,10 @@
 
 package org.apache.james.imap.processor;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -42,6 +44,9 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.metrics.api.MetricFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRangeRequest> extends AbstractMailboxProcessor<R> {
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractMessageRangeProcessor.class);
@@ -86,29 +91,26 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
     private StatusResponse.ResponseCode handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) throws MailboxException {
         MessageManager mailbox = getMailboxManager().getMailbox(targetMailbox, mailboxSession);
 
-        List<IdRange> resultRanges = new ArrayList<>();
-        for (IdRange range : request.getIdSet()) {
-            MessageRange messageSet = messageRange(session.getSelected(), range, request.isUseUids());
-            if (messageSet != null) {
-                List<MessageRange> processedUids = process(targetMailbox, session.getSelected(), mailboxSession, messageSet);
-                for (MessageRange mr : processedUids) {
-                    // Set recent flag on copied message as this SHOULD be
-                    // done.
-                    // See RFC 3501 6.4.7. COPY Command
-                    // See IMAP-287
-                    //
-                    // Disable this as this is now done directly in the scope of the copy operation.
-                    // See MAILBOX-85
-                    //mailbox.setFlags(new Flags(Flags.Flag.RECENT), true, false, mr, mailboxSession);
-                    resultRanges.add(new IdRange(mr.getUidFrom().asLong(), mr.getUidTo().asLong()));
-                }
-            }
-        }
-        IdRange[] resultUids = IdRange.mergeRanges(resultRanges).toArray(new IdRange[0]);
+        IdRange[] resultUids = IdRange.mergeRanges(Arrays.stream(request.getIdSet())
+            .map(Throwing.<IdRange, MessageRange>function(
+                range -> messageRange(session.getSelected(), range, request.isUseUids()))
+                .sneakyThrow())
+            .filter(Objects::nonNull)
+            .flatMap(Throwing.<MessageRange, Stream<IdRange>>function(
+                range -> handleRange(session, targetMailbox, mailboxSession, range))
+                .sneakyThrow())
+            .collect(Guavate.toImmutableList()))
+            .toArray(new IdRange[0]);
 
         // get folder UIDVALIDITY
         Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
 
         return StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), resultUids);
+    }
+
+    private Stream<IdRange> handleRange(ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession, MessageRange range) throws MailboxException {
+        return process(targetMailbox, session.getSelected(), mailboxSession, range)
+            .stream()
+            .map(IdRange::from);
     }
 }

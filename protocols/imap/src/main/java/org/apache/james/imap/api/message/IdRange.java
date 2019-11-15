@@ -26,6 +26,8 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
+import org.apache.james.mailbox.model.MessageRange;
+
 import com.google.common.collect.ImmutableList;
 
 /**
@@ -37,6 +39,12 @@ public final class IdRange implements Iterable<Long>, Comparable<IdRange> {
         return Optional.ofNullable(ranges)
             .map(ImmutableList::copyOf)
             .toString();
+    }
+
+    public static IdRange from(MessageRange messageRange) {
+        return new IdRange(
+            messageRange.getUidFrom().asLong(),
+            messageRange.getUidTo().asLong());
     }
 
     private long lowVal;
