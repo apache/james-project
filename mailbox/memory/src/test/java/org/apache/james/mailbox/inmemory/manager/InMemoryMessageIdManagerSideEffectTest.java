@@ -27,15 +27,8 @@ import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.junit.Before;
 
-public class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+class InMemoryMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
     @Override
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {

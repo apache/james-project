@@ -18,38 +18,24 @@
  ****************************************************************/
 package org.apache.james.mailbox.cassandra.user;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraSubscriptionMapperTest extends SubscriptionMapperTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() {
-        cassandra = CassandraCluster.create(CassandraSubscriptionModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSubscriptionModule.MODULE);
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {
-        return new CassandraSubscriptionMapper(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
+        return new CassandraSubscriptionMapper(cassandraCluster.getCassandraCluster().getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
 }

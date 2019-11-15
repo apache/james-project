@@ -22,15 +22,8 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.junit.Before;
 
-public class InMemoryMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+class InMemoryMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
     
     @Override
     protected MessageIdManagerTestSystem createTestingData() {

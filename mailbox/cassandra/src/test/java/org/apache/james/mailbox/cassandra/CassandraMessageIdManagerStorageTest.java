@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
@@ -29,32 +29,18 @@ import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
     
     @Override
     protected MessageIdManagerTestSystem createTestingData() {
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, new NoQuotaManager(), eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK);
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandraCluster.getCassandraCluster(), new NoQuotaManager(), eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
 }

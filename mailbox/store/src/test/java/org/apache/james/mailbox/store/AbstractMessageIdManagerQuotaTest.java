@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store;
 
 import static org.apache.james.mailbox.fixture.MailboxFixture.ALICE;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import javax.mail.Flags;
 
@@ -36,10 +37,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
@@ -47,9 +46,6 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     private static final MessageUid messageUid1 = MessageUid.of(111);
 
     public static final Flags FLAGS = new Flags();
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     private MessageIdManager messageIdManager;
     private MailboxSession session;
@@ -67,8 +63,8 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     
     protected abstract QuotaManager createQuotaManager(MaxQuotaManager maxQuotaManager, CurrentQuotaManager currentQuotaManager);
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         maxQuotaManager = createMaxQuotaManager();
         CurrentQuotaManager currentQuotaManager = createCurrentQuotaManager();
         QuotaManager quotaManager = createQuotaManager(maxQuotaManager, currentQuotaManager);
@@ -83,7 +79,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     }
 
     @Test
-    public void setInMailboxesShouldNotThrowWhenMessageQuotaNotExceeded() throws Exception {
+    void setInMailboxesShouldNotThrowWhenMessageQuotaNotExceeded() throws Exception {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(1));
 
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
@@ -92,7 +88,7 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     }
 
     @Test
-    public void setInMailboxesShouldNotThrowWhenStorageQuotaNotExceeded() throws Exception {
+    void setInMailboxesShouldNotThrowWhenStorageQuotaNotExceeded() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(testingData.getConstantMessageSize()));
 
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
@@ -101,34 +97,40 @@ public abstract class AbstractMessageIdManagerQuotaTest {
     }
 
     @Test
-    public void setInMailboxesShouldThrowWhenStorageQuotaExceeded() throws Exception {
+    void setInMailboxesShouldThrowWhenStorageQuotaExceeded() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(2 * testingData.getConstantMessageSize()));
 
         testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
 
-        expectedException.expect(OverQuotaException.class);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
+        assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()),
+                session))
+            .isInstanceOf(OverQuotaException.class);
     }
 
     @Test
-    public void setInMailboxesShouldThrowWhenStorageQuotaExceededWhenCopiedToMultipleMailboxes() throws Exception {
+    void setInMailboxesShouldThrowWhenStorageQuotaExceededWhenCopiedToMultipleMailboxes() throws Exception {
         maxQuotaManager.setGlobalMaxStorage(QuotaSize.size(2 * testingData.getConstantMessageSize()));
 
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        expectedException.expect(OverQuotaException.class);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), session);
+        assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()),
+                session))
+            .isInstanceOf(OverQuotaException.class);
     }
 
     @Test
-    public void setInMailboxesShouldThrowWhenStorageMessageExceeded() throws Exception {
+    void setInMailboxesShouldThrowWhenStorageMessageExceeded() throws Exception {
         maxQuotaManager.setGlobalMaxMessage(QuotaCount.count(2));
 
         testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         MessageId messageId = testingData.persist(mailbox2.getMailboxId(), messageUid1, FLAGS, session);
 
-        expectedException.expect(OverQuotaException.class);
-        messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), session);
+        assertThatThrownBy(() -> messageIdManager.setInMailboxes(messageId,
+                ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()),
+                session))
+            .isInstanceOf(OverQuotaException.class);
     }
 }

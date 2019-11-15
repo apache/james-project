@@ -22,7 +22,7 @@ package org.apache.james.mailbox.inmemory.user;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperTest;
 
-public class InMemorySubscriptionMapperTest extends SubscriptionMapperTest {
+class InMemorySubscriptionMapperTest extends SubscriptionMapperTest {
 
     @Override
     protected SubscriptionMapper createSubscriptionMapper() {

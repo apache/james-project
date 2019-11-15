@@ -26,8 +26,8 @@ import java.util.List;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.model.Subscription;
 import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public abstract class SubscriptionMapperTest {
     private static final String USER_1 = "user1";
@@ -39,27 +39,27 @@ public abstract class SubscriptionMapperTest {
 
     protected abstract SubscriptionMapper createSubscriptionMapper();
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         testee = createSubscriptionMapper();
     }
 
     @Test
-    public void findSubscriptionsForUserShouldBeEmptyByDefault() throws SubscriptionException {
+    void findSubscriptionsForUserShouldBeEmptyByDefault() throws SubscriptionException {
         List<Subscription> subscriptions = testee.findSubscriptionsForUser(USER_1);
 
         assertThat(subscriptions).isEmpty();
     }
 
     @Test
-    public void findMailboxSubscriptionForUserShouldReturnNullByDefault() throws SubscriptionException {
+    void findMailboxSubscriptionForUserShouldReturnNullByDefault() throws SubscriptionException {
         Subscription subscriptions = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
 
         assertThat(subscriptions).isNull();
     }
 
     @Test
-    public void findMailboxSubscriptionForUserShouldReturnSubscription() throws SubscriptionException {
+    void findMailboxSubscriptionForUserShouldReturnSubscription() throws SubscriptionException {
         SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
         testee.save(subscription);
 
@@ -69,7 +69,7 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    public void findSubscriptionsForUserShouldReturnSubscriptions() throws SubscriptionException {
+    void findSubscriptionsForUserShouldReturnSubscriptions() throws SubscriptionException {
         SimpleSubscription subscription1 = new SimpleSubscription(USER_1, MAILBOX_1);
         SimpleSubscription subscription2 = new SimpleSubscription(USER_1, MAILBOX_2);
         testee.save(subscription1);
@@ -81,7 +81,7 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    public void findSubscriptionsForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
+    void findSubscriptionsForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
         SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
         SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_2);
         testee.save(subscription1);
@@ -93,7 +93,7 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    public void findMailboxSubscriptionForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
+    void findMailboxSubscriptionForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
         SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
         SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_1);
         testee.save(subscription1);
@@ -105,7 +105,7 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    public void findMailboxSubscriptionForUserShouldReturnSubscriptionConcerningTheMailbox() throws SubscriptionException {
+    void findMailboxSubscriptionForUserShouldReturnSubscriptionConcerningTheMailbox() throws SubscriptionException {
         SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
         SimpleSubscription subscription2 = new SimpleSubscription(USER_1,MAILBOX_2);
         testee.save(subscription1);
@@ -117,7 +117,7 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    public void deleteShouldRemoveSubscription() throws SubscriptionException {
+    void deleteShouldRemoveSubscription() throws SubscriptionException {
         SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
         testee.save(subscription);
 

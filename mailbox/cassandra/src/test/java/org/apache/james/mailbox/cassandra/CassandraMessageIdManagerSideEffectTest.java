@@ -21,39 +21,25 @@ package org.apache.james.mailbox.cassandra;
 
 import java.util.Set;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerSideEffectTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraMessageIdManagerSideEffectTest extends AbstractMessageIdManagerSideEffectTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
 
     @Override
     protected MessageIdManagerTestSystem createTestSystem(QuotaManager quotaManager, EventBus eventBus, Set<PreDeletionHook> preDeletionHooks) {
-        return CassandraMessageIdManagerTestSystem.createTestingData(cassandra, quotaManager, eventBus, preDeletionHooks);
+        return CassandraMessageIdManagerTestSystem.createTestingData(cassandraCluster.getCassandraCluster(), quotaManager, eventBus, preDeletionHooks);
     }
 }
