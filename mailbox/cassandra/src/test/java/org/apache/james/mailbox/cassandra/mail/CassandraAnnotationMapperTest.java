@@ -19,40 +19,26 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAnnotationModule;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraAnnotationMapperTest extends AnnotationMapperTest {
-    
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraAnnotationMapperTest extends AnnotationMapperTest {
 
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(CassandraAnnotationModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraAnnotationModule.MODULE);
 
     @Override
     protected AnnotationMapper createAnnotationMapper() {
-        return GuiceUtils.testInjector(cassandra)
+        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraAnnotationMapper.class);
     }
 

@@ -27,20 +27,13 @@ import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
 
-public class JpaMailboxMapperTest extends MailboxMapperTest {
+class JpaMailboxMapperTest extends MailboxMapperTest {
 
     public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     private final AtomicInteger counter = new AtomicInteger();
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
 
     @Override
     protected MailboxMapper createMailboxMapper() {
@@ -52,8 +45,8 @@ public class JpaMailboxMapperTest extends MailboxMapperTest {
         return JPAId.of(counter.incrementAndGet());
     }
 
-    @After
-    public void cleanUp() {
+    @AfterEach
+    void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

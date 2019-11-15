@@ -22,7 +22,7 @@ package org.apache.james.mailbox.inmemory.quota;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.store.quota.GenericMaxQuotaManagerTest;
 
-public class InMemoryPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
+class InMemoryPerUserMaxQuotaManagerTest extends GenericMaxQuotaManagerTest {
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {

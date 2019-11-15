@@ -19,18 +19,10 @@
 
 package org.apache.james.mailbox.inmemory.mail;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
-import org.junit.Before;
 
-public class InMemoryMessageIdMapperTest extends MessageIdMapperTest {
-
-    @Override
-    @Before
-    public void setUp() throws MailboxException {
-        super.setUp();
-    }
+class InMemoryMessageIdMapperTest extends MessageIdMapperTest {
 
     @Override
     protected MapperProvider provideMapper() {

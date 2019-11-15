@@ -21,15 +21,8 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMoveTest;
-import org.junit.Before;
 
-public class MemoryMessageMoveTest extends MessageMoveTest {
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
+class MemoryMessageMoveTest extends MessageMoveTest {
     
     @Override
     protected MapperProvider createMapperProvider() {

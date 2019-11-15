@@ -23,8 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
@@ -32,48 +32,35 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.MessageIdMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-public class CassandraMessageIdMapperTest extends MessageIdMapperTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraMessageIdMapperTest extends MessageIdMapperTest {
 
     private static final MailboxSession MAILBOX_SESSION = MailboxSessionUtil.create(Username.of("benwa"));
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws MailboxException {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
     
     @Override
     protected CassandraMapperProvider provideMapper() {
-        return new CassandraMapperProvider(cassandra);
+        return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
     }
 
     @Test
-    public void findShouldReturnCorrectElementsWhenChunking() throws Exception {
+    void findShouldReturnCorrectElementsWhenChunking() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
         CassandraMailboxSessionMapperFactory mapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandra.getConf(), cassandra.getTypesProvider(), messageIdFactory,
+            cassandraCluster.getCassandraCluster().getConf(),
+            cassandraCluster.getCassandraCluster().getTypesProvider(),
+            messageIdFactory,
             CassandraConfiguration.builder()
                 .messageReadChunkSize(3)
                 .build());

@@ -20,15 +20,14 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -52,33 +51,31 @@ public abstract class AnnotationMapperTest {
     private AnnotationMapper annotationMapper;
     private MailboxId mailboxId;
 
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
-
     protected abstract AnnotationMapper createAnnotationMapper();
 
     protected abstract MailboxId generateMailboxId();
 
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         this.annotationMapper = createAnnotationMapper();
         this.mailboxId = generateMailboxId();
     }
 
     @Test
-    public void insertAnnotationShouldThrowExceptionWithNilData() {
-        expected.expect(IllegalArgumentException.class);
-        annotationMapper.insertAnnotation(mailboxId, MailboxAnnotation.nil(PRIVATE_KEY));
+    void insertAnnotationShouldThrowExceptionWithNilData() {
+        assertThatThrownBy(() -> annotationMapper.insertAnnotation(mailboxId, MailboxAnnotation.nil(PRIVATE_KEY)))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void insertAnnotationShouldCreateNewAnnotation() throws MailboxException {
+    void insertAnnotationShouldCreateNewAnnotation() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
 
         assertThat(annotationMapper.getAllAnnotations(mailboxId)).containsExactly(PRIVATE_ANNOTATION);
     }
 
     @Test
-    public void insertAnnotationShouldUpdateExistedAnnotation() throws MailboxException {
+    void insertAnnotationShouldUpdateExistedAnnotation() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_UPDATE);
 
@@ -86,7 +83,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void deleteAnnotationShouldDeleteStoredAnnotation() throws MailboxException {
+    void deleteAnnotationShouldDeleteStoredAnnotation() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.deleteAnnotation(mailboxId, PRIVATE_KEY);
 
@@ -94,12 +91,12 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getEmptyAnnotationsWithNonStoredAnnotations() throws MailboxException {
+    void getEmptyAnnotationsWithNonStoredAnnotations() {
         assertThat(annotationMapper.getAllAnnotations(mailboxId)).isEmpty();
     }
 
     @Test
-    public void getAllAnnotationsShouldRetrieveStoredAnnotations() throws MailboxException {
+    void getAllAnnotationsShouldRetrieveStoredAnnotations() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
 
@@ -107,7 +104,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysShouldReturnStoredAnnotationWithFilter() throws MailboxException {
+    void getAnnotationsByKeysShouldReturnStoredAnnotationWithFilter() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
 
@@ -116,7 +113,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldReturnThatEntryAndItsChildren() throws MailboxException {
+    void getAnnotationsByKeysWithOneDepthShouldReturnThatEntryAndItsChildren() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
@@ -128,7 +125,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldReturnThatEntryAndAllBelowEntries() throws MailboxException {
+    void getAnnotationsByKeysWithAllDepthShouldReturnThatEntryAndAllBelowEntries() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
@@ -140,7 +137,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() throws Exception {
+    void getAnnotationsByKeysWithOneDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
@@ -151,7 +148,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() throws Exception {
+    void getAnnotationsByKeysWithAllDepthShouldReturnTheChildrenEntriesEvenItDoesNotExist() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
@@ -162,7 +159,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldReturnEmptyWithEmptyInputKeys() throws Exception {
+    void getAnnotationsByKeysWithOneDepthShouldReturnEmptyWithEmptyInputKeys() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_CHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_GRANDCHILD_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
@@ -172,7 +169,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithOneDepthShouldReturnEmptyIfDoNotFind() throws Exception {
+    void getAnnotationsByKeysWithOneDepthShouldReturnEmptyIfDoNotFind() {
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
@@ -180,7 +177,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void getAnnotationsByKeysWithAllDepthShouldReturnEmptyIfDoNotFind() throws Exception {
+    void getAnnotationsByKeysWithAllDepthShouldReturnEmptyIfDoNotFind() {
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_USER_ANNOTATION);
 
@@ -188,7 +185,7 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void annotationShouldBeCaseInsentive() throws Exception {
+    void annotationShouldBeCaseInsentive() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_WITH_KEY_UPPER);
 
@@ -196,24 +193,24 @@ public abstract class AnnotationMapperTest {
     }
 
     @Test
-    public void isExistedShouldReturnTrueIfAnnotationIsStored() throws Exception {
+    void isExistedShouldReturnTrueIfAnnotationIsStored() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
 
         assertThat(annotationMapper.exist(mailboxId, PRIVATE_ANNOTATION)).isTrue();
     }
 
     @Test
-    public void isExistedShouldReturnFalseIfAnnotationIsNotStored() throws Exception {
+    void isExistedShouldReturnFalseIfAnnotationIsNotStored() {
         assertThat(annotationMapper.exist(mailboxId, PRIVATE_ANNOTATION)).isFalse();
     }
 
     @Test
-    public void countAnnotationShouldReturnZeroIfNoMoreAnnotationBelongToMailbox() throws Exception {
+    void countAnnotationShouldReturnZeroIfNoMoreAnnotationBelongToMailbox() {
         assertThat(annotationMapper.countAnnotations(mailboxId)).isEqualTo(0);
     }
 
     @Test
-    public void countAnnotationShouldReturnNumberOfAnnotationBelongToMailbox() throws Exception {
+    void countAnnotationShouldReturnNumberOfAnnotationBelongToMailbox() {
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION);
         annotationMapper.insertAnnotation(mailboxId, PRIVATE_ANNOTATION_UPDATE);
         annotationMapper.insertAnnotation(mailboxId, SHARED_ANNOTATION);

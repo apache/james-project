@@ -19,47 +19,32 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAttachmentModule;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.model.AttachmentMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraAttachmentMapperTest extends AttachmentMapperTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraAttachmentMapperTest extends AttachmentMapperTest {
 
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
         CassandraAttachmentModule.MODULE,
         CassandraBlobModule.MODULE);
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws MailboxException {
-        cassandra = CassandraCluster.create(MODULES, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);
 
     @Override
     protected AttachmentMapper createAttachmentMapper() {
-        return GuiceUtils.testInjector(cassandra)
+        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraAttachmentMapper.class);
     }
 

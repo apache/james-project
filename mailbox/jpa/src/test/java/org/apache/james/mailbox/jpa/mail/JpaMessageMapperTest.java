@@ -23,26 +23,19 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageMapperTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
 
-public class JpaMessageMapperTest extends MessageMapperTest {
+class JpaMessageMapperTest extends MessageMapperTest {
 
     public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
     
     @Override
     protected MapperProvider createMapperProvider() {
         return new JPAMapperProvider(JPA_TEST_CLUSTER);
     }
     
-    @After
-    public void cleanUp() {
+    @AfterEach
+    void cleanUp() {
         JPA_TEST_CLUSTER.clear(JPAMailboxFixture.MAILBOX_TABLE_NAMES);
     }
 }

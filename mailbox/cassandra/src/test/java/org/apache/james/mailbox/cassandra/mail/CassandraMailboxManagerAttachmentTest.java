@@ -22,8 +22,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -50,39 +50,32 @@ import org.apache.james.mailbox.store.quota.QuotaComponents;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
 
     private CassandraMailboxSessionMapperFactory mailboxSessionMapperFactory;
     private CassandraMailboxManager mailboxManager;
     private CassandraMailboxManager parseFailingMailboxManager;
 
-    @Before
-    public void init() throws Exception {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
+    @BeforeEach
+    void init() throws Exception {
         initSystemUnderTest();
         super.setUp();
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
     }
 
     private void initSystemUnderTest() throws Exception {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
         mailboxSessionMapperFactory = TestCassandraMailboxSessionMapperFactory.forTests(
-            cassandra.getConf(),
-            cassandra.getTypesProvider(),
+            cassandraCluster.getCassandraCluster().getConf(),
+            cassandraCluster.getCassandraCluster().getTypesProvider(),
             messageIdFactory);
         Authenticator noAuthenticator = null;
         Authorizator noAuthorizator = null;

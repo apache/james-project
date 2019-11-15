@@ -19,35 +19,21 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.store.mail.model.MapperProvider;
 import org.apache.james.mailbox.store.mail.model.MessageWithAttachmentMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraMessageWithAttachmentMapperTest extends MessageWithAttachmentMapperTest {
-    
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraMessageWithAttachmentMapperTest extends MessageWithAttachmentMapperTest {
 
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(MailboxAggregateModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
     
     @Override
     protected MapperProvider createMapperProvider() {
-        return new CassandraMapperProvider(cassandra);
+        return new CassandraMapperProvider(cassandraCluster.getCassandraCluster());
     }
 }

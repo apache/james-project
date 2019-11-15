@@ -32,24 +32,20 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableMap;
 
 public abstract class MailboxMapperACLTest {
     private static final long UID_VALIDITY = 42;
-    public static final boolean POSITIVE = true;
-    public static final boolean NEGATIVE = !POSITIVE;
+    private static final boolean POSITIVE = true;
+    private static final boolean NEGATIVE = !POSITIVE;
     private static final Username USER = Username.of("user");
     private static final Username USER_1 = Username.of("user1");
     private static final Username USER_2 = Username.of("user2");
 
     private Mailbox benwaInboxMailbox;
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     private MailboxMapper mailboxMapper;
 
@@ -57,7 +53,8 @@ public abstract class MailboxMapperACLTest {
 
     protected abstract MailboxId generateId();
 
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         mailboxMapper = createMailboxMapper();
         MailboxPath benwaInboxPath = MailboxPath.forUser(Username.of("benwa"), "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
@@ -65,7 +62,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void storedAclShouldBeEmptyByDefault() throws MailboxException {
+    void storedAclShouldBeEmptyByDefault() throws MailboxException {
         assertThat(
             mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())
                 .getACL()
@@ -74,7 +71,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldSaveAclWhenReplace() throws MailboxException {
+    void updateAclShouldSaveAclWhenReplace() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         mailboxMapper.updateACL(benwaInboxMailbox, MailboxACL.command().key(key).rights(rights).asReplacement());
@@ -88,7 +85,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldOverwriteStoredAclWhenReplace() throws MailboxException {
+    void updateAclShouldOverwriteStoredAclWhenReplace() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
@@ -105,7 +102,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldTreatNegativeAndPositiveRightSeparately() throws MailboxException {
+    void updateAclShouldTreatNegativeAndPositiveRightSeparately() throws MailboxException {
         EntryKey key1 = EntryKey.createUserEntryKey(USER, NEGATIVE);
         EntryKey key2 = EntryKey.createUserEntryKey(USER, POSITIVE);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
@@ -123,7 +120,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldTreatNameTypesRightSeparately() throws MailboxException {
+    void updateAclShouldTreatNameTypesRightSeparately() throws MailboxException {
         EntryKey key1 = EntryKey.createUserEntryKey(USER);
         EntryKey key2 = EntryKey.createGroupEntryKey(USER.asString());
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
@@ -141,7 +138,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldCleanAclEntryWhenEmptyReplace() throws MailboxException {
+    void updateAclShouldCleanAclEntryWhenEmptyReplace() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights();
@@ -156,7 +153,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateAclShouldCombineStoredAclWhenAdd() throws MailboxException {
+    void updateAclShouldCombineStoredAclWhenAdd() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
@@ -173,7 +170,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void removeAclShouldRemoveSomeStoredAclWhenAdd() throws MailboxException {
+    void removeAclShouldRemoveSomeStoredAclWhenAdd() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights removedRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.PerformExpunge);
@@ -190,7 +187,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void removeAclShouldNotFailWhenRemovingNonExistingRight() throws MailboxException {
+    void removeAclShouldNotFailWhenRemovingNonExistingRight() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights removedRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.PerformExpunge, Right.Lookup);
@@ -207,7 +204,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void resetAclShouldReplaceStoredAcl() throws MailboxException {
+    void resetAclShouldReplaceStoredAcl() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge, Right.Write, Right.WriteSeenFlag);
         Rfc4314Rights newRights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
@@ -223,7 +220,7 @@ public abstract class MailboxMapperACLTest {
     }
     
     @Test
-    public void resetAclShouldInitializeStoredAcl() throws MailboxException {
+    void resetAclShouldInitializeStoredAcl() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.setACL(benwaInboxMailbox,
@@ -244,12 +241,12 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldReturnEmptyWhenNone() throws MailboxException {
+    void findMailboxesShouldReturnEmptyWhenNone() throws MailboxException {
         assertThat(mailboxMapper.findNonPersonalMailboxes(USER, Right.Administer)).isEmpty();
     }
 
     @Test
-    public void findMailboxesShouldReturnEmptyWhenRightDoesntMatch() throws MailboxException {
+    void findMailboxesShouldReturnEmptyWhenRightDoesntMatch() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer);
         mailboxMapper.updateACL(benwaInboxMailbox,
@@ -262,7 +259,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateACLShouldInsertUsersRights() throws MailboxException {
+    void updateACLShouldInsertUsersRights() throws MailboxException {
         Rfc4314Rights rights = new Rfc4314Rights(Right.Administer, Right.PerformExpunge);
         mailboxMapper.updateACL(benwaInboxMailbox,
             MailboxACL.command()
@@ -275,7 +272,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateACLShouldOverwriteUsersRights() throws MailboxException {
+    void updateACLShouldOverwriteUsersRights() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights initialRights = new Rfc4314Rights(Right.Administer);
         mailboxMapper.updateACL(benwaInboxMailbox,
@@ -298,7 +295,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldNotReportDeletedACLViaReplace() throws MailboxException {
+    void findMailboxesShouldNotReportDeletedACLViaReplace() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights initialRights = new Rfc4314Rights(Right.Administer);
         mailboxMapper.updateACL(benwaInboxMailbox,
@@ -319,7 +316,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldNotReportDeletedACLViaRemove() throws MailboxException {
+    void findMailboxesShouldNotReportDeletedACLViaRemove() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights initialRights = new Rfc4314Rights(Right.Administer);
         mailboxMapper.updateACL(benwaInboxMailbox,
@@ -338,7 +335,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldNotReportDeletedMailboxes() throws MailboxException {
+    void findMailboxesShouldNotReportDeletedMailboxes() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights initialRights = new Rfc4314Rights(Right.Administer);
         mailboxMapper.updateACL(benwaInboxMailbox,
@@ -353,7 +350,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void setACLShouldStoreMultipleUsersRights() throws MailboxException {
+    void setACLShouldStoreMultipleUsersRights() throws MailboxException {
         EntryKey user1 = EntryKey.createUserEntryKey(USER_1);
         EntryKey user2 = EntryKey.createUserEntryKey(USER_2);
 
@@ -368,7 +365,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldNotReportRightsRemovedViaSetAcl() throws MailboxException {
+    void findMailboxesShouldNotReportRightsRemovedViaSetAcl() throws MailboxException {
         EntryKey user1 = EntryKey.createUserEntryKey(USER_1);
         EntryKey user2 = EntryKey.createUserEntryKey(USER_2);
 
@@ -384,7 +381,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxesShouldReportRightsUpdatedViaSetAcl() throws MailboxException {
+    void findMailboxesShouldReportRightsUpdatedViaSetAcl() throws MailboxException {
         EntryKey user1 = EntryKey.createUserEntryKey(USER_1);
         EntryKey user2 = EntryKey.createUserEntryKey(USER_2);
 
@@ -400,7 +397,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void findMailboxByPathShouldReturnMailboxWithACL() throws MailboxException {
+    void findMailboxByPathShouldReturnMailboxWithACL() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
         mailboxMapper.setACL(benwaInboxMailbox,
@@ -415,7 +412,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void setACLShouldReturnACLDiff() throws MailboxException {
+    void setACLShouldReturnACLDiff() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
 
@@ -430,7 +427,7 @@ public abstract class MailboxMapperACLTest {
     }
 
     @Test
-    public void updateACLShouldReturnACLDiff() throws MailboxException {
+    void updateACLShouldReturnACLDiff() throws MailboxException {
         EntryKey key = EntryKey.createUserEntryKey(USER);
         Rfc4314Rights rights = new Rfc4314Rights(Right.WriteSeenFlag, Right.CreateMailbox, Right.Administer, Right.PerformExpunge, Right.DeleteMessages);
 

@@ -19,8 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -32,11 +32,11 @@ import org.apache.james.mailbox.cassandra.modules.CassandraUidModule;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
 
     private static final CassandraModule MODULES = CassandraModule.aggregateModules(
         CassandraSchemaVersionModule.MODULE,
@@ -45,26 +45,12 @@ public class CassandraGenericMailboxMapperTest extends MailboxMapperTest {
         CassandraModSeqModule.MODULE,
         CassandraUidModule.MODULE);
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(MODULES, cassandraServer.getHost());
-        super.setUp();
-    }
-    
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MODULES);
 
     @Override
     protected MailboxMapper createMailboxMapper() {
-        return GuiceUtils.testInjector(cassandra)
+        return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraMailboxMapper.class);
     }
 

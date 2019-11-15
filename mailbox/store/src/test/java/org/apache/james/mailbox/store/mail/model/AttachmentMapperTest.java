@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Collection;
@@ -27,49 +28,45 @@ import java.util.List;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AttachmentMapperTest {
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
-    public static final Username OWNER = Username.of("owner");
-    public static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
+    private static final Username OWNER = Username.of("owner");
+    private static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
 
     private AttachmentMapper attachmentMapper;
-
-    @Rule
-    public ExpectedException expected = ExpectedException.none();
 
     protected abstract AttachmentMapper createAttachmentMapper();
 
     protected abstract MessageId generateMessageId();
 
-    public void setUp() throws MailboxException {
+    @BeforeEach
+    void setUp() {
         this.attachmentMapper = createAttachmentMapper();
     }
 
     @Test
-    public void getAttachmentShouldThrowWhenNullAttachmentId() throws Exception {
-        expected.expect(IllegalArgumentException.class);
-        attachmentMapper.getAttachment(null);
+    void getAttachmentShouldThrowWhenNullAttachmentId() {
+        assertThatThrownBy(() -> attachmentMapper.getAttachment(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void getAttachmentShouldThrowWhenNonReferencedAttachmentId() throws Exception {
-        expected.expect(AttachmentNotFoundException.class);
-        attachmentMapper.getAttachment(UNKNOWN_ATTACHMENT_ID);
+    void getAttachmentShouldThrowWhenNonReferencedAttachmentId() {
+        assertThatThrownBy(() -> attachmentMapper.getAttachment(UNKNOWN_ATTACHMENT_ID))
+            .isInstanceOf(AttachmentNotFoundException.class);
     }
 
     @Test
-    public void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
+    void getAttachmentShouldReturnTheAttachmentWhenReferenced() throws Exception {
         //Given
         Attachment expected = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -84,7 +81,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
+    void getAttachmentShouldReturnTheAttachmentsWhenMultipleStored() throws Exception {
         //Given
         Attachment expected1 = Attachment.builder()
                 .bytes("payload1".getBytes(StandardCharsets.UTF_8))
@@ -106,20 +103,20 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getAttachmentsShouldThrowWhenNullAttachmentId() {
-        expected.expect(IllegalArgumentException.class);
-        attachmentMapper.getAttachments(null);
+    void getAttachmentsShouldThrowWhenNullAttachmentId() {
+        assertThatThrownBy(() -> attachmentMapper.getAttachments(null))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() {
+    void getAttachmentsShouldReturnEmptyListWhenNonReferencedAttachmentId() {
         List<Attachment> attachments = attachmentMapper.getAttachments(ImmutableList.of(UNKNOWN_ATTACHMENT_ID));
 
         assertThat(attachments).isEmpty();
     }
 
     @Test
-    public void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
+    void getAttachmentsShouldReturnTheAttachmentsWhenSome() throws Exception {
         //Given
         Attachment expected = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -142,14 +139,14 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnEmptyWhenNone() throws Exception {
+    void getOwnerMessageIdsShouldReturnEmptyWhenNone() throws Exception {
         Collection<MessageId> messageIds = attachmentMapper.getRelatedMessageIds(UNKNOWN_ATTACHMENT_ID);
 
         assertThat(messageIds).isEmpty();
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnEmptyWhenStoredWithoutMessageId() throws Exception {
+    void getOwnerMessageIdsShouldReturnEmptyWhenStoredWithoutMessageId() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -165,7 +162,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnMessageIdWhenStoredWithMessageId() throws Exception {
+    void getOwnerMessageIdsShouldReturnMessageIdWhenStoredWithMessageId() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -182,7 +179,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnTwoMessageIdsWhenStoredTwice() throws Exception {
+    void getOwnerMessageIdsShouldReturnTwoMessageIdsWhenStoredTwice() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -201,7 +198,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnOnlyMatchingMessageId() throws Exception {
+    void getOwnerMessageIdsShouldReturnOnlyMatchingMessageId() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -224,7 +221,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnOnlyOneMessageIdWhenStoredTwice() throws Exception {
+    void getOwnerMessageIdsShouldReturnOnlyOneMessageIdWhenStoredTwice() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -242,7 +239,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnerMessageIdsShouldReturnMessageIdForTwoAttachmentsWhenBothStoredAtTheSameTime() throws Exception {
+    void getOwnerMessageIdsShouldReturnMessageIdForTwoAttachmentsWhenBothStoredAtTheSameTime() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
                 .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -265,7 +262,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnersShouldBeRetrievedWhenExplicitlySpecified() throws Exception {
+    void getOwnersShouldBeRetrievedWhenExplicitlySpecified() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
             .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -283,7 +280,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnersShouldReturnEmptyWhenMessageIdReferenced() throws Exception {
+    void getOwnersShouldReturnEmptyWhenMessageIdReferenced() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
             .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -300,7 +297,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnersShouldReturnAllOwners() throws Exception {
+    void getOwnersShouldReturnAllOwners() throws Exception {
         //Given
         Attachment attachment = Attachment.builder()
             .bytes("payload".getBytes(StandardCharsets.UTF_8))
@@ -319,7 +316,7 @@ public abstract class AttachmentMapperTest {
     }
 
     @Test
-    public void getOwnersShouldReturnEmptyWhenUnknownAttachmentId() throws Exception {
+    void getOwnersShouldReturnEmptyWhenUnknownAttachmentId() throws Exception {
         Collection<Username> actualOwners = attachmentMapper.getOwners(AttachmentId.from("any"));
 
         assertThat(actualOwners).isEmpty();

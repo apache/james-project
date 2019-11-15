@@ -19,36 +19,22 @@
 
 package org.apache.james.mailbox.cassandra.quota;
 
-import org.apache.james.backends.cassandra.CassandraCluster;
-import org.apache.james.backends.cassandra.DockerCassandraRule;
+import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.mailbox.cassandra.modules.CassandraQuotaModule;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManagerTest;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
+@ExtendWith(CassandraRestartExtension.class)
+class CassandraCurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
 
-    @Rule public DockerCassandraRule cassandraServer = new DockerCassandraRule().allowRestart();
-
-    private CassandraCluster cassandra;
-
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        cassandra = CassandraCluster.create(CassandraQuotaModule.MODULE, cassandraServer.getHost());
-        super.setUp();
-    }
+    @RegisterExtension
+    static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraQuotaModule.MODULE);
 
     @Override
     protected StoreCurrentQuotaManager provideTestee() {
-        return new CassandraCurrentQuotaManager(cassandra.getConf());
-    }
-
-    @After
-    public void tearDown() {
-        cassandra.clearTables();
-        cassandra.closeCluster();
+        return new CassandraCurrentQuotaManager(cassandraCluster.getCassandraCluster().getConf());
     }
 }
