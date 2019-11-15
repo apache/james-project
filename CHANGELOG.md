@@ -20,6 +20,7 @@ of tasks being currently executed.
   - Disable dynamic mapping thanks to a change of the header structure 
   - Read related [upgrade instructions](upgrade-instructions.md)
 - JAMES-2855 Multiple library/plugin/docker images/build tool upgrades
+- By default the cassandra keyspace creation by James is now disabled by default. This allow to have credentials limited to a keyspace. It can be enabled by setting cassandra.keyspace.create=true in the cassandra.properties file.
   
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B
