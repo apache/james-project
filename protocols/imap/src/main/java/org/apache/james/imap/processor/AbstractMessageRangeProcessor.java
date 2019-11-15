@@ -105,7 +105,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
             .toArray(new IdRange[0]);
 
         // get folder UIDVALIDITY
-        Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
+        Long uidValidity = mailbox.getMailboxEntity().getUidValidity();
 
         return StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), resultUids);
     }
