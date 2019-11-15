@@ -51,19 +51,19 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
         super(acceptableClass, next, mailboxManager, factory, metricFactory);
     }
 
-    protected abstract List<MessageRange> process(final MailboxPath targetMailbox,
-                                                  final SelectedMailbox currentMailbox,
-                                                  final MailboxSession mailboxSession,
+    protected abstract List<MessageRange> process(MailboxPath targetMailbox,
+                                                  SelectedMailbox currentMailbox,
+                                                  MailboxSession mailboxSession,
                                                   MessageRange messageSet) throws MailboxException;
 
     protected abstract String getOperationName();
 
     @Override
     protected void processRequest(R request, ImapSession session, Responder responder) {
-        final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
+        MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
 
         try {
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
 
             if (!getMailboxManager().mailboxExists(targetMailbox, mailboxSession)) {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
@@ -84,7 +84,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
     }
 
     private StatusResponse.ResponseCode handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) throws MailboxException {
-        final MessageManager mailbox = getMailboxManager().getMailbox(targetMailbox, mailboxSession);
+        MessageManager mailbox = getMailboxManager().getMailbox(targetMailbox, mailboxSession);
 
         List<IdRange> resultRanges = new ArrayList<>();
         for (IdRange range : request.getIdSet()) {
