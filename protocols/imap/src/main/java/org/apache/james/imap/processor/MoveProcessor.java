@@ -51,9 +51,8 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
 
     @Override
     protected List<MessageRange> process(MailboxPath targetMailbox, SelectedMailbox currentMailbox,
-                                         MailboxSession mailboxSession,
-                                         MailboxManager mailboxManager, MessageRange messageSet) throws MailboxException {
-        return mailboxManager.moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
+                                         MailboxSession mailboxSession, MessageRange messageSet) throws MailboxException {
+        return getMailboxManager().moveMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
     }
 
     @Override

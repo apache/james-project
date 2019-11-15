@@ -51,8 +51,8 @@ public class CopyProcessor extends AbstractMessageRangeProcessor<CopyRequest> {
     protected List<MessageRange> process(MailboxPath targetMailbox,
                                          SelectedMailbox currentMailbox,
                                          MailboxSession mailboxSession,
-                                         MailboxManager mailboxManager, MessageRange messageSet) throws MailboxException {
-        return mailboxManager.copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
+                                         MessageRange messageSet) throws MailboxException {
+        return getMailboxManager().copyMessages(messageSet, currentMailbox.getPath(), targetMailbox, mailboxSession);
     }
 
     @Override

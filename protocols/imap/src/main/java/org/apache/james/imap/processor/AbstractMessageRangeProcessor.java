@@ -54,7 +54,6 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
     protected abstract List<MessageRange> process(final MailboxPath targetMailbox,
                                                   final SelectedMailbox currentMailbox,
                                                   final MailboxSession mailboxSession,
-                                                  final MailboxManager mailboxManager,
                                                   MessageRange messageSet) throws MailboxException;
 
     protected abstract String getOperationName();
@@ -91,9 +90,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
         for (IdRange range : request.getIdSet()) {
             MessageRange messageSet = messageRange(session.getSelected(), range, request.isUseUids());
             if (messageSet != null) {
-                List<MessageRange> processedUids = process(
-                    targetMailbox, session.getSelected(), mailboxSession,
-                    getMailboxManager(), messageSet);
+                List<MessageRange> processedUids = process(targetMailbox, session.getSelected(), mailboxSession, messageSet);
                 for (MessageRange mr : processedUids) {
                     // Set recent flag on copied message as this SHOULD be
                     // done.
