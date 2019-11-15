@@ -54,9 +54,9 @@ public class MessageResultImpl implements MessageResult {
 
     private final Map<MimePath, PartContent> partsByPath = new HashMap<>();
     private final MailboxMessage message;
+    private final HeadersImpl headers;
 
     private MimeDescriptor mimeDescriptor;
-    private HeadersImpl headers;
     private Content fullContent;
     private Content bodyContent;
 
@@ -305,9 +305,6 @@ public class MessageResultImpl implements MessageResult {
     
     @Override
     public Headers getHeaders() {
-        if (headers == null) {
-            headers = new HeadersImpl(message);
-        }
         return headers;
     }
     
