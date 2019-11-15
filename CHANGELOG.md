@@ -35,6 +35,7 @@ of tasks being currently executed.
 - JAMES-2739 fixed browse mails from queue over JMX
 - JAMES-2375 DSNBounce mailet should provide a subject
 - JAMES-2097 RemoteDelivery: Avoid retrying already succeeded recipients when sendPartial
+- MAILBOX-392 Mailbox name validation upon mailbox creation is stricter: forbid `#&*%` and empty sub-mailboxes names.
 
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
