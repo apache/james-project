@@ -62,56 +62,56 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
     @Override
     protected void processRequest(R request, ImapSession session, Responder responder) {
         final MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
-        final IdRange[] idSet = request.getIdSet();
-        final boolean useUids = request.isUseUids();
-        final SelectedMailbox currentMailbox = session.getSelected();
+
         try {
             final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-            final MailboxManager mailboxManager = getMailboxManager();
-            final boolean mailboxExists = mailboxManager.mailboxExists(targetMailbox, mailboxSession);
 
-            if (!mailboxExists) {
+            if (!getMailboxManager().mailboxExists(targetMailbox, mailboxSession)) {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());
             } else {
-
-                final MessageManager mailbox = mailboxManager.getMailbox(targetMailbox, mailboxSession);
-
-                List<IdRange> resultRanges = new ArrayList<>();
-                for (IdRange range : idSet) {
-                    MessageRange messageSet = messageRange(currentMailbox, range, useUids);
-                    if (messageSet != null) {
-                        List<MessageRange> processedUids = process(
-                            targetMailbox, currentMailbox, mailboxSession,
-                            mailboxManager, messageSet);
-                        for (MessageRange mr : processedUids) {
-                            // Set recent flag on copied message as this SHOULD be
-                            // done.
-                            // See RFC 3501 6.4.7. COPY Command
-                            // See IMAP-287
-                            //
-                            // Disable this as this is now done directly in the scope of the copy operation.
-                            // See MAILBOX-85
-                            //mailbox.setFlags(new Flags(Flags.Flag.RECENT), true, false, mr, mailboxSession);
-                            resultRanges.add(new IdRange(mr.getUidFrom().asLong(), mr.getUidTo().asLong()));
-                        }
-                    }
-                }
-                IdRange[] resultUids = IdRange.mergeRanges(resultRanges).toArray(new IdRange[0]);
-
-                // get folder UIDVALIDITY
-                Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
-
-                unsolicitedResponses(session, responder, useUids);
-                okComplete(request, StatusResponse.ResponseCode.copyUid(uidValidity, idSet, resultUids), responder);
+                StatusResponse.ResponseCode code = handleRanges(request, session, targetMailbox, mailboxSession);
+                unsolicitedResponses(session, responder, request.isUseUids());
+                okComplete(request, code, responder);
             }
         } catch (MessageRangeException e) {
             LOGGER.debug("{} failed from mailbox {} to {} for invalid sequence-set {}",
-                    getOperationName(), currentMailbox.getMailboxId(), targetMailbox, idSet, e);
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e);
             taggedBad(request, responder, HumanReadableText.INVALID_MESSAGESET);
         } catch (MailboxException e) {
             LOGGER.error("{} failed from mailbox {} to {} for sequence-set {}",
-                    getOperationName(), currentMailbox.getMailboxId(), targetMailbox, idSet, e);
+                    getOperationName(), session.getSelected().getMailboxId(), targetMailbox, request.getIdSet(), e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
+    }
+
+    private StatusResponse.ResponseCode handleRanges(R request, ImapSession session, MailboxPath targetMailbox, MailboxSession mailboxSession) throws MailboxException {
+        final MessageManager mailbox = getMailboxManager().getMailbox(targetMailbox, mailboxSession);
+
+        List<IdRange> resultRanges = new ArrayList<>();
+        for (IdRange range : request.getIdSet()) {
+            MessageRange messageSet = messageRange(session.getSelected(), range, request.isUseUids());
+            if (messageSet != null) {
+                List<MessageRange> processedUids = process(
+                    targetMailbox, session.getSelected(), mailboxSession,
+                    getMailboxManager(), messageSet);
+                for (MessageRange mr : processedUids) {
+                    // Set recent flag on copied message as this SHOULD be
+                    // done.
+                    // See RFC 3501 6.4.7. COPY Command
+                    // See IMAP-287
+                    //
+                    // Disable this as this is now done directly in the scope of the copy operation.
+                    // See MAILBOX-85
+                    //mailbox.setFlags(new Flags(Flags.Flag.RECENT), true, false, mr, mailboxSession);
+                    resultRanges.add(new IdRange(mr.getUidFrom().asLong(), mr.getUidTo().asLong()));
+                }
+            }
+        }
+        IdRange[] resultUids = IdRange.mergeRanges(resultRanges).toArray(new IdRange[0]);
+
+        // get folder UIDVALIDITY
+        Long uidValidity = mailbox.getMetaData(false, mailboxSession, MessageManager.MetaData.FetchGroup.NO_UNSEEN).getUidValidity();
+
+        return StatusResponse.ResponseCode.copyUid(uidValidity, request.getIdSet(), resultUids);
     }
 }
