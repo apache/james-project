@@ -151,14 +151,6 @@ public class JPAMailbox {
         this.name = name;
     }
 
-    public long getUidValidity() {
-        return uidValidity;
-    }
-
-    public void setUidValidity(long uidValidity) {
-        this.uidValidity = uidValidity;
-    }
-
     public String getUser() {
         return user;
     }
@@ -167,28 +159,8 @@ public class JPAMailbox {
         this.user = user;
     }
 
-    public String getNamespace() {
-        return namespace;
-    }
-
     public void setNamespace(String namespace) {
         this.namespace = namespace;
-    }
-
-    public long getLastUid() {
-        return lastUid;
-    }
-
-    public void setLastUid(long lastUid) {
-        this.lastUid = lastUid;
-    }
-
-    public long getHighestModSeq() {
-        return highestModSeq;
-    }
-
-    public void setHighestModSeq(long highestModSeq) {
-        this.highestModSeq = highestModSeq;
     }
 
     @Override
