@@ -23,7 +23,7 @@ import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAss
 
 import java.util.List;
 
-import org.apache.james.mailbox.store.SimpleProperty;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.junit.Before;
 import org.junit.Test;
 
