@@ -28,11 +28,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.apache.james.mailbox.store.mail.model.Property;
+import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 @Entity(name = "Property")
 @Table(name = "JAMES_MAIL_PROPERTY")
-public class JPAProperty implements Property {
+public class JPAProperty {
 
     /** The system unique key */
     @Id
@@ -96,34 +97,8 @@ public class JPAProperty implements Property {
         this(property.getNamespace(), property.getLocalName(), property.getValue(), order);
     }
 
-    /**
-     * Gets the local part of the name of the property.
-     * 
-     * @return not null
-     */
-    @Override
-    public String getLocalName() {
-        return localName;
-    }
-
-    /**
-     * Gets the namespace for the name.
-     * 
-     * @return not null
-     */
-    @Override
-    public String getNamespace() {
-        return namespace;
-    }
-
-    /**
-     * Gets the value for this property.
-     * 
-     * @return not null
-     */
-    @Override
-    public String getValue() {
-        return value;
+    public Property toProperty() {
+        return new SimpleProperty(namespace, localName, value);
     }
 
     @Override

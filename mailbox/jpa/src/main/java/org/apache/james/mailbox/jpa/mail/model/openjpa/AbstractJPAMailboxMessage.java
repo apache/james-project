@@ -63,6 +63,7 @@ import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 
 /**
@@ -356,7 +357,9 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      */
     @Override
     public List<Property> getProperties() {
-        return new ArrayList<>(properties);
+        return properties.stream()
+            .map(JPAProperty::toProperty)
+            .collect(Guavate.toImmutableList());
     }
 
     @Override
