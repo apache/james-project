@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail.model;
 
+import java.util.Objects;
+
+import com.google.common.base.MoreObjects;
 
 /**
  * <p>Values a namespaced property.</p>
@@ -37,25 +40,102 @@ package org.apache.james.mailbox.store.mail.model;
  * object "BASE64".
  * </p>
  */
-public interface Property {
+public class Property {
+    private final String namespace;
+    private final String localName;
+    private final String value;
+
+    /**
+     * Construct a property.
+     * @param namespace not null
+     * @param localName not null
+     * @param value not null
+     */
+    public Property(String namespace, String localName, String value) {
+        super();
+        this.namespace = namespace;
+        this.localName = localName;
+        this.value = value;
+    }
+
+    public Property(Property property) {
+        this(property.getNamespace(), property.getLocalName(), property.getValue());
+    }
 
     /**
      * Gets the namespace for the name.
      * @return not null
      */
-    String getNamespace();
-    
+    public String getNamespace() {
+        return namespace;
+    }
+
     /**
      * Gets the local part of the name of the property.
      * @return not null
      */
-    String getLocalName();
-    
+    public String getLocalName() {
+        return localName;
+    }
+
     /**
      * Gets the value for this property.
      * @return not null
      */
-    String getValue();
+    public String getValue() {
+        return value;
+    }
 
+    /**
+     * Does the full name of the property match that given?
+     * @param namespace not null
+     * @param localName not null
+     * @return true when namespaces and local names match,
+     * false otherwise
+     */
+    public boolean isNamed(String namespace, String localName) {
+        return namespace.equals(this.namespace) && localName.equals(this.localName);
+    }
 
+    /**
+     * Is this property in the given namespace?
+     * @param namespace not null
+     * @return true when this property is in the given namespace,
+     * false otherwise
+     */
+    public boolean isInSpace(String namespace) {
+        return this.namespace.equals(namespace);
+    }
+
+    /**
+     * Constructs a <code>String</code> with all attributes
+     * in name = value format.
+     *
+     * @return a <code>String</code> representation
+     * of this object.
+     */
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("namespace", namespace)
+            .add("localName", localName)
+            .add("value", value)
+            .toString();
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Property) {
+            Property that = (Property) o;
+
+            return Objects.equals(namespace, that.namespace) &&
+                Objects.equals(localName, that.localName) &&
+                Objects.equals(value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(namespace, localName, value);
+    }
 }

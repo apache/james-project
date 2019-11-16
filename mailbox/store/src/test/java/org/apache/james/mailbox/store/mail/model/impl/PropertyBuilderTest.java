@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.apache.james.mailbox.store.mail.model.Property;
 import org.junit.Test;
 
 public class PropertyBuilderTest {
@@ -35,7 +36,7 @@ public class PropertyBuilderTest {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setHasAttachment(false);
         assertThat(propertyBuilder.toProperties())
-            .containsOnly(new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false"));
+            .containsOnly(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false"));
     }
 
     @Test
@@ -43,7 +44,7 @@ public class PropertyBuilderTest {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setHasAttachment(true);
         assertThat(propertyBuilder.toProperties())
-            .containsOnly(new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true"));
+            .containsOnly(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true"));
     }
 
 }

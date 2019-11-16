@@ -32,8 +32,8 @@ import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
@@ -191,7 +191,7 @@ public class IndexableMessage {
         }
     }
 
-    public static final SimpleProperty HAS_ATTACHMENT_PROPERTY = new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
+    public static final Property HAS_ATTACHMENT_PROPERTY = new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
 
     public static Builder builder() {
         return new Builder();

@@ -23,7 +23,6 @@ import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAss
 
 import java.util.List;
 
-import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -37,8 +36,8 @@ public class ListMessagePropertiesAssertTest {
     private static final String LOCAL_NAME = StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;
     private static final String NAMESPACE = StandardNames.NAMESPACE_RFC_2045;
 
-    private static final Property PROPERTY1 = new SimpleProperty(NAMESPACE, LOCAL_NAME, VALUE);
-    private static final Property PROPERTY2 = new SimpleProperty(OTHER_NAMESPACE, OTHER_LOCAL_NAME, OTHER_VALUE);
+    private static final Property PROPERTY1 = new Property(NAMESPACE, LOCAL_NAME, VALUE);
+    private static final Property PROPERTY2 = new Property(OTHER_NAMESPACE, OTHER_LOCAL_NAME, OTHER_VALUE);
     
     private List<Property> actual;
     
@@ -76,22 +75,7 @@ public class ListMessagePropertiesAssertTest {
             createProperty(NAMESPACE, LOCAL_NAME, OTHER_VALUE)));
     }
 
-    private Property createProperty(final String namespace, final String name, final String value) {
-        return new Property() {
-            @Override
-            public String getValue() {
-                return value;
-            }
-            
-            @Override
-            public String getNamespace() {
-                return namespace;
-            }
-            
-            @Override
-            public String getLocalName() {
-                return name;
-            }
-        };
+    private Property createProperty(String namespace, String name, String value) {
+        return new Property(namespace, name, value);
     }
 }

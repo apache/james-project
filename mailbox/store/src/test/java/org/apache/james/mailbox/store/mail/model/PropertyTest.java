@@ -17,16 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail.model.impl;
+package org.apache.james.mailbox.store.mail.model;
 
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-class SimplePropertyTest {
+class PropertyTest {
     @Test
     void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(SimpleProperty.class)
+        EqualsVerifier.forClass(Property.class)
             .verify();
     }
 }

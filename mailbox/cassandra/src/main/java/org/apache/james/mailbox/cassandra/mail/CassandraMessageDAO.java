@@ -70,8 +70,8 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.util.streams.Limit;
 
 import com.datastax.driver.core.BoundStatement;
@@ -278,7 +278,7 @@ public class CassandraMessageDAO {
     private PropertyBuilder getPropertyBuilder(Row row) {
         PropertyBuilder property = new PropertyBuilder(
             row.getList(PROPERTIES, UDTValue.class).stream()
-                .map(x -> new SimpleProperty(x.getString(Properties.NAMESPACE), x.getString(Properties.NAME), x.getString(Properties.VALUE)))
+                .map(x -> new Property(x.getString(Properties.NAMESPACE), x.getString(Properties.NAME), x.getString(Properties.VALUE)))
                 .collect(Collectors.toList()));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property;

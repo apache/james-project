@@ -40,8 +40,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
+import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.james.mailbox.tika.TikaConfiguration;
 import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
@@ -333,7 +333,7 @@ public class IndexableMessageTest {
         when(mailboxMessage.getUid())
             .thenReturn(MESSAGE_UID);
         when(mailboxMessage.getProperties())
-            .thenReturn(ImmutableList.of(new SimpleProperty(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false")));
+            .thenReturn(ImmutableList.of(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false")));
 
         // When
         IndexableMessage indexableMessage = IndexableMessage.builder()

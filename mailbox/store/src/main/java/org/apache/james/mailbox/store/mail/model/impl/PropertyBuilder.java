@@ -69,13 +69,13 @@ public class PropertyBuilder {
     }
 
     private Long textualLineCount;
-    private final List<SimpleProperty> properties;
+    private final List<Property> properties;
 
     public PropertyBuilder(List<Property> props) {
         textualLineCount = null;
         properties = new ArrayList<>(props.size());
         for (Property property:props) {
-            properties.add(new SimpleProperty(property));
+            properties.add(new Property(property));
         }
     }
     
@@ -114,7 +114,7 @@ public class PropertyBuilder {
         return properties.stream()
             .filter(property -> property.isNamed(namespace, localName))
             .findFirst()
-            .map(SimpleProperty::getValue)
+            .map(Property::getValue)
             .orElse(null);
     }
     
@@ -127,7 +127,7 @@ public class PropertyBuilder {
     public List<String> getValues(String namespace, String localName) {
         return properties.stream()
             .filter(property -> property.isNamed(namespace, localName))
-            .map(SimpleProperty::getValue)
+            .map(Property::getValue)
             .collect(Guavate.toImmutableList());
     }
     
@@ -138,15 +138,15 @@ public class PropertyBuilder {
      * @param value null to remove property
      */
     public void setProperty(String namespace, String localName, String value) {
-        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
-            final SimpleProperty property = it.next();
+        for (Iterator<Property> it = properties.iterator();it.hasNext();) {
+            final Property property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
             }
         }
         
         if (value != null) {
-            properties.add(new SimpleProperty(namespace, localName, value));
+            properties.add(new Property(namespace, localName, value));
         }
     }
     
@@ -157,15 +157,15 @@ public class PropertyBuilder {
      * @param values null to remove property
      */
     public void setProperty(String namespace, String localName, List<String> values) {
-        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
-            final SimpleProperty property = it.next();
+        for (Iterator<Property> it = properties.iterator();it.hasNext();) {
+            final Property property = it.next();
             if (property.isNamed(namespace, localName)) {
                 it.remove();
             }
         }
         if (values != null) {
             for (String value:values) {
-                properties.add(new SimpleProperty(namespace, localName, value));
+                properties.add(new Property(namespace, localName, value));
             }
         }
     }
@@ -177,7 +177,7 @@ public class PropertyBuilder {
      */
     public SortedMap<String,String> getProperties(String namespace) {
         final SortedMap<String, String> parameters = new TreeMap<>();
-        for (SimpleProperty property : properties) {
+        for (Property property : properties) {
             if (property.isInSpace(namespace)) {
                 parameters.put(property.getLocalName(), property.getValue());
             }
@@ -193,14 +193,14 @@ public class PropertyBuilder {
      * @param valuesByLocalName not null
      */
     public void setProperties(String namespace, Map<String,String> valuesByLocalName) {
-        for (Iterator<SimpleProperty> it = properties.iterator();it.hasNext();) {
-            final SimpleProperty property = it.next();
+        for (Iterator<Property> it = properties.iterator();it.hasNext();) {
+            final Property property = it.next();
             if (property.isInSpace(namespace)) {
                 it.remove();
             }
         }
         for (Map.Entry<String, String> valueByLocalName:valuesByLocalName.entrySet()) {
-            properties.add(new SimpleProperty(namespace, valueByLocalName.getKey().toLowerCase(Locale.US), valueByLocalName.getValue()));
+            properties.add(new Property(namespace, valueByLocalName.getKey().toLowerCase(Locale.US), valueByLocalName.getValue()));
         }
     }
     

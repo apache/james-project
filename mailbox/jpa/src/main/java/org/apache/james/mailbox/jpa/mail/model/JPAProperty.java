@@ -28,7 +28,6 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 import org.apache.james.mailbox.store.mail.model.Property;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleProperty;
 import org.apache.openjpa.persistence.jdbc.Index;
 
 @Entity(name = "Property")
@@ -98,7 +97,7 @@ public class JPAProperty {
     }
 
     public Property toProperty() {
-        return new SimpleProperty(namespace, localName, value);
+        return new Property(namespace, localName, value);
     }
 
     @Override
