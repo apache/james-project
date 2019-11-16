@@ -32,7 +32,6 @@ import javax.persistence.Table;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 
 @Entity(name = "Mailbox")
@@ -119,10 +118,6 @@ public class JPAMailbox {
 
     public JPAId getMailboxId() {
         return JPAId.of(mailboxId);
-    }
-
-    public void setMailboxId(MailboxId mailboxId) {
-        this.mailboxId = ((JPAId)mailboxId).getRawId();
     }
 
     public long consumeUid() {
