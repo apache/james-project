@@ -134,11 +134,8 @@ public class JPAMailbox {
     }
 
     public Mailbox toMailbox() {
-        return new Mailbox(generateAssociatedPath(), uidValidity, new JPAId(mailboxId));
-    }
-
-    public MailboxPath generateAssociatedPath() {
-        return new MailboxPath(namespace, Username.of(user), name);
+        MailboxPath path = new MailboxPath(namespace, Username.of(user), name);
+        return new Mailbox(path, uidValidity, new JPAId(mailboxId));
     }
 
     public void setMailboxId(long mailboxId) {
