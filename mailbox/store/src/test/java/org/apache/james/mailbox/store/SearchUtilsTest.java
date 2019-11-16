@@ -78,8 +78,8 @@ public class SearchUtilsTest {
     @Before
     public void setUp() throws Exception {
         recent = new ArrayList<>();
-        builder = new MessageBuilder();
-        builder.uid = MessageUid.of(1009);
+        builder = new MessageBuilder()
+            .uid(MessageUid.of(1009));
         
         Iterator<MailboxMessage> messages = null;
         SearchQuery query = null; 
@@ -89,7 +89,7 @@ public class SearchUtilsTest {
     
     @Test
     public void testMatchSizeLessThan() throws Exception {
-        builder.size = SIZE;
+        builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeLessThan(SIZE - 1), row,
                 recent)).isFalse();
@@ -103,7 +103,7 @@ public class SearchUtilsTest {
 
     @Test
     public void testMatchSizeMoreThan() throws Exception {
-        builder.size = SIZE;
+        builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeGreaterThan(SIZE - 1), row,
                 recent)).isTrue();
@@ -117,7 +117,7 @@ public class SearchUtilsTest {
 
     @Test
     public void testMatchSizeEquals() throws Exception {
-        builder.size = SIZE;
+        builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeEquals(SIZE - 1), row,
                 recent)).isFalse();
@@ -130,7 +130,7 @@ public class SearchUtilsTest {
 
     @Test
     public void testMatchInternalDateEquals() throws Exception {
-        builder.internalDate = SUN_SEP_9TH_2001;
+        builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.internalDateOn(getDate(9, 9, 2000), DateResolution.Day),
                 row, recent)).isFalse();
@@ -147,7 +147,7 @@ public class SearchUtilsTest {
     
     @Test
     public void testMatchInternalDateBefore() throws Exception {
-        builder.internalDate = SUN_SEP_9TH_2001;
+        builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(
                 SearchQuery.internalDateBefore(getDate(9, 9, 2000), DateResolution.Day), row, recent)).isFalse();
@@ -163,7 +163,7 @@ public class SearchUtilsTest {
 
     @Test
     public void testMatchInternalDateAfter() throws Exception {
-        builder.internalDate = SUN_SEP_9TH_2001;
+        builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.internalDateAfter(getDate(9, 9, 2000), DateResolution.Day),
                 row, recent)).isTrue();

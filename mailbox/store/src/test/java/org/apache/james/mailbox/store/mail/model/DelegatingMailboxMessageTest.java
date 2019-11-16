@@ -36,9 +36,9 @@ public class DelegatingMailboxMessageTest {
     }
 
     private MailboxMessage buildMessage(int uid) throws Exception {
-        MessageBuilder builder = new MessageBuilder();
-        builder.uid = MessageUid.of(uid);
-        return builder.build();
+        return new MessageBuilder()
+            .uid(MessageUid.of(uid))
+            .build();
     }
 
     @Test

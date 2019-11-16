@@ -52,10 +52,10 @@ public class MailboxMessageResultImplTest {
 
 
     private MailboxMessage buildMessage(MessageUid uid, Date aDate) throws Exception {
-        MessageBuilder builder = new MessageBuilder();
-        builder.uid = uid;
-        builder.internalDate = aDate;
-        return builder.build();
+        return new MessageBuilder()
+            .uid(uid)
+            .internalDate(aDate)
+            .build();
     }
 
 

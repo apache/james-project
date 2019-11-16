@@ -46,13 +46,33 @@ public class MessageBuilder {
     private static final char[] NEW_LINE = { 0x0D, 0x0A };
     private static final ImmutableList<MessageAttachment> NO_ATTACHMENTS = ImmutableList.of();
 
-    public TestId mailboxId = TestId.of(113);
-    public MessageUid uid = MessageUid.of(776);
-    public Date internalDate = new Date();
-    public int size = 8867;
-    public Flags flags = new Flags();
-    public byte[] body = {};
-    public final Map<String, String> headers = new HashMap<>();
+    private TestId mailboxId = TestId.of(113);
+    private MessageUid uid = MessageUid.of(776);
+    private Date internalDate = new Date();
+    private int size = 8867;
+    private Flags flags = new Flags();
+    private byte[] body = {};
+    private final Map<String, String> headers = new HashMap<>();
+
+    public MessageBuilder mailboxId(TestId testId) {
+        this.mailboxId = testId;
+        return this;
+    }
+
+    public MessageBuilder uid(MessageUid uid) {
+        this.uid = uid;
+        return this;
+    }
+
+    public MessageBuilder internalDate(Date internalDate) {
+        this.internalDate = internalDate;
+        return this;
+    }
+
+    public MessageBuilder body(byte[] body) {
+        this.body = body;
+        return this;
+    }
     
     public MailboxMessage build() throws Exception {
         return build(new DefaultMessageId());
@@ -86,8 +106,9 @@ public class MessageBuilder {
         return this;
     }
 
-    public void header(String field, String value) {
+    public MessageBuilder header(String field, String value) {
         headers.put(field, value);
+        return this;
     }
 
     public MessageBuilder headers(Map<String, String> headers) {

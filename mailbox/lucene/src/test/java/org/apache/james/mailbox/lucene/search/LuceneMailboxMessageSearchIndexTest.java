@@ -126,23 +126,23 @@ public class LuceneMailboxMessageSearchIndexTest {
         uid1 = MessageUid.of(1);
         MessageBuilder builder1 = new MessageBuilder()
             .headers(headersSubject)
-            .flags(new Flags(Flag.ANSWERED));
-        builder1.body = "My Body".getBytes(StandardCharsets.UTF_8);
-        builder1.size = 200;
-        builder1.internalDate = new Date();
-        builder1.mailboxId = TEST_ID_1;
-        builder1.uid = uid1;
+            .flags(new Flags(Flag.ANSWERED))
+            .mailboxId(TEST_ID_1)
+            .uid(uid1)
+            .internalDate(new Date())
+            .body("My Body".getBytes(StandardCharsets.UTF_8))
+            .size(200);
         index.add(session, mailbox, builder1.build(id1));
 
         uid2 = MessageUid.of(1);
         MessageBuilder builder2 = new MessageBuilder()
             .headers(headersSubject)
-            .flags(new Flags(Flag.ANSWERED));
-        builder2.body = "My Body".getBytes(StandardCharsets.UTF_8);
-        builder2.size = 20;
-        builder2.internalDate = new Date();
-        builder2.mailboxId = TEST_ID_2;
-        builder2.uid = uid2;
+            .flags(new Flags(Flag.ANSWERED))
+            .mailboxId(TEST_ID_2)
+            .uid(uid2)
+            .internalDate(new Date())
+            .body("My Body".getBytes(StandardCharsets.UTF_8))
+            .size(20);
         index.add(session, mailbox2, builder2.build(id2));
         
         uid3 = MessageUid.of(2);
@@ -150,12 +150,12 @@ public class LuceneMailboxMessageSearchIndexTest {
         cal.set(1980, 2, 10);
         MessageBuilder builder3 = new MessageBuilder()
             .headers(headersTest)
-            .flags(new Flags(Flag.DELETED));
-        builder3.body = "My Otherbody".getBytes(StandardCharsets.UTF_8);
-        builder3.size = 20;
-        builder3.internalDate = cal.getTime();
-        builder3.mailboxId = TEST_ID_1;
-        builder3.uid = uid3;
+            .flags(new Flags(Flag.DELETED))
+            .mailboxId(TEST_ID_1)
+            .uid(uid3)
+            .internalDate(cal.getTime())
+            .body("My Otherbody".getBytes(StandardCharsets.UTF_8))
+            .size(20);
         index.add(session, mailbox, builder3.build(id3));
         
         uid4 = MessageUid.of(3);
@@ -163,12 +163,12 @@ public class LuceneMailboxMessageSearchIndexTest {
         cal2.set(8000, 2, 10);
         MessageBuilder builder4 = new MessageBuilder()
             .headers(headersTestSubject)
-            .flags(new Flags(Flag.DELETED));
-        builder4.body = "My Otherbody2".getBytes(StandardCharsets.UTF_8);
-        builder4.size = 20;
-        builder4.internalDate = cal2.getTime();
-        builder4.mailboxId = TEST_ID_1;
-        builder4.uid = uid4;
+            .flags(new Flags(Flag.DELETED))
+            .mailboxId(TEST_ID_1)
+            .uid(uid4)
+            .internalDate(cal2.getTime())
+            .body("My Otherbody2".getBytes(StandardCharsets.UTF_8))
+            .size(20);
         index.add(session, mailbox, builder4.build(id4));
         
         uid5 = MessageUid.of(10);
@@ -177,10 +177,9 @@ public class LuceneMailboxMessageSearchIndexTest {
         builder.header("To", FROM_ADDRESS);
         builder.header("Subject", "A " + SUBJECT_PART + " Multipart Mail");
         builder.header("Date", "Thu, 14 Feb 2008 12:00:00 +0000 (GMT)");
-        builder.body = StandardCharsets.US_ASCII.encode(BODY).array();
-        builder.uid = uid5;
-        builder.mailboxId = (TestId) mailbox3.getMailboxId();
-        
+        builder.body(StandardCharsets.US_ASCII.encode(BODY).array());
+        builder.uid(uid5);
+        builder.mailboxId(TEST_ID_3);
         index.add(session, mailbox3, builder.build(id5));
 
     }

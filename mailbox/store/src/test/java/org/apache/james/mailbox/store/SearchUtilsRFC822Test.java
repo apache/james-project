@@ -63,7 +63,7 @@ public class SearchUtilsRFC822Test {
         builder.header("To", FROM_ADDRESS);
         builder.header("Subject", "A " + SUBJECT_PART + " Multipart Mail");
         builder.header("Date", "Thu, 14 Feb 2008 12:00:00 +0000 (GMT)");
-        builder.body = Charset.forName("us-ascii").encode(BODY).array();
+        builder.body(Charset.forName("us-ascii").encode(BODY).array());
         row = builder.build();
         
         Iterator<MailboxMessage> messages = null;
