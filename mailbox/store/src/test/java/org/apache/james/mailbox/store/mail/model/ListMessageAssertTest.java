@@ -22,7 +22,7 @@ package org.apache.james.mailbox.store.mail.model;
 import static org.apache.james.mailbox.store.mail.model.ListMessageAssert.assertMessages;
 
 import java.io.IOException;
-import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
 
@@ -31,12 +31,9 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
@@ -82,148 +79,13 @@ public class ListMessageAssertTest {
         assertMessages(actual).containOnly(createMailboxMessage(MAILBOX_ID, MESSAGE_ID, MESSAGE_UID, INTERNAL_DATE, BODY_CONTENT2, BODY_START, new PropertyBuilder()));
     }
 
-    private MailboxMessage createMailboxMessage(final MailboxId mailboxId, final MessageId messageId, final MessageUid uid,
-            final Date internalDate, final String content, final int bodyStart, final PropertyBuilder propertyBuilder) {
-        return new MailboxMessage() {
-            @Override
-            public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
-                return ComposedMessageIdWithMetaData.builder()
-                    .modSeq(getModSeq())
-                    .flags(createFlags())
-                    .composedMessageId(new ComposedMessageId(mailboxId, getMessageId(), uid))
-                    .build();
-            }
-
-            @Override
-            public MailboxId getMailboxId() {
-                return mailboxId;
-            }
-
-            @Override
-            public MessageUid getUid() {
-                return uid;
-            }
-
-            @Override
-            public void setUid(MessageUid uid) {
-
-            }
-
-            @Override
-            public void setModSeq(long modSeq) {
-
-            }
-
-            @Override
-            public long getModSeq() {
-                return 0;
-            }
-
-            @Override
-            public boolean isAnswered() {
-                return false;
-            }
-
-            @Override
-            public boolean isDeleted() {
-                return false;
-            }
-
-            @Override
-            public boolean isDraft() {
-                return false;
-            }
-
-            @Override
-            public boolean isFlagged() {
-                return false;
-            }
-
-            @Override
-            public boolean isRecent() {
-                return false;
-            }
-
-            @Override
-            public boolean isSeen() {
-                return false;
-            }
-
-            @Override
-            public void setFlags(Flags flags) {
-
-            }
-
-            @Override
-            public Flags createFlags() {
-                return null;
-            }
-
-            @Override
-            public long getHeaderOctets() {
-                return bodyStart;
-            }
-
-            @Override
-            public MessageId getMessageId() {
-                return messageId;
-            }
-
-            @Override
-            public Date getInternalDate() {
-                return internalDate;
-            }
-
-            @Override
-            public InputStream getBodyContent() throws IOException {
-                return null;
-            }
-
-            @Override
-            public String getMediaType() {
-                return null;
-            }
-
-            @Override
-            public String getSubType() {
-                return null;
-            }
-
-            @Override
-            public long getBodyOctets() {
-                return content.length() - bodyStart;
-            }
-
-            @Override
-            public long getFullContentOctets() {
-                return content.length();
-            }
-
-            @Override
-            public Long getTextualLineCount() {
-                return null;
-            }
-
-            @Override
-            public InputStream getHeaderContent() throws IOException {
-                return null;
-            }
-
-            @Override
-            public InputStream getFullContent() throws IOException {
-                return new SharedByteArrayInputStream(content.getBytes());
-            }
-
-            @Override
-            public List<Property> getProperties() {
-                return null;
-            }
-
-            @Override
-            public List<MessageAttachment> getAttachments() {
-                return null;
-            }
-        };
+    private MailboxMessage createMailboxMessage(MailboxId mailboxId, MessageId messageId, MessageUid uid,
+            Date internalDate, String content, int bodyStart, PropertyBuilder propertyBuilder) {
+        SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, content.length(),
+            bodyStart, new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder, mailboxId);
+        simpleMailboxMessage.setUid(uid);
+        simpleMailboxMessage.setModSeq(0);
+        return simpleMailboxMessage;
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {
