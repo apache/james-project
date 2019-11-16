@@ -95,24 +95,6 @@ public class JPAProperty implements Property {
     }
 
     /**
-     * Create a copy of the give JPAProperty
-     * 
-     * @param property
-     */
-    public JPAProperty(JPAProperty property) {
-        this(property.getNamespace(), property.getLocalName(), property.getValue(), property.getOrder());
-    }
-
-    /**
-     * Gets the order of this property.
-     * 
-     * @return order of this property
-     */
-    public int getOrder() {
-        return line;
-    }
-
-    /**
      * Gets the local part of the name of the property.
      * 
      * @return not null
