@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.mail.model;
 
+import java.util.Objects;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -173,28 +175,17 @@ public class JPAMailbox {
     }
 
     @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + (int) (mailboxId ^ (mailboxId >>> 32));
-        return result;
+    public final boolean equals(Object o) {
+        if (o instanceof JPAMailbox) {
+            JPAMailbox that = (JPAMailbox) o;
+
+            return Objects.equals(this.mailboxId, that.mailboxId);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final JPAMailbox other = (JPAMailbox) obj;
-        if (mailboxId != other.mailboxId) {
-            return false;
-        }
-        return true;
+    public final int hashCode() {
+        return Objects.hash(mailboxId);
     }
 }
