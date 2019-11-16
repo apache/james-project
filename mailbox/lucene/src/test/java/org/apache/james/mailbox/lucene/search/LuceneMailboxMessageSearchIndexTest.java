@@ -20,7 +20,7 @@ package org.apache.james.mailbox.lucene.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
@@ -48,7 +48,6 @@ import org.apache.james.mailbox.model.SearchQuery.Sort.SortClause;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.MessageBuilder;
-import org.apache.james.mailbox.store.SimpleMailboxMembership;
 import org.apache.lucene.store.RAMDirectory;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,14 +55,16 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 
 public class LuceneMailboxMessageSearchIndexTest {
+    private static final long LIMIT = 100L;
+    private static final TestId TEST_ID_1 = TestId.of(0);
+    private static final TestId TEST_ID_2 = TestId.of(1);
+    private static final TestId TEST_ID_3 = TestId.of(2);
 
-    public static final long LIMIT = 100L;
     private static final Username BOB = Username.of("bob");
+    private Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), 18, TEST_ID_1);
+    private Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), 19, TEST_ID_2);
+    private Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), 12, TEST_ID_3);
     private LuceneMessageSearchIndex index;
-    
-    private Mailbox mailbox = new Mailbox(MailboxPath.forUser(BOB, "box"), 18, TestId.of(0));
-    private Mailbox mailbox2 = new Mailbox(MailboxPath.forUser(BOB, "box"), 19, TestId.of(1));
-    private Mailbox mailbox3 = new Mailbox(MailboxPath.forUser(BOB, "box"), 12, TestId.of(2));
     private MailboxSession session;
 
     private static final String FROM_ADDRESS = "Harry <harry@example.org>";
@@ -123,24 +124,52 @@ public class LuceneMailboxMessageSearchIndexTest {
         headersTestSubject.put("Cc", "test211 <test21@localhost>, test6 <test6@foobar>");
         
         uid1 = MessageUid.of(1);
-        SimpleMailboxMembership m = new SimpleMailboxMembership(id1, (TestId) mailbox.getMailboxId(), uid1, 0, new Date(), 200, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
-        index.add(session, mailbox, m);
+        MessageBuilder builder1 = new MessageBuilder()
+            .headers(headersSubject)
+            .flags(new Flags(Flag.ANSWERED));
+        builder1.body = "My Body".getBytes(StandardCharsets.UTF_8);
+        builder1.size = 200;
+        builder1.internalDate = new Date();
+        builder1.mailboxId = TEST_ID_1;
+        builder1.uid = uid1;
+        index.add(session, mailbox, builder1.build(id1));
 
         uid2 = MessageUid.of(1);
-        SimpleMailboxMembership m2 = new SimpleMailboxMembership(id2, (TestId) mailbox2.getMailboxId(), uid2, 0, new Date(), 20, new Flags(Flag.ANSWERED), "My Body".getBytes(), headersSubject);
-        index.add(session, mailbox2, m2);
+        MessageBuilder builder2 = new MessageBuilder()
+            .headers(headersSubject)
+            .flags(new Flags(Flag.ANSWERED));
+        builder2.body = "My Body".getBytes(StandardCharsets.UTF_8);
+        builder2.size = 20;
+        builder2.internalDate = new Date();
+        builder2.mailboxId = TEST_ID_2;
+        builder2.uid = uid2;
+        index.add(session, mailbox2, builder2.build(id2));
         
         uid3 = MessageUid.of(2);
         Calendar cal = Calendar.getInstance();
         cal.set(1980, 2, 10);
-        SimpleMailboxMembership m3 = new SimpleMailboxMembership(id3, (TestId) mailbox.getMailboxId(), uid3, 0, cal.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody".getBytes(), headersTest);
-        index.add(session, mailbox, m3);
+        MessageBuilder builder3 = new MessageBuilder()
+            .headers(headersTest)
+            .flags(new Flags(Flag.DELETED));
+        builder3.body = "My Otherbody".getBytes(StandardCharsets.UTF_8);
+        builder3.size = 20;
+        builder3.internalDate = cal.getTime();
+        builder3.mailboxId = TEST_ID_1;
+        builder3.uid = uid3;
+        index.add(session, mailbox, builder3.build(id3));
         
         uid4 = MessageUid.of(3);
         Calendar cal2 = Calendar.getInstance();
         cal2.set(8000, 2, 10);
-        SimpleMailboxMembership m4 = new SimpleMailboxMembership(id4, (TestId) mailbox.getMailboxId(), uid4, 0, cal2.getTime(), 20, new Flags(Flag.DELETED), "My Otherbody2".getBytes(), headersTestSubject);
-        index.add(session, mailbox, m4);
+        MessageBuilder builder4 = new MessageBuilder()
+            .headers(headersTestSubject)
+            .flags(new Flags(Flag.DELETED));
+        builder4.body = "My Otherbody2".getBytes(StandardCharsets.UTF_8);
+        builder4.size = 20;
+        builder4.internalDate = cal2.getTime();
+        builder4.mailboxId = TEST_ID_1;
+        builder4.uid = uid4;
+        index.add(session, mailbox, builder4.build(id4));
         
         uid5 = MessageUid.of(10);
         MessageBuilder builder = new MessageBuilder();
@@ -148,7 +177,7 @@ public class LuceneMailboxMessageSearchIndexTest {
         builder.header("To", FROM_ADDRESS);
         builder.header("Subject", "A " + SUBJECT_PART + " Multipart Mail");
         builder.header("Date", "Thu, 14 Feb 2008 12:00:00 +0000 (GMT)");
-        builder.body = Charset.forName("us-ascii").encode(BODY).array();
+        builder.body = StandardCharsets.US_ASCII.encode(BODY).array();
         builder.uid = uid5;
         builder.mailboxId = (TestId) mailbox3.getMailboxId();
         
