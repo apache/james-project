@@ -142,18 +142,4 @@ public class CRLFOutputStream extends FilterOutputStream {
             startOfLine = false;
         }
     }
-
-    /**
-     * Ensure that the stream is CRLF terminated.
-     *
-     * @throws IOException
-     *             if an error occurs writing the byte
-     */
-    public void checkCRLFTerminator() throws IOException {
-        if (statusLast == LAST_WAS_OTHER) {
-            out.write('\r');
-            out.write('\n');
-            statusLast = LAST_WAS_CR;
-        }
-    }
 }
