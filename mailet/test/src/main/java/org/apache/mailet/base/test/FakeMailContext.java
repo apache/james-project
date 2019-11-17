@@ -542,10 +542,6 @@ public class FakeMailContext implements MailetContext {
         attributes.put(attribute.getName(), attribute);
     }
 
-    public void storeMail(MailAddress sender, MailAddress recipient, MimeMessage msg) throws MessagingException {
-        // trivial implementation
-    }
-
     /**
      * @deprecated use the generic dnsLookup method
      */
