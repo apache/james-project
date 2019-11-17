@@ -34,8 +34,7 @@ public interface MatcherLoader {
      * Get a new {@link Matcher} for the given {@link MatcherConfig}. The
      * returned {@link Matcher} needs to be fully initialized, so the returned
      * instance is "read-to-use"
-     * 
-     * @param config
+     *
      * @throws MessagingException
      *             if an error occurs
      */

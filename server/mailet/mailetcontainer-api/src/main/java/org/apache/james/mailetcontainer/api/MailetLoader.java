@@ -34,8 +34,7 @@ public interface MailetLoader {
      * Get a new {@link Mailet} instance for the given {@link MailetConfig}. The
      * returned {@link Mailet} needs to be fully initialized, so the returned
      * instance is "read-to-use"
-     * 
-     * @param config
+     *
      * @throws MessagingException
      *             if an error occurs
      */

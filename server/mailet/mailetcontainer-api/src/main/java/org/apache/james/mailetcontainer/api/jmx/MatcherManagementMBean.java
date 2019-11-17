@@ -26,29 +26,21 @@ public interface MatcherManagementMBean extends MailProcessorManagementMBean {
 
     /**
      * Return the name of the Matcher
-     * 
-     * @return name
      */
     String getMatcherName();
 
     /**
      * Return the matcher condition
-     * 
-     * @return condition
      */
     String getMatcherCondition();
 
     /**
      * Return the count of how many times the Matcher matched
-     * 
-     * @return matched
      */
     long getMatchedCount();
 
     /**
      * Return the count of how many times the Matcher not matches
-     * 
-     * @return notmatched
      */
     long getNotMatchedCount();
 

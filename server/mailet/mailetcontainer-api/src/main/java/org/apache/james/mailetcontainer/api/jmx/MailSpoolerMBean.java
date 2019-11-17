@@ -25,13 +25,10 @@ public interface MailSpoolerMBean {
 
     /**
      * Return the number of threads used for spooling
-     * 
-     * @return threadCount
      */
     int getThreadCount();
 
     /**
-     * 
      * @return current spool count
      */
     int getCurrentSpoolCount();
