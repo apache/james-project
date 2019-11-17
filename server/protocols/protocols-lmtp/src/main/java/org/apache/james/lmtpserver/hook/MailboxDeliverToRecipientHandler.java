@@ -47,25 +47,19 @@ import org.slf4j.LoggerFactory;
 
 /**
  * {@link DeliverToRecipientHook} which deliver the message directly to the recipients mailbox.
- * 
- *
  */
 public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(MailboxDeliverToRecipientHandler.class);
   
-    private UsersRepository users;
-    private MailboxManager mailboxManager;
+    private final UsersRepository users;
+    private final MailboxManager mailboxManager;
 
     @Inject
-    public final void setUsersRepository(UsersRepository users) {
+    public MailboxDeliverToRecipientHandler(UsersRepository users, @Named("mailboxmanager") MailboxManager mailboxManager) {
         this.users = users;
-    }
-
-    @Inject
-    public final void setMailboxManager(@Named("mailboxmanager") MailboxManager mailboxManager) {
         this.mailboxManager = mailboxManager;
     }
-    
+
     @Override
     public HookResult deliver(SMTPSession session, MailAddress recipient, MailEnvelope envelope) {
         try {
