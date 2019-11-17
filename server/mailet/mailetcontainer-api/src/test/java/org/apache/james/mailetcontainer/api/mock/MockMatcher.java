@@ -23,8 +23,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.core.MailAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Matcher;
@@ -50,13 +48,13 @@ public class MockMatcher implements Matcher {
     }
 
     @Override
-    public void init(MatcherConfig config) throws MessagingException {
+    public void init(MatcherConfig config) {
         this.config = config;
         matchCount = Integer.parseInt(config.getCondition());
     }
 
     @Override
-    public Collection<MailAddress> match(Mail mail) throws MessagingException {
+    public Collection<MailAddress> match(Mail mail) {
         List<MailAddress> match = new ArrayList<>();
 
         Iterator<MailAddress> rcpts = mail.getRecipients().iterator();

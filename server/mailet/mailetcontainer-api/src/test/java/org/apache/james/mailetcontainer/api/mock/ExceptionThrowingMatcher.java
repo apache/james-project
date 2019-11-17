@@ -46,7 +46,7 @@ public class ExceptionThrowingMatcher implements Matcher {
     }
 
     @Override
-    public void init(MatcherConfig config) throws MessagingException {
+    public void init(MatcherConfig config) {
         this.config = config;
     }
 

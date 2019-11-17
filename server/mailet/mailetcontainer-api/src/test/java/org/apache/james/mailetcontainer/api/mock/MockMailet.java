@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.api.mock;
 
-import javax.mail.MessagingException;
-
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.MailetConfig;
@@ -43,12 +41,12 @@ public class MockMailet implements Mailet {
     }
 
     @Override
-    public void init(MailetConfig config) throws MessagingException {
+    public void init(MailetConfig config) {
         this.config = config;
     }
 
     @Override
-    public void service(Mail mail) throws MessagingException {
+    public void service(Mail mail) {
         String state = config.getInitParameter("state");
         mail.setState(state);
     }

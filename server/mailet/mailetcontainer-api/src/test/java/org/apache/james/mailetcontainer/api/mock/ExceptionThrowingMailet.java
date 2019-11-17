@@ -43,7 +43,7 @@ public class ExceptionThrowingMailet implements Mailet {
     }
 
     @Override
-    public void init(MailetConfig config) throws MessagingException {
+    public void init(MailetConfig config) {
         this.config = config;
     }
 
