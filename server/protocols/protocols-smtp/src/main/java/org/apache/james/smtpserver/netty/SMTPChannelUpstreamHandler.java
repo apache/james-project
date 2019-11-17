@@ -69,8 +69,6 @@ public class SMTPChannelUpstreamHandler extends BasicChannelUpstreamHandler {
 
     /**
      * Cleanup temporary files
-     * 
-     * @param ctx
      */
     @Override
     protected void cleanup(ChannelHandlerContext ctx) {

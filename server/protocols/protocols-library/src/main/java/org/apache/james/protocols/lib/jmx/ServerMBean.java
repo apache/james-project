@@ -25,36 +25,26 @@ public interface ServerMBean {
 
     /**
      * Return the maximum allowed concurrent connections for the server
-     * 
-     * @return maxConcurrentConnections
      */
     int getMaximumConcurrentConnections();
 
     /**
      * Return the current connection count
-     * 
-     * @return currentConnection
      */
     int getCurrentConnections();
 
     /**
      * Return the count of handled connections till startup
-     * 
-     * @return handledConnections
      */
     long getHandledConnections();
 
     /**
      * Return true if the server is enabled
-     * 
-     * @return isEnabled
      */
     boolean isEnabled();
 
     /**
      * Return true if startTLS is supported by the server
-     * 
-     * @return startTLS
      */
     boolean getStartTLSSupported();
 
@@ -75,29 +65,21 @@ public interface ServerMBean {
     /**
      * Return true if the server is started, which basicly means it is bound to
      * a address and accept connections
-     * 
-     * @return started
      */
     boolean isStarted();
 
     /**
      * Start the server
-     * 
-     * @return start
      */
     boolean start();
 
     /**
      * Stop the server
-     * 
-     * @return stop
      */
     boolean stop();
 
     /**
      * Return the timeout in seconds
-     * 
-     * @return timeout
      */
     int getTimeout();
 }

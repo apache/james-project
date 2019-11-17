@@ -53,8 +53,6 @@ public class ConnectHandlerStats extends StandardMBean implements HandlerStatsMB
 
     /**
      * Increment the stats
-     * 
-     * @param response
      */
     public void increment(Response response) {
         all.incrementAndGet();

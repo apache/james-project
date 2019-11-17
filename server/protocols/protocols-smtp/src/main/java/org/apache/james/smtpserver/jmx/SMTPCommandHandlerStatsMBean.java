@@ -27,22 +27,16 @@ public interface SMTPCommandHandlerStatsMBean extends CommandHandlerStatsMBean {
 
     /**
      * Return the count of temporary errors returned by the handler
-     * 
-     * @return tempCount
      */
     long getTemporaryError();
 
     /**
      * Return the count of permanent errors returned by the handler
-     * 
-     * @return permCount
      */
     long getPermantError();
 
     /**
      * Return the count of successful handling returned by the handler
-     * 
-     * @return tempCount
      */
     long getOk();
 

@@ -59,8 +59,6 @@ public abstract class AbstractCommandHandlerStats extends StandardMBean implemen
 
     /**
      * Increment stats based on the given response
-     * 
-     * @param response
      */
     public void increment(Response response) {
         if (response.isEndSession()) {
@@ -73,8 +71,6 @@ public abstract class AbstractCommandHandlerStats extends StandardMBean implemen
 
     /**
      * Subclasses need to implement this to handle more precise stats
-     * 
-     * @param response
      */
     protected abstract void incrementStats(Response response);
 

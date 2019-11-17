@@ -54,7 +54,6 @@ public class SendMailHandler implements JamesMessageHook {
 
     /**
      * Adds header to the message
-     *
      */
     @Override
     public HookResult onMessage(SMTPSession session, Mail mail) {

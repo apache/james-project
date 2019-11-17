@@ -55,9 +55,6 @@ public class POP3Server extends AbstractProtocolAsyncServer implements POP3Serve
      * A class to provide POP3 handler configuration to the handlers
      */
     private class POP3Configuration implements ProtocolConfiguration {
-
-        /**
-         */
         @Override
         public String getHelloName() {
             return POP3Server.this.getHelloName();

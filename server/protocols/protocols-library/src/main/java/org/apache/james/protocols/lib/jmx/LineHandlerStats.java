@@ -55,8 +55,6 @@ public class LineHandlerStats extends StandardMBean implements HandlerStatsMBean
 
     /**
      * Increment the stats
-     * 
-     * @param response
      */
     public void increment(Response response) {
         all.incrementAndGet();

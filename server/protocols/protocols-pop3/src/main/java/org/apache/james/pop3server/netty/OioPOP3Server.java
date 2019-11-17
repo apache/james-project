@@ -35,7 +35,6 @@ public class OioPOP3Server extends POP3Server {
 
     /**
      * As OIO use one thread per connection we disable the use of the {@link ExecutionHandler}
-     * 
      */
     @Override
     protected ExecutionHandler createExecutionHander() {

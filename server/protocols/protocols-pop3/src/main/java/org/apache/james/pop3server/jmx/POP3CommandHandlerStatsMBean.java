@@ -24,15 +24,11 @@ public interface POP3CommandHandlerStatsMBean extends CommandHandlerStatsMBean {
 
     /**
      * Return the count of errors returned by the handler
-     * 
-     * @return error
      */
     long getError();
 
     /**
      * Return the count of successful handling returned by the handler
-     * 
-     * @return tempCount
      */
     long getOk();
 

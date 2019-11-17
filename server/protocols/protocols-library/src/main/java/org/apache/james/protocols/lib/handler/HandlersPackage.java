@@ -34,8 +34,6 @@ public interface HandlersPackage extends ProtocolHandler {
     
     /**
      * Return a List which contains a set of CommandHandlers
-     * 
-     * @return Map
      */
     List<String> getHandlers();
 

@@ -195,8 +195,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
     /**
      * Return the default port which will get used for this server if non is
      * specify in the configuration
-     * 
-     * @return port
      */
     @Override
     protected int getDefaultPort() {
@@ -261,8 +259,6 @@ public class SMTPServer extends AbstractProtocolAsyncServer implements SMTPServe
         /**
          * Return true if the username and mail from must match for a authorized
          * user
-         * 
-         * @return verify
          */
         public boolean verifyIdentity() {
             return SMTPServer.this.verifyIdentity;

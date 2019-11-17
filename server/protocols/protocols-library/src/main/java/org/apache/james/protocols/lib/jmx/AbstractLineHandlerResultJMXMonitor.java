@@ -92,8 +92,6 @@ public abstract class AbstractLineHandlerResultJMXMonitor<R extends Response, S 
 
     /**
      * Return default JMX Name if none is configured
-     * 
-     * @return defaultJMXName
      */
     protected abstract String getDefaultJMXName();
 }

@@ -82,10 +82,6 @@ public abstract class AbstractCommandHandlerResultJMXMonitor<S extends ProtocolS
     /**
      * Create the {@link AbstractCommandHandlerStats} for the given
      * {@link CommandHandler}
-     * 
-     * @param handler
-     * @return stats
-     * @throws Exception
      */
     protected abstract AbstractCommandHandlerStats createCommandHandlerStats(CommandHandler<S> handler) throws Exception;
 
