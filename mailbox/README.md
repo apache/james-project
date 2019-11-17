@@ -20,7 +20,6 @@ Apache James Mailbox has the following project (Maven) structure:
 |-- spring          -- Spring module - starts a specific mailbox implementation
 |-- store           -- Common base/utility classes used in all mailbox implementations
 |-- tool            -- Database migration/mailbox export tool
-|-- zoo-seq-provider -- Distributed unique ID generator using Zookeeper and Curator (Clustering James Mailbox)
 ~~~
 
 Mailbox JPA
@@ -41,13 +40,6 @@ Mailbox Maildir
 
 Implements the Maildir standard for email storage (http://en.wikipedia.org/wiki/Maildir). Works only on GNU/Linux and other
 *Nix systems.
-
-
-Zookeeper Sequence Provider
-==========================
-
-Uses Zookeeper and Curator Framework for generating distributed unique ID's, needed for mailbox management from multiple
-instances of James (IMAP) servers.
 
 
 Building

@@ -72,8 +72,6 @@
         <module>tools/indexer</module>
         <module>tools/jpa-migrator</module>
         <module>tools/maildir-utils</module>
-
-        <module>zoo-seq-provider</module>
     </modules>
 
     <issueManagement>
