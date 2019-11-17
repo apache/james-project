@@ -19,8 +19,6 @@
 
 package org.apache.mailet.base;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -66,60 +64,6 @@ public final class StringUtils {
             }
         }
         return list.toArray(new String[list.size()]);
-    }
-
-    /**
-     * Creates an MD5 digest from the message.
-     * Note that this implementation is unsalted.
-     * @param message not null
-     * @return MD5 digest, not null
-     */
-    public static String md5(java.lang.String message) {
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            StringBuilder sb = new StringBuilder();
-            byte[] buf = message.getBytes();
-            byte[] md5 = md.digest(buf);
-
-            for (byte aMd5 : md5) {
-                String tmpStr = "0" + Integer.toHexString((0xff & aMd5));
-                sb.append(tmpStr.substring(tmpStr.length() - 2));
-            }
-            return sb.toString();
-            
-        } catch (NoSuchAlgorithmException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Capitalizes each word in the given text by converting the
-     * first letter to upper case.
-     * @param data text to be capitalize, possibly null
-     * @return text with each work capitalized, 
-     * or null when the text is null
-     */
-    public static String capitalizeWords(String data) {
-        if (data == null) {
-            return null;
-        }
-        StringBuilder res = new StringBuilder();
-        char ch;
-        char prevCh = '.';
-        for (int i = 0;  i < data.length();  i++) {
-            ch = data.charAt(i);
-            if (Character.isLetter(ch)) {
-                if (!Character.isLetter(prevCh)) {
-                    res.append(Character.toUpperCase(ch));
-                } else {
-                    res.append(Character.toLowerCase(ch));
-                }
-            } else {
-                res.append(ch);
-            }
-            prevCh = ch;
-        }
-        return res.toString();
     }
     
     /**
