@@ -55,6 +55,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.google.inject.name.Names;
+
 public class POP3ServerTest {
     private static final DomainList NO_DOMAIN_LIST = null;
 
@@ -716,9 +718,6 @@ public class POP3ServerTest {
     }
 
     protected void setUpServiceManager() throws Exception {
-        protocolHandlerChain = new MockProtocolHandlerLoader();
-        protocolHandlerChain.put("usersrepository", UsersRepository.class, usersRepository);
-
         mailboxManager = InMemoryIntegrationResources.builder()
             .authenticator((userid, passwd) -> {
                 try {
@@ -737,12 +736,13 @@ public class POP3ServerTest {
             .storeQuotaManager()
             .build()
             .getMailboxManager();
-
-        protocolHandlerChain.put("mailboxmanager", MailboxManager.class, mailboxManager);
-    
         fileSystem = new MockFileSystem();
-        protocolHandlerChain.put("fileSystem", FileSystem.class, fileSystem);
-    
+
+        protocolHandlerChain = MockProtocolHandlerLoader.builder()
+            .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
+            .put(binder -> binder.bind(MailboxManager.class).annotatedWith(Names.named("mailboxmanager")).toInstance(mailboxManager))
+            .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+            .build();
     }
 
     private void setupTestMails(MailboxSession session, MessageManager mailbox) throws MailboxException {

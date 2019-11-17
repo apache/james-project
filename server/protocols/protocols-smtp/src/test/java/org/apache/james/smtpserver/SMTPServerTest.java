@@ -61,6 +61,8 @@ import org.apache.james.mailrepository.memory.MemoryMailRepositoryStore;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -85,6 +87,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.TypeLiteral;
 
 public class SMTPServerTest {
 
@@ -244,28 +247,23 @@ public class SMTPServerTest {
     }
 
     protected void setUpFakeLoader() throws Exception {
-
-        chain = new MockProtocolHandlerLoader();
-    
-        chain.put("usersrepository", UsersRepository.class, usersRepository);
-    
         dnsServer = new AlterableDNSServer();
-        chain.put("dnsservice", DNSService.class, dnsServer);
-    
-        chain.put("mailStore", MailRepositoryStore.class, mailRepositoryStore);
-
-        chain.put("fileSystem", FileSystem.class, fileSystem);
-
         MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
-        chain.put("recipientrewritetable", RecipientRewriteTable.class, rewriteTable);
-
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
-        chain.put("mailqueuefactory", MailQueueFactory.class, queueFactory);
         MemoryDomainList domainList = new MemoryDomainList(mock(DNSService.class));
         domainList.addDomain(Domain.LOCALHOST);
-        chain.put("domainlist", DomainList.class, domainList);
-        
+
+        chain = MockProtocolHandlerLoader.builder()
+            .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
+            .put(binder -> binder.bind(new TypeLiteral<MailQueueFactory<?>>() {}).toInstance(queueFactory))
+            .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
+            .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
+            .put(binder -> binder.bind(MailRepositoryStore.class).toInstance(mailRepositoryStore))
+            .put(binder -> binder.bind(DNSService.class).toInstance(dnsServer))
+            .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
+            .put(binder -> binder.bind(MetricFactory.class).to(NoopMetricFactory.class))
+            .build();
     }
 
     @Test
