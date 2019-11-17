@@ -81,8 +81,7 @@ public class ValidRcptMXTest {
         MailAddress mailAddress = new MailAddress("test@" + INVALID_HOST);
         SMTPSession session = setupMockedSMTPSession(mailAddress);
 
-        ValidRcptMX handler = new ValidRcptMX();
-        handler.setDNSService(dns);
+        ValidRcptMX handler = new ValidRcptMX(dns);
         handler.setBannedNetworks(ImmutableList.of(bannedAddress), dns);
         HookReturnCode rCode = handler.doRcpt(session, MaybeSender.nullSender(), mailAddress).getResult();
 

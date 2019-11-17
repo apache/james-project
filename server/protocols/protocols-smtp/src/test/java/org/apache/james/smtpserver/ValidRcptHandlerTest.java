@@ -59,13 +59,12 @@ public class ValidRcptHandlerTest {
 
     @Before
     public void setUp() throws Exception {
-        UsersRepository users = MemoryUsersRepository.withoutVirtualHosting();
-        users.addUser(VALID_USER, PASSWORD);
-
         MemoryDomainList memoryDomainList = new MemoryDomainList(mock(DNSService.class));
         memoryDomainList.configure(DomainListConfiguration.builder()
             .defaultDomain(Domain.LOCALHOST)
             .build());
+        UsersRepository users = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
+        users.addUser(VALID_USER, PASSWORD);
 
         memoryRecipientRewriteTable = new MemoryRecipientRewriteTable();
         memoryRecipientRewriteTable.setDomainList(memoryDomainList);

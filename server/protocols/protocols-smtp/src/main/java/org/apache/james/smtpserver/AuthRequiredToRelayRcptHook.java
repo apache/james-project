@@ -26,11 +26,10 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.core.AbstractAuthRequiredToRelayRcptHook;
 
 public class AuthRequiredToRelayRcptHook extends AbstractAuthRequiredToRelayRcptHook {
-
-    private DomainList domains;
+    private final DomainList domains;
 
     @Inject
-    public void setDomainList(DomainList domains) {
+    public AuthRequiredToRelayRcptHook(DomainList domains) {
         this.domains = domains;
     }
 

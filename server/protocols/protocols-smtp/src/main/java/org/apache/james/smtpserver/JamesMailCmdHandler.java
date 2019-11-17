@@ -26,18 +26,14 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.MailCmdHandler;
 
 public class JamesMailCmdHandler extends MailCmdHandler {
-
-    private DomainList domainList;
+    private final DomainList domainList;
 
     @Inject
-    public JamesMailCmdHandler(MetricFactory metricFactory) {
+    public JamesMailCmdHandler(MetricFactory metricFactory, DomainList domainList) {
         super(metricFactory);
-    }
-
-    @Inject
-    public final void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }
+
 
     @Override
     public String getDefaultDomain() {

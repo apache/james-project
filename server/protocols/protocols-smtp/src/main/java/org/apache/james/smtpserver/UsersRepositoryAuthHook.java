@@ -36,25 +36,10 @@ import org.slf4j.LoggerFactory;
 public class UsersRepositoryAuthHook implements AuthHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(UsersRepositoryAuthHook.class);
 
-    private UsersRepository users;
+    private final UsersRepository users;
 
-    /**
-     * Gets the users repository.
-     * 
-     * @return the users
-     */
-    public final UsersRepository getUsers() {
-        return users;
-    }
-
-    /**
-     * Sets the users repository.
-     * 
-     * @param users
-     *            the users to set
-     */
     @Inject
-    public final void setUsersRepository(UsersRepository users) {
+    public UsersRepositoryAuthHook(UsersRepository users) {
         this.users = users;
     }
 

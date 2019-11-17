@@ -23,7 +23,6 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.dsn.DSNStatus;
 import org.apache.james.protocols.smtp.hook.HookResult;
@@ -40,16 +39,16 @@ import org.slf4j.LoggerFactory;
 public class SendMailHandler implements JamesMessageHook {
     private static final Logger LOGGER = LoggerFactory.getLogger(SendMailHandler.class);
 
+    private final MailQueueFactory<?> queueFactory;
     private MailQueue queue;
-    private MailQueueFactory<?> queueFactory;
 
     @Inject
-    public void setMailQueueFactory(MailQueueFactory<?> queueFactory) {
+    public SendMailHandler(MailQueueFactory<?> queueFactory) {
         this.queueFactory = queueFactory;
     }
 
     @Override
-    public void init(Configuration config) throws ConfigurationException {
+    public void init(Configuration config) {
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
     }
 

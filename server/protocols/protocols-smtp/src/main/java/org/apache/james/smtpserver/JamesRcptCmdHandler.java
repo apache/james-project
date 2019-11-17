@@ -27,16 +27,11 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.protocols.smtp.core.RcptCmdHandler;
 
 public class JamesRcptCmdHandler extends RcptCmdHandler {
-
-    private DomainList domainList;
+    private final DomainList domainList;
 
     @Inject
-    public JamesRcptCmdHandler(MetricFactory metricFactory) {
+    public JamesRcptCmdHandler(MetricFactory metricFactory, DomainList domainList) {
         super(metricFactory);
-    }
-
-    @Inject
-    public final void setDomainList(DomainList domainList) {
         this.domainList = domainList;
     }
 

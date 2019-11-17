@@ -33,11 +33,10 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
 
 public class DNSRBLHandler extends org.apache.james.protocols.smtp.core.fastfail.DNSRBLHandler implements ProtocolHandler {
-
-    private DNSService dns;
+    private final DNSService dns;
 
     @Inject
-    public void setDNSService(DNSService dns) {
+    public DNSRBLHandler(DNSService dns) {
         this.dns = dns;
     }
 

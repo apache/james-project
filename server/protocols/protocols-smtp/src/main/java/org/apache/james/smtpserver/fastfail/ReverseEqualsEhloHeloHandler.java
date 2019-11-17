@@ -25,11 +25,10 @@ import javax.inject.Inject;
 import org.apache.james.dnsservice.api.DNSService;
 
 public class ReverseEqualsEhloHeloHandler extends org.apache.james.protocols.smtp.core.fastfail.ReverseEqualsEhloHeloHandler {
-
-    private DNSService dns;
+    private final DNSService dns;
 
     @Inject
-    public void setDNSService(DNSService dns) {
+    public ReverseEqualsEhloHeloHandler(DNSService dns) {
         this.dns = dns;
     }
 

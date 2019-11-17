@@ -25,11 +25,10 @@ import javax.inject.Inject;
 import org.apache.james.dnsservice.api.DNSService;
 
 public class ResolvableEhloHeloHandler extends org.apache.james.protocols.smtp.core.fastfail.ResolvableEhloHeloHandler {
-
-    private DNSService dns;
+    private final DNSService dns;
 
     @Inject
-    public void setDNSService(DNSService dns) {
+    public ResolvableEhloHeloHandler(DNSService dns) {
         this.dns = dns;
     }
 

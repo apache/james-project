@@ -39,18 +39,13 @@ import org.apache.james.user.api.UsersRepositoryException;
  * Handler which check if the authenticated user is incorrect
  */
 public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthIdentifyVerificationRcptHook {
-
-    private DomainList domains;
-    private UsersRepository users;
-
-    @Inject
-    public final void setUsersRepository(UsersRepository users) {
-        this.users = users;
-    }
+    private final DomainList domains;
+    private final UsersRepository users;
 
     @Inject
-    public void setDomainList(DomainList domains) {
+    public SenderAuthIdentifyVerificationRcptHook(DomainList domains, UsersRepository users) {
         this.domains = domains;
+        this.users = users;
     }
 
     @Override

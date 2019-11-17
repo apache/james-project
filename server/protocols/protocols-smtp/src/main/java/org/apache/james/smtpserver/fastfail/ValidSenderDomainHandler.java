@@ -26,11 +26,10 @@ import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.protocols.smtp.SMTPSession;
 
 public class ValidSenderDomainHandler extends org.apache.james.protocols.smtp.core.fastfail.ValidSenderDomainHandler {
-    
-    private DNSService dnsService;
+    private final DNSService dnsService;
 
     @Inject
-    public void setDNSService(DNSService dnsService) {
+    public ValidSenderDomainHandler(DNSService dnsService) {
         this.dnsService = dnsService;
     }
 
