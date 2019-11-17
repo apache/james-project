@@ -78,7 +78,6 @@ public class DomainsRoutes implements Routes {
     private static final String ALIASES = "aliases";
     private static final String DOMAIN_ALIASES = SPECIFIC_DOMAIN + SEPARATOR + ALIASES;
     private static final String SPECIFIC_ALIAS = DOMAINS + SEPARATOR + DESTINATION_DOMAIN + SEPARATOR + ALIASES + SEPARATOR + SOURCE_DOMAIN;
-    private static final int MAXIMUM_DOMAIN_SIZE = 256;
 
     private final DomainList domainList;
     private final DomainAliasService domainAliasService;
