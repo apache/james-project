@@ -47,14 +47,13 @@ public class ScanningQuotaSearchExtension implements ParameterResolver, BeforeEa
         try {
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
-            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 
             DNSService dnsService = mock(DNSService.class);
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
             domainList.configure(DomainListConfiguration.builder()
                 .autoDetect(false)
                 .autoDetectIp(false));
-            usersRepository.setDomainList(domainList);
+            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
 
             QuotaComponents quotaComponents = resources.getMailboxManager().getQuotaComponents();

@@ -39,6 +39,7 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -66,7 +67,8 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     private final PreparedStatement insertStatement;
 
     @Inject
-    public CassandraUsersRepository(Session session) {
+    public CassandraUsersRepository(DomainList domainList, Session session) {
+        super(domainList);
         this.executor = new CassandraAsyncExecutor(session);
         this.getUserStatement = prepareGetUserStatement(session);
         this.updateUserStatement = prepareUpdateUserStatement(session);

@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
@@ -35,6 +36,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 public class WithStorageDirectiveTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private WithStorageDirective testee;
 
@@ -43,7 +45,7 @@ public class WithStorageDirectiveTest {
 
     @Before
     public void setUp() {
-        testee = new WithStorageDirective(MemoryUsersRepository.withVirtualHosting());
+        testee = new WithStorageDirective(MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST));
     }
 
     @Test

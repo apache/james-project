@@ -68,31 +68,34 @@ class UserRoutesTest {
     private static class UserRoutesExtension implements BeforeEachCallback, AfterEachCallback, ParameterResolver {
 
         static UserRoutesExtension withVirtualHosting() {
-            return new UserRoutesExtension(MemoryUsersRepository.withVirtualHosting());
+            SimpleDomainList domainList = new SimpleDomainList();
+            return new UserRoutesExtension(MemoryUsersRepository.withVirtualHosting(domainList), domainList);
         }
+
         static UserRoutesExtension withoutVirtualHosting() {
-            return new UserRoutesExtension(MemoryUsersRepository.withoutVirtualHosting());
+            SimpleDomainList domainList = new SimpleDomainList();
+            return new UserRoutesExtension(MemoryUsersRepository.withoutVirtualHosting(domainList), domainList);
         }
 
         final MemoryUsersRepository usersRepository;
+        final SimpleDomainList domainList;
 
         WebAdminServer webAdminServer;
 
-        UserRoutesExtension(MemoryUsersRepository usersRepository) {
+        UserRoutesExtension(MemoryUsersRepository usersRepository, SimpleDomainList domainList) {
             this.usersRepository = spy(usersRepository);
+            this.domainList = domainList;
         }
 
         @Override
         public void beforeEach(ExtensionContext extensionContext) throws Exception {
-            DomainList domainList = new SimpleDomainList();
             domainList.addDomain(DOMAIN);
-            usersRepository.setDomainList(domainList);
 
             webAdminServer = startServer(usersRepository);
         }
 
         @Override
-        public void afterEach(ExtensionContext extensionContext) throws Exception {
+        public void afterEach(ExtensionContext extensionContext) {
             webAdminServer.destroy();
         }
 

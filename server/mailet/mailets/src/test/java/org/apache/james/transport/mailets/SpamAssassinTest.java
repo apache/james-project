@@ -26,6 +26,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.spamassassin.SpamAssassinResult;
 import org.apache.james.spamassassin.mock.MockSpamd;
@@ -43,10 +44,11 @@ import com.github.steveash.guavate.Guavate;
 
 public class SpamAssassinTest {
 
+    public static final DomainList NO_DOMAIN_LIST = null;
     @Rule
     public MockSpamdTestRule spamd = new MockSpamdTestRule();
 
-    private SpamAssassin mailet = new SpamAssassin(new NoopMetricFactory(), MemoryUsersRepository.withVirtualHosting());
+    private SpamAssassin mailet = new SpamAssassin(new NoopMetricFactory(), MemoryUsersRepository.withVirtualHosting(NO_DOMAIN_LIST));
 
     @Test
     public void initShouldSetDefaultSpamdHostWhenNone() throws Exception {

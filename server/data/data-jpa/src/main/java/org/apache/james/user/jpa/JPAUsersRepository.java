@@ -36,6 +36,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.jpa.model.JPAUser;
@@ -54,6 +55,11 @@ public class JPAUsersRepository extends AbstractUsersRepository {
     private EntityManagerFactory entityManagerFactory;
 
     private String algo;
+
+    @Inject
+    public JPAUsersRepository(DomainList domainList) {
+        super(domainList);
+    }
 
     /**
      * Sets entity manager.

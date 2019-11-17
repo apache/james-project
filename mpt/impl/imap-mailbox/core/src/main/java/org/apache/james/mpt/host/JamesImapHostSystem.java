@@ -26,6 +26,7 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.decode.ImapDecoder;
@@ -46,6 +47,7 @@ import org.apache.james.mpt.imapmailbox.GrantRightsOnHost;
 import org.apache.james.user.memory.MemoryUsersRepository;
 
 public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRightsOnHost {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private MemoryUsersRepository memoryUsersRepository;
     protected Authorizator authorizator;
@@ -58,7 +60,7 @@ public abstract class JamesImapHostSystem implements ImapHostSystem, GrantRights
 
     @Override
     public void beforeTest() throws Exception {
-        memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         try {
             memoryUsersRepository.configure(userRepositoryConfiguration());
         } catch (ConfigurationException e) {

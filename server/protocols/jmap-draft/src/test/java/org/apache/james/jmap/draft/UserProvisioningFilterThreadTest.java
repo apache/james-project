@@ -22,7 +22,7 @@ import java.time.Duration;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.UserProvisioningFilter;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -32,6 +32,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class UserProvisioningFilterThreadTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private UserProvisioningFilter sut;
     private MemoryUsersRepository usersRepository;
@@ -39,7 +40,7 @@ public class UserProvisioningFilterThreadTest {
 
     @Before
     public void before() {
-        usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         session = MailboxSessionUtil.create(Username.of("username"));
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
     }

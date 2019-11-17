@@ -34,6 +34,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.junit.TemporaryFolderExtension;
 import org.apache.james.sieverepository.api.ScriptContent;
@@ -55,6 +56,7 @@ import io.restassured.RestAssured;
 
 @ExtendWith(TemporaryFolderExtension.class)
 class SieveScriptRoutesTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private WebAdminServer webAdminServer;
     private SieveRepository sieveRepository;
@@ -80,7 +82,7 @@ class SieveScriptRoutesTest {
         };
 
         sieveRepository = new SieveFileRepository(fileSystem);
-        UsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        UsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         usersRepository.addUser(Username.of("userA"), "password");
 
         URL sieveResource = ClassLoader.getSystemResource("sieve/my_sieve");

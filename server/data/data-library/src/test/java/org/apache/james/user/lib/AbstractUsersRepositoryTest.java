@@ -41,7 +41,7 @@ public abstract class AbstractUsersRepositoryTest {
     private static final Domain DOMAIN = Domain.of("domain");
 
     protected AbstractUsersRepository usersRepository;
-    private SimpleDomainList domainList;
+    protected SimpleDomainList domainList;
 
     /**
      * Create the repository to be tested.
@@ -56,11 +56,10 @@ public abstract class AbstractUsersRepositoryTest {
     private Username user3;
     private Username admin;
     
-    public void setUp() throws Exception { 
-        this.usersRepository = getUsersRepository();
+    public void setUp() throws Exception {
         domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
-        usersRepository.setDomainList(domainList);
+        this.usersRepository = getUsersRepository();
         user1 = login("username");
         user2 = login("username2");
         user3 = login("username3");
@@ -382,7 +381,6 @@ public abstract class AbstractUsersRepositoryTest {
     @Test
     public void getMailAddressForShouldAppendDefaultDomainWhenNoVirtualHosting() throws Exception {
         usersRepository.setEnableVirtualHosting(false);
-        usersRepository.setDomainList(domainList);
 
         // Some implementations do not support changing virtual hosting value
         Assume.assumeFalse(usersRepository.supportVirtualHosting());

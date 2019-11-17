@@ -107,8 +107,7 @@ class GroupsRoutesTest {
             domainList.addDomain(DOMAIN);
             domainList.addDomain(ALIAS_DOMAIN);
             memoryRecipientRewriteTable.setDomainList(domainList);
-            usersRepository = MemoryUsersRepository.withVirtualHosting();
-            usersRepository.setDomainList(domainList);
+            usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
             createServer(new GroupsRoutes(memoryRecipientRewriteTable, usersRepository, new JsonTransformer(mappingSourceModule)));
         }

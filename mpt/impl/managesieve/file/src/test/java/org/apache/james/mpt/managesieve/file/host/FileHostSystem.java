@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.mpt.host.JamesManageSieveHostSystem;
 import org.apache.james.sieverepository.api.SieveRepository;
@@ -37,6 +38,7 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
 
     private static final String SIEVE_ROOT = FileSystem.FILE_PROTOCOL + "sieve";
     private static final FileSystem fileSystem = getFileSystem();
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private static FileSystem getFileSystem() {
         return new FileSystem() {
@@ -59,7 +61,7 @@ public class FileHostSystem extends JamesManageSieveHostSystem {
 
     @Override
     protected UsersRepository createUsersRepository() {
-        return MemoryUsersRepository.withoutVirtualHosting();
+        return MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
     }
 
     @Override

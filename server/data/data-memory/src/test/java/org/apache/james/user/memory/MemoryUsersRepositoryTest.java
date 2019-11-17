@@ -42,12 +42,12 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     
     @Override
     protected AbstractUsersRepository getUsersRepository() {
-        return MemoryUsersRepository.withVirtualHosting();
+        return MemoryUsersRepository.withVirtualHosting(domainList);
     }
 
     @Test
     public void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user@domain.tld")))
             .isInstanceOf(UsersRepositoryException.class);
@@ -55,7 +55,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Test
     public void assertValidShouldThrowWhenNoDomainPartAndVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting();
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user")))
             .isInstanceOf(UsersRepositoryException.class);
@@ -63,15 +63,14 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Test
     public void assertValidShouldNotThrowWhenDomainPartAndVirtualHosting() throws Exception {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting();
-
         MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord("localhost", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
         domainList.setAutoDetect(false);
         domainList.setAutoDetectIP(false);
         domainList.addDomain(Domain.of("domain.tld"));
-        memoryUsersRepository.setDomainList(domainList);
+
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         assertThatCode(() -> memoryUsersRepository.assertValid(Username.of("user@domain.tld")))
             .doesNotThrowAnyException();
@@ -79,14 +78,13 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Test
     public void assertValidShouldNotThrowWhenDomainPartAndDomainNotFound() throws Exception {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting();
-
         MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord("localhost", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
         domainList.setAutoDetect(false);
         domainList.setAutoDetectIP(false);
-        memoryUsersRepository.setDomainList(domainList);
+
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user@domain.tld")))
             .isInstanceOf(UsersRepositoryException.class);
@@ -94,7 +92,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Test
     public void assertValidShouldNotThrowWhenNoDomainPartAndNoVirtualHosting() {
-        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
 
         assertThatCode(() -> memoryUsersRepository.assertValid(Username.of("user")))
             .doesNotThrowAnyException();

@@ -115,8 +115,7 @@ class ForwardRoutesTest {
             memoryRecipientRewriteTable.setDomainList(domainList);
             MappingSourceModule mappingSourceModule = new MappingSourceModule();
 
-            usersRepository = MemoryUsersRepository.withVirtualHosting();
-            usersRepository.setDomainList(domainList);
+            usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             usersRepository.configure(new BaseHierarchicalConfiguration());
 
             usersRepository.addUser(Username.of(BOB), BOB_PASSWORD);

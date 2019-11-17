@@ -25,6 +25,7 @@ import static org.hamcrest.Matchers.is;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.sieverepository.api.SieveQuotaRepository;
 import org.apache.james.sieverepository.memory.InMemorySieveQuotaRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -45,6 +46,7 @@ class SieveQuotaRoutesTest {
     private static final String USER_NAME_A = "userA";
     private static final String PASSWORD_A = "123456";
     private static final Username USERNAME_A = Username.of(USER_NAME_A);
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private WebAdminServer webAdminServer;
     private SieveQuotaRepository sieveRepository;
@@ -53,7 +55,7 @@ class SieveQuotaRoutesTest {
     void setUp() throws UsersRepositoryException {
         sieveRepository = new InMemorySieveQuotaRepository();
 
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         usersRepository.addUser(Username.of(USER_NAME_A), PASSWORD_A);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(new SieveQuotaRoutes(sieveRepository, usersRepository, new JsonTransformer()))

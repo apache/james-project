@@ -41,9 +41,14 @@ import com.google.common.annotations.VisibleForTesting;
 
 public abstract class AbstractUsersRepository implements UsersRepository, Configurable {
 
-    private DomainList domainList;
+    private final DomainList domainList;
     private boolean virtualHosting;
     private Optional<Username> administratorId;
+
+    @Inject
+    protected AbstractUsersRepository(DomainList domainList) {
+        this.domainList = domainList;
+    }
 
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> configuration) throws ConfigurationException {
@@ -64,11 +69,6 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     public void setEnableVirtualHosting(boolean virtualHosting) {
         this.virtualHosting = virtualHosting;
-    }
-
-    @Inject
-    public void setDomainList(DomainList domainList) {
-        this.domainList = domainList;
     }
 
     @Override

@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
@@ -41,6 +42,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class JWTAuthenticationStrategyTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private JWTAuthenticationStrategy testee;
     private MailboxManager mockedMailboxManager;
@@ -54,7 +56,7 @@ public class JWTAuthenticationStrategyTest {
         mockedMailboxManager = mock(MailboxManager.class);
         mockAuthenticationExtractor = mock(HeadersAuthenticationExtractor.class);
         request = mock(HttpServletRequest.class);
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
 
         testee = new JWTAuthenticationStrategy(stubTokenVerifier, mockedMailboxManager, mockAuthenticationExtractor, usersRepository);
     }

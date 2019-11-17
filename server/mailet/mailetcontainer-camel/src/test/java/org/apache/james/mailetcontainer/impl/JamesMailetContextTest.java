@@ -79,8 +79,7 @@ public class JamesMailetContextTest {
             .autoDetectIp(false)
             .build());
 
-        usersRepository = MemoryUsersRepository.withVirtualHosting();
-        usersRepository.setDomainList(domainList);
+        usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         MailQueueFactory<MailQueue> mailQueueFactory = mock(MailQueueFactory.class);
         spoolMailQueue = mock(MailQueue.class);
         when(mailQueueFactory.createQueue(MailQueueFactory.SPOOL)).thenReturn(spoolMailQueue);

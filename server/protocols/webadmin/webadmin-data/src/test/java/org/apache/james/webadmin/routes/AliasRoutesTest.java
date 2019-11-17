@@ -116,8 +116,7 @@ class AliasRoutesTest {
             MappingSourceModule module = new MappingSourceModule();
             memoryRecipientRewriteTable.setDomainList(domainList);
 
-            usersRepository = MemoryUsersRepository.withVirtualHosting();
-            usersRepository.setDomainList(domainList);
+            usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
             usersRepository.configure(new BaseHierarchicalConfiguration());
 
             usersRepository.addUser(Username.of(BOB), BOB_PASSWORD);

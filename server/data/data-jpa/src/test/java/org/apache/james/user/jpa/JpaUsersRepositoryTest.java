@@ -45,7 +45,7 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Override
     protected AbstractUsersRepository getUsersRepository() throws Exception {
-        JPAUsersRepository repos = new JPAUsersRepository();
+        JPAUsersRepository repos = new JPAUsersRepository(domainList);
         repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
         repos.configure(new BaseHierarchicalConfiguration());
         return repos;

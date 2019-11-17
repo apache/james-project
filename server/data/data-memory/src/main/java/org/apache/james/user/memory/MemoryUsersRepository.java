@@ -28,6 +28,7 @@ import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.user.lib.AbstractUsersRepository;
@@ -35,19 +36,20 @@ import org.apache.james.user.lib.model.DefaultUser;
 
 public class MemoryUsersRepository extends AbstractUsersRepository {
 
-    public static MemoryUsersRepository withVirtualHosting() {
-        return new MemoryUsersRepository(true);
+    public static MemoryUsersRepository withVirtualHosting(DomainList domainList) {
+        return new MemoryUsersRepository(domainList, true);
     }
 
-    public static MemoryUsersRepository withoutVirtualHosting() {
-        return new MemoryUsersRepository(false);
+    public static MemoryUsersRepository withoutVirtualHosting(DomainList domainList) {
+        return new MemoryUsersRepository(domainList, false);
     }
     
     private final Map<String, User> userByName;
     private final boolean supportVirtualHosting;
     private String algo;
 
-    private MemoryUsersRepository(boolean supportVirtualHosting) {
+    private MemoryUsersRepository(DomainList domainList, boolean supportVirtualHosting) {
+        super(domainList);
         this.userByName = new HashMap<>();
         this.algo = "MD5";
         this.supportVirtualHosting = supportVirtualHosting;

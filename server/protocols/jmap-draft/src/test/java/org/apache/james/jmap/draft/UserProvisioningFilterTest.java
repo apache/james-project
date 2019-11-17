@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -47,6 +48,7 @@ import org.junit.Test;
 public class UserProvisioningFilterTest {
     private static final Username USERNAME = Username.of("username");
     private static final Username USERNAME_WITH_DOMAIN = Username.of("username@james.org");
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private UserProvisioningFilter sut;
     private MemoryUsersRepository usersRepository;
@@ -56,7 +58,7 @@ public class UserProvisioningFilterTest {
 
     @Before
     public void setup() throws Exception {
-        usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);

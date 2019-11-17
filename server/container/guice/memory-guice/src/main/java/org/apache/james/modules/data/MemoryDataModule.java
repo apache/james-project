@@ -69,13 +69,18 @@ public class MemoryDataModule extends AbstractModule {
         bind(MemoryMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
         bind(MailRepositoryUrlStore.class).to(MemoryMailRepositoryUrlStore.class);
 
-        bind(MemoryUsersRepository.class).toInstance(MemoryUsersRepository.withVirtualHosting());
-        bind(UsersRepository.class).to(MemoryUsersRepository.class);
-
         bind(EventSourcingDLPConfigurationStore.class).in(Scopes.SINGLETON);
         bind(DLPConfigurationStore.class).to(EventSourcingDLPConfigurationStore.class);
 
+        bind(UsersRepository.class).to(MemoryUsersRepository.class);
+
         bind(MailStoreRepositoryModule.DefaultItemSupplier.class).toInstance(() -> MEMORY_MAILREPOSITORY_DEFAULT_DECLARATION);
+    }
+
+    @Provides
+    @Singleton
+    public MemoryUsersRepository providesUsersRepository(DomainList domainList) {
+        return MemoryUsersRepository.withVirtualHosting(domainList);
     }
 
     @Provides

@@ -69,11 +69,10 @@ public class ElasticSearchQuotaSearchExtension implements ParameterResolver, Bef
 
             InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
-            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
 
             DNSService dnsService = mock(DNSService.class);
             MemoryDomainList domainList = new MemoryDomainList(dnsService);
-            usersRepository.setDomainList(domainList);
+            MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
             ElasticSearchQuotaMailboxListener listener = new ElasticSearchQuotaMailboxListener(
                 new ElasticSearchIndexer(client, QuotaRatioElasticSearchConstants.DEFAULT_QUOTA_RATIO_WRITE_ALIAS),

@@ -25,19 +25,21 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.lib.UsersRepositoryManagement;
 import org.junit.Before;
 import org.junit.Test;
 
 public class UsersRepositoryManagementTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private UsersRepository usersRepository;
     private UsersRepositoryManagement userManagement;
 
     @Before
     public void setUp() throws Exception {
-        usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
 
         userManagement = new UsersRepositoryManagement();
         userManagement.setUsersRepository(usersRepository);

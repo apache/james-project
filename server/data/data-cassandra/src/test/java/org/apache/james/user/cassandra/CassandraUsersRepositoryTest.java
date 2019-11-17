@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Rule;
 
 public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
-
     @Rule
     public DockerCassandraRule cassandraServer = new DockerCassandraRule();
     
@@ -51,6 +50,6 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
     @Override
     protected AbstractUsersRepository getUsersRepository() {
-        return new CassandraUsersRepository(cassandra.getConf());
+        return new CassandraUsersRepository(domainList, cassandra.getConf());
     }
 }

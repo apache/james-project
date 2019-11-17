@@ -32,6 +32,7 @@ import javax.mail.MessagingException;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.Rule;
@@ -53,6 +54,7 @@ import org.junit.jupiter.api.extension.ParameterResolver;
 import com.google.common.collect.ImmutableList;
 
 public class JMAPFilteringExtension implements BeforeEachCallback, ParameterResolver {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     class JMAPFilteringTestSystem {
 
@@ -130,7 +132,7 @@ public class JMAPFilteringExtension implements BeforeEachCallback, ParameterReso
     @Override
     public void beforeEach(ExtensionContext extensionContext) {
         FilteringManagement filteringManagement = new EventSourcingFilteringManagement(new InMemoryEventStore());
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         ActionApplier.Factory actionApplierFactory = ActionApplier.factory(mailboxManager, new InMemoryId.Factory());
 

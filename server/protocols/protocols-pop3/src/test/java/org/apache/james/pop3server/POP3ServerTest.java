@@ -31,6 +31,7 @@ import org.apache.commons.net.pop3.POP3Client;
 import org.apache.commons.net.pop3.POP3MessageInfo;
 import org.apache.commons.net.pop3.POP3Reply;
 import org.apache.james.core.Username;
+import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.filesystem.api.mock.MockFileSystem;
 import org.apache.james.mailbox.MailboxManager;
@@ -48,7 +49,6 @@ import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
-
 import org.jboss.netty.util.HashedWheelTimer;
 import org.junit.After;
 import org.junit.Before;
@@ -56,9 +56,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 public class POP3ServerTest {
+    private static final DomainList NO_DOMAIN_LIST = null;
 
     private POP3TestConfiguration pop3Configuration;
-    private final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+    private final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
     private POP3Client pop3Client = null;
     protected MockFileSystem fileSystem;
     protected MockProtocolHandlerLoader protocolHandlerChain;

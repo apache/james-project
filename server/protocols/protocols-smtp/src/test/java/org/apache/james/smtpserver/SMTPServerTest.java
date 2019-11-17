@@ -171,11 +171,12 @@ public class SMTPServerTest {
 
     private static final long HALF_SECOND = 500;
     private static final int MAX_ITERATIONS = 10;
+    private static final DomainList NO_DOMAIN_LIST = null;
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
     protected HashedWheelTimer hashedWheelTimer;
-    protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+    protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
     protected AlterableDNSServer dnsServer;
     protected MemoryMailRepositoryStore mailRepositoryStore;
     protected FileSystemImpl fileSystem;

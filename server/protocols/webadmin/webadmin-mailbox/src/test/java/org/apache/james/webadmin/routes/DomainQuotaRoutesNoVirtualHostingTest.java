@@ -57,7 +57,7 @@ class DomainQuotaRoutesNoVirtualHostingTest {
         memoryDomainList.addDomain(Domain.of(FOUND_LOCAL));
         DomainQuotaService domainQuotaService = new DomainQuotaService(maxQuotaManager);
         QuotaModule quotaModule = new QuotaModule();
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting();
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(memoryDomainList);
         DomainQuotaRoutes domainQuotaRoutes = new DomainQuotaRoutes(memoryDomainList, domainQuotaService, usersRepository, new JsonTransformer(quotaModule), ImmutableSet.of(quotaModule));
         webAdminServer = WebAdminUtils.createWebAdminServer(domainQuotaRoutes)
             .start();

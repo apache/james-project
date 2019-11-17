@@ -210,8 +210,7 @@ class DeletedMessagesVaultRoutesTest {
             .autoDetectIp(false));
         domainList.addDomain(DOMAIN);
 
-        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting();
-        usersRepository.setDomainList(domainList);
+        MemoryUsersRepository usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
         usersRepository.configure(new BaseHierarchicalConfiguration());
 
         usersRepository.addUser(USERNAME, "userPassword");
