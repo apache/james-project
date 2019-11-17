@@ -60,7 +60,7 @@ public class MailetUtil {
         return getInitParameterAsStrictlyPositiveInteger(condition, Optional.empty());
     }
 
-    public static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<String> defaultValue) throws MessagingException {
+    private static int getInitParameterAsStrictlyPositiveInteger(String condition, Optional<String> defaultValue) throws MessagingException {
         String value = Optional.ofNullable(condition)
             .orElse(defaultValue.orElse(null));
 
