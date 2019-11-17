@@ -90,8 +90,6 @@ public class CamelMailetProcessor extends AbstractStateMailetProcessor implement
      * Return the endpoint for the processorname.
      * 
      * This will return a "direct" endpoint.
-     * 
-     * @return endPoint
      */
     protected String getEndpoint() {
         return "direct:processor." + getState();

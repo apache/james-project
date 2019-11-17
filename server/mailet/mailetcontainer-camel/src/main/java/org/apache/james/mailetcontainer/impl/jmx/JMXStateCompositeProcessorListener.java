@@ -27,7 +27,6 @@ import java.util.Map;
 import javax.mail.MessagingException;
 import javax.management.JMException;
 import javax.management.MBeanServer;
-import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 
 import org.apache.james.lifecycle.api.Disposable;
@@ -71,9 +70,6 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
 
     /**
      * Register all JMX MBeans
-     * 
-     * @throws JMException
-     * @throws MalformedObjectNameException
      */
     private void registerMBeans() throws JMException {
 
@@ -87,11 +83,6 @@ public class JMXStateCompositeProcessorListener implements CompositeProcessorLis
 
     /**
      * Register a JMX MBean for a {@link MailProcessor}
-     * 
-     * @param baseObjectName
-     * @param processorName
-     * @throws JMException
-     * @throws MalformedObjectNameException
      */
     private void registerProcessorMBean(String baseObjectName, String processorName) throws JMException {
         String processorMBeanName = baseObjectName + "processor=" + processorName;

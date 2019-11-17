@@ -82,7 +82,6 @@ public class MatcherSplitter {
      * @param mail
      *            Mail which is stored in the @Body of the MailMessage
      * @return mailMessageList
-     * @throws MessagingException
      */
     @Handler
     public List<Mail> split(@Body Mail mail) throws MessagingException {

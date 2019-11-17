@@ -109,9 +109,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
 
     /**
      * Return a {@link MailProcessor} for a given state
-     * 
-     * @param state
-     * @return processor
      */
     public MailProcessor getProcessor(String state) {
         return processors.get(state);
@@ -124,8 +121,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
     /**
      * Check if all needed Processors are configured and if not throw a
      * {@link ConfigurationException}
-     * 
-     * @throws ConfigurationException
      */
     private void checkProcessors() throws ConfigurationException {
         boolean errorProcessorFound = false;
@@ -189,11 +184,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
 
     /**
      * Create a new {@link MailProcessor}
-     * 
-     * @param state
-     * @param config
-     * @return container
-     * @throws Exception
      */
     protected abstract MailProcessor createMailProcessor(String state, HierarchicalConfiguration<ImmutableNode> config) throws Exception;
 
@@ -206,9 +196,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         /**
          * Get called after the processing via a {@link MailProcessor} was
          * complete
-         * 
-         * @param processor
-         * @param mailName
          * @param processTime
          *            in ms
          * @param e

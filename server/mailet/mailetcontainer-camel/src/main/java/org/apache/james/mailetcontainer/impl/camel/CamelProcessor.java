@@ -47,12 +47,6 @@ public class CamelProcessor {
     private final Mailet mailet;
     private final CamelMailetProcessor processor;
 
-    /**
-     * Mailet to call on process
-     *  @param metricFactory
-     * @param processor
-     * @param mailet
-     */
     public CamelProcessor(MetricFactory metricFactory, CamelMailetProcessor processor, Mailet mailet) {
         this.metricFactory = metricFactory;
         this.processor = processor;

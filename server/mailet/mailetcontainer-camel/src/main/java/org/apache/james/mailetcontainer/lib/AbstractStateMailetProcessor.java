@@ -29,7 +29,6 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.mail.MessagingException;
-import javax.management.NotCompliantMBeanException;
 
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
@@ -111,8 +110,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Init the container
-     * 
-     * @throws Exception
      */
     @PostConstruct
     public void init() throws Exception {
@@ -149,9 +146,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Hand the mail over to another processor
-     * 
-     * @param mail
-     * @throws MessagingException
      */
     protected void toProcessor(Mail mail) throws MessagingException {
         rootMailProcessor.service(mail);
@@ -163,8 +157,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Return a unmodifiable {@link List} of the configured {@link Mailet}'s
-     * 
-     * @return mailets
      */
     public List<Mailet> getMailets() {
         return pairs.stream()
@@ -174,8 +166,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Return a unmodifiable {@link List} of the configured {@link Matcher}'s
-     * 
-     * @return matchers
      */
     public List<Matcher> getMatchers() {
         return pairs.stream()
@@ -193,10 +183,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Create a {@link MailetConfig} for the given mailetname and configuration
-     * 
-     * @param mailetName
-     * @param configuration
-     * @return mailetConfig
      */
     private MailetConfig createMailetConfig(String mailetName, HierarchicalConfiguration<ImmutableNode> configuration) {
 
@@ -209,9 +195,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
     /**
      * Create a {@link MatcherConfig} for the given "match=" attribute.
-     * 
-     * @param matchName
-     * @return matcherConfig
      */
     private MatcherConfig createMatcherConfig(String matchName) {
         String condition = null;
@@ -233,13 +216,8 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
      * {@link Matcher}'s
      * 
      * CompositeMatcher were added by JAMES-948
-     * 
-     * @param compMap
-     * @param compMatcherConfs
+     *
      * @return compositeMatchers
-     * @throws ConfigurationException
-     * @throws MessagingException
-     * @throws NotCompliantMBeanException
      */
     private List<Matcher> loadCompositeMatchers(String state, Map<String, Matcher> compMap, List<HierarchicalConfiguration<ImmutableNode>> compMatcherConfs) throws ConfigurationException, MessagingException {
         List<Matcher> matchers = new ArrayList<>();
@@ -426,10 +404,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
         /**
          * Get called after each {@link Mailet} call was complete
-         * 
-         * @param m
-         * @param mailName
-         * @param state
+         *
          * @param processTime
          *            in ms
          * @param e
@@ -439,11 +414,7 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
 
         /**
          * Get called after each {@link Matcher} call was complete
-         * 
-         * @param m
-         * @param mailName
-         * @param recipients
-         * @param matches
+         *
          * @param processTime
          *            in ms
          * @param e

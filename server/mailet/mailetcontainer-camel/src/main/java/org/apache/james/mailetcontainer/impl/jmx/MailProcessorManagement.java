@@ -46,9 +46,6 @@ public class MailProcessorManagement extends StandardMBean implements MailProces
 
     /**
      * Update the stats
-     * 
-     * @param processTime
-     * @param success
      */
     public void update(long processTime, boolean success) {
         long fastest = fastestProcessing.get();

@@ -36,12 +36,12 @@ import com.google.common.collect.Lists;
  * of each child matcher. Of course it is easier to understand if it only
  * includes one matcher in the composition, the normal recommended use. @See
  * CompositeMatcher interface.
- *
- * @return Collection of Recipients from the Negated composition of the child
- *         Matcher(s).
  */
 public class Not extends GenericCompositeMatcher {
 
+    /**
+     * @return Collection of Recipients from the Negated composition of the child Matcher(s).
+     */
     @Override
     public Collection<MailAddress> match(Mail mail) throws MessagingException {
         Collection<MailAddress> finalResult = Optional.ofNullable(Lists.newArrayList(mail.getRecipients())).orElse(new ArrayList<>());
