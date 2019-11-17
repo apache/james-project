@@ -187,10 +187,6 @@ public abstract class AbstractStateMailetProcessor implements MailProcessor, Con
         listeners.add(listener);
     }
 
-    public void removeListener(MailetProcessorListener listener) {
-        listeners.remove(listener);
-    }
-
     public List<MailetProcessorListener> getListeners() {
         return listeners;
     }

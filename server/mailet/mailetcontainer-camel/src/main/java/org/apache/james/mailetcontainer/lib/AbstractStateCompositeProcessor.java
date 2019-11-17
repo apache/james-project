@@ -59,14 +59,6 @@ public abstract class AbstractStateCompositeProcessor implements MailProcessor, 
         listeners.add(listener);
     }
 
-    public List<CompositeProcessorListener> getListeners() {
-        return listeners;
-    }
-
-    public void removeListener(CompositeProcessorListener listener) {
-        listeners.remove(listener);
-    }
-
     @Override
     public void configure(HierarchicalConfiguration<ImmutableNode> config) {
         this.config = config;
