@@ -89,18 +89,6 @@ public class MailetConfigImpl implements MailetConfig {
         return params.iterator();
     }
 
-    /**
-     * Get the value of an (XML) attribute stored in this MailetConfig.
-     * 
-     * @param name
-     *            the name of the attribute whose value is to be retrieved.
-     * 
-     * @return the attribute value or null if missing
-     */
-    public String getInitAttribute(String name) {
-        return configuration.getString("[@" + name + "]", null);
-    }
-
     @Override
     public MailetContext getMailetContext() {
         return mailetContext;
