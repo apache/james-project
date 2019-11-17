@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.smtpserver;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Mockito.mock;
@@ -34,6 +35,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.List;
 
@@ -384,7 +386,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -500,7 +502,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         String[] capabilityRes = smtpProtocol.getReplyStrings();
@@ -534,7 +536,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         smtpProtocol.sendCommand("STARTTLS");
@@ -555,7 +557,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtpProtocol.sendCommand("EHLO " + InetAddress.getLocalHost());
         smtpProtocol.sendCommand("STARTTLS\r\nAUTH PLAIN");
@@ -594,7 +596,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtp.helo(InetAddress.getLocalHost().toString());
         smtp.setSender("mail@localhost");
@@ -620,7 +622,7 @@ public class SMTPServerTest {
         // no message there, yet
         assertThat(queue.getLastMail())
             .as("no mail received by mail server")
-            .isNull();;
+            .isNull();
 
         smtp.helo(InetAddress.getLocalHost().toString());
         smtp.setSender("mail@localhost");
@@ -1285,7 +1287,7 @@ public class SMTPServerTest {
             .isFalse();
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.encodeAsString("\0" + noexistUserName + "\0pwd\0"));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + noexistUserName + "\0pwd\0").getBytes(UTF_8)));
         // smtpProtocol.sendCommand(noexistUserName+"pwd".toCharArray());
         assertThat(smtpProtocol.getReplyCode())
             .as("expected error")
@@ -1294,13 +1296,13 @@ public class SMTPServerTest {
         usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0wrongpwd\0"));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0wrongpwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("expected error")
             .isEqualTo(535);
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
@@ -1339,7 +1341,7 @@ public class SMTPServerTest {
         smtpProtocol.setSender("");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
@@ -1558,7 +1560,7 @@ public class SMTPServerTest {
         usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.sendCommand("AUTH PLAIN");
-        smtpProtocol.sendCommand(Base64.encodeAsString("\0" + userName + "\0pwd\0"));
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
         assertThat(smtpProtocol.getReplyCode())
             .as("authenticated")
             .isEqualTo(235);
