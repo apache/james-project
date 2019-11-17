@@ -110,17 +110,13 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
         List<String> c = handlersPackage.getHandlers();
 
         for (String cName : c) {
-            try {
-                CombinedConfiguration conf = new CombinedConfiguration();
-                HierarchicalConfiguration<ImmutableNode> cmdConf = addHandler(cName);
-                conf.addConfiguration(cmdConf);
-                if (handlerConfig != null) {
-                    conf.addConfiguration(handlerConfig);
-                }
-                children.add(conf);
-            } catch (ConfigurationException e) {
-                throw new ConfigurationException("Unable to create configuration for handler " + cName, e);
+            CombinedConfiguration conf = new CombinedConfiguration();
+            HierarchicalConfiguration<ImmutableNode> cmdConf = addHandler(cName);
+            conf.addConfiguration(cmdConf);
+            if (handlerConfig != null) {
+                conf.addConfiguration(handlerConfig);
             }
+            children.add(conf);
         }
     }
 
@@ -130,9 +126,8 @@ public class ProtocolHandlerChainImpl implements ProtocolHandlerChain {
      *
      * @param className The class name
      * @return DefaultConfiguration
-     * @throws ConfigurationException
      */
-    private HierarchicalConfiguration<ImmutableNode> addHandler(String className) throws ConfigurationException {
+    private HierarchicalConfiguration<ImmutableNode> addHandler(String className) {
         HierarchicalConfiguration<ImmutableNode> hConf = new BaseHierarchicalConfiguration();
         hConf.addProperty("[@class]", className);
         return hConf;
