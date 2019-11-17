@@ -50,10 +50,10 @@ import org.slf4j.LoggerFactory;
 public class PassCmdHandler extends AbstractPassCmdHandler  {
     private static final Logger LOGGER = LoggerFactory.getLogger(PassCmdHandler.class);
 
-    private MailboxManager manager;
+    private final MailboxManager manager;
 
     @Inject
-    public void setMailboxManager(@Named("mailboxmanager") MailboxManager manager) {
+    public PassCmdHandler(@Named("mailboxmanager") MailboxManager manager) {
         this.manager = manager;
     }
 
