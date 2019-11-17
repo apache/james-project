@@ -48,12 +48,6 @@ public class JMXEnabledOrderedMemoryAwareThreadPoolExecutor extends OrderedMemor
         this.jmxPath = jmxPath;
         registerMBean();
     }
-    
-    public JMXEnabledOrderedMemoryAwareThreadPoolExecutor(int corePoolSize, long maxChannelMemorySize, long maxTotalMemorySize, long keepAliveTime, TimeUnit unit, String jmxPath, String name) {
-        super(corePoolSize, maxChannelMemorySize, maxTotalMemorySize, keepAliveTime, unit, NamedThreadFactory.withName(name));
-        this.jmxPath = jmxPath;
-        registerMBean();
-    }
 
     @Override
     protected void beforeExecute(Thread t, Runnable r) {

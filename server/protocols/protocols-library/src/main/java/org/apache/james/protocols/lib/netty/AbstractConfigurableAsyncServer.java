@@ -329,16 +329,6 @@ public abstract class AbstractConfigurableAsyncServer extends AbstractAsyncServe
         // override me
     }
 
-  
-    /**
-     * Return the FileSystem
-     * 
-     * @return fileSystem
-     */
-    protected FileSystem getFileSystem() {
-        return fileSystem;
-    }
-
     /**
      * Configure the helloName for the given Configuration
      * 

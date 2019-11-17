@@ -34,13 +34,6 @@ import org.jboss.netty.util.HashedWheelTimer;
 public abstract class AbstractExecutorAwareChannelPipelineFactory extends AbstractSSLAwareChannelPipelineFactory {
 
     public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
-                                                       ChannelGroup group, ExecutionHandler eHandler,
-                                                       ChannelHandlerFactory frameHandlerFactory,
-                                                       HashedWheelTimer hashedWheelTimer) {
-        super(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
-    }
-
-    public AbstractExecutorAwareChannelPipelineFactory(int timeout, int maxConnections, int maxConnectsPerIp,
                                                        ChannelGroup group, String[] enabledCipherSuites,
                                                        ExecutionHandler eHandler, ChannelHandlerFactory frameHandlerFactory,
                                                        HashedWheelTimer hashedWheelTimer) {
