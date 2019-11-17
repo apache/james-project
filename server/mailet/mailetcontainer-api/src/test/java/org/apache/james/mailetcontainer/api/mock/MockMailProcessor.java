@@ -18,30 +18,18 @@
  ****************************************************************/
 package org.apache.james.mailetcontainer.api.mock;
 
-import javax.mail.MessagingException;
-
 import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.mailet.Mail;
 
 public class MockMailProcessor implements MailProcessor {
+    private String newState;
 
-    private boolean shouldThrow = false;
-    private String newState = null;
-
-    public MockMailProcessor(boolean shouldThrow) {
-        this.shouldThrow = shouldThrow;
-    }
-
-    public MockMailProcessor(String newState) {
+    protected MockMailProcessor(String newState) {
         this.newState = newState;
     }
 
     @Override
-    public void service(Mail mail) throws MessagingException {
-        if (shouldThrow) {
-            throw new MessagingException();
-        } else {
-            mail.setState(newState);
-        }
+    public void service(Mail mail) {
+        mail.setState(newState);
     }
 }
