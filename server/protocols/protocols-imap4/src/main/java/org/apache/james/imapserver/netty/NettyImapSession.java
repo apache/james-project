@@ -52,16 +52,6 @@ public class NettyImapSession implements ImapSession, NettyConstants {
         this.plainAuthDisallowed = plainAuthDisallowed;
     }
 
-    /**
-     * Return the wrapped {@link Channel} which this {@link ImapSession} is
-     * bound to
-     * 
-     * @return channel
-     */
-    public Channel getChannel() {
-        return channel;
-    }
-
     @Override
     public void logout() {
         closeMailbox();

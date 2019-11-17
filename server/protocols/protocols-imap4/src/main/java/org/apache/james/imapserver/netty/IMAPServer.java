@@ -42,7 +42,6 @@ import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.ChannelUpstreamHandler;
 import org.jboss.netty.channel.group.ChannelGroup;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
 import org.jboss.netty.handler.execution.ExecutionHandler;
 import org.jboss.netty.handler.ssl.SslHandler;
 import org.jboss.netty.handler.stream.ChunkedWriteHandler;
@@ -211,13 +210,6 @@ public class IMAPServer extends AbstractConfigurableAsyncServer implements ImapC
            coreHandler = new ImapChannelUpstreamHandler(hello, processor, encoder, compress, plainAuthDisallowed, imapMetrics);
         }
         return coreHandler;
-    }
-
-    /**
-     * Return null as we don't need this
-     */
-    protected OneToOneEncoder createEncoder() {
-        return null;
     }
 
     @Override
