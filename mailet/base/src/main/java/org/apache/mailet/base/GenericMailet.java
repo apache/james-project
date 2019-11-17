@@ -21,6 +21,7 @@
 package org.apache.mailet.base;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -313,8 +314,7 @@ public abstract class GenericMailet implements Mailet, MailetConfig {
         }
         
         if (bad.size() > 0) {
-            throw new MessagingException("Unexpected init parameters found: "
-                    + org.apache.mailet.base.StringUtils.arrayToString(bad.toArray()));
+            throw new MessagingException("Unexpected init parameters found: " + Arrays.toString(bad.toArray()));
         }
     }
 

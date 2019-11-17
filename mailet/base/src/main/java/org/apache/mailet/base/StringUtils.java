@@ -20,9 +20,9 @@
 package org.apache.mailet.base;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Iterables;
 
 /**
@@ -65,22 +65,8 @@ public final class StringUtils {
         }
         return list.toArray(new String[list.size()]);
     }
-    
-    /**
-     * Utility method for obtaining a string representation of an array of Objects.
-     */
-    public static String arrayToString(Object[] array) {
-        if (array == null) {
-            return "null";
-        }
-        StringBuilder sb = new StringBuilder(1024);
-        sb.append("[");
-        sb.append(Joiner.on(",").join(array));
-        sb.append("]");
-        return sb.toString();
-    }
 
     public static String listToString(List<String> strings) {
-        return arrayToString(Iterables.toArray(strings, String.class));
+        return Arrays.toString(Iterables.toArray(strings, String.class));
     }
 }

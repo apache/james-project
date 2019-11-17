@@ -32,36 +32,6 @@ public class StringUtilsTest {
     public ExpectedException expectedException = ExpectedException.none();
 
     @Test
-    public void arrayToStringShouldReturnNullWhenArrayIsNull() {
-        String arrayToString = StringUtils.arrayToString(null);
-        assertThat(arrayToString).isEqualTo("null");
-    }
-
-    @Test
-    public void arrayToStringShouldReturnOnlyBracketsWhenArrayIsEmpty() {
-        String arrayToString = StringUtils.arrayToString(new String[] {});
-        assertThat(arrayToString).isEqualTo("[]");
-    }
-
-    @Test
-    public void arrayToStringShouldReturnOneElementWhenArrayContainsOneElement() {
-        String arrayToString = StringUtils.arrayToString(new String[] { "first" });
-        assertThat(arrayToString).isEqualTo("[first]");
-    }
-
-    @Test
-    public void arrayToStringShouldReturnSeparatedElementsWhenArrayContainsMultipleElements() {
-        String arrayToString = StringUtils.arrayToString(new String[] { "first", "second", "fourth" });
-        assertThat(arrayToString).isEqualTo("[first,second,fourth]");
-    }
-
-    @Test
-    public void arrayToStringShouldThrowWhenArrayContainsANullElement() {
-        expectedException.expect(NullPointerException.class);
-        StringUtils.arrayToString(new String[] { "first", null, "fourth" });
-    }
-
-    @Test
     public void listToStringShouldThrowWhenListIsNull() {
         expectedException.expect(NullPointerException.class);
         StringUtils.listToString(null);
@@ -82,7 +52,7 @@ public class StringUtilsTest {
     @Test
     public void listToStringShouldReturnSeparatedElementsWhenListContainsMultipleElements() {
         String listToString = StringUtils.listToString(ImmutableList.of("first", "second", "fourth"));
-        assertThat(listToString).isEqualTo("[first,second,fourth]");
+        assertThat(listToString).isEqualTo("[first, second, fourth]");
     }
 
     @Test
