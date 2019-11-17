@@ -54,27 +54,10 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
         maxMessageSizeKB = kilobytes;
     }
 
-    public int getMaxMessageSize() {
-        return maxMessageSizeKB;
-    }
-
-    public String getAuthorizedAddresses() {
-        return authorizedAddresses;
-    }
-
     public void setAuthorizedAddresses(String authorizedAddresses) {
         this.authorizedAddresses = authorizedAddresses;
     }
 
-    public void setAuthorizingNotRequired() {
-        authorizingMode = "false";
-        verifyIdentity = false;
-    }
-
-    public void setAuthorizingRequired() {
-        authorizingMode = "true";
-        verifyIdentity = true;
-    }
 
     public void setAuthorizingAnnounce() {
         authorizingMode = "announce";
@@ -83,10 +66,6 @@ public class SMTPTestConfiguration extends BaseHierarchicalConfiguration {
 
     public void setConnectionLimit(int iConnectionLimit) {
         connectionLimit = iConnectionLimit;
-    }
-
-    public void setConnectionBacklog(int iConnectionBacklog) {
-        connectionBacklog = iConnectionBacklog;
     }
 
     public void setHeloResolv() {
