@@ -34,7 +34,6 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.MessageIdMapper;
@@ -58,13 +57,12 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MessageMapper createMessageMapper() throws MailboxException {
+    public MessageMapper createMessageMapper() {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
-        JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
         JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSessionUtil.create(Username.of("benwa")),
             new JPAUidProvider(entityManagerFactory),
-            new JPAModSeqProvider(locker, entityManagerFactory), 
+            new JPAModSeqProvider(entityManagerFactory),
             entityManagerFactory);
 
         return new TransactionalMessageMapper(messageMapper);

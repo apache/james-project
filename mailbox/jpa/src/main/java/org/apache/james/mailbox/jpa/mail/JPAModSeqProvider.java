@@ -23,55 +23,49 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
-import org.apache.commons.lang3.NotImplementedException;
-import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.store.mail.AbstractLockingModSeqProvider;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
 
-public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
+public class JPAModSeqProvider implements ModSeqProvider {
 
     private final EntityManagerFactory factory;
 
     @Inject
-    public JPAModSeqProvider(MailboxPathLocker locker, EntityManagerFactory factory) {
-        super(locker);
+    public JPAModSeqProvider(EntityManagerFactory factory) {
         this.factory = factory;
     }
 
     @Override
     public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        EntityManager manager = null;
-        try {
-            manager = factory.createEntityManager();
-            manager.getTransaction().begin();
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
-            long highest = (Long) manager.createNamedQuery("findHighestModSeq").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
-            manager.getTransaction().commit();
-            return highest;
-        } catch (PersistenceException e) {
-            if (manager != null && manager.getTransaction().isActive()) {
-                manager.getTransaction().rollback();
-            }
-            throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailbox, e);
-        } finally {
-            if (manager != null) {
-                manager.close();
-            }
-        }
+        JPAId mailboxId = (JPAId) mailbox.getMailboxId();
+        return highestModSeq(mailboxId);
     }
 
     @Override
-    protected long lockedNextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return nextModSeq((JPAId) mailbox.getMailboxId());
+    }
+
+    @Override
+    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return nextModSeq((JPAId) mailboxId);
+    }
+
+    @Override
+    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return highestModSeq((JPAId) mailboxId);
+    }
+
+    private long nextModSeq(JPAId mailboxId) throws MailboxException {
         EntityManager manager = null;
         try {
             manager = factory.createEntityManager();
             manager.getTransaction().begin();
-            JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             JPAMailbox m = manager.find(JPAMailbox.class, mailboxId.getRawId());
             long modSeq = m.consumeModSeq();
             manager.persist(m);
@@ -81,7 +75,7 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
             if (manager != null && manager.getTransaction().isActive()) {
                 manager.getTransaction().rollback();
             }
-            throw new MailboxException("Unable to save highest mod-sequence for mailbox " + mailbox, e);
+            throw new MailboxException("Unable to save highest mod-sequence for mailbox " + mailboxId, e);
         } finally {
             if (manager != null) {
                 manager.close();
@@ -89,8 +83,23 @@ public class JPAModSeqProvider extends AbstractLockingModSeqProvider {
         }
     }
 
-    @Override
-    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        throw new NotImplementedException("not implemented");
+    private long highestModSeq(JPAId mailboxId) throws MailboxException {
+        EntityManager manager = null;
+        try {
+            manager = factory.createEntityManager();
+            manager.getTransaction().begin();
+            long highest = (Long) manager.createNamedQuery("findHighestModSeq").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
+            manager.getTransaction().commit();
+            return highest;
+        } catch (PersistenceException e) {
+            if (manager != null && manager.getTransaction().isActive()) {
+                manager.getTransaction().rollback();
+            }
+            throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailboxId, e);
+        } finally {
+            if (manager != null) {
+                manager.close();
+            }
+        }
     }
 }
