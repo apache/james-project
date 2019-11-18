@@ -21,28 +21,37 @@ package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
-import org.apache.james.mailbox.MailboxManagerStressTest;
+import org.apache.james.mailbox.MailboxManagerStressContract;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @ExtendWith(CassandraRestartExtension.class)
-class CassandraMailboxManagerStressTest extends MailboxManagerStressTest<CassandraMailboxManager> {
+class CassandraMailboxManagerStressTest implements MailboxManagerStressContract<CassandraMailboxManager> {
 
     @RegisterExtension
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(MailboxAggregateModule.MODULE_WITH_QUOTA);
-    
+
+    private CassandraMailboxManager mailboxManager;
+
     @Override
-    protected CassandraMailboxManager provideManager() {
-        return CassandraMailboxManagerProvider.provideMailboxManager(cassandra.getCassandraCluster().getConf(),
-            cassandra.getCassandraCluster().getTypesProvider(),
-            PreDeletionHooks.NO_PRE_DELETION_HOOK);
+    public CassandraMailboxManager getManager() {
+        return mailboxManager;
     }
 
     @Override
-    protected EventBus retrieveEventBus(CassandraMailboxManager mailboxManager) {
+    public EventBus retrieveEventBus() {
         return mailboxManager.getEventBus();
+    }
+
+    @BeforeEach
+    void setUp() {
+        this.mailboxManager = CassandraMailboxManagerProvider.provideMailboxManager(
+            cassandra.getCassandraCluster().getConf(),
+            cassandra.getCassandraCluster().getTypesProvider(),
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 }

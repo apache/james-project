@@ -21,26 +21,31 @@ package org.apache.james.mailbox.maildir;
 
 import java.io.File;
 
-import org.apache.james.mailbox.MailboxManagerStressTest;
+import org.apache.james.mailbox.MailboxManagerStressContract;
 import org.apache.james.mailbox.events.EventBus;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.io.TempDir;
 
-class DomainUserMaildirMailboxManagerStressTest extends MailboxManagerStressTest<StoreMailboxManager> {
+class DomainUserMaildirMailboxManagerStressTest implements MailboxManagerStressContract<StoreMailboxManager> {
     @TempDir
     File tmpFolder;
-    
+
+    private StoreMailboxManager mailboxManager;
+
     @Override
-    protected StoreMailboxManager provideManager() {
-        try {
-            return MaildirMailboxManagerProvider.createMailboxManager("/%domain/%user", tmpFolder);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public StoreMailboxManager getManager() {
+        return mailboxManager;
     }
 
     @Override
-    protected EventBus retrieveEventBus(StoreMailboxManager mailboxManager) {
+    public EventBus retrieveEventBus() {
         return mailboxManager.getEventBus();
+    }
+
+    @BeforeEach
+    void setUp() throws MailboxException {
+        this.mailboxManager = MaildirMailboxManagerProvider.createMailboxManager("/%domain/%user", tmpFolder);
     }
 }

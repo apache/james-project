@@ -41,45 +41,37 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.concurrent.NamedThreadFactory;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public abstract class MailboxManagerStressTest<T extends MailboxManager> {
+public interface MailboxManagerStressContract<T extends MailboxManager> {
 
-    private static final int APPEND_OPERATIONS = 200;
+    int APPEND_OPERATIONS = 200;
 
-    private T mailboxManager;
+    T getManager();
 
-    protected abstract T provideManager() throws MailboxException;
-
-    protected abstract EventBus retrieveEventBus(T mailboxManager);
-
-    @BeforeEach
-    void setUp() throws Exception {
-        this.mailboxManager = provideManager();
-    }
+    EventBus retrieveEventBus();
 
     @Test
-    void testStressTest() throws InterruptedException, MailboxException {
+    default void testStressTest() throws InterruptedException, MailboxException {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
 
         CountDownLatch latch = new CountDownLatch(APPEND_OPERATIONS);
         ExecutorService pool = Executors.newFixedThreadPool(APPEND_OPERATIONS / 20, threadFactory);
         Collection<MessageUid> uList = new ConcurrentLinkedDeque<>();
         Username username = Username.of("username");
-        MailboxSession session = mailboxManager.createSystemSession(username);
-        mailboxManager.startProcessingRequest(session);
+        MailboxSession session = getManager().createSystemSession(username);
+        getManager().startProcessingRequest(session);
         MailboxPath path = MailboxPath.forUser(username, "INBOX");
-        MailboxId mailboxId = mailboxManager.createMailbox(path, session).get();
-        retrieveEventBus(mailboxManager).register(
+        MailboxId mailboxId = getManager().createMailbox(path, session).get();
+        retrieveEventBus().register(
             event -> {
                 MessageUid u = ((MailboxListener.Added) event).getUids().iterator().next();
                 uList.add(u);
             }, new MailboxIdRegistrationKey(mailboxId));
-        mailboxManager.endProcessingRequest(session);
-        mailboxManager.logout(session, false);
+        getManager().endProcessingRequest(session);
+        getManager().logout(session, false);
 
         final AtomicBoolean fail = new AtomicBoolean(false);
         final ConcurrentHashMap<MessageUid, Object> uids = new ConcurrentHashMap<>();
@@ -93,10 +85,10 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
                 }
 
                 try {
-                    MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
+                    MailboxSession mailboxSession = getManager().createSystemSession(username);
 
-                    mailboxManager.startProcessingRequest(mailboxSession);
-                    MessageManager m = mailboxManager.getMailbox(path, mailboxSession);
+                    getManager().startProcessingRequest(mailboxSession);
+                    MessageManager m = getManager().getMailbox(path, mailboxSession);
                     ComposedMessageId messageId = m.appendMessage(
                         MessageManager.AppendCommand
                             .from(Message.Builder.of()
@@ -107,8 +99,8 @@ public abstract class MailboxManagerStressTest<T extends MailboxManager> {
                     if (uids.put(messageId.getUid(), new Object()) != null) {
                         fail.set(true);
                     }
-                    mailboxManager.endProcessingRequest(mailboxSession);
-                    mailboxManager.logout(mailboxSession, false);
+                    getManager().endProcessingRequest(mailboxSession);
+                    getManager().logout(mailboxSession, false);
                 } catch (Exception e) {
                     e.printStackTrace();
                     fail.set(true);
