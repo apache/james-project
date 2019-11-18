@@ -101,8 +101,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
     /**
      * Update the repository with the specified user object. A user object with
      * this username must already exist.
-     * 
-     * @throws UsersRepositoryException
      */
     @Override
     public void updateUser(User user) throws UsersRepositoryException {
@@ -134,7 +132,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * 
      * @param name
      *            the user to remove from the repository
-     * @throws UsersRepositoryException
      */
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
@@ -166,7 +163,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * @param name
      *            the name to check in the repository
      * @return whether the user is in the repository
-     * @throws UsersRepositoryException
      */
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
@@ -209,7 +205,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * Returns a count of the users in the repository.
      * 
      * @return the number of users in the repository
-     * @throws UsersRepositoryException
      */
     @Override
     public int countUsers() throws UsersRepositoryException {
@@ -230,7 +225,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
      * 
      * @return Iterator over a collection of Strings, each being one user in the
      *         repository.
-     * @throws UsersRepositoryException
      */
     @Override
     @SuppressWarnings("unchecked")
