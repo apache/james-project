@@ -21,7 +21,7 @@ package org.apache.james.repository.api;
 
 import java.util.stream.Stream;
 
-public interface ObjectRepository extends Repository {
+public interface ObjectRepository {
 
     boolean containsKey(String key);
 

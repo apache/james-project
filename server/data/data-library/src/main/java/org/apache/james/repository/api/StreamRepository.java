@@ -23,7 +23,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.stream.Stream;
 
-public interface StreamRepository extends Repository {
+public interface StreamRepository {
 
     InputStream get(String key);
 
