@@ -88,24 +88,18 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public Mappings getStoredMappings(MappingSource source) throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final EntityTransaction transaction = entityManager.getTransaction();
         try {
-            transaction.begin();
             @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectUserDomainMapping")
                 .setParameter("user", source.getFixedUser())
                 .setParameter("domain", source.getFixedDomain())
                 .getResultList();
-            transaction.commit();
             if (virtualUsers.size() > 0) {
                 return MappingsImpl.fromRawString(virtualUsers.get(0).getTargetAddress());
             }
             return MappingsImpl.empty();
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get user domain mappings", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
         } finally {
             entityManager.close();
@@ -115,22 +109,16 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
     @Override
     public Map<MappingSource, Mappings> getAllMappings() throws RecipientRewriteTableException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
-        final EntityTransaction transaction = entityManager.getTransaction();
         Map<MappingSource, Mappings> mapping = new HashMap<>();
         try {
-            transaction.begin();
             @SuppressWarnings("unchecked")
             List<JPARecipientRewrite> virtualUsers = entityManager.createNamedQuery("selectAllMappings").getResultList();
-            transaction.commit();
             for (JPARecipientRewrite virtualUser : virtualUsers) {
                 mapping.put(MappingSource.fromUser(virtualUser.getUser(), virtualUser.getDomain()), MappingsImpl.fromRawString(virtualUser.getTargetAddress()));
             }
             return mapping;
         } catch (PersistenceException e) {
             LOGGER.debug("Failed to get all mappings", e);
-            if (transaction.isActive()) {
-                transaction.rollback();
-            }
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
         } finally {
             entityManager.close();
