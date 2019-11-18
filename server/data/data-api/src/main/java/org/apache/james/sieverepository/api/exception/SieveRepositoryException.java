@@ -23,7 +23,6 @@ package org.apache.james.sieverepository.api.exception;
 public class SieveRepositoryException extends Exception {
     /**
      * Creates a new instance of SieveRepositoryException.
-     *
      */
     public SieveRepositoryException() {
         super();
@@ -31,9 +30,6 @@ public class SieveRepositoryException extends Exception {
 
     /**
      * Creates a new instance of SieveRepositoryException.
-     *
-     * @param message
-     * @param cause
      */
     public SieveRepositoryException(String message, Throwable cause) {
         super(message, cause);
@@ -41,8 +37,6 @@ public class SieveRepositoryException extends Exception {
 
     /**
      * Creates a new instance of SieveRepositoryException.
-     *
-     * @param message
      */
     public SieveRepositoryException(String message) {
         super(message);
@@ -50,8 +44,6 @@ public class SieveRepositoryException extends Exception {
 
     /**
      * Creates a new instance of SieveRepositoryException.
-     *
-     * @param cause
      */
     public SieveRepositoryException(Throwable cause) {
         super(cause);

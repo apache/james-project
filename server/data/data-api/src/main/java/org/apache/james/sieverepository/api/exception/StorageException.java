@@ -20,26 +20,12 @@
 
 package org.apache.james.sieverepository.api.exception;
 
-/**
- * <code>StorageException</code>
- */
 public class StorageException extends SieveRepositoryException {
 
     private static final long serialVersionUID = 7374111339714642386L;
 
     /**
      * Creates a new instance of StorageException.
-     *
-     */
-    public StorageException() {
-        super();
-    }
-
-    /**
-     * Creates a new instance of StorageException.
-     *
-     * @param message
-     * @param cause
      */
     public StorageException(String message, Throwable cause) {
         super(message, cause);
@@ -47,17 +33,6 @@ public class StorageException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of StorageException.
-     *
-     * @param message
-     */
-    public StorageException(String message) {
-        super(message);
-    }
-
-    /**
-     * Creates a new instance of StorageException.
-     *
-     * @param cause
      */
     public StorageException(Throwable cause) {
         super(cause);

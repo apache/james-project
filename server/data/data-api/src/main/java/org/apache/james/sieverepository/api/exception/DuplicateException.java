@@ -31,30 +31,9 @@ public class DuplicateException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of DuplicateException.
-     *
-     * @param message
-     * @param cause
-     */
-    public DuplicateException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Creates a new instance of DuplicateException.
-     *
-     * @param message
      */
     public DuplicateException(String message) {
         super(message);
-    }
-
-    /**
-     * Creates a new instance of DuplicateException.
-     *
-     * @param cause
-     */
-    public DuplicateException(Throwable cause) {
-        super(cause);
     }
 
     private static final long serialVersionUID = 7384835765215418347L;

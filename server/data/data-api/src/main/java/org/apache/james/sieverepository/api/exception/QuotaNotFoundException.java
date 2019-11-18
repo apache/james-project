@@ -20,45 +20,20 @@
 
 package org.apache.james.sieverepository.api.exception;
 
-/**
- * <code>QuotaNotFoundException</code>
- */
 public class QuotaNotFoundException extends SieveRepositoryException {
     private static final long serialVersionUID = 6523546952593451503L;
 
     /**
      * Creates a new instance of QuotaNotFoundException.
-     *
      */
     public QuotaNotFoundException() {
     }
 
     /**
      * Creates a new instance of QuotaNotFoundException.
-     *
-     * @param message
-     * @param cause
-     */
-    public QuotaNotFoundException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Creates a new instance of QuotaNotFoundException.
-     *
-     * @param message
      */
     public QuotaNotFoundException(String message) {
         super(message);
-    }
-
-    /**
-     * Creates a new instance of QuotaNotFoundException.
-     *
-     * @param cause
-     */
-    public QuotaNotFoundException(Throwable cause) {
-        super(cause);
     }
 
 }

@@ -23,7 +23,6 @@ package org.apache.james.sieverepository.api.exception;
 public class ScriptNotFoundException extends SieveRepositoryException {
     /**
      * Creates a new instance of ScriptNotFoundException.
-     *
      */
     public ScriptNotFoundException() {
         super();
@@ -31,9 +30,6 @@ public class ScriptNotFoundException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of ScriptNotFoundException.
-     *
-     * @param message
-     * @param cause
      */
     public ScriptNotFoundException(String message, Throwable cause) {
         super(message, cause);
@@ -41,8 +37,6 @@ public class ScriptNotFoundException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of ScriptNotFoundException.
-     *
-     * @param message
      */
     public ScriptNotFoundException(String message) {
         super(message);
@@ -50,8 +44,6 @@ public class ScriptNotFoundException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of ScriptNotFoundException.
-     *
-     * @param cause
      */
     public ScriptNotFoundException(Throwable cause) {
         super(cause);

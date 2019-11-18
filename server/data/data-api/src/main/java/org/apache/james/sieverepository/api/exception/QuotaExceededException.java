@@ -23,7 +23,6 @@ package org.apache.james.sieverepository.api.exception;
 public class QuotaExceededException extends SieveRepositoryException {
     /**
      * Creates a new instance of QuotaExceededException.
-     *
      */
     public QuotaExceededException() {
         super();
@@ -31,9 +30,6 @@ public class QuotaExceededException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of QuotaExceededException.
-     *
-     * @param message
-     * @param cause
      */
     public QuotaExceededException(String message, Throwable cause) {
         super(message, cause);
@@ -41,20 +37,9 @@ public class QuotaExceededException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of QuotaExceededException.
-     *
-     * @param message
      */
     public QuotaExceededException(String message) {
         super(message);
-    }
-
-    /**
-     * Creates a new instance of QuotaExceededException.
-     *
-     * @param cause
-     */
-    public QuotaExceededException(Throwable cause) {
-        super(cause);
     }
 
     private static final long serialVersionUID = -3966867419152420878L;

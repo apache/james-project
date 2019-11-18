@@ -45,12 +45,6 @@ public interface SieveRepository extends SieveQuotaRepository {
      * PutScript.
      *
      * <p><strong>Note:</strong> It is the responsibility of the caller to validate the script to be put.
-     *
-     * @param username
-     * @param name
-     * @param content
-     * @throws StorageException
-     * @throws QuotaExceededException
      */
     void putScript(Username username, ScriptName name, ScriptContent content) throws StorageException, QuotaExceededException;
     

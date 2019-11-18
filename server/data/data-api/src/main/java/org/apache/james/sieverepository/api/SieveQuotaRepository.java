@@ -25,9 +25,6 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.sieverepository.api.exception.QuotaNotFoundException;
 import org.apache.james.sieverepository.api.exception.StorageException;
 
-/**
- * SieveQuotaRepository
- */
 public interface SieveQuotaRepository {
 
     boolean hasDefaultQuota() throws StorageException;

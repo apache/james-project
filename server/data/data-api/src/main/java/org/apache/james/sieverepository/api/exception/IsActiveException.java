@@ -23,7 +23,6 @@ package org.apache.james.sieverepository.api.exception;
 public class IsActiveException extends SieveRepositoryException {
     /**
      * Creates a new instance of IsActiveException.
-     *
      */
     public IsActiveException() {
         super();
@@ -31,30 +30,9 @@ public class IsActiveException extends SieveRepositoryException {
 
     /**
      * Creates a new instance of IsActiveException.
-     *
-     * @param message
-     * @param cause
-     */
-    public IsActiveException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    /**
-     * Creates a new instance of IsActiveException.
-     *
-     * @param message
      */
     public IsActiveException(String message) {
         super(message);
-    }
-
-    /**
-     * Creates a new instance of IsActiveException.
-     *
-     * @param cause
-     */
-    public IsActiveException(Throwable cause) {
-        super(cause);
     }
 
     private static final long serialVersionUID = 7472385325048232256L;
