@@ -48,18 +48,13 @@ public class JPAUidProvider implements UidProvider {
         EntityManager manager = null;
         try {
             manager = factory.createEntityManager();
-            manager.getTransaction().begin();
             JPAId mailboxId = (JPAId) mailbox.getMailboxId();
             long uid = (Long) manager.createNamedQuery("findLastUid").setParameter("idParam", mailboxId.getRawId()).getSingleResult();
-            manager.getTransaction().commit();
             if (uid == 0) {
                 return Optional.empty();
             }
             return Optional.of(MessageUid.of(uid));
         } catch (PersistenceException e) {
-            if (manager != null && manager.getTransaction().isActive()) {
-                manager.getTransaction().rollback();
-            }
             throw new MailboxException("Unable to get last uid for mailbox " + mailbox, e);
         } finally {
             if (manager != null) {
@@ -92,7 +87,7 @@ public class JPAUidProvider implements UidProvider {
             if (manager != null && manager.getTransaction().isActive()) {
                 manager.getTransaction().rollback();
             }
-            throw new MailboxException("Unable to save next uid for mailbox " + mailboxId, e);
+            throw new MailboxException("Unable to save next uid for mailbox " + mailboxId.serialize(), e);
         } finally {
             if (manager != null) {
                 manager.close();
