@@ -31,11 +31,6 @@ import org.apache.james.mailbox.model.MailboxPath;
  */
 public class NoMailboxPathLocker implements MailboxPathLocker {
     @Override
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException {
-        return execution.execute();
-    }
-
-    @Override
     public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
         return execution.execute();
     }

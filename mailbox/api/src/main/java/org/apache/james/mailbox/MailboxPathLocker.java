@@ -31,14 +31,6 @@ import org.apache.james.mailbox.model.MailboxPath;
  * Implementations that are not able to handle read / write locks in a different way are needed to handle all locks as write lock.
  */
 public interface MailboxPathLocker {
-
-    /**
-     * @deprecated use {@link #executeWithLock(MailboxSession, MailboxPath, LockAwareExecution, boolean)} with argument <code>true</code>
-     */
-    @Deprecated
-    <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException;
-
-    
     /**
      * Execute the {@link LockAwareExecution} while holding a lock on the
      * {@link MailboxPath}. If writeLock is true the implementation need to make sure that no other threads can read and write while the lock

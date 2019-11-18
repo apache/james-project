@@ -38,11 +38,6 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
     private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
 
     @Override
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException {
-        return executeWithLock(session, path, execution, true);
-    }
-
-    @Override
     public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
         try {
             lock(path, writeLock);
