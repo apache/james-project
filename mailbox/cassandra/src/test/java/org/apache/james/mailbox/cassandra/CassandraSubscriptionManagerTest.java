@@ -24,8 +24,8 @@ import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.blob.api.BlobStore;
-import org.apache.james.mailbox.AbstractSubscriptionManagerTest;
 import org.apache.james.mailbox.SubscriptionManager;
+import org.apache.james.mailbox.SubscriptionManagerContract;
 import org.apache.james.mailbox.cassandra.mail.CassandraACLMapper;
 import org.apache.james.mailbox.cassandra.mail.CassandraApplicableFlagDAO;
 import org.apache.james.mailbox.cassandra.mail.CassandraAttachmentDAO;
@@ -47,6 +47,7 @@ import org.apache.james.mailbox.cassandra.mail.CassandraUidProvider;
 import org.apache.james.mailbox.cassandra.mail.CassandraUserMailboxRightsDAO;
 import org.apache.james.mailbox.cassandra.modules.CassandraSubscriptionModule;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -54,13 +55,20 @@ import org.junit.jupiter.api.extension.RegisterExtension;
  * Test Cassandra subscription against some general purpose written code.
  */
 @ExtendWith(CassandraRestartExtension.class)
-class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
+class CassandraSubscriptionManagerTest implements SubscriptionManagerContract {
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraSubscriptionModule.MODULE);
 
+    private SubscriptionManager subscriptionManager;
+
     @Override
-    protected SubscriptionManager createSubscriptionManager() {
+    public SubscriptionManager getSubscriptionManager() {
+        return subscriptionManager;
+    }
+
+    @BeforeEach
+    void setUp() {
         CassandraMessageIdToImapUidDAO imapUidDAO = null;
         CassandraMessageDAO messageDAO = null;
         CassandraMessageIdDAO messageIdDAO = null;
@@ -81,7 +89,8 @@ class CassandraSubscriptionManagerTest extends AbstractSubscriptionManagerTest {
         BlobStore blobStore = null;
         CassandraUidProvider uidProvider = null;
         CassandraModSeqProvider modSeqProvider = null;
-        return new StoreSubscriptionManager(
+
+        subscriptionManager = new StoreSubscriptionManager(
             new CassandraMailboxSessionMapperFactory(
                 uidProvider,
                 modSeqProvider,
