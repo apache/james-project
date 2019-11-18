@@ -299,12 +299,14 @@ Resource name usernameToBeUsed:
  - can not be null or empty
  - can not be more than 255 characters
  - can not contain '/'
+ - When virtual hosting is enabled, it should follow the format `localPart` + `@` + `domainPart`, 
+ otherwise the valid format doesn't contain `@`
+ 
 
 Response codes:
 
  - 204: The user was successfully created
  - 400: The user name or the payload is invalid
- - 409: Conflict: A concurrent modification make that query to fail
 
 Note: if the user exists already, its password will be updated.
 
