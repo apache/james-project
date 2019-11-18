@@ -20,6 +20,7 @@
 package org.apache.james.webadmin.routes;
 
 import static org.apache.james.webadmin.Constants.SEPARATOR;
+import static spark.Spark.halt;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -28,6 +29,8 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.Username;
+import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.AddUserRequest;
@@ -49,6 +52,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import spark.HaltException;
 import spark.Request;
 import spark.Response;
 import spark.Service;
@@ -139,7 +143,7 @@ public class UserRoutes implements Routes {
     }
 
     private String removeUser(Request request, Response response) {
-        String username = request.params(USER_NAME);
+        Username username = extractUsername(request);
         try {
             userService.removeUser(username);
             return Responses.returnNoContent(response);
@@ -150,54 +154,37 @@ public class UserRoutes implements Routes {
                 .message("The user " + username + " does not exists")
                 .cause(e)
                 .haltError();
-        } catch (UserService.InvalidUsername e) {
+        }
+    }
+
+    private HaltException upsertUser(Request request, Response response) throws JsonExtractException {
+        Username username = extractUsername(request);
+        try {
+            userService.upsertUser(username,
+                jsonExtractor.parse(request.body()).getPassword());
+
+            return halt(HttpStatus.NO_CONTENT_204);
+        } catch (InvalidUsernameException e) {
             LOGGER.info("Invalid username", e);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid username: it should be between 1 and 255 long without '/'")
+                .message("Username supplied is invalid")
                 .cause(e)
                 .haltError();
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Invalid user path", e);
+        } catch (UsersRepositoryException e) {
+            String errorMessage = String.format("Error while upserting user '%s'", username);
+            LOGGER.info(errorMessage, e);
             throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid user path")
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorType.SERVER_ERROR)
+                .message(errorMessage)
                 .cause(e)
                 .haltError();
         }
     }
 
-    private String upsertUser(Request request, Response response) throws UsersRepositoryException {
-        try {
-            return userService.upsertUser(request.params(USER_NAME),
-                jsonExtractor.parse(request.body()).getPassword(),
-                response);
-        } catch (JsonExtractException e) {
-            LOGGER.info("Error while deserializing addUser request", e);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Error while deserializing addUser request")
-                .cause(e)
-                .haltError();
-        } catch (UserService.InvalidUsername e) {
-            LOGGER.info("Invalid username", e);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid username: it should be between 1 and 255 long without '/'")
-                .cause(e)
-                .haltError();
-        } catch (IllegalArgumentException e) {
-            LOGGER.info("Invalid user path", e);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid user path")
-                .cause(e)
-                .haltError();
-        }
+    private Username extractUsername(Request request) {
+        return Username.of(request.params(USER_NAME));
     }
 }

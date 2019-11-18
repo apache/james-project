@@ -31,25 +31,10 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
-import org.apache.james.webadmin.utils.Responses;
-import org.eclipse.jetty.http.HttpStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 
-import spark.Response;
-
 public class UserService {
-
-    public static class InvalidUsername extends RuntimeException {
-        InvalidUsername(Exception e) {
-            super("Username invariants violation", e);
-        }
-    }
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
-    private static final String EMPTY_BODY = "";
 
     private final UsersRepository usersRepository;
 
@@ -67,32 +52,15 @@ public class UserService {
             .collect(Guavate.toImmutableList());
     }
 
-    public void removeUser(String username) throws UsersRepositoryException {
-        usernamePreconditions(username);
-        usersRepository.removeUser(Username.of(username));
+    public void removeUser(Username username) throws UsersRepositoryException {
+        usersRepository.removeUser(username);
     }
 
-    public String upsertUser(String rawUsername, char[] password, Response response) throws UsersRepositoryException {
-        usernamePreconditions(rawUsername);
-        Username username = Username.of(rawUsername);
+    public void upsertUser(Username username, char[] password) throws UsersRepositoryException {
         User user = usersRepository.getUserByName(username);
-        try {
-            upsert(user, username, password);
-            return Responses.returnNoContent(response);
-        } catch (UsersRepositoryException e) {
-            LOGGER.info("Error creating or updating user : {}", e.getMessage());
-            response.status(HttpStatus.CONFLICT_409);
-        }
-        return EMPTY_BODY;
+        upsert(user, username, password);
     }
 
-    private void usernamePreconditions(String username) {
-        try {
-            Username.of(username);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidUsername(e);
-        }
-    }
 
     private void upsert(User user, Username username, char[] password) throws UsersRepositoryException {
         if (user == null) {
