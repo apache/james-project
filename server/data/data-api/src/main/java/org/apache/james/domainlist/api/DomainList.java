@@ -29,10 +29,8 @@ import org.apache.james.core.Domain;
 public interface DomainList {
 
     /**
-     * Return array of domains which should be used as localdomains. Return null
+     * Return list of domains which should be used as localdomains. Return empty
      * if no domain is found.
-     * 
-     * @return domains
      */
     List<Domain> getDomains() throws DomainListException;
 
