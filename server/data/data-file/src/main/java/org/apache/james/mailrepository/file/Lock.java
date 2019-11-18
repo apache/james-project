@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailrepository.lib;
+package org.apache.james.mailrepository.file;
 
 import java.util.Hashtable;
 
