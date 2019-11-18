@@ -34,13 +34,25 @@ import org.apache.james.mailbox.model.MailboxPath;
  * same MailboxPath. This is done using one {@link ReentrantReadWriteLock}
  * per {@link MailboxPath} so its only usable in a single JVM.
  */
-public final class JVMMailboxPathLocker extends AbstractMailboxPathLocker {
-
+public final class JVMMailboxPathLocker implements MailboxPathLocker {
     private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
 
+    @Override
+    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution) throws MailboxException {
+        return executeWithLock(session, path, execution, true);
+    }
 
     @Override
-    protected void lock(MailboxSession session, MailboxPath path, boolean writeLock) throws MailboxException {
+    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
+        try {
+            lock(path, writeLock);
+            return execution.execute();
+        } finally {
+            unlock(path, writeLock);
+        }
+    }
+
+    private void lock(MailboxPath path, boolean writeLock) {
         ReadWriteLock lock = paths.get(path);
         if (lock == null) {
             lock = new ReentrantReadWriteLock();
@@ -52,9 +64,7 @@ public final class JVMMailboxPathLocker extends AbstractMailboxPathLocker {
         getLock(lock, writeLock).lock();
     }
 
-
-    @Override
-    protected void unlock(MailboxSession session, MailboxPath path, boolean writeLock) throws MailboxException {
+    private void unlock(MailboxPath path, boolean writeLock) {
         ReadWriteLock lock = paths.get(path);
 
         if (lock != null) {
@@ -63,12 +73,10 @@ public final class JVMMailboxPathLocker extends AbstractMailboxPathLocker {
     }
 
     private Lock getLock(ReadWriteLock lock, boolean writeLock) {
-        Lock l;
         if (writeLock) {
-            l = lock.writeLock();
+            return lock.writeLock();
         } else {
-            l = lock.readLock();
+            return lock.readLock();
         }
-        return l;
     }
 }
