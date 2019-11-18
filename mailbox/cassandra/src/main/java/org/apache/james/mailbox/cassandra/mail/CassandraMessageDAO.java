@@ -226,11 +226,11 @@ public class CassandraMessageDAO {
 
     private List<UDTValue> buildPropertiesUdt(MailboxMessage message) {
         return message.getProperties().stream()
-            .map(x -> typesProvider.getDefinedUserType(PROPERTIES)
+            .map(property -> typesProvider.getDefinedUserType(PROPERTIES)
                 .newValue()
-                .setString(Properties.NAMESPACE, x.getNamespace())
-                .setString(Properties.NAME, x.getLocalName())
-                .setString(Properties.VALUE, x.getValue()))
+                .setString(Properties.NAMESPACE, property.getNamespace())
+                .setString(Properties.NAME, property.getLocalName())
+                .setString(Properties.VALUE, property.getValue()))
             .collect(Guavate.toImmutableList());
     }
 
@@ -278,10 +278,14 @@ public class CassandraMessageDAO {
     private PropertyBuilder getPropertyBuilder(Row row) {
         PropertyBuilder property = new PropertyBuilder(
             row.getList(PROPERTIES, UDTValue.class).stream()
-                .map(x -> new Property(x.getString(Properties.NAMESPACE), x.getString(Properties.NAME), x.getString(Properties.VALUE)))
+                .map(this::toProperty)
                 .collect(Collectors.toList()));
         property.setTextualLineCount(row.getLong(TEXTUAL_LINE_COUNT));
         return property;
+    }
+
+    private Property toProperty(UDTValue udtValue) {
+        return new Property(udtValue.getString(Properties.NAMESPACE), udtValue.getString(Properties.NAME), udtValue.getString(Properties.VALUE));
     }
 
     private Stream<MessageAttachmentRepresentation> getAttachments(Row row, FetchType fetchType) {
