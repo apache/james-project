@@ -451,7 +451,7 @@ public class StoreMessageManager implements MessageManager {
 
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
-            return locker.executeWithLock(mailboxSession, getMailboxPath(), () -> {
+            return locker.executeWithLock(getMailboxPath(), () -> {
                 MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
@@ -650,7 +650,7 @@ public class StoreMessageManager implements MessageManager {
             throw new ReadOnlyException(toMailbox.getMailboxPath());
         }
 
-        return locker.executeWithLock(session, toMailbox.getMailboxPath(), () -> {
+        return locker.executeWithLock(toMailbox.getMailboxPath(), () -> {
             SortedMap<MessageUid, MessageMetaData> copiedUids = copy(set, toMailbox, session);
             return MessageRange.toRanges(new ArrayList<>(copiedUids.keySet()));
         }, true);
@@ -668,7 +668,7 @@ public class StoreMessageManager implements MessageManager {
         }
 
         //TODO lock the from mailbox too, in a non-deadlocking manner - how?
-        return locker.executeWithLock(session, toMailbox.getMailboxPath(), () -> {
+        return locker.executeWithLock(toMailbox.getMailboxPath(), () -> {
             SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
             return MessageRange.toRanges(new ArrayList<>(movedUids.keySet()));
         }, true);

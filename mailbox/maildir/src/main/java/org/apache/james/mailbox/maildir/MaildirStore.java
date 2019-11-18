@@ -132,7 +132,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
         try {
             Mailbox loadedMailbox = new Mailbox(mailboxPath, folder.getUidValidity());
             loadedMailbox.setMailboxId(folder.readMailboxId());
-            loadedMailbox.setACL(folder.getACL(session));
+            loadedMailbox.setACL(folder.getACL());
             return loadedMailbox;
         } catch (IOException e) {
             throw new MailboxException("Unable to load Mailbox " + mailboxPath, e);
@@ -251,7 +251,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     @Override
     public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
-            return createMaildirFolder(mailbox).getLastUid(session)
+            return createMaildirFolder(mailbox).getLastUid()
                 .map(MessageUid::next)
                 .orElse(MessageUid.MIN_VALUE);
         } catch (MailboxException e) {
@@ -275,7 +275,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
 
     @Override
     public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-       return createMaildirFolder(mailbox).getLastUid(session);
+       return createMaildirFolder(mailbox).getLastUid();
     }
 
     /**

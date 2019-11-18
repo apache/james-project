@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store;
 
 import org.apache.james.mailbox.MailboxPathLocker;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -31,7 +30,7 @@ import org.apache.james.mailbox.model.MailboxPath;
  */
 public class NoMailboxPathLocker implements MailboxPathLocker {
     @Override
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
+    public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
         return execution.execute();
     }
 }

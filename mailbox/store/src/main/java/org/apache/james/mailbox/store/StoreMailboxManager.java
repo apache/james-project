@@ -377,7 +377,7 @@ public class StoreMailboxManager implements MailboxManager {
 
     private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailbox) throws MailboxException {
         List<MailboxId> mailboxIds = new ArrayList<>();
-        locker.executeWithLock(mailboxSession, mailbox, (LockAwareExecution<Void>) () -> {
+        locker.executeWithLock(mailbox, (LockAwareExecution<Void>) () -> {
             if (!mailboxExists(mailbox, mailboxSession)) {
                 Mailbox m = doCreateMailbox(mailbox);
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
@@ -506,7 +506,7 @@ public class StoreMailboxManager implements MailboxManager {
             .expression(new PrefixedWildcard(from.getName() + getDelimiter()))
             .build()
             .asUserBound();
-        locker.executeWithLock(session, from, (LockAwareExecution<Void>) () -> {
+        locker.executeWithLock(from, (LockAwareExecution<Void>) () -> {
             List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(query);
             for (Mailbox sub : subMailboxes) {
                 String subOriginalName = sub.getName();

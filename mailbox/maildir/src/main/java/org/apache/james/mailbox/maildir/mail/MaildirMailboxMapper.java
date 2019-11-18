@@ -218,7 +218,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                     }
                 }
             }
-            folder.setACL(session, mailbox.getACL());
+            folder.setACL(mailbox.getACL());
         } catch (MailboxNotFoundException e) {
             // it cannot be found and is thus new
             MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
@@ -246,7 +246,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
                 throw new MailboxException("Failed to save Mailbox " + mailbox, ioe);
 
             }
-            folder.setACL(session, mailbox.getACL());
+            folder.setACL(mailbox.getACL());
         }
         return maildirId;
     }
@@ -319,7 +319,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         MailboxACL oldACL = mailbox.getACL();
         MailboxACL newACL = mailbox.getACL().apply(mailboxACLCommand);
-        folder.setACL(session, newACL);
+        folder.setACL(newACL);
         mailbox.setACL(newACL);
         return ACLDiff.computeDiff(oldACL, newACL);
     }
@@ -328,7 +328,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     public ACLDiff setACL(Mailbox mailbox, MailboxACL mailboxACL) throws MailboxException {
         MailboxACL oldAcl = mailbox.getACL();
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
-        folder.setACL(session, mailboxACL);
+        folder.setACL(mailboxACL);
         mailbox.setACL(mailboxACL);
         return ACLDiff.computeDiff(oldAcl, mailboxACL);
     }

@@ -199,9 +199,9 @@ public class MaildirFolder {
     /**
      * Returns the last uid used in this mailbox
      */
-    public Optional<MessageUid> getLastUid(MailboxSession session) throws MailboxException {
+    public Optional<MessageUid> getLastUid() throws MailboxException {
         if (!lastUid.isPresent()) {
-            readLastUid(session);
+            readLastUid();
         }
         return lastUid;
     }
@@ -220,8 +220,8 @@ public class MaildirFolder {
      *
      * @throws MailboxException if there are problems with the uidList file
      */
-    private void readLastUid(MailboxSession session) throws MailboxException {
-        locker.executeWithLock(session, path,
+    private void readLastUid() throws MailboxException {
+        locker.executeWithLock(path,
             (LockAwareExecution<Void>) () -> {
             File uidList = uidFile;
 
@@ -352,9 +352,9 @@ public class MaildirFolder {
      * @return The {@link MaildirMessageName} that belongs to the uid
      * @throws MailboxException If the uidlist file cannot be found or read
      */
-    public MaildirMessageName getMessageNameByUid(final MailboxSession session, final MessageUid uid) throws MailboxException {
+    public MaildirMessageName getMessageNameByUid(final MessageUid uid) throws MailboxException {
        
-        return locker.executeWithLock(session, path, () -> {
+        return locker.executeWithLock(path, () -> {
             File uidList = uidFile;
             try (FileReader fileReader = new FileReader(uidList);
                  BufferedReader reader = new BufferedReader(fileReader)) {
@@ -395,9 +395,9 @@ public class MaildirFolder {
      * @return a {@link Map} whith all uids in the given range and associated {@link MaildirMessageName}s
      * @throws MailboxException if there is a problem with the uid list file
      */
-    public SortedMap<MessageUid, MaildirMessageName> getUidMap(final MailboxSession session, final MessageUid from, final MessageUid to)
+    public SortedMap<MessageUid, MaildirMessageName> getUidMap(final MessageUid from, final MessageUid to)
     throws MailboxException {
-        return locker.executeWithLock(session, path, () -> {
+        return locker.executeWithLock(path, () -> {
             final SortedMap<MessageUid, MaildirMessageName> uidMap = new TreeMap<>();
 
             File uidList = uidFile;
@@ -414,7 +414,7 @@ public class MaildirFolder {
                     }
                 } else {
                     // the uidList is up to date
-                    uidMap.putAll(readUidFile(session, from, to));
+                    uidMap.putAll(readUidFile(from, to));
                 }
             } else {
                 // the uidList does not exist
@@ -426,7 +426,7 @@ public class MaildirFolder {
     
     public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, MessageUid from, MessageUid to)
     throws MailboxException {
-        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, from, to);
+        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(from, to);
         SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         for (Entry<MessageUid, MaildirMessageName> entry : allUids.entrySet()) {
             if (filter.accept(null, entry.getValue().getFullName())) {
@@ -448,7 +448,7 @@ public class MaildirFolder {
      */
     public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, int limit) throws MailboxException {
         MessageUid to = null;
-        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(session, MessageUid.MIN_VALUE, to);
+        SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(MessageUid.MIN_VALUE, to);
         SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
         int theLimit = limit;
         if (limit < 1) {
@@ -473,11 +473,11 @@ public class MaildirFolder {
      * @return A {@link Map} with all uids and associated {@link MaildirMessageName}s of recent messages
      * @throws MailboxException If there is a problem with the uid list file
      */
-    public SortedMap<MessageUid, MaildirMessageName> getRecentMessages(final MailboxSession session) throws MailboxException {
+    public SortedMap<MessageUid, MaildirMessageName> getRecentMessages() throws MailboxException {
         final String[] recentFiles = getNewFolder().list();
         final LinkedList<String> lines = new LinkedList<>();
         final int theLimit = recentFiles.length;
-        return locker.executeWithLock(session, path, () -> {
+        return locker.executeWithLock(path, () -> {
             final SortedMap<MessageUid, MaildirMessageName> recentMessages = new TreeMap<>();
 
             File uidList = uidFile;
@@ -631,7 +631,7 @@ public class MaildirFolder {
         return uidMap;
     }
 
-    private Map<MessageUid, MaildirMessageName> readUidFile(MailboxSession session, MessageUid from, MessageUid to) throws MailboxException {
+    private Map<MessageUid, MaildirMessageName> readUidFile(MessageUid from, MessageUid to) throws MailboxException {
         final Map<MessageUid, MaildirMessageName> uidMap = new HashMap<>();
 
         File uidList = uidFile;
@@ -749,8 +749,8 @@ public class MaildirFolder {
      * @param name The name of the message's file
      * @return The uid of the message
      */
-    public MessageUid appendMessage(MailboxSession session, final String name) throws MailboxException {
-        return locker.executeWithLock(session, path, () -> {
+    public MessageUid appendMessage(final String name) throws MailboxException {
+        return locker.executeWithLock(path, () -> {
             File uidList = uidFile;
             MessageUid uid = null;
             try {
@@ -816,8 +816,8 @@ public class MaildirFolder {
     /**
      * Updates an entry in the uid list.
      */
-    public void update(MailboxSession session, final MessageUid uid, final String messageName) throws MailboxException {
-        locker.executeWithLock(session, path, (LockAwareExecution<Void>) () -> {
+    public void update(final MessageUid uid, final String messageName) throws MailboxException {
+        locker.executeWithLock(path, (LockAwareExecution<Void>) () -> {
             File uidList = uidFile;
             try (FileReader fileReader = new FileReader(uidList);
                 BufferedReader reader = new BufferedReader(fileReader)) {
@@ -852,8 +852,8 @@ public class MaildirFolder {
      * @return The {@link MaildirMessageName} of the deleted message
      * @throws MailboxException If the file cannot be deleted of there is a problem with the uid list
      */
-    public MaildirMessageName delete(final MailboxSession session, final MessageUid uid) throws MailboxException {        
-        return locker.executeWithLock(session, path, () -> {
+    public MaildirMessageName delete(final MessageUid uid) throws MailboxException {
+        return locker.executeWithLock(path, () -> {
             File uidList = uidFile;
             MaildirMessageName deletedMessage = null;
             try (FileReader fileReader = new FileReader(uidList);
@@ -908,9 +908,9 @@ public class MaildirFolder {
         return getRootFile().getAbsolutePath();
     }
     
-    public MailboxACL getACL(MailboxSession session) throws MailboxException {
+    public MailboxACL getACL() throws MailboxException {
         if (acl == null) {
-            acl = readACL(session);
+            acl = readACL();
         }
         return acl;
     }
@@ -920,9 +920,9 @@ public class MaildirFolder {
      *
      * @throws MailboxException if there are problems with the aclFile file
      */
-    private MailboxACL readACL(MailboxSession session) throws MailboxException {
+    private MailboxACL readACL() throws MailboxException {
         // FIXME Do we need this locking?
-        return locker.executeWithLock(session, path, (LockAwareExecution<MailboxACL>) () -> {
+        return locker.executeWithLock(path, (LockAwareExecution<MailboxACL>) () -> {
             File f = aclFile;
             Properties props = new Properties();
             if (f.exists()) {
@@ -939,19 +939,19 @@ public class MaildirFolder {
         
     }
     
-    public void setACL(MailboxSession session, MailboxACL acl) throws MailboxException {
+    public void setACL(MailboxACL acl) throws MailboxException {
         MailboxACL old = this.acl;
         if (!Objects.equals(old, acl)) {
             /* change only if different */
-            saveACL(acl, session);
+            saveACL(acl);
             this.acl = acl;
         }
         
     }
 
-    private void saveACL(final MailboxACL acl, MailboxSession session) throws MailboxException {
+    private void saveACL(final MailboxACL acl) throws MailboxException {
         // FIXME Do we need this locking?
-        locker.executeWithLock(session, path, new LockAwareExecution<Void>() {
+        locker.executeWithLock(path, new LockAwareExecution<Void>() {
             
             @Override
             public Void execute() throws MailboxException {

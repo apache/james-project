@@ -25,7 +25,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.james.mailbox.MailboxPathLocker;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 
@@ -38,7 +37,7 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
     private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
 
     @Override
-    public <T> T executeWithLock(MailboxSession session, MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
+    public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
         try {
             lock(path, writeLock);
             return execution.execute();
