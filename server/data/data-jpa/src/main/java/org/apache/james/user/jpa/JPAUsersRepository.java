@@ -99,23 +99,6 @@ public class JPAUsersRepository extends AbstractUsersRepository {
     }
 
     /**
-     * Returns the user name of the user matching name on an equalsIgnoreCase
-     * basis. Returns null if no match.
-     * 
-     * @param name
-     *            the name to case-correct
-     * @return the case-correct name of the user, null if the user doesn't exist
-     * @throws UsersRepositoryException
-     */
-    public String getRealName(Username name) throws UsersRepositoryException {
-        User u = getUserByName(name);
-        if (u != null) {
-            u.getUserName();
-        }
-        return null;
-    }
-
-    /**
      * Update the repository with the specified user object. A user object with
      * this username must already exist.
      * 
