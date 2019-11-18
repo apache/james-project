@@ -42,20 +42,6 @@ public class Lock {
     }
 
     /**
-     * Check to see if we can lock on a given object.
-     * 
-     * @param key
-     *            the Object on which to lock
-     * @return true if the calling thread can lock, false otherwise
-     */
-    public boolean canI(Object key) {
-        Object o = locks.get(key);
-
-        return null == o || o == this.getCallerId();
-
-    }
-
-    /**
      * Lock on a given object.
      * 
      * @param key
