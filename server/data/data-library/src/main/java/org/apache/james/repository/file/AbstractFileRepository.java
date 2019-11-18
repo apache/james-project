@@ -154,18 +154,6 @@ public abstract class AbstractFileRepository implements Configurable {
     }
 
     /**
-     * Return a new instance of this class
-     * 
-     * @return class a new instance of AbstractFileRepository
-     * @throws Exception
-     *             get thrown if an error is detected while create the new
-     *             instance
-     */
-    protected AbstractFileRepository createChildRepository() throws Exception {
-        return getClass().newInstance();
-    }
-
-    /**
      * Return the File Object which belongs to the given key
      * 
      * @param key
