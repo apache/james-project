@@ -48,9 +48,7 @@ import javax.sql.DataSource;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
-import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.util.sql.JDBCUtil;
 import org.apache.james.util.sql.SqlResources;
 import org.apache.mailet.Experimental;
@@ -296,8 +294,6 @@ public class WhiteListManager extends GenericMailet {
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
-        senderUser = getPrimaryName(senderUser);
-
         Connection conn = null;
         PreparedStatement selectStmt = null;
         PreparedStatement insertStmt = null;
@@ -380,8 +376,6 @@ public class WhiteListManager extends GenericMailet {
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
 
-        senderUser = getPrimaryName(senderUser);
-
         Connection conn = null;
         PreparedStatement selectStmt = null;
         ResultSet selectRS = null;
@@ -427,8 +421,6 @@ public class WhiteListManager extends GenericMailet {
         MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
-
-        senderUser = getPrimaryName(senderUser);
 
         Connection conn = null;
         PreparedStatement selectStmt = null;
@@ -548,8 +540,6 @@ public class WhiteListManager extends GenericMailet {
         MailAddress senderMailAddress = mail.getMaybeSender().get();
         String senderUser = senderMailAddress.getLocalPart().toLowerCase(Locale.US);
         Domain senderHost = senderMailAddress.getDomain();
-
-        senderUser = getPrimaryName(senderUser);
 
         Connection conn = null;
         PreparedStatement selectStmt = null;
@@ -715,23 +705,6 @@ public class WhiteListManager extends GenericMailet {
         } catch (Exception e) {
             LOGGER.error("Exception found sending reply", e);
         }
-    }
-
-    /**
-     * Gets the main name of a local customer, handling alias
-     */
-    private String getPrimaryName(String originalUsername) {
-        String username;
-        try {
-            username = originalUsername;
-            JamesUser user = (JamesUser) localusers.getUserByName(Username.of(username));
-            if (user.getAliasing()) {
-                username = user.getAlias();
-            }
-        } catch (Exception e) {
-            username = originalUsername;
-        }
-        return username;
     }
 
     /**

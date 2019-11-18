@@ -30,10 +30,8 @@ import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
-import org.apache.james.user.api.model.JamesUser;
 import org.apache.james.user.api.model.User;
 
-@SuppressWarnings("deprecation")
 public class UsersRepositoryManagement extends StandardMBean implements UsersRepositoryManagementMBean {
 
     /**
@@ -48,18 +46,6 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
 
     public UsersRepositoryManagement() throws NotCompliantMBeanException {
         super(UsersRepositoryManagementMBean.class);
-    }
-
-    private JamesUser getJamesUser(Username userName) throws UsersRepositoryException {
-        User baseuser = usersRepository.getUserByName(userName);
-        if (baseuser == null) {
-            throw new IllegalArgumentException("user not found: " + userName.asString());
-        }
-        if (!(baseuser instanceof JamesUser)) {
-            throw new IllegalArgumentException("user is not of type JamesUser: " + userName.asString());
-        }
-
-        return (JamesUser) baseuser;
     }
 
     @Override
@@ -132,61 +118,6 @@ public class UsersRepositoryManagement extends StandardMBean implements UsersRep
 
         }
 
-    }
-
-    @Override
-    public void unsetAlias(Username userName) throws Exception {
-        try {
-            JamesUser user = getJamesUser(userName);
-            if (!user.getAliasing()) {
-                throw new UsersRepositoryException("User " + user + " is no alias");
-            }
-            user.setAliasing(false);
-            usersRepository.updateUser(user);
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        }
-    }
-
-    @Override
-    public String getAlias(Username userName) throws Exception {
-        try {
-            JamesUser user = getJamesUser(userName);
-            if (!user.getAliasing()) {
-                return null;
-            }
-            return user.getAlias();
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-
-        }
-    }
-
-    @Override
-    public void unsetForwardAddress(Username userName) throws Exception {
-        try {
-            JamesUser user = getJamesUser(userName);
-            if (!user.getForwarding()) {
-                throw new UsersRepositoryException("User " + user + " is no forward");
-            }
-            user.setForwarding(false);
-            usersRepository.updateUser(user);
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        }
-    }
-
-    @Override
-    public String getForwardAddress(Username userName) throws Exception {
-        try {
-            JamesUser user = getJamesUser(userName);
-            if (!user.getForwarding()) {
-                return null;
-            }
-            return user.getForwardingDestination().toString();
-        } catch (UsersRepositoryException e) {
-            throw new Exception(e.getMessage());
-        }
     }
 
     @Override

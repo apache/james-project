@@ -19,8 +19,6 @@
 
 package org.apache.james.user.api;
 
-import org.apache.james.core.Username;
-
 /**
  * Expose user account management functionality through JMX.
  */
@@ -90,55 +88,6 @@ public interface UsersRepositoryManagementMBean {
      *             if error
      */
     void setPassword(String userName, String password) throws Exception;
-
-    /**
-     * Removes a user's alias which terminates local mail forwarding
-     * 
-     * 
-     * @param userName
-     *            The name of the user whose alias is unset
-     * @throws UsersRepositoryException
-     *             if error
-     */
-    @Deprecated
-    void unsetAlias(Username userName) throws Exception;
-
-    /**
-     * Retrieves the user's alias, if set
-     * 
-     * 
-     * @return User's alias, or NULL, if no alias is set
-     * @throws UsersRepositoryException
-     *             if error
-     */
-    @Deprecated
-    String getAlias(Username userName) throws Exception;
-
-    /**
-     * Removes a user's forward email address which terminates remote mail
-     * forwarding
-     * 
-     * 
-     * @param userName
-     *            The name of the user whose forward is unset
-     * @throws UsersRepositoryException
-     *             if error
-     */
-    @Deprecated
-    void unsetForwardAddress(Username userName) throws Exception;
-
-    /**
-     * Retrieves the user's forward, if set
-     * 
-     * 
-     * @param userName
-     *            The name of the user whose forward is set
-     * @return User's forward email address, or NULL, if no forward is set
-     * @throws UsersRepositoryException
-     *             if error
-     */
-    @Deprecated
-    String getForwardAddress(Username userName) throws Exception;
 
     /**
      * Return true if the UserRepository has VirtualHosting enabled
