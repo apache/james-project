@@ -294,14 +294,8 @@ Response codes:
 curl -XPUT http://ip:port/users/usernameToBeUsed -d '{"password":"passwordToBeUsed"}'
 ```
 
-Resource name usernameToBeUsed:
-
- - can not be null or empty
- - can not be more than 255 characters
- - can not contain '/'
- - When virtual hosting is enabled, it should follow the format `localPart` + `@` + `domainPart`, 
- otherwise the valid format doesn't contain `@`
- 
+Resource name usernameToBeUsed representing valid users, 
+hence it should match the criteria at [User Repositories documentation](/server/config-users.html) 
 
 Response codes:
 

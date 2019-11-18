@@ -33,6 +33,20 @@
 
       <p>Consult <a href="https://github.com/apache/james-project/tree/master/server/app/src/main/resources/usersrepository.xml">usersrepository.xml</a> in GIT to get some examples and hints.</p>
 
+      <p>
+        A user has two attributes: username and password. A valid user should satisfy these criteria:
+      </p>
+      <ul>
+        <li>username and password cannot be null or empty</li>
+        <li>username should not be longer than 255 characters</li>
+        <li>username can not contain '/'</li>
+        <li>username can not contain multiple domain delimiter('@')</li>
+        <li>A username can have only a local part when virtualHosting is disabled. E.g.'myUser'</li>
+        <li>
+            When virtualHosting is enabled, a username should have a domain part,
+            and the domain part should be concatenated after a domain delimiter('@'). E.g. 'myuser@james.org'
+        </li>
+      </ul>
     </subsection>
 
     <subsection name="General configuration">
@@ -43,7 +57,7 @@
         <dt><strong>enableVirtualHosting</strong></dt>
         <dd>true or false. Add domain support for users (default: false, except for Cassandra Users Repository)</dd>
         <dt><strong>administratorId</strong></dt>
-        <dd>user's name. Allow an user to access to the <a href="https://tools.ietf.org/html/rfc4616#section-2">impersonation command</a>, acting on the behalf of any user.</dd>
+        <dd>user's name. Allow a user to access to the <a href="https://tools.ietf.org/html/rfc4616#section-2">impersonation command</a>, acting on the behalf of any user.</dd>
       </dl>
 
     </subsection>
