@@ -51,11 +51,4 @@ public interface User {
      * @return true if newPass successfully added
      */
     boolean setPassword(String newPass);
-
-    default boolean hasUsername(Username username) {
-        Username thisUsername = getUserName();
-        Username thatUsername = username;
-
-        return thisUsername.equals(thatUsername);
-    }
 }
