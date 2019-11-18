@@ -36,6 +36,8 @@ of tasks being currently executed.
 - JAMES-2375 DSNBounce mailet should provide a subject
 - JAMES-2097 RemoteDelivery: Avoid retrying already succeeded recipients when sendPartial
 - MAILBOX-392 Mailbox name validation upon mailbox creation is stricter: forbid `#&*%` and empty sub-mailboxes names.
+- JAMES-2972 Incorrect attribute name in the mailet configuration thanks to jtconsol
+- JAMES-2632 JMAP Draft GetMailboxes performance enhancements when retrieving all mailboxes of a user
 
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
