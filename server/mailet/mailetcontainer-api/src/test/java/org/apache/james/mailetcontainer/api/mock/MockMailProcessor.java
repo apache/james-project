@@ -22,7 +22,7 @@ import org.apache.james.mailetcontainer.api.MailProcessor;
 import org.apache.mailet.Mail;
 
 public class MockMailProcessor implements MailProcessor {
-    private String newState;
+    private final String newState;
 
     protected MockMailProcessor(String newState) {
         this.newState = newState;

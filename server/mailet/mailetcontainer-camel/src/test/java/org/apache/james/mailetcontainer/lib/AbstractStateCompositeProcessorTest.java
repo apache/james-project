@@ -48,8 +48,7 @@ public abstract class AbstractStateCompositeProcessorTest {
         AbstractStateCompositeProcessor processor = new AbstractStateCompositeProcessor() {
 
             @Override
-            protected MailProcessor createMailProcessor(final String state, HierarchicalConfiguration<ImmutableNode> config) throws
-                Exception {
+            protected MailProcessor createMailProcessor(String state, HierarchicalConfiguration<ImmutableNode> config) {
                 return new MockMailProcessor("") {
                     @Override
                     public void service(Mail mail) {
