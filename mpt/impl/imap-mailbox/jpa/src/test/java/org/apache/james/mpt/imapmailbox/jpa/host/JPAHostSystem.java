@@ -94,7 +94,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         super.beforeTest();
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-        JPAUidProvider uidProvider = new JPAUidProvider(locker, entityManagerFactory);
+        JPAUidProvider uidProvider = new JPAUidProvider(entityManagerFactory);
         JPAModSeqProvider modSeqProvider = new JPAModSeqProvider(locker, entityManagerFactory);
         JPAMailboxSessionMapperFactory mapperFactory = new JPAMailboxSessionMapperFactory(entityManagerFactory, uidProvider, modSeqProvider);
 

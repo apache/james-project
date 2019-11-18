@@ -53,7 +53,7 @@ public class JpaMailboxManagerProvider {
     public static OpenJPAMailboxManager provideMailboxManager(JpaTestCluster jpaTestCluster) {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
-        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(locker, entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
+        JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory, new JPAUidProvider(entityManagerFactory), new JPAModSeqProvider(locker, entityManagerFactory));
 
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();

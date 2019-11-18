@@ -63,7 +63,7 @@ public class JPAMapperProvider implements MapperProvider {
         JVMMailboxPathLocker locker = new JVMMailboxPathLocker();
 
         JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSessionUtil.create(Username.of("benwa")),
-            new JPAUidProvider(locker, entityManagerFactory), 
+            new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(locker, entityManagerFactory), 
             entityManagerFactory);
 

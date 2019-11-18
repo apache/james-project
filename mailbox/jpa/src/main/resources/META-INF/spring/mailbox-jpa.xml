@@ -53,8 +53,7 @@
         <constructor-arg index="2" ref="jpa-modSeqProvider"/>
     </bean>
     <bean id="jpa-uidProvider" class="org.apache.james.mailbox.jpa.mail.JPAUidProvider">
-        <constructor-arg index="0" ref="jpa-locker"/>
-        <constructor-arg index="1" ref="entityManagerFactory"/>
+        <constructor-arg index="0" ref="entityManagerFactory"/>
     </bean>
     <bean id="jpa-modSeqProvider" class="org.apache.james.mailbox.jpa.mail.JPAModSeqProvider">
         <constructor-arg index="0" ref="jpa-locker"/>

@@ -38,7 +38,7 @@ class JPASubscriptionManagerTest extends AbstractSubscriptionManagerTest {
 
         EntityManagerFactory entityManagerFactory = JPA_TEST_CLUSTER.getEntityManagerFactory();
         JPAMailboxSessionMapperFactory mf = new JPAMailboxSessionMapperFactory(entityManagerFactory,
-            new JPAUidProvider(locker, entityManagerFactory),
+            new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(locker, entityManagerFactory));
 
         return new JPASubscriptionManager(mf);
