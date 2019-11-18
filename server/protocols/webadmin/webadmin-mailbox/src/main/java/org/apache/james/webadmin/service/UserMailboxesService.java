@@ -82,7 +82,7 @@ public class UserMailboxesService {
         usernamePreconditions(username);
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         return listUserMailboxes(mailboxSession)
-            .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName()))
+            .map(mailboxMetaData -> new MailboxResponse(mailboxMetaData.getPath().getName(), mailboxMetaData.getId()))
             .collect(Guavate.toImmutableList());
     }
 
