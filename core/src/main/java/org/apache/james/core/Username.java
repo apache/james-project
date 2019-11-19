@@ -125,6 +125,17 @@ public class Username {
         return asString().toLowerCase(Locale.US);
     }
 
+    public boolean equalsAsId(String otherId) {
+        if (otherId == null) {
+            return false;
+        }
+        return asId().equals(otherId.toLowerCase(Locale.US));
+    }
+
+    public boolean equalsAsId(Username otherId) {
+        return asId().equals(otherId.asId());
+    }
+
     public MailAddress asMailAddress() throws AddressException {
         Preconditions.checkState(hasDomainPart());
         return new MailAddress(localPart, domainPart.get());

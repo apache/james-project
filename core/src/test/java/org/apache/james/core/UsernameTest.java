@@ -242,4 +242,52 @@ class UsernameTest {
             .withDefaultDomainFromUser(Username.of("bob")))
             .isEqualTo(Username.of("user"));
     }
+
+    @Test
+    void equalsAsIdShouldReturnFalseWhenNull() {
+        assertThat(Username.of("user").equalsAsId((String)null))
+            .isFalse();
+    }
+
+    @Test
+    void equalsAsIdShouldReturnFalseWhenDifferentId() {
+        assertThat(Username.of("user").equalsAsId("user2"))
+            .isFalse();
+    }
+
+    @Test
+    void equalsAsIdShouldReturnTrueWhenSameId() {
+        assertThat(Username.of("user").equalsAsId("user"))
+            .isTrue();
+    }
+
+    @Test
+    void equalsAsIdShouldReturnTrueWhenSameIdWithDifferentCase() {
+        assertThat(Username.of("user").equalsAsId("uSEr"))
+            .isTrue();
+    }
+
+    @Test
+    void equalsAsIdForUsernameShouldThrowWhenNull() {
+        assertThatThrownBy(() -> Username.of("user").equalsAsId((Username)null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void equalsAsIdForUsernameShouldReturnFalseWhenDifferentId() {
+        assertThat(Username.of("user").equalsAsId(Username.of("user2")))
+            .isFalse();
+    }
+
+    @Test
+    void equalsAsIdForUsernameShouldReturnTrueWhenSameId() {
+        assertThat(Username.of("user").equalsAsId(Username.of("user")))
+            .isTrue();
+    }
+
+    @Test
+    void equalsAsIdForUsernameShouldReturnTrueWhenSameIdWithDifferentCase() {
+        assertThat(Username.of("user").equalsAsId(Username.of("uSEr")))
+            .isTrue();
+    }
 }

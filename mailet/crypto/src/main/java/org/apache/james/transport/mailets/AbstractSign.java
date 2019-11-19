@@ -586,7 +586,7 @@ public abstract class AbstractSign extends GenericMailet {
         } else {
             // is the reverse-path user different from the SMTP authorized user?
             Username username = getUsername(reversePath);
-            if (!username.asString().equals(authUser)) { //FIXME-USERNAME
+            if (!username.equalsAsId(authUser)) {
                 LOGGER.info("SMTP logged in as <{}> but pretend to be sender <{}>", authUser, username);
                 return false;
             }

@@ -101,7 +101,7 @@ public class MailboxPath {
     }
 
     public boolean belongsTo(MailboxSession mailboxSession) {
-        return user.asString().equalsIgnoreCase(mailboxSession.getUser().asString());//FIXME-USERNAME
+        return user.equalsAsId(mailboxSession.getUser());
     }
 
     /**
