@@ -20,6 +20,7 @@ package org.apache.james.dnsservice.library.netmatcher;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -33,8 +34,6 @@ import org.apache.james.dnsservice.library.inetnetwork.model.InetNetwork;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Splitter;
-
 /**
  * NetMatcher Class is used to check if an ipAddress match a network.
  * 
@@ -44,7 +43,7 @@ import com.google.common.base.Splitter;
 public class NetMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetMatcher.class);
 
-    public static final String NETS_SEPARATOR = ", ";
+    public static final String NETS_SEPARATOR_PATTERN = ",\\s*";
 
     /**
      * The DNS Service used to build InetNetworks.
@@ -84,7 +83,7 @@ public class NetMatcher {
 
     public NetMatcher(String commaSeparatedNets, DNSService dnsServer) {
         this.dnsServer = dnsServer;
-        List<String> nets = Splitter.on(NETS_SEPARATOR).splitToList(commaSeparatedNets);
+        List<String> nets = Arrays.asList(commaSeparatedNets.split(NETS_SEPARATOR_PATTERN));
         initInetNetworks(nets);
     }
 
