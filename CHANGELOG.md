@@ -39,6 +39,7 @@ of tasks being currently executed.
 - MAILBOX-392 Mailbox name validation upon mailbox creation is stricter: forbid `#&*%` and empty sub-mailboxes names.
 - JAMES-2972 Incorrect attribute name in the mailet configuration thanks to jtconsol
 - JAMES-2632 JMAP Draft GetMailboxes performance enhancements when retrieving all mailboxes of a user
+- JAMES-2964 Forbid to create User quota/ Domain quota/ Global quota using negative number
 
 ### Removed
 - Classes marked as deprecated whose removal was planned after 3.4.0 release (See JAMES-2703). This includes:
