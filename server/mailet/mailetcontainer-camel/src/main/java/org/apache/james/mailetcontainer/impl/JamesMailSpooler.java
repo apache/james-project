@@ -118,12 +118,11 @@ public class JamesMailSpooler implements Disposable, Configurable, MailSpoolerMB
         TimeMetric timeMetric = metricFactory.timer(SPOOL_PROCESSING);
         try {
             processingActive.incrementAndGet();
-            return processMail(queueItem);
+            return processMail(queueItem)
+                .doOnSuccess(any -> timeMetric.stopAndPublish())
+                .doOnSuccess(any -> processingActive.decrementAndGet());
         } catch (Throwable e) {
             return Mono.error(e);
-        } finally {
-            processingActive.decrementAndGet();
-            timeMetric.stopAndPublish();
         }
     }
 

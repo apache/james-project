@@ -94,11 +94,10 @@ public class DeliveryRunnable implements Disposable {
     private Mono<Void> runStep(MailQueue.MailQueueItem queueItem) {
         TimeMetric timeMetric = metricFactory.timer(REMOTE_DELIVERY_TRIAL);
         try {
-            return processMail(queueItem);
+            return processMail(queueItem)
+                .doOnSuccess(any -> timeMetric.stopAndPublish());
         } catch (Throwable e) {
             return Mono.error(e);
-        } finally {
-            timeMetric.stopAndPublish();
         }
     }
 
