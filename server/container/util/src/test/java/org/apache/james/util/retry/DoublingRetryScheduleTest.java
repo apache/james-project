@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.junit.jupiter.api.Test;
 
-public class DoublingRetryScheduleTest {
+class DoublingRetryScheduleTest {
 
     @Test
     void testDoublingRetrySchedule() {

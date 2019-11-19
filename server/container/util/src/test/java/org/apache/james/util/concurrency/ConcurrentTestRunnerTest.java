@@ -32,9 +32,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.Test;
 
-public class ConcurrentTestRunnerTest {
-    public static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
-    public static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
+class ConcurrentTestRunnerTest {
+    private static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
+    private static final Duration DEFAULT_AWAIT_TIME = Duration.ofMillis(100);
 
     @Test
     void constructorShouldThrowOnNegativeThreadCount() {

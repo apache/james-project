@@ -41,7 +41,7 @@ import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class MessageContentExtractorTest {
+class MessageContentExtractorTest {
     private static final String BINARY_CONTENT = "binary";
     private static final String TEXT_CONTENT = "text content";
     private static final String HTML_CONTENT = "<b>html</b> content";

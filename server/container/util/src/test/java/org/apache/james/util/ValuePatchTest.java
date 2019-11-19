@@ -27,12 +27,12 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
-public class ValuePatchTest {
+class ValuePatchTest {
 
-    public static final int REPLACEMENT_VALUE = 24;
-    public static final Optional<Integer> REPLACEMENT = Optional.of(REPLACEMENT_VALUE);
-    public static final int VALUE = 12;
-    public static final Optional<Integer> OPTIONAL_OF_VALUE = Optional.of(VALUE);
+    private static final int REPLACEMENT_VALUE = 24;
+    private static final Optional<Integer> REPLACEMENT = Optional.of(REPLACEMENT_VALUE);
+    private static final int VALUE = 12;
+    private static final Optional<Integer> OPTIONAL_OF_VALUE = Optional.of(VALUE);
 
     @Test
     void keepShouldProduceKeptValues() {

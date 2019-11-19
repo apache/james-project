@@ -29,7 +29,7 @@ import org.apache.james.util.retry.api.RetryHandler;
 import org.apache.james.util.retry.api.RetrySchedule;
 import org.junit.jupiter.api.Test;
 
-public class NamingExceptionRetryHandlerTest {
+class NamingExceptionRetryHandlerTest {
 
     private static class TestRetryingProxy implements ExceptionRetryingProxy {
         @Override

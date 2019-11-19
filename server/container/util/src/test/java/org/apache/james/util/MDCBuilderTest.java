@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class MDCBuilderTest {
+class MDCBuilderTest {
 
     private static final String KEY_1 = "key1";
     private static final String KEY_2 = "key2";

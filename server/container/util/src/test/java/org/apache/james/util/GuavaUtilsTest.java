@@ -29,7 +29,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
 
-public class GuavaUtilsTest {
+class GuavaUtilsTest {
 
     @Test
     void toMultimapShouldAcceptEmptyMaps() {

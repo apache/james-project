@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class OffsetTest {
+class OffsetTest {
 
     public static final int VALUE = 18;
 

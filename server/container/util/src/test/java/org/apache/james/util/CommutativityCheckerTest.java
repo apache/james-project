@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class CommutativityCheckerTest {
+class CommutativityCheckerTest {
     @Test
     void constructorShouldThrowWhenNullValuesToTest() {
         BinaryOperator<Integer> binaryOperator = (a, b) -> a * a + b;

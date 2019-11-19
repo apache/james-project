@@ -29,7 +29,7 @@ import java.time.format.DateTimeParseException;
 
 import org.junit.jupiter.api.Test;
 
-public class ImapDateTimeFormatterTest {
+class ImapDateTimeFormatterTest {
 
     @Test
     void dayOfWeekShouldBeParsed() {

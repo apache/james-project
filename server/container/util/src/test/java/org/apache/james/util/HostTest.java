@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class HostTest {
+class HostTest {
 
     private static final int DEFAULT_PORT = 154;
 

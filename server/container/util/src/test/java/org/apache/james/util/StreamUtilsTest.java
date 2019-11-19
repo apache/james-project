@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
-public class StreamUtilsTest {
+class StreamUtilsTest {
 
     @Test
     void flattenShouldReturnEmptyWhenEmptyStreams() {

@@ -31,7 +31,7 @@ import com.google.common.collect.UnmodifiableIterator;
 
 import reactor.core.publisher.Flux;
 
-public class IteratorsTest {
+class IteratorsTest {
 
     @Test
     void toStreamShouldReturnEmptyStreamWhenEmptyIterator() {

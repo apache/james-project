@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
-public class PortTest {
+class PortTest {
     @Test
     void assertValidShouldThrowOnNegativePort() {
         assertThatThrownBy(() -> Port.assertValid(-1))

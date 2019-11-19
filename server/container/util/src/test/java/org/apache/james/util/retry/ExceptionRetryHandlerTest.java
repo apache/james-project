@@ -32,7 +32,7 @@ import org.apache.james.util.retry.api.RetrySchedule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class ExceptionRetryHandlerTest {
+class ExceptionRetryHandlerTest {
     private static class TestRetryingProxy implements ExceptionRetryingProxy {
 
         @Override

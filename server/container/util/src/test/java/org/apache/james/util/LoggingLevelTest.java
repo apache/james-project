@@ -25,37 +25,37 @@ import static org.mockito.Mockito.verify;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 
-public class LoggingLevelTest {
+class LoggingLevelTest {
     @Test
-    public void formatShouldCallDebugWhenDebugLevelIsGiven() {
+    void formatShouldCallDebugWhenDebugLevelIsGiven() {
         Logger logger = mock(Logger.class);
         LoggingLevel.DEBUG.format(logger, "easy as {} {} {}", 1, 2.0, "3");
         verify(logger).debug("easy as {} {} {}", 1, 2.0, "3");
     }
 
     @Test
-    public void formatShouldCallErrorWhenErrorLevelIsGiven() {
+    void formatShouldCallErrorWhenErrorLevelIsGiven() {
         Logger logger = mock(Logger.class);
         LoggingLevel.ERROR.format(logger, "easy as {} {} {}", 1, 2.0, "3");
         verify(logger).error("easy as {} {} {}", 1, 2.0, "3");
     }
 
     @Test
-    public void formatShouldCallInfoWhenInfoLevelIsGiven() {
+    void formatShouldCallInfoWhenInfoLevelIsGiven() {
         Logger logger = mock(Logger.class);
         LoggingLevel.INFO.format(logger, "easy as {} {} {}", 1, 2.0, "3");
         verify(logger).info("easy as {} {} {}", 1, 2.0, "3");
     }
 
     @Test
-    public void formatShouldCallTraceWhenTraceLevelIsGiven() {
+    void formatShouldCallTraceWhenTraceLevelIsGiven() {
         Logger logger = mock(Logger.class);
         LoggingLevel.TRACE.format(logger, "easy as {} {} {}", 1, 2.0, "3");
         verify(logger).trace("easy as {} {} {}", 1, 2.0, "3");
     }
 
     @Test
-    public void formatShouldCallWarningWhenWarningLevelIsGiven() {
+    void formatShouldCallWarningWhenWarningLevelIsGiven() {
         Logger logger = mock(Logger.class);
         LoggingLevel.WARNING.format(logger, "easy as {} {} {}", 1, 2.0, "3");
         verify(logger).warn("easy as {} {} {}", 1, 2.0, "3");

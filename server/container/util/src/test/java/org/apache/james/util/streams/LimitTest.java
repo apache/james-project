@@ -32,7 +32,7 @@ import com.google.common.collect.ImmutableList;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class LimitTest {
+class LimitTest {
 
     private final List<Integer> aList = ImmutableList.of(1, 2, 3, 4, 5, 6);
 

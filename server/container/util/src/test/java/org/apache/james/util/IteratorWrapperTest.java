@@ -26,7 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class IteratorWrapperTest {
+class IteratorWrapperTest {
 
     @Test
     void getEntriesSeenShouldReturnEmptyWhenNotConsumed() {
