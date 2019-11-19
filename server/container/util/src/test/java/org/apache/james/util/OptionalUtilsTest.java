@@ -210,7 +210,7 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    void containsDifferentShouldReturnTrueWhenNullStoreValue() throws Exception {
+    void containsDifferentShouldReturnTrueWhenNullStoreValue() {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), null)).isTrue();
     }
 
@@ -220,12 +220,12 @@ public class OptionalUtilsTest {
     }
 
     @Test
-    void containsDifferentShouldReturnFalseWhenSameValue() throws Exception {
+    void containsDifferentShouldReturnFalseWhenSameValue() {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "any")).isFalse();
     }
 
     @Test
-    void containsDifferentShouldReturnTrueWhenDifferentValue() throws Exception {
+    void containsDifferentShouldReturnTrueWhenDifferentValue() {
         assertThat(OptionalUtils.containsDifferent(Optional.of("any"), "other")).isTrue();
     }
 

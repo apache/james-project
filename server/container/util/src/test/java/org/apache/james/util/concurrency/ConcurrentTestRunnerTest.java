@@ -185,7 +185,7 @@ public class ConcurrentTestRunnerTest {
     }
 
     @Test
-    void assertNoExceptionShouldThrowOnExceptions() throws Exception {
+    void assertNoExceptionShouldThrowOnExceptions() {
         assertThatThrownBy(() ->
                 ConcurrentTestRunner.builder()
                     .operation((threadNumber, step) -> {

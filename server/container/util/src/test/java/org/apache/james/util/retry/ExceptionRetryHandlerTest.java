@@ -55,7 +55,7 @@ public class ExceptionRetryHandlerTest {
     private RetrySchedule schedule = null;
 
     @BeforeEach
-    void setUp() throws Exception {
+    void setUp() {
         exceptionClasses = new Class<?>[]{Exception.class};
         proxy = new TestRetryingProxy();
         schedule = i -> i;

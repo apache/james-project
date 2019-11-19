@@ -68,7 +68,7 @@ public class SizeTest {
     }
 
     @Test
-    void testWrongNumber() throws Exception {
+    void testWrongNumber() {
         assertThatThrownBy(() -> Size.parse("42RG"))
             .isInstanceOf(NumberFormatException.class);
     }
