@@ -22,13 +22,13 @@ package org.apache.james.mailbox.fixture;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.MailboxPath;
 
-public class MailboxFixture {
-    public static final Username ALICE = Username.of("alice");
-    public static final Username BOB = Username.of("bob");
-    public static final Username CEDRIC = Username.of("cedric");
+public interface MailboxFixture {
+    Username ALICE = Username.of("alice");
+    Username BOB = Username.of("bob");
+    Username CEDRIC = Username.of("cedric");
 
-    public static final MailboxPath INBOX_ALICE = MailboxPath.forUser(ALICE, "INBOX");
-    public static final MailboxPath OUTBOX_ALICE = MailboxPath.forUser(ALICE, "OUTBOX");
-    public static final MailboxPath SENT_ALICE = MailboxPath.forUser(ALICE, "SENT");
-    public static final MailboxPath INBOX_BOB = MailboxPath.forUser(BOB, "INBOX");
+    MailboxPath INBOX_ALICE = MailboxPath.forUser(ALICE, "INBOX");
+    MailboxPath OUTBOX_ALICE = MailboxPath.forUser(ALICE, "OUTBOX");
+    MailboxPath SENT_ALICE = MailboxPath.forUser(ALICE, "SENT");
+    MailboxPath INBOX_BOB = MailboxPath.forUser(BOB, "INBOX");
 }
