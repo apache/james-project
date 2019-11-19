@@ -44,7 +44,7 @@ import com.google.common.base.Splitter;
 public class NetMatcher {
     private static final Logger LOGGER = LoggerFactory.getLogger(NetMatcher.class);
 
-    public static final String NETS_SEPARATOR = ", ";
+    public static final String NETS_SEPARATOR = ",";
 
     /**
      * The DNS Service used to build InetNetworks.
@@ -84,7 +84,7 @@ public class NetMatcher {
 
     public NetMatcher(String commaSeparatedNets, DNSService dnsServer) {
         this.dnsServer = dnsServer;
-        List<String> nets = Splitter.on(NETS_SEPARATOR).splitToList(commaSeparatedNets);
+        List<String> nets = Splitter.on(NETS_SEPARATOR).trimResults().splitToList(commaSeparatedNets);
         initInetNetworks(nets);
     }
 

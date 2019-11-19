@@ -34,6 +34,16 @@ public class NetMatcherTest {
     private static NetMatcher netMatcher;
 
     /**
+     * Test ability to split expressions even when comma is not followed by a space.
+     */
+    @Test
+    public void testSplitterDoesNotRequireSpaceAfterComma() {
+        netMatcher = new NetMatcher("127.0.0.1,192.168.100.14/24,10.*", DNSFixture.DNS_SERVER_IPV4_MOCK);
+        assertThat(netMatcher.toString())
+                .isEqualTo("[10.0.0.0/255.0.0.0, 127.0.0.1/255.255.255.255, 192.168.100.0/255.255.255.0]");
+    }
+
+    /**
      * Test for IPV4 uniqueness.
      */
     @Test
