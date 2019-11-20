@@ -36,6 +36,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -58,7 +59,7 @@ class ExpungedSerializationTest {
     private static final MessageUid MESSAGE_UID = MessageUid.of(123456);
     private static final Instant INSTANT = Instant.parse("2018-12-14T09:41:51.541Z");
     private static final TestMessageId MESSAGE_ID = TestMessageId.of(42);
-    private static final int MOD_SEQ = 35;
+    private static final ModSeq MOD_SEQ = ModSeq.of(35);
     private static final int SIZE = 45;
     private static final Flags FLAGS = FlagsBuilder.builder()
         .add(Flags.Flag.ANSWERED, Flags.Flag.DRAFT)

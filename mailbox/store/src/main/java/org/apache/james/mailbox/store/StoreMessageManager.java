@@ -51,6 +51,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -537,7 +538,7 @@ public class StoreMessageManager implements MessageManager {
         MessageUid uidNext = mapperFactory.getMessageMapper(mailboxSession).getLastUid(mailbox)
                 .map(MessageUid::next)
                 .orElse(MessageUid.MIN_VALUE);
-        long highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
+        ModSeq highestModSeq = mapperFactory.getMessageMapper(mailboxSession).getHighestModSeq(mailbox);
         long messageCount;
         long unseenCount;
         MessageUid firstUnseen;

@@ -35,6 +35,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -368,7 +369,7 @@ public abstract class MessageIdMapperTest {
         Flags newFlags = new Flags(Flag.ANSWERED);
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.ADD);
 
-        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
             .modSeq(modSeq)
@@ -395,7 +396,7 @@ public abstract class MessageIdMapperTest {
 
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REPLACE);
 
-        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
             .modSeq(modSeq)
@@ -423,7 +424,7 @@ public abstract class MessageIdMapperTest {
 
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId()), newFlags, FlagsUpdateMode.REMOVE);
 
-        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
             .modSeq(modSeq)
@@ -494,7 +495,7 @@ public abstract class MessageIdMapperTest {
             .add(Flag.RECENT)
             .add(Flag.ANSWERED)
             .build();
-        long modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.highestModSeq(benwaInboxMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
             .modSeq(modSeq)
@@ -519,8 +520,8 @@ public abstract class MessageIdMapperTest {
         Flags newFlags = new Flags(Flag.ANSWERED);
         Map<MailboxId, UpdatedFlags> flags = sut.setFlags(messageId, ImmutableList.of(message1.getMailboxId(), message1InOtherMailbox.getMailboxId()), newFlags, FlagsUpdateMode.ADD);
 
-        long modSeqBenwaInboxMailbox = mapperProvider.highestModSeq(benwaInboxMailbox);
-        long modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
+        ModSeq modSeqBenwaInboxMailbox = mapperProvider.highestModSeq(benwaInboxMailbox);
+        ModSeq modSeqBenwaWorkMailbox = mapperProvider.highestModSeq(benwaWorkMailbox);
         UpdatedFlags expectedUpdatedFlags = UpdatedFlags.builder()
             .uid(message1.getUid())
             .modSeq(modSeqBenwaInboxMailbox)
@@ -554,7 +555,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void setFlagsShouldNotModifyModSeqWhenMailboxIdsIsEmpty() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         sut.save(message1);
 
@@ -570,7 +571,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void setFlagsShouldUpdateModSeqWhenMessageIsInOneMailbox() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         sut.save(message1);
 
@@ -585,7 +586,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void setFlagsShouldNotModifyFlagsWhenMailboxIdsIsEmpty() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         Flags initialFlags = new Flags(Flags.Flag.DRAFT);
         message1.setFlags(initialFlags);
@@ -813,7 +814,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void setFlagsShouldNotUpdateModSeqWhenNoop() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         message1.setFlags(new Flags(Flag.SEEN));
         sut.save(message1);
@@ -831,7 +832,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void addingFlagToAMessageThatAlreadyHasThisFlagShouldResultInNoChange() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         Flags flags = new Flags(Flag.SEEN);
         message1.setFlags(flags);
@@ -850,7 +851,7 @@ public abstract class MessageIdMapperTest {
     @Test
     void setFlagsShouldReturnUpdatedFlagsWhenNoop() throws Exception {
         message1.setUid(mapperProvider.generateMessageUid());
-        long modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
+        ModSeq modSeq = mapperProvider.generateModSeq(benwaInboxMailbox);
         message1.setModSeq(modSeq);
         Flags flags = new Flags(Flag.SEEN);
         message1.setFlags(flags);

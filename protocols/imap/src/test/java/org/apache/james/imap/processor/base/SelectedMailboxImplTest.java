@@ -44,6 +44,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -67,7 +68,7 @@ public class SelectedMailboxImplTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SelectedMailboxImplTest.class);
     private static final MessageUid EMITTED_EVENT_UID = MessageUid.of(5);
-    private static final int MOD_SEQ = 12;
+    private static final ModSeq MOD_SEQ = ModSeq.of(12);
     private static final int SIZE = 38;
 
     private ExecutorService executorService;

@@ -25,6 +25,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.SearchResponse;
+import org.apache.james.mailbox.ModSeq;
 
 /**
  * Encoders IMAP4rev1 <code>SEARCH</code> responses.
@@ -39,7 +40,7 @@ public class SearchResponseEncoder extends AbstractChainedImapEncoder {
     protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
         SearchResponse response = (SearchResponse) acceptableMessage;
         final long[] ids = response.getIds();
-        Long highestModSeq = response.getHighestModSeq();
+        ModSeq highestModSeq = response.getHighestModSeq();
         composer.untagged();
         composer.message(ImapConstants.SEARCH_RESPONSE_NAME);
         if (ids != null) {
@@ -52,7 +53,7 @@ public class SearchResponseEncoder extends AbstractChainedImapEncoder {
         if (highestModSeq != null) {
             composer.openParen();
             composer.message("MODSEQ");
-            composer.message(highestModSeq);
+            composer.message(highestModSeq.asLong());
             composer.closeParen();
         }
         composer.end();

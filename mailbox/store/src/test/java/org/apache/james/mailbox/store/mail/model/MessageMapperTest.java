@@ -40,6 +40,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -526,14 +527,14 @@ public abstract class MessageMapperTest {
 
     @Test
     void getHighestMoseqShouldBeEqualToZeroOnEmptyMailbox() throws MailboxException {
-        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(0);
+        assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isEqualTo(ModSeq.first());
     }
 
     @Test
     void insertingAMessageShouldIncrementModSeq() throws MailboxException {
         messageMapper.add(benwaInboxMailbox, message1);
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
-        assertThat(modSeq).isGreaterThan(0);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        assertThat(modSeq).isGreaterThan(ModSeq.first());
         messageMapper.add(benwaInboxMailbox, message2);
         assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isGreaterThan(modSeq);
     }
@@ -577,7 +578,7 @@ public abstract class MessageMapperTest {
     @Test
     void copyShouldIncrementModSeq() throws MailboxException, IOException {
         saveMessages();
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         messageMapper.copy(benwaInboxMailbox, SimpleMailboxMessage.copy(benwaInboxMailbox.getMailboxId(), message6));
         assertThat(messageMapper.getHighestModSeq(benwaInboxMailbox)).isGreaterThan(modSeq);
     }
@@ -663,13 +664,13 @@ public abstract class MessageMapperTest {
     @Test
     void flagsReplacementShouldReturnAnUpdatedFlagHighlightingTheReplacement() throws MailboxException {
         saveMessages();
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         Iterator<UpdatedFlags> updatedFlags = messageMapper.updateFlags(benwaInboxMailbox,
                 new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
         assertThat(Lists.newArrayList(updatedFlags))
             .containsOnly(UpdatedFlags.builder()
                 .uid(message1.getUid())
-                .modSeq(modSeq + 1)
+                .modSeq(modSeq.next())
                 .oldFlags(new Flags())
                 .newFlags(new Flags(Flags.Flag.FLAGGED))
                 .build());
@@ -679,12 +680,12 @@ public abstract class MessageMapperTest {
     void flagsAdditionShouldReturnAnUpdatedFlagHighlightingTheAddition() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.FLAGGED), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
             .toIterable()
             .containsOnly(UpdatedFlags.builder()
                     .uid(message1.getUid())
-                    .modSeq(modSeq + 1)
+                    .modSeq(modSeq.next())
                     .oldFlags(new Flags(Flags.Flag.FLAGGED))
                     .newFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
                     .build());
@@ -712,13 +713,13 @@ public abstract class MessageMapperTest {
     void flagsRemovalShouldReturnAnUpdatedFlagHighlightingTheRemoval() throws MailboxException {
         saveMessages();
         messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new FlagsBuilder().add(Flags.Flag.FLAGGED, Flags.Flag.SEEN).build(), FlagsUpdateMode.REPLACE), MessageRange.one(message1.getUid()));
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(Flags.Flag.SEEN), FlagsUpdateMode.REMOVE), MessageRange.one(message1.getUid())))
             .toIterable()
             .containsOnly(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
-                    .modSeq(modSeq + 1)
+                    .modSeq(modSeq.next())
                     .oldFlags(new FlagsBuilder().add(Flags.Flag.SEEN, Flags.Flag.FLAGGED).build())
                     .newFlags(new Flags(Flags.Flag.FLAGGED))
                     .build());
@@ -839,13 +840,13 @@ public abstract class MessageMapperTest {
     @Test
     void userFlagsUpdateShouldReturnCorrectUpdatedFlags() throws Exception {
         saveMessages();
-        long modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
+        ModSeq modSeq = messageMapper.getHighestModSeq(benwaInboxMailbox);
         assertThat(messageMapper.updateFlags(benwaInboxMailbox, new FlagsUpdateCalculator(new Flags(USER_FLAG), FlagsUpdateMode.ADD), MessageRange.one(message1.getUid())))
             .toIterable()
             .containsOnly(
                 UpdatedFlags.builder()
                     .uid(message1.getUid())
-                    .modSeq(modSeq + 1)
+                    .modSeq(modSeq.next())
                     .oldFlags(new Flags())
                     .newFlags(new Flags(USER_FLAG))
                     .build());

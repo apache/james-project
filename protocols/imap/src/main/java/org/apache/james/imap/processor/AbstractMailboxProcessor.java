@@ -54,6 +54,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -282,16 +283,13 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         if (!enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
             if (sendHighestModSeq) {
                 if (metaData.isModSeqPermanent()) {
-
-                    final long highestModSeq = metaData.getHighestModSeq();
+                    ModSeq highestModSeq = metaData.getHighestModSeq();
 
                     StatusResponse untaggedOk = getStatusResponseFactory().untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
                     responder.respond(untaggedOk);        
                 }
             }
             enabled.add(ImapConstants.SUPPORTS_CONDSTORE);
-
-
         }
     }
     
@@ -547,7 +545,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
         //      A client providing message sequence match data can reduce the scope
         //      as above.  In the case where there have been no expunges, the server
         //      can ignore this data.
-        if (metaData.getHighestModSeq() > changedSince) {
+        if (metaData.getHighestModSeq().asLong() > changedSince) {
             SearchQuery searchQuery = new SearchQuery();
             SearchQuery.UidRange[] nRanges = new SearchQuery.UidRange[ranges.size()];
             Set<MessageUid> vanishedUids = new HashSet<>();

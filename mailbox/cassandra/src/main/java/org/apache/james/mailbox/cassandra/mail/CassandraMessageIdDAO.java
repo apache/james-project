@@ -50,6 +50,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
@@ -173,7 +174,7 @@ public class CassandraMessageIdDAO {
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
+                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
                 .setBool(DRAFT, flags.contains(Flag.DRAFT))
@@ -188,7 +189,7 @@ public class CassandraMessageIdDAO {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
         return cassandraAsyncExecutor.executeVoid(update.bind()
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
+                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
                 .setBool(DRAFT, flags.contains(Flag.DRAFT))
@@ -262,7 +263,7 @@ public class CassandraMessageIdDAO {
                         messageIdFactory.of(row.getUUID(MESSAGE_ID)),
                         MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(new FlagsExtractor(row).getFlags())
-                .modSeq(row.getLong(MOD_SEQ))
+                .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
                 .build();
     }
 }

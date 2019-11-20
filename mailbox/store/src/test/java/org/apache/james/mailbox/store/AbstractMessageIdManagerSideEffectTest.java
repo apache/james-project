@@ -45,6 +45,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -75,6 +76,7 @@ import org.mockito.ArgumentCaptor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+
 import reactor.core.publisher.Mono;
 
 public abstract class AbstractMessageIdManagerSideEffectTest {
@@ -461,7 +463,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThat(messages).hasSize(1);
         MessageResult messageResult = messages.get(0);
         MessageUid messageUid = messageResult.getUid();
-        long modSeq = messageResult.getModSeq();
+        ModSeq modSeq = messageResult.getModSeq();
         UpdatedFlags updatedFlags = UpdatedFlags.builder()
             .uid(messageUid)
             .modSeq(modSeq)

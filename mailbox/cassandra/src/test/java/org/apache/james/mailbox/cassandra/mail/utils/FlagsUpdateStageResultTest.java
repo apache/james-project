@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.junit.jupiter.api.Test;
 
@@ -37,13 +38,13 @@ class FlagsUpdateStageResultTest {
     private static final MessageUid OTHER_UID = MessageUid.of(2L);
     private static final UpdatedFlags UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
-        .modSeq(18L)
+        .modSeq(ModSeq.of(18))
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.SEEN))
         .build();
     private static final UpdatedFlags OTHER_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(OTHER_UID)
-        .modSeq(18L)
+        .modSeq(ModSeq.of(18))
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.SEEN))
         .build();

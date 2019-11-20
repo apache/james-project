@@ -35,6 +35,7 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
@@ -180,10 +181,10 @@ public abstract class AbstractMessageIdManagerStorageTest {
 
         messageIdManager.setInMailboxes(messageId2, ImmutableList.of(aliceMailbox1.getMailboxId(), aliceMailbox2.getMailboxId()), aliceSession);
 
-        long modSeqMessage1Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, aliceSession)
+        ModSeq modSeqMessage1Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, aliceSession)
             .get(0)
             .getModSeq();
-        long modSeqMessage2Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, aliceSession)
+        ModSeq modSeqMessage2Mailbox1 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, aliceSession)
             .stream()
             .filter(inMailbox(aliceMailbox1.getMailboxId()))
             .findFirst()
@@ -198,7 +199,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
         MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession).get(0);
         MessageUid messageUid1 = messageResult1.getUid();
-        long modSeq1 = messageResult1.getModSeq();
+        ModSeq modSeq1 = messageResult1.getModSeq();
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(aliceMailbox1.getMailboxId(), aliceMailbox2.getMailboxId()), aliceSession);
 
@@ -208,7 +209,7 @@ public abstract class AbstractMessageIdManagerStorageTest {
             .findFirst()
             .get();
         MessageUid messageUid2 = messageResult2.getUid();
-        long modSeq2 = messageResult2.getModSeq();
+        ModSeq modSeq2 = messageResult2.getModSeq();
 
         assertThat(messageUid1).isEqualTo(messageUid2);
         assertThat(modSeq1).isEqualTo(modSeq2);
@@ -390,12 +391,12 @@ public abstract class AbstractMessageIdManagerStorageTest {
         MessageId messageId = testingData.persist(aliceMailbox1.getMailboxId(), messageUid1, FLAGS, aliceSession);
 
         MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession).get(0);
-        long modSeq1 = messageResult1.getModSeq();
+        ModSeq modSeq1 = messageResult1.getModSeq();
 
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(aliceMailbox1.getMailboxId()), aliceSession);
 
         MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, aliceSession).get(0);
-        long modSeq2 = messageResult2.getModSeq();
+        ModSeq modSeq2 = messageResult2.getModSeq();
 
         assertThat(modSeq2).isGreaterThan(modSeq1);
     }

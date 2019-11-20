@@ -329,7 +329,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getHighestModSeq()).isNotNegative();
+        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getHighestModSeq().asLong()).isNotNegative();
     }
 
     @Test

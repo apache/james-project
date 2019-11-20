@@ -40,6 +40,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -566,15 +567,15 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean matches(SearchQuery.ModSeqCriterion criterion, MailboxMessage message)
             throws UnsupportedSearchException {
         SearchQuery.NumericOperator operator = criterion.getOperator();
-        long modSeq = message.getModSeq();
+        ModSeq modSeq = message.getModSeq();
         long value = operator.getValue();
         switch (operator.getType()) {
         case LESS_THAN:
-            return modSeq < value;
+            return modSeq.asLong() < value;
         case GREATER_THAN:
-            return modSeq > value;
+            return modSeq.asLong() > value;
         case EQUALS:
-            return modSeq == value;
+            return modSeq.asLong() == value;
         default:
             throw new UnsupportedSearchException();
         }

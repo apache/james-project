@@ -29,10 +29,10 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -146,7 +146,7 @@ public class TransactionalMessageMapper implements MessageMapper {
     }
 
     @Override
-    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return messageMapper.getHighestModSeq(mailbox);
     }
 

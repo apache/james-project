@@ -34,6 +34,7 @@ import javax.mail.Flags;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MessageId;
@@ -61,7 +62,7 @@ public class MessageToElasticSearchJsonTest {
     private static final int BODY_START_OCTET = 100;
     private static final TestId MAILBOX_ID = TestId.of(18L);
     private static final MessageId MESSAGE_ID = TestMessageId.of(184L);
-    private static final long MOD_SEQ = 42L;
+    private static final ModSeq MOD_SEQ = ModSeq.of(42L);
     private static final MessageUid UID = MessageUid.of(25);
     private static final Username USERNAME = Username.of("username");
 

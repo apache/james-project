@@ -21,6 +21,7 @@ package org.apache.james.mailbox.store.mail.model;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -54,12 +55,12 @@ public interface MailboxMessage extends Message, Comparable<MailboxMessage> {
      * Set the mod-sequence for the message. This must be called before the message is added to the store
      * or any flags are changed. This must be unique / sequential.
      */
-    void setModSeq(long modSeq);
+    void setModSeq(ModSeq modSeq);
 
     /**
      * Return the mod-sequence for the message
      */
-    long getModSeq();
+    ModSeq getModSeq();
 
     /**
      * Return if it was marked as answered

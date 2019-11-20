@@ -25,6 +25,7 @@ import java.io.IOException;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirId;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
@@ -44,14 +45,14 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
     private final Mailbox mailbox;
     private MessageUid uid;
     protected boolean newMessage;
-    private long modSeq;
+    private ModSeq modSeq;
     
     public MaildirMailboxMessage(Mailbox mailbox, MessageUid messageUid, MaildirMessageName messageName) throws IOException {
         super(new MaildirMessage(messageName));
 
         this.mailbox = mailbox;
         setUid(messageUid);
-        setModSeq(messageName.getFile().lastModified());
+        setModSeq(ModSeq.of(messageName.getFile().lastModified()));
         Flags flags = messageName.getFlags();
         
         // Set the flags for the message and respect if its RECENT
@@ -149,12 +150,12 @@ public class MaildirMailboxMessage extends DelegatingMailboxMessage {
     }
 
     @Override
-    public long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
 
     @Override
-    public void setModSeq(long modSeq) {
+    public void setModSeq(ModSeq modSeq) {
         this.modSeq = modSeq;
     }
 

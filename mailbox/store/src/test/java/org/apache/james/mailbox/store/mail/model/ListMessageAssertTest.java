@@ -31,6 +31,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -84,7 +85,7 @@ public class ListMessageAssertTest {
         SimpleMailboxMessage simpleMailboxMessage = new SimpleMailboxMessage(messageId, internalDate, content.length(),
             bodyStart, new SharedByteArrayInputStream(content.getBytes(StandardCharsets.UTF_8)), new Flags(), propertyBuilder, mailboxId);
         simpleMailboxMessage.setUid(uid);
-        simpleMailboxMessage.setModSeq(0);
+        simpleMailboxMessage.setModSeq(ModSeq.first());
         return simpleMailboxMessage;
     }
 

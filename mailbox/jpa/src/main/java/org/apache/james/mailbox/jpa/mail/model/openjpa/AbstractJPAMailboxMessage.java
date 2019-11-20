@@ -42,6 +42,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
@@ -275,12 +276,12 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
      * @param original
      *            message to be copied, not null
      */
-    public AbstractJPAMailboxMessage(JPAMailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
+    public AbstractJPAMailboxMessage(JPAMailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original)
             throws MailboxException {
         super();
         this.mailbox = mailbox;
         this.uid = uid.asLong();
-        this.modSeq = modSeq;
+        this.modSeq = modSeq.asLong();
         this.userFlags = new ArrayList<>();
         setFlags(original.createFlags());
 
@@ -322,20 +323,20 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public ComposedMessageIdWithMetaData getComposedMessageIdWithMetaData() {
         return ComposedMessageIdWithMetaData.builder()
-            .modSeq(modSeq)
+            .modSeq(getModSeq())
             .flags(createFlags())
             .composedMessageId(new ComposedMessageId(mailbox.getMailboxId(), getMessageId(), MessageUid.of(uid)))
             .build();
     }
 
     @Override
-    public long getModSeq() {
-        return modSeq;
+    public ModSeq getModSeq() {
+        return ModSeq.of(modSeq);
     }
 
     @Override
-    public void setModSeq(long modSeq) {
-        this.modSeq = modSeq;
+    public void setModSeq(ModSeq modSeq) {
+        this.modSeq = modSeq.asLong();
     }
 
     @Override

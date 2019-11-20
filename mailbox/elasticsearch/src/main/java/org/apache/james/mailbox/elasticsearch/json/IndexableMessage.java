@@ -28,6 +28,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -137,7 +138,7 @@ public class IndexableMessage {
 
             long uid = message.getUid().asLong();
             String mailboxId = message.getMailboxId().serialize();
-            long modSeq = message.getModSeq();
+            ModSeq modSeq = message.getModSeq();
             long size = message.getFullContentOctets();
             String date = DateResolutionFormater.DATE_TIME_FOMATTER.format(getSanitizedInternalDate(message, zoneId));
             String mediaType = message.getMediaType();
@@ -243,7 +244,7 @@ public class IndexableMessage {
                              boolean isUnRead,
                              String mailboxId,
                              String mediaType, String messageId,
-                             long modSeq,
+                             ModSeq modSeq,
                              String sentDate,
                              long size,
                              Subjects subjects,
@@ -270,7 +271,7 @@ public class IndexableMessage {
         this.mailboxId = mailboxId;
         this.mediaType = mediaType;
         this.messageId = messageId;
-        this.modSeq = modSeq;
+        this.modSeq = modSeq.asLong();
         this.sentDate = sentDate;
         this.size = size;
         this.subjects = subjects;

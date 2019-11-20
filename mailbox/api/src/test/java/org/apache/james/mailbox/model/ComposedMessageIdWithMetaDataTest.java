@@ -25,6 +25,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -62,7 +63,7 @@ class ComposedMessageIdWithMetaDataTest {
     @Test
     void buildShoudWork() {
         Flags flags = new Flags(Flag.RECENT);
-        long modSeq = 1;
+        ModSeq modSeq = ModSeq.of(1);
 
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
             .composedMessageId(COMPOSED_MESSAGE_ID)
@@ -80,7 +81,7 @@ class ComposedMessageIdWithMetaDataTest {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(TEST_ID, TEST_MESSAGE_ID, MESSAGE_UID))
                 .flags(new Flags(Flag.RECENT))
-                .modSeq((long) 1)
+                .modSeq(ModSeq.of(1))
                 .build();
 
         assertThat(composedMessageIdWithMetaData.isMatching(TEST_MESSAGE_ID)).isTrue();
@@ -91,7 +92,7 @@ class ComposedMessageIdWithMetaDataTest {
         ComposedMessageIdWithMetaData composedMessageIdWithMetaData = ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(COMPOSED_MESSAGE_ID)
                 .flags(new Flags(Flag.RECENT))
-                .modSeq((long) 1)
+                .modSeq(ModSeq.of(1))
                 .build();
 
         assertThat(composedMessageIdWithMetaData.isMatching(new TestMessageId("3"))).isFalse();

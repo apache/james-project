@@ -21,6 +21,8 @@ package org.apache.james.mailbox.model;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.ModSeq;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -35,7 +37,7 @@ public class ComposedMessageIdWithMetaData {
 
         private ComposedMessageId composedMessageId;
         private Flags flags;
-        private Long modSeq;
+        private ModSeq modSeq;
 
         private Builder() {
         }
@@ -50,7 +52,7 @@ public class ComposedMessageIdWithMetaData {
             return this;
         }
 
-        public Builder modSeq(long modSeq) {
+        public Builder modSeq(ModSeq modSeq) {
             this.modSeq = modSeq;
             return this;
         }
@@ -65,9 +67,9 @@ public class ComposedMessageIdWithMetaData {
 
     private final ComposedMessageId composedMessageId;
     private final Flags flags;
-    private final long modSeq;
+    private final ModSeq modSeq;
 
-    public ComposedMessageIdWithMetaData(ComposedMessageId composedMessageId, Flags flags, long modSeq) {
+    public ComposedMessageIdWithMetaData(ComposedMessageId composedMessageId, Flags flags, ModSeq modSeq) {
         this.composedMessageId = composedMessageId;
         this.flags = flags;
         this.modSeq = modSeq;
@@ -81,7 +83,7 @@ public class ComposedMessageIdWithMetaData {
         return flags;
     }
 
-    public long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
 

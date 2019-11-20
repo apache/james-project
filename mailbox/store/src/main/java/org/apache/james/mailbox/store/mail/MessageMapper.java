@@ -27,6 +27,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -142,7 +143,7 @@ public interface MessageMapper extends Mapper {
     /**
      * Return the higest mod-sequence which were used for storing a MailboxMessage in the {@link Mailbox}
      */
-    long getHighestModSeq(Mailbox mailbox) throws MailboxException;
+    ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException;
 
     Flags getApplicableFlag(Mailbox mailbox) throws MailboxException;
 

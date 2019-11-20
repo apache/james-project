@@ -39,6 +39,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -62,19 +63,19 @@ public class MailboxEventAnalyserTest {
     private static final MessageUid UID = MessageUid.of(900);
     private static final UpdatedFlags ADD_RECENT_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
-        .modSeq(-1)
+        .modSeq(ModSeq.first())
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.RECENT))
         .build();
     private static final UpdatedFlags ADD_ANSWERED_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
-        .modSeq(-1)
+        .modSeq(ModSeq.first())
         .oldFlags(new Flags())
         .newFlags(new Flags(Flags.Flag.ANSWERED))
         .build();
     private static final UpdatedFlags NOOP_UPDATED_FLAGS = UpdatedFlags.builder()
         .uid(UID)
-        .modSeq(-1)
+        .modSeq(ModSeq.first())
         .oldFlags(new Flags())
         .newFlags(new Flags())
         .build();
@@ -123,7 +124,7 @@ public class MailboxEventAnalyserTest {
         .randomEventId()
         .mailboxSession(MAILBOX_SESSION)
         .mailbox(DEFAULT_MAILBOX)
-        .addMetaData(new MessageMetaData(MessageUid.of(11), 0, new Flags(), 45, new Date(), new DefaultMessageId()))
+        .addMetaData(new MessageMetaData(MessageUid.of(11), ModSeq.first(), new Flags(), 45, new Date(), new DefaultMessageId()))
         .build();
 
     private SelectedMailboxImpl testee;

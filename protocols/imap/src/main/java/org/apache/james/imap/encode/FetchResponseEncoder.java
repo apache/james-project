@@ -37,6 +37,7 @@ import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Structure;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -91,12 +92,12 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
 
     // Handle the MODSEQ 
     private void encodeModSeq(ImapResponseComposer composer, FetchResponse response) throws IOException {
-        Long modSeq = response.getModSeq();
+        ModSeq modSeq = response.getModSeq();
         if (modSeq != null) {
             composer.message(ImapConstants.FETCH_MODSEQ);
             composer.openParen();
             composer.skipNextSpace();
-            composer.message(modSeq);
+            composer.message(modSeq.asLong());
             composer.closeParen();
         }
     }

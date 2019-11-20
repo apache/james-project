@@ -29,6 +29,7 @@ import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ESearchResponse;
+import org.apache.james.mailbox.ModSeq;
 
 /**
  * Encoders IMAP4rev1 <code>ESEARCH</code> responses.
@@ -49,7 +50,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         IdRange[] all = response.getAll();
         UidRange[] allUids = response.getAllUids();
         boolean useUid = response.getUseUid();
-        Long highestModSeq = response.getHighestModSeq();
+        ModSeq highestModSeq = response.getHighestModSeq();
         List<SearchResultOption> options = response.getSearchResultOptions();
         
         composer.untagged().message("ESEARCH").openParen().message("TAG").quote(tag.asString()).closeParen();
@@ -79,7 +80,7 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
         // see RFC4731 3.2.  Interaction with CONDSTORE extension
         if (highestModSeq != null) {
             composer.message("MODSEQ");
-            composer.message(highestModSeq);
+            composer.message(highestModSeq.asLong());
         }
         composer.end();
     }

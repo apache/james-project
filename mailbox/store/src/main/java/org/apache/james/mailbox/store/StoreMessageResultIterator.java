@@ -27,6 +27,7 @@ import java.util.Objects;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.Headers;
@@ -242,7 +243,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         }
 
         @Override
-        public long getModSeq() {
+        public ModSeq getModSeq() {
             return messageMetaData().getModSeq();
         }
 

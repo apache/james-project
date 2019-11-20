@@ -26,6 +26,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.CassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.TestCassandraMailboxSessionMapperFactory;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -112,13 +113,13 @@ public class CassandraMapperProvider implements MapperProvider {
     }
 
     @Override
-    public long generateModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
         MailboxSession mailboxSession = null;
         return cassandraModSeqProvider.nextModSeq(mailboxSession, mailbox);
     }
 
     @Override
-    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         MailboxSession mailboxSession = null;
         return cassandraModSeqProvider.highestModSeq(mailboxSession, mailbox);
     }

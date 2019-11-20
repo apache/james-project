@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -31,7 +32,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class UpdatedFlagsTest {
 
     public static final MessageUid UID = MessageUid.of(45L);
-    public static final long MOD_SEQ = 47L;
+    public static final ModSeq MOD_SEQ = ModSeq.of(47L);
 
     @Test
     void shouldMatchBeanContract() {

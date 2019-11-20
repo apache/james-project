@@ -19,6 +19,7 @@
 package org.apache.james.mailbox.store.mail;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -36,7 +37,7 @@ public interface ModSeqProvider {
      * 
      * The first mod-seq must be >= 1
      */
-    long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    ModSeq nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
 
     /**
      * Return the next mod-sequence which can be used for the {@link Mailbox}.
@@ -45,15 +46,15 @@ public interface ModSeqProvider {
      * 
      * The first mod-seq must be >= 1
      */
-    long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException;
+    ModSeq nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException;
     
     /**
      * Return the highest mod-sequence which were used for the {@link Mailbox}
      */
-    long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
+    ModSeq highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException;
     
     /**
      * Return the highest mod-sequence which were used for the {@link Mailbox}
      */
-    long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException;
+    ModSeq highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException;
 }

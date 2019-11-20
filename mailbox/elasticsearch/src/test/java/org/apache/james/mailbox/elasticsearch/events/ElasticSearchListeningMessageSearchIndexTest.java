@@ -37,6 +37,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.MailboxElasticSearchConstants;
 import org.apache.james.mailbox.elasticsearch.MailboxIdRoutingKeyFactory;
@@ -83,7 +84,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     private static final int SIZE = 25;
     private static final int BODY_START_OCTET = 100;
     private static final TestId MAILBOX_ID = TestId.of(1L);
-    private static final long MOD_SEQ = 42L;
+    private static final ModSeq MOD_SEQ = ModSeq.of(42L);
     private static final Username USERNAME = Username.of("user");
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(25);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(26);

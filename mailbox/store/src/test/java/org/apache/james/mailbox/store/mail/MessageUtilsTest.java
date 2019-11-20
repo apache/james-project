@@ -33,6 +33,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -110,11 +111,11 @@ public class MessageUtilsTest {
     @Test
     public void enrichMesageShouldEnrichUidAndModSeq() throws Exception {
         when(uidProvider.nextUid(eq(mailboxSession), eq(mailbox))).thenReturn(MESSAGE_UID);
-        when(modSeqProvider.nextModSeq(eq(mailboxSession), eq(mailbox))).thenReturn(11L);
+        when(modSeqProvider.nextModSeq(eq(mailboxSession), eq(mailbox))).thenReturn(ModSeq.of(11));
 
         messageUtils.enrichMessage(mailbox, message);
         
         assertThat(message.getUid()).isEqualTo(MESSAGE_UID);
-        assertThat(message.getModSeq()).isEqualTo(11L);
+        assertThat(message.getModSeq()).isEqualTo(ModSeq.of(11));
     }
 }

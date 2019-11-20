@@ -31,6 +31,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
@@ -62,7 +63,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
         private PropertyBuilder propertyBuilder;
         private MailboxId mailboxId;
         private Optional<MessageUid> uid = Optional.empty();
-        private Optional<Long> modseq = Optional.empty();
+        private Optional<ModSeq> modseq = Optional.empty();
         private ImmutableList.Builder<MessageAttachment> attachments = ImmutableList.builder();
         private Optional<Boolean> hasAttachment = Optional.empty();
 
@@ -76,8 +77,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
             return this;
         }
 
-        public Builder modseq(long modseq) {
-            Preconditions.checkArgument(modseq >= 0, "modseq can not be negative");
+        public Builder modseq(ModSeq modseq) {
             this.modseq = Optional.of(modseq);
             return this;
         }
@@ -201,7 +201,7 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     private boolean recent;
     private boolean seen;
     private String[] userFlags;
-    private long modSeq;
+    private ModSeq modSeq;
 
     public SimpleMailboxMessage(MessageId messageId, Date internalDate, long size, int bodyStartOctet,
             SharedInputStream content, Flags flags,
@@ -293,12 +293,12 @@ public class SimpleMailboxMessage extends DelegatingMailboxMessage {
     }
 
     @Override
-    public long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
 
     @Override
-    public void setModSeq(long modSeq) {
+    public void setModSeq(ModSeq modSeq) {
         this.modSeq = modSeq;
     }
 

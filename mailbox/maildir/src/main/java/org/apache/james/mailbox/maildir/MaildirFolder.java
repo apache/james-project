@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
@@ -206,13 +207,13 @@ public class MaildirFolder {
         return lastUid;
     }
     
-    public long getHighestModSeq() throws IOException {
+    public ModSeq getHighestModSeq() throws IOException {
         long newModified = getNewFolder().lastModified();
         long curModified = getCurFolder().lastModified();
         if (newModified  == 0L && curModified == 0L) {
             throw new IOException("Unable to read highest modSeq");
         }
-        return Math.max(newModified, curModified);
+        return ModSeq.of(Math.max(newModified, curModified));
     }
 
     /**

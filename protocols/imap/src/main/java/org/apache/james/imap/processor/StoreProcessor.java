@@ -49,6 +49,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -151,7 +152,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
                             // Check if the mod-sequence of the message is <= the unchangedsince.
                             //
                             // See RFC4551 3.2. STORE and UID STORE Commands
-                            if (!fail && r.getModSeq() <= unchangedSince) {
+                            if (!fail && r.getModSeq().asLong() <= unchangedSince) {
                                 uids.add(uid);
                             } else {
                                 if (useUids) {
@@ -253,7 +254,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         boolean condstoreEnabled = enabled.contains(ImapConstants.SUPPORTS_CONDSTORE);
         
         if (!silent || unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-            final Map<MessageUid, Long> modSeqs = new HashMap<>();
+            final Map<MessageUid, ModSeq> modSeqs = new HashMap<>();
            
             // Check if we need to also send the the mod-sequences back to the client
             //

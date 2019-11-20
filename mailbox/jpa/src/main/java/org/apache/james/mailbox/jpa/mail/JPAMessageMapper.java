@@ -32,6 +32,7 @@ import javax.persistence.Query;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
@@ -324,7 +325,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     }
 
     @Override
-    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return messageMetadataMapper.getHighestModSeq(mailbox);
     }
 
@@ -335,7 +336,7 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
             .computeApplicableFlags();
     }
 
-    private MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
+    private MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original)
             throws MailboxException {
         MailboxMessage copy;
         JPAMailbox currentMailbox = JPAMailbox.from(mailbox);

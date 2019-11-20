@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -77,7 +78,7 @@ public class MessageToElasticSearchJson {
                 .build());
     }
 
-    public String getUpdatedJsonMessagePart(Flags flags, long modSeq) throws JsonProcessingException {
+    public String getUpdatedJsonMessagePart(Flags flags, ModSeq modSeq) throws JsonProcessingException {
         Preconditions.checkNotNull(flags);
         return mapper.writeValueAsString(new MessageUpdateJson(flags, modSeq));
     }

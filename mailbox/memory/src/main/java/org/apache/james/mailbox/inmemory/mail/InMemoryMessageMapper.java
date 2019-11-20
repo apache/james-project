@@ -32,6 +32,7 @@ import javax.mail.Flags.Flag;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.Mailbox;
@@ -202,7 +203,7 @@ public class InMemoryMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
+    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original)
             throws MailboxException {
         SimpleMailboxMessage message = SimpleMailboxMessage.copy(mailbox.getMailboxId(), original);
         message.setUid(uid);

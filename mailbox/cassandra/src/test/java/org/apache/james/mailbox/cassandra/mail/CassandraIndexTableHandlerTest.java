@@ -32,6 +32,7 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.modules.CassandraApplicableFlagsModule;
@@ -58,7 +59,7 @@ class CassandraIndexTableHandlerTest {
     private static final MessageUid MESSAGE_UID = MessageUid.of(18L);
     private static final CassandraMessageId CASSANDRA_MESSAGE_ID = new CassandraMessageId.Factory().generate();
     private static final int UID_VALIDITY = 15;
-    private static final long MODSEQ = 17;
+    private static final ModSeq MODSEQ = ModSeq.of(17);
 
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(

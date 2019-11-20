@@ -29,12 +29,12 @@ import org.apache.james.core.quota.{QuotaCountLimit, QuotaCountUsage, QuotaLimit
 import org.apache.james.event.json.DTOs.SystemFlag.SystemFlag
 import org.apache.james.event.json.DTOs._
 import org.apache.james.mailbox.MailboxSession.SessionId
-import org.apache.james.mailbox.MessageUid
 import org.apache.james.mailbox.events.Event.EventId
 import org.apache.james.mailbox.events.MailboxListener.{Added => JavaAdded, Expunged => JavaExpunged, FlagsUpdated => JavaFlagsUpdated, MailboxACLUpdated => JavaMailboxACLUpdated, MailboxAdded => JavaMailboxAdded, MailboxDeletion => JavaMailboxDeletion, MailboxRenamed => JavaMailboxRenamed, QuotaUsageUpdatedEvent => JavaQuotaUsageUpdatedEvent}
 import org.apache.james.mailbox.events.{Event => JavaEvent, MessageMoveEvent => JavaMessageMoveEvent}
 import org.apache.james.mailbox.model.{MailboxId, MessageId, MessageMoves, QuotaRoot, MailboxACL => JavaMailboxACL, MessageMetaData => JavaMessageMetaData, Quota => JavaQuota}
 import org.apache.james.mailbox.quota.QuotaRootDeserializer
+import org.apache.james.mailbox.{MessageUid, ModSeq}
 import play.api.libs.json._
 
 import scala.collection.JavaConverters._
@@ -218,6 +218,7 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   implicit val aclDiffWrites: Writes[ACLDiff] = Json.writes[ACLDiff]
   implicit val messageIdWrites: Writes[MessageId] = value => JsString(value.serialize())
   implicit val messageUidWrites: Writes[MessageUid] = value => JsNumber(value.asLong())
+  implicit val modSeqWrites: Writes[ModSeq] = value => JsNumber(value.asLong())
   implicit val userFlagWrites: Writes[UserFlag] = value => JsString(value.value)
   implicit val flagWrites: Writes[Flags] = Json.writes[Flags]
   implicit val eventIdWrites: Writes[EventId] = value => JsString(value.getId.toString)
@@ -279,6 +280,10 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
   }
   implicit val messageUidReads: Reads[MessageUid] = {
     case JsNumber(value) => JsSuccess(MessageUid.of(value.toLong))
+    case _ => JsError()
+  }
+  implicit val modSeqReads: Reads[ModSeq] = {
+    case JsNumber(value) => JsSuccess(ModSeq.of(value.toLong))
     case _ => JsError()
   }
   implicit val userFlagsReads: Reads[UserFlag] = {

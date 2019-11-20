@@ -35,10 +35,10 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
@@ -183,7 +183,7 @@ public class StoreMailboxMessageResultIteratorTest {
         }
 
         @Override
-        public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+        public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
             throw new UnsupportedOperationException();
         }
 

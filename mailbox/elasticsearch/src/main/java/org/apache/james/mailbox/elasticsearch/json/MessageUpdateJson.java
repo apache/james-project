@@ -23,6 +23,8 @@ package org.apache.james.mailbox.elasticsearch.json;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.ModSeq;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class MessageUpdateJson {
@@ -30,9 +32,9 @@ public class MessageUpdateJson {
     private final Flags flags;
     private final long modSeq;
 
-    public MessageUpdateJson(Flags flags, long modSeq) {
+    public MessageUpdateJson(Flags flags, ModSeq modSeq) {
         this.flags = flags;
-        this.modSeq = modSeq;
+        this.modSeq = modSeq.asLong();
     }
 
     @JsonProperty(JsonMessageConstants.IS_ANSWERED)

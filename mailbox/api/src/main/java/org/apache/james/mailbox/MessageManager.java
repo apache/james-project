@@ -395,7 +395,7 @@ public interface MessageManager {
          * 
          * @return higestModSeq
          */
-        long getHighestModSeq();
+        ModSeq getHighestModSeq();
 
         /**
          * Gets the number of messages that this mailbox contains. This is an

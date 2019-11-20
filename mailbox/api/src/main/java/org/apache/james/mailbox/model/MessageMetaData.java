@@ -23,6 +23,7 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 
 import com.google.common.base.Objects;
 
@@ -31,10 +32,10 @@ public class MessageMetaData {
     private final Flags flags;
     private final long size;
     private final Date internalDate;
-    private final long modSeq;
+    private final ModSeq modSeq;
     private final MessageId messageId;
 
-    public MessageMetaData(MessageUid uid, long modSeq, Flags flags, long size, Date internalDate, MessageId messageId) {
+    public MessageMetaData(MessageUid uid, ModSeq modSeq, Flags flags, long size, Date internalDate, MessageId messageId) {
         this.uid = uid;
         this.flags = flags;
         this.size = size;
@@ -76,7 +77,7 @@ public class MessageMetaData {
      * Return the modify-sequence number of the message. This is kind of optional and the mailbox
      * implementation may not support this. If so it will return -1
      */
-    public long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
 

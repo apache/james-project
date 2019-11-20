@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class MailboxListenerTest {
@@ -64,7 +65,7 @@ class MailboxListenerTest {
     private static final MailboxACL ACL_2 = new MailboxACL(
         Pair.of(MailboxACL.EntryKey.createUserEntryKey(Username.of("Bob")), new MailboxACL.Rfc4314Rights(MailboxACL.Right.Read)));
     private static final MessageUid UID = MessageUid.of(85);
-    private static final MessageMetaData META_DATA = new MessageMetaData(UID, 45, new Flags(), 45, new Date(), TestMessageId.of(75));
+    private static final MessageMetaData META_DATA = new MessageMetaData(UID, ModSeq.of(45), new Flags(), 45, new Date(), TestMessageId.of(75));
 
     @Test
     void mailboxAddedShouldMatchBeanContract() {
@@ -193,7 +194,7 @@ class MailboxListenerTest {
         MailboxListener.FlagsUpdated flagsUpdated = new MailboxListener.FlagsUpdated(SESSION_ID, BOB, PATH, MAILBOX_ID,
             ImmutableList.of(UpdatedFlags.builder()
                 .uid(UID)
-                .modSeq(45)
+                .modSeq(ModSeq.of(45))
                 .newFlags(new Flags())
                 .oldFlags(new Flags(Flags.Flag.ANSWERED))
                 .build()),

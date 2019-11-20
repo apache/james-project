@@ -28,6 +28,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -42,7 +43,7 @@ import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 
 public class MessageIdManagerTestSystem {
     private static final byte[] MESSAGE_CONTENT = "subject: any\n\nbody".getBytes(StandardCharsets.UTF_8);
-    public static final int MOD_SEQ = 452;
+    public static final ModSeq MOD_SEQ = ModSeq.of(452);
 
     private final MessageIdManager messageIdManager;
     private final MessageId.Factory messageIdFactory;

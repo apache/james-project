@@ -42,6 +42,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.mail.CassandraMessageDAO.MessageIdAttachmentIds;
@@ -103,7 +104,7 @@ class CassandraMessageDAOTest {
         messageIds = ImmutableList.of(ComposedMessageIdWithMetaData.builder()
                 .composedMessageId(new ComposedMessageId(MAILBOX_ID, messageId, messageUid))
                 .flags(new Flags())
-                .modSeq(1)
+                .modSeq(ModSeq.of(1))
                 .build());
     }
 

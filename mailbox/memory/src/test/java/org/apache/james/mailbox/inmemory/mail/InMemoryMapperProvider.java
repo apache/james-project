@@ -26,6 +26,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
@@ -112,13 +113,13 @@ public class InMemoryMapperProvider implements MapperProvider {
     }
 
     @Override
-    public long generateModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
                 .nextModSeq(MAILBOX_SESSION, mailbox);
     }
 
     @Override
-    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
             .highestModSeq(MAILBOX_SESSION, mailbox);
     }

@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxACL;
 
@@ -40,7 +41,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     public static MailboxMetaData sensibleInformationFree(MailboxACL resolvedAcl, long uidValidity, boolean writeable, boolean modSeqPermanent) throws MailboxException {
         ImmutableList<MessageUid> recents = ImmutableList.of();
         MessageUid uidNext = MessageUid.MIN_VALUE;
-        long highestModSeq = 0L;
+        ModSeq highestModSeq = ModSeq.first();
         long messageCount = 0L;
         long unseenCount = 0L;
         MessageUid firstUnseen = null;
@@ -67,12 +68,11 @@ public class MailboxMetaData implements MessageManager.MetaData {
     private final long unseenCount;
     private final MessageUid firstUnseen;
     private final boolean writeable;
-    private final long highestModSeq;
+    private final ModSeq highestModSeq;
     private final boolean modSeqPermanent;
     private final MailboxACL acl;
 
-    public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, long uidValidity, MessageUid uidNext, long highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
-        super();
+    public MailboxMetaData(List<MessageUid> recent, Flags permanentFlags, long uidValidity, MessageUid uidNext, ModSeq highestModSeq, long messageCount, long unseenCount, MessageUid firstUnseen, boolean writeable, boolean modSeqPermanent, MailboxACL acl) {
         this.recent = Optional.ofNullable(recent).orElseGet(ArrayList::new);
         this.highestModSeq = highestModSeq;
         this.recentCount = this.recent.size();
@@ -134,7 +134,7 @@ public class MailboxMetaData implements MessageManager.MetaData {
     }
 
     @Override
-    public long getHighestModSeq() {
+    public ModSeq getHighestModSeq() {
         return highestModSeq;
     }
 

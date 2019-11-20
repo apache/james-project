@@ -22,13 +22,14 @@ package org.apache.james.imap.message.response;
 import java.util.Arrays;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
+import org.apache.james.mailbox.ModSeq;
 
 /**
  * A <code>SEARCH</code> response.
  */
 public class SearchResponse implements ImapResponseMessage {
     private final long[] ids;
-    private final Long highestModSeq;
+    private final ModSeq highestModSeq;
 
     /**
      * Constructs a <code>SEARCH</code> response.
@@ -36,7 +37,7 @@ public class SearchResponse implements ImapResponseMessage {
      * @param ids ids, not null
      * @param highestModSeq
      */
-    public SearchResponse(long[] ids, Long highestModSeq) {
+    public SearchResponse(long[] ids, ModSeq highestModSeq) {
         super();
         this.ids = ids;
         this.highestModSeq = highestModSeq;
@@ -57,7 +58,7 @@ public class SearchResponse implements ImapResponseMessage {
      *  
      * @return highestMod
      */
-    public final Long getHighestModSeq() {
+    public final ModSeq getHighestModSeq() {
         return highestModSeq;
     }
 

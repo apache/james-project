@@ -49,6 +49,7 @@ import javax.mail.Flags.Flag;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId.Factory;
@@ -63,6 +64,7 @@ import com.datastax.driver.core.Statement;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -162,7 +164,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
+                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
                 .setBool(DRAFT, flags.contains(Flag.DRAFT))
@@ -173,11 +175,11 @@ public class CassandraMessageIdToImapUidDAO {
                 .setSet(USER_FLAGS, ImmutableSet.copyOf(flags.getUserFlags())));
     }
 
-    public Mono<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, long oldModSeq) {
+    public Mono<Boolean> updateMetadata(ComposedMessageIdWithMetaData composedMessageIdWithMetaData, ModSeq oldModSeq) {
         ComposedMessageId composedMessageId = composedMessageIdWithMetaData.getComposedMessageId();
         Flags flags = composedMessageIdWithMetaData.getFlags();
         return cassandraAsyncExecutor.executeReturnApplied(update.bind()
-                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq())
+                .setLong(MOD_SEQ, composedMessageIdWithMetaData.getModSeq().asLong())
                 .setBool(ANSWERED, flags.contains(Flag.ANSWERED))
                 .setBool(DELETED, flags.contains(Flag.DELETED))
                 .setBool(DRAFT, flags.contains(Flag.DRAFT))
@@ -189,7 +191,7 @@ public class CassandraMessageIdToImapUidDAO {
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) composedMessageId.getMessageId()).get())
                 .setUUID(MAILBOX_ID, ((CassandraId) composedMessageId.getMailboxId()).asUuid())
                 .setLong(IMAP_UID, composedMessageId.getUid().asLong())
-                .setLong(MOD_SEQ_CONDITION, oldModSeq));
+                .setLong(MOD_SEQ_CONDITION, oldModSeq.asLong()));
     }
 
     public Flux<ComposedMessageIdWithMetaData> retrieve(CassandraMessageId messageId, Optional<CassandraId> mailboxId) {
@@ -206,7 +208,7 @@ public class CassandraMessageIdToImapUidDAO {
                     messageIdFactory.of(row.getUUID(MESSAGE_ID)),
                     MessageUid.of(row.getLong(IMAP_UID))))
                 .flags(new FlagsExtractor(row).getFlags())
-                .modSeq(row.getLong(MOD_SEQ))
+                .modSeq(ModSeq.of(row.getLong(MOD_SEQ)))
                 .build();
     }
 

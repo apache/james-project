@@ -27,6 +27,7 @@ import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.TestId;
@@ -39,7 +40,7 @@ public class MetadataMapAssertTest {
 
     private static final MessageUid UID = MessageUid.of(18);
     private static final MessageId MESSAGE_ID = new DefaultMessageId();
-    private static final Long MODSEQ = 24L;
+    private static final ModSeq MODSEQ = ModSeq.of(24L);
     private static final Date DATE = new Date();
     private static final String HEADER_STRING = "name: headerName\n\n";
     private static final String BODY_STRING = "body\\n.\\n";

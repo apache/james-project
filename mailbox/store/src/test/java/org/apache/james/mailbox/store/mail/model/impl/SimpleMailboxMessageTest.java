@@ -33,6 +33,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -143,14 +144,6 @@ public class SimpleMailboxMessageTest {
     }
 
     @Test
-    public void modseqShouldThrowWhenNegative() {
-        expectedException.expect(IllegalArgumentException.class);
-
-        SimpleMailboxMessage.builder()
-            .modseq(-1);
-    }
-
-    @Test
     public void sizeShouldThrowWhenNegative() {
         expectedException.expect(IllegalArgumentException.class);
 
@@ -188,7 +181,7 @@ public class SimpleMailboxMessageTest {
         Date internalDate = new Date();
         Flags flags = new Flags();
         PropertyBuilder propertyBuilder = new PropertyBuilder();
-        int modseq = 145;
+        ModSeq modseq = ModSeq.of(145);
         MessageUid uid = MessageUid.of(45);
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(Attachment.builder()

@@ -35,6 +35,7 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.MessageFlags;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 
 import com.github.steveash.guavate.Guavate;
 
@@ -319,8 +320,8 @@ public interface StatusResponse extends ImapResponseMessage {
          * @param modSeq positive non-zero long
          * @return <code>ResponseCode</code>
          */
-        public static ResponseCode highestModSeq(long modSeq) {
-            return new ResponseCode("HIGHESTMODSEQ", modSeq);
+        public static ResponseCode highestModSeq(ModSeq modSeq) {
+            return new ResponseCode("HIGHESTMODSEQ", modSeq.asLong());
         }
         
         /**

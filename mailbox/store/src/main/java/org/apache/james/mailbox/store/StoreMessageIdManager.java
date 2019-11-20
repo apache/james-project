@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -395,7 +396,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     private void save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
-        long modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxSession, mailboxMessage.getMailboxId());
+        ModSeq modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxSession, mailboxMessage.getMailboxId());
         MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxMessage.getMailboxId());
         mailboxMessage.setModSeq(modSeq);
         mailboxMessage.setUid(uid);

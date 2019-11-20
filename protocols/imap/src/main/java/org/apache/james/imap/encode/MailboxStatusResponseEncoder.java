@@ -27,6 +27,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 
 /**
  * Encodes <code>STATUS</code> responses.
@@ -43,7 +44,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         Long messages = response.getMessages();
         Long recent = response.getRecent();
         MessageUid uidNext = response.getUidNext();
-        Long highestModSeq = response.getHighestModSeq();
+        ModSeq highestModSeq = response.getHighestModSeq();
         Long uidValidity = response.getUidValidity();
         Long unseen = response.getUnseen();
         String mailboxName = response.getMailbox();
@@ -73,7 +74,7 @@ public class MailboxStatusResponseEncoder extends AbstractChainedImapEncoder imp
         
         if (highestModSeq != null) {
             composer.message(STATUS_HIGHESTMODSEQ);
-            composer.message(highestModSeq);
+            composer.message(highestModSeq.asLong());
         }
 
         if (uidValidity != null) {

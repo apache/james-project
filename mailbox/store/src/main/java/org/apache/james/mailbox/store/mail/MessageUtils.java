@@ -22,10 +22,12 @@ package org.apache.james.mailbox.store.mail;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -48,7 +50,7 @@ public class MessageUtils {
         this.modSeqProvider = modSeqProvider;
     }
     
-    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.highestModSeq(mailboxSession, mailbox);
     }
 
@@ -61,7 +63,7 @@ public class MessageUtils {
         return uidProvider.nextUid(mailboxSession, mailbox);
     }
 
-    public long nextModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.nextModSeq(mailboxSession, mailbox);
     }
 
@@ -75,7 +77,7 @@ public class MessageUtils {
         ImmutableList.Builder<UpdatedFlags> updatedFlags = ImmutableList.builder();
         ImmutableList.Builder<MailboxMessage> changedFlags = ImmutableList.builder();
 
-        long modSeq = nextModSeq(mailbox);
+        ModSeq modSeq = nextModSeq(mailbox);
 
         while (messages.hasNext()) {
             MailboxMessage member = messages.next();

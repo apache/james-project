@@ -28,6 +28,7 @@ import java.util.Set;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 
 
@@ -72,7 +73,7 @@ public interface MessageResult extends Comparable<MessageResult> {
 
     MessageUid getUid();
 
-    long getModSeq();
+    ModSeq getModSeq();
 
     /**
      * Indicates the results fetched.

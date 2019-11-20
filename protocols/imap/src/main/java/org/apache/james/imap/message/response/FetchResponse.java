@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 
 public final class FetchResponse implements ImapResponseMessage {
 
@@ -48,9 +49,9 @@ public final class FetchResponse implements ImapResponseMessage {
 
     private final Structure bodystructure;
 
-    private final Long modSeq;
+    private final ModSeq modSeq;
 
-    public FetchResponse(int messageNumber, Flags flags, MessageUid uid, Long modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
+    public FetchResponse(int messageNumber, Flags flags, MessageUid uid, ModSeq modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
         super();
         this.messageNumber = messageNumber;
         this.flags = flags;
@@ -159,7 +160,7 @@ public final class FetchResponse implements ImapResponseMessage {
      * 
      * @return modSeq
      */
-    public Long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
 

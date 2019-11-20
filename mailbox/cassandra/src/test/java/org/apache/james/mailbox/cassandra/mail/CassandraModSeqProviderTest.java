@@ -30,6 +30,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.modules.CassandraModSeqModule;
 import org.apache.james.mailbox.model.Mailbox;
@@ -64,12 +65,12 @@ class CassandraModSeqProviderTest {
     @Test
     void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
-        long result = modSeqProvider.highestModSeq(null, mailbox);
+        ModSeq result = modSeqProvider.highestModSeq(null, mailbox);
         assertThat(result).isEqualTo(0);
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        long uid = modSeqProvider.nextModSeq(null, mailbox);
-                        assertThat(uid).isEqualTo(modSeqProvider.highestModSeq(null, mailbox));
+                    ModSeq modSeq = modSeqProvider.nextModSeq(null, mailbox);
+                    assertThat(modSeq).isEqualTo(modSeqProvider.highestModSeq(null, mailbox));
                 })
             );
     }
@@ -77,11 +78,11 @@ class CassandraModSeqProviderTest {
     @Test
     void nextModSeqShouldIncrementValueByOne() throws Exception {
         int nbEntries = 100;
-        long lastUid = modSeqProvider.highestModSeq(null, mailbox);
-        LongStream.range(lastUid + 1, lastUid + nbEntries)
+        ModSeq lastModSeq = modSeqProvider.highestModSeq(null, mailbox);
+        LongStream.range(lastModSeq.asLong() + 1, lastModSeq.asLong() + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                long result = modSeqProvider.nextModSeq(null, mailbox);
-                assertThat(value).isEqualTo(result);
+                ModSeq result = modSeqProvider.nextModSeq(null, mailbox);
+                assertThat(result.asLong()).isEqualTo(value);
             }));
     }
 
@@ -89,7 +90,7 @@ class CassandraModSeqProviderTest {
     void nextModSeqShouldGenerateUniqueValuesWhenParallelCalls() throws ExecutionException, InterruptedException {
         int nbEntries = 10;
 
-        ConcurrentSkipListSet<Long> modSeqs = new ConcurrentSkipListSet<>();
+        ConcurrentSkipListSet<ModSeq> modSeqs = new ConcurrentSkipListSet<>();
         ConcurrentTestRunner.builder()
             .operation(
                 (threadNumber, step) -> modSeqs.add(modSeqProvider.nextModSeq(null, mailbox)))

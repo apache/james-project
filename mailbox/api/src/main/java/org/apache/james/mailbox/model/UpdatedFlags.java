@@ -27,6 +27,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -44,7 +45,7 @@ public class UpdatedFlags {
         private MessageUid uid;
         private Flags oldFlags;
         private Flags newFlags;
-        private Optional<Long> modSeq = Optional.empty();
+        private Optional<ModSeq> modSeq = Optional.empty();
 
         private Builder() {
         }
@@ -64,7 +65,7 @@ public class UpdatedFlags {
             return this;
         }
 
-        public Builder modSeq(long modSeq) {
+        public Builder modSeq(ModSeq modSeq) {
             this.modSeq = Optional.of(modSeq);
             return this;
         }
@@ -82,9 +83,9 @@ public class UpdatedFlags {
     private final Flags oldFlags;
     private final Flags newFlags;
     private final Flags modifiedFlags;
-    private final long modSeq;
+    private final ModSeq modSeq;
 
-    private UpdatedFlags(MessageUid uid, long modSeq, Flags oldFlags, Flags newFlags) {
+    private UpdatedFlags(MessageUid uid, ModSeq modSeq, Flags oldFlags, Flags newFlags) {
        this.uid = uid;
        this.modSeq = modSeq;
        this.oldFlags = oldFlags;
@@ -197,7 +198,7 @@ public class UpdatedFlags {
     /**
      * Return the new mod-sequence for the message
      */
-    public long getModSeq() {
+    public ModSeq getModSeq() {
         return modSeq;
     }
     

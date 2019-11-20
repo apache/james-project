@@ -52,6 +52,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
@@ -100,7 +101,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             // Check if the search did contain the MODSEQ searchkey. If so we need to include the highest mod in the response.
             //
             // See RFC4551: 3.4. MODSEQ Search Criterion in SEARCH
-            final Long highestModSeq;
+            final ModSeq highestModSeq;
             if (session.getAttribute(SEARCH_MODSEQ) != null) {
                 MetaData metaData = mailbox.getMetaData(false, msession, MessageManager.MetaData.FetchGroup.NO_COUNT);
                 highestModSeq = findHighestModSeq(msession, mailbox, MessageRange.toRanges(uids), metaData.getHighestModSeq());
@@ -237,16 +238,16 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
      * @return highestModSeq
      * @throws MailboxException
      */
-    private Long findHighestModSeq(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, long currentHighest) throws MailboxException {
-        Long highestModSeq = null;
+    private ModSeq findHighestModSeq(MailboxSession session, MessageManager mailbox, List<MessageRange> ranges, ModSeq currentHighest) throws MailboxException {
+        ModSeq highestModSeq = null;
         
         // Reverse loop over the ranges as its more likely that we find a match at the end
         int size = ranges.size();
         for (int i = size - 1; i > 0; i--) {
             MessageResultIterator results = mailbox.getMessages(ranges.get(i), FetchGroupImpl.MINIMAL, session);
             while (results.hasNext()) {
-                long modSeq = results.next().getModSeq();
-                if (highestModSeq == null || modSeq > highestModSeq) {
+                ModSeq modSeq = results.next().getModSeq();
+                if (highestModSeq == null || modSeq.asLong() > highestModSeq.asLong()) {
                     highestModSeq = modSeq;
                 }
                 if (highestModSeq == currentHighest) {

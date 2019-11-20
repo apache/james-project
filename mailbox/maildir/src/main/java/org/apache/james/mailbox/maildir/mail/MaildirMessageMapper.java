@@ -38,6 +38,7 @@ import javax.mail.Flags.Flag;
 import org.apache.commons.io.FileUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.maildir.MaildirFolder;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
@@ -197,7 +198,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
                     } else {
                         modSeq = messageFile.lastModified();
                     }
-                    member.setModSeq(modSeq);
+                    member.setModSeq(ModSeq.of(modSeq));
 
                     updatedFlags.add(UpdatedFlags.builder()
                         .uid(member.getUid())
@@ -273,7 +274,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
     }
 
     @Override
-    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original)
+    protected MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original)
             throws MailboxException {
         SimpleMailboxMessage theCopy = SimpleMailboxMessage.copyWithoutAttachments(mailbox.getMailboxId(), original);
         Flags flags = theCopy.createFlags();
@@ -337,7 +338,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
         try {
             uid = folder.appendMessage(newMessageFile.getName());
             message.setUid(uid);
-            message.setModSeq(newMessageFile.lastModified());
+            message.setModSeq(ModSeq.of(newMessageFile.lastModified()));
             return message.metaData();
         } catch (MailboxException e) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, e);

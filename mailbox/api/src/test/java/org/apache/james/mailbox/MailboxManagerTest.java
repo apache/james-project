@@ -1387,7 +1387,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                 softly -> {
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getHighestModSeq)
-                        .isEqualTo(0L);
+                        .isEqualTo(ModSeq.first());
                     softly.assertThat(metaData)
                         .extracting(MessageManager.MetaData::getUidNext)
                         .isEqualTo(MessageUid.MIN_VALUE);

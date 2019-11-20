@@ -34,6 +34,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
@@ -57,7 +58,7 @@ class FlagsUpdatedSerializationTest {
     private static final MessageUid MESSAGE_UID_1 = MessageUid.of(123456);
     private static final MessageUid MESSAGE_UID_2 = MessageUid.of(654321);
 
-    private static final int MOD_SEQ_1 = 35;
+    private static final ModSeq MOD_SEQ_1 = ModSeq.of(35);
     private static final Flags OLD_FLAGS_1 = FlagsBuilder.builder()
         .add(Flags.Flag.SEEN, Flags.Flag.DELETED)
         .add("Old Flag 1")
@@ -73,7 +74,7 @@ class FlagsUpdatedSerializationTest {
         .newFlags(NEW_FLAGS_1)
         .build();
 
-    private static final int MOD_SEQ_2 = 36;
+    private static final ModSeq MOD_SEQ_2 = ModSeq.of(36);
     private static final Flags OLD_FLAGS_2 = FlagsBuilder.builder()
         .add(Flags.Flag.RECENT, Flags.Flag.FLAGGED)
         .add("Old Flag 2")

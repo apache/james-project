@@ -28,6 +28,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
@@ -260,12 +261,12 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public long nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        return System.currentTimeMillis();
+    public ModSeq nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+        return ModSeq.of(System.currentTimeMillis());
     }
 
     @Override
-    public long highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
         try {
             return createMaildirFolder(mailbox).getHighestModSeq();
         } catch (IOException e) {
@@ -299,8 +300,8 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public long nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
-        return System.currentTimeMillis();
+    public ModSeq nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+        return ModSeq.of(System.currentTimeMillis());
     }
 
     @Override
@@ -309,7 +310,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public long highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public ModSeq highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
         throw new NotImplementedException("Not implemented");
     }
 }

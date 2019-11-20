@@ -27,6 +27,7 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
@@ -37,6 +38,7 @@ import org.apache.james.mailbox.store.FlagsUpdateCalculator;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 
 /**
@@ -59,7 +61,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     }
     
     @Override
-    public long getHighestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.highestModSeq(mailboxSession, mailbox);
     }
 
@@ -81,14 +83,11 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     public Iterator<UpdatedFlags> updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, MessageRange set) throws MailboxException {
         final List<UpdatedFlags> updatedFlags = new ArrayList<>();
         Iterator<MailboxMessage> messages = findInMailbox(mailbox, set, FetchType.Metadata, UNLIMITED);
-        
-        long modSeq = -1;
-        if (messages.hasNext()) {
-            // if a mailbox does not support mod-sequences the provider may be null
-            if (modSeqProvider != null) {
-                modSeq = modSeqProvider.nextModSeq(mailboxSession, mailbox);
-            }
+
+        if (!messages.hasNext()) {
+            return ImmutableList.<UpdatedFlags>of().iterator();
         }
+        ModSeq modSeq = modSeqProvider.nextModSeq(mailboxSession, mailbox);
         while (messages.hasNext()) {
             final MailboxMessage member = messages.next();
             Flags originalFlags = member.createFlags();
@@ -131,10 +130,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
         MessageUid uid = uidProvider.nextUid(mailboxSession, mailbox);
-        long modSeq = -1;
-        if (modSeqProvider != null) {
-            modSeq = modSeqProvider.nextModSeq(mailboxSession, mailbox);
-        }
+        ModSeq modSeq = modSeqProvider.nextModSeq(mailboxSession, mailbox);
         final MessageMetaData metaData = copy(mailbox, uid, modSeq, original);  
         
         return metaData;
@@ -149,7 +145,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     /**
      * Copy the MailboxMessage to the Mailbox, using the given uid and modSeq for the new MailboxMessage
      */
-    protected abstract MessageMetaData copy(Mailbox mailbox, MessageUid uid, long modSeq, MailboxMessage original) throws MailboxException;
+    protected abstract MessageMetaData copy(Mailbox mailbox, MessageUid uid, ModSeq modSeq, MailboxMessage original) throws MailboxException;
 
     @Override
     public Iterator<MessageUid> listAllMessageUids(Mailbox mailbox) throws MailboxException {

@@ -29,6 +29,7 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.model.Mailbox;
@@ -104,12 +105,12 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public long generateModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
         throw new NotImplementedException("not implemented");
     }
 
     @Override
-    public long highestModSeq(Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         throw new NotImplementedException("not implemented");
     }
 

@@ -40,6 +40,7 @@ import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.Content;
@@ -60,7 +61,7 @@ public final class FetchResponseBuilder {
 
     private Long size;
     
-    private Long modSeq;
+    private ModSeq modSeq;
 
     private List<FetchResponse.BodyElement> elements;
 
@@ -91,7 +92,7 @@ public final class FetchResponseBuilder {
         this.uid = resultUid;
     }
 
-    private void setModSeq(long modSeq) {
+    private void setModSeq(ModSeq modSeq) {
         this.modSeq = modSeq;
     }
 
@@ -188,7 +189,7 @@ public final class FetchResponseBuilder {
             long changedSince = fetch.getChangedSince();
             if (changedSince != -1) {
                 // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
-                if (changedSince < result.getModSeq()) {
+                if (changedSince < result.getModSeq().asLong()) {
                     setModSeq(result.getModSeq());
                 }
             } else {

@@ -47,6 +47,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -317,7 +318,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
     private void highestModSeq(Responder responder, MetaData metaData, SelectedMailbox selected) {
         final StatusResponse untaggedOk;
         if (metaData.isModSeqPermanent()) {
-            final long highestModSeq = metaData.getHighestModSeq();
+            final ModSeq highestModSeq = metaData.getHighestModSeq();
             untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.HIGHEST_MOD_SEQ, ResponseCode.highestModSeq(highestModSeq));
         } else {
             untaggedOk = statusResponseFactory.untaggedOk(HumanReadableText.NO_MOD_SEQ, ResponseCode.noModSeq());

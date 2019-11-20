@@ -157,7 +157,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 final MessageResult result = messages.next();
 
                 //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
-                if (fetch.isModSeq() && result.getModSeq() <= fetch.getChangedSince()) {
+                if (fetch.isModSeq() && result.getModSeq().asLong() <= fetch.getChangedSince()) {
                     continue;
                 }
 
