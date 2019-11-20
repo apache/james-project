@@ -118,7 +118,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public User getUserByName(Username name) {
         return executor.executeSingleRow(
                 getUserStatement.bind()
-                    .setString(NAME, name.asId()))
+                    .setString(NAME, name.asString()))
             .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .blockOptional()
             .orElse(null);
@@ -133,7 +133,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
                     .setString(REALNAME, defaultUser.getUserName().asString())
                     .setString(PASSWORD, defaultUser.getHashedPassword())
                     .setString(ALGORITHM, defaultUser.getHashAlgorithm())
-                    .setString(NAME, defaultUser.getUserName().asId()))
+                    .setString(NAME, defaultUser.getUserName().asString()))
             .block();
 
         if (!executed) {
@@ -145,7 +145,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
-                .setString(NAME, name.asId()))
+                .setString(NAME, name.asString()))
             .block();
 
         if (!executed) {
@@ -196,7 +196,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         user.setPassword(password);
         boolean executed = executor.executeReturnApplied(
             insertStatement.bind()
-                .setString(NAME, user.getUserName().asId())
+                .setString(NAME, user.getUserName().asString())
                 .setString(REALNAME, user.getUserName().asString())
                 .setString(PASSWORD, user.getHashedPassword())
                 .setString(ALGORITHM, user.getHashAlgorithm()))

@@ -85,7 +85,7 @@ public class Username {
         Preconditions.checkArgument(!localPart.isEmpty(), "username should not be empty");
         Preconditions.checkArgument(!localPart.contains("@"), "username can not contain domain delimiter");
 
-        this.localPart = localPart;
+        this.localPart = localPart.toLowerCase(Locale.US);
         this.domainPart = domainPart;
     }
 
@@ -119,25 +119,6 @@ public class Username {
     public String asString() {
         return domainPart.map(domain -> localPart + "@" + domain.asString())
             .orElse(localPart);
-    }
-
-    public String asId() {
-        return toLowerCase().asString();
-    }
-
-    public Username toLowerCase() {
-        return new Username(localPart.toLowerCase(Locale.US), domainPart);
-    }
-
-    public boolean equalsAsId(String otherId) {
-        if (otherId == null) {
-            return false;
-        }
-        return asId().equals(otherId.toLowerCase(Locale.US));
-    }
-
-    public boolean equalsAsId(Username otherId) {
-        return asId().equals(otherId.asId());
     }
 
     public MailAddress asMailAddress() throws AddressException {

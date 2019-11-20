@@ -256,8 +256,8 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldReturnSharedWithProperty() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), mailboxName).serialize();
-        String targetUser1 = "toUser1@" + DOMAIN;
-        String targetUser2 = "toUser2@" + DOMAIN;
+        String targetUser1 = "touser1@" + DOMAIN;
+        String targetUser2 = "touser2@" + DOMAIN;
 
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Administer));
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser2, new Rfc4314Rights(Right.Read, Right.Lookup));
@@ -279,7 +279,7 @@ public abstract class GetMailboxesMethodTest {
     public void getMailboxesShouldRemoveOwnerRight() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), mailboxName).serialize();
-        String targetUser1 = "toUser1@" + DOMAIN;
+        String targetUser1 = "touser1@" + DOMAIN;
 
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), ALICE.asString(), new Rfc4314Rights(Right.Read, Right.Administer));
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser1, new Rfc4314Rights(Right.Read, Right.Lookup));
@@ -317,7 +317,7 @@ public abstract class GetMailboxesMethodTest {
     public void nonHandledRightsShouldBeFilteredOut() throws Exception {
         String mailboxName = "myMailbox";
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), mailboxName).serialize();
-        String targetUser1 = "toUser1@" + DOMAIN;
+        String targetUser1 = "touser1@" + DOMAIN;
 
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Post));
 

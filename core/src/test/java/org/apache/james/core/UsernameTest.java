@@ -27,7 +27,14 @@ import java.util.Optional;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class UsernameTest {
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(Username.class)
+            .verify();
+    }
 
     @Test
     void fromShouldThrowOnEmptyLocalPart() {
@@ -244,50 +251,14 @@ class UsernameTest {
     }
 
     @Test
-    void equalsAsIdShouldReturnFalseWhenNull() {
-        assertThat(Username.of("user").equalsAsId((String)null))
+    void equalsShouldReturnFalseWhenDifferentId() {
+        assertThat(Username.of("user").equals(Username.of("user2")))
             .isFalse();
     }
 
     @Test
-    void equalsAsIdShouldReturnFalseWhenDifferentId() {
-        assertThat(Username.of("user").equalsAsId("user2"))
-            .isFalse();
-    }
-
-    @Test
-    void equalsAsIdShouldReturnTrueWhenSameId() {
-        assertThat(Username.of("user").equalsAsId("user"))
-            .isTrue();
-    }
-
-    @Test
-    void equalsAsIdShouldReturnTrueWhenSameIdWithDifferentCase() {
-        assertThat(Username.of("user").equalsAsId("uSEr"))
-            .isTrue();
-    }
-
-    @Test
-    void equalsAsIdForUsernameShouldThrowWhenNull() {
-        assertThatThrownBy(() -> Username.of("user").equalsAsId((Username)null))
-            .isInstanceOf(NullPointerException.class);
-    }
-
-    @Test
-    void equalsAsIdForUsernameShouldReturnFalseWhenDifferentId() {
-        assertThat(Username.of("user").equalsAsId(Username.of("user2")))
-            .isFalse();
-    }
-
-    @Test
-    void equalsAsIdForUsernameShouldReturnTrueWhenSameId() {
-        assertThat(Username.of("user").equalsAsId(Username.of("user")))
-            .isTrue();
-    }
-
-    @Test
-    void equalsAsIdForUsernameShouldReturnTrueWhenSameIdWithDifferentCase() {
-        assertThat(Username.of("user").equalsAsId(Username.of("uSEr")))
+    void equalsShouldReturnTrueWhenSameIdWithDifferentCase() {
+        assertThat(Username.of("user").equals(Username.of("uSEr")))
             .isTrue();
     }
 }

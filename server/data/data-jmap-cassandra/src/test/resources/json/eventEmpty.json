@@ -1,6 +1,6 @@
 {
   "type":"filtering-rule-set-defined",
   "eventId":0,
-  "aggregateId":"FilteringRule/Bart",
+  "aggregateId":"FilteringRule/bart",
   "rules":[]
 }

@@ -52,7 +52,7 @@ class QuotaUsageUpdatedEventSerializationTest {
     private static final Instant INSTANT = Instant.parse("2018-11-13T12:00:55Z");
     private final MailboxListener.QuotaUsageUpdatedEvent eventWithUserContainsUsername = new MailboxListener.QuotaUsageUpdatedEvent(
         EVENT_ID,
-        Username.of("onlyUsername"),
+        Username.of("onlyusername"),
         QUOTA_ROOT,
         QUOTA_COUNT,
         QUOTA_SIZE,
@@ -65,7 +65,7 @@ class QuotaUsageUpdatedEventSerializationTest {
         "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
         "        \"time\":\"2018-11-13T12:00:55Z\"," +
         "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-        "        \"user\":\"onlyUsername\"" +
+        "        \"user\":\"onlyusername\"" +
         "    }" +
         "}";
 
@@ -107,7 +107,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "        \"quotaRoot\":\"#private&foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"sizeQuota\":{\"used\":1234,\"limit\":10000,\"limits\":{}}," +
-            "        \"user\":\"onlyUsername\"" +
+            "        \"user\":\"onlyusername\"" +
             "    }" +
             "}";
 
@@ -124,7 +124,7 @@ class QuotaUsageUpdatedEventSerializationTest {
             "        \"quotaRoot\":\"#private&foo\"," +
             "        \"time\":\"2018-11-13T12:00:55Z\"," +
             "        \"countQuota\":{\"used\":12,\"limit\":100,\"limits\":{}}," +
-            "        \"user\":\"onlyUsername\"" +
+            "        \"user\":\"onlyusername\"" +
             "    }" +
             "}";
 

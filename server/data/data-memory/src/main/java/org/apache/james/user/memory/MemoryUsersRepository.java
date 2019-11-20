@@ -72,14 +72,14 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
 
     @Override
     protected void doAddUser(Username username, String password) {
-        DefaultUser user = new DefaultUser(username.toLowerCase(), algo);
+        DefaultUser user = new DefaultUser(username, algo);
         user.setPassword(password);
-        userByName.put(username.asId(), user);
+        userByName.put(username.asString(), user);
     }
 
     @Override
     public User getUserByName(Username name) throws UsersRepositoryException {
-        return userByName.get(name.asId());
+        return userByName.get(name.asString());
     }
 
     @Override
@@ -88,24 +88,24 @@ public class MemoryUsersRepository extends AbstractUsersRepository {
         if (existingUser == null) {
             throw new UsersRepositoryException("Please provide an existing user to update");
         }
-        userByName.put(user.getUserName().asId(), user);
+        userByName.put(user.getUserName().asString(), user);
     }
 
     @Override
     public void removeUser(Username name) throws UsersRepositoryException {
-        if (userByName.remove(name.asId()) == null) {
+        if (userByName.remove(name.asString()) == null) {
             throw new UsersRepositoryException("unable to remove unknown user " + name.asString());
         }
     }
 
     @Override
     public boolean contains(Username name) throws UsersRepositoryException {
-        return userByName.containsKey(name.asId());
+        return userByName.containsKey(name.asString());
     }
 
     @Override
     public boolean test(Username name, final String password) throws UsersRepositoryException {
-        return Optional.ofNullable(userByName.get(name.asId()))
+        return Optional.ofNullable(userByName.get(name.asString()))
             .map(user -> user.verifyPassword(password))
             .orElse(false);
     }

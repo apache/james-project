@@ -42,7 +42,7 @@ import com.google.common.hash.Hashing;
 @Entity(name = "JamesUser")
 @Table(name = "JAMES_USER")
 @NamedQueries({ 
-    @NamedQuery(name = "findUserByName", query = "SELECT user FROM JamesUser user WHERE LOWER(user.name)=:name"),
+    @NamedQuery(name = "findUserByName", query = "SELECT user FROM JamesUser user WHERE user.name=:name"),
     @NamedQuery(name = "deleteUserByName", query = "DELETE FROM JamesUser user WHERE user.name=:name"),
     @NamedQuery(name = "containsUser", query = "SELECT COUNT(user) FROM JamesUser user WHERE user.name=:name"), 
     @NamedQuery(name = "countUsers", query = "SELECT COUNT(user) FROM JamesUser user"), 

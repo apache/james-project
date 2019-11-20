@@ -93,7 +93,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
 
         try {
-            return (JPAUser) entityManager.createNamedQuery("findUserByName").setParameter("name", name.asId()).getSingleResult();
+            return (JPAUser) entityManager.createNamedQuery("findUserByName").setParameter("name", name.asString()).getSingleResult();
         } catch (NoResultException e) {
             return null;
         } catch (PersistenceException e) {
@@ -146,7 +146,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
         final EntityTransaction transaction = entityManager.getTransaction();
         try {
             transaction.begin();
-            if (entityManager.createNamedQuery("deleteUserByName").setParameter("name", name.asId()).executeUpdate() < 1) {
+            if (entityManager.createNamedQuery("deleteUserByName").setParameter("name", name.asString()).executeUpdate() < 1) {
                 transaction.commit();
                 throw new UsersRepositoryException("User " + name.asString() + " does not exist");
             } else {

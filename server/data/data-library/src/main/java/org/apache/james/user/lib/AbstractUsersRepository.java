@@ -128,10 +128,8 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
 
     @Override
     public boolean isAdministrator(Username username) throws UsersRepositoryException {
-        if (administratorId.isPresent()) {
-            return administratorId.get().toLowerCase().equals(username.toLowerCase());
-        }
-        return false;
+        return administratorId.map(id -> id.equals(username))
+            .orElse(false);
     }
 
     @Override

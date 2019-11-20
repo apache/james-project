@@ -606,7 +606,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
     @Nested
     class EventTests {
-        private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&USER_1", Optional.empty());
+        private final QuotaRoot quotaRoot = QuotaRoot.quotaRoot("#private&user_1", Optional.empty());
         private EventCollector listener;
         private MailboxPath inbox;
         private MailboxId inboxId;

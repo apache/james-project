@@ -574,7 +574,7 @@ public abstract class AbstractSign extends GenericMailet {
             return false;
         }
 
-        String authUser = fetchedAuthUser.get();
+        Username authUser = Username.of(fetchedAuthUser.get());
 
         // The sender is the postmaster?
         if (Objects.equal(getMailetContext().getPostmaster(), reversePath)) {
@@ -586,8 +586,8 @@ public abstract class AbstractSign extends GenericMailet {
         } else {
             // is the reverse-path user different from the SMTP authorized user?
             Username username = getUsername(reversePath);
-            if (!username.equalsAsId(authUser)) {
-                LOGGER.info("SMTP logged in as <{}> but pretend to be sender <{}>", authUser, username);
+            if (!username.equals(authUser)) {
+                LOGGER.info("SMTP logged in as <{}> but pretend to be sender <{}>", authUser.asString(), username.asString());
                 return false;
             }
             // is there no "From:" address same as the reverse-path?

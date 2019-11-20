@@ -104,7 +104,7 @@ public class SimpleMailStore implements MailStore {
 
     private String locateFolder(Username username, Mail mail) {
         return AttributeUtils
-            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asId()), String.class)
+            .getValueAndCastFromMail(mail, AttributeName.of(DELIVERY_PATH_PREFIX + username.asString()), String.class)
             .orElse(folder);
     }
 

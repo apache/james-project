@@ -48,7 +48,7 @@ public class TestScriptedUserAdder {
     @Test
     public void testShouldExecuteScriptAgainstPort() throws Exception {
         ScriptedUserAdder adder = new ScriptedUserAdder("localhost", protocol.getPort(), "C: USER='${user}' password='${password}'");
-        adder.addUser(Username.of("A User"), "Some Password");
-        assertThat(record.complete()).isEqualTo("USER='A User' password='Some Password'\r\n");
+        adder.addUser(Username.of("user"), "Some Password");
+        assertThat(record.complete()).isEqualTo("USER='user' password='Some Password'\r\n");
     }
 }

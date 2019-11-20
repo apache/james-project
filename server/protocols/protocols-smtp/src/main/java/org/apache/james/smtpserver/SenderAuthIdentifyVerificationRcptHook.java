@@ -75,6 +75,6 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
 
     @Override
     protected boolean isSenderAllowed(Username user, Username sender) {
-        return user.equalsAsId(sender);
+        return user.equals(sender);
     }
 }
