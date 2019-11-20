@@ -19,6 +19,7 @@
 
 package org.apache.james.user.cassandra;
 
+import org.apache.commons.configuration2.BaseHierarchicalConfiguration;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.DockerCassandraRule;
 import org.apache.james.user.lib.AbstractUsersRepository;
@@ -48,8 +49,11 @@ public class CassandraUsersRepositoryTest extends AbstractUsersRepositoryTest {
         cassandra.closeCluster();
     }
 
-    @Override
-    protected AbstractUsersRepository getUsersRepository() {
-        return new CassandraUsersRepository(domainList, cassandra.getConf());
+    @Override    protected AbstractUsersRepository getUsersRepository() throws Exception {
+        CassandraUsersRepository cassandraUsersRepository = new CassandraUsersRepository(domainList, cassandra.getConf());
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        configuration.addProperty("enableVirtualHosting", "true");
+        cassandraUsersRepository.configure(configuration);
+        return cassandraUsersRepository;
     }
 }

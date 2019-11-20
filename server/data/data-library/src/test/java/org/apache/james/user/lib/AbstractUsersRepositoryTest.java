@@ -19,6 +19,7 @@
 package org.apache.james.user.lib;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -52,10 +53,12 @@ public abstract class AbstractUsersRepositoryTest {
     protected abstract AbstractUsersRepository getUsersRepository() throws Exception;
 
     private Username user1;
+    private Username user1CaseVariation;
     private Username user2;
     private Username user3;
     private Username admin;
-    
+    private Username adminCaseVariation;
+
     public void setUp() throws Exception {
         domainList = new SimpleDomainList();
         domainList.addDomain(DOMAIN);
@@ -63,7 +66,9 @@ public abstract class AbstractUsersRepositoryTest {
         user1 = login("username");
         user2 = login("username2");
         user3 = login("username3");
+        user1CaseVariation = login("uSeRnaMe");
         admin = login("admin");
+        adminCaseVariation = login("adMin");
     }
 
     public void tearDown() throws Exception {
@@ -138,6 +143,121 @@ public abstract class AbstractUsersRepositoryTest {
         usersRepository.addUser(user2, "password2");
         //Then
         assertThat(usersRepository.contains(user2)).isTrue();
+    }
+
+    @Test
+    public void containsShouldPreserveCaseVariation() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        assertThat(usersRepository.contains(user1CaseVariation)).isTrue();
+    }
+
+    @Test
+    public void containsShouldBeCaseInsentive() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        assertThat(usersRepository.contains(user1)).isTrue();
+    }
+
+    @Test
+    public void containsShouldBeCaseInsentiveWhenOriginalValueLowerCased() throws UsersRepositoryException {
+        usersRepository.addUser(user1, "password2");
+
+        assertThat(usersRepository.contains(user1CaseVariation)).isTrue();
+    }
+
+    @Test
+    public void addUserShouldDisableCaseVariationWhenOriginalValueLowerCased() throws UsersRepositoryException {
+        usersRepository.addUser(user1, "password2");
+
+        assertThatThrownBy(() -> usersRepository.addUser(user1CaseVariation, "pass"))
+            .isInstanceOf(UsersRepositoryException.class);
+    }
+
+    @Test
+    public void addUserShouldDisableCaseVariation() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        assertThatThrownBy(() -> usersRepository.addUser(user1, "pass"))
+            .isInstanceOf(UsersRepositoryException.class);
+    }
+
+    @Test
+    public void listShouldReturnLowerCaseUser() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        assertThat(usersRepository.list())
+            .toIterable()
+            .containsExactly(user1);
+    }
+
+    @Test
+    public void removeUserShouldBeCaseInsentiveOnCaseVariationUser() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        usersRepository.removeUser(user1);
+
+        assertThat(usersRepository.list())
+            .toIterable()
+            .isEmpty();
+    }
+
+    @Test
+    public void removeUserShouldBeCaseInsentive() throws UsersRepositoryException {
+        usersRepository.addUser(user1, "password2");
+
+        usersRepository.removeUser(user1CaseVariation);
+
+        assertThat(usersRepository.list())
+            .toIterable()
+            .isEmpty();
+    }
+
+    @Test
+    public void getUserByNameShouldBeCaseInsentive() throws UsersRepositoryException {
+        usersRepository.addUser(user1, "password2");
+
+        assertThat(usersRepository.getUserByName(user1CaseVariation).getUserName())
+            .isEqualTo(user1);
+    }
+
+    @Test
+    public void getUserByNameShouldReturnLowerCaseAddedUser() throws UsersRepositoryException {
+        usersRepository.addUser(user1CaseVariation, "password2");
+
+        assertThat(usersRepository.getUserByName(user1).getUserName())
+            .isEqualTo(user1);
+    }
+
+    @Test
+    public void getUserShouldBeCaseInsentive() throws Exception {
+        assertThat(usersRepository.getUser(user1CaseVariation.asMailAddress()))
+            .isEqualTo(user1);
+    }
+
+    @Test
+    public void isAdministratorShouldBeCaseInsentive() throws Exception {
+        usersRepository.setAdministratorId(Optional.of(admin));
+        assertThat(usersRepository.isAdministrator(adminCaseVariation))
+            .isTrue();
+    }
+
+    @Test
+    public void testShouldBeCaseInsentiveOnCaseVariationUser() throws UsersRepositoryException {
+        String password = "password2";
+        usersRepository.addUser(user1CaseVariation, password);
+
+        assertThat(usersRepository.test(user1, password))
+            .isTrue();
+    }
+
+    @Test
+    public void testShouldBeCaseInsentive() throws UsersRepositoryException {
+        String password = "password2";
+        usersRepository.addUser(user1, password);
+
+        assertThat(usersRepository.test(user1CaseVariation, password))
+            .isTrue();
     }
     
     @Test 

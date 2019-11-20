@@ -122,15 +122,6 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
      */
     protected abstract void doAddUser(Username username, String password) throws UsersRepositoryException;
 
-    @Override
-    public Username getUser(MailAddress mailAddress) throws UsersRepositoryException {
-        if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
-        } else {
-            return Username.of(mailAddress.getLocalPart());
-        }
-    }
-
     @VisibleForTesting void setAdministratorId(Optional<Username> username) {
         this.administratorId = username;
     }
@@ -138,7 +129,7 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
     @Override
     public boolean isAdministrator(Username username) throws UsersRepositoryException {
         if (administratorId.isPresent()) {
-            return administratorId.get().equals(username);
+            return administratorId.get().toLowerCase().equals(username.toLowerCase());
         }
         return false;
     }

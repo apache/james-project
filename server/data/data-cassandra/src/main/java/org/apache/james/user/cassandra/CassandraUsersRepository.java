@@ -84,7 +84,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     private PreparedStatement prepareListStatement(Session session) {
-        return session.prepare(select(REALNAME)
+        return session.prepare(select(NAME)
             .from(TABLE_NAME));
     }
 
@@ -109,7 +109,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     }
 
     private PreparedStatement prepareGetUserStatement(Session session) {
-        return session.prepare(select(REALNAME, PASSWORD, ALGORITHM)
+        return session.prepare(select(NAME, PASSWORD, ALGORITHM)
             .from(TABLE_NAME)
             .where(eq(NAME, bindMarker(NAME))));
     }
@@ -119,7 +119,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
         return executor.executeSingleRow(
                 getUserStatement.bind()
                     .setString(NAME, name.asId()))
-            .map(row -> new DefaultUser(Username.of(row.getString(REALNAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
+            .map(row -> new DefaultUser(Username.of(row.getString(NAME)), row.getString(PASSWORD), row.getString(ALGORITHM)))
             .blockOptional()
             .orElse(null);
     }
@@ -145,7 +145,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     public void removeUser(Username name) throws UsersRepositoryException {
         boolean executed = executor.executeReturnApplied(
             removeUserStatement.bind()
-                .setString(NAME, name.asString()))
+                .setString(NAME, name.asId()))
             .block();
 
         if (!executed) {
@@ -178,7 +178,7 @@ public class CassandraUsersRepository extends AbstractUsersRepository {
     @Override
     public Iterator<Username> list() throws UsersRepositoryException {
         return executor.executeRows(listStatement.bind())
-            .map(row -> row.getString(REALNAME))
+            .map(row -> row.getString(NAME))
             .map(Username::of)
             .toIterable()
             .iterator();

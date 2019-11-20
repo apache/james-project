@@ -132,11 +132,15 @@ public interface UsersRepository {
     /**
      * Returns username to be used for a given MailAddress
      *
-     * @param mailAddress
      * @return Username used by James for this mailAddress
-     * @throws UsersRepositoryException
      */
-    Username getUser(MailAddress mailAddress) throws UsersRepositoryException;
+    default Username getUser(MailAddress mailAddress) throws UsersRepositoryException {
+        if (supportVirtualHosting()) {
+            return Username.of(mailAddress.asString()).toLowerCase();
+        } else {
+            return Username.of(mailAddress.getLocalPart()).toLowerCase();
+        }
+    }
 
     /**
      * Returns one of the possible mail addresses to be used to send a mail to that user

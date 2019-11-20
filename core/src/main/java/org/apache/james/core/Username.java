@@ -122,7 +122,11 @@ public class Username {
     }
 
     public String asId() {
-        return asString().toLowerCase(Locale.US);
+        return toLowerCase().asString();
+    }
+
+    public Username toLowerCase() {
+        return new Username(localPart.toLowerCase(Locale.US), domainPart);
     }
 
     public boolean equalsAsId(String otherId) {

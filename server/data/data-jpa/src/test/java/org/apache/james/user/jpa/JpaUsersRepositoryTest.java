@@ -47,7 +47,9 @@ public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
     protected AbstractUsersRepository getUsersRepository() throws Exception {
         JPAUsersRepository repos = new JPAUsersRepository(domainList);
         repos.setEntityManagerFactory(JPA_TEST_CLUSTER.getEntityManagerFactory());
-        repos.configure(new BaseHierarchicalConfiguration());
+        BaseHierarchicalConfiguration configuration = new BaseHierarchicalConfiguration();
+        configuration.addProperty("enableVirtualHosting", "true");
+        repos.configure(configuration);
         return repos;
     }
 }

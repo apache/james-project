@@ -657,16 +657,6 @@ public class ReadOnlyUsersLDAPRepository implements UsersRepository, Configurabl
         return ldapConfiguration.supportsVirtualHosting();
     }
 
-
-    @Override
-    public Username getUser(MailAddress mailAddress) {
-        if (supportVirtualHosting()) {
-            return Username.of(mailAddress.asString());
-        } else {
-            return Username.of(mailAddress.getLocalPart());
-        }
-    }
-
     @Override
     public boolean isAdministrator(Username username) {
         if (ldapConfiguration.getAdministratorId().isPresent()) {
