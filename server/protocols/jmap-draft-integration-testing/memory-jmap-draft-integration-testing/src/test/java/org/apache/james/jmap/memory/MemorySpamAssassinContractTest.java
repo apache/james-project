@@ -35,10 +35,9 @@ class MemorySpamAssassinContractTest implements SpamAssassinContract {
 
     private static final int LIMIT_TO_20_MESSAGES = 20;
 
-    private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
-        .extension(spamAssassinExtension)
+        .extension(new SpamAssassinModuleExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))

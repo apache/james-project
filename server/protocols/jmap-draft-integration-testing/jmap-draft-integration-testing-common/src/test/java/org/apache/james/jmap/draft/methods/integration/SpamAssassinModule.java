@@ -55,17 +55,6 @@ public class SpamAssassinModule extends AbstractModule {
                 new MailetConfigurationOverride(
                     org.apache.james.transport.mailets.SpamAssassin.class,
                     spamAssassinMailetConfig()));
-
-        Multibinder.newSetBinder(binder(), MailboxListener.GroupMailboxListener.class)
-            .addBinding()
-            .to(SpamAssassinListener.class);
-    }
-
-    @Provides
-    @Singleton
-    SpamAssassinListener provideSpamAssassinListener(SpamAssassin spamAssassin, SystemMailboxesProvider systemMailboxesProvider, MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) {
-        return new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory,
-            MailboxListener.ExecutionMode.SYNCHRONOUS);
     }
 
     @Provides
