@@ -59,12 +59,12 @@ public class ModSeq implements Comparable<ModSeq> {
     }
     
     @Override
-    public int hashCode() {
+    public final int hashCode() {
         return Objects.hashCode(modSeq);
     }
     
     @Override
-    public boolean equals(Object obj) {
+    public final boolean equals(Object obj) {
         if (obj instanceof ModSeq) {
             ModSeq other = (ModSeq) obj;
             return other.modSeq == this.modSeq;
