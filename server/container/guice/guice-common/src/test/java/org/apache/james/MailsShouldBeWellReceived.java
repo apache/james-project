@@ -19,8 +19,6 @@
 
 package org.apache.james;
 
-import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
-
 import org.apache.james.core.Domain;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -29,6 +27,7 @@ import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
 import org.awaitility.Awaitility;
+import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
@@ -39,8 +38,8 @@ interface MailsShouldBeWellReceived {
     String JAMES_USER = "james-user@" + DOMAIN;
     String PASSWORD = "secret";
     ConditionFactory CALMLY_AWAIT = Awaitility
-        .with().pollInterval(ONE_HUNDRED_MILLISECONDS)
-        .and().pollDelay(ONE_HUNDRED_MILLISECONDS)
+        .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
+        .and().pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
         .await();
 
     @Test
@@ -63,4 +62,5 @@ interface MailsShouldBeWellReceived {
                 .awaitMessage(CALMLY_AWAIT);
         }
     }
+
 }
