@@ -465,7 +465,7 @@ public class StoreMessageManager implements MessageManager {
                     new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                     .block();
                 return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
-            }, true);
+            }, MailboxPathLocker.LockType.Write);
         }
     }
 
@@ -653,7 +653,7 @@ public class StoreMessageManager implements MessageManager {
         return locker.executeWithLock(toMailbox.getMailboxPath(), () -> {
             SortedMap<MessageUid, MessageMetaData> copiedUids = copy(set, toMailbox, session);
             return MessageRange.toRanges(new ArrayList<>(copiedUids.keySet()));
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
 
     /**
@@ -671,7 +671,7 @@ public class StoreMessageManager implements MessageManager {
         return locker.executeWithLock(toMailbox.getMailboxPath(), () -> {
             SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
             return MessageRange.toRanges(new ArrayList<>(movedUids.keySet()));
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
 
     protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {

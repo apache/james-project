@@ -31,12 +31,17 @@ import org.apache.james.mailbox.model.MailboxPath;
  * Implementations that are not able to handle read / write locks in a different way are needed to handle all locks as write lock.
  */
 public interface MailboxPathLocker {
+    enum LockType {
+        Read,
+        Write
+    }
+
     /**
      * Execute the {@link LockAwareExecution} while holding a lock on the
      * {@link MailboxPath}. If writeLock is true the implementation need to make sure that no other threads can read and write while the lock
      * is hold. The contract is the same as documented in {@link ReadWriteLock}.
      */
-    <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException;
+    <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType lockType) throws MailboxException;
 
     /**
      * Execute code while holding a lock

@@ -239,7 +239,7 @@ public class MaildirFolder {
             } catch (IOException e) {
                 throw new MailboxException("Unable to read last uid", e);
             }
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
         
         
     }
@@ -383,7 +383,7 @@ public class MaildirFolder {
             } catch (IOException e) {
                 throw new MailboxException("Unable to read messagename for uid " + uid, e);
             }
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
     
     /**
@@ -421,7 +421,7 @@ public class MaildirFolder {
                 uidMap.putAll(truncateMap(createUidFile(), from, to));
             }
             return uidMap;
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
     
     public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, MessageUid from, MessageUid to)
@@ -546,7 +546,7 @@ public class MaildirFolder {
                 throw new MailboxException("Unable to read recent messages", e);
             }
             return recentMessages;
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
     
     
@@ -809,7 +809,7 @@ public class MaildirFolder {
             } else {
                return uid;
             }
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
 
     }
 
@@ -841,7 +841,7 @@ public class MaildirFolder {
                 throw new MailboxException("Unable to update msg with uid " + uid, e);
             }
             return null;
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
 
     }
     
@@ -895,7 +895,7 @@ public class MaildirFolder {
             } catch (IOException e) {
                 throw new MailboxException("Unable to delete msg with uid " + uid, e);
             }
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
         
 
     }
@@ -935,7 +935,7 @@ public class MaildirFolder {
 
             return new MailboxACL(props);
 
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
         
     }
     
@@ -975,7 +975,7 @@ public class MaildirFolder {
                 return null;
 
             }
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
 
     

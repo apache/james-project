@@ -24,6 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -37,7 +38,7 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
     private final ConcurrentHashMap<MailboxPath, ReadWriteLock> paths = new ConcurrentHashMap<>();
 
     @Override
-    public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, boolean writeLock) throws MailboxException {
+    public <T> T executeWithLock(MailboxPath path, LockAwareExecution<T> execution, LockType writeLock) throws MailboxException {
         try {
             lock(path, writeLock);
             return execution.execute();
@@ -46,7 +47,7 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
         }
     }
 
-    private void lock(MailboxPath path, boolean writeLock) {
+    private void lock(MailboxPath path, LockType lockType) {
         ReadWriteLock lock = paths.get(path);
         if (lock == null) {
             lock = new ReentrantReadWriteLock();
@@ -55,22 +56,25 @@ public final class JVMMailboxPathLocker implements MailboxPathLocker {
                 lock = storedLock;
             }
         }
-        getLock(lock, writeLock).lock();
+        getLock(lock, lockType).lock();
     }
 
-    private void unlock(MailboxPath path, boolean writeLock) {
+    private void unlock(MailboxPath path, LockType lockType) {
         ReadWriteLock lock = paths.get(path);
 
         if (lock != null) {
-            getLock(lock, writeLock).unlock();
+            getLock(lock, lockType).unlock();
         }
     }
 
-    private Lock getLock(ReadWriteLock lock, boolean writeLock) {
-        if (writeLock) {
-            return lock.writeLock();
-        } else {
-            return lock.readLock();
+    private Lock getLock(ReadWriteLock lock, LockType lockType) {
+        switch (lockType) {
+            case Write:
+                return lock.writeLock();
+            case Read:
+                return lock.readLock();
+            default:
+                throw new NotImplementedException("Unsupported lock tuype " + lockType);
         }
     }
 }

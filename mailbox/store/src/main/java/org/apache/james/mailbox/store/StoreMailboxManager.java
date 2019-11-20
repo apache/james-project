@@ -397,7 +397,7 @@ public class StoreMailboxManager implements MailboxManager {
             }
             return null;
 
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
 
         return mailboxIds;
     }
@@ -528,7 +528,7 @@ public class StoreMailboxManager implements MailboxManager {
             }
             return null;
 
-        }, true);
+        }, MailboxPathLocker.LockType.Write);
     }
 
     @Override
