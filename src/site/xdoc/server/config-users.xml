@@ -47,6 +47,9 @@
             and the domain part should be concatenated after a domain delimiter('@'). E.g. 'myuser@james.org'
         </li>
       </ul>
+      <p>
+        A user is always considered as lower cased, so 'myUser' and 'myuser' are the same user, and can be used as well as recipient local part than as login for different protocols.
+      </p>
     </subsection>
 
     <subsection name="General configuration">

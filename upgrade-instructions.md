@@ -16,10 +16,22 @@ Changes to apply between 3.4.x and 3.5.x will be reported here.
 
 Change list:
 
+ - [Enforce usernames to be lower cased](#enforce-usernames-to-be-lower-cased)
+ - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
  - [UsersFileRepository](#usersfilerepository)
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
- - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
+
+#### Enforce usernames to be lower cased
+
+Date 21/11/2019
+
+SHA-1 xxxxxxxxx
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2949
+
+Many users recently complained about mails non received when sending to upper cased local recipients. We decided to simplify the handling of case for local recipients and users by always storing them lower cased.
+Now all the users repositories are storing user in lower case to ensure that. If you previously used to store users in a case sensitive way (which is very unlikely as it is broking delivery), you could need to update your user database to lower case all your users.
 
 #### Cassandra keyspace creation configuration
 
