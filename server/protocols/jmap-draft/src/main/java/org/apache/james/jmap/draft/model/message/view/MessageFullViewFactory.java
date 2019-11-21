@@ -40,7 +40,6 @@ import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
-import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -66,10 +65,8 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
-public class MessageFullViewFactory {
+public class MessageFullViewFactory implements MessageViewFactory<MessageFullView> {
     public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
-
-    private static final KeywordsCombiner ACCUMULATOR = new KeywordsCombiner();
 
     private final BlobManager blobManager;
     private final MessagePreviewGenerator messagePreview;
@@ -87,6 +84,7 @@ public class MessageFullViewFactory {
         this.keywordsFactory = Keywords.lenientFactory();
     }
 
+    @Override
     public MessageFullView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
         return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
     }
@@ -122,34 +120,17 @@ public class MessageFullViewFactory {
     }
 
     private MetaDataWithContent toMetaDataWithContent(Collection<MessageResult> messageResults) throws MailboxException {
-        Preconditions.checkArgument(!messageResults.isEmpty(), "MessageResults cannot be empty");
-        Preconditions.checkArgument(hasOnlyOneMessageId(messageResults), "MessageResults need to share the same messageId");
+        assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = messageResults.stream()
-            .map(MessageResult::getMailboxId)
-            .distinct()
-            .collect(Guavate.toImmutableList());
-
-        Keywords keywords = messageResults.stream()
-            .map(MessageResult::getFlags)
-            .map(keywordsFactory::fromFlags)
-            .reduce(ACCUMULATOR)
-            .get();
+        List<MailboxId> mailboxIds = getMailboxIds(messageResults);
+        Keywords keywords = getKeywords(messageResults);
 
         return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
             .messageId(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
             .keywords(keywords)
             .build();
-    }
-
-    private boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
-        return messageResults
-            .stream()
-            .map(MessageResult::getMessageId)
-            .distinct()
-            .count() == 1;
     }
 
     private Instant getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {

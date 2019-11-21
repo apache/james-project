@@ -50,6 +50,8 @@ import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProvider;
+import org.apache.james.mailbox.store.StoreAttachmentManager;
+import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageIdManager;
@@ -384,6 +386,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
     private final StoreMessageIdManager storeMessageIdManager;
     private final MessageSearchIndex searchIndex;
     private final EventBus eventBus;
+    private final StoreBlobManager blobManager;
 
     InMemoryIntegrationResources(InMemoryMailboxManager mailboxManager, StoreRightManager storeRightManager, MessageId.Factory messageIdFactory, InMemoryCurrentQuotaManager currentQuotaManager, DefaultUserQuotaRootResolver defaultUserQuotaRootResolver, InMemoryPerUserMaxQuotaManager maxQuotaManager, QuotaManager quotaManager, MessageSearchIndex searchIndex, EventBus eventBus) {
         this.mailboxManager = mailboxManager;
@@ -404,6 +407,11 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             quotaManager,
             defaultUserQuotaRootResolver,
             mailboxManager.getPreDeletionHooks());
+
+        this.blobManager = new StoreBlobManager(
+            new StoreAttachmentManager((InMemoryMailboxSessionMapperFactory) mailboxManager.getMapperFactory(), storeMessageIdManager),
+            storeMessageIdManager,
+            messageIdFactory);
     }
 
     public DefaultUserQuotaRootResolver getDefaultUserQuotaRootResolver() {
@@ -449,5 +457,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     public EventBus getEventBus() {
         return eventBus;
+    }
+
+    public StoreBlobManager getBlobManager() {
+        return blobManager;
     }
 }
