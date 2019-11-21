@@ -176,6 +176,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getId, MessageFullView::getSubject, MessageFullView::getTextBody)
             .containsOnly(
                 Tuple.tuple(message1.getMessageId(), "message 1 subject", Optional.of("my message")),
@@ -205,6 +207,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getId, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my <b>HTML</b> message")));
     }
@@ -304,6 +308,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my HTML message"), Optional.of("my <b>HTML</b> message")));
     }
@@ -330,6 +336,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.of("")));
     }
@@ -362,6 +370,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("My plain message"), Optional.of("<a>The </a> <strong>HTML</strong> message")));
     }
@@ -456,8 +466,11 @@ public class GetMessagesMethodTest {
         Method.Response response = result.get(0).getResponse();
         assertThat(response).isInstanceOf(GetMessagesResponse.class);
         GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
-        assertThat(getMessagesResponse.list()).hasSize(1);
-        assertThat(getMessagesResponse.list().get(0).getMailboxIds()).containsOnly(customMailboxId, message1.getMailboxId());
+        assertThat(getMessagesResponse.list()).hasSize(1)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
+            .flatExtracting(MessageFullView::getMailboxIds)
+            .containsOnly(customMailboxId, message1.getMailboxId());
     }
 
     @Test
@@ -529,6 +542,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(
@@ -586,6 +601,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(
@@ -626,6 +643,8 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
+            .hasOnlyElementsOfType(MessageFullView.class)
+            .extracting(MessageFullView.class::cast)
             .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(

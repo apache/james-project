@@ -50,7 +50,7 @@ import com.google.common.collect.ImmutableMap;
 
 @JsonDeserialize(builder = MessageFullView.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
-public class MessageFullView {
+public class MessageFullView implements MessageView {
 
     public static Builder builder() {
         return new Builder();
