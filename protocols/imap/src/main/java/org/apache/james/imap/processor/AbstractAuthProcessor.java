@@ -68,7 +68,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             if (!authFailure) {
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.login(Username.of(authenticationAttempt.getAuthenticationId()),
+                    final MailboxSession mailboxSession = mailboxManager.login(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword());
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
@@ -97,9 +97,9 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             if (!authFailure) {
                 final MailboxManager mailboxManager = getMailboxManager();
                 try {
-                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(Username.of(authenticationAttempt.getAuthenticationId()),
+                    final MailboxSession mailboxSession = mailboxManager.loginAsOtherUser(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword(),
-                        Username.of(authenticationAttempt.getDelegateUserName().get()));
+                        authenticationAttempt.getDelegateUserName().get());
                     session.authenticated();
                     session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
@@ -156,20 +156,20 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
         }
     }
 
-    protected static AuthenticationAttempt delegation(String authorizeId, String authenticationId, String password) {
+    protected static AuthenticationAttempt delegation(Username authorizeId, Username authenticationId, String password) {
         return new AuthenticationAttempt(Optional.of(authorizeId), authenticationId, password);
     }
 
-    protected static AuthenticationAttempt noDelegation(String authenticationId, String password) {
+    protected static AuthenticationAttempt noDelegation(Username authenticationId, String password) {
         return new AuthenticationAttempt(Optional.empty(), authenticationId, password);
     }
 
     protected static class AuthenticationAttempt {
-        private final Optional<String> delegateUserName;
-        private final String authenticationId;
+        private final Optional<Username> delegateUserName;
+        private final Username authenticationId;
         private final String password;
 
-        public AuthenticationAttempt(Optional<String> delegateUserName, String authenticationId, String password) {
+        public AuthenticationAttempt(Optional<Username> delegateUserName, Username authenticationId, String password) {
             this.delegateUserName = delegateUserName;
             this.authenticationId = authenticationId;
             this.password = password;
@@ -179,11 +179,11 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
             return delegateUserName.isPresent() && !delegateUserName.get().equals(authenticationId);
         }
 
-        public Optional<String> getDelegateUserName() {
+        public Optional<Username> getDelegateUserName() {
             return delegateUserName;
         }
 
-        public String getAuthenticationId() {
+        public Username getAuthenticationId() {
             return authenticationId;
         }
 

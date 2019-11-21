@@ -26,6 +26,7 @@ import java.util.Base64;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -104,7 +105,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
             String token1 = authTokenizer.nextToken();  // Authorization Identity
             token2 = authTokenizer.nextToken();                 // Authentication Identity
             try {
-                return delegation(token1, token2, authTokenizer.nextToken());
+                return delegation(Username.of(token1), Username.of(token2), authTokenizer.nextToken());
             } catch (java.util.NoSuchElementException ignored) {
                 // If we got here, this is what happened.  RFC 2595
                 // says that "the client may leave the authorization
@@ -121,7 +122,7 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
                 // elements, leading to the exception we just
                 // caught.  So we need to move the user to the
                 // password, and the authorize_id to the user.
-                return noDelegation(token1, token2);
+                return noDelegation(Username.of(token1), token2);
             } finally {
                 authTokenizer = null;
             }
