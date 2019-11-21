@@ -31,7 +31,7 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class SubMailboxMessageTest {
+public class SubMessageTest {
 
     private static final Optional<String> DEFAULT_TEXT_BODY = Optional.of("textBody");
     private static final Optional<String> DEFAULT_HTML_BODY = Optional.of("htmlBody");
