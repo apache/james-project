@@ -21,6 +21,8 @@ package org.apache.james.backends.es;
 
 import java.util.Objects;
 
+import com.google.common.base.MoreObjects;
+
 public class IndexName {
     private final String value;
 
@@ -45,5 +47,12 @@ public class IndexName {
     @Override
     public final int hashCode() {
         return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }

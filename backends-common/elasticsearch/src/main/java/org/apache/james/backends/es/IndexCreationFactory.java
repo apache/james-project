@@ -120,7 +120,7 @@ public class IndexCreationFactory {
                             .source(settings), RequestOptions.DEFAULT);
             } catch (ElasticsearchStatusException exception) {
                 if (exception.getMessage().contains(INDEX_ALREADY_EXISTS_EXCEPTION_MESSAGE)) {
-                    LOGGER.info("Index [{}] already exist", indexName);
+                    LOGGER.info("Index [{}] already exists", indexName.getValue());
                 } else {
                     throw exception;
                 }
