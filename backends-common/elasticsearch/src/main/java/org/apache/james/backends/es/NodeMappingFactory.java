@@ -66,7 +66,7 @@ public class NodeMappingFactory {
     @SuppressWarnings("deprecation")
     public static boolean mappingAlreadyExist(RestHighLevelClient client, IndexName indexName) throws IOException {
         try {
-            client.getLowLevelClient().performRequest("GET", indexName.getValue() + "/_mapping/" + NodeMappingFactory.DEFAULT_MAPPING_NAME);
+            client.getLowLevelClient().performRequest("GET", "/" + indexName.getValue() + "/_mapping/" + NodeMappingFactory.DEFAULT_MAPPING_NAME);
             return true;
         } catch (ResponseException e) {
             if (e.getResponse().getStatusLine().getStatusCode() != HttpStatus.SC_NOT_FOUND) {
