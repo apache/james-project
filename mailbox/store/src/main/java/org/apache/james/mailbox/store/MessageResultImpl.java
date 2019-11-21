@@ -309,7 +309,7 @@ public class MessageResultImpl implements MessageResult {
     }
     
     @Override
-    public List<MessageAttachment> getAttachments() {
+    public List<MessageAttachment> getLoadedAttachments() {
         return message.getAttachments();
     }
 

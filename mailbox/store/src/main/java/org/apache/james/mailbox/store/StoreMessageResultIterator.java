@@ -333,7 +333,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         }
 
         @Override
-        public List<MessageAttachment> getAttachments() throws MailboxException {
+        public List<MessageAttachment> getLoadedAttachments() throws MailboxException {
             throw exception;
         }
 

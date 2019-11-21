@@ -72,7 +72,7 @@ public class MessageIdProbe implements GuiceProbe {
             mailboxSession);
 
         return messages.stream()
-            .flatMap(Throwing.function(messageResult -> messageResult.getAttachments().stream()))
+            .flatMap(Throwing.function(messageResult -> messageResult.getLoadedAttachments().stream()))
             .map(MessageAttachment::getAttachmentId)
             .collect(Guavate.toImmutableList());
     }

@@ -233,7 +233,7 @@ public class MessageFactory {
                 .modSeq(messageResult.getModSeq())
                 .size(messageResult.getSize())
                 .internalDate(messageResult.getInternalDate().toInstant())
-                .attachments(messageResult.getAttachments())
+                .attachments(messageResult.getLoadedAttachments())
                 .mailboxId(messageResult.getMailboxId());
             try {
                 return builder.content(messageResult.getFullContent().getInputStream());
