@@ -188,10 +188,6 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         return uidProvider;
     }
 
-    Session getSession() {
-        return session;
-    }
-
     @Override
     public AnnotationMapper createAnnotationMapper(MailboxSession mailboxSession)
             throws MailboxException {
