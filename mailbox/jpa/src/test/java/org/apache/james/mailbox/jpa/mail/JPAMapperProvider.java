@@ -26,8 +26,6 @@ import javax.persistence.EntityManagerFactory;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.backends.jpa.JpaTestCluster;
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -61,8 +59,7 @@ public class JPAMapperProvider implements MapperProvider {
     public MessageMapper createMessageMapper() {
         EntityManagerFactory entityManagerFactory = jpaTestCluster.getEntityManagerFactory();
 
-        JPAMessageMapper messageMapper = new JPAMessageMapper(MailboxSessionUtil.create(Username.of("benwa")),
-            new JPAUidProvider(entityManagerFactory),
+        JPAMessageMapper messageMapper = new JPAMessageMapper(new JPAUidProvider(entityManagerFactory),
             new JPAModSeqProvider(entityManagerFactory),
             entityManagerFactory);
 

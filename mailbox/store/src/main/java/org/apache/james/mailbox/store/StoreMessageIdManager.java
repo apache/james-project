@@ -382,7 +382,7 @@ public class StoreMessageIdManager implements MessageIdManager {
                                     .build())
                             .build())
                     .build();
-            save(mailboxSession, messageIdMapper, copy);
+            save(messageIdMapper, copy);
 
             eventBus.dispatch(EventFactory.added()
                 .randomEventId()
@@ -395,9 +395,9 @@ public class StoreMessageIdManager implements MessageIdManager {
         }
     }
 
-    private void save(MailboxSession mailboxSession, MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
+    private void save(MessageIdMapper messageIdMapper, MailboxMessage mailboxMessage) throws MailboxException {
         ModSeq modSeq = mailboxSessionMapperFactory.getModSeqProvider().nextModSeq(mailboxMessage.getMailboxId());
-        MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxSession, mailboxMessage.getMailboxId());
+        MessageUid uid = mailboxSessionMapperFactory.getUidProvider().nextUid(mailboxMessage.getMailboxId());
         mailboxMessage.setModSeq(modSeq);
         mailboxMessage.setUid(uid);
         messageIdMapper.copyInMailbox(mailboxMessage);

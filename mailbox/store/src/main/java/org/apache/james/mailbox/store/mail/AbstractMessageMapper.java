@@ -67,7 +67,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailboxSession, mailbox);
+        return uidProvider.lastUid(mailbox);
     }
 
     @Override
@@ -114,7 +114,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
 
     @Override
     public MessageMetaData add(Mailbox mailbox, MailboxMessage message) throws MailboxException {
-        message.setUid(uidProvider.nextUid(mailboxSession, mailbox));
+        message.setUid(uidProvider.nextUid(mailbox));
         
         // if a mailbox does not support mod-sequences the provider may be null
         if (modSeqProvider != null) {
@@ -129,7 +129,7 @@ public abstract class AbstractMessageMapper extends TransactionalMapper implemen
     
     @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        MessageUid uid = uidProvider.nextUid(mailboxSession, mailbox);
+        MessageUid uid = uidProvider.nextUid(mailbox);
         ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);
         final MessageMetaData metaData = copy(mailbox, uid, modSeq, original);  
         

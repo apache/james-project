@@ -65,12 +65,12 @@ class CassandraUidProviderTest {
     @Test
     void lastUidShouldRetrieveValueStoredByNextUid() throws Exception {
         int nbEntries = 100;
-        Optional<MessageUid> result = uidProvider.lastUid(null, mailbox);
+        Optional<MessageUid> result = uidProvider.lastUid(mailbox);
         assertThat(result).isEmpty();
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                        MessageUid uid = uidProvider.nextUid(null, mailbox);
-                        assertThat(uid).isEqualTo(uidProvider.lastUid(null, mailbox).get());
+                        MessageUid uid = uidProvider.nextUid(mailbox);
+                        assertThat(uid).isEqualTo(uidProvider.lastUid(mailbox).get());
                 })
             );
     }
@@ -80,7 +80,7 @@ class CassandraUidProviderTest {
         int nbEntries = 100;
         LongStream.range(1, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                MessageUid result = uidProvider.nextUid(null, mailbox);
+                MessageUid result = uidProvider.nextUid(mailbox);
                 assertThat(value).isEqualTo(result.asLong());
             }));
     }
@@ -92,7 +92,7 @@ class CassandraUidProviderTest {
 
         ConcurrentSkipListSet<MessageUid> messageUids = new ConcurrentSkipListSet<>();
         ConcurrentTestRunner.builder()
-                .operation((threadNumber, step) -> messageUids.add(uidProvider.nextUid(null, mailbox)))
+                .operation((threadNumber, step) -> messageUids.add(uidProvider.nextUid(mailbox)))
             .threadCount(threadCount)
             .operationCount(nbEntries / threadCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));

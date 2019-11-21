@@ -25,7 +25,6 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -38,14 +37,12 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MessageUtils {
-    private final MailboxSession mailboxSession;
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
 
-    public MessageUtils(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider) {
+    public MessageUtils(UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         Preconditions.checkNotNull(uidProvider);
         Preconditions.checkNotNull(modSeqProvider);
-        this.mailboxSession = mailboxSession;
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
     }
@@ -55,12 +52,11 @@ public class MessageUtils {
     }
 
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailboxSession, mailbox);
+        return uidProvider.lastUid(mailbox);
     }
-    
 
     public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.nextUid(mailboxSession, mailbox);
+        return uidProvider.nextUid(mailbox);
     }
 
     public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {

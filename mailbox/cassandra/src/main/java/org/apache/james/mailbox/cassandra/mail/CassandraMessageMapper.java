@@ -32,7 +32,6 @@ import javax.mail.Flags.Flag;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.ApplicableFlagBuilder;
 import org.apache.james.mailbox.FlagsBuilder;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
@@ -68,7 +67,6 @@ public class CassandraMessageMapper implements MessageMapper {
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageMapper.class);
 
     private final CassandraModSeqProvider modSeqProvider;
-    private final MailboxSession mailboxSession;
     private final CassandraUidProvider uidProvider;
     private final CassandraMessageDAO messageDAO;
     private final CassandraMessageIdDAO messageIdDAO;
@@ -83,7 +81,7 @@ public class CassandraMessageMapper implements MessageMapper {
     private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageMapper(CassandraUidProvider uidProvider, CassandraModSeqProvider modSeqProvider,
-                                  MailboxSession mailboxSession, CassandraAttachmentMapper attachmentMapper,
+                                  CassandraAttachmentMapper attachmentMapper,
                                   CassandraMessageDAO messageDAO, CassandraMessageIdDAO messageIdDAO,
                                   CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMailboxCounterDAO mailboxCounterDAO,
                                   CassandraMailboxRecentsDAO mailboxRecentDAO, CassandraApplicableFlagDAO applicableFlagDAO,
@@ -91,7 +89,6 @@ public class CassandraMessageMapper implements MessageMapper {
                                   CassandraDeletedMessageDAO deletedMessageDAO, CassandraConfiguration cassandraConfiguration) {
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
-        this.mailboxSession = mailboxSession;
         this.messageDAO = messageDAO;
         this.messageIdDAO = messageIdDAO;
         this.imapUidDAO = imapUidDAO;
@@ -363,7 +360,7 @@ public class CassandraMessageMapper implements MessageMapper {
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailboxSession, mailbox);
+        return uidProvider.lastUid(mailbox);
     }
 
     @Override

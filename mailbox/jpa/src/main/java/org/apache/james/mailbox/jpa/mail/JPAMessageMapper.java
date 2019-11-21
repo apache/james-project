@@ -30,7 +30,6 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 import javax.persistence.Query;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -71,9 +70,9 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     private final MessageUtils messageMetadataMapper;
 
-    public JPAMessageMapper(MailboxSession mailboxSession, UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
+    public JPAMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
-        this.messageMetadataMapper = new MessageUtils(mailboxSession, uidProvider, modSeqProvider);
+        this.messageMetadataMapper = new MessageUtils(uidProvider, modSeqProvider);
     }
 
     @Override

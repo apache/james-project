@@ -250,7 +250,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
         try {
             return createMaildirFolder(mailbox).getLastUid()
                 .map(MessageUid::next)
@@ -275,7 +275,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException {
        return createMaildirFolder(mailbox).getLastUid();
     }
 
@@ -305,7 +305,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
         throw new NotImplementedException("Not implemented");
     }
 

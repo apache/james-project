@@ -409,7 +409,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             throws MailboxException {
         MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
         try {
-            SortedMap<MessageUid, MaildirMessageName> uidMap = folder.getUidMap(mailboxSession, filter, limit);
+            SortedMap<MessageUid, MaildirMessageName> uidMap = folder.getUidMap(filter, limit);
 
             ArrayList<MailboxMessage> filtered = new ArrayList<>(uidMap.size());
             for (Entry<MessageUid, MaildirMessageName> entry : uidMap.entrySet()) {

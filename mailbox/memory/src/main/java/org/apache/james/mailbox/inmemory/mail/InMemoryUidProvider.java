@@ -24,7 +24,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -37,12 +36,12 @@ public class InMemoryUidProvider implements UidProvider {
     private final ConcurrentMap<InMemoryId, AtomicLong> map = new ConcurrentHashMap<>();
     
     @Override
-    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
-        return nextUid(session, mailbox.getMailboxId());
+    public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
+        return nextUid(mailbox.getMailboxId());
     }
 
     @Override
-    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) {
+    public MessageUid nextUid(MailboxId mailboxId) {
         InMemoryId memoryId = (InMemoryId) mailboxId;
         AtomicLong uid = getLast(memoryId);
         if (uid != null) {
@@ -58,7 +57,7 @@ public class InMemoryUidProvider implements UidProvider {
     }
 
     @Override
-    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException {
         AtomicLong last = getLast((InMemoryId) mailbox.getMailboxId());
         if (last == null) {
             return Optional.empty();

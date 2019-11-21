@@ -142,7 +142,6 @@ public class CassandraMailboxSessionMapperFactory extends MailboxSessionMapperFa
         return new CassandraMessageMapper(
                                           uidProvider,
                                           modSeqProvider,
-                                          null,
                                           createAttachmentMapper(mailboxSession),
                                           messageDAO,
                                           messageIdDAO,

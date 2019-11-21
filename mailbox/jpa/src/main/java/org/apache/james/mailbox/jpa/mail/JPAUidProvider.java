@@ -25,7 +25,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -44,7 +43,7 @@ public class JPAUidProvider implements UidProvider {
     }
 
     @Override
-    public Optional<MessageUid> lastUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException {
         EntityManager manager = null;
         try {
             manager = factory.createEntityManager();
@@ -64,12 +63,12 @@ public class JPAUidProvider implements UidProvider {
     }
 
     @Override
-    public MessageUid nextUid(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
         return nextUid((JPAId) mailbox.getMailboxId());
     }
 
     @Override
-    public MessageUid nextUid(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public MessageUid nextUid(MailboxId mailboxId) throws MailboxException {
         return nextUid((JPAId) mailboxId);
     }
 

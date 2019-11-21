@@ -447,7 +447,7 @@ public class MaildirFolder {
      * @return A {@link Map} with all uids and associated {@link MaildirMessageName}s
      * @throws MailboxException if there is a problem with the uid list file
      */
-    public SortedMap<MessageUid, MaildirMessageName> getUidMap(MailboxSession session, FilenameFilter filter, int limit) throws MailboxException {
+    public SortedMap<MessageUid, MaildirMessageName> getUidMap(FilenameFilter filter, int limit) throws MailboxException {
         MessageUid to = null;
         SortedMap<MessageUid, MaildirMessageName> allUids = getUidMap(MessageUid.MIN_VALUE, to);
         SortedMap<MessageUid, MaildirMessageName> filteredUids = new TreeMap<>();
