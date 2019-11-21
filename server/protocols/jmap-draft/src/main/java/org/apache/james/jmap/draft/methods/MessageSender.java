@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jmap.draft.model.MessageFactory;
+import org.apache.james.jmap.draft.model.MessageViewFactory;
 import org.apache.james.jmap.draft.send.MailMetadata;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.lifecycle.api.LifecycleUtil;
@@ -48,7 +48,7 @@ public class MessageSender {
         this.mailSpool = mailSpool;
     }
 
-    public void sendMessage(MessageFactory.MetaDataWithContent message,
+    public void sendMessage(MessageViewFactory.MetaDataWithContent message,
                             Envelope envelope,
                             MailboxSession session) throws MessagingException {
         Mail mail = buildMail(message, envelope);
@@ -60,7 +60,7 @@ public class MessageSender {
     }
 
     @VisibleForTesting
-    static Mail buildMail(MessageFactory.MetaDataWithContent message, Envelope envelope) throws MessagingException {
+    static Mail buildMail(MessageViewFactory.MetaDataWithContent message, Envelope envelope) throws MessagingException {
         String name = message.getMessageId().serialize();
         return MailImpl.builder()
             .name(name)

@@ -32,11 +32,11 @@ import org.apache.james.jmap.draft.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.Message;
-import org.apache.james.jmap.draft.model.MessageFactory;
-import org.apache.james.jmap.draft.model.MessageFactory.MetaDataWithContent;
+import org.apache.james.jmap.draft.model.MessageFullView;
 import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
+import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.MessageViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxSession;
@@ -65,17 +65,17 @@ public class GetMessagesMethod implements Method {
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
     private static final KeywordsCombiner ACCUMULATOR = new KeywordsCombiner();
-    private final MessageFactory messageFactory;
+    private final MessageViewFactory messageViewFactory;
     private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
     private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
-            MessageFactory messageFactory,
+            MessageViewFactory messageViewFactory,
             MessageIdManager messageIdManager,
             MetricFactory metricFactory) {
-        this.messageFactory = messageFactory;
+        this.messageViewFactory = messageViewFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
         this.keywordsFactory = Keywords.lenientFactory();
@@ -150,10 +150,10 @@ public class GetMessagesMethod implements Method {
         }
     }
 
-    private Function<MetaDataWithContent, Stream<Message>> toMessage() {
+    private Function<MetaDataWithContent, Stream<MessageFullView>> toMessage() {
         return metaDataWithContent -> {
             try {
-                return Stream.of(messageFactory.fromMetaDataWithContent(metaDataWithContent));
+                return Stream.of(messageViewFactory.fromMetaDataWithContent(metaDataWithContent));
             } catch (Exception e) {
                 LOGGER.error("Can not convert metaData with content to Message for {}", metaDataWithContent.getMessageId(), e);
                 return Stream.of();

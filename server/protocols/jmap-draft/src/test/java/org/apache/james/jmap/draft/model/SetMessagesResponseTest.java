@@ -56,8 +56,8 @@ public class SetMessagesResponseTest {
     @Test
     public void builderShouldWork() {
         Instant currentDate = Instant.now();
-        ImmutableMap<CreationMessageId, Message> created = ImmutableMap.of(CreationMessageId.of("user|created|1"),
-            Message.builder()
+        ImmutableMap<CreationMessageId, MessageFullView> created = ImmutableMap.of(CreationMessageId.of("user|created|1"),
+            MessageFullView.builder()
                 .id(TestMessageId.of(1))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
@@ -110,8 +110,8 @@ public class SetMessagesResponseTest {
         assertThat(emptyBuilder.build()).isEqualToComparingFieldByField(testee);
     }
 
-    private ImmutableMap<CreationMessageId, Message> buildMessage(CreationMessageId creationMessageId, MessageId messageId) {
-        return ImmutableMap.of(creationMessageId, Message.builder()
+    private ImmutableMap<CreationMessageId, MessageFullView> buildMessage(CreationMessageId creationMessageId, MessageId messageId) {
+        return ImmutableMap.of(creationMessageId, MessageFullView.builder()
                 .id(messageId)
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")

@@ -41,7 +41,7 @@ public class GetMessagesResponse implements Method.Response {
     
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder {
-        private ImmutableList<Message> messages;
+        private ImmutableList<MessageFullView> messages;
         private List<MessageId> expectedMessageIds;
 
         private Builder() {
@@ -49,12 +49,12 @@ public class GetMessagesResponse implements Method.Response {
         }
 
         @JsonIgnore
-        public Builder message(Message message) {
+        public Builder message(MessageFullView message) {
             this.messages = ImmutableList.of(message);
             return this;
         }
 
-        public Builder messages(List<Message> messages) {
+        public Builder messages(List<MessageFullView> messages) {
             this.messages = ImmutableList.copyOf(messages);
             return this;
         }
@@ -71,7 +71,7 @@ public class GetMessagesResponse implements Method.Response {
         
 
         private List<MessageId> messagesNotFound() {
-            Set<MessageId> foundMessageIds = messages.stream().map(Message::getId).collect(Collectors.toSet());
+            Set<MessageId> foundMessageIds = messages.stream().map(MessageFullView::getId).collect(Collectors.toSet());
             return ImmutableList.copyOf(expectedMessageIds.stream()
                 .filter(id -> !foundMessageIds.contains(id))
                 .collect(Collectors.toList()));
@@ -80,16 +80,16 @@ public class GetMessagesResponse implements Method.Response {
     
     
     
-    private final List<Message> messages;
+    private final List<MessageFullView> messages;
     private final List<MessageId> messagesNotFound;
 
-    private GetMessagesResponse(List<Message> messages, List<MessageId> messagesNotFound) {
+    private GetMessagesResponse(List<MessageFullView> messages, List<MessageId> messagesNotFound) {
         this.messages = messages;
         this.messagesNotFound = messagesNotFound;
     }
 
     @JsonSerialize
-    public List<Message> list() {
+    public List<MessageFullView> list() {
         return messages;
     }
     

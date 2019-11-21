@@ -50,7 +50,7 @@ public class SetMessagesResponse implements Method.Response {
         private String accountId;
         private String oldState;
         private String newState;
-        private final ImmutableMap.Builder<CreationMessageId, Message> created;
+        private final ImmutableMap.Builder<CreationMessageId, MessageFullView> created;
         private final ImmutableMap.Builder<CreationMessageId, MessageId> mdnSent;
         private final ImmutableList.Builder<MessageId> updated;
         private final ImmutableList.Builder<MessageId> destroyed;
@@ -82,12 +82,12 @@ public class SetMessagesResponse implements Method.Response {
             throw new NotImplementedException("not implemented");
         }
 
-        public Builder created(CreationMessageId creationMessageId, Message message) {
+        public Builder created(CreationMessageId creationMessageId, MessageFullView message) {
             this.created.put(creationMessageId, message);
             return this;
         }
 
-        public Builder created(Map<CreationMessageId, Message> created) {
+        public Builder created(Map<CreationMessageId, MessageFullView> created) {
             this.created.putAll(created);
             return this;
         }
@@ -171,7 +171,7 @@ public class SetMessagesResponse implements Method.Response {
     private final String accountId;
     private final String oldState;
     private final String newState;
-    private final ImmutableMap<CreationMessageId, Message> created;
+    private final ImmutableMap<CreationMessageId, MessageFullView> created;
     private final ImmutableMap<CreationMessageId, MessageId> mdnSent;
     private final ImmutableList<MessageId> updated;
     private final ImmutableList<MessageId> destroyed;
@@ -180,7 +180,7 @@ public class SetMessagesResponse implements Method.Response {
     private final ImmutableMap<MessageId, SetError> notUpdated;
     private final ImmutableMap<MessageId, SetError> notDestroyed;
 
-    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, ImmutableMap<CreationMessageId, Message> created, ImmutableMap<CreationMessageId, MessageId> mdnSent, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed,
+    @VisibleForTesting SetMessagesResponse(String accountId, String oldState, String newState, ImmutableMap<CreationMessageId, MessageFullView> created, ImmutableMap<CreationMessageId, MessageId> mdnSent, ImmutableList<MessageId> updated, ImmutableList<MessageId> destroyed,
                                            ImmutableMap<CreationMessageId, SetError> notCreated, ImmutableMap<CreationMessageId, SetError> mdnNotSent, ImmutableMap<MessageId, SetError> notUpdated, ImmutableMap<MessageId, SetError> notDestroyed) {
         this.accountId = accountId;
         this.oldState = oldState;
@@ -207,7 +207,7 @@ public class SetMessagesResponse implements Method.Response {
         return newState;
     }
 
-    public ImmutableMap<CreationMessageId, Message> getCreated() {
+    public ImmutableMap<CreationMessageId, MessageFullView> getCreated() {
         return created;
     }
 

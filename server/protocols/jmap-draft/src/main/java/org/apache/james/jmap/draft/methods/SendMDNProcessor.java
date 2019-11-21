@@ -32,7 +32,7 @@ import javax.mail.MessagingException;
 import org.apache.james.jmap.draft.exceptions.InvalidOriginMessageForMDNException;
 import org.apache.james.jmap.draft.exceptions.MessageNotFoundException;
 import org.apache.james.jmap.draft.model.JmapMDN;
-import org.apache.james.jmap.draft.model.MessageFactory;
+import org.apache.james.jmap.draft.model.MessageViewFactory;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
@@ -151,7 +151,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         Message mdnAnswer = mdn.generateMDNMessage(originalMessage, mailboxSession);
 
         Flags seen = new Flags(Flags.Flag.SEEN);
-        MessageFactory.MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
+        MessageViewFactory.MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
             getOutbox(mailboxSession), reportAsAttachment, seen, mailboxSession);
 
         messageSender.sendMessage(metaDataWithContent,

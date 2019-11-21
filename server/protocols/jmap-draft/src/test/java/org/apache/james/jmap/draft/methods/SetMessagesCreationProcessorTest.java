@@ -37,8 +37,8 @@ import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
-import org.apache.james.jmap.draft.model.MessageFactory;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
+import org.apache.james.jmap.draft.model.MessageViewFactory;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.send.MailMetadata;
@@ -100,7 +100,7 @@ public class SetMessagesCreationProcessorTest {
                         .build())
             .build();
 
-    private MessageFactory messageFactory;
+    private MessageViewFactory messageViewFactory;
     private MailSpool mockedMailSpool;
     private SystemMailboxesProvider fakeSystemMailboxesProvider;
     private MailboxSession session;
@@ -127,7 +127,7 @@ public class SetMessagesCreationProcessorTest {
         when(messagePreview.compute(any())).thenReturn("text preview");
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
-        messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        messageViewFactory = new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
         mockedMailboxManager = mock(MailboxManager.class);
@@ -140,7 +140,7 @@ public class SetMessagesCreationProcessorTest {
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mockedAttachmentManager, mimeMessageConverter);
         messageSender = new MessageSender(mockedMailSpool);
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
-        sut = new SetMessagesCreationProcessor(messageFactory,
+        sut = new SetMessagesCreationProcessor(messageViewFactory,
             fakeSystemMailboxesProvider,
             new AttachmentChecker(mockedAttachmentManager),
             new NoopMetricFactory(),
@@ -232,7 +232,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(messageFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater);
+        sut = new SetMessagesCreationProcessor(messageViewFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -247,7 +247,7 @@ public class SetMessagesCreationProcessorTest {
     public void processShouldReturnErrorWhenOutboxNotFound() {
         // Given
         TestSystemMailboxesProvider doNotProvideOutbox = new TestSystemMailboxesProvider(Optional::empty, () -> optionalDrafts);
-        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(messageFactory, doNotProvideOutbox,
+        SetMessagesCreationProcessor sut = new SetMessagesCreationProcessor(messageViewFactory, doNotProvideOutbox,
             new AttachmentChecker(mockedAttachmentManager), new NoopMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
             messageAppender,
             messageSender,

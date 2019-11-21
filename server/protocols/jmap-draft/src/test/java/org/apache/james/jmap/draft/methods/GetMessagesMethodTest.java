@@ -36,13 +36,13 @@ import javax.mail.Flags.Flag;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
-import org.apache.james.jmap.draft.model.Message;
-import org.apache.james.jmap.draft.model.MessageFactory;
+import org.apache.james.jmap.draft.model.MessageFullView;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
@@ -103,7 +103,7 @@ public class GetMessagesMethodTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        MessageFactory messageFactory = new MessageFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        MessageViewFactory messageViewFactory = new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
@@ -113,7 +113,7 @@ public class GetMessagesMethodTest {
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
         messageIdManager = resources.getMessageIdManager();
-        testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
+        testee = new GetMessagesMethod(messageViewFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()
             .setSubject("message 1 subject")
@@ -176,7 +176,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getSubject, Message::getTextBody)
+            .extracting(MessageFullView::getId, MessageFullView::getSubject, MessageFullView::getTextBody)
             .containsOnly(
                 Tuple.tuple(message1.getMessageId(), "message 1 subject", Optional.of("my message")),
                 Tuple.tuple(message2.getMessageId(), "message 2 subject", Optional.of("my message")),
@@ -205,7 +205,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getHtmlBody)
+            .extracting(MessageFullView::getId, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my <b>HTML</b> message")));
     }
 
@@ -304,7 +304,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("my HTML message"), Optional.of("my <b>HTML</b> message")));
     }
 
@@ -330,7 +330,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.empty(), Optional.of("")));
     }
 
@@ -362,7 +362,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getId, Message::getTextBody, Message::getHtmlBody)
+            .extracting(MessageFullView::getId, MessageFullView::getTextBody, MessageFullView::getHtmlBody)
             .containsOnly(Tuple.tuple(message.getMessageId(), Optional.of("My plain message"), Optional.of("<a>The </a> <strong>HTML</strong> message")));
     }
 
@@ -462,8 +462,8 @@ public class GetMessagesMethodTest {
 
     @Test
     public void processShouldNotFailOnSingleMessageFailure() throws Exception {
-        MessageFactory messageFactory = mock(MessageFactory.class);
-        testee = new GetMessagesMethod(messageFactory, messageIdManager, new DefaultMetricFactory());
+        MessageViewFactory messageViewFactory = mock(MessageViewFactory.class);
+        testee = new GetMessagesMethod(messageViewFactory, messageIdManager, new DefaultMetricFactory());
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
         org.apache.james.mime4j.dom.Message messageContent = org.apache.james.mime4j.dom.Message.Builder.of()
@@ -476,8 +476,8 @@ public class GetMessagesMethodTest {
 
         ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent), session);
         ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session);
-        when(messageFactory.fromMetaDataWithContent(any()))
-            .thenReturn(mock(Message.class))
+        when(messageViewFactory.fromMetaDataWithContent(any()))
+            .thenReturn(mock(MessageFullView.class))
             .thenThrow(new RuntimeException());
 
         GetMessagesRequest request = GetMessagesRequest.builder()
@@ -529,7 +529,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getKeywords)
+            .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(
                         ImmutableMap.of(
@@ -586,7 +586,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getKeywords)
+            .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(
                         ImmutableMap.of(
@@ -626,7 +626,7 @@ public class GetMessagesMethodTest {
             .hasOnlyElementsOfType(GetMessagesResponse.class)
             .extracting(GetMessagesResponse.class::cast)
             .flatExtracting(GetMessagesResponse::list)
-            .extracting(Message::getKeywords)
+            .extracting(MessageFullView::getKeywords)
             .containsOnlyElementsOf(
                     ImmutableList.of(
                         ImmutableMap.of(

@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.methods;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.jmap.draft.model.JmapMDN;
-import org.apache.james.jmap.draft.model.Message;
+import org.apache.james.jmap.draft.model.MessageFullView;
 import org.apache.james.jmap.draft.model.SetError;
 
 import com.google.common.base.MoreObjects;
@@ -63,8 +63,8 @@ public class ValueWithId<T> {
         }
     }
 
-    public static class MessageWithId extends ValueWithId<Message> {
-        public MessageWithId(CreationMessageId creationId, Message message) {
+    public static class MessageWithId extends ValueWithId<MessageFullView> {
+        public MessageWithId(CreationMessageId creationId, MessageFullView message) {
             super(creationId, message);
         }
     }

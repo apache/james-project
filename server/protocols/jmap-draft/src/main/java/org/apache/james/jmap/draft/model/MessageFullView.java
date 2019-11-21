@@ -42,9 +42,9 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-@JsonDeserialize(builder = Message.Builder.class)
+@JsonDeserialize(builder = MessageFullView.Builder.class)
 @JsonFilter(JmapResponseWriterImpl.PROPERTIES_FILTER)
-public class Message {
+public class MessageFullView {
 
     public static Builder builder() {
         return new Builder();
@@ -192,7 +192,7 @@ public class Message {
             return this;
         }
 
-        public Message build() {
+        public MessageFullView build() {
             Preconditions.checkState(id != null, "'id' is mandatory");
             Preconditions.checkState(blobId != null, "'blobId' is mandatory");
             Preconditions.checkState(!Strings.isNullOrEmpty(threadId), "'threadId' is mandatory");
@@ -206,7 +206,7 @@ public class Message {
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             boolean hasAttachment = hasAttachment(attachments);
 
-            return new Message(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
+            return new MessageFullView(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
                 hasAttachment, headers, Optional.ofNullable(from),
                 to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, textBody, htmlBody, attachments, attachedMessages,
                 keywords.orElse(Keywords.DEFAULT_VALUE));
@@ -252,27 +252,28 @@ public class Message {
     private final ImmutableMap<BlobId, SubMessage> attachedMessages;
     private final Keywords keywords;
 
-    @VisibleForTesting Message(MessageId id,
-                               BlobId blobId,
-                               String threadId,
-                               ImmutableList<MailboxId> mailboxIds,
-                               Optional<String> inReplyToMessageId,
-                               boolean hasAttachment,
-                               ImmutableMap<String, String> headers,
-                               Optional<Emailer> from,
-                               ImmutableList<Emailer> to,
-                               ImmutableList<Emailer> cc,
-                               ImmutableList<Emailer> bcc,
-                               ImmutableList<Emailer> replyTo,
-                               String subject,
-                               Instant date,
-                               Number size,
-                               String preview,
-                               Optional<String> textBody,
-                               Optional<String> htmlBody,
-                               ImmutableList<Attachment> attachments,
-                               ImmutableMap<BlobId, SubMessage> attachedMessages,
-                               Keywords keywords) {
+    @VisibleForTesting
+    MessageFullView(MessageId id,
+                    BlobId blobId,
+                    String threadId,
+                    ImmutableList<MailboxId> mailboxIds,
+                    Optional<String> inReplyToMessageId,
+                    boolean hasAttachment,
+                    ImmutableMap<String, String> headers,
+                    Optional<Emailer> from,
+                    ImmutableList<Emailer> to,
+                    ImmutableList<Emailer> cc,
+                    ImmutableList<Emailer> bcc,
+                    ImmutableList<Emailer> replyTo,
+                    String subject,
+                    Instant date,
+                    Number size,
+                    String preview,
+                    Optional<String> textBody,
+                    Optional<String> htmlBody,
+                    ImmutableList<Attachment> attachments,
+                    ImmutableMap<BlobId, SubMessage> attachedMessages,
+                    Keywords keywords) {
         this.id = id;
         this.blobId = blobId;
         this.threadId = threadId;

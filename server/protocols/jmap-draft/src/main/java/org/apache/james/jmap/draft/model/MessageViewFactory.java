@@ -60,7 +60,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
-public class MessageFactory {
+public class MessageViewFactory {
 
     public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
 
@@ -70,21 +70,21 @@ public class MessageFactory {
     private final HtmlTextExtractor htmlTextExtractor;
 
     @Inject
-    public MessageFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, HtmlTextExtractor htmlTextExtractor) {
+    public MessageViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, HtmlTextExtractor htmlTextExtractor) {
         this.blobManager = blobManager;
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
     }
 
-    public Message fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
+    public MessageFullView fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
         org.apache.james.mime4j.dom.Message mimeMessage = parse(message);
         MessageContent messageContent = extractContent(mimeMessage);
         Optional<String> htmlBody = messageContent.getHtmlBody();
         Optional<String> mainTextContent = mainTextContent(messageContent);
         Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
         String preview = messagePreview.compute(mainTextContent);
-        return Message.builder()
+        return MessageFullView.builder()
                 .id(message.getMessageId())
                 .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))
                 .threadId(message.getMessageId().serialize())

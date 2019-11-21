@@ -30,7 +30,7 @@ import org.apache.james.util.StreamUtils;
 import com.github.steveash.guavate.Guavate;
 
 public class EnvelopeUtils {
-    public static Envelope fromMessage(Message jmapMessage) {
+    public static Envelope fromMessage(MessageFullView jmapMessage) {
         MaybeSender sender = MaybeSender.of(jmapMessage.getFrom()
             .map(Emailer::toMailAddress)
             .orElseThrow(() -> new RuntimeException("Sender is mandatory")));

@@ -28,7 +28,7 @@ import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.Message;
+import org.apache.james.jmap.draft.model.MessageFullView;
 import org.apache.james.jmap.draft.model.SubMessage;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.inmemory.InMemoryId;
@@ -71,7 +71,7 @@ public interface ParsingWritingObjects {
         Optional<String> HTML_BODY = Optional.of("<h1>myHtmlBody</h1>");
     }
 
-    Message MESSAGE = Message.builder()
+    MessageFullView MESSAGE = MessageFullView.builder()
             .id(Common.MESSAGE_ID)
             .blobId(Common.BLOB_ID)
             .threadId(Common.THREAD_ID)

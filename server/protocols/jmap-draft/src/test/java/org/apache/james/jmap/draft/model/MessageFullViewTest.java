@@ -30,71 +30,71 @@ import org.junit.Test;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MessageTest {
+public class MessageFullViewTest {
 
     
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenIdIsNull() {
-        Message.builder().build();
+        MessageFullView.builder().build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenBlobIdIsNull() {
-        Message.builder().id(TestMessageId.of(1)).build();
+        MessageFullView.builder().id(TestMessageId.of(1)).build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenThreadIdIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).build();
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenThreadIdIsEmpty() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("").build();
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("").build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenMailboxIdsIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").build();
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenHeadersIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().build();
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of()).build();
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of()).build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSubjectIsEmpty() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("").build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenSizeIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenDateIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsNull() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).date(Instant.now()).build();
     }
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenPreviewIsEmpty() {
-        Message.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
+        MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
             .subject("subject").size(123).date(Instant.now()).preview("").build();
     }
 
@@ -102,10 +102,10 @@ public class MessageTest {
     public void buildShouldWorkWhenMandatoryFieldsArePresent() {
         Instant currentDate = Instant.now();
         Number messageSize = Number.fromLong(123);
-        Message expected = new Message(TestMessageId.of(1), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"), Optional.empty(),
+        MessageFullView expected = new MessageFullView(TestMessageId.of(1), BlobId.of("blobId"), "threadId", ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"), Optional.empty(),
                 ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), "subject", currentDate, messageSize, "preview", Optional.empty(), Optional.empty(),
                 ImmutableList.of(), ImmutableMap.of(), Keywords.DEFAULT_VALUE);
-        Message tested = Message.builder()
+        MessageFullView tested = MessageFullView.builder()
                 .id(TestMessageId.of(1))
                 .blobId(BlobId.of("blobId"))
                 .threadId("threadId")
@@ -129,7 +129,7 @@ public class MessageTest {
                 .date(Instant.now())
                 .build();
         ImmutableMap<BlobId, SubMessage> attachedMessages = ImmutableMap.of(BlobId.of("differentBlobId"), simpleMessage);
-        Message.builder()
+        MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -165,7 +165,7 @@ public class MessageTest {
             .from(Keyword.DRAFT, Keyword.ANSWERED, Keyword.FLAGGED);
 
         Number messageSize = Number.fromLong(123);
-        Message expected = new Message(
+        MessageFullView expected = new MessageFullView(
             TestMessageId.of(1),
             BlobId.of("blobId"),
             "threadId",
@@ -187,7 +187,7 @@ public class MessageTest {
             attachments,
             attachedMessages,
             keywords);
-        Message tested = Message.builder()
+        MessageFullView tested = MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -214,7 +214,7 @@ public class MessageTest {
 
     @Test(expected = IllegalStateException.class)
     public void buildShouldThrowWhenOneAttachedMessageIsNotInAttachments() throws Exception {
-        Message.builder()
+        MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -234,7 +234,7 @@ public class MessageTest {
 
     @Test
     public void buildShouldNotThrowWhenOneAttachedMessageIsInAttachments() throws Exception {
-        Message.builder()
+        MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -259,7 +259,7 @@ public class MessageTest {
 
     @Test
     public void hasAttachmentShouldReturnFalseWhenNoAttachment() throws Exception {
-        Message message = Message.builder()
+        MessageFullView message = MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -277,7 +277,7 @@ public class MessageTest {
 
     @Test
     public void hasAttachmentShouldReturnFalseWhenAllAttachmentsAreInline() throws Exception {
-        Message message = Message.builder()
+        MessageFullView message = MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -309,7 +309,7 @@ public class MessageTest {
 
     @Test
     public void hasAttachmentShouldReturnTrueWhenOneAttachmentIsNotInline() throws Exception {
-        Message message = Message.builder()
+        MessageFullView message = MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")
@@ -347,7 +347,7 @@ public class MessageTest {
 
     @Test
     public void hasAttachmentShouldReturnTrueWhenAllAttachmentsAreNotInline() throws Exception {
-        Message message = Message.builder()
+        MessageFullView message = MessageFullView.builder()
             .id(TestMessageId.of(1))
             .blobId(BlobId.of("blobId"))
             .threadId("threadId")

@@ -129,7 +129,7 @@ public class SubMessage {
             Preconditions.checkState(date != null, "'date' is mandatory");
             ImmutableList<Attachment> attachments = this.attachments.build();
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
-            Preconditions.checkState(Message.areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
+            Preconditions.checkState(MessageFullView.areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
             return new SubMessage(headers, Optional.ofNullable(from), to.build(), cc.build(), bcc.build(),
                     replyTo.build(), subject, date, textBody, htmlBody,
                     attachments, attachedMessages
