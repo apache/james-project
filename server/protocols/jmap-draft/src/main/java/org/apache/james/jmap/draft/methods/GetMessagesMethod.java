@@ -130,6 +130,7 @@ public class GetMessagesMethod implements Method {
         getMessagesRequest.getAccountId().ifPresent((input) -> notImplemented("accountId"));
 
         try {
+            MessageProperties.ReadLevel readLevel = getMessagesRequest.getProperties().computeReadLevel();
             return GetMessagesResponse.builder()
                 .messages(
                     messageIdManager.getMessages(getMessagesRequest.getIds(), FetchGroupImpl.FULL_CONTENT, mailboxSession)

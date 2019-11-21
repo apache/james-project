@@ -25,6 +25,7 @@ import java.util.Optional;
 
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
@@ -86,5 +87,100 @@ class MessagePropertiesTest {
         assertThat(actual.getOptionalHeadersProperties()).hasValueSatisfying(
             value -> assertThat(value).contains(HeaderProperty.fromFieldName("x-spam-score"))
         );
+    }
+
+    @Test
+    void computeReadLevelShouldReturnHeaderWhenOnlyHeaderProperties() {
+        MessageProperties actual = new MessageProperties(
+            Optional.of(ImmutableSet.of("headers.X-Spam-Score"))).toOutputProperties();
+
+        assertThat(actual.computeReadLevel())
+            .isEqualTo(MessageProperties.ReadLevel.Header);
+    }
+
+    @Test
+    void computeReadLevelShouldReturnMetadataWhenOnlyKeywordProperty() {
+        MessageProperties actual = new MessageProperties(
+            Optional.of(ImmutableSet.of("keywords"))).toOutputProperties();
+
+        assertThat(actual.computeReadLevel())
+            .isEqualTo(MessageProperties.ReadLevel.Metadata);
+    }
+
+    @Test
+    void computeReadLevelShouldReturnFullWhenHtmlBodyProperty() {
+        MessageProperties actual = new MessageProperties(
+            Optional.of(ImmutableSet.of("htmlBody"))).toOutputProperties();
+
+        assertThat(actual.computeReadLevel())
+            .isEqualTo(MessageProperties.ReadLevel.Full);
+    }
+
+    @Test
+    void computeReadLevelShouldCombineReadLevels() {
+        MessageProperties actual = new MessageProperties(
+            Optional.of(ImmutableSet.of("headers.X-Spam-Score", "keywords"))).toOutputProperties();
+
+        assertThat(actual.computeReadLevel())
+            .isEqualTo(MessageProperties.ReadLevel.Header);
+    }
+
+    @Nested
+    class ReadLevelTest {
+        @Test
+        void combineShouldReturnMetadataWhenOnlyMetadata() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                    MessageProperties.ReadLevel.Metadata,
+                    MessageProperties.ReadLevel.Metadata))
+                .isEqualTo(MessageProperties.ReadLevel.Metadata);
+        }
+
+        @Test
+        void combineShouldReturnHeaderWhenOnlyHeader() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                    MessageProperties.ReadLevel.Header,
+                    MessageProperties.ReadLevel.Header))
+                .isEqualTo(MessageProperties.ReadLevel.Header);
+        }
+
+        @Test
+        void combineShouldReturnFullWhenOnlyFull() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                    MessageProperties.ReadLevel.Full,
+                    MessageProperties.ReadLevel.Full))
+                .isEqualTo(MessageProperties.ReadLevel.Full);
+        }
+
+        @Test
+        void combineShouldReturnHeaderWhenHeaderAndMetadata() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                MessageProperties.ReadLevel.Metadata,
+                MessageProperties.ReadLevel.Header))
+                .isEqualTo(MessageProperties.ReadLevel.Header);
+        }
+
+        @Test
+        void combineShouldReturnFullWhenFullAndMetadata() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                MessageProperties.ReadLevel.Metadata,
+                MessageProperties.ReadLevel.Full))
+                .isEqualTo(MessageProperties.ReadLevel.Full);
+        }
+
+        @Test
+        void combineShouldReturnFullWhenFullAndHeader() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                MessageProperties.ReadLevel.Header,
+                MessageProperties.ReadLevel.Full))
+                .isEqualTo(MessageProperties.ReadLevel.Full);
+        }
+
+        @Test
+        void combineShouldCommute() {
+            assertThat(MessageProperties.ReadLevel.combine(
+                MessageProperties.ReadLevel.Full,
+                MessageProperties.ReadLevel.Header))
+                .isEqualTo(MessageProperties.ReadLevel.Full);
+        }
     }
 }
