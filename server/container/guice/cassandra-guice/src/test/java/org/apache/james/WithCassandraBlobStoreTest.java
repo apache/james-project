@@ -22,7 +22,6 @@ package org.apache.james;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.jmap.draft.methods.integration.SpamAssassinModuleExtension;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
@@ -41,9 +40,4 @@ class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShould
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 
-
-    @Override
-    @Disabled("Fail to spool some mail at the same time with activeMQ")
-    public void twoHundredMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
-    }
 }
