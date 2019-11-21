@@ -32,7 +32,7 @@ import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;

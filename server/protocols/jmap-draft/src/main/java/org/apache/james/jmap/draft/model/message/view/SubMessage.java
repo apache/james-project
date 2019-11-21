@@ -17,12 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.model;
+package org.apache.james.jmap.draft.model.message.view;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Emailer;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;

@@ -23,6 +23,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.jmap.draft.methods.Method;
+import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.fasterxml.jackson.annotation.JsonProperty;

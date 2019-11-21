@@ -33,6 +33,7 @@ import javax.mail.internet.InternetAddress;
 
 import org.apache.james.jmap.draft.methods.ValidationResult;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
+import org.apache.james.jmap.draft.model.message.view.SubMessage;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.util.OptionalUtils;
 

@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft.model;
+package org.apache.james.jmap.draft.model.message.view;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,6 +34,11 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.internet.SharedInputStream;
 
+import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Emailer;
+import org.apache.james.jmap.draft.model.Keywords;
+import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;

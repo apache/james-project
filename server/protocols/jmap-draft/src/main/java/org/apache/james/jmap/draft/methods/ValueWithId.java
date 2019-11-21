@@ -22,8 +22,8 @@ package org.apache.james.jmap.draft.methods;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessageId;
 import org.apache.james.jmap.draft.model.JmapMDN;
-import org.apache.james.jmap.draft.model.MessageFullView;
 import org.apache.james.jmap.draft.model.SetError;
+import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 
 import com.google.common.base.MoreObjects;
 

@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.MaybeSender;
+import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.util.StreamUtils;
 

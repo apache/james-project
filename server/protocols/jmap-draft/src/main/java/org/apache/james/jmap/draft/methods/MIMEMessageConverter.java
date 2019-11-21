@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
-import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;

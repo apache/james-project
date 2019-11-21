@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.jmap.draft.model;
+package org.apache.james.jmap.draft.model.message.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -29,7 +29,14 @@ import java.time.Instant;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.jmap.draft.model.MessageViewFactory.MetaDataWithContent;
+import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Emailer;
+import org.apache.james.jmap.draft.model.Keyword;
+import org.apache.james.jmap.draft.model.Keywords;
+import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
+import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.model;
+package org.apache.james.jmap.draft.model.message.view;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -29,6 +29,12 @@ import java.util.function.Predicate;
 
 import org.apache.james.jmap.draft.methods.GetMessagesMethod;
 import org.apache.james.jmap.draft.methods.JmapResponseWriterImpl;
+import org.apache.james.jmap.draft.model.Attachment;
+import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Emailer;
+import org.apache.james.jmap.draft.model.Keyword;
+import org.apache.james.jmap.draft.model.Keywords;
+import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 

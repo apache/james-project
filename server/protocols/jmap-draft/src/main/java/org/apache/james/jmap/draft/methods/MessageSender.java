@@ -25,7 +25,7 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.jmap.draft.send.MailMetadata;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.lifecycle.api.LifecycleUtil;

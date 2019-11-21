@@ -35,7 +35,7 @@ import org.apache.james.jmap.draft.crypto.SignedTokenFactory;
 import org.apache.james.jmap.draft.crypto.SignedTokenManager;
 import org.apache.james.jmap.draft.model.MailboxFactory;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
-import org.apache.james.jmap.draft.model.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.lifecycle.api.StartUpCheck;
