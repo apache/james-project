@@ -25,26 +25,26 @@ import java.util.Optional;
 
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 
-public class MessagePropertiesTest {
+class MessagePropertiesTest {
 
     @Test
-    public void toOutputPropertiesShouldReturnAllMessagePropertiesWhenAbsent() {
+    void toOutputPropertiesShouldReturnAllMessagePropertiesWhenAbsent() {
         MessageProperties actual = new MessageProperties(Optional.empty()).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties()).hasValue(MessageProperty.allOutputProperties());
     }
     
     @Test
-    public void toOutputPropertiesShouldReturnEmptyHeaderPropertiesWhenAbsent() {
+    void toOutputPropertiesShouldReturnEmptyHeaderPropertiesWhenAbsent() {
         MessageProperties actual = new MessageProperties(Optional.empty()).toOutputProperties();
         assertThat(actual.getOptionalHeadersProperties()).isEmpty();
     }
 
     @Test
-    public void toOutputPropertiesShouldReturnTextBodyWhenBodyRequested() {
+    void toOutputPropertiesShouldReturnTextBodyWhenBodyRequested() {
         MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of("body"))).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties())
             .hasValueSatisfying(value -> 
@@ -52,7 +52,7 @@ public class MessagePropertiesTest {
     }
 
     @Test
-    public void toOutputPropertiesShouldReturnIsUnread() {
+    void toOutputPropertiesShouldReturnIsUnread() {
         MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of("isUnread"))).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties())
                 .hasValueSatisfying(value ->
@@ -60,14 +60,14 @@ public class MessagePropertiesTest {
     }
 
     @Test
-    public void toOutputPropertiesShouldReturnMandatoryPropertiesWhenEmptyRequest() {
+    void toOutputPropertiesShouldReturnMandatoryPropertiesWhenEmptyRequest() {
         MessageProperties actual = new MessageProperties(Optional.of(ImmutableSet.of())).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties())
             .hasValue(ImmutableSet.of(MessageProperty.id));
     }
 
     @Test
-    public void toOutputPropertiesShouldReturnAllHeadersWhenHeadersAndIndividualHeadersRequested() {
+    void toOutputPropertiesShouldReturnAllHeadersWhenHeadersAndIndividualHeadersRequested() {
         MessageProperties actual = new MessageProperties(
             Optional.of(ImmutableSet.of("headers.X-Spam-Score", "headers"))).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties()).hasValueSatisfying(
@@ -77,7 +77,7 @@ public class MessagePropertiesTest {
     }
 
     @Test
-    public void toOutputPropertiesShouldReturnHeadersMessagePropertyWhenIndividualHeadersRequested() {
+    void toOutputPropertiesShouldReturnHeadersMessagePropertyWhenIndividualHeadersRequested() {
         MessageProperties actual = new MessageProperties(
             Optional.of(ImmutableSet.of("headers.X-Spam-Score"))).toOutputProperties();
         assertThat(actual.getOptionalMessageProperties()).hasValueSatisfying(
