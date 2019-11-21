@@ -275,4 +275,9 @@ public class MaildirMessage implements Message {
         }
     }
 
+    @Override
+    public boolean hasAttachment() {
+        return !getAttachments().isEmpty();
+    }
+
 }

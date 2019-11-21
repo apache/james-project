@@ -70,6 +70,7 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -77,6 +78,7 @@ import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.util.EventCollector;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
@@ -85,9 +87,11 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Mono;
 
 /**
@@ -1802,6 +1806,47 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .toIterable()
                     .isEmpty();
             }
+        }
+    }
+
+    @Nested
+    class MessageTests {
+        private MessageManager inboxManager;
+
+        @BeforeEach
+        void setUp() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session).get();
+            inboxManager = mailboxManager.getMailbox(inbox, session);
+        }
+
+        @Test
+        void getMessagesShouldIncludeHasAttachmentInformation() throws Exception {
+            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.DELETED))
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session);
+
+            MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroupImpl.MINIMAL, session);
+
+            assertThat(messages).toIterable()
+                .hasSize(1)
+                .first()
+                .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isTrue()));
+        }
+
+        @Test
+        void getMessagesShouldNotIncludeAttachmentInformationWhenNone() throws Exception {
+            ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                .withFlags(new Flags(Flags.Flag.DELETED))
+                .build(message), session);
+
+            MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroupImpl.MINIMAL, session);
+
+            assertThat(messages).toIterable()
+                .hasSize(1)
+                .first()
+                .satisfies(Throwing.consumer(messageResult -> assertThat(messageResult.hasAttachments()).isFalse()));
         }
     }
 }

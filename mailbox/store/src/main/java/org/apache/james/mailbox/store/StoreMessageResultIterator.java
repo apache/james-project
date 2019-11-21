@@ -265,7 +265,12 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         public Content getBody() throws MailboxException {
             throw exception;
         }
-        
+
+        @Override
+        public boolean hasAttachments() throws MailboxException {
+            throw exception;
+        }
+
         @Override
         public int compareTo(MessageResult that) {
             return getUid().compareTo(that.getUid());

@@ -109,4 +109,6 @@ public interface Message {
      */
     List<MessageAttachment> getAttachments();
 
+    boolean hasAttachment();
+
 }

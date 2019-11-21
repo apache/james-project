@@ -67,6 +67,9 @@ public class MessageIdManagerTestSystem {
         this.mailboxManager = mailboxManager;
     }
 
+    public StoreMailboxManager getMailboxManager() {
+        return mailboxManager;
+    }
 
     public MessageIdManager getMessageIdManager() {
         return messageIdManager;

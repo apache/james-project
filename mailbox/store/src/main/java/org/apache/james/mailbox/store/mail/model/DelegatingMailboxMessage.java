@@ -119,4 +119,9 @@ public abstract class DelegatingMailboxMessage implements MailboxMessage {
     public List<MessageAttachment> getAttachments() {
         return message.getAttachments();
     }
+
+    @Override
+    public boolean hasAttachment() {
+        return message.hasAttachment();
+    }
 }

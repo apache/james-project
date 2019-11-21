@@ -270,8 +270,9 @@ public class CassandraMessageDAO {
                     getPropertyBuilder(row),
                     messageId.getMailboxId(),
                     messageId.getUid(),
-                    messageIdWithMetaData.getModSeq());
-            return found(Pair.of(messageWithoutAttachment, getAttachments(row, fetchType)));
+                    messageIdWithMetaData.getModSeq(),
+                    hasAttachment(row));
+            return found(Pair.of(messageWithoutAttachment, getAttachments(row)));
         });
     }
 
@@ -288,16 +289,14 @@ public class CassandraMessageDAO {
         return new Property(udtValue.getString(Properties.NAMESPACE), udtValue.getString(Properties.NAME), udtValue.getString(Properties.VALUE));
     }
 
-    private Stream<MessageAttachmentRepresentation> getAttachments(Row row, FetchType fetchType) {
-        switch (fetchType) {
-            case Full:
-            case Body:
-                List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+    private Stream<MessageAttachmentRepresentation> getAttachments(Row row) {
+        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+        return attachmentByIds(udtValues);
+    }
 
-                return attachmentByIds(udtValues);
-            default:
-                return Stream.of();
-        }
+    private boolean hasAttachment(Row row) {
+        List<UDTValue> udtValues = row.getList(ATTACHMENTS, UDTValue.class);
+        return !udtValues.isEmpty();
     }
 
     private Stream<MessageAttachmentRepresentation> attachmentByIds(List<UDTValue> udtValues) {

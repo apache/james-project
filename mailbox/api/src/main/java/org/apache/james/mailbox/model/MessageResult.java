@@ -253,8 +253,18 @@ public interface MessageResult extends Comparable<MessageResult> {
 
     
     Headers getHeaders() throws MailboxException;
-    
+
+    /**
+     * Returns the list of loaded attachments depending on the fetchType.
+     *
+     * These attachments will be loaded only for Full
+     */
     List<MessageAttachment> getAttachments() throws MailboxException;
+
+    /**
+     * Indicates if the message have attachments, regardless of loaded attachments.
+     */
+    boolean hasAttachments() throws MailboxException;
     
     /**
      * Describes a path within a multipart MIME message. All implementations

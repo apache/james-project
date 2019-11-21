@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Date;
 import java.util.List;
+
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
@@ -44,9 +45,11 @@ public class MessageWithoutAttachment {
     private final MailboxId mailboxId;
     private final MessageUid messageUid;
     private final long modSeq;
+    private final boolean hasAttachment;
 
     public MessageWithoutAttachment(MessageId messageId, Date internalDate, Long size, Integer bodySize, SharedByteArrayInputStream content,
-                                    Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, long modSeq) {
+                                    Flags flags, PropertyBuilder propertyBuilder, MailboxId mailboxId, MessageUid messageUid, long modSeq,
+                                    boolean hasAttachment) {
         this.messageId = messageId;
         this.internalDate = internalDate;
         this.size = size;
@@ -57,6 +60,7 @@ public class MessageWithoutAttachment {
         this.mailboxId = mailboxId;
         this.messageUid = messageUid;
         this.modSeq = modSeq;
+        this.hasAttachment = hasAttachment;
     }
 
     public SimpleMailboxMessage toMailboxMessage(List<MessageAttachment> attachments) {
@@ -72,6 +76,7 @@ public class MessageWithoutAttachment {
             .flags(flags)
             .propertyBuilder(propertyBuilder)
             .addAttachments(attachments)
+            .hasAttachment(hasAttachment)
             .build();
     }
 

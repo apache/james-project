@@ -312,7 +312,12 @@ public class MessageResultImpl implements MessageResult {
     public List<MessageAttachment> getAttachments() {
         return message.getAttachments();
     }
-    
+
+    @Override
+    public boolean hasAttachments() {
+        return message.hasAttachment();
+    }
+
     private static final class HeadersImpl implements Headers {
 
         private final MailboxMessage msg;

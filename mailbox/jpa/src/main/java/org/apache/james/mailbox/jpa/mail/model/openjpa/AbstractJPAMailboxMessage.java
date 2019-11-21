@@ -510,4 +510,9 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         }
     }
 
+    @Override
+    public boolean hasAttachment() {
+        return !getAttachments().isEmpty();
+    }
+
 }
