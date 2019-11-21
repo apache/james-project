@@ -39,7 +39,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class MessageHeaderView extends MessageMetadataView {
 
-    public static Builder messageHeaderBuilder() {
+    public static MessageHeaderView.Builder<? extends MessageHeaderView.Builder> messageHeaderBuilder() {
         return new Builder();
     }
 

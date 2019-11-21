@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
@@ -176,7 +176,7 @@ public class MIMEMessageConverter {
     }
 
     private void addMultivaluedHeader(Message.Builder messageBuilder, String fieldName, String multipleValues) {
-        Splitter.on(MessageFullViewFactory.JMAP_MULTIVALUED_FIELD_DELIMITER).split(multipleValues)
+        Splitter.on(MessageViewFactory.JMAP_MULTIVALUED_FIELD_DELIMITER).split(multipleValues)
             .forEach(value -> addHeader(messageBuilder, fieldName, value));
     }
 

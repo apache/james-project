@@ -24,19 +24,14 @@ import java.time.Instant;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
-import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
@@ -48,31 +43,21 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mime4j.dom.address.AddressList;
-import org.apache.james.mime4j.dom.address.Mailbox;
-import org.apache.james.mime4j.dom.address.MailboxList;
-import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
-import org.apache.james.mime4j.util.MimeUtil;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 public class MessageFullViewFactory implements MessageViewFactory<MessageFullView> {
-    public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
-
     private final BlobManager blobManager;
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
-    private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
     public MessageFullViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor,
@@ -81,7 +66,6 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
-        this.keywordsFactory = Keywords.lenientFactory();
     }
 
     @Override
@@ -90,7 +74,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     }
 
     public MessageFullView fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
-        org.apache.james.mime4j.dom.Message mimeMessage = parse(message);
+        Message mimeMessage = parse(message);
         MessageContent messageContent = extractContent(mimeMessage);
         Optional<String> htmlBody = messageContent.getHtmlBody();
         Optional<String> mainTextContent = mainTextContent(messageContent);
@@ -133,7 +117,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             .build();
     }
 
-    private Instant getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {
+    private Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MetaDataWithContent message) {
         return Optional.ofNullable(mimeMessage.getDate())
             .map(Date::toInstant)
             .orElse(message.getInternalDate());
@@ -153,9 +137,9 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
             .orElse(messageContent.getTextBody());
     }
 
-    private org.apache.james.mime4j.dom.Message parse(MetaDataWithContent message) throws MailboxException {
+    private Message parse(MetaDataWithContent message) throws MailboxException {
         try {
-            return org.apache.james.mime4j.dom.Message.Builder
+            return Message.Builder
                     .of()
                     .use(MimeConfig.PERMISSIVE)
                     .parse(message.getContent())
@@ -165,70 +149,12 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         }
     }
 
-    private MessageContent extractContent(org.apache.james.mime4j.dom.Message mimeMessage) throws MailboxException {
+    private MessageContent extractContent(Message mimeMessage) throws MailboxException {
         try {
             return messageContentExtractor.extract(mimeMessage);
         } catch (IOException e) {
             throw new MailboxException("Unable to extract content: " + e.getMessage(), e);
         }
-    }
-
-    private Emailer firstFromMailboxList(MailboxList list) {
-        if (list == null) {
-            return null;
-        }
-        return list.stream()
-                .map(this::fromMailbox)
-                .findFirst()
-                .orElse(null);
-    }
-    
-    private ImmutableList<Emailer> fromAddressList(AddressList list) {
-        if (list == null) {
-            return ImmutableList.of();
-        }
-        return list.flatten()
-            .stream()
-            .map(this::fromMailbox)
-            .collect(Guavate.toImmutableList());
-    }
-    
-    private Emailer fromMailbox(Mailbox mailbox) {
-        return Emailer.builder()
-            .name(getNameOrAddress(mailbox))
-            .email(mailbox.getAddress())
-            .allowInvalid()
-            .build();
-    }
-
-    private String getNameOrAddress(Mailbox mailbox) {
-        if (mailbox.getName() != null) {
-            return mailbox.getName();
-        }
-        return mailbox.getAddress();
-    }
-
-    private ImmutableMap<String, String> toMap(List<Field> fields) {
-        Function<Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
-                .stream()
-                .map(Field::getBody)
-                .map(MimeUtil::unscrambleHeaderValue)
-                .collect(Collectors.toList())
-                .stream()
-                .collect(Collectors.joining(JMAP_MULTIVALUED_FIELD_DELIMITER));
-        return Multimaps.index(fields, Field::getName)
-                .asMap()
-                .entrySet()
-                .stream()
-                .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
-    }
-    
-    private String getHeader(org.apache.james.mime4j.dom.Message message, String header) {
-        Field field = message.getHeader().getField(header);
-        if (field == null) {
-            return null;
-        }
-        return field.getBody();
     }
     
     private List<Attachment> getAttachments(List<MessageAttachment> attachments) {
