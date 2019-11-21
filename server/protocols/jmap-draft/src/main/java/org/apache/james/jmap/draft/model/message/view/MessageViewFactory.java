@@ -40,6 +40,7 @@ import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
+import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -66,20 +67,28 @@ import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
 public class MessageViewFactory {
-
     public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
+
+    private static final KeywordsCombiner ACCUMULATOR = new KeywordsCombiner();
 
     private final BlobManager blobManager;
     private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
+    private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
-    public MessageViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor, HtmlTextExtractor htmlTextExtractor) {
+    public MessageViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor,
+                              HtmlTextExtractor htmlTextExtractor) {
         this.blobManager = blobManager;
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
+        this.keywordsFactory = Keywords.lenientFactory();
+    }
+
+    public MessageFullView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
+        return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
     }
 
     public MessageFullView fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
@@ -110,6 +119,37 @@ public class MessageViewFactory {
                 .preview(preview)
                 .attachments(getAttachments(message.getAttachments()))
                 .build();
+    }
+
+    private MetaDataWithContent toMetaDataWithContent(Collection<MessageResult> messageResults) throws MailboxException {
+        Preconditions.checkArgument(!messageResults.isEmpty(), "MessageResults cannot be empty");
+        Preconditions.checkArgument(hasOnlyOneMessageId(messageResults), "MessageResults need to share the same messageId");
+
+        MessageResult firstMessageResult = messageResults.iterator().next();
+        List<MailboxId> mailboxIds = messageResults.stream()
+            .map(MessageResult::getMailboxId)
+            .distinct()
+            .collect(Guavate.toImmutableList());
+
+        Keywords keywords = messageResults.stream()
+            .map(MessageResult::getFlags)
+            .map(keywordsFactory::fromFlags)
+            .reduce(ACCUMULATOR)
+            .get();
+
+        return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
+            .messageId(firstMessageResult.getMessageId())
+            .mailboxIds(mailboxIds)
+            .keywords(keywords)
+            .build();
+    }
+
+    private boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
+        return messageResults
+            .stream()
+            .map(MessageResult::getMessageId)
+            .distinct()
+            .count() == 1;
     }
 
     private Instant getDateFromHeaderOrInternalDateOtherwise(org.apache.james.mime4j.dom.Message mimeMessage, MetaDataWithContent message) {

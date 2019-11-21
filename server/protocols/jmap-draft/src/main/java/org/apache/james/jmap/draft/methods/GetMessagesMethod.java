@@ -20,7 +20,6 @@
 package org.apache.james.jmap.draft.methods;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -31,19 +30,15 @@ import org.apache.james.jmap.draft.JmapFieldNotSupportedException;
 import org.apache.james.jmap.draft.json.FieldNamePropertyFilter;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
-import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory.MetaDataWithContent;
-import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroupImpl;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -64,11 +59,9 @@ public class GetMessagesMethod implements Method {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
-    private static final KeywordsCombiner ACCUMULATOR = new KeywordsCombiner();
     private final MessageViewFactory messageViewFactory;
     private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
-    private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
@@ -78,7 +71,6 @@ public class GetMessagesMethod implements Method {
         this.messageViewFactory = messageViewFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
-        this.keywordsFactory = Keywords.lenientFactory();
     }
     
     @Override
@@ -140,8 +132,7 @@ public class GetMessagesMethod implements Method {
                         .values()
                         .stream()
                         .filter(collection -> !collection.isEmpty())
-                        .flatMap(toMetaDataWithContent())
-                        .flatMap(toMessage())
+                        .flatMap(toMessageViews())
                         .collect(Guavate.toImmutableList()))
                 .expectedMessageIds(getMessagesRequest.getIds())
                 .build();
@@ -150,38 +141,12 @@ public class GetMessagesMethod implements Method {
         }
     }
 
-    private Function<MetaDataWithContent, Stream<MessageFullView>> toMessage() {
-        return metaDataWithContent -> {
-            try {
-                return Stream.of(messageViewFactory.fromMetaDataWithContent(metaDataWithContent));
-            } catch (Exception e) {
-                LOGGER.error("Can not convert metaData with content to Message for {}", metaDataWithContent.getMessageId(), e);
-                return Stream.of();
-            }
-        };
-    }
-
-    private Function<Collection<MessageResult>, Stream<MetaDataWithContent>> toMetaDataWithContent() {
+    private Function<Collection<MessageResult>, Stream<MessageFullView>> toMessageViews() {
         return messageResults -> {
-            MessageResult firstMessageResult = messageResults.iterator().next();
-            List<MailboxId> mailboxIds = messageResults.stream()
-                .map(MessageResult::getMailboxId)
-                .distinct()
-                .collect(Guavate.toImmutableList());
             try {
-                Keywords keywords = messageResults.stream()
-                    .map(MessageResult::getFlags)
-                    .map(keywordsFactory::fromFlags)
-                    .reduce(ACCUMULATOR)
-                    .get();
-                return Stream.of(
-                    MetaDataWithContent.builderFromMessageResult(firstMessageResult)
-                        .messageId(firstMessageResult.getMessageId())
-                        .mailboxIds(mailboxIds)
-                        .keywords(keywords)
-                        .build());
+                return Stream.of(messageViewFactory.fromMessageResults(messageResults));
             } catch (Exception e) {
-                LOGGER.error("Can not convert MessageResults to MetaData with content for messageId {} in {}", firstMessageResult.getMessageId(), mailboxIds, e);
+                LOGGER.error("Can not convert metaData with content to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
                 return Stream.of();
             }
         };

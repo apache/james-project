@@ -21,7 +21,9 @@ package org.apache.james.jmap.draft.methods;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import java.nio.charset.StandardCharsets;
@@ -94,7 +96,8 @@ public class GetMessagesMethodTest {
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
     private MethodCallId methodCallId;
-    
+    private MessageViewFactory messageViewFactory;
+
     @Before
     public void setup() throws Exception {
         methodCallId = MethodCallId.of("#0");
@@ -103,7 +106,7 @@ public class GetMessagesMethodTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        MessageViewFactory messageViewFactory = new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        messageViewFactory = spy(new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor));
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
@@ -475,8 +478,6 @@ public class GetMessagesMethodTest {
 
     @Test
     public void processShouldNotFailOnSingleMessageFailure() throws Exception {
-        MessageViewFactory messageViewFactory = mock(MessageViewFactory.class);
-        testee = new GetMessagesMethod(messageViewFactory, messageIdManager, new DefaultMetricFactory());
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
         org.apache.james.mime4j.dom.Message messageContent = org.apache.james.mime4j.dom.Message.Builder.of()
@@ -489,9 +490,11 @@ public class GetMessagesMethodTest {
 
         ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent), session);
         ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session);
-        when(messageViewFactory.fromMetaDataWithContent(any()))
-            .thenReturn(mock(MessageFullView.class))
-            .thenThrow(new RuntimeException());
+
+        doCallRealMethod()
+            .doThrow(new RuntimeException())
+            .when(messageViewFactory)
+            .fromMessageResults(any());
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(), message2.getMessageId()))
