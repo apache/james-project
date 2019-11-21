@@ -32,6 +32,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
@@ -80,6 +81,8 @@ public class IndexableMessageTest {
             .thenReturn(mailboxId);
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getFullContent())
             .thenReturn(new ByteArrayInputStream("".getBytes()));
         when(mailboxMessage.createFlags())
@@ -103,6 +106,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -130,6 +135,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -165,6 +172,8 @@ public class IndexableMessageTest {
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
             .thenReturn(MESSAGE_UID);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
@@ -192,6 +201,8 @@ public class IndexableMessageTest {
             .thenReturn(new ByteArrayInputStream("Bcc: First bcc <user@james.org>\nBcc: Second bcc <user2@james.org>".getBytes()));
         when(mailboxMessage.createFlags())
             .thenReturn(new Flags());
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
 
         IndexableMessage indexableMessage = IndexableMessage.builder()
                 .message(mailboxMessage)
@@ -211,6 +222,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -236,6 +249,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -263,6 +278,8 @@ public class IndexableMessageTest {
             .thenReturn(mailboxId);
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getFullContent())
             .thenReturn(ClassLoader.getSystemResourceAsStream("eml/mailWithHeaders.eml"));
         when(mailboxMessage.createFlags())
@@ -295,6 +312,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -332,6 +351,8 @@ public class IndexableMessageTest {
             .thenReturn(new Flags());
         when(mailboxMessage.getUid())
             .thenReturn(MESSAGE_UID);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getProperties())
             .thenReturn(ImmutableList.of(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false")));
 
@@ -354,6 +375,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -384,6 +407,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -412,6 +437,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -440,6 +467,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -486,6 +515,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(InMemoryMessageId.of(42));
         when(mailboxMessage.getFullContent())
@@ -518,6 +549,8 @@ public class IndexableMessageTest {
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
             .thenReturn(mailboxId);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getMessageId())
             .thenReturn(invalidMessageIdThatReturnNull);
         when(mailboxMessage.getFullContent())
@@ -548,6 +581,8 @@ public class IndexableMessageTest {
             .thenReturn(mailboxId);
         when(mailboxMessage.getMessageId())
             .thenReturn(null);
+        when(mailboxMessage.getModSeq())
+            .thenReturn(ModSeq.first());
         when(mailboxMessage.getFullContent())
             .thenReturn(ClassLoader.getSystemResourceAsStream("eml/bodyMakeTikaToFail.eml"));
         when(mailboxMessage.createFlags())

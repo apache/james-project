@@ -279,11 +279,19 @@ class JsonSerialize(mailboxIdFactory: MailboxId.Factory, messageIdFactory: Messa
     case _ => JsError()
   }
   implicit val messageUidReads: Reads[MessageUid] = {
-    case JsNumber(value) => JsSuccess(MessageUid.of(value.toLong))
+    case JsNumber(value) => if (value.isValidLong) {
+        JsSuccess(MessageUid.of(value.toLong))
+      } else {
+        JsError()
+      }
     case _ => JsError()
   }
   implicit val modSeqReads: Reads[ModSeq] = {
-    case JsNumber(value) => JsSuccess(ModSeq.of(value.toLong))
+    case JsNumber(value) => if (value.isValidLong) {
+      JsSuccess(ModSeq.of(value.toLong))
+    } else {
+      JsError()
+    }
     case _ => JsError()
   }
   implicit val userFlagsReads: Reads[UserFlag] = {

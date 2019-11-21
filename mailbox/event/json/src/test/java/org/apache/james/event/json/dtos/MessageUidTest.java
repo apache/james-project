@@ -45,6 +45,12 @@ class MessageUidTest {
     }
 
     @Test
+    void messageUidShouldReturnErrorWhenFloat() {
+        assertThat(DTO_JSON_SERIALIZE.messageUidReads().reads(new JsNumber(BigDecimal.valueOf(18.5))))
+            .isInstanceOf(JsError.class);
+    }
+
+    @Test
     void messageUidShouldReturnErrorWhenString() {
         assertThat(DTO_JSON_SERIALIZE.messageUidReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);

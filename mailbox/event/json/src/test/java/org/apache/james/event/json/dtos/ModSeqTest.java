@@ -33,25 +33,31 @@ import scala.math.BigDecimal;
 
 class ModSeqTest {
     @Test
-    void messageUidShouldBeWellSerialized() {
+    void modSeqShouldBeWellSerialized() {
         assertThat(DTO_JSON_SERIALIZE.modSeqWrites().writes(ModSeq.of(18)))
             .isEqualTo(new JsNumber(BigDecimal.valueOf(18)));
     }
 
     @Test
-    void messageUidShouldBeWellDeSerialized() {
+    void modSeqShouldBeWellDeSerialized() {
         assertThat(DTO_JSON_SERIALIZE.modSeqReads().reads(new JsNumber(BigDecimal.valueOf(18))).get())
             .isEqualTo(ModSeq.of(18));
     }
 
     @Test
-    void messageUidShouldReturnErrorWhenString() {
+    void modSeqShouldReturnErrorWhenFloat() {
+        assertThat(DTO_JSON_SERIALIZE.modSeqReads().reads(new JsNumber(BigDecimal.valueOf(18.5))))
+            .isInstanceOf(JsError.class);
+    }
+
+    @Test
+    void modSeqShouldReturnErrorWhenString() {
         assertThat(DTO_JSON_SERIALIZE.modSeqReads().reads(new JsString("18")))
             .isInstanceOf(JsError.class);
     }
 
     @Test
-    void messageUidShouldReturnErrorWhenNull() {
+    void modSeqShouldReturnErrorWhenNull() {
         assertThat(DTO_JSON_SERIALIZE.modSeqReads().reads(JsNull$.MODULE$))
             .isInstanceOf(JsError.class);
     }

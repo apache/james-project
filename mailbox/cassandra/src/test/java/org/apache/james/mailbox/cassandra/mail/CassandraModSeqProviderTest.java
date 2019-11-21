@@ -66,7 +66,7 @@ class CassandraModSeqProviderTest {
     void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
         ModSeq result = modSeqProvider.highestModSeq(mailbox);
-        assertThat(result).isEqualTo(0);
+        assertThat(result).isEqualTo(ModSeq.first());
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
                     ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);
