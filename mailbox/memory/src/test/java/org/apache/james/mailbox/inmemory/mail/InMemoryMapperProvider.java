@@ -115,13 +115,13 @@ public class InMemoryMapperProvider implements MapperProvider {
     @Override
     public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
-                .nextModSeq(MAILBOX_SESSION, mailbox);
+                .nextModSeq(mailbox);
     }
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         return inMemoryMailboxSessionMapperFactory.getModSeqProvider()
-            .highestModSeq(MAILBOX_SESSION, mailbox);
+            .highestModSeq(mailbox);
     }
 
 }

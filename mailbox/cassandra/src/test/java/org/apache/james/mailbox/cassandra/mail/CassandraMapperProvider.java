@@ -114,14 +114,12 @@ public class CassandraMapperProvider implements MapperProvider {
 
     @Override
     public ModSeq generateModSeq(Mailbox mailbox) throws MailboxException {
-        MailboxSession mailboxSession = null;
-        return cassandraModSeqProvider.nextModSeq(mailboxSession, mailbox);
+        return cassandraModSeqProvider.nextModSeq(mailbox);
     }
 
     @Override
     public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
-        MailboxSession mailboxSession = null;
-        return cassandraModSeqProvider.highestModSeq(mailboxSession, mailbox);
+        return cassandraModSeqProvider.highestModSeq(mailbox);
     }
 
 }

@@ -51,7 +51,7 @@ public class MessageUtils {
     }
     
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.highestModSeq(mailboxSession, mailbox);
+        return modSeqProvider.highestModSeq(mailbox);
     }
 
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
@@ -64,7 +64,7 @@ public class MessageUtils {
     }
 
     public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.nextModSeq(mailboxSession, mailbox);
+        return modSeqProvider.nextModSeq(mailbox);
     }
 
     public void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException { 

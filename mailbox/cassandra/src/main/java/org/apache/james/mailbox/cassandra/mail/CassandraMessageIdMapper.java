@@ -28,7 +28,6 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -67,14 +66,13 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
     private final CassandraMessageDAO messageDAO;
     private final CassandraIndexTableHandler indexTableHandler;
     private final ModSeqProvider modSeqProvider;
-    private final MailboxSession mailboxSession;
     private final AttachmentLoader attachmentLoader;
     private final CassandraConfiguration cassandraConfiguration;
 
     public CassandraMessageIdMapper(MailboxMapper mailboxMapper, CassandraMailboxDAO mailboxDAO, CassandraAttachmentMapper attachmentMapper,
                                     CassandraMessageIdToImapUidDAO imapUidDAO, CassandraMessageIdDAO messageIdDAO,
                                     CassandraMessageDAO messageDAO, CassandraIndexTableHandler indexTableHandler,
-                                    ModSeqProvider modSeqProvider, MailboxSession mailboxSession, CassandraConfiguration cassandraConfiguration) {
+                                    ModSeqProvider modSeqProvider, CassandraConfiguration cassandraConfiguration) {
 
         this.mailboxMapper = mailboxMapper;
         this.mailboxDAO = mailboxDAO;
@@ -83,7 +81,6 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         this.messageDAO = messageDAO;
         this.indexTableHandler = indexTableHandler;
         this.modSeqProvider = modSeqProvider;
-        this.mailboxSession = mailboxSession;
         this.attachmentLoader = new AttachmentLoader(attachmentMapper);
         this.cassandraConfiguration = cassandraConfiguration;
     }
@@ -274,7 +271,7 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
         ComposedMessageIdWithMetaData newComposedId = new ComposedMessageIdWithMetaData(
             oldComposedId.getComposedMessageId(),
             newFlags,
-            modSeqProvider.nextModSeq(mailboxSession, cassandraId));
+            modSeqProvider.nextModSeq(cassandraId));
 
         return updateFlags(oldComposedId, newComposedId);
     }

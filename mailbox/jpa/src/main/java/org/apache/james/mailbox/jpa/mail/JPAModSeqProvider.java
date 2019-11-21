@@ -23,7 +23,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -42,23 +41,23 @@ public class JPAModSeqProvider implements ModSeqProvider {
     }
 
     @Override
-    public ModSeq highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         JPAId mailboxId = (JPAId) mailbox.getMailboxId();
         return highestModSeq(mailboxId);
     }
 
     @Override
-    public ModSeq nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
         return nextModSeq((JPAId) mailbox.getMailboxId());
     }
 
     @Override
-    public ModSeq nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public ModSeq nextModSeq(MailboxId mailboxId) throws MailboxException {
         return nextModSeq((JPAId) mailboxId);
     }
 
     @Override
-    public ModSeq highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public ModSeq highestModSeq(MailboxId mailboxId) throws MailboxException {
         return highestModSeq((JPAId) mailboxId);
     }
 

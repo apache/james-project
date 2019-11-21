@@ -261,12 +261,12 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public ModSeq nextModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public ModSeq nextModSeq(Mailbox mailbox) {
         return ModSeq.of(System.currentTimeMillis());
     }
 
     @Override
-    public ModSeq highestModSeq(MailboxSession session, Mailbox mailbox) throws MailboxException {
+    public ModSeq highestModSeq(Mailbox mailbox) throws MailboxException {
         try {
             return createMaildirFolder(mailbox).getHighestModSeq();
         } catch (IOException e) {
@@ -300,7 +300,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public ModSeq nextModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public ModSeq nextModSeq(MailboxId mailboxId) {
         return ModSeq.of(System.currentTimeMillis());
     }
 
@@ -310,7 +310,7 @@ public class MaildirStore implements UidProvider, ModSeqProvider {
     }
 
     @Override
-    public ModSeq highestModSeq(MailboxSession session, MailboxId mailboxId) throws MailboxException {
+    public ModSeq highestModSeq(MailboxId mailboxId) {
         throw new NotImplementedException("Not implemented");
     }
 }

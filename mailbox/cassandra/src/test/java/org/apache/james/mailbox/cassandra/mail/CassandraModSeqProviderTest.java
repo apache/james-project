@@ -65,12 +65,12 @@ class CassandraModSeqProviderTest {
     @Test
     void highestModSeqShouldRetrieveValueStoredNextModSeq() throws Exception {
         int nbEntries = 100;
-        ModSeq result = modSeqProvider.highestModSeq(null, mailbox);
+        ModSeq result = modSeqProvider.highestModSeq(mailbox);
         assertThat(result).isEqualTo(0);
         LongStream.range(0, nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                    ModSeq modSeq = modSeqProvider.nextModSeq(null, mailbox);
-                    assertThat(modSeq).isEqualTo(modSeqProvider.highestModSeq(null, mailbox));
+                    ModSeq modSeq = modSeqProvider.nextModSeq(mailbox);
+                    assertThat(modSeq).isEqualTo(modSeqProvider.highestModSeq(mailbox));
                 })
             );
     }
@@ -78,10 +78,10 @@ class CassandraModSeqProviderTest {
     @Test
     void nextModSeqShouldIncrementValueByOne() throws Exception {
         int nbEntries = 100;
-        ModSeq lastModSeq = modSeqProvider.highestModSeq(null, mailbox);
+        ModSeq lastModSeq = modSeqProvider.highestModSeq(mailbox);
         LongStream.range(lastModSeq.asLong() + 1, lastModSeq.asLong() + nbEntries)
             .forEach(Throwing.longConsumer(value -> {
-                ModSeq result = modSeqProvider.nextModSeq(null, mailbox);
+                ModSeq result = modSeqProvider.nextModSeq(mailbox);
                 assertThat(result.asLong()).isEqualTo(value);
             }));
     }
@@ -93,7 +93,7 @@ class CassandraModSeqProviderTest {
         ConcurrentSkipListSet<ModSeq> modSeqs = new ConcurrentSkipListSet<>();
         ConcurrentTestRunner.builder()
             .operation(
-                (threadNumber, step) -> modSeqs.add(modSeqProvider.nextModSeq(null, mailbox)))
+                (threadNumber, step) -> modSeqs.add(modSeqProvider.nextModSeq(mailbox)))
             .threadCount(10)
             .operationCount(nbEntries)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
