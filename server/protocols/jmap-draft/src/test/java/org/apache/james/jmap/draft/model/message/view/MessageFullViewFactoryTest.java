@@ -48,21 +48,21 @@ import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.mime.MessageContentExtractor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class MessageFullViewFactoryTest {
+class MessageFullViewFactoryTest {
     private static final String FORWARDED = "forwarded";
     private static final InMemoryId MAILBOX_ID = InMemoryId.of(18L);
     private static final Instant INTERNAL_DATE = Instant.parse("2012-02-03T14:30:42Z");
 
     private MessageFullViewFactory messageFullViewFactory;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
@@ -74,7 +74,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void emptyMailShouldBeLoadedIntoMessage() throws Exception {
+    void emptyMailShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
                 .keywords(Keywords.strictFactory().from(Keyword.SEEN))
@@ -93,7 +93,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void flagsShouldBeSetIntoMessage() throws Exception {
+    void flagsShouldBeSetIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
                 .keywords(Keywords.strictFactory().from(Keyword.ANSWERED, Keyword.FLAGGED, Keyword.DRAFT, Keyword.FORWARDED))
@@ -111,7 +111,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void headersShouldBeSetIntoMessage() throws Exception {
+    void headersShouldBeSetIntoMessage() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
                 + "Subject: test subject\n"
@@ -177,7 +177,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void headersShouldBeUnfoldedAndDecoded() throws Exception {
+    void headersShouldBeUnfoldedAndDecoded() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
             + "Subject: test subject\n"
@@ -229,7 +229,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void multivaluedHeadersShouldBeSeparatedByLineFeed() throws Exception {
+    void multivaluedHeadersShouldBeSeparatedByLineFeed() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.SEEN);
         String headers = "From: user <user@domain>\n"
             + "Subject: test subject\n"
@@ -278,7 +278,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void textBodyShouldBeSetIntoMessage() throws Exception {
+    void textBodyShouldBeSetIntoMessage() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.SEEN);
         String headers = "Subject: test subject\n";
         String body = "Mail body";
@@ -298,7 +298,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void textBodyShouldNotOverrideWhenItIsThere() throws Exception {
+    void textBodyShouldNotOverrideWhenItIsThere() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
             + "MIME-Version: 1.0\n"
             + "Content-Type: multipart/alternative;\n"
@@ -334,7 +334,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewShouldBeLimitedTo256Length() throws Exception {
+    void previewShouldBeLimitedTo256Length() throws Exception {
         String headers = "Subject: test subject\n";
         String body300 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
                 + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
@@ -360,7 +360,7 @@ public class MessageFullViewFactoryTest {
     }
     
     @Test
-    public void attachmentsShouldBeEmptyWhenNone() throws Exception {
+    void attachmentsShouldBeEmptyWhenNone() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
             .keywords(Keywords.strictFactory().from(Keyword.SEEN))
@@ -376,7 +376,7 @@ public class MessageFullViewFactoryTest {
     }
     
     @Test
-    public void attachmentsShouldBeRetrievedWhenSome() throws Exception {
+    void attachmentsShouldBeRetrievedWhenSome() throws Exception {
         String payload = "payload";
         BlobId blodId = BlobId.of("id1");
         String type = "content";
@@ -413,7 +413,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void invalidAddressesShouldBeAllowed() throws Exception {
+    void invalidAddressesShouldBeAllowed() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
             + "Cc: usercc <userccdomain>\n"
@@ -445,7 +445,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void messageWithoutFromShouldHaveEmptyFromField() throws Exception {
+    void messageWithoutFromShouldHaveEmptyFromField() throws Exception {
         String headers = "To: user <user@domain>\n"
             + "Subject: test subject\n";
         MetaDataWithContent testMail = MetaDataWithContent.builder()
@@ -465,7 +465,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void dateFromHeaderShouldBeUsedIfPresent() throws Exception {
+    void dateFromHeaderShouldBeUsedIfPresent() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
             + "Cc: usercc <userccdomain>\n"
@@ -491,7 +491,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void dateFromHeaderShouldUseCurrentCenturyWhenNone() throws Exception {
+    void dateFromHeaderShouldUseCurrentCenturyWhenNone() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
             + "Cc: usercc <userccdomain>\n"
@@ -517,7 +517,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void internalDateShouldBeUsedIfNoDateInHeaders() throws Exception {
+    void internalDateShouldBeUsedIfNoDateInHeaders() throws Exception {
         String headers = "From: user <userdomain>\n"
             + "To: user1 <user1domain>, user2 <user2domain>\n"
             + "Cc: usercc <userccdomain>\n"
@@ -541,7 +541,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void mailWithBigLinesShouldBeLoadedIntoMessage() throws Exception {
+    void mailWithBigLinesShouldBeLoadedIntoMessage() throws Exception {
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
             .keywords(Keywords.strictFactory().from(Keyword.SEEN))
@@ -560,7 +560,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void textBodyShouldBeSetIntoMessageInCaseOfHtmlBody() throws Exception {
+    void textBodyShouldBeSetIntoMessageInCaseOfHtmlBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
@@ -583,7 +583,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void textBodyShouldBeEmptyInCaseOfEmptyHtmlBodyAndEmptyTextBody() throws Exception {
+    void textBodyShouldBeEmptyInCaseOfEmptyHtmlBodyAndEmptyTextBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n").getBytes(StandardCharsets.UTF_8));
         MetaDataWithContent testMail = MetaDataWithContent.builder()
@@ -604,7 +604,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewBodyShouldReturnTruncatedStringWithoutHtmlTagWhenHtmlBodyContainTags() throws Exception {
+    void previewBodyShouldReturnTruncatedStringWithoutHtmlTagWhenHtmlBodyContainTags() throws Exception {
         String body = "This is a <b>HTML</b> mail containing <u>underlined part</u>, <i>italic part</i> and <u><i>underlined AND italic part</i></u>9999999999"
             + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
             + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
@@ -634,7 +634,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewBodyShouldReturnTextBodyWhenNoHtmlBody() throws Exception {
+    void previewBodyShouldReturnTextBodyWhenNoHtmlBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/plain\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
@@ -656,7 +656,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewBodyShouldReturnStringEmptyWhenNoHtmlBodyAndNoTextBody() throws Exception {
+    void previewBodyShouldReturnStringEmptyWhenNoHtmlBodyAndNoTextBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject: message 1 subject\r\n").getBytes(StandardCharsets.UTF_8));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
@@ -677,7 +677,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewBodyShouldReturnStringEmptyWhenNoMeaningHtmlBodyAndNoTextBody() throws Exception {
+    void previewBodyShouldReturnStringEmptyWhenNoMeaningHtmlBodyAndNoTextBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("CContent-Type: text/html\r\n"
             + "Subject: message 1 subject\r\n"
             + "\r\n"
@@ -701,7 +701,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void previewBodyShouldReturnTextBodyWhenNoMeaningHtmlBodyAndTextBody() throws Exception {
+    void previewBodyShouldReturnTextBodyWhenNoMeaningHtmlBodyAndTextBody() throws Exception {
         ByteArrayInputStream messageContent = new ByteArrayInputStream(("Subject\n"
             + "MIME-Version: 1.0\n"
             + "Content-Type: multipart/alternative;\n"
@@ -737,7 +737,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void keywordShouldBeSetIntoMessage() throws Exception {
+    void keywordShouldBeSetIntoMessage() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.SEEN, Keyword.DRAFT);
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
@@ -755,7 +755,7 @@ public class MessageFullViewFactoryTest {
     }
 
     @Test
-    public void keywordWithUserFlagShouldBeSetIntoMessage() throws Exception {
+    void keywordWithUserFlagShouldBeSetIntoMessage() throws Exception {
         Keywords keywords = Keywords.strictFactory().from(Keyword.ANSWERED, Keyword.of(FORWARDED));
 
         MetaDataWithContent testMail = MetaDataWithContent.builder()
