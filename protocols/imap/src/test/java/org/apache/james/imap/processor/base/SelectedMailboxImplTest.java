@@ -48,7 +48,6 @@ import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -85,7 +84,7 @@ public class SelectedMailboxImplTest {
     public void setUp() throws Exception {
         ThreadFactory threadFactory = NamedThreadFactory.withClassName(getClass());
         executorService = Executors.newFixedThreadPool(1, threadFactory);
-        mailboxPath = MailboxPath.forUser(Username.of("tellier@linagora.com"), MailboxConstants.INBOX);
+        mailboxPath = MailboxPath.inbox(Username.of("tellier@linagora.com"));
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
         imapSession = mock(ImapSession.class);

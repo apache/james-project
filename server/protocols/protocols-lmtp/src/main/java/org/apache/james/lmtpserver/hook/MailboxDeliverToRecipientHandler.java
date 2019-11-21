@@ -75,7 +75,7 @@ public class MailboxDeliverToRecipientHandler implements DeliverToRecipientHook 
                 Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
                 LOGGER.info("Provisioning INBOX. {} created.", mailboxId);
             }
-            mailboxManager.getMailbox(MailboxPath.inbox(mailboxSession), mailboxSession)
+            mailboxManager.getMailbox(MailboxPath.inbox(username), mailboxSession)
                 .appendMessage(MessageManager.AppendCommand.builder()
                     .recent()
                     .build(envelope.getMessageInputStream()),

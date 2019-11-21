@@ -29,7 +29,6 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailets.TemporaryJamesServer;
 import org.apache.james.mailets.configuration.CommonProcessors;
@@ -107,9 +106,9 @@ public class AliasMappingTest {
         dataProbe.addUser(ALICE_ADDRESS, PASSWORD);
         dataProbe.addUser(CEDRIC_ADDRESS, PASSWORD);
 
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(BOB_ADDRESS), MailboxConstants.INBOX));
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(ALICE_ADDRESS), MailboxConstants.INBOX));
-        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.forUser(Username.of(CEDRIC_ADDRESS), MailboxConstants.INBOX));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(Username.of(BOB_ADDRESS)));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(Username.of(ALICE_ADDRESS)));
+        jamesServer.getProbe(MailboxProbeImpl.class).createMailbox(MailboxPath.inbox(Username.of(CEDRIC_ADDRESS)));
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 

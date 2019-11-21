@@ -49,7 +49,7 @@ import org.mockito.ArgumentCaptor;
 public class ReIndexerImplTest {
 
     private static final Username USERNAME = Username.of("benwa@apache.org");
-    public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
+    public static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
     private InMemoryMailboxManager mailboxManager;
     private ListeningMessageSearchIndex messageSearchIndex;
 

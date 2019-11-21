@@ -72,7 +72,7 @@ public class MailboxManagementTest {
 
     @Test
     void deleteMailboxesShouldDeleteInbox() throws Exception {
-        mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.forUser(USER, "INBOX"), UID_VALIDITY));
+        mapperFactory.createMailboxMapper(session).save(new Mailbox(MailboxPath.inbox(USER), UID_VALIDITY));
         mailboxManagerManagement.deleteMailboxes(USER.asString());
         assertThat(mapperFactory.createMailboxMapper(session).list()).isEmpty();
     }

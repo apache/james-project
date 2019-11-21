@@ -53,7 +53,7 @@ import com.google.common.base.Strings;
 
 public class CassandraReIndexerImplTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
-    public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
+    public static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
     private CassandraMailboxManager mailboxManager;
     private ListeningMessageSearchIndex messageSearchIndex;
 

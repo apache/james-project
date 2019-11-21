@@ -73,7 +73,7 @@ import io.restassured.RestAssured;
 
 class ReindexingRoutesTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
-    private static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
+    private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
 
     private WebAdminServer webAdminServer;
     private ListeningMessageSearchIndex searchIndex;

@@ -46,10 +46,10 @@ public class ManagerTestProvisionner {
     public static final String USER_PASS = "pass";
     public static final Username OTHER_USER = Username.of("otherUser@domain.org");
     public static final String OTHER_USER_PASS = "otherPass";
+    public static final MailboxPath INBOX = MailboxPath.inbox(USER);
 
     private IntegrationResources<?> integrationResources;
 
-    private MailboxPath inbox;
     private MessageManager messageManager;
     private MailboxPath subFolder;
     private MailboxSession session;
@@ -59,8 +59,7 @@ public class ManagerTestProvisionner {
         this.integrationResources = integrationResources;
 
         session = integrationResources.getMailboxManager().login(USER, USER_PASS);
-        inbox = MailboxPath.inbox(session);
-        subFolder = new MailboxPath(inbox, "INBOX.SUB");
+        subFolder = new MailboxPath(INBOX, "INBOX.SUB");
 
         MaxQuotaManager maxQuotaManager = integrationResources.getMaxQuotaManager();
         maxQuotaManager.setGlobalMaxMessage(QuotaCountLimit.count(1000));
@@ -68,9 +67,9 @@ public class ManagerTestProvisionner {
     }
 
     public void createMailboxes() throws MailboxException {
-        integrationResources.getMailboxManager().createMailbox(inbox, session);
+        integrationResources.getMailboxManager().createMailbox(INBOX, session);
         integrationResources.getMailboxManager().createMailbox(subFolder, session);
-        messageManager = integrationResources.getMailboxManager().getMailbox(inbox, session);
+        messageManager = integrationResources.getMailboxManager().getMailbox(INBOX, session);
     }
 
     public MessageManager getMessageManager() {
@@ -80,11 +79,6 @@ public class ManagerTestProvisionner {
     public MailboxPath getSubFolder() {
         return subFolder;
     }
-
-    public MailboxPath getInbox() {
-        return inbox;
-    }
-
 
     public MailboxSession getSession() {
         return session;

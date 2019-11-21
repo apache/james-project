@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -56,7 +55,7 @@ class SetCustomFlagOnBigMessagesTest {
 
     private static final Username USER = Username.of("user");
     private static final Event.EventId RANDOM_EVENT_ID = Event.EventId.random();
-    private static final MailboxPath INBOX_PATH = MailboxPath.forUser(USER, DefaultMailboxes.INBOX);
+    private static final MailboxPath INBOX_PATH = MailboxPath.inbox(USER);
 
     private SetCustomFlagOnBigMessages testee;
     private MessageManager inboxMessageManager;

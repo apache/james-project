@@ -60,7 +60,7 @@ public class ListMessageAssertTest {
     
     @Before
     public void setUp() {
-        benwaInboxMailbox = createMailbox(MailboxPath.forUser(Username.of("user"), "INBOX"));
+        benwaInboxMailbox = createMailbox(MailboxPath.inbox(Username.of("user")));
 
         message1 = createMessage(benwaInboxMailbox, MESSAGE_ID, BODY_CONTENT1, BODY_START, new PropertyBuilder());
         message2 = createMessage(benwaInboxMailbox, MESSAGE_ID, BODY_CONTENT2, BODY_START, new PropertyBuilder());

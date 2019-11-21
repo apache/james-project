@@ -45,7 +45,7 @@ import com.google.common.collect.Lists;
 public class DefaultUserQuotaRootResolverTest {
 
     private static final Username BENWA = Username.of("benwa");
-    private static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(BENWA, "INBOX");
+    private static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
     public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
     private static final MailboxPath PATH_LIKE = MailboxPath.forUser(BENWA, "%");
     private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");

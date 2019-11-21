@@ -41,7 +41,6 @@ import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.transport.mailets.LocalDelivery;
 import org.apache.james.user.api.UsersRepository;
-import org.apache.james.user.api.model.User;
 import org.apache.mailet.Mail;
 import org.apache.mailet.base.test.FakeMail;
 import org.apache.mailet.base.test.FakeMailContext;
@@ -82,7 +81,7 @@ public class LocalDeliveryTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOn() throws Exception {
         // Given
         Username username = Username.of("receiver@domain.com");
-        MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
+        MailboxPath inbox = MailboxPath.inbox(username);
         MessageManager messageManager = mock(MessageManager.class);
 
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
@@ -103,7 +102,7 @@ public class LocalDeliveryTest {
     public void mailShouldBeWellDeliveredByDefaultToUserWhenVirtualHostingIsTurnedOff() throws Exception {
         // Given
         Username username = Username.of("receiver");
-        MailboxPath inbox = MailboxPath.forUser(username, "INBOX");
+        MailboxPath inbox = MailboxPath.inbox(username);
         MessageManager messageManager = mock(MessageManager.class);
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUser(new MailAddress("receiver@localhost"))).thenReturn(username);

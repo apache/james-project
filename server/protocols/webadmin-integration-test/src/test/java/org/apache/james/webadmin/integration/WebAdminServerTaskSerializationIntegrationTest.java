@@ -75,15 +75,15 @@ import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.apache.mailet.base.test.FakeMail;
-
-import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
 
 public class WebAdminServerTaskSerializationIntegrationTest {
 
@@ -257,7 +257,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
                 USERNAME,
-                MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
+                MailboxPath.inbox(Username.of(USERNAME)),
                 new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
                 new Date(),
                 false,
@@ -286,7 +286,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
             USERNAME,
-            MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
+            MailboxPath.inbox(Username.of(USERNAME)),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             false,
@@ -684,7 +684,7 @@ public class WebAdminServerTaskSerializationIntegrationTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
             USERNAME,
-            MailboxPath.forUser(Username.of(USERNAME), MailboxConstants.INBOX),
+            MailboxPath.inbox(Username.of(USERNAME)),
             new ByteArrayInputStream("Subject: test\r\n\r\ntestmail".getBytes()),
             new Date(),
             false,

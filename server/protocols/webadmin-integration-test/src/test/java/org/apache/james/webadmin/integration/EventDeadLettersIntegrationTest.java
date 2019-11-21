@@ -63,6 +63,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.inject.multibindings.Multibinder;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
@@ -135,7 +136,7 @@ public class EventDeadLettersIntegrationTest {
     private static final String EVENTS_ACTION = "reDeliver";
     private static final String GROUP_ID = new RetryEventsListenerGroup().asString();
 
-    private static final MailboxPath BOB_INBOX_PATH = MailboxPath.forUser(Username.of(BOB), DefaultMailboxes.INBOX);
+    private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(Username.of(BOB));
 
     private Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private ConditionFactory calmlyAwait = Awaitility.with()

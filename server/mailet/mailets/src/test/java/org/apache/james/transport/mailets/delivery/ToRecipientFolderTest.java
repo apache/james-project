@@ -58,7 +58,7 @@ public class ToRecipientFolderTest {
     public static final String USER = USER_LOCAL_PART + "@domain.com";
     public static final Username USERNAME = Username.of(USER);
     public static final Username USERNAME_LOCAL_PART = Username.of(USER_LOCAL_PART);
-    public static final MailboxPath INBOX = MailboxPath.forUser(USERNAME, "INBOX");
+    public static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
     public static final MailboxPath JUNK = MailboxPath.forUser(USERNAME_LOCAL_PART, "Junk");
     public static final MailboxPath JUNK_VIRTUAL_HOSTING = MailboxPath.forUser(USERNAME, "Junk");
     public static final String MAILET_NAME = "RecipientFolderTest";

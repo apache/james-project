@@ -44,7 +44,7 @@ import org.junit.Test;
 public class QuotaCheckerTest {
 
     public static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("benwa", Optional.empty());
-    public static final MailboxPath MAILBOX_PATH = MailboxPath.forUser(Username.of("benwa"), "INBOX");
+    public static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(Username.of("benwa"));
     public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
 
     private QuotaRootResolver mockedQuotaRootResolver;

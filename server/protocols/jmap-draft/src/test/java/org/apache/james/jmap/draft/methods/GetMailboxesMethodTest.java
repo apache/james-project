@@ -31,10 +31,10 @@ import java.util.stream.Collectors;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.GetMailboxesRequest;
 import org.apache.james.jmap.draft.model.GetMailboxesResponse;
 import org.apache.james.jmap.draft.model.MailboxFactory;
+import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.mailbox.Mailbox;
 import org.apache.james.jmap.draft.model.mailbox.SortOrder;
@@ -246,7 +246,7 @@ public class GetMailboxesMethodTest {
     @SuppressWarnings("unchecked")
     public void getMailboxesShouldReturnMailboxesWithSortOrder() throws Exception {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(USERNAME);
-        mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "INBOX"), mailboxSession);
+        mailboxManager.createMailbox(MailboxPath.inbox(USERNAME), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Archive"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Drafts"), mailboxSession);
         mailboxManager.createMailbox(MailboxPath.forUser(USERNAME, "Outbox"), mailboxSession);

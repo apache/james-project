@@ -208,7 +208,7 @@ public class POP3ServerTest {
         assertThat(list.length).describedAs("Found unexpected messages").isEqualTo(0);
 
         pop3Client.disconnect();
-        MailboxPath mailboxPath = MailboxPath.forUser(username, "INBOX");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar");
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
             mailboxManager.createMailbox(mailboxPath, session);
@@ -294,7 +294,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
 
-        MailboxPath mailboxPath = MailboxPath.forUser(username, "INBOX");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
@@ -384,7 +384,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
 
-        MailboxPath mailboxPath = MailboxPath.forUser(username, "INBOX");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
@@ -438,7 +438,7 @@ public class POP3ServerTest {
         Username username = Username.of("foo2");
         usersRepository.addUser(username, "bar2");
 
-        MailboxPath mailboxPath = MailboxPath.forUser(username, "INBOX");
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
         MailboxSession session = mailboxManager.login(username, "bar2");
 
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {
@@ -650,7 +650,7 @@ public class POP3ServerTest {
         usersRepository.addUser(username, "bar6");
         MailboxSession session = mailboxManager.login(username, "bar6");
 
-        MailboxPath mailboxPath = MailboxPath.inbox(session);
+        MailboxPath mailboxPath = MailboxPath.inbox(username);
 
         mailboxManager.startProcessingRequest(session);
         if (!mailboxManager.mailboxExists(mailboxPath, session)) {

@@ -34,7 +34,6 @@ import static org.apache.james.jmap.TestingConstants.DOMAIN;
 import static org.apache.james.jmap.TestingConstants.NAME;
 import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
-import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -92,7 +91,7 @@ public abstract class FilterTest {
 
         MailboxProbeImpl mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         matchedMailbox = mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, "matched"));
-        inbox = mailboxProbe.createMailbox(MailboxPath.forUser(ALICE, INBOX));
+        inbox = mailboxProbe.createMailbox(MailboxPath.inbox(ALICE));
     }
 
     @After

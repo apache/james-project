@@ -27,8 +27,8 @@ public interface MailboxFixture {
     Username BOB = Username.of("bob");
     Username CEDRIC = Username.of("cedric");
 
-    MailboxPath INBOX_ALICE = MailboxPath.forUser(ALICE, "INBOX");
+    MailboxPath INBOX_ALICE = MailboxPath.inbox(ALICE);
     MailboxPath OUTBOX_ALICE = MailboxPath.forUser(ALICE, "OUTBOX");
     MailboxPath SENT_ALICE = MailboxPath.forUser(ALICE, "SENT");
-    MailboxPath INBOX_BOB = MailboxPath.forUser(BOB, "INBOX");
+    MailboxPath INBOX_BOB = MailboxPath.inbox(BOB);
 }

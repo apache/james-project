@@ -92,8 +92,9 @@ public class SetAnnotationProcessorTest {
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
 
-        mockMailboxSession = MailboxSessionUtil.create(Username.of("username"));
-        inbox = MailboxPath.inbox(mockMailboxSession);
+        Username username = Username.of("username");
+        mockMailboxSession = MailboxSessionUtil.create(username);
+        inbox = MailboxPath.inbox(username);
         mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
         request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);

@@ -111,8 +111,8 @@ public abstract class AbstractMessageSearchIndexTest {
         session = storeMailboxManager.createSystemSession(USERNAME);
         otherSession = storeMailboxManager.createSystemSession(OTHERUSER);
 
-        inboxPath = MailboxPath.forUser(USERNAME, INBOX);
-        otherInboxPath = MailboxPath.forUser(OTHERUSER, INBOX);
+        inboxPath = MailboxPath.inbox(USERNAME);
+        otherInboxPath = MailboxPath.inbox(OTHERUSER);
 
         storeMailboxManager.createMailbox(inboxPath, session);
         storeMailboxManager.createMailbox(otherInboxPath, otherSession);

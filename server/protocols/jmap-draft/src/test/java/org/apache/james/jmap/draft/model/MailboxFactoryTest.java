@@ -34,7 +34,6 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -140,7 +139,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void getParentIdFromMailboxPathShouldReturnParentIdWhenChildMailbox() throws Exception {
-        MailboxPath parentMailboxPath = MailboxPath.forUser(user, MailboxConstants.INBOX);
+        MailboxPath parentMailboxPath = MailboxPath.inbox(user);
         mailboxManager.createMailbox(parentMailboxPath, mailboxSession);
         MailboxId parentId = mailboxManager.getMailbox(parentMailboxPath, mailboxSession).getId();
 
@@ -185,7 +184,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void getNamespaceShouldReturnPersonalNamespaceWhenUserMailboxPathAndUserMailboxSessionAreTheSame() throws Exception {
-        MailboxPath inbox = MailboxPath.forUser(user, "inbox");
+        MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
 
         Mailbox retrievedMailbox = sut.builder()
@@ -200,7 +199,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void getNamespaceShouldReturnDelegatedNamespaceWhenUserMailboxPathAndUserMailboxSessionAreNotTheSame() throws Exception {
-        MailboxPath inbox = MailboxPath.forUser(user, MailboxConstants.INBOX);
+        MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
         mailboxManager.applyRightsCommand(inbox,
             MailboxACL.command()
@@ -240,7 +239,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void delegatedUserShouldHaveMayAddItemsWhenAllowedToInsert() throws Exception {
-        MailboxPath inbox = MailboxPath.forUser(user, MailboxConstants.INBOX);
+        MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
         mailboxManager.applyRightsCommand(inbox,
             MailboxACL.command()
@@ -265,7 +264,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void delegatedUserShouldHaveMayReadItemsWhenAllowedToRead() throws Exception {
-        MailboxPath inbox = MailboxPath.forUser(user, MailboxConstants.INBOX);
+        MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
         mailboxManager.applyRightsCommand(inbox,
             MailboxACL.command()
@@ -290,7 +289,7 @@ public class MailboxFactoryTest {
 
     @Test
     public void delegatedUserShouldHaveMayRemoveItemsWhenAllowedToRemoveItems() throws Exception {
-        MailboxPath inbox = MailboxPath.forUser(user, MailboxConstants.INBOX);
+        MailboxPath inbox = MailboxPath.inbox(user);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(inbox, mailboxSession);
         mailboxManager.applyRightsCommand(inbox,
             MailboxACL.command()

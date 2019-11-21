@@ -57,6 +57,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.google.common.base.Strings;
+
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.path.json.JsonPath;
@@ -437,7 +438,7 @@ class UserQuotaRoutesTest {
             MailboxManager mailboxManager = testSystem.getMailboxManager();
             MailboxSession session = mailboxManager.createSystemSession(username);
 
-            MailboxPath mailboxPath = MailboxPath.inbox(session);
+            MailboxPath mailboxPath = MailboxPath.inbox(username);
             mailboxManager.createMailbox(mailboxPath, session);
             mailboxManager.getMailbox(mailboxPath, session)
                 .appendMessage(appendCommand, session);

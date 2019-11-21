@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
@@ -63,7 +64,6 @@ import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.Host;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -154,7 +154,7 @@ public class FixingGhostMailboxTest {
     private void simulateGhostMailboxBug() throws MailboxException, IOException {
         // State before ghost mailbox bug
         // Alice INBOX is delegated to Bob and contains one message
-        aliceInboxPath = MailboxPath.forUser(Username.of(ALICE), MailboxConstants.INBOX);
+        aliceInboxPath = MailboxPath.inbox(Username.of(ALICE));
         aliceGhostInboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
         aclProbe.addRights(aliceInboxPath, BOB, MailboxACL.FULL_RIGHTS);
         message1 = mailboxProbe.appendMessage(ALICE, aliceInboxPath, AppendCommand.from(generateMessageContent()));

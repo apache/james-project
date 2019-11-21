@@ -105,8 +105,9 @@ public class GetAnnotationProcessorTest {
         mockResponder = mock(ImapProcessor.Responder.class);
         mockImapSession = mock(ImapSession.class);
 
-        mailboxSession = MailboxSessionUtil.create(Username.of("username"));
-        inbox = MailboxPath.inbox(mailboxSession);
+        Username username = Username.of("username");
+        mailboxSession = MailboxSessionUtil.create(username);
+        inbox = MailboxPath.inbox(username);
         keys = ImmutableSet.of(PRIVATE_KEY);
         annotationRequestBuilder = GetAnnotationRequest.builder()
             .tag(TAG)

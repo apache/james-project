@@ -53,26 +53,26 @@ import org.slf4j.Logger;
 
 public class SieveIntegrationTest {
 
-    public static final String LOCAL_PART = "receiver";
-    public static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
-    public static final Username LOCAL_USER = Username.of(LOCAL_PART);
+    private static final String LOCAL_PART = "receiver";
+    private static final String RECEIVER_DOMAIN_COM = LOCAL_PART + "@domain.com";
+    private static final Username LOCAL_USER = Username.of(LOCAL_PART);
 
-    public static final ZonedDateTime DATE_CLOSE = ZonedDateTime.parse("2016-01-16T00:00:00Z");
-    public static final ZonedDateTime DATE_DEFAULT = ZonedDateTime.parse("2016-01-14T00:00:00Z");
-    public static final ZonedDateTime DATE_NEW = ZonedDateTime.parse("2016-01-18T00:00:00Z");
-    public static final ZonedDateTime DATE_OLD = ZonedDateTime.parse("2011-01-18T00:00:00Z");
-    public static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.not.selected");
-    public static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.select");
-    public static final MailboxPath INBOX = MailboxPath.forUser(LOCAL_USER, "INBOX");
-    public static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_USER, "INBOX.any");
+    private static final ZonedDateTime DATE_CLOSE = ZonedDateTime.parse("2016-01-16T00:00:00Z");
+    private static final ZonedDateTime DATE_DEFAULT = ZonedDateTime.parse("2016-01-14T00:00:00Z");
+    private static final ZonedDateTime DATE_NEW = ZonedDateTime.parse("2016-01-18T00:00:00Z");
+    private static final ZonedDateTime DATE_OLD = ZonedDateTime.parse("2011-01-18T00:00:00Z");
+    private static final MailboxPath NOT_SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.not.selected");
+    private static final MailboxPath SELECTED_MAILBOX = MailboxPath.forUser(LOCAL_USER, "INBOX.select");
+    private static final MailboxPath INBOX = MailboxPath.inbox(LOCAL_USER);
+    private static final MailboxPath INBOX_ANY = MailboxPath.forUser(LOCAL_USER, "INBOX.any");
 
-    public static final AttributeName ATTRIBUTE_NAME = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART);
-    public static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
-    public static final Attribute ATTRIBUTE_INBOX_ANY = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX_ANY.getName())));
-    public static final Attribute ATTRIBUTE_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName())));
-    public static final Attribute ATTRIBUTE_NOT_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName())));
-    public static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + RECEIVER_DOMAIN_COM);
-    public static final Attribute ATTRIBUTE_INBOX_DOMAIN = new Attribute(ATTRIBUTE_NAME_DOMAIN, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
+    private static final AttributeName ATTRIBUTE_NAME = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + LOCAL_PART);
+    private static final Attribute ATTRIBUTE_INBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
+    private static final Attribute ATTRIBUTE_INBOX_ANY = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(INBOX_ANY.getName())));
+    private static final Attribute ATTRIBUTE_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(SELECTED_MAILBOX.getName())));
+    private static final Attribute ATTRIBUTE_NOT_SELECTED_MAILBOX = new Attribute(ATTRIBUTE_NAME, AttributeValue.of(expressMailboxNameWithSlash(NOT_SELECTED_MAILBOX.getName())));
+    private static final AttributeName ATTRIBUTE_NAME_DOMAIN = AttributeName.of(MailStore.DELIVERY_PATH_PREFIX + RECEIVER_DOMAIN_COM);
+    private static final Attribute ATTRIBUTE_INBOX_DOMAIN = new Attribute(ATTRIBUTE_NAME_DOMAIN, AttributeValue.of(expressMailboxNameWithSlash(INBOX.getName())));
 
     private Sieve testee;
     private UsersRepository usersRepository;

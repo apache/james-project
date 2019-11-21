@@ -43,7 +43,11 @@ public class MailboxPath {
      * session
      */
     public static MailboxPath inbox(MailboxSession session) {
-        return MailboxPath.forUser(session.getUser(), MailboxConstants.INBOX);
+        return MailboxPath.inbox(session.getUser());
+    }
+
+    public static MailboxPath inbox(Username username) {
+        return MailboxPath.forUser(username, MailboxConstants.INBOX);
     }
 
     /**
