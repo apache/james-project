@@ -34,7 +34,7 @@ import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -59,16 +59,16 @@ public class GetMessagesMethod implements Method {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
-    private final MessageViewFactory messageViewFactory;
+    private final MessageFullViewFactory messageFullViewFactory;
     private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
-            MessageViewFactory messageViewFactory,
+            MessageFullViewFactory messageFullViewFactory,
             MessageIdManager messageIdManager,
             MetricFactory metricFactory) {
-        this.messageViewFactory = messageViewFactory;
+        this.messageFullViewFactory = messageFullViewFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
     }
@@ -144,9 +144,9 @@ public class GetMessagesMethod implements Method {
     private Function<Collection<MessageResult>, Stream<MessageFullView>> toMessageViews() {
         return messageResults -> {
             try {
-                return Stream.of(messageViewFactory.fromMessageResults(messageResults));
+                return Stream.of(messageFullViewFactory.fromMessageResults(messageResults));
             } catch (Exception e) {
-                LOGGER.error("Can not convert metaData with content to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
+                LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
                 return Stream.of();
             }
         };

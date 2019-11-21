@@ -32,7 +32,7 @@ import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -73,9 +73,9 @@ public class MessageAppender {
         this.mimeMessageConverter = mimeMessageConverter;
     }
 
-    public MessageViewFactory.MetaDataWithContent appendMessageInMailboxes(CreationMessageEntry createdEntry,
-                                                                           List<MailboxId> targetMailboxes,
-                                                                           MailboxSession session) throws MailboxException {
+    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailboxes(CreationMessageEntry createdEntry,
+                                                                               List<MailboxId> targetMailboxes,
+                                                                               MailboxSession session) throws MailboxException {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
         ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
         byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments);
@@ -94,7 +94,7 @@ public class MessageAppender {
             messageIdManager.setInMailboxes(message.getMessageId(), targetMailboxes, session);
         }
 
-        return MessageViewFactory.MetaDataWithContent.builder()
+        return MessageFullViewFactory.MetaDataWithContent.builder()
             .uid(message.getUid())
             .keywords(createdEntry.getValue().getKeywords())
             .internalDate(internalDate.toInstant())
@@ -106,11 +106,11 @@ public class MessageAppender {
             .build();
     }
 
-    public MessageViewFactory.MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
-                                                                         MessageManager messageManager,
-                                                                         List<MessageAttachment> attachments,
-                                                                         Flags flags,
-                                                                         MailboxSession session) throws MailboxException {
+    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
+                                                                             MessageManager messageManager,
+                                                                             List<MessageAttachment> attachments,
+                                                                             Flags flags,
+                                                                             MailboxSession session) throws MailboxException {
 
 
         byte[] messageContent = asBytes(message);
@@ -121,7 +121,7 @@ public class MessageAppender {
             .withFlags(flags)
             .build(content), session);
 
-        return MessageViewFactory.MetaDataWithContent.builder()
+        return MessageFullViewFactory.MetaDataWithContent.builder()
             .uid(appendedMessage.getUid())
             .keywords(Keywords.lenientFactory().fromFlags(flags))
             .internalDate(internalDate.toInstant())
@@ -141,9 +141,9 @@ public class MessageAppender {
         }
     }
 
-    public MessageViewFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
-                                                                         MailboxId targetMailbox,
-                                                                         MailboxSession session) throws MailboxException {
+    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
+                                                                             MailboxId targetMailbox,
+                                                                             MailboxSession session) throws MailboxException {
         return appendMessageInMailboxes(createdEntry, ImmutableList.of(targetMailbox), session);
     }
 

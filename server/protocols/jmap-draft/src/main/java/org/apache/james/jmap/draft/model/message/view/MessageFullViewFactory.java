@@ -66,7 +66,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 
-public class MessageViewFactory {
+public class MessageFullViewFactory {
     public static final String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
 
     private static final KeywordsCombiner ACCUMULATOR = new KeywordsCombiner();
@@ -78,8 +78,8 @@ public class MessageViewFactory {
     private final Keywords.KeywordsFactory keywordsFactory;
 
     @Inject
-    public MessageViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor,
-                              HtmlTextExtractor htmlTextExtractor) {
+    public MessageFullViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor,
+                                  HtmlTextExtractor htmlTextExtractor) {
         this.blobManager = blobManager;
         this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;

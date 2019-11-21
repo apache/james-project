@@ -38,7 +38,7 @@ import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
@@ -59,7 +59,7 @@ import com.google.common.collect.ImmutableSet;
 class MessageSenderTest {
 
     private Envelope envelope;
-    private MessageViewFactory.MetaDataWithContent message;
+    private MessageFullViewFactory.MetaDataWithContent message;
     private MessageFullView jmapMessage;
 
     @BeforeEach
@@ -72,7 +72,7 @@ class MessageSenderTest {
         String content = headers
             + "Hello! How are you?";
 
-        message = MessageViewFactory.MetaDataWithContent.builder()
+        message = MessageFullViewFactory.MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
             .keywords(Keywords.strictFactory().from(Keyword.SEEN))
             .size(content.length())
@@ -90,14 +90,14 @@ class MessageSenderTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        MessageViewFactory messageViewFactory = new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
-        jmapMessage = messageViewFactory.fromMetaDataWithContent(message);
+        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message);
         envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }
 
     @Test
     void buildMailShouldThrowWhenNullMailboxMessage() throws Exception {
-        MessageViewFactory.MetaDataWithContent message = null;
+        MessageFullViewFactory.MetaDataWithContent message = null;
         assertThatThrownBy(() -> MessageSender.buildMail(message, envelope)).isInstanceOf(NullPointerException.class);
     }
 

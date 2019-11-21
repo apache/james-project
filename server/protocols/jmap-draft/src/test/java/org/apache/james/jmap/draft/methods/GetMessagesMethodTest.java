@@ -44,7 +44,7 @@ import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
@@ -96,7 +96,7 @@ public class GetMessagesMethodTest {
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
     private MethodCallId methodCallId;
-    private MessageViewFactory messageViewFactory;
+    private MessageFullViewFactory messageFullViewFactory;
 
     @Before
     public void setup() throws Exception {
@@ -106,7 +106,7 @@ public class GetMessagesMethodTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        messageViewFactory = spy(new MessageViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor));
+        messageFullViewFactory = spy(new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor));
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
@@ -116,7 +116,7 @@ public class GetMessagesMethodTest {
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
         messageIdManager = resources.getMessageIdManager();
-        testee = new GetMessagesMethod(messageViewFactory, messageIdManager, new DefaultMetricFactory());
+        testee = new GetMessagesMethod(messageFullViewFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()
             .setSubject("message 1 subject")
@@ -493,7 +493,7 @@ public class GetMessagesMethodTest {
 
         doCallRealMethod()
             .doThrow(new RuntimeException())
-            .when(messageViewFactory)
+            .when(messageFullViewFactory)
             .fromMessageResults(any());
 
         GetMessagesRequest request = GetMessagesRequest.builder()

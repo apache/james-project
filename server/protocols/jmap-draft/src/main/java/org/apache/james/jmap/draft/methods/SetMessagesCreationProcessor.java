@@ -48,8 +48,8 @@ import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.SetMessagesResponse.Builder;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
-import org.apache.james.jmap.draft.model.message.view.MessageViewFactory.MetaDataWithContent;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
@@ -76,7 +76,7 @@ import com.google.common.collect.ImmutableList;
 public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private static final Logger LOG = LoggerFactory.getLogger(SetMailboxesCreationProcessor.class);
-    private final MessageViewFactory messageViewFactory;
+    private final MessageFullViewFactory messageFullViewFactory;
     private final SystemMailboxesProvider systemMailboxesProvider;
     private final AttachmentChecker attachmentChecker;
     private final MetricFactory metricFactory;
@@ -88,7 +88,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     
     @VisibleForTesting
     @Inject
-    SetMessagesCreationProcessor(MessageViewFactory messageViewFactory,
+    SetMessagesCreationProcessor(MessageFullViewFactory messageFullViewFactory,
                                  SystemMailboxesProvider systemMailboxesProvider,
                                  AttachmentChecker attachmentChecker,
                                  MetricFactory metricFactory,
@@ -97,7 +97,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MessageAppender messageAppender,
                                  MessageSender messageSender,
                                  ReferenceUpdater referenceUpdater) {
-        this.messageViewFactory = messageViewFactory;
+        this.messageFullViewFactory = messageFullViewFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentChecker = attachmentChecker;
         this.metricFactory = metricFactory;
@@ -276,7 +276,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         assertUserIsSender(session, entry.getValue().getFrom());
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
-        MessageFullView jmapMessage = messageViewFactory.fromMetaDataWithContent(newMessage);
+        MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
         messageSender.sendMessage(newMessage, envelope, session);
         referenceUpdater.updateReferences(entry.getValue().getHeaders(), session);
@@ -294,7 +294,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
     private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
-        MessageFullView jmapMessage = messageViewFactory.fromMetaDataWithContent(newMessage);
+        MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
     
