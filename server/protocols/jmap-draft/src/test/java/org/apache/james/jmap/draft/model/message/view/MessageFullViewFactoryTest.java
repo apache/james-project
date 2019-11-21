@@ -19,9 +19,6 @@
 package org.apache.james.jmap.draft.model.message.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
@@ -39,13 +36,12 @@ import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
-import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.inmemory.InMemoryId;
+import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,9 +64,9 @@ class MessageFullViewFactoryTest {
         MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
 
-        BlobManager blobManager = mock(BlobManager.class);
-        when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("blobId"));
-        messageFullViewFactory = new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+
+        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messagePreview, messageContentExtractor, htmlTextExtractor);
     }
 
     @Test
@@ -155,7 +151,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         MessageFullView expected = MessageFullView.builder()
                 .id(TestMessageId.of(2))
-                .blobId(BlobId.of("blobId"))
+                .blobId(BlobId.of("2"))
                 .threadId("2")
                 .mailboxId(MAILBOX_ID)
                 .inReplyToMessageId("<SNT124-W2664003139C1E520CF4F6787D30@phx.gbl>")
@@ -209,7 +205,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         MessageFullView expected = MessageFullView.builder()
             .id(TestMessageId.of(2))
-            .blobId(BlobId.of("blobId"))
+            .blobId(BlobId.of("2"))
             .threadId("2")
             .mailboxId(MAILBOX_ID)
             .headers(headersMap)
@@ -259,7 +255,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         MessageFullView expected = MessageFullView.builder()
             .id(TestMessageId.of(2))
-            .blobId(BlobId.of("blobId"))
+            .blobId(BlobId.of("2"))
             .threadId("2")
             .mailboxId(MAILBOX_ID)
             .headers(headersMap)
