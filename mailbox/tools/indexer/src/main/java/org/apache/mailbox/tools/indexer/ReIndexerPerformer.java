@@ -78,8 +78,7 @@ public class ReIndexerPerformer {
         try {
             return Iterators.toStream(
                 mailboxSessionMapperFactory.getMessageMapper(mailboxSession)
-                    .findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, NO_LIMIT))
-                .map(MailboxMessage::getUid)
+                    .listAllMessageUids(mailbox))
                 .map(uid -> handleMessageReIndexing(mailboxSession, mailbox, uid, reprocessingContext))
                 .reduce(Task::combine)
                 .orElse(Task.Result.COMPLETED);
