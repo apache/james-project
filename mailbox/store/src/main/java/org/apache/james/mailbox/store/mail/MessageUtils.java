@@ -97,7 +97,7 @@ public class MessageUtils {
     }
 
     
-    public class MessageChangedFlags {
+    public static class MessageChangedFlags {
         private final Iterator<UpdatedFlags> updatedFlags;
         private final List<MailboxMessage> changedFlags;
 
