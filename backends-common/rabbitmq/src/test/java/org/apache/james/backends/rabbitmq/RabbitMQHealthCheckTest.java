@@ -52,6 +52,20 @@ class RabbitMQHealthCheckTest {
     }
 
     @Test
+    void checkShouldReturnHealthyWhenCalledSeveralTime() {
+        healthCheck.check();
+        healthCheck.check();
+        healthCheck.check();
+        healthCheck.check();
+        healthCheck.check();
+        healthCheck.check();
+        healthCheck.check();
+        Result check = healthCheck.check();
+
+        assertThat(check.isHealthy()).isTrue();
+    }
+
+    @Test
     void checkShouldReturnUnhealthyWhenRabbitMQIsNotRunning(DockerRabbitMQ rabbitMQ) throws Exception {
         rabbitMQ.stopApp();
 

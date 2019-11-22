@@ -126,6 +126,20 @@ public class WebAdminServerIntegrationTest {
     }
 
     @Test
+    public void healthCheckShouldReturn200WhenCalledRepeatedly() {
+        given().get(HealthCheckRoutes.HEALTHCHECK);
+        given().get(HealthCheckRoutes.HEALTHCHECK);
+        given().get(HealthCheckRoutes.HEALTHCHECK);
+        given().get(HealthCheckRoutes.HEALTHCHECK);
+        given().get(HealthCheckRoutes.HEALTHCHECK);
+
+        when()
+            .get(HealthCheckRoutes.HEALTHCHECK)
+        .then()
+            .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
     public void mailRepositoriesRoutesShouldBeExposed() {
         when()
             .get(MailRepositoriesRoutes.MAIL_REPOSITORIES)
