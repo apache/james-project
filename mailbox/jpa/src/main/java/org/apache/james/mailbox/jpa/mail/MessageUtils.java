@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store.mail;
+package org.apache.james.mailbox.jpa.mail;
 
 import java.util.Iterator;
 import java.util.List;
@@ -30,16 +30,19 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.FlagsUpdateCalculator;
+import org.apache.james.mailbox.store.mail.ModSeqProvider;
+import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
-public class MessageUtils {
+class MessageUtils {
     private final UidProvider uidProvider;
     private final ModSeqProvider modSeqProvider;
 
-    public MessageUtils(UidProvider uidProvider, ModSeqProvider modSeqProvider) {
+    MessageUtils(UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         Preconditions.checkNotNull(uidProvider);
         Preconditions.checkNotNull(modSeqProvider);
 
@@ -47,13 +50,13 @@ public class MessageUtils {
         this.modSeqProvider = modSeqProvider;
     }
 
-    public void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException { 
+    void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException {
         message.setUid(nextUid(mailbox));
         message.setModSeq(nextModSeq(mailbox));
     }
 
-    public MessageChangedFlags updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator, 
-            Iterator<MailboxMessage> messages) throws MailboxException {
+    MessageChangedFlags updateFlags(Mailbox mailbox, FlagsUpdateCalculator flagsUpdateCalculator,
+                                    Iterator<MailboxMessage> messages) throws MailboxException {
         ImmutableList.Builder<UpdatedFlags> updatedFlags = ImmutableList.builder();
         ImmutableList.Builder<MailboxMessage> changedFlags = ImmutableList.builder();
 
@@ -80,15 +83,17 @@ public class MessageUtils {
         return new MessageChangedFlags(updatedFlags.build().iterator(), changedFlags.build());
     }
 
+    @VisibleForTesting
     MessageUid nextUid(Mailbox mailbox) throws MailboxException {
         return uidProvider.nextUid(mailbox);
     }
 
+    @VisibleForTesting
     ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
         return modSeqProvider.nextModSeq(mailbox);
     }
     
-    public static class MessageChangedFlags {
+    static class MessageChangedFlags {
         private final Iterator<UpdatedFlags> updatedFlags;
         private final List<MailboxMessage> changedFlags;
 
