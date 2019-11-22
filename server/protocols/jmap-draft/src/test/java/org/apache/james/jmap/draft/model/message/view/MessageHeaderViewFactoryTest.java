@@ -19,14 +19,19 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.ALICE_EMAIL;
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB;
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB_EMAIL;
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.HEADERS_MAP;
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACK_EMAIL;
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACOB_EMAIL;
+
 import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.BlobId;
-import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.Number;
@@ -47,11 +52,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 
 class MessageHeaderViewFactoryTest {
-    private static final Username BOB = Username.of("bob@local");
-
     private MessageIdManager messageIdManager;
     private MessageHeaderViewFactory testee;
     private MailboxSession session;
@@ -85,25 +87,6 @@ class MessageHeaderViewFactoryTest {
         List<MessageResult> messages = messageIdManager
             .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroupImpl.MINIMAL, session);
 
-        Emailer bobEmail = Emailer.builder().name(BOB.getLocalPart()).email(BOB.asString()).build();
-        Emailer aliceEmail = Emailer.builder().name("alice").email("alice@local").build();
-        Emailer jackEmail = Emailer.builder().name("jack").email("jack@local").build();
-        Emailer jacobEmail = Emailer.builder().name("jacob").email("jacob@local").build();
-
-        ImmutableMap<String, String> headersMap = ImmutableMap.<String, String>builder()
-            .put("Content-Type", "multipart/mixed; boundary=\"------------7AF1D14DE1DFA16229726B54\"")
-            .put("Date", "Tue, 7 Jun 2016 16:23:37 +0200")
-            .put("From", "alice <alice@local>")
-            .put("To", "bob <bob@local>")
-            .put("Subject", "Full message")
-            .put("Mime-Version", "1.0")
-            .put("Message-ID", "<1cc7f114-dbc4-42c2-99bd-f1100db6d0c1@open-paas.org>")
-            .put("Cc", "jack <jack@local>, jacob <jacob@local>")
-            .put("Bcc", "alice <alice@local>")
-            .put("Reply-to", "alice <alice@local>")
-            .put("In-reply-to", "bob@local")
-            .build();
-
         MessageHeaderView actual = testee.fromMessageResults(messages);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(message1.getMessageId());
@@ -113,12 +96,12 @@ class MessageHeaderViewFactoryTest {
             softly.assertThat(actual.getKeywords()).isEqualTo(Keywords.strictFactory().from(Keyword.SEEN).asMap());
             softly.assertThat(actual.getBlobId()).isEqualTo(BlobId.of(message1.getMessageId().serialize()));
             softly.assertThat(actual.getInReplyToMessageId()).isEqualTo(Optional.of(BOB.asString()));
-            softly.assertThat(actual.getHeaders()).isEqualTo(headersMap);
-            softly.assertThat(actual.getFrom()).isEqualTo(Optional.of(aliceEmail));
-            softly.assertThat(actual.getTo()).isEqualTo(ImmutableList.of(bobEmail));
-            softly.assertThat(actual.getCc()).isEqualTo(ImmutableList.of(jackEmail, jacobEmail));
-            softly.assertThat(actual.getBcc()).isEqualTo(ImmutableList.of(aliceEmail));
-            softly.assertThat(actual.getReplyTo()).isEqualTo(ImmutableList.of(aliceEmail));
+            softly.assertThat(actual.getHeaders()).isEqualTo(HEADERS_MAP);
+            softly.assertThat(actual.getFrom()).isEqualTo(Optional.of(ALICE_EMAIL));
+            softly.assertThat(actual.getTo()).isEqualTo(ImmutableList.of(BOB_EMAIL));
+            softly.assertThat(actual.getCc()).isEqualTo(ImmutableList.of(JACK_EMAIL, JACOB_EMAIL));
+            softly.assertThat(actual.getBcc()).isEqualTo(ImmutableList.of(ALICE_EMAIL));
+            softly.assertThat(actual.getReplyTo()).isEqualTo(ImmutableList.of(ALICE_EMAIL));
             softly.assertThat(actual.getSubject()).isEqualTo("Full message");
             softly.assertThat(actual.getDate()).isEqualTo("2016-06-07T14:23:37Z");
         });

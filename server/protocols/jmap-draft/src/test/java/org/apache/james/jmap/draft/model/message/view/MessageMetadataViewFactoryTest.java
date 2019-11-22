@@ -19,11 +19,12 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
+import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.BOB;
+
 import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
@@ -46,8 +47,6 @@ import org.junit.jupiter.api.Test;
 import com.google.common.collect.ImmutableList;
 
 class MessageMetadataViewFactoryTest {
-
-    public static final Username BOB = Username.of("bob");
     private MessageIdManager messageIdManager;
     private MessageMetadataViewFactory testee;
     private MailboxSession session;
