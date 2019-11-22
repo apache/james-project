@@ -371,7 +371,7 @@ public abstract class ImapRequestLineReader {
         } else {
             try (FastByteArrayOutputStream out = new FastByteArrayOutputStream();
                  InputStream in = consumeLiteral(false)) {
-                IOUtils.copy(in, out, 0xFFFF);
+                IOUtils.copy(in, out, 2048);
                 byte[] bytes = out.toByteArray();
                 ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 return decode(charset, buffer);
