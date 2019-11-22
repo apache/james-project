@@ -36,6 +36,7 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -310,10 +311,7 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             try (FileOutputStream fos = new FileOutputStream(messageFile);
                 InputStream input = message.getFullContent()) {
                 byte[] b = new byte[BUF_SIZE];
-                int len = 0;
-                while ((len = input.read(b)) != -1) {
-                    fos.write(b, 0, len);
-                }
+                IOUtils.copy(input, fos, BUF_SIZE);
             }
         } catch (IOException ioe) {
             throw new MailboxException("Failure while save MailboxMessage " + message + " in Mailbox " + mailbox, ioe);

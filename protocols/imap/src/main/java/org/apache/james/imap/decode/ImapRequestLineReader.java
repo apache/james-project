@@ -34,6 +34,7 @@ import java.util.List;
 
 import javax.mail.Flags;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
@@ -370,16 +371,10 @@ public abstract class ImapRequestLineReader {
         } else {
             try (FastByteArrayOutputStream out = new FastByteArrayOutputStream();
                  InputStream in = consumeLiteral(false)) {
-                byte[] buf = new byte[0xFFFF];
-
-                for (int len; (len = in.read(buf)) != -1; ) {
-                    out.write(buf, 0, len);
-                }
-
-                final byte[] bytes = out.toByteArray();
-                final ByteBuffer buffer = ByteBuffer.wrap(bytes);
+                IOUtils.copy(in, out, 0xFFFF);
+                byte[] bytes = out.toByteArray();
+                ByteBuffer buffer = ByteBuffer.wrap(bytes);
                 return decode(charset, buffer);
-
             } catch (IOException e) {
                 throw new DecodingException(HumanReadableText.BAD_IO_ENCODING, "Bad character encoding", e);
             }

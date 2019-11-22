@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.imap.encode.ImapResponseWriter;
 import org.apache.james.imap.message.response.Literal;
 
@@ -32,28 +33,18 @@ import org.apache.james.imap.message.response.Literal;
  */
 public class OutputStreamImapResponseWriter implements ImapResponseWriter {
 
+    public static final int BUFFER_SIZE = 1024;
     private final OutputStream output;
 
     public OutputStreamImapResponseWriter(OutputStream output) {
         this.output = output;
     }
 
-    public void flush() throws IOException {
-        output.flush();
-    }
-
-
-
     @Override
     public void write(Literal literal) throws IOException {
         try (InputStream in = literal.getInputStream()) {
-
-            byte[] buffer = new byte[1024];
-            for (int len; (len = in.read(buffer)) != -1; ) {
-                output.write(buffer, 0, len);
-            }
+            IOUtils.copy(in, output, BUFFER_SIZE);
         }
-
     }
 
     @Override
