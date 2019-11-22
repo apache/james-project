@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.store.mail.FetchGroupConverter.getFetchType;
+
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -74,51 +76,6 @@ public class StoreMessageResultIterator implements MessageResultIterator {
         this.type = range.getType();
         this.ftype = getFetchType(group);
         LOGGER.debug("batchSizes used: {}", batchSizes);
-    }
-
-    /**
-     * Use the passed {@link FetchGroup} and calculate the right
-     * {@link FetchType} for it
-     */
-    private static FetchType getFetchType(FetchGroup group) {
-        int content = group.content();
-        boolean headers = false;
-        boolean body = false;
-        boolean full = false;
-
-        if ((content & FetchGroup.HEADERS) > 0) {
-            headers = true;
-            content -= FetchGroup.HEADERS;
-        }
-        if (group.getPartContentDescriptors().size() > 0) {
-            full = true;
-        }
-        if ((content & FetchGroup.BODY_CONTENT) > 0) {
-            body = true;
-            content -= FetchGroup.BODY_CONTENT;
-        }
-
-        if ((content & FetchGroup.FULL_CONTENT) > 0) {
-            full = true;
-            content -= FetchGroup.FULL_CONTENT;
-        }
-
-        if ((content & FetchGroup.MIME_DESCRIPTOR) > 0) {
-            // If we need the mimedescriptor we MAY need the full content later
-            // too.
-            // This gives us no other choice then request it
-            full = true;
-            content -= FetchGroup.MIME_DESCRIPTOR;
-        }
-        if (full || (body && headers)) {
-            return FetchType.Full;
-        } else if (body) {
-            return FetchType.Body;
-        } else if (headers) {
-            return FetchType.Headers;
-        } else {
-            return FetchType.Metadata;
-        }
     }
 
     @Override

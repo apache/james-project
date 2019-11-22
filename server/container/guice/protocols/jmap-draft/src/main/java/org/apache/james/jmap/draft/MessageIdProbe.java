@@ -68,7 +68,7 @@ public class MessageIdProbe implements GuiceProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         List<MessageResult> messages = messageIdManager.getMessages(
             ImmutableList.of(messageId),
-            FetchGroupImpl.MINIMAL,
+            FetchGroupImpl.FULL_CONTENT,
             mailboxSession);
 
         return messages.stream()
