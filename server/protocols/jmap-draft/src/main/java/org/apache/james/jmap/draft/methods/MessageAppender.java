@@ -32,7 +32,7 @@ import org.apache.james.jmap.draft.methods.ValueWithId.CreationMessageEntry;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -73,7 +73,7 @@ public class MessageAppender {
         this.mimeMessageConverter = mimeMessageConverter;
     }
 
-    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailboxes(CreationMessageEntry createdEntry,
+    public MetaDataWithContent appendMessageInMailboxes(CreationMessageEntry createdEntry,
                                                                                List<MailboxId> targetMailboxes,
                                                                                MailboxSession session) throws MailboxException {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
@@ -94,7 +94,7 @@ public class MessageAppender {
             messageIdManager.setInMailboxes(message.getMessageId(), targetMailboxes, session);
         }
 
-        return MessageFullViewFactory.MetaDataWithContent.builder()
+        return MetaDataWithContent.builder()
             .uid(message.getUid())
             .keywords(createdEntry.getValue().getKeywords())
             .internalDate(internalDate.toInstant())
@@ -106,7 +106,7 @@ public class MessageAppender {
             .build();
     }
 
-    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
+    public MetaDataWithContent appendMessageInMailbox(org.apache.james.mime4j.dom.Message message,
                                                                              MessageManager messageManager,
                                                                              List<MessageAttachment> attachments,
                                                                              Flags flags,
@@ -121,7 +121,7 @@ public class MessageAppender {
             .withFlags(flags)
             .build(content), session);
 
-        return MessageFullViewFactory.MetaDataWithContent.builder()
+        return MetaDataWithContent.builder()
             .uid(appendedMessage.getUid())
             .keywords(Keywords.lenientFactory().fromFlags(flags))
             .internalDate(internalDate.toInstant())
@@ -141,7 +141,7 @@ public class MessageAppender {
         }
     }
 
-    public MessageFullViewFactory.MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
+    public MetaDataWithContent appendMessageInMailbox(CreationMessageEntry createdEntry,
                                                                              MailboxId targetMailbox,
                                                                              MailboxSession session) throws MailboxException {
         return appendMessageInMailboxes(createdEntry, ImmutableList.of(targetMailbox), session);

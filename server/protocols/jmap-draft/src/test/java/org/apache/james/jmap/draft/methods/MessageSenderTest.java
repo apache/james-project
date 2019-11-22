@@ -39,6 +39,7 @@ import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
@@ -59,7 +60,7 @@ import com.google.common.collect.ImmutableSet;
 class MessageSenderTest {
 
     private Envelope envelope;
-    private MessageFullViewFactory.MetaDataWithContent message;
+    private MetaDataWithContent message;
     private MessageFullView jmapMessage;
 
     @BeforeEach
@@ -72,7 +73,7 @@ class MessageSenderTest {
         String content = headers
             + "Hello! How are you?";
 
-        message = MessageFullViewFactory.MetaDataWithContent.builder()
+        message = MetaDataWithContent.builder()
             .uid(MessageUid.of(2))
             .keywords(Keywords.strictFactory().from(Keyword.SEEN))
             .size(content.length())
@@ -97,7 +98,7 @@ class MessageSenderTest {
 
     @Test
     void buildMailShouldThrowWhenNullMailboxMessage() throws Exception {
-        MessageFullViewFactory.MetaDataWithContent message = null;
+        MetaDataWithContent message = null;
         assertThatThrownBy(() -> MessageSender.buildMail(message, envelope)).isInstanceOf(NullPointerException.class);
     }
 

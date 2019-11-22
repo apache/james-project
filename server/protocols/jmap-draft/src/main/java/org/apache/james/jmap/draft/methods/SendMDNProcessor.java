@@ -35,7 +35,7 @@ import org.apache.james.jmap.draft.model.JmapMDN;
 import org.apache.james.jmap.draft.model.SetError;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -151,7 +151,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         Message mdnAnswer = mdn.generateMDNMessage(originalMessage, mailboxSession);
 
         Flags seen = new Flags(Flags.Flag.SEEN);
-        MessageFullViewFactory.MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
+        MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
             getOutbox(mailboxSession), reportAsAttachment, seen, mailboxSession);
 
         messageSender.sendMessage(metaDataWithContent,
