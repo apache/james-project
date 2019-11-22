@@ -38,7 +38,6 @@ import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
 import org.apache.james.mailbox.jpa.JPAMailboxFixture;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
-import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
@@ -48,6 +47,7 @@ import org.apache.james.mailbox.jpa.quota.JpaCurrentQuotaManager;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreRightManager;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -119,7 +119,7 @@ public class JPAHostSystem extends JamesImapHostSystem {
         eventBus.register(quotaUpdater);
         eventBus.register(new MailboxAnnotationListener(mapperFactory, sessionProvider));
 
-        SubscriptionManager subscriptionManager = new JPASubscriptionManager(mapperFactory);
+        SubscriptionManager subscriptionManager = new StoreSubscriptionManager(mapperFactory);
         
         ImapProcessor defaultImapProcessorFactory =
                 DefaultImapProcessorFactory.createDefaultProcessor(

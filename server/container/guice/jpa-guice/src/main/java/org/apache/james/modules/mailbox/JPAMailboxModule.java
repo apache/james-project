@@ -35,7 +35,6 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.indexer.ReIndexer;
 import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
-import org.apache.james.mailbox.jpa.JPASubscriptionManager;
 import org.apache.james.mailbox.jpa.mail.JPAModSeqProvider;
 import org.apache.james.mailbox.jpa.mail.JPAUidProvider;
 import org.apache.james.mailbox.jpa.openjpa.OpenJPAMailboxManager;
@@ -47,12 +46,14 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.mail.MailboxMapperFactory;
 import org.apache.james.mailbox.store.mail.MessageMapperFactory;
 import org.apache.james.mailbox.store.mail.ModSeqProvider;
 import org.apache.james.mailbox.store.mail.UidProvider;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
+import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.modules.data.JPAEntityManagerModule;
 import org.apache.james.utils.MailboxManagerDefinition;
 import org.apache.mailbox.tools.indexer.ReIndexerImpl;
@@ -74,7 +75,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(JPAMailboxSessionMapperFactory.class).in(Scopes.SINGLETON);
         bind(OpenJPAMailboxManager.class).in(Scopes.SINGLETON);
         bind(JVMMailboxPathLocker.class).in(Scopes.SINGLETON);
-        bind(JPASubscriptionManager.class).in(Scopes.SINGLETON);
+        bind(StoreSubscriptionManager.class).in(Scopes.SINGLETON);
         bind(JPAModSeqProvider.class).in(Scopes.SINGLETON);
         bind(JPAUidProvider.class).in(Scopes.SINGLETON);
         bind(UserRepositoryAuthenticator.class).in(Scopes.SINGLETON);
@@ -85,6 +86,7 @@ public class JPAMailboxModule extends AbstractModule {
         bind(DefaultMessageId.Factory.class).in(Scopes.SINGLETON);
         bind(ReIndexerImpl.class).in(Scopes.SINGLETON);
 
+        bind(SubscriptionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MessageMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
         bind(MailboxSessionMapperFactory.class).to(JPAMailboxSessionMapperFactory.class);
@@ -92,7 +94,7 @@ public class JPAMailboxModule extends AbstractModule {
 
         bind(ModSeqProvider.class).to(JPAModSeqProvider.class);
         bind(UidProvider.class).to(JPAUidProvider.class);
-        bind(SubscriptionManager.class).to(JPASubscriptionManager.class);
+        bind(SubscriptionManager.class).to(StoreSubscriptionManager.class);
         bind(MailboxPathLocker.class).to(JVMMailboxPathLocker.class);
         bind(Authenticator.class).to(UserRepositoryAuthenticator.class);
         bind(MailboxManager.class).to(OpenJPAMailboxManager.class);

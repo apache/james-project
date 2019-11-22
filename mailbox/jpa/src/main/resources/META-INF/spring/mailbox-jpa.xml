@@ -44,7 +44,7 @@
         <constructor-arg index="8" ref="indexer" />
     </bean>
     
-    <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.jpa.JPASubscriptionManager">
+    <bean id ="jpa-subscriptionManager" class="org.apache.james.mailbox.store.StoreSubscriptionManager">
         <constructor-arg index="0" ref="jpa-sessionMapperFactory"/>
     </bean>
     <bean id="jpa-sessionMapperFactory" class="org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory">
