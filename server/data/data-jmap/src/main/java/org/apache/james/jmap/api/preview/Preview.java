@@ -20,6 +20,9 @@
 package org.apache.james.jmap.api.preview;
 
 import java.util.Objects;
+import java.util.Optional;
+
+import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
@@ -27,9 +30,23 @@ import com.google.common.base.Preconditions;
 public class Preview {
 
     private static final int MAX_LENGTH = 256;
+    public static final Preview NO_BODY = new Preview("(Empty)");
 
     public static Preview from(String value) {
         return new Preview(value);
+    }
+
+    public static Preview compute(String textBody) {
+        return Optional.of(textBody)
+            .map(StringUtils::normalizeSpace)
+            .filter(text -> !text.isEmpty())
+            .map(Preview::truncateToMaxLength)
+            .map(Preview::from)
+            .orElse(NO_BODY);
+    }
+
+    private static String truncateToMaxLength(String body) {
+        return StringUtils.left(body, MAX_LENGTH);
     }
 
     private final String value;

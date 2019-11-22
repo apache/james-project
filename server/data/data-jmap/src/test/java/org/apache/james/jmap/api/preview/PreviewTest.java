@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import org.apache.commons.lang3.StringUtils;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Strings;
@@ -32,6 +34,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class PreviewTest {
 
     private static final String PREVIEW_RAW_VALUE = "Hello James!";
+    private static final Preview NO_BODY = new Preview("(Empty)");
 
     @Test
     void shouldMatchBeanContract() {
@@ -69,5 +72,68 @@ class PreviewTest {
     void fromShouldNotThrowWhenValueLengthIsEqualsToMaximum256() {
         assertThatCode(() -> Preview.from(Strings.repeat("a", 256)))
             .doesNotThrowAnyException();
+    }
+
+    @Nested
+    class ComputeTest {
+        
+        @Test
+        void computeShouldReturnStringEmptyWhenStringEmptyTextBody() throws Exception {
+            assertThat(Preview.compute(""))
+                .isEqualTo(NO_BODY);
+        }
+
+        @Test
+        void computeShouldReturnStringEmptyWhenOnlySpaceTabAndBreakLines() throws Exception {
+            assertThat(Preview.compute(" \n\t "))
+                .isEqualTo(NO_BODY);
+        }
+
+        @Test
+        void computeShouldReturnStringEmptyWhenOnlySpace() throws Exception {
+            assertThat(Preview.compute(" "))
+                .isEqualTo(NO_BODY);
+        }
+
+        @Test
+        void computeShouldReturnStringEmptyWhenOnlyTab() throws Exception {
+            assertThat(Preview.compute("\t"))
+                .isEqualTo(NO_BODY);
+        }
+
+        @Test
+        void computeShouldReturnStringEmptyWhenOnlyBreakLines() throws Exception {
+            assertThat(Preview.compute("\n"))
+                .isEqualTo(NO_BODY);
+        }
+
+        @Test
+        void computeShouldReturnStringWithoutTruncation() throws Exception {
+            String body = StringUtils.leftPad("a", 100, "b");
+
+            assertThat(Preview.compute(body)
+                    .getValue())
+                .hasSize(100)
+                .isEqualTo(body);
+        }
+
+        @Test
+        void computeShouldReturnStringIsLimitedTo256Length() throws Exception {
+            String body = StringUtils.leftPad("a", 300, "b");
+            String expected = StringUtils.leftPad("b", 256, "b");
+
+            assertThat(Preview.compute(body)
+                    .getValue())
+                .hasSize(256)
+                .isEqualTo(expected);
+        }
+
+        @Test
+        void computeShouldReturnNormalizeSpaceString() throws Exception {
+            String body = "    this      is\n      the\r           preview\t         content\n\n         ";
+
+            assertThat(Preview.compute(body))
+                .isEqualTo(Preview.from("this is the preview content"));
+        }
     }
 }
