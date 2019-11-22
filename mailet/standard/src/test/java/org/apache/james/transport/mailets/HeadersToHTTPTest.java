@@ -90,7 +90,7 @@ class HeadersToHTTPTest {
 
         FakeMailetConfig mailetConfig = FakeMailetConfig.builder()
                 .setProperty("parameterKey", "pKey").setProperty("parameterValue", "pValue")
-                .setProperty("url", "http://qwerty.localhost:123456" + urlTestPattern).build();
+                .setProperty("url", "http://qwerty.localhost:12345" + urlTestPattern).build();
 
         Mailet mailet = new HeadersToHTTP();
         mailet.init(mailetConfig);
