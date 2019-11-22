@@ -80,21 +80,9 @@ public class MessageUtilsTest {
     }
     
     @Test
-    public void getHighestModSeqShouldCallModSeqProvider() throws Exception {
-        messageUtils.getHighestModSeq(mailbox);
-        verify(modSeqProvider).highestModSeq(eq(mailbox));
-    }
-    
-    @Test
     public void nextModSeqShouldCallModSeqProvider() throws Exception {
         messageUtils.nextModSeq(mailbox);
         verify(modSeqProvider).nextModSeq(eq(mailbox));
-    }
-    
-    @Test
-    public void getLastUidShouldCallUidProvider() throws Exception {
-        messageUtils.getLastUid(mailbox);
-        verify(uidProvider).lastUid(eq(mailbox));
     }
     
     @Test

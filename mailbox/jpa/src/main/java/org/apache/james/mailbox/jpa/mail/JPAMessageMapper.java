@@ -69,10 +69,14 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
     private static final int UNLIMITED = -1;
 
     private final MessageUtils messageMetadataMapper;
+    private final UidProvider uidProvider;
+    private final ModSeqProvider modSeqProvider;
 
     public JPAMessageMapper(UidProvider uidProvider, ModSeqProvider modSeqProvider, EntityManagerFactory entityManagerFactory) {
         super(entityManagerFactory);
         this.messageMetadataMapper = new MessageUtils(uidProvider, modSeqProvider);
+        this.uidProvider = uidProvider;
+        this.modSeqProvider = modSeqProvider;
     }
 
     @Override
@@ -315,17 +319,17 @@ public class JPAMessageMapper extends JPATransactionalMapper implements MessageM
 
     @Override
     public MessageMetaData copy(Mailbox mailbox, MailboxMessage original) throws MailboxException {
-        return copy(mailbox, messageMetadataMapper.nextUid(mailbox), messageMetadataMapper.nextModSeq(mailbox), original);  
+        return copy(mailbox, uidProvider.nextUid(mailbox), modSeqProvider.nextModSeq(mailbox), original);
     }
 
     @Override
     public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return messageMetadataMapper.getLastUid(mailbox);
+        return uidProvider.lastUid(mailbox);
     }
 
     @Override
     public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return messageMetadataMapper.getHighestModSeq(mailbox);
+        return modSeqProvider.highestModSeq(mailbox);
     }
 
     @Override

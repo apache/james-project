@@ -21,7 +21,6 @@ package org.apache.james.mailbox.store.mail;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 import javax.mail.Flags;
 
@@ -43,24 +42,9 @@ public class MessageUtils {
     public MessageUtils(UidProvider uidProvider, ModSeqProvider modSeqProvider) {
         Preconditions.checkNotNull(uidProvider);
         Preconditions.checkNotNull(modSeqProvider);
+
         this.uidProvider = uidProvider;
         this.modSeqProvider = modSeqProvider;
-    }
-    
-    public ModSeq getHighestModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.highestModSeq(mailbox);
-    }
-
-    public Optional<MessageUid> getLastUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.lastUid(mailbox);
-    }
-
-    public MessageUid nextUid(Mailbox mailbox) throws MailboxException {
-        return uidProvider.nextUid(mailbox);
-    }
-
-    public ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
-        return modSeqProvider.nextModSeq(mailbox);
     }
 
     public void enrichMessage(Mailbox mailbox, MailboxMessage message) throws MailboxException { 
@@ -96,6 +80,13 @@ public class MessageUtils {
         return new MessageChangedFlags(updatedFlags.build().iterator(), changedFlags.build());
     }
 
+    MessageUid nextUid(Mailbox mailbox) throws MailboxException {
+        return uidProvider.nextUid(mailbox);
+    }
+
+    ModSeq nextModSeq(Mailbox mailbox) throws MailboxException {
+        return modSeqProvider.nextModSeq(mailbox);
+    }
     
     public static class MessageChangedFlags {
         private final Iterator<UpdatedFlags> updatedFlags;
