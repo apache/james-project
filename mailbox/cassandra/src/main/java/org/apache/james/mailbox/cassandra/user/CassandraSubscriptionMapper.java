@@ -35,9 +35,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 
-import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 
@@ -59,21 +57,12 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
     }
 
     @Override
-    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) {
-        ResultSet results = session.execute(select(MAILBOX)
-            .from(TABLE_NAME)
-            .where(eq(USER, user.asString()))
-            .and(eq(MAILBOX, mailbox)));
-        return !results.isExhausted() ? new SimpleSubscription(user, mailbox) : null;
-    }
-
-    @Override
     public List<Subscription> findSubscriptionsForUser(Username user) {
         return cassandraUtils.convertToStream(
             session.execute(select(MAILBOX)
                 .from(TABLE_NAME)
                 .where(eq(USER, user.asString()))))
-            .map((row) -> new SimpleSubscription(user, row.getString(MAILBOX)))
+            .map((row) -> new Subscription(user, row.getString(MAILBOX)))
             .collect(Collectors.toList());
     }
 
@@ -84,11 +73,11 @@ public class CassandraSubscriptionMapper extends NonTransactionalMapper implemen
             .value(MAILBOX, subscription.getMailbox()));
     }
 
-    public List<SimpleSubscription> list() {
+    public List<Subscription> list() {
         return cassandraUtils.convertToStream(
             session.execute(select(FIELDS)
                 .from(TABLE_NAME)))
-            .map((row) -> new SimpleSubscription(Username.of(row.getString(USER)), row.getString(MAILBOX)))
+            .map((row) -> new Subscription(Username.of(row.getString(USER)), row.getString(MAILBOX)))
             .collect(Collectors.toList());
     }
 

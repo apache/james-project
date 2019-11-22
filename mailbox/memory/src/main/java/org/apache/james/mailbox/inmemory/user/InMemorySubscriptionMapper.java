@@ -19,58 +19,57 @@
 package org.apache.james.mailbox.inmemory.user;
 
 import java.util.List;
+import java.util.Set;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Multimaps;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
 
 public class InMemorySubscriptionMapper extends NonTransactionalMapper implements SubscriptionMapper {
+    private enum ValueHolder {
+        INSTANCE
+    }
     
-    private final ListMultimap<Username, Subscription> subscriptionsByUser;
+    private final Table<Username, String, ValueHolder> subscriptionsByUser;
     
     public InMemorySubscriptionMapper() {
-        subscriptionsByUser = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
+        subscriptionsByUser = HashBasedTable.create();
     }
 
     @Override
-    public synchronized void delete(Subscription subscription) {
-        subscriptionsByUser.remove(subscription.getUser(), subscription);
-    }
-
-    @Override
-    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) {
-        final List<Subscription> subscriptions = ImmutableList.copyOf(subscriptionsByUser.get(user));
-        if (subscriptions != null) {
-            return subscriptions.stream()
-                .filter(subscription -> subscription.getMailbox().equals(mailbox))
-                .findFirst()
-                .orElse(null);
+    public void delete(Subscription subscription) {
+        synchronized (subscriptionsByUser) {
+            subscriptionsByUser.remove(subscription.getUser(), subscription.getMailbox());
         }
-        return null;
     }
 
     @Override
     public List<Subscription> findSubscriptionsForUser(Username user) {
-        final List<Subscription> subcriptions = subscriptionsByUser.get(user);
-        if (subcriptions == null) {
-            return ImmutableList.of();
+        synchronized (subscriptionsByUser) {
+            Set<String> subscriptions = subscriptionsByUser.row(user).keySet();
+
+            return subscriptions.stream()
+                .map(mailbox -> new Subscription(user, mailbox))
+                .collect(Guavate.toImmutableList());
         }
-        return ImmutableList.copyOf(subcriptions);
     }
 
     @Override
-    public synchronized void save(Subscription subscription) {
-        subscriptionsByUser.put(subscription.getUser(), subscription);
+    public void save(Subscription subscription) {
+        synchronized (subscriptionsByUser) {
+            subscriptionsByUser.put(subscription.getUser(), subscription.getMailbox(), ValueHolder.INSTANCE);
+        }
     }
     
     public void deleteAll() {
-        subscriptionsByUser.clear();
+        synchronized (subscriptionsByUser) {
+            subscriptionsByUser.clear();
+        }
     }
 
     @Override

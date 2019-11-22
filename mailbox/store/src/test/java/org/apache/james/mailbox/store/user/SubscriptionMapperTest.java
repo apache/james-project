@@ -26,7 +26,6 @@ import java.util.List;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -53,15 +52,8 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    void findMailboxSubscriptionForUserShouldReturnNullByDefault() throws SubscriptionException {
-        Subscription subscriptions = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
-
-        assertThat(subscriptions).isNull();
-    }
-
-    @Test
     void findMailboxSubscriptionForUserShouldReturnSubscription() throws SubscriptionException {
-        SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
+        Subscription subscription = new Subscription(USER_1, MAILBOX_1);
         testee.save(subscription);
 
         List<Subscription> results = testee.findSubscriptionsForUser(USER_1);
@@ -71,8 +63,8 @@ public abstract class SubscriptionMapperTest {
 
     @Test
     void findSubscriptionsForUserShouldReturnSubscriptions() throws SubscriptionException {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1, MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_1, MAILBOX_2);
+        Subscription subscription1 = new Subscription(USER_1, MAILBOX_1);
+        Subscription subscription2 = new Subscription(USER_1, MAILBOX_2);
         testee.save(subscription1);
         testee.save(subscription2);
 
@@ -83,8 +75,8 @@ public abstract class SubscriptionMapperTest {
 
     @Test
     void findSubscriptionsForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_2);
+        Subscription subscription1 = new Subscription(USER_1,MAILBOX_1);
+        Subscription subscription2 = new Subscription(USER_2,MAILBOX_2);
         testee.save(subscription1);
         testee.save(subscription2);
 
@@ -94,32 +86,19 @@ public abstract class SubscriptionMapperTest {
     }
 
     @Test
-    void findMailboxSubscriptionForUserShouldReturnOnlyUserSubscriptions() throws SubscriptionException {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_2,MAILBOX_1);
+    void findSubscriptionsForUserShouldNotReturnDuplicates() throws SubscriptionException {
+        Subscription subscription1 = new Subscription(USER_1,MAILBOX_1);
         testee.save(subscription1);
-        testee.save(subscription2);
-
-        Subscription result = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
-
-        assertThat(result).isEqualTo(result);
-    }
-
-    @Test
-    void findMailboxSubscriptionForUserShouldReturnSubscriptionConcerningTheMailbox() throws SubscriptionException {
-        SimpleSubscription subscription1 = new SimpleSubscription(USER_1,MAILBOX_1);
-        SimpleSubscription subscription2 = new SimpleSubscription(USER_1,MAILBOX_2);
         testee.save(subscription1);
-        testee.save(subscription2);
 
-        Subscription result = testee.findMailboxSubscriptionForUser(USER_1,MAILBOX_1);
+        List<Subscription> results = testee.findSubscriptionsForUser(USER_1);
 
-        assertThat(result).isEqualTo(result);
+        assertThat(results).containsExactly(subscription1);
     }
 
     @Test
     void deleteShouldRemoveSubscription() throws SubscriptionException {
-        SimpleSubscription subscription = new SimpleSubscription(USER_1, MAILBOX_1);
+        Subscription subscription = new Subscription(USER_1, MAILBOX_1);
         testee.save(subscription);
 
         testee.delete(subscription);

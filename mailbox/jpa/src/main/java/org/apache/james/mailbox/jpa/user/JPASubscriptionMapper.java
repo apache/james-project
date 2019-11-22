@@ -18,8 +18,13 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.user;
 
-import java.util.List;
+import static org.apache.james.mailbox.jpa.user.model.JPASubscription.FIND_MAILBOX_SUBSCRIPTION_FOR_USER;
+import static org.apache.james.mailbox.jpa.user.model.JPASubscription.FIND_SUBSCRIPTIONS_FOR_USER;
 
+import java.util.List;
+import java.util.Optional;
+
+import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
@@ -27,8 +32,11 @@ import javax.persistence.PersistenceException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.SubscriptionException;
 import org.apache.james.mailbox.jpa.JPATransactionalMapper;
+import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
+
+import com.github.steveash.guavate.Guavate;
 
 /**
  * JPA implementation of a {@link SubscriptionMapper}. This class is not thread-safe!
@@ -39,37 +47,27 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
         super(entityManagerFactory);
     }
 
-    
-    @Override
-    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException {
-        try {
-            return (Subscription) getEntityManager().createNamedQuery("findFindMailboxSubscriptionForUser")
-            .setParameter("userParam", user.asString())
-                .setParameter("mailboxParam", mailbox)
-                .getSingleResult();
-        } catch (NoResultException e) {
-            return null;
-        } catch (PersistenceException e) {
-            throw new SubscriptionException(e);
-        }
-    }
-
     @Override
     public void save(Subscription subscription) throws SubscriptionException {
+        EntityManager entityManager = getEntityManager();
         try {
-            getEntityManager().persist(subscription);
+            if (!exists(entityManager, subscription)) {
+                entityManager.persist(new JPASubscription(subscription));
+            }
         } catch (PersistenceException e) {
             throw new SubscriptionException(e);
         }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException {
         try {
-            return (List<Subscription>) getEntityManager().createNamedQuery("findSubscriptionsForUser")
+            return getEntityManager().createNamedQuery(FIND_SUBSCRIPTIONS_FOR_USER, JPASubscription.class)
                 .setParameter("userParam", user.asString())
-                .getResultList();
+                .getResultList()
+                .stream()
+                .map(JPASubscription::toSubscription)
+                .collect(Guavate.toImmutableList());
         } catch (PersistenceException e) {
             throw new SubscriptionException(e);
         }
@@ -77,8 +75,32 @@ public class JPASubscriptionMapper extends JPATransactionalMapper implements Sub
 
     @Override
     public void delete(Subscription subscription) throws SubscriptionException {
+        EntityManager entityManager = getEntityManager();
         try {
-            getEntityManager().remove(subscription);
+            findJpaSubscription(entityManager, subscription)
+                .ifPresent(entityManager::remove);
+        } catch (PersistenceException e) {
+            throw new SubscriptionException(e);
+        }
+    }
+
+    private Optional<JPASubscription> findJpaSubscription(EntityManager entityManager, Subscription subscription) {
+        return entityManager.createNamedQuery(FIND_MAILBOX_SUBSCRIPTION_FOR_USER, JPASubscription.class)
+            .setParameter("userParam", subscription.getUser().asString())
+            .setParameter("mailboxParam", subscription.getMailbox())
+            .getResultList()
+            .stream()
+            .findFirst();
+    }
+
+    private boolean exists(EntityManager entityManager, Subscription subscription) throws SubscriptionException {
+        try {
+            return !entityManager.createNamedQuery(FIND_MAILBOX_SUBSCRIPTION_FOR_USER, JPASubscription.class)
+                .setParameter("userParam", subscription.getUser().asString())
+                .setParameter("mailboxParam", subscription.getMailbox())
+                .getResultList().isEmpty();
+        } catch (NoResultException e) {
+            return false;
         } catch (PersistenceException e) {
             throw new SubscriptionException(e);
         }

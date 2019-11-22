@@ -20,14 +20,24 @@ package org.apache.james.mailbox.store.user.model;
 
 import org.apache.james.core.Username;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 /**
  * 
  * Subscription of a mailbox to a user
  */
-public interface Subscription {
+public class Subscription {
+    private final Username user;
+    private final String mailbox;
+
+    public Subscription(Username user, String mailbox) {
+        this.user = user;
+        this.mailbox = mailbox;
+    }
 
     /**
-     * Gets the name of the mailbox to which 
+     * Gets the name of the mailbox to which
      * the user is subscribed.
      * Note that subscriptions must be maintained
      * beyond the lifetime of a particular instance
@@ -35,13 +45,41 @@ public interface Subscription {
      * 
      * @return not null
      */
-    String getMailbox();
+    public String getMailbox() {
+        return mailbox;
+    }
 
     /**
      * Gets the name of the subscribed user.
      * 
      * @return not null
      */
-    Username getUser();
+    public Username getUser() {
+        return user;
+    }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Subscription) {
+            Subscription that = (Subscription) o;
+
+            return Objects.equal(this.user, that.user)
+                && Objects.equal(this.mailbox, that.mailbox);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hashCode(user, mailbox);
+    }
+
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("user", user)
+            .add("mailbox", mailbox)
+            .toString();
+    }
 }

@@ -35,7 +35,6 @@ import org.apache.james.mailbox.maildir.MaildirStore;
 import org.apache.james.mailbox.store.transaction.NonTransactionalMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableSet;
@@ -69,23 +68,8 @@ public class MaildirSubscriptionMapper extends NonTransactionalMapper implements
     public List<Subscription> findSubscriptionsForUser(Username user) throws SubscriptionException {
         Set<String> subscriptionNames = readSubscriptionsForUser(user);
         return subscriptionNames.stream()
-            .map(subscription -> new SimpleSubscription(user, subscription))
+            .map(subscription -> new Subscription(user, subscription))
             .collect(Guavate.toImmutableList());
-    }
-
-    @Override
-    public Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException {
-        File userRoot = new File(store.userRoot(user));
-        Set<String> subscriptionNames;
-        try {
-            subscriptionNames = readSubscriptions(userRoot);
-        } catch (IOException e) {
-            throw new SubscriptionException(e);
-        }
-        if (subscriptionNames.contains(mailbox)) {
-            return new SimpleSubscription(user, mailbox);
-        }
-        return null;
     }
 
     @Override

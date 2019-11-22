@@ -20,14 +20,10 @@ package org.apache.james.mailbox.jpa;
 
 import javax.inject.Inject;
 
-import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.jpa.user.model.JPASubscription;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.mailbox.store.user.model.Subscription;
 
 /**
  * JPA implementation of {@link StoreSubscriptionManager}
- *
  */
 public class JPASubscriptionManager extends StoreSubscriptionManager {
     
@@ -35,9 +31,5 @@ public class JPASubscriptionManager extends StoreSubscriptionManager {
     public JPASubscriptionManager(JPAMailboxSessionMapperFactory mapperFactory) {
         super(mapperFactory);
     }
-    
-    @Override
-    protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new JPASubscription(session.getUser(), mailbox);
-    }
+
 }

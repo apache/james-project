@@ -30,17 +30,6 @@ import org.apache.james.mailbox.store.user.model.Subscription;
  *
  */
 public interface SubscriptionMapper extends Mapper {
-
-
-    /**
-     * Finds any subscriptions for a given user to the given mailbox.
-     * @param user not null
-     * @param mailbox not null
-     * @return <code>Subscription</code>, 
-     * or null when the user is not subscribed to the given mailbox
-     */
-    Subscription findMailboxSubscriptionForUser(Username user, String mailbox) throws SubscriptionException;
-
     /**
      * Saves the given subscription.
      * @param subscription not null

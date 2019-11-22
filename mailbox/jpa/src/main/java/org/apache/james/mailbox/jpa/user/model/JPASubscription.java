@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.jpa.user.model;
 
+import java.util.Objects;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -44,15 +46,20 @@ import org.apache.james.mailbox.store.user.model.Subscription;
                         "MAILBOX_NAME"})
 )
 @NamedQueries({
-    @NamedQuery(name = "findFindMailboxSubscriptionForUser",
+    @NamedQuery(name = JPASubscription.FIND_MAILBOX_SUBSCRIPTION_FOR_USER,
         query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam"),          
-    @NamedQuery(name = "findSubscriptionsForUser",
-        query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam")                  
+    @NamedQuery(name = JPASubscription.FIND_SUBSCRIPTIONS_FOR_USER,
+        query = "SELECT subscription FROM Subscription subscription WHERE subscription.username = :userParam"),
+    @NamedQuery(name = JPASubscription.DELETE_SUBSCRIPTION,
+        query = "DELETE subscription FROM Subscription subscription WHERE subscription.username = :userParam AND subscription.mailbox = :mailboxParam")
 })
-public class JPASubscription implements Subscription {
+public class JPASubscription {
+    public static final String DELETE_SUBSCRIPTION = "deleteSubscription";
+    public static final String FIND_SUBSCRIPTIONS_FOR_USER = "findSubscriptionsForUser";
+    public static final String FIND_MAILBOX_SUBSCRIPTION_FOR_USER = "findFindMailboxSubscriptionForUser";
 
     private static final String TO_STRING_SEPARATOR = "  ";
-    
+
     /** Primary key */
     @GeneratedValue
     @Id 
@@ -79,49 +86,38 @@ public class JPASubscription implements Subscription {
     
     /**
      * Constructs a user subscription.
-     * @param username not null
-     * @param mailbox not null
      */
-    public JPASubscription(Username username, String mailbox) {
+    public JPASubscription(Subscription subscription) {
         super();
-        this.username = username.asString();
-        this.mailbox = mailbox;
+        this.username = subscription.getUser().asString();
+        this.mailbox = subscription.getMailbox();
     }
 
-    @Override
     public String getMailbox() {
         return mailbox;
     }
-    
-    @Override
+
     public Username getUser() {
         return Username.of(username);
     }
 
-    @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + (int) (id ^ (id >>> 32));
-        return result;
+    public Subscription toSubscription() {
+        return new Subscription(Username.of(username), mailbox);
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
+    public final boolean equals(Object o) {
+        if (o instanceof JPASubscription) {
+            JPASubscription that = (JPASubscription) o;
+
+            return Objects.equals(this.id, that.id);
         }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final JPASubscription other = (JPASubscription) obj;
-        if (id != other.id) {
-            return false;
-        }
-        return true;
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(id);
     }
 
     /**

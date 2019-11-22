@@ -33,13 +33,11 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapper;
 import org.apache.james.mailbox.store.user.SubscriptionMapperFactory;
 import org.apache.james.mailbox.store.user.model.Subscription;
-import org.apache.james.mailbox.store.user.model.impl.SimpleSubscription;
 
 /**
  * Manages subscriptions for Users and Mailboxes.
  */
 public class StoreSubscriptionManager implements SubscriptionManager {
-
     private static final int INITIAL_SIZE = 32;
     
     protected SubscriptionMapperFactory mapperFactory;
@@ -50,28 +48,16 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public void subscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
-        final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
+    public void subscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+        SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
             mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser(), mailbox);
-                if (subscription == null) {
-                    Subscription newSubscription = createSubscription(session, mailbox);
-                    mapper.save(newSubscription);
-                }
+                Subscription newSubscription = new Subscription(session.getUser(), mailbox);
+                mapper.save(newSubscription);
             }));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }
-    }
-
-    /**
-     * Create Subscription for the given user and mailbox. By default a {@link SimpleSubscription} will get returned.
-     * 
-     * If you need something more special just override this method
-     */
-    protected Subscription createSubscription(MailboxSession session, String mailbox) {
-        return new SimpleSubscription(session.getUser(), mailbox);
     }
 
     @Override
@@ -84,15 +70,10 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     }
 
     @Override
-    public void unsubscribe(final MailboxSession session, final String mailbox) throws SubscriptionException {
-        final SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
+    public void unsubscribe(MailboxSession session, String mailbox) throws SubscriptionException {
+        SubscriptionMapper mapper = mapperFactory.getSubscriptionMapper(session);
         try {
-            mapper.execute(Mapper.toTransaction(() -> {
-                Subscription subscription = mapper.findMailboxSubscriptionForUser(session.getUser(), mailbox);
-                if (subscription != null) {
-                    mapper.delete(subscription);
-                }
-            }));
+            mapper.execute(Mapper.toTransaction(() -> mapper.delete(new Subscription(session.getUser(), mailbox))));
         } catch (MailboxException e) {
             throw new SubscriptionException(e);
         }
@@ -109,6 +90,4 @@ public class StoreSubscriptionManager implements SubscriptionManager {
     public void startProcessingRequest(MailboxSession session) {
         // Do nothing        
     }
-    
-    
 }
