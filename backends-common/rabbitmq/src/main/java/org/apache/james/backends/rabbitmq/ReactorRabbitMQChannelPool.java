@@ -137,12 +137,14 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
     @Override
     public Mono<? extends Channel> getChannelMono() {
-        return Mono.fromCallable(() -> {
-            Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
-            Preconditions.checkArgument(channel.isOpen());
-            borrowedChannels.add(channel);
-            return channel;
-        });
+        return Mono.fromCallable(this::borrow);
+    }
+
+    private Channel borrow() throws Exception {
+        Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
+        Preconditions.checkArgument(channel.isOpen());
+        borrowedChannels.add(channel);
+        return channel;
     }
 
     @Override
@@ -186,10 +188,17 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
     }
 
     public boolean tryChannel() {
+        Channel channel = null;
         try {
-            return getChannelMono().block().isOpen();
+            channel = borrow();
+            return channel.isOpen();
         } catch (Throwable t) {
             return false;
+        } finally {
+            if (channel != null) {
+                borrowedChannels.remove(channel);
+                pool.returnObject(channel);
+            }
         }
     }
 }
