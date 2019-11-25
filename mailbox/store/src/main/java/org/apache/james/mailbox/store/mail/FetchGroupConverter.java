@@ -27,27 +27,27 @@ public class FetchGroupConverter {
      * {@link MessageMapper.FetchType} for it
      */
     public static MessageMapper.FetchType getFetchType(FetchGroup group) {
-        if (hasMask(group, FetchGroup.FULL_CONTENT_MASK)) {
+        if (group.hasMask(FetchGroup.FULL_CONTENT_MASK)) {
             return MessageMapper.FetchType.Full;
         }
-        if (hasMask(group, FetchGroup.MIME_DESCRIPTOR_MASK)) {
+        if (group.hasMask(FetchGroup.MIME_DESCRIPTOR_MASK)) {
             // If we need the mimedescriptor we MAY need the full content later
             // too.
             // This gives us no other choice then request it
             return MessageMapper.FetchType.Full;
         }
-        if (hasMask(group, FetchGroup.MIME_CONTENT_MASK)) {
+        if (group.hasMask(FetchGroup.MIME_CONTENT_MASK)) {
             return MessageMapper.FetchType.Full;
         }
-        if (hasMask(group, FetchGroup.MIME_HEADERS_MASK)) {
+        if (group.hasMask(FetchGroup.MIME_HEADERS_MASK)) {
             return MessageMapper.FetchType.Full;
         }
         if (!group.getPartContentDescriptors().isEmpty()) {
             return MessageMapper.FetchType.Full;
         }
 
-        boolean headers = hasMask(group, FetchGroup.HEADERS_MASK);
-        boolean body = hasMask(group, FetchGroup.BODY_CONTENT_MASK);
+        boolean headers = group.hasMask(FetchGroup.HEADERS_MASK);
+        boolean body = group.hasMask(FetchGroup.BODY_CONTENT_MASK);
 
         if (body && headers) {
             return MessageMapper.FetchType.Full;
@@ -58,9 +58,5 @@ public class FetchGroupConverter {
         } else {
             return MessageMapper.FetchType.Metadata;
         }
-    }
-
-    private static boolean hasMask(FetchGroup group, int mask) {
-        return (group.content() & mask) > 0;
     }
 }

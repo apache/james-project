@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -35,6 +36,7 @@ public class FetchGroup {
      * For example: could have best performance when doing store and then
      * forget. UIDs are always returned
      */
+    public static final int NO_MASK = 0;
     public static final int MINIMAL_MASK = 0x00;
     public static final int MIME_DESCRIPTOR_MASK = 0x01;
     public static final int HEADERS_MASK = 0x100;
@@ -118,6 +120,17 @@ public class FetchGroup {
                 .findFirst()
                 .orElse(new PartContentDescriptor(path))
                 .or(content);
+    }
+
+    public boolean hasMask(int mask) {
+        return (content & mask) > NO_MASK;
+    }
+
+    public boolean hasOnlyMasks(int... masks) {
+        int allowedMask = Arrays.stream(masks)
+            .reduce((a, b) -> a | b)
+            .orElse(0);
+        return (content & (~ allowedMask)) == 0;
     }
 
     @Override

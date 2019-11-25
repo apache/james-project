@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.apache.james.mailbox.model.FetchGroup.NO_MASK;
+
 import java.util.Objects;
 
 /**
@@ -68,11 +70,17 @@ public class PartContentDescriptor {
         return path;
     }
 
-    public int hashCode() {
+    public boolean hasMask(int mask) {
+        return (content & mask) > NO_MASK;
+    }
+
+    @Override
+    public final int hashCode() {
         return Objects.hash(path);
     }
 
-    public boolean equals(Object obj) {
+    @Override
+    public final boolean equals(Object obj) {
         if (obj instanceof PartContentDescriptor) {
             PartContentDescriptor that = (PartContentDescriptor) obj;
             return Objects.equals(this.path, that.path);

@@ -72,4 +72,60 @@ class FetchGroupTest {
                 .addPartContent(new MimePath(path), FetchGroup.HEADERS_MASK))
             .isEqualTo(new FetchGroup(FetchGroup.MINIMAL_MASK, ImmutableSet.of(new PartContentDescriptor(FetchGroup.MINIMAL_MASK, new MimePath(path)).or(FetchGroup.HEADERS_MASK))));
     }
+
+    @Test
+    void hasMaskShouldReturnFalseWhenNotContained() {
+        assertThat(FetchGroup.MINIMAL
+                .or(FetchGroup.MIME_HEADERS_MASK)
+                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
+                .hasMask(FetchGroup.HEADERS_MASK))
+            .isFalse();
+    }
+
+    @Test
+    void hasMaskShouldReturnTrueWhenContained() {
+        assertThat(FetchGroup.MINIMAL
+                .or(FetchGroup.MIME_HEADERS_MASK)
+                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
+                .hasMask(FetchGroup.MIME_HEADERS_MASK))
+            .isTrue();
+    }
+
+    @Test
+    void hasOnlyMasksShouldReturnTrueWhenSuppliedEmpty() {
+        assertThat(FetchGroup.MINIMAL
+                .hasOnlyMasks())
+            .isTrue();
+    }
+
+    @Test
+    void hasOnlyMasksShouldReturnTrueWhenExactlyContainASingleValue() {
+        assertThat(FetchGroup.HEADERS
+                .hasOnlyMasks(FetchGroup.HEADERS_MASK))
+            .isTrue();
+    }
+
+    @Test
+    void hasOnlyMasksShouldReturnTrueWhenExactlyContainMultipleValues() {
+        assertThat(FetchGroup.HEADERS
+                .or(FetchGroup.BODY_CONTENT_MASK)
+                .hasOnlyMasks(FetchGroup.HEADERS_MASK, FetchGroup.BODY_CONTENT_MASK))
+            .isTrue();
+    }
+
+    @Test
+    void hasOnlyMasksShouldReturnFalseWhenNotContained() {
+        assertThat(FetchGroup.HEADERS
+                .or(FetchGroup.BODY_CONTENT_MASK)
+                .hasOnlyMasks(FetchGroup.FULL_CONTENT_MASK))
+            .isFalse();
+    }
+
+    @Test
+    void minimalShouldAlwaysBeValid() {
+        assertThat(FetchGroup.MINIMAL
+                .hasOnlyMasks(FetchGroup.FULL_CONTENT_MASK, FetchGroup.HEADERS_MASK, FetchGroup.BODY_CONTENT_MASK,
+                    FetchGroup.MIME_DESCRIPTOR_MASK))
+            .isTrue();
+    }
 }

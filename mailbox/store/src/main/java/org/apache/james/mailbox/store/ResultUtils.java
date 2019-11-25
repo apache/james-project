@@ -91,40 +91,27 @@ public class ResultUtils {
     
     /**
      * Return the {@link MessageResult} for the given {@link MailboxMessage} and {@link FetchGroup}
-     *
-     * @return result
      */
     public static MessageResult loadMessageResult(MailboxMessage message, FetchGroup fetchGroup) throws MailboxException {
         try {
-
             MessageResultImpl messageResult = new MessageResultImpl(message);
             if (fetchGroup != null) {
-                int content = fetchGroup.content();
-
-                if ((content & FetchGroup.HEADERS_MASK) > 0) {
-                    content -= FetchGroup.HEADERS_MASK;
+                if (!haveValidContent(fetchGroup)) {
+                    throw new UnsupportedOperationException("Unsupported result: " + fetchGroup.content());
                 }
-                if ((content & FetchGroup.BODY_CONTENT_MASK) > 0) {
-                    content -= FetchGroup.BODY_CONTENT_MASK;
-                }
-                if ((content & FetchGroup.FULL_CONTENT_MASK) > 0) {
-                    content -= FetchGroup.FULL_CONTENT_MASK;
-                }
-                if ((content & FetchGroup.MIME_DESCRIPTOR_MASK) > 0) {
-                    content -= FetchGroup.MIME_DESCRIPTOR_MASK;
-                }
-                if (content != 0) {
-                    throw new UnsupportedOperationException("Unsupported result: " + content);
-                }
-
                 addPartContent(fetchGroup, message, messageResult);
             }
             return messageResult;
-
         } catch (IOException | MimeException e) {
             throw new MailboxException("Unable to parse message", e);
         }
+    }
 
+    private static boolean haveValidContent(FetchGroup fetchGroup) {
+        return fetchGroup.hasOnlyMasks(FetchGroup.HEADERS_MASK,
+            FetchGroup.BODY_CONTENT_MASK,
+            FetchGroup.FULL_CONTENT_MASK,
+            FetchGroup.MIME_DESCRIPTOR_MASK);
     }
 
     private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
@@ -140,20 +127,19 @@ public class ResultUtils {
     private static void addPartContent(PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
             throws MailboxException, IOException, MimeException {
         MimePath mimePath = descriptor.path();
-        int content = descriptor.content();
-        if ((content & FetchGroup.FULL_CONTENT_MASK) > 0) {
+        if (descriptor.hasMask(FetchGroup.FULL_CONTENT_MASK)) {
             addFullContent(message, messageResult, mimePath);
         }
-        if ((content & FetchGroup.BODY_CONTENT_MASK) > 0) {
+        if (descriptor.hasMask(FetchGroup.BODY_CONTENT_MASK)) {
             addBodyContent(message, messageResult, mimePath);
         }
-        if ((content & FetchGroup.MIME_CONTENT_MASK) > 0) {
+        if (descriptor.hasMask(FetchGroup.MIME_CONTENT_MASK)) {
             addMimeBodyContent(message, messageResult, mimePath);
         }
-        if ((content & FetchGroup.HEADERS_MASK) > 0) {
+        if (descriptor.hasMask(FetchGroup.HEADERS_MASK)) {
             addHeaders(message, messageResult, mimePath);
         }
-        if ((content & FetchGroup.MIME_HEADERS_MASK) > 0) {
+        if (descriptor.hasMask(FetchGroup.MIME_HEADERS_MASK)) {
             addMimeHeaders(message, messageResult, mimePath);
         }
     }
