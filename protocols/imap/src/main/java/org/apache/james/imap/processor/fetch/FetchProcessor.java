@@ -188,10 +188,10 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         FetchGroup result = FetchGroup.MINIMAL;
 
         if (fetch.isEnvelope()) {
-            result.or(FetchGroup.HEADERS_MASK);
+            result = result.or(FetchGroup.HEADERS_MASK);
         }
         if (fetch.isBody() || fetch.isBodyStructure()) {
-            result.or(FetchGroup.MIME_DESCRIPTOR_MASK);
+            result = result.or(FetchGroup.MIME_DESCRIPTOR_MASK);
         }
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
@@ -203,21 +203,21 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 switch (sectionType) {
                     case BodyFetchElement.CONTENT:
                         if (isBase) {
-                            addContent(result, path, isBase, FetchGroup.FULL_CONTENT_MASK);
+                            result = addContent(result, path, isBase, FetchGroup.FULL_CONTENT_MASK);
                         } else {
-                            addContent(result, path, isBase, FetchGroup.MIME_CONTENT_MASK);
+                            result = addContent(result, path, isBase, FetchGroup.MIME_CONTENT_MASK);
                         }
                         break;
                     case BodyFetchElement.HEADER:
                     case BodyFetchElement.HEADER_NOT_FIELDS:
                     case BodyFetchElement.HEADER_FIELDS:
-                        addContent(result, path, isBase, FetchGroup.HEADERS_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.HEADERS_MASK);
                         break;
                     case BodyFetchElement.MIME:
-                        addContent(result, path, isBase, FetchGroup.MIME_HEADERS_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.MIME_HEADERS_MASK);
                         break;
                     case BodyFetchElement.TEXT:
-                        addContent(result, path, isBase, FetchGroup.BODY_CONTENT_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.BODY_CONTENT_MASK);
                         break;
                     default:
                         break;
@@ -228,12 +228,12 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         return result;
     }
 
-    private void addContent(FetchGroup result, int[] path, boolean isBase, int content) {
+    private FetchGroup addContent(FetchGroup result, int[] path, boolean isBase, int content) {
         if (isBase) {
-            result.or(content);
+            return result.or(content);
         } else {
             MimePath mimePath = new MimePath(path);
-            result.addPartContent(mimePath, content);
+            return result.addPartContent(mimePath, content);
         }
     }
 

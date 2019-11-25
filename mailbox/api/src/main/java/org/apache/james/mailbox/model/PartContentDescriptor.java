@@ -27,17 +27,20 @@ import java.util.Objects;
  * if and only if their paths are equal.
  */
 public class PartContentDescriptor {
-
-    private int content = 0;
-
+    private final int content;
     private final MimePath path;
 
     public PartContentDescriptor(MimePath path) {
+        this(0, path);
+    }
+
+    public PartContentDescriptor(int content, MimePath path) {
+        this.content = content;
         this.path = path;
     }
 
-    public void or(int content) {
-        this.content = this.content | content;
+    public PartContentDescriptor or(int content) {
+        return new PartContentDescriptor(this.content | content, path);
     }
 
     /**
