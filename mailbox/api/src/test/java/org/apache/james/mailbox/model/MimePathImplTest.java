@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.model;
 
+import static org.assertj.core.api.Java6Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
@@ -28,5 +30,26 @@ class MimePathImplTest {
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(MimePathImpl.class)
             .verify();
+    }
+
+    @Test
+    void toStringWhenEmpty() {
+        int[] empty = {};
+        assertThat(new MimePathImpl(empty).toString())
+            .isEqualTo("MIMEPath:[]");
+    }
+
+    @Test
+    void toStringWhenSingle() {
+        int[] single = {1};
+        assertThat(new MimePathImpl(single).toString())
+            .isEqualTo("MIMEPath:[1]");
+    }
+
+    @Test
+    void toStringWhenMany() {
+        int[] many = {1, 2, 3};
+        assertThat(new MimePathImpl(many).toString())
+            .isEqualTo("MIMEPath:[1, 2, 3]");
     }
 }

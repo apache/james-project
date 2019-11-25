@@ -28,7 +28,6 @@ public class MimePathImpl implements MessageResult.MimePath {
     private final int[] positions;
 
     public MimePathImpl(int[] positions) {
-        super();
         this.positions = positions;
     }
 
@@ -52,17 +51,9 @@ public class MimePathImpl implements MessageResult.MimePath {
         return Arrays.hashCode(positions);
     }
 
-    public String toString() {
-        final StringBuilder builder = new StringBuilder("MIMEPath:");
-        boolean isFirst = false;
-        for (int position : positions) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                builder.append('.');
-            }
-            builder.append(position);
-        }
-        return builder.toString();
+    @Override
+    public final String toString() {
+        return "MIMEPath:"
+            + Arrays.toString(positions);
     }
 }
