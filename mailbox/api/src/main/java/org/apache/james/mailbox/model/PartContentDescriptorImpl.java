@@ -22,8 +22,6 @@ package org.apache.james.mailbox.model;
 import java.util.Objects;
 
 import org.apache.james.mailbox.model.MessageResult.FetchGroup.PartContentDescriptor;
-import org.apache.james.mailbox.model.MessageResult.MimePath;
-
 
 public class PartContentDescriptorImpl implements PartContentDescriptor {
 

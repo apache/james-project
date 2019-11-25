@@ -17,43 +17,39 @@
  * under the License.                                           *
  ****************************************************************/
 
-/**
- * 
- */
 package org.apache.james.mailbox.model;
 
-import java.util.Arrays;
+import static org.assertj.core.api.Java6Assertions.assertThat;
 
-public class MimePathImpl implements MessageResult.MimePath {
-    private final int[] positions;
+import org.junit.jupiter.api.Test;
 
-    public MimePathImpl(int[] positions) {
-        this.positions = positions;
+import nl.jqno.equalsverifier.EqualsVerifier;
+
+class MimePathTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MimePath.class)
+            .verify();
     }
 
-    @Override
-    public int[] getPositions() {
-        return positions;
+    @Test
+    void toStringWhenEmpty() {
+        int[] empty = {};
+        assertThat(new MimePath(empty).toString())
+            .isEqualTo("MIMEPath:[]");
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MimePathImpl) {
-            MimePathImpl mimePath = (MimePathImpl) o;
-
-            return Arrays.equals(this.positions, mimePath.positions);
-        }
-        return false;
+    @Test
+    void toStringWhenSingle() {
+        int[] single = {1};
+        assertThat(new MimePath(single).toString())
+            .isEqualTo("MIMEPath:[1]");
     }
 
-    @Override
-    public final int hashCode() {
-        return Arrays.hashCode(positions);
-    }
-
-    @Override
-    public final String toString() {
-        return "MIMEPath:"
-            + Arrays.toString(positions);
+    @Test
+    void toStringWhenMany() {
+        int[] many = {1, 2, 3};
+        assertThat(new MimePath(many).toString())
+            .isEqualTo("MIMEPath:[1, 2, 3]");
     }
 }

@@ -22,8 +22,6 @@ package org.apache.james.mailbox.model;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.apache.james.mailbox.model.MessageResult.MimePath;
-
 /**
  * Specifies a fetch group.
  */

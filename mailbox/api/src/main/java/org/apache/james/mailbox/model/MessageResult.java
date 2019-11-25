@@ -266,19 +266,5 @@ public interface MessageResult extends Comparable<MessageResult> {
      * Indicates if the message have attachments, regardless of loaded attachments.
      */
     boolean hasAttachments() throws MailboxException;
-    
-    /**
-     * Describes a path within a multipart MIME message. All implementations
-     * must implement equals. Two paths are equal if and only if each position
-     * is identical.
-     */
-    interface MimePath {
 
-        /**
-         * Gets the positions of each part in the path.
-         * 
-         * @return part positions describing the path
-         */
-        int[] getPositions();
-    }
 }

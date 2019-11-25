@@ -46,7 +46,7 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MimePathImpl;
+import org.apache.james.mailbox.model.MimePath;
 
 public final class FetchResponseBuilder {
 
@@ -290,7 +290,7 @@ public final class FetchResponseBuilder {
                 throw new MailboxException("Unable to get TEXT of body", e);
             }
         } else {
-            MessageResult.MimePath mimePath = new MimePathImpl(path);
+            MimePath mimePath = new MimePath(path);
             body = messageResult.getBody(mimePath);
         }
         if (body == null) {
@@ -378,14 +378,14 @@ public final class FetchResponseBuilder {
         if (isBase) {
             headers = messageResult.getHeaders().headers();
         } else {
-            MessageResult.MimePath mimePath = new MimePathImpl(path);
+            MimePath mimePath = new MimePath(path);
             headers = messageResult.iterateHeaders(mimePath);
         }
         return headers;
     }
 
     private Iterator<MessageResult.Header> getMimeHeaders(MessageResult messageResult, int[] path, boolean isBase) throws MailboxException {
-        MessageResult.MimePath mimePath = new MimePathImpl(path);
+        MimePath mimePath = new MimePath(path);
         return messageResult.iterateMimeHeaders(mimePath);
     }
 
@@ -400,7 +400,7 @@ public final class FetchResponseBuilder {
                 throw new MailboxException("Unable to get content", e);
             }
         } else {
-            MessageResult.MimePath mimePath = new MimePathImpl(path);
+            MimePath mimePath = new MimePath(path);
             full = messageResult.getMimeBody(mimePath);
         }
 

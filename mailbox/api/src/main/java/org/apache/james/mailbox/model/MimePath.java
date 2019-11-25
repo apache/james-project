@@ -17,39 +17,56 @@
  * under the License.                                           *
  ****************************************************************/
 
+/**
+ * 
+ */
 package org.apache.james.mailbox.model;
 
-import static org.assertj.core.api.Java6Assertions.assertThat;
+import java.util.Arrays;
+import java.util.List;
 
-import org.junit.jupiter.api.Test;
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Joiner;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+/**
+ * Describes a path within a multipart MIME message. All implementations
+ * must implement equals. Two paths are equal if and only if each position
+ * is identical.
+ */
+public final class MimePath {
+    private final int[] positions;
 
-class MimePathImplTest {
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(MimePathImpl.class)
-            .verify();
+    public MimePath(int[] positions) {
+        this.positions = Arrays.copyOf(positions, positions.length);
     }
 
-    @Test
-    void toStringWhenEmpty() {
-        int[] empty = {};
-        assertThat(new MimePathImpl(empty).toString())
-            .isEqualTo("MIMEPath:[]");
+    /**
+     * Gets the positions of each part in the path.
+     *
+     * @return part positions describing the path
+     */
+    public int[] getPositions() {
+        return positions;
     }
 
-    @Test
-    void toStringWhenSingle() {
-        int[] single = {1};
-        assertThat(new MimePathImpl(single).toString())
-            .isEqualTo("MIMEPath:[1]");
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof MimePath) {
+            MimePath mimePath = (MimePath) o;
+
+            return Arrays.equals(this.positions, mimePath.positions);
+        }
+        return false;
     }
 
-    @Test
-    void toStringWhenMany() {
-        int[] many = {1, 2, 3};
-        assertThat(new MimePathImpl(many).toString())
-            .isEqualTo("MIMEPath:[1, 2, 3]");
+    @Override
+    public final int hashCode() {
+        return Arrays.hashCode(positions);
+    }
+
+    @Override
+    public final String toString() {
+        return "MIMEPath:"
+            + Arrays.toString(positions);
     }
 }

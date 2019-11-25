@@ -29,7 +29,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
-import org.apache.james.mailbox.model.MessageResult.MimePath;
+import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mime4j.MimeException;
