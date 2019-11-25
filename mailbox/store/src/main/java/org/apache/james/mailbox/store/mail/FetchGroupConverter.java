@@ -56,6 +56,14 @@ public class FetchGroupConverter {
             full = true;
             content -= FetchGroup.MIME_DESCRIPTOR_MASK;
         }
+        if ((content & FetchGroup.MIME_CONTENT_MASK) > 0) {
+            full = true;
+            content -= FetchGroup.MIME_CONTENT_MASK;
+        }
+        if ((content & FetchGroup.MIME_HEADERS_MASK) > 0) {
+            full = true;
+            content -= FetchGroup.MIME_HEADERS_MASK;
+        }
         if (full || (body && headers)) {
             return MessageMapper.FetchType.Full;
         } else if (body) {
