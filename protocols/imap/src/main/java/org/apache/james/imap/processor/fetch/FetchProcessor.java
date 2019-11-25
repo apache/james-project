@@ -43,10 +43,9 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.metrics.api.MetricFactory;
@@ -186,13 +185,13 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     }
 
     protected FetchGroup getFetchGroup(FetchData fetch) {
-        FetchGroupImpl result = FetchGroupImpl.MINIMAL;
+        FetchGroup result = FetchGroup.MINIMAL;
 
         if (fetch.isEnvelope()) {
-            result.or(FetchGroup.HEADERS);
+            result.or(FetchGroup.HEADERS_MASK);
         }
         if (fetch.isBody() || fetch.isBodyStructure()) {
-            result.or(FetchGroup.MIME_DESCRIPTOR);
+            result.or(FetchGroup.MIME_DESCRIPTOR_MASK);
         }
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
@@ -204,21 +203,21 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 switch (sectionType) {
                     case BodyFetchElement.CONTENT:
                         if (isBase) {
-                            addContent(result, path, isBase, FetchGroup.FULL_CONTENT);
+                            addContent(result, path, isBase, FetchGroup.FULL_CONTENT_MASK);
                         } else {
-                            addContent(result, path, isBase, FetchGroup.MIME_CONTENT);
+                            addContent(result, path, isBase, FetchGroup.MIME_CONTENT_MASK);
                         }
                         break;
                     case BodyFetchElement.HEADER:
                     case BodyFetchElement.HEADER_NOT_FIELDS:
                     case BodyFetchElement.HEADER_FIELDS:
-                        addContent(result, path, isBase, FetchGroup.HEADERS);
+                        addContent(result, path, isBase, FetchGroup.HEADERS_MASK);
                         break;
                     case BodyFetchElement.MIME:
-                        addContent(result, path, isBase, FetchGroup.MIME_HEADERS);
+                        addContent(result, path, isBase, FetchGroup.MIME_HEADERS_MASK);
                         break;
                     case BodyFetchElement.TEXT:
-                        addContent(result, path, isBase, FetchGroup.BODY_CONTENT);
+                        addContent(result, path, isBase, FetchGroup.BODY_CONTENT_MASK);
                         break;
                     default:
                         break;
@@ -229,7 +228,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         return result;
     }
 
-    private void addContent(FetchGroupImpl result, int[] path, boolean isBase, int content) {
+    private void addContent(FetchGroup result, int[] path, boolean isBase, int content) {
         if (isBase) {
             result.or(content);
         } else {

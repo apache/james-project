@@ -44,13 +44,13 @@ public class PartContentDescriptor {
      * Contents to be fetched. Composed bitwise.
      *
      * @return bitwise descripion
-     * @see MessageResult.FetchGroup#MINIMAL
-     * @see MessageResult.FetchGroup#MIME_DESCRIPTOR
-     * @see MessageResult.FetchGroup#HEADERS
-     * @see MessageResult.FetchGroup#FULL_CONTENT
-     * @see MessageResult.FetchGroup#BODY_CONTENT
-     * @see MessageResult.FetchGroup#MIME_HEADERS
-     * @see MessageResult.FetchGroup#MIME_CONTENT
+     * @see FetchGroup#MINIMAL_MASK
+     * @see FetchGroup#MIME_DESCRIPTOR_MASK
+     * @see FetchGroup#HEADERS_MASK
+     * @see FetchGroup#FULL_CONTENT_MASK
+     * @see FetchGroup#BODY_CONTENT_MASK
+     * @see FetchGroup#MIME_HEADERS_MASK
+     * @see FetchGroup#MIME_CONTENT_MASK
      */
     public int content() {
         return content;

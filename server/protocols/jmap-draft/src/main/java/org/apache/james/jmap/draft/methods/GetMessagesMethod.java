@@ -38,7 +38,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
@@ -125,7 +125,7 @@ public class GetMessagesMethod implements Method {
             MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
             return GetMessagesResponse.builder()
                 .messages(
-                    messageIdManager.getMessages(getMessagesRequest.getIds(), FetchGroupImpl.FULL_CONTENT, mailboxSession)
+                    messageIdManager.getMessages(getMessagesRequest.getIds(), FetchGroup.FULL_CONTENT, mailboxSession)
                         .stream()
                         .collect(Guavate.toImmutableListMultimap(MessageResult::getMessageId))
                         .asMap()

@@ -47,12 +47,11 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.MetaData;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
@@ -88,7 +87,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             final Flags flags = request.getFlags();
             
             if (unchangedSince != -1) {
-                MetaData metaData = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);
+                MetaData metaData = mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT);
                 if (metaData.isModSeqPermanent() == false) {
                     // Check if the mailbox did not support modsequences. If so return a tagged bad response.
                     // See RFC4551 3.1.2. NOMODSEQ Response Code 
@@ -125,7 +124,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
                         List<MessageUid> uids = new ArrayList<>();
 
-                        MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
+                        MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroup.MINIMAL, mailboxSession);
                         while (results.hasNext()) {
                             MessageResult r = results.next();
                             MessageUid uid = r.getUid();
@@ -245,7 +244,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         // See IMAP-303
         if (selected.hasNewApplicableFlags()) {
             flags(responder, selected);
-            permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT), selected);
+            permanentFlags(responder, mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT), selected);
             selected.resetNewApplicableFlags();
         }
         
@@ -264,7 +263,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
             //      - QRESYNC was enabled via ENABLE QRESYNC
             //
             if (unchangedSince != -1 || qresyncEnabled || condstoreEnabled) {
-                MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL, mailboxSession);
+                MessageResultIterator results = mailbox.getMessages(messageSet, FetchGroup.MINIMAL, mailboxSession);
                 while (results.hasNext()) {
                     MessageResult r = results.next();
                     // Store the modseq for the uid for later usage in the response
@@ -322,7 +321,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
 
             if (unchangedSince != -1) {
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
-                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT), true);
+                condstoreEnablingCommand(session, responder,  mailbox.getMetaData(false, mailboxSession, MetaData.FetchGroup.NO_COUNT), true);
                                   
             }
         }

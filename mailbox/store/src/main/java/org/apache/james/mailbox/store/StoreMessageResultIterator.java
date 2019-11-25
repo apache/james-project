@@ -32,6 +32,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
@@ -41,7 +42,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResultIterator;
 import org.apache.james.mailbox.model.MimeDescriptor;
 import org.apache.james.mailbox.model.MimePath;
@@ -66,7 +66,7 @@ public class StoreMessageResultIterator implements MessageResultIterator {
     private final MessageMapper mapper;
     private final FetchType ftype;
 
-    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, BatchSizes batchSizes, org.apache.james.mailbox.model.MessageResult.FetchGroup group) {
+    public StoreMessageResultIterator(MessageMapper mapper, Mailbox mailbox, MessageRange range, BatchSizes batchSizes, FetchGroup group) {
         this.mailbox = mailbox;
         this.group = group;
         this.mapper = mapper;

@@ -41,7 +41,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -303,7 +303,7 @@ class DeletedMessageVaultHookTest {
     }
 
     private long messageSize(MessageManager messageManager, ComposedMessageId composedMessageId) throws MailboxException {
-        return messageManager.getMessages(MessageRange.one(composedMessageId.getUid()), FetchGroupImpl.MINIMAL, aliceSession)
+        return messageManager.getMessages(MessageRange.one(composedMessageId.getUid()), FetchGroup.MINIMAL, aliceSession)
             .next()
             .getSize();
     }

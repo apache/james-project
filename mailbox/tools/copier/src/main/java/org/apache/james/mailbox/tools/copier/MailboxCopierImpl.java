@@ -32,7 +32,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.copier.MailboxCopier;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
@@ -99,7 +99,7 @@ public class MailboxCopierImpl implements MailboxCopier {
                 MessageManager dstMessageManager = dstMailboxManager.getMailbox(mailboxPath, dstMailboxSession);
 
                 int j = 0;
-                Iterator<MessageResult> messageResultIterator = srcMessageManager.getMessages(MessageRange.all(), FetchGroupImpl.FULL_CONTENT, srcMailboxSession);
+                Iterator<MessageResult> messageResultIterator = srcMessageManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, srcMailboxSession);
                 
                 while (messageResultIterator.hasNext()) {
 

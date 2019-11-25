@@ -92,7 +92,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
@@ -2269,7 +2269,7 @@ class DeletedMessagesVaultRoutesTest {
     private List<MessageResult> restoreMailboxMessages(Username username) throws Exception {
         MailboxSession session = mailboxManager.createSystemSession(username);
         MessageManager messageManager = mailboxManager.getMailbox(MailboxPath.forUser(username, DefaultMailboxes.RESTORED_MESSAGES), session);
-        return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session));
+        return ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session));
     }
 
     private DeletedMessage.Builder.RequireHasAttachment<DeletedMessage.Builder.RequireSize<DeletedMessage.Builder.FinalStage>> messageWithAttachmentBuilder() {

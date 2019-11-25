@@ -44,7 +44,7 @@ import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.Attachment;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -162,7 +162,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
     private Message retrieveOriginalMessage(JmapMDN mdn, MailboxSession mailboxSession) throws MailboxException, IOException, MessageNotFoundException {
         List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(mdn.getMessageId()),
-            FetchGroupImpl.HEADERS,
+            FetchGroup.HEADERS,
             mailboxSession);
 
         if (messages.size() == 0) {

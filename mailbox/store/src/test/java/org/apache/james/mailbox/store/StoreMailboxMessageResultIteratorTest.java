@@ -35,7 +35,7 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -189,7 +189,7 @@ public class StoreMailboxMessageResultIteratorTest {
     public void testBatching() {
         MessageRange range = MessageRange.range(MessageUid.of(1), MessageUid.of(10));
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(3);
-        StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, FetchGroupImpl.MINIMAL);
+        StoreMessageResultIterator it = new StoreMessageResultIterator(new TestMessageMapper(MessageRange.all()), null, range, batchSize, FetchGroup.MINIMAL);
 
         assertThat(it).toIterable()
             .extracting(input -> input.getUid().asLong())
@@ -200,7 +200,7 @@ public class StoreMailboxMessageResultIteratorTest {
     public void nextShouldReturnFirstElement() {
         MessageRange range = MessageUid.of(1).toRange();
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(42);
-        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(range), null, range, batchSize, FetchGroupImpl.MINIMAL);
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(range), null, range, batchSize, FetchGroup.MINIMAL);
         assertThat(iterator.next()).isNotNull();
     }
     
@@ -209,7 +209,7 @@ public class StoreMailboxMessageResultIteratorTest {
         MessageRange messages = MessageUid.of(1).toRange();
         MessageRange findRange = MessageUid.of(2).toRange();
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(42);
-        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, FetchGroupImpl.MINIMAL);
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, FetchGroup.MINIMAL);
         iterator.next();
     }
     
@@ -218,7 +218,7 @@ public class StoreMailboxMessageResultIteratorTest {
         MessageRange messages = MessageUid.of(1).toRange();
         MessageRange findRange = MessageUid.of(2).toRange();
         BatchSizes batchSize = BatchSizes.uniqueBatchSize(42);
-        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, FetchGroupImpl.MINIMAL);
+        StoreMessageResultIterator iterator = new StoreMessageResultIterator(new TestMessageMapper(messages), null, findRange, batchSize, FetchGroup.MINIMAL);
         assertThat(iterator.hasNext()).isFalse();
     }
 }

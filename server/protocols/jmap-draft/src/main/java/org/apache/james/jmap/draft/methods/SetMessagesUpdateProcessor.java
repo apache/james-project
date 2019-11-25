@@ -56,7 +56,7 @@ import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.OverQuotaException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxId.Factory;
 import org.apache.james.mailbox.model.MessageId;
@@ -127,7 +127,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private void update(MessageId messageId, UpdateMessagePatch updateMessagePatch, MailboxSession mailboxSession,
                         SetMessagesResponse.Builder builder) {
         try {
-            List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, mailboxSession);
+            List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, mailboxSession);
             assertValidUpdate(messages, updateMessagePatch, mailboxSession);
 
             if (messages.isEmpty()) {
@@ -175,7 +175,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         if (isTargetingOutbox(mailboxSession, listTargetMailboxIds(updateMessagePatch))) {
             Optional<MessageResult> maybeMessageToSend =
                 messageIdManager.getMessages(
-                    ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession)
+                    ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession)
                     .stream()
                     .findFirst();
             if (maybeMessageToSend.isPresent()) {

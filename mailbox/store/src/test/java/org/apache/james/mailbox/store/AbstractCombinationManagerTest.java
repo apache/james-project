@@ -36,11 +36,10 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
-import org.apache.james.mailbox.MessageManager.MetaData.FetchGroup;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
@@ -128,7 +127,7 @@ public abstract class AbstractCombinationManagerTest {
         messageIdManager.setInMailboxes(messageId,
             ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        MessageUid uidInMailbox2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+        MessageUid uidInMailbox2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)
             .get(0)
             .getUid();
 
@@ -176,7 +175,7 @@ public abstract class AbstractCombinationManagerTest {
         messageManager1.setFlags(deleted, FlagsUpdateMode.ADD, MessageRange.all(), session);
         messageManager1.expunge(MessageRange.all(), session);
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)).isEmpty();
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)).isEmpty();
     }
 
     @Test
@@ -211,7 +210,7 @@ public abstract class AbstractCombinationManagerTest {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getMessageId();
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)).hasSize(1);
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)).hasSize(1);
     }
 
     @Test
@@ -221,7 +220,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.copyMessages(MessageRange.all(), mailbox1.getMailboxId(), mailbox2.getMailboxId(), session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(2)
             .extractingResultOf("getMailboxId")
@@ -235,7 +234,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(2)
             .extractingResultOf("getMailboxId")
@@ -249,7 +248,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(1)
             .extractingResultOf("getMailboxId")
@@ -263,7 +262,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
             .toIterable()
             .hasSize(1);
     }
@@ -276,10 +275,10 @@ public abstract class AbstractCombinationManagerTest {
                 .withFlags(recent)
                 .build(mailContent), session);
 
-        long mailbox2NextUid = messageManager2.getMetaData(true, session, FetchGroup.UNSEEN_COUNT).getUidNext().asLong();
+        long mailbox2NextUid = messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getUidNext().asLong();
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageUid> messageUids = messageManager2.getMetaData(true, session, FetchGroup.UNSEEN_COUNT).getRecent();
+        List<MessageUid> messageUids = messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getRecent();
 
         assertThat(messageUids).hasSize(1);
         assertThat(messageUids.get(0).asLong()).isGreaterThanOrEqualTo(mailbox2NextUid);
@@ -296,7 +295,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).countRecent()).isEqualTo(1);
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).countRecent()).isEqualTo(1);
     }
 
     @Test
@@ -309,7 +308,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId.getMessageId()), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId.getMessageId()), FetchGroup.MINIMAL, session);
 
         long uid2 = listMessages.stream()
             .filter(messageInMailbox2())
@@ -318,7 +317,7 @@ public abstract class AbstractCombinationManagerTest {
             .getUid()
             .asLong();
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getUidNext().asLong())
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).getUidNext().asLong())
             .isGreaterThan(uid2);
     }
 
@@ -329,7 +328,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getHighestModSeq().asLong()).isNotNegative();
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).getHighestModSeq().asLong()).isNotNegative();
     }
 
     @Test
@@ -339,7 +338,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getMessageCount()).isEqualTo(1);
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).getMessageCount()).isEqualTo(1);
     }
 
     @Test
@@ -349,7 +348,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.UNSEEN_COUNT).getUnseenCount()).isEqualTo(1);
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getUnseenCount()).isEqualTo(1);
     }
 
     @Test
@@ -358,7 +357,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager2.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getFirstUnseen()).isEqualTo(messageId.getUid());
+        assertThat(messageManager2.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).getFirstUnseen()).isEqualTo(messageId.getUid());
     }
 
     @Test
@@ -369,7 +368,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setFlags(newFlag, FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager1.getMetaData(true, session, FetchGroup.UNSEEN_COUNT).getUnseenCount()).isEqualTo(1);
+        assertThat(messageManager1.getMetaData(true, session, MessageManager.MetaData.FetchGroup.UNSEEN_COUNT).getUnseenCount()).isEqualTo(1);
     }
 
     @Test
@@ -379,7 +378,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setFlags(newFlag, FlagsUpdateMode.ADD, messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager1.getMetaData(true, session, FetchGroup.FIRST_UNSEEN).getFirstUnseen()).isEqualTo(messageId.getUid());
+        assertThat(messageManager1.getMetaData(true, session, MessageManager.MetaData.FetchGroup.FIRST_UNSEEN).getFirstUnseen()).isEqualTo(messageId.getUid());
     }
 
     @Test
@@ -389,10 +388,10 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox2.getMailboxId()), session);
 
-        assertThat(messageManager1.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+        assertThat(messageManager1.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
             .toIterable()
             .isEmpty();
-        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroupImpl.MINIMAL, session))
+        assertThat(messageManager2.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
             .toIterable()
             .hasSize(1)
             .extracting(MessageResult::getMessageId)
@@ -502,7 +501,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        MessageUid uid2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+        MessageUid uid2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)
             .stream()
             .filter(messageInMailbox2())
             .findFirst()

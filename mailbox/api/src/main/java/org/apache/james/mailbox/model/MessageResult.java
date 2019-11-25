@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.mail.Flags;
 
@@ -74,56 +73,6 @@ public interface MessageResult extends Comparable<MessageResult> {
     MessageUid getUid();
 
     ModSeq getModSeq();
-
-    /**
-     * Indicates the results fetched.
-     */
-    interface FetchGroup {
-
-        /**
-         * For example: could have best performance when doing store and then
-         * forget. UIDs are always returned
-         */
-        int MINIMAL = 0x00;
-
-        /**
-         * 
-         */
-        int MIME_DESCRIPTOR = 0x01;
-
-        int HEADERS = 0x100;
-
-        int FULL_CONTENT = 0x200;
-
-        int BODY_CONTENT = 0x400;
-
-        int MIME_HEADERS = 0x800;
-
-        int MIME_CONTENT = 0x1000;
-
-        /**
-         * Contents to be fetched. Composed bitwise.
-         * 
-         * @return bitwise description
-         * @see #MINIMAL
-         * @see #MIME_DESCRIPTOR
-         * @see #HEADERS
-         * @see #FULL_CONTENT
-         * @see #BODY_CONTENT
-         * @see #MIME_HEADERS
-         * @see #MIME_CONTENT
-         */
-        int content();
-
-        /**
-         * Gets contents to be fetched for contained parts. For each part to be
-         * contained, only one descriptor should be contained.
-         * 
-         * @return <code>Set</code> of {@link PartContentDescriptor}, or null if
-         *         there is no part content to be fetched
-         */
-        Set<PartContentDescriptor> getPartContentDescriptors();
-    }
 
     MimeDescriptor getMimeDescriptor() throws MailboxException;
 

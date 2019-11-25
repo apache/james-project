@@ -57,7 +57,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MessageRangeException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageRange.Type;
@@ -238,7 +238,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                                    MessageRange messageSet, MessageManager mailbox,
                                    boolean isModSeqPermanent,
                                    MailboxSession mailboxSession) throws MailboxException {
-        final MessageResultIterator it = mailbox.getMessages(messageSet, FetchGroupImpl.MINIMAL,  mailboxSession);
+        final MessageResultIterator it = mailbox.getMessages(messageSet, FetchGroup.MINIMAL,  mailboxSession);
         final boolean qresyncEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC);
         final boolean condstoreEnabled = EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_CONDSTORE);
         while (it.hasNext()) {

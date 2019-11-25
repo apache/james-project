@@ -55,7 +55,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -134,7 +134,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         givenUnlimitedQuota();
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
 
-        MessageResult messageResult = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session).get(0);
+        MessageResult messageResult = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session).get(0);
         MessageMetaData simpleMessageMetaData = messageResult.messageMetaData();
 
         eventBus.register(eventCollector);
@@ -158,9 +158,9 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageId messageId1 = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         MessageId messageId2 = testingData.persist(mailbox1.getMailboxId(), messageUid2, FLAGS, session);
 
-        MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroupImpl.MINIMAL, session).get(0);
+        MessageResult messageResult1 = messageIdManager.getMessages(ImmutableList.of(messageId1), FetchGroup.MINIMAL, session).get(0);
         MessageMetaData simpleMessageMetaData1 = messageResult1.messageMetaData();
-        MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroupImpl.MINIMAL, session).get(0);
+        MessageResult messageResult2 = messageIdManager.getMessages(ImmutableList.of(messageId2), FetchGroup.MINIMAL, session).get(0);
         MessageMetaData simpleMessageMetaData2 = messageResult2.messageMetaData();
 
         eventBus.register(eventCollector);
@@ -275,7 +275,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         assertThatThrownBy(() -> messageIdManager.delete(messageId, ImmutableList.of(mailbox1.getMailboxId()), session))
             .isInstanceOf(RuntimeException.class);
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session)
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)
                 .stream()
                 .map(MessageResult::getMessageId))
             .hasSize(1)
@@ -306,7 +306,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         latchForHook1.await();
         latchForHook2.await();
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session))
+        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session))
             .isEmpty();
     }
 
@@ -343,7 +343,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         eventBus.register(eventCollector);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId(), mailbox3.getMailboxId()), session);
 
-        messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
 
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MessageMoveEvent).hasSize(1);
         assertThat(eventCollector.getEvents()).filteredOn(event -> event instanceof MailboxListener.Added).hasSize(2)
@@ -373,7 +373,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         MessageId messageId = testingData.persist(mailbox1.getMailboxId(), messageUid1, FLAGS, session);
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageResult> messageResults = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> messageResults = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
         assertThat(messageResults).hasSize(2);
 
         eventBus.register(eventCollector);
@@ -459,7 +459,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
         Flags newFlags = new Flags(Flags.Flag.SEEN);
         messageIdManager.setFlags(newFlags, MessageManager.FlagsUpdateMode.ADD, messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.MINIMAL, session);
+        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
         assertThat(messages).hasSize(1);
         MessageResult messageResult = messages.get(0);
         MessageUid messageUid = messageResult.getUid();

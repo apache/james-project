@@ -31,7 +31,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager.FlagsUpdateMode;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.AttachmentId;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -55,7 +55,7 @@ public class MessageIdProbe implements GuiceProbe {
     public List<MessageResult> getMessages(MessageId messageId, Username user) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
-        return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroupImpl.FULL_CONTENT, mailboxSession);
+        return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession);
     }
 
     public void updateNewFlags(Username user, Flags newFlags, MessageId messageId, List<MailboxId> mailboxIds) throws MailboxException {
@@ -68,7 +68,7 @@ public class MessageIdProbe implements GuiceProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         List<MessageResult> messages = messageIdManager.getMessages(
             ImmutableList.of(messageId),
-            FetchGroupImpl.FULL_CONTENT,
+            FetchGroup.FULL_CONTENT,
             mailboxSession);
 
         return messages.stream()

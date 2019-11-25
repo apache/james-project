@@ -27,8 +27,8 @@ import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.mailbox.model.PartContentDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
@@ -100,17 +100,17 @@ public class ResultUtils {
             if (fetchGroup != null) {
                 int content = fetchGroup.content();
 
-                if ((content & FetchGroup.HEADERS) > 0) {
-                    content -= FetchGroup.HEADERS;
+                if ((content & FetchGroup.HEADERS_MASK) > 0) {
+                    content -= FetchGroup.HEADERS_MASK;
                 }
-                if ((content & FetchGroup.BODY_CONTENT) > 0) {
-                    content -= FetchGroup.BODY_CONTENT;
+                if ((content & FetchGroup.BODY_CONTENT_MASK) > 0) {
+                    content -= FetchGroup.BODY_CONTENT_MASK;
                 }
-                if ((content & FetchGroup.FULL_CONTENT) > 0) {
-                    content -= FetchGroup.FULL_CONTENT;
+                if ((content & FetchGroup.FULL_CONTENT_MASK) > 0) {
+                    content -= FetchGroup.FULL_CONTENT_MASK;
                 }
-                if ((content & FetchGroup.MIME_DESCRIPTOR) > 0) {
-                    content -= FetchGroup.MIME_DESCRIPTOR;
+                if ((content & FetchGroup.MIME_DESCRIPTOR_MASK) > 0) {
+                    content -= FetchGroup.MIME_DESCRIPTOR_MASK;
                 }
                 if (content != 0) {
                     throw new UnsupportedOperationException("Unsupported result: " + content);
@@ -140,19 +140,19 @@ public class ResultUtils {
             throws MailboxException, IOException, MimeException {
         MimePath mimePath = descriptor.path();
         int content = descriptor.content();
-        if ((content & MessageResult.FetchGroup.FULL_CONTENT) > 0) {
+        if ((content & FetchGroup.FULL_CONTENT_MASK) > 0) {
             addFullContent(message, messageResult, mimePath);
         }
-        if ((content & MessageResult.FetchGroup.BODY_CONTENT) > 0) {
+        if ((content & FetchGroup.BODY_CONTENT_MASK) > 0) {
             addBodyContent(message, messageResult, mimePath);
         }
-        if ((content & MessageResult.FetchGroup.MIME_CONTENT) > 0) {
+        if ((content & FetchGroup.MIME_CONTENT_MASK) > 0) {
             addMimeBodyContent(message, messageResult, mimePath);
         }
-        if ((content & MessageResult.FetchGroup.HEADERS) > 0) {
+        if ((content & FetchGroup.HEADERS_MASK) > 0) {
             addHeaders(message, messageResult, mimePath);
         }
-        if ((content & MessageResult.FetchGroup.MIME_HEADERS) > 0) {
+        if ((content & FetchGroup.MIME_HEADERS_MASK) > 0) {
             addMimeHeaders(message, messageResult, mimePath);
         }
     }

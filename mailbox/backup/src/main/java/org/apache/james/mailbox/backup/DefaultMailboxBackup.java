@@ -30,7 +30,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxMetaData;
@@ -128,7 +128,7 @@ public class DefaultMailboxBackup implements MailboxBackup {
             Mailbox mailbox = messageManager.getMailboxEntity();
             List<MailboxAnnotation> annotations = mailboxManager.getAllAnnotations(path, session);
             MailboxWithAnnotations mailboxWithAnnotations = new MailboxWithAnnotations(mailbox, annotations);
-            Stream<MessageResult> messages = Iterators.toStream(messageManager.getMessages(MessageRange.all(), FetchGroupImpl.FULL_CONTENT, session));
+            Stream<MessageResult> messages = Iterators.toStream(messageManager.getMessages(MessageRange.all(), FetchGroup.FULL_CONTENT, session));
             return Stream.of(new MailAccountContent(mailboxWithAnnotations, messages));
         } catch (MailboxException e) {
             LOGGER.error("Error while fetching Mailbox during backup", e);

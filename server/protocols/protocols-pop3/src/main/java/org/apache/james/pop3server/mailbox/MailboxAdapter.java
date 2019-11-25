@@ -31,10 +31,9 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.protocols.pop3.mailbox.Mailbox;
 import org.apache.james.protocols.pop3.mailbox.MessageMetaData;
 
@@ -42,10 +41,10 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 
 public class MailboxAdapter implements Mailbox {
-    private static final FetchGroup FULL_GROUP = FetchGroupImpl.FULL_CONTENT;
-    private static final FetchGroup BODY_GROUP = FetchGroupImpl.BODY_CONTENT;
-    private static final FetchGroup HEADERS_GROUP = FetchGroupImpl.HEADERS;
-    private static final FetchGroup METADATA_GROUP = FetchGroupImpl.MINIMAL;
+    private static final FetchGroup FULL_GROUP = FetchGroup.FULL_CONTENT;
+    private static final FetchGroup BODY_GROUP = FetchGroup.BODY_CONTENT;
+    private static final FetchGroup HEADERS_GROUP = FetchGroup.HEADERS;
+    private static final FetchGroup METADATA_GROUP = FetchGroup.MINIMAL;
 
     private final MessageManager manager;
     private final MailboxSession session;

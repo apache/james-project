@@ -23,32 +23,51 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Specifies a fetch group.
+ * Indicates the results fetched.
  */
-public class FetchGroupImpl implements MessageResult.FetchGroup {
+public class FetchGroup {
+    /**
+     * For example: could have best performance when doing store and then
+     * forget. UIDs are always returned
+     */
+    public static final int MINIMAL_MASK = 0x00;
+    public static final int MIME_DESCRIPTOR_MASK = 0x01;
+    public static final int HEADERS_MASK = 0x100;
+    public static final int FULL_CONTENT_MASK = 0x200;
+    public static final int BODY_CONTENT_MASK = 0x400;
+    public static final int MIME_HEADERS_MASK = 0x800;
+    public static final int MIME_CONTENT_MASK = 0x1000;
 
-    public static final FetchGroupImpl MINIMAL = new FetchGroupImpl(MessageResult.FetchGroup.MINIMAL);
-
-    public static final FetchGroupImpl HEADERS = new FetchGroupImpl(MessageResult.FetchGroup.HEADERS);
-
-    public static final FetchGroupImpl FULL_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT);
-
-    public static final FetchGroupImpl BODY_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.BODY_CONTENT);
+    public static final FetchGroup MINIMAL = new FetchGroup(MINIMAL_MASK);
+    public static final FetchGroup HEADERS = new FetchGroup(HEADERS_MASK);
+    public static final FetchGroup FULL_CONTENT = new FetchGroup(FULL_CONTENT_MASK);
+    public static final FetchGroup BODY_CONTENT = new FetchGroup(BODY_CONTENT_MASK);
 
     private int content;
 
     private Set<PartContentDescriptor> partContentDescriptors;
 
-    private FetchGroupImpl(int content) {
+    private FetchGroup(int content) {
         this(content, new HashSet<>());
     }
 
-    private FetchGroupImpl(int content, Set<PartContentDescriptor> partContentDescriptors) {
+    private FetchGroup(int content, Set<PartContentDescriptor> partContentDescriptors) {
         this.content = content;
         this.partContentDescriptors = partContentDescriptors;
     }
 
-    @Override
+    /**
+     * Contents to be fetched. Composed bitwise.
+     *
+     * @return bitwise description
+     * @see #MINIMAL_MASK
+     * @see #MIME_DESCRIPTOR_MASK
+     * @see #HEADERS_MASK
+     * @see #FULL_CONTENT_MASK
+     * @see #BODY_CONTENT_MASK
+     * @see #MIME_HEADERS_MASK
+     * @see #MIME_CONTENT_MASK
+     */
     public int content() {
         return content;
     }
@@ -61,7 +80,13 @@ public class FetchGroupImpl implements MessageResult.FetchGroup {
         return "Fetch " + content;
     }
 
-    @Override
+    /**
+     * Gets contents to be fetched for contained parts. For each part to be
+     * contained, only one descriptor should be contained.
+     *
+     * @return <code>Set</code> of {@link PartContentDescriptor}, or null if
+     *         there is no part content to be fetched
+     */
     public Set<PartContentDescriptor> getPartContentDescriptors() {
         return partContentDescriptors;
     }

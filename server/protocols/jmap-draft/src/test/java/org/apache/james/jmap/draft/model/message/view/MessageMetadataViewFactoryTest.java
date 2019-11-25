@@ -35,7 +35,7 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroupImpl;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
@@ -78,7 +78,7 @@ class MessageMetadataViewFactoryTest {
     @Test
     void fromMessageResultsShouldReturnCorrectView() throws Exception {
         List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroupImpl.MINIMAL, session);
+            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.MINIMAL, session);
 
         MessageMetadataView actual = testee.fromMessageResults(messages);
         SoftAssertions.assertSoftly(softly -> {
@@ -97,7 +97,7 @@ class MessageMetadataViewFactoryTest {
         bobMailbox.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), session);
 
         List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroupImpl.MINIMAL, session);
+            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.MINIMAL, session);
 
         MessageMetadataView actual = testee.fromMessageResults(messages);
         SoftAssertions.assertSoftly(softly -> {

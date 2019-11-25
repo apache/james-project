@@ -19,42 +19,42 @@
 
 package org.apache.james.mailbox.store.mail;
 
-import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.FetchGroup;
 
 public class FetchGroupConverter {
     /**
-     * Use the passed {@link MessageResult.FetchGroup} and calculate the right
+     * Use the passed {@link FetchGroup} and calculate the right
      * {@link MessageMapper.FetchType} for it
      */
-    public static MessageMapper.FetchType getFetchType(MessageResult.FetchGroup group) {
+    public static MessageMapper.FetchType getFetchType(FetchGroup group) {
         int content = group.content();
         boolean headers = false;
         boolean body = false;
         boolean full = false;
 
-        if ((content & MessageResult.FetchGroup.HEADERS) > 0) {
+        if ((content & FetchGroup.HEADERS_MASK) > 0) {
             headers = true;
-            content -= MessageResult.FetchGroup.HEADERS;
+            content -= FetchGroup.HEADERS_MASK;
         }
         if (group.getPartContentDescriptors().size() > 0) {
             full = true;
         }
-        if ((content & MessageResult.FetchGroup.BODY_CONTENT) > 0) {
+        if ((content & FetchGroup.BODY_CONTENT_MASK) > 0) {
             body = true;
-            content -= MessageResult.FetchGroup.BODY_CONTENT;
+            content -= FetchGroup.BODY_CONTENT_MASK;
         }
 
-        if ((content & MessageResult.FetchGroup.FULL_CONTENT) > 0) {
+        if ((content & FetchGroup.FULL_CONTENT_MASK) > 0) {
             full = true;
-            content -= MessageResult.FetchGroup.FULL_CONTENT;
+            content -= FetchGroup.FULL_CONTENT_MASK;
         }
 
-        if ((content & MessageResult.FetchGroup.MIME_DESCRIPTOR) > 0) {
+        if ((content & FetchGroup.MIME_DESCRIPTOR_MASK) > 0) {
             // If we need the mimedescriptor we MAY need the full content later
             // too.
             // This gives us no other choice then request it
             full = true;
-            content -= MessageResult.FetchGroup.MIME_DESCRIPTOR;
+            content -= FetchGroup.MIME_DESCRIPTOR_MASK;
         }
         if (full || (body && headers)) {
             return MessageMapper.FetchType.Full;
