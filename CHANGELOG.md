@@ -50,6 +50,7 @@ of tasks being currently executed.
   - JamesUsersJdbcRepository, DefaultUsersJdbcRepository. Please use JpaUsersRepository instead.
   - MailboxQuotaFixed matcher. Please use IsOverQuota instead.
 - UsersFileRepository, which was marked as deprecated for years
+  - We accordingly removed deprecated methods within UsersRepositoryManagementMBean exposed over JMX (unsetAlias, getAlias, unsetForwardAddress, getForwardAddress). RecipientRewriteTables should be used instead.
 
 ### Third party softwares
  - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
