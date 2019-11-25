@@ -17,52 +17,16 @@
  * under the License.                                           *
  ****************************************************************/
 
-/**
- * 
- */
 package org.apache.james.mailbox.model;
 
-import java.util.Arrays;
+import org.junit.jupiter.api.Test;
 
-public class MimePathImpl implements MessageResult.MimePath {
-    private final int[] positions;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public MimePathImpl(int[] positions) {
-        super();
-        this.positions = positions;
-    }
-
-    @Override
-    public int[] getPositions() {
-        return positions;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof MimePathImpl) {
-            MimePathImpl mimePath = (MimePathImpl) o;
-
-            return Arrays.equals(this.positions, mimePath.positions);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Arrays.hashCode(positions);
-    }
-
-    public String toString() {
-        final StringBuilder builder = new StringBuilder("MIMEPath:");
-        boolean isFirst = false;
-        for (int position : positions) {
-            if (isFirst) {
-                isFirst = false;
-            } else {
-                builder.append('.');
-            }
-            builder.append(position);
-        }
-        return builder.toString();
+class MimePathImplTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(MimePathImpl.class)
+            .verify();
     }
 }
