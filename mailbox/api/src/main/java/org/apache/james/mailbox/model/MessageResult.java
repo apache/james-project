@@ -123,34 +123,6 @@ public interface MessageResult extends Comparable<MessageResult> {
          *         there is no part content to be fetched
          */
         Set<PartContentDescriptor> getPartContentDescriptors();
-
-        /**
-         * Describes the contents to be fetched for a mail part. All
-         * implementations MUST implement equals. Two implementations are equal
-         * if and only if their paths are equal.
-         */
-        interface PartContentDescriptor {
-            /**
-             * Contents to be fetched. Composed bitwise.
-             * 
-             * @return bitwise descripion
-             * @see #MINIMAL
-             * @see #MIME_DESCRIPTOR
-             * @see #HEADERS
-             * @see #FULL_CONTENT
-             * @see #BODY_CONTENT
-             * @see #MIME_HEADERS
-             * @see #MIME_CONTENT
-             */
-            int content();
-
-            /**
-             * Path describing the part to be fetched.
-             * 
-             * @return path describing the part, not null
-             */
-            MimePath path();
-        }
     }
 
     MimeDescriptor getMimeDescriptor() throws MailboxException;

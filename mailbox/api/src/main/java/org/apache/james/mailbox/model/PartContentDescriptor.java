@@ -21,15 +21,18 @@ package org.apache.james.mailbox.model;
 
 import java.util.Objects;
 
-import org.apache.james.mailbox.model.MessageResult.FetchGroup.PartContentDescriptor;
-
-public class PartContentDescriptorImpl implements PartContentDescriptor {
+/**
+ * Describes the contents to be fetched for a mail part. All
+ * implementations MUST implement equals. Two implementations are equal
+ * if and only if their paths are equal.
+ */
+public class PartContentDescriptor {
 
     private int content = 0;
 
     private final MimePath path;
 
-    public PartContentDescriptorImpl(MimePath path) {
+    public PartContentDescriptor(MimePath path) {
         this.path = path;
     }
 
@@ -37,12 +40,27 @@ public class PartContentDescriptorImpl implements PartContentDescriptor {
         this.content = this.content | content;
     }
 
-    @Override
+    /**
+     * Contents to be fetched. Composed bitwise.
+     *
+     * @return bitwise descripion
+     * @see MessageResult.FetchGroup#MINIMAL
+     * @see MessageResult.FetchGroup#MIME_DESCRIPTOR
+     * @see MessageResult.FetchGroup#HEADERS
+     * @see MessageResult.FetchGroup#FULL_CONTENT
+     * @see MessageResult.FetchGroup#BODY_CONTENT
+     * @see MessageResult.FetchGroup#MIME_HEADERS
+     * @see MessageResult.FetchGroup#MIME_CONTENT
+     */
     public int content() {
         return content;
     }
 
-    @Override
+    /**
+     * Path describing the part to be fetched.
+     *
+     * @return path describing the part, not null
+     */
     public MimePath path() {
         return path;
     }
@@ -52,8 +70,8 @@ public class PartContentDescriptorImpl implements PartContentDescriptor {
     }
 
     public boolean equals(Object obj) {
-        if (obj instanceof PartContentDescriptorImpl) {
-            PartContentDescriptorImpl that = (PartContentDescriptorImpl) obj;
+        if (obj instanceof PartContentDescriptor) {
+            PartContentDescriptor that = (PartContentDescriptor) obj;
             return Objects.equals(this.path, that.path);
         }
         return false;

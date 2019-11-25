@@ -30,6 +30,7 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MimePath;
+import org.apache.james.mailbox.model.PartContentDescriptor;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mime4j.MimeException;
@@ -127,15 +128,15 @@ public class ResultUtils {
 
     private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
             throws MailboxException, IOException, MimeException {
-        Collection<FetchGroup.PartContentDescriptor> partContent = fetchGroup.getPartContentDescriptors();
+        Collection<PartContentDescriptor> partContent = fetchGroup.getPartContentDescriptors();
         if (partContent != null) {
-            for (FetchGroup.PartContentDescriptor descriptor: partContent) {
+            for (PartContentDescriptor descriptor: partContent) {
                 addPartContent(descriptor, message, messageResult);
             }
         }
     }
 
-    private static void addPartContent(FetchGroup.PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
+    private static void addPartContent(PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
             throws MailboxException, IOException, MimeException {
         MimePath mimePath = descriptor.path();
         int content = descriptor.content();
