@@ -95,7 +95,7 @@ class MessagePropertiesTest {
             Optional.of(ImmutableSet.of("headers.X-Spam-Score"))).toOutputProperties();
 
         assertThat(actual.computeReadLevel())
-            .isEqualTo(MessageProperties.ReadLevel.Header);
+            .isEqualTo(MessageProperties.ReadProfile.Header);
     }
 
     @Test
@@ -104,7 +104,7 @@ class MessagePropertiesTest {
             Optional.of(ImmutableSet.of("keywords"))).toOutputProperties();
 
         assertThat(actual.computeReadLevel())
-            .isEqualTo(MessageProperties.ReadLevel.Metadata);
+            .isEqualTo(MessageProperties.ReadProfile.Metadata);
     }
 
     @Test
@@ -113,7 +113,7 @@ class MessagePropertiesTest {
             Optional.of(ImmutableSet.of("htmlBody"))).toOutputProperties();
 
         assertThat(actual.computeReadLevel())
-            .isEqualTo(MessageProperties.ReadLevel.Full);
+            .isEqualTo(MessageProperties.ReadProfile.Full);
     }
 
     @Test
@@ -122,65 +122,65 @@ class MessagePropertiesTest {
             Optional.of(ImmutableSet.of("headers.X-Spam-Score", "keywords"))).toOutputProperties();
 
         assertThat(actual.computeReadLevel())
-            .isEqualTo(MessageProperties.ReadLevel.Header);
+            .isEqualTo(MessageProperties.ReadProfile.Header);
     }
 
     @Nested
-    class ReadLevelTest {
+    class ReadProfileTest {
         @Test
         void combineShouldReturnMetadataWhenOnlyMetadata() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                    MessageProperties.ReadLevel.Metadata,
-                    MessageProperties.ReadLevel.Metadata))
-                .isEqualTo(MessageProperties.ReadLevel.Metadata);
+            assertThat(MessageProperties.ReadProfile.combine(
+                    MessageProperties.ReadProfile.Metadata,
+                    MessageProperties.ReadProfile.Metadata))
+                .isEqualTo(MessageProperties.ReadProfile.Metadata);
         }
 
         @Test
         void combineShouldReturnHeaderWhenOnlyHeader() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                    MessageProperties.ReadLevel.Header,
-                    MessageProperties.ReadLevel.Header))
-                .isEqualTo(MessageProperties.ReadLevel.Header);
+            assertThat(MessageProperties.ReadProfile.combine(
+                    MessageProperties.ReadProfile.Header,
+                    MessageProperties.ReadProfile.Header))
+                .isEqualTo(MessageProperties.ReadProfile.Header);
         }
 
         @Test
         void combineShouldReturnFullWhenOnlyFull() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                    MessageProperties.ReadLevel.Full,
-                    MessageProperties.ReadLevel.Full))
-                .isEqualTo(MessageProperties.ReadLevel.Full);
+            assertThat(MessageProperties.ReadProfile.combine(
+                    MessageProperties.ReadProfile.Full,
+                    MessageProperties.ReadProfile.Full))
+                .isEqualTo(MessageProperties.ReadProfile.Full);
         }
 
         @Test
         void combineShouldReturnHeaderWhenHeaderAndMetadata() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                MessageProperties.ReadLevel.Metadata,
-                MessageProperties.ReadLevel.Header))
-                .isEqualTo(MessageProperties.ReadLevel.Header);
+            assertThat(MessageProperties.ReadProfile.combine(
+                MessageProperties.ReadProfile.Metadata,
+                MessageProperties.ReadProfile.Header))
+                .isEqualTo(MessageProperties.ReadProfile.Header);
         }
 
         @Test
         void combineShouldReturnFullWhenFullAndMetadata() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                MessageProperties.ReadLevel.Metadata,
-                MessageProperties.ReadLevel.Full))
-                .isEqualTo(MessageProperties.ReadLevel.Full);
+            assertThat(MessageProperties.ReadProfile.combine(
+                MessageProperties.ReadProfile.Metadata,
+                MessageProperties.ReadProfile.Full))
+                .isEqualTo(MessageProperties.ReadProfile.Full);
         }
 
         @Test
         void combineShouldReturnFullWhenFullAndHeader() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                MessageProperties.ReadLevel.Header,
-                MessageProperties.ReadLevel.Full))
-                .isEqualTo(MessageProperties.ReadLevel.Full);
+            assertThat(MessageProperties.ReadProfile.combine(
+                MessageProperties.ReadProfile.Header,
+                MessageProperties.ReadProfile.Full))
+                .isEqualTo(MessageProperties.ReadProfile.Full);
         }
 
         @Test
         void combineShouldCommute() {
-            assertThat(MessageProperties.ReadLevel.combine(
-                MessageProperties.ReadLevel.Full,
-                MessageProperties.ReadLevel.Header))
-                .isEqualTo(MessageProperties.ReadLevel.Full);
+            assertThat(MessageProperties.ReadProfile.combine(
+                MessageProperties.ReadProfile.Full,
+                MessageProperties.ReadProfile.Header))
+                .isEqualTo(MessageProperties.ReadProfile.Full);
         }
     }
 }

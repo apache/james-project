@@ -71,25 +71,25 @@ public class MessageProperties {
                 .ensureHeadersMessageProperty();
     }
 
-    public ReadLevel computeReadLevel() {
-        Stream<ReadLevel> readLevels = Stream.concat(this.buildOutputMessageProperties()
+    public ReadProfile computeReadLevel() {
+        Stream<ReadProfile> readLevels = Stream.concat(this.buildOutputMessageProperties()
                 .stream()
-                .map(MessageProperty::getReadLevel),
+                .map(MessageProperty::getReadProfile),
             headerPropertiesReadLevel());
 
         // If `null`, all properties will be fetched (JMAP Draft)
         // This defer from RFC-8621 behavior (not implemented here)
         // If omitted, this defaults to: [ "partId", "blobId", "size", "name", "type", "charset", "disposition", "cid",
         // "language", "location" ]
-        return readLevels.reduce(ReadLevel::combine)
-            .orElse(ReadLevel.Full);
+        return readLevels.reduce(ReadProfile::combine)
+            .orElse(ReadProfile.Full);
 
     }
 
-    private Stream<ReadLevel> headerPropertiesReadLevel() {
+    private Stream<ReadProfile> headerPropertiesReadLevel() {
         return headersProperties.map(collection ->
             collection.stream()
-                .map(any -> ReadLevel.Header))
+                .map(any -> ReadProfile.Header))
             .orElse(Stream.of());
     }
 
@@ -140,46 +140,46 @@ public class MessageProperties {
     }
 
     public enum MessageProperty implements Property {
-        id("id", ReadLevel.Metadata),
-        blobId("blobId", ReadLevel.Metadata),
-        threadId("threadId", ReadLevel.Metadata),
-        mailboxIds("mailboxIds", ReadLevel.Metadata),
-        inReplyToMessageId("inReplyToMessageId", ReadLevel.Header),
-        isUnread("isUnread", ReadLevel.Metadata),
-        isFlagged("isFlagged", ReadLevel.Metadata),
-        isAnswered("isAnswered", ReadLevel.Metadata),
-        isDraft("isDraft", ReadLevel.Metadata),
-        isForwarded("isForwarded", ReadLevel.Metadata),
-        hasAttachment("hasAttachment", ReadLevel.Full),
-        headers("headers", ReadLevel.Header),
-        from("from", ReadLevel.Header),
-        to("to", ReadLevel.Header),
-        cc("cc", ReadLevel.Header),
-        bcc("bcc", ReadLevel.Header),
-        replyTo("replyTo", ReadLevel.Header),
-        subject("subject", ReadLevel.Header),
-        date("date", ReadLevel.Header),
-        size("size", ReadLevel.Metadata),
-        preview("preview", ReadLevel.Full),
-        textBody("textBody", ReadLevel.Full),
-        htmlBody("htmlBody", ReadLevel.Full),
-        attachments("attachments", ReadLevel.Full),
-        attachedMessages("attachedMessages", ReadLevel.Full),
-        keywords("keywords", ReadLevel.Metadata),
-        body("body", PropertyType.INPUTONLY, ReadLevel.Full);
+        id("id", ReadProfile.Metadata),
+        blobId("blobId", ReadProfile.Metadata),
+        threadId("threadId", ReadProfile.Metadata),
+        mailboxIds("mailboxIds", ReadProfile.Metadata),
+        inReplyToMessageId("inReplyToMessageId", ReadProfile.Header),
+        isUnread("isUnread", ReadProfile.Metadata),
+        isFlagged("isFlagged", ReadProfile.Metadata),
+        isAnswered("isAnswered", ReadProfile.Metadata),
+        isDraft("isDraft", ReadProfile.Metadata),
+        isForwarded("isForwarded", ReadProfile.Metadata),
+        hasAttachment("hasAttachment", ReadProfile.Full),
+        headers("headers", ReadProfile.Header),
+        from("from", ReadProfile.Header),
+        to("to", ReadProfile.Header),
+        cc("cc", ReadProfile.Header),
+        bcc("bcc", ReadProfile.Header),
+        replyTo("replyTo", ReadProfile.Header),
+        subject("subject", ReadProfile.Header),
+        date("date", ReadProfile.Header),
+        size("size", ReadProfile.Metadata),
+        preview("preview", ReadProfile.Full),
+        textBody("textBody", ReadProfile.Full),
+        htmlBody("htmlBody", ReadProfile.Full),
+        attachments("attachments", ReadProfile.Full),
+        attachedMessages("attachedMessages", ReadProfile.Full),
+        keywords("keywords", ReadProfile.Metadata),
+        body("body", PropertyType.INPUTONLY, ReadProfile.Full);
     
         private final String property;
         private final PropertyType type;
-        private final ReadLevel readLevel;
+        private final ReadProfile readProfile;
 
-        MessageProperty(String property, ReadLevel readLevel) {
-            this(property, PropertyType.INPUTOUTPUT, readLevel);
+        MessageProperty(String property, ReadProfile readProfile) {
+            this(property, PropertyType.INPUTOUTPUT, readProfile);
         }
 
-        MessageProperty(String property, PropertyType type, ReadLevel readLevel) {
+        MessageProperty(String property, PropertyType type, ReadProfile readProfile) {
             this.property = property;
             this.type = type;
-            this.readLevel = readLevel;
+            this.readProfile = readProfile;
         }
     
         @Override
@@ -187,8 +187,8 @@ public class MessageProperties {
             return property;
         }
 
-        public ReadLevel getReadLevel() {
-            return readLevel;
+        public ReadProfile getReadProfile() {
+            return readProfile;
         }
     
         public static Stream<MessageProperty> find(String property) {
@@ -212,21 +212,21 @@ public class MessageProperties {
         }
     }
 
-    public enum ReadLevel {
+    public enum ReadProfile {
         Metadata(0),
         Header(1),
         Full(2);
 
-        static ReadLevel combine(ReadLevel readLevel1, ReadLevel readLevel2) {
-            if (readLevel1.priority > readLevel2.priority) {
-                return readLevel1;
+        static ReadProfile combine(ReadProfile readProfile1, ReadProfile readProfile2) {
+            if (readProfile1.priority > readProfile2.priority) {
+                return readProfile1;
             }
-            return readLevel2;
+            return readProfile2;
         }
 
         private final int priority;
 
-        ReadLevel(int priority) {
+        ReadProfile(int priority) {
             this.priority = priority;
         }
     }
