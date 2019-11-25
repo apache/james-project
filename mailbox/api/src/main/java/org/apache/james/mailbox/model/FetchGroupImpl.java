@@ -29,27 +29,23 @@ import org.apache.james.mailbox.model.MessageResult.MimePath;
  */
 public class FetchGroupImpl implements MessageResult.FetchGroup {
 
-    public static final MessageResult.FetchGroup MINIMAL = new FetchGroupImpl(MessageResult.FetchGroup.MINIMAL);
+    public static final FetchGroupImpl MINIMAL = new FetchGroupImpl(MessageResult.FetchGroup.MINIMAL);
 
-    public static final MessageResult.FetchGroup HEADERS = new FetchGroupImpl(MessageResult.FetchGroup.HEADERS);
+    public static final FetchGroupImpl HEADERS = new FetchGroupImpl(MessageResult.FetchGroup.HEADERS);
 
-    public static final MessageResult.FetchGroup FULL_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT);
+    public static final FetchGroupImpl FULL_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.FULL_CONTENT);
 
-    public static final MessageResult.FetchGroup BODY_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.BODY_CONTENT);
+    public static final FetchGroupImpl BODY_CONTENT = new FetchGroupImpl(MessageResult.FetchGroup.BODY_CONTENT);
 
-    private int content = MessageResult.FetchGroup.MINIMAL;
+    private int content;
 
     private Set<PartContentDescriptor> partContentDescriptors;
 
-    public FetchGroupImpl() {
-        this(0, new HashSet<>());
-    }
-
-    public FetchGroupImpl(int content) {
+    private FetchGroupImpl(int content) {
         this(content, new HashSet<>());
     }
 
-    public FetchGroupImpl(int content, Set<PartContentDescriptor> partContentDescriptors) {
+    private FetchGroupImpl(int content, Set<PartContentDescriptor> partContentDescriptors) {
         this.content = content;
         this.partContentDescriptors = partContentDescriptors;
     }
