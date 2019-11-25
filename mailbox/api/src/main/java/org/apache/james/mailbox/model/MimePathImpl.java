@@ -20,13 +20,11 @@
 /**
  * 
  */
-package org.apache.james.imap.processor.fetch;
+package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
 
-import org.apache.james.mailbox.model.MessageResult;
-
-final class MimePathImpl implements MessageResult.MimePath {
+public class MimePathImpl implements MessageResult.MimePath {
     private final int[] positions;
 
     public MimePathImpl(int[] positions) {

@@ -49,6 +49,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResult.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult.MimePath;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.model.MimePathImpl;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;

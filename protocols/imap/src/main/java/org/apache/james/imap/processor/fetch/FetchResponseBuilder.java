@@ -46,6 +46,7 @@ import org.apache.james.mailbox.exception.MessageRangeException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.MimePathImpl;
 
 public final class FetchResponseBuilder {
 
