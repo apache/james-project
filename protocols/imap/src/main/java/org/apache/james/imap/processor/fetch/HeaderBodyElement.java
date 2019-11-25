@@ -27,14 +27,14 @@ import java.util.List;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse.BodyElement;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageResult;
+import org.apache.james.mailbox.model.Header;
 
 /**
  * {@link BodyElement} which represent a HEADER element specified by for example (BODY[1.HEADER])
  */
 public class HeaderBodyElement extends MimeBodyElement {
 
-    public HeaderBodyElement(String name, List<MessageResult.Header> headers) throws MailboxException {
+    public HeaderBodyElement(String name, List<Header> headers) throws MailboxException {
         super(name, headers);
     }
 
@@ -50,7 +50,7 @@ public class HeaderBodyElement extends MimeBodyElement {
     }
 
     @Override
-    protected long calculateSize(List<MessageResult.Header> headers) throws MailboxException {
+    protected long calculateSize(List<Header> headers) throws MailboxException {
         if (headers.isEmpty()) {
             // even if the headers are empty we need to include the headers body
             // seperator

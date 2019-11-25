@@ -29,7 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.mailbox.model.MessageResult.Header;
+import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder.PartNotFoundException;
 import org.junit.Before;
@@ -204,7 +204,7 @@ public class PartContentBuilderComplexMultipartTest {
             throws Exception {
         List<Header> headers = headers(position);
         assertThat(headers.size()).isEqualTo(1);
-        ResultHeader header = (ResultHeader) headers.get(0);
+        Header header = (Header) headers.get(0);
         assertThat(header.getName()).isEqualTo(CONTENT_TYPE);
         assertThat(header.getValue()).isEqualTo(contentType);
     }

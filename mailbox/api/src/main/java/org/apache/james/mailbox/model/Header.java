@@ -20,32 +20,41 @@
 /**
  * 
  */
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.model;
 
 import static java.nio.charset.StandardCharsets.US_ASCII;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.apache.james.mailbox.model.MessageResult;
-
-public final class ResultHeader implements MessageResult.Header {
+/**
+ * A header.
+ */
+public final class Header implements Content {
     private final String name;
     private final String value;
     private final long size;
 
-    public ResultHeader(String name, String value) {
+    public Header(String name, String value) {
         this.name = name;
         this.value = value;
         this.size = name.length() + value.length() + 2;
     }
 
-    @Override
+    /**
+     * Gets the name of this header.
+     *
+     * @return name of this header
+     */
     public String getName() {
         return name;
     }
 
-    @Override
+    /**
+     * Gets the (unparsed) value of this header.
+     *
+     * @return value of this header
+     */
     public String getValue() {
         return value;
     }

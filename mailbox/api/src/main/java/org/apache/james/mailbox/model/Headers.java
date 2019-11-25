@@ -22,7 +22,6 @@ package org.apache.james.mailbox.model;
 import java.util.Iterator;
 
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageResult.Header;
 
 public interface Headers extends Content {
     /**

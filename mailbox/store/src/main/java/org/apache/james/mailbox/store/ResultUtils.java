@@ -28,6 +28,7 @@ import java.util.List;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.mailbox.model.PartContentDescriptor;
@@ -44,8 +45,8 @@ import org.apache.james.mime4j.util.ContentUtil;
 
 public class ResultUtils {
 
-    public static List<MessageResult.Header> createHeaders(MailboxMessage document) throws IOException {
-        List<MessageResult.Header> results = new ArrayList<>();
+    public static List<Header> createHeaders(MailboxMessage document) throws IOException {
+        List<Header> results = new ArrayList<>();
         MimeStreamParser parser = new MimeStreamParser(MimeConfig.PERMISSIVE);
         parser.setContentHandler(new AbstractContentHandler() {
             @Override
@@ -76,8 +77,8 @@ public class ResultUtils {
                     fieldValue = fieldValue.substring(1);
                 }
                 
-                ResultHeader resultHeader = new ResultHeader(field.getName(), fieldValue);
-                results.add(resultHeader);
+                Header header = new Header(field.getName(), fieldValue);
+                results.add(header);
             }
         });
         try {
@@ -187,7 +188,7 @@ public class ResultUtils {
         int[] path = path(mimePath);
         if (path != null) {
             PartContentBuilder builder = build(path, message);
-            List<MessageResult.Header> headers = builder.getMessageHeaders();
+            List<Header> headers = builder.getMessageHeaders();
             messageResult.setHeaders(mimePath, headers.iterator());
         }
     }
@@ -197,7 +198,7 @@ public class ResultUtils {
         int[] path = path(mimePath);
         if (path != null) {
             PartContentBuilder builder = build(path, message);
-            List<MessageResult.Header> headers = builder.getMimeHeaders();
+            List<Header> headers = builder.getMimeHeaders();
             messageResult.setMimeHeaders(mimePath, headers.iterator());
         }
     }

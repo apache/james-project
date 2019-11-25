@@ -31,8 +31,8 @@ import javax.mail.internet.MimeUtility;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.codec.EncoderUtil;
 import org.apache.james.mime4j.dom.address.Address;
 import org.apache.james.mime4j.dom.address.AddressList;
@@ -62,7 +62,7 @@ public final class EnvelopeBuilder {
     }
 
     private String headerValue(Headers message, String headerName) throws MailboxException {
-        final MessageResult.Header header = MessageResultUtils.getMatching(headerName, message.headers());
+        final Header header = MessageResultUtils.getMatching(headerName, message.headers());
         final String result;
         if (header == null) {
             result = null;
@@ -108,7 +108,7 @@ public final class EnvelopeBuilder {
      * @throws MailboxException
      */
     private FetchResponse.Envelope.Address[] buildAddresses(Headers message, String headerName) throws MailboxException {
-        final MessageResult.Header header = MessageResultUtils.getMatching(headerName, message.headers());
+        final Header header = MessageResultUtils.getMatching(headerName, message.headers());
         FetchResponse.Envelope.Address[] results;
         if (header == null) {
             results = null;

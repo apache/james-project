@@ -101,26 +101,6 @@ public interface MessageResult extends Comparable<MessageResult> {
     Iterator<Header> iterateMimeHeaders(MimePath path) throws MailboxException;
 
     /**
-     * A header.
-     */
-    interface Header extends Content {
-
-        /**
-         * Gets the name of this header.
-         * 
-         * @return name of this header
-         */
-        String getName();
-
-        /**
-         * Gets the (unparsed) value of this header.
-         * 
-         * @return value of this header
-         */
-        String getValue();
-    }
-
-    /**
      * Gets the full message including headers and body. The message data should
      * have normalised line endings (CRLF).
      * 

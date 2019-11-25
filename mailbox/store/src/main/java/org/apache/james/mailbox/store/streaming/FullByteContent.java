@@ -28,8 +28,7 @@ import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.MessageResult.Header;
+import org.apache.james.mailbox.model.Header;
 
 /**
  * Abstract base class for {@link Content} implementations which hold the headers and 
@@ -42,7 +41,7 @@ public class FullByteContent implements Content {
     private final byte[] body;
     private final long size;
     
-    public FullByteContent(byte[] body, List<MessageResult.Header> headers) throws MailboxException {
+    public FullByteContent(byte[] body, List<Header> headers) throws MailboxException {
         this.headers = headers;
         this.body = body;
         this.size = caculateSize();
