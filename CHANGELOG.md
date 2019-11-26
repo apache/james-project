@@ -53,6 +53,7 @@ of tasks being currently executed.
   - We accordingly removed deprecated methods within UsersRepositoryManagementMBean exposed over JMX (unsetAlias, getAlias, unsetForwardAddress, getForwardAddress). RecipientRewriteTables should be used instead.
 
 ### Third party softwares
+ - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.
  - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
 
 ## [3.4.0] - 2019-09-05

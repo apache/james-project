@@ -16,17 +16,32 @@ Changes to apply between 3.4.x and 3.5.x will be reported here.
 
 Change list:
 
+ - [RabbitMQ minimal version](#rabbitmq-minimal-version)
  - [Enforce usernames to be lower cased](#enforce-usernames-to-be-lower-cased)
  - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
  - [UsersFileRepository](#usersfilerepository)
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
 
+#### RabbitMQ minimal version
+
+Date 26/11/2019
+
+SHA-1 0bf4e8384e
+
+Concerned products: Guice distributed James (rabbitMQ)
+
+The distributed James project (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) benefits from a new distributed task mananger.
+
+In order to enforce task sequential processing at the cluster level, we rely on a single active consumer, which is a feature introduced in RabbitMQ 3.8.
+
+Users of distributed James product thus need to upgrade their RabbitMQ server to be at least version 3.8.
+
 #### Enforce usernames to be lower cased
 
 Date 21/11/2019
 
-SHA-1 xxxxxxxxx
+SHA-1 9e976d3f49
 
 JIRA: https://issues.apache.org/jira/browse/JAMES-2949
 
