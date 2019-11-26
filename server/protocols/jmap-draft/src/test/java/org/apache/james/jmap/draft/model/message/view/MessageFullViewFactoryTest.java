@@ -35,13 +35,14 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
@@ -87,7 +88,6 @@ class MessageFullViewFactoryTest {
     void setUp() throws Exception {
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
@@ -106,7 +106,7 @@ class MessageFullViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messagePreview, messageContentExtractor, htmlTextExtractor);
+        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor);
     }
 
     @Test
@@ -132,7 +132,7 @@ class MessageFullViewFactoryTest {
             softly.assertThat(actual.getSubject()).isEqualTo("Full message");
             softly.assertThat(actual.getDate()).isEqualTo("2016-06-07T14:23:37Z");
             softly.assertThat(actual.isHasAttachment()).isEqualTo(true);
-            softly.assertThat(actual.getPreview()).isEqualTo("blabla bloblo");
+            softly.assertThat(actual.getPreview()).isEqualTo(PreviewDTO.of("blabla bloblo"));
             softly.assertThat(actual.getTextBody()).isEqualTo(Optional.of("/blabla/\n*bloblo*\n"));
             softly.assertThat(actual.getHtmlBody()).isEqualTo(Optional.of("<i>blabla</i>\n<b>bloblo</b>\n"));
             softly.assertThat(actual.getAttachments()).hasSize(1);
@@ -171,7 +171,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly("(Empty)", Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of("(Empty)"), Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -250,7 +250,7 @@ class MessageFullViewFactoryTest {
                 .subject("test subject")
                 .date(Instant.parse("2015-07-14T12:30:42.000Z"))
                 .size(headers.length())
-                .preview("(Empty)")
+                .preview(Preview.from("(Empty)"))
                 .textBody(Optional.of(""))
                 .htmlBody(Optional.empty())
                 .keywords(keywords)
@@ -301,7 +301,7 @@ class MessageFullViewFactoryTest {
             .subject("test subject")
             .date(Instant.parse("2012-02-03T14:30:42.000Z"))
             .size(headers.length())
-            .preview("(Empty)")
+            .preview(Preview.from("(Empty)"))
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
             .keywords(keywords)
@@ -350,7 +350,7 @@ class MessageFullViewFactoryTest {
             .subject("test subject")
             .date(Instant.parse("2012-02-03T14:30:42.000Z"))
             .size(headers.length())
-            .preview("(Empty)")
+            .preview(Preview.from("(Empty)"))
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
             .keywords(keywords)
@@ -421,11 +421,11 @@ class MessageFullViewFactoryTest {
         String body300 = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
                 + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
                 + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999";
-        String expectedPreview = "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999" 
+        PreviewDTO expectedPreview = PreviewDTO.of("0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999"
                 + "0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999" 
-                + "00000000001111111111222222222233333333334444444444555555";
+                + "00000000001111111111222222222233333333334444444444555555");
         assertThat(body300.length()).isEqualTo(300);
-        assertThat(expectedPreview.length()).isEqualTo(256);
+        assertThat(expectedPreview.getValue().length()).isEqualTo(256);
         String mail = headers + "\n" + body300;
         MetaDataWithContent testMail = MetaDataWithContent.builder()
                 .uid(MessageUid.of(2))
@@ -438,7 +438,8 @@ class MessageFullViewFactoryTest {
                 .messageId(TestMessageId.of(2))
                 .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
-        assertThat(testee.getPreview()).isEqualTo(expectedPreview);
+        assertThat(testee.getPreview())
+            .isEqualTo(expectedPreview);
     }
     
     @Test
@@ -638,7 +639,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly("(Empty)", Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of("(Empty)"), Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -659,7 +660,8 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getPreview()).isEqualTo("my HTML message");
+        assertThat(testee.getPreview())
+            .isEqualTo(PreviewDTO.of("my HTML message"));
         assertThat(testee.getTextBody()).hasValue("my HTML message");
         assertThat(testee.getHtmlBody()).hasValue("my <b>HTML</b> message");
     }
@@ -680,7 +682,7 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getPreview()).isEqualTo(MessagePreviewGenerator.NO_BODY);
+        assertThat(testee.getPreview()).isEqualTo(PreviewDTO.of("(Empty)"));
         assertThat(testee.getHtmlBody()).contains("");
         assertThat(testee.getTextBody()).isEmpty();
     }
@@ -712,7 +714,8 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getPreview()).isEqualTo(expected);
+        assertThat(testee.getPreview())
+            .isEqualTo(PreviewDTO.of(expected));
     }
 
     @Test
@@ -734,7 +737,8 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getPreview()).isEqualTo("My plain text");
+        assertThat(testee.getPreview())
+            .isEqualTo(PreviewDTO.of("My plain text"));
     }
 
     @Test
@@ -755,7 +759,7 @@ class MessageFullViewFactoryTest {
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
-            .containsExactly(MessagePreviewGenerator.NO_BODY, Optional.empty(), Optional.of(""));
+            .containsExactly(PreviewDTO.of("(Empty)"), Optional.empty(), Optional.of(""));
     }
 
     @Test
@@ -779,7 +783,7 @@ class MessageFullViewFactoryTest {
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
-            .containsExactly(MessagePreviewGenerator.NO_BODY, Optional.of("<html><body></body></html>"), Optional.empty());
+            .containsExactly(PreviewDTO.of("(Empty)"), Optional.of("<html><body></body></html>"), Optional.empty());
     }
 
     @Test
@@ -815,7 +819,7 @@ class MessageFullViewFactoryTest {
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
-            .containsExactly("My plain message", Optional.of("<html></html>"), Optional.of("My plain message"));
+            .containsExactly(PreviewDTO.of("My plain message"), Optional.of("<html></html>"), Optional.of("My plain message"));
     }
 
     @Test

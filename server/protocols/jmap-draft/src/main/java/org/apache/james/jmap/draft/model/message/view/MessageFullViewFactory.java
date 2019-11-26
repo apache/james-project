@@ -30,10 +30,10 @@ import java.util.Set;
 import javax.inject.Inject;
 import javax.mail.internet.SharedInputStream;
 
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageUid;
@@ -55,15 +55,13 @@ import com.google.common.collect.Sets;
 
 public class MessageFullViewFactory implements MessageViewFactory<MessageFullView> {
     private final BlobManager blobManager;
-    private final MessagePreviewGenerator messagePreview;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
 
     @Inject
-    public MessageFullViewFactory(BlobManager blobManager, MessagePreviewGenerator messagePreview, MessageContentExtractor messageContentExtractor,
+    public MessageFullViewFactory(BlobManager blobManager, MessageContentExtractor messageContentExtractor,
                                   HtmlTextExtractor htmlTextExtractor) {
         this.blobManager = blobManager;
-        this.messagePreview = messagePreview;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
     }
@@ -79,7 +77,10 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         Optional<String> htmlBody = messageContent.getHtmlBody();
         Optional<String> mainTextContent = mainTextContent(messageContent);
         Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
-        String preview = messagePreview.compute(mainTextContent);
+
+        Preview preview = mainTextContent.map(Preview::compute)
+            .orElse(Preview.NO_BODY);
+
         return MessageFullView.builder()
                 .id(message.getMessageId())
                 .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))

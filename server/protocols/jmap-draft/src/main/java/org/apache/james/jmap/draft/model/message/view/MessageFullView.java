@@ -25,12 +25,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 
@@ -39,7 +41,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -53,7 +54,7 @@ public class MessageFullView extends MessageHeaderView {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder extends MessageHeaderView.Builder<MessageFullView.Builder> {
-        private String preview;
+        private Preview preview;
         private Optional<String> textBody = Optional.empty();
         private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
@@ -65,7 +66,7 @@ public class MessageFullView extends MessageHeaderView {
             attachedMessages = ImmutableMap.builder();
         }
 
-        public Builder preview(String preview) {
+        public Builder preview(Preview preview) {
             this.preview = preview;
             return this;
         }
@@ -98,13 +99,13 @@ public class MessageFullView extends MessageHeaderView {
 
             return new MessageFullView(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
                 hasAttachment, headers, Optional.ofNullable(from),
-                to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, preview, textBody, htmlBody, attachments, attachedMessages,
+                to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, PreviewDTO.from(preview), textBody, htmlBody, attachments, attachedMessages,
                 keywords.orElse(Keywords.DEFAULT_VALUE));
         }
 
         public void checkState(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
             super.checkState();
-            Preconditions.checkState(!Strings.isNullOrEmpty(preview), "'preview' is mandatory");
+            Preconditions.checkState(preview != null, "'preview' is mandatory");
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
         }
     }
@@ -126,7 +127,7 @@ public class MessageFullView extends MessageHeaderView {
     }
 
     private final boolean hasAttachment;
-    private final String preview;
+    private final PreviewDTO preview;
     private final Optional<String> textBody;
     private final Optional<String> htmlBody;
     private final ImmutableList<Attachment> attachments;
@@ -148,7 +149,7 @@ public class MessageFullView extends MessageHeaderView {
                     String subject,
                     Instant date,
                     Number size,
-                    String preview,
+                    PreviewDTO preview,
                     Optional<String> textBody,
                     Optional<String> htmlBody,
                     ImmutableList<Attachment> attachments,
@@ -167,7 +168,7 @@ public class MessageFullView extends MessageHeaderView {
         return hasAttachment;
     }
 
-    public String getPreview() {
+    public PreviewDTO getPreview() {
         return preview;
     }
 
