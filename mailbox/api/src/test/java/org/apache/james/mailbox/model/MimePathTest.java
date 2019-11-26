@@ -36,20 +36,20 @@ class MimePathTest {
     void toStringWhenEmpty() {
         int[] empty = {};
         assertThat(new MimePath(empty).toString())
-            .isEqualTo("MIMEPath:[]");
+            .isEqualTo("MIMEPath:");
     }
 
     @Test
     void toStringWhenSingle() {
         int[] single = {1};
         assertThat(new MimePath(single).toString())
-            .isEqualTo("MIMEPath:[1]");
+            .isEqualTo("MIMEPath:1");
     }
 
     @Test
     void toStringWhenMany() {
         int[] many = {1, 2, 3};
         assertThat(new MimePath(many).toString())
-            .isEqualTo("MIMEPath:[1, 2, 3]");
+            .isEqualTo("MIMEPath:1.2.3");
     }
 }
