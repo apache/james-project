@@ -30,11 +30,14 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageResult;
 
+import com.google.common.annotations.VisibleForTesting;
+
 public class MessageMetadataViewFactory implements MessageViewFactory<MessageMetadataView> {
     private final BlobManager blobManager;
 
     @Inject
-    MessageMetadataViewFactory(BlobManager blobManager) {
+    @VisibleForTesting
+    public MessageMetadataViewFactory(BlobManager blobManager) {
         this.blobManager = blobManager;
     }
 

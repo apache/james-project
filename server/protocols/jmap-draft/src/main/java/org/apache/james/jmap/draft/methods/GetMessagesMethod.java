@@ -33,8 +33,9 @@ import org.apache.james.jmap.draft.model.GetMessagesResponse;
 import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.model.MessageProperties.HeaderProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageView;
+import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -59,16 +60,16 @@ public class GetMessagesMethod implements Method {
     private static final Logger LOGGER = LoggerFactory.getLogger(GetMessagesMethod.class);
     private static final Method.Request.Name METHOD_NAME = Method.Request.name("getMessages");
     private static final Method.Response.Name RESPONSE_NAME = Method.Response.name("messages");
-    private final MessageFullViewFactory messageFullViewFactory;
+    private final MetaMessageViewFactory messageViewFactory;
     private final MessageIdManager messageIdManager;
     private final MetricFactory metricFactory;
 
     @Inject
     @VisibleForTesting GetMessagesMethod(
-            MessageFullViewFactory messageFullViewFactory,
+            MetaMessageViewFactory messageViewFactory,
             MessageIdManager messageIdManager,
             MetricFactory metricFactory) {
-        this.messageFullViewFactory = messageFullViewFactory;
+        this.messageViewFactory = messageViewFactory;
         this.messageIdManager = messageIdManager;
         this.metricFactory = metricFactory;
     }
@@ -123,6 +124,8 @@ public class GetMessagesMethod implements Method {
 
         try {
             MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
+            MessageViewFactory factory = messageViewFactory.getFactory(readProfile);
+
             return GetMessagesResponse.builder()
                 .messages(
                     messageIdManager.getMessages(getMessagesRequest.getIds(), FetchGroup.FULL_CONTENT, mailboxSession)
@@ -132,7 +135,7 @@ public class GetMessagesMethod implements Method {
                         .values()
                         .stream()
                         .filter(collection -> !collection.isEmpty())
-                        .flatMap(toMessageViews())
+                        .flatMap(toMessageViews(factory))
                         .collect(Guavate.toImmutableList()))
                 .expectedMessageIds(getMessagesRequest.getIds())
                 .build();
@@ -141,10 +144,10 @@ public class GetMessagesMethod implements Method {
         }
     }
 
-    private Function<Collection<MessageResult>, Stream<MessageFullView>> toMessageViews() {
+    private Function<Collection<MessageResult>, Stream<MessageView>> toMessageViews(MessageViewFactory factory) {
         return messageResults -> {
             try {
-                return Stream.of(messageFullViewFactory.fromMessageResults(messageResults));
+                return Stream.of(factory.fromMessageResults(messageResults));
             } catch (Exception e) {
                 LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
                 return Stream.of();

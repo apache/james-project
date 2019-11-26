@@ -36,13 +36,15 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
 
 public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeaderView> {
     private final BlobManager blobManager;
 
     @Inject
-    MessageHeaderViewFactory(BlobManager blobManager) {
+    @VisibleForTesting
+    public MessageHeaderViewFactory(BlobManager blobManager) {
         this.blobManager = blobManager;
     }
 

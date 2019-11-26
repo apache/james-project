@@ -45,6 +45,11 @@ import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageHeaderView;
+import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MessageMetadataView;
+import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
+import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
@@ -96,7 +101,7 @@ public class GetMessagesMethodTest {
     private MailboxPath inboxPath;
     private MailboxPath customMailboxPath;
     private MethodCallId methodCallId;
-    private MessageFullViewFactory messageFullViewFactory;
+    private MessageMetadataViewFactory messageMetadataViewFactory;
 
     @Before
     public void setup() throws Exception {
@@ -106,7 +111,12 @@ public class GetMessagesMethodTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        messageFullViewFactory = spy(new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor));
+        messageMetadataViewFactory = spy(new MessageMetadataViewFactory(blobManager));
+        MetaMessageViewFactory metaMessageViewFactory = new MetaMessageViewFactory(
+            new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor),
+            new MessageHeaderViewFactory(blobManager),
+            messageMetadataViewFactory);
+
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         mailboxManager = resources.getMailboxManager();
 
@@ -116,7 +126,7 @@ public class GetMessagesMethodTest {
         mailboxManager.createMailbox(inboxPath, session);
         mailboxManager.createMailbox(customMailboxPath, session);
         messageIdManager = resources.getMessageIdManager();
-        testee = new GetMessagesMethod(messageFullViewFactory, messageIdManager, new DefaultMetricFactory());
+        testee = new GetMessagesMethod(metaMessageViewFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()
             .setSubject("message 1 subject")
@@ -470,10 +480,115 @@ public class GetMessagesMethodTest {
         assertThat(response).isInstanceOf(GetMessagesResponse.class);
         GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
         assertThat(getMessagesResponse.list()).hasSize(1)
-            .hasOnlyElementsOfType(MessageFullView.class)
-            .extracting(MessageFullView.class::cast)
-            .flatExtracting(MessageFullView::getMailboxIds)
+            .hasOnlyElementsOfType(MessageMetadataView.class)
+            .extracting(MessageMetadataView.class::cast)
+            .flatExtracting(MessageMetadataView::getMailboxIds)
             .containsOnly(customMailboxId, message1.getMailboxId());
+    }
+
+    @Test
+    public void processShouldReturnMetadataWhenOnlyMailboxIds() throws Exception {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
+
+        MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
+        messageIdManager.setInMailboxes(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId(), customMailboxId),
+            session);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message1.getMessageId()))
+            .properties(ImmutableList.of("mailboxIds"))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1);
+        Method.Response response = result.get(0).getResponse();
+        assertThat(response).isInstanceOf(GetMessagesResponse.class);
+        GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
+        assertThat(getMessagesResponse.list())
+            .hasSize(1)
+            .hasOnlyElementsOfType(MessageMetadataView.class);
+    }
+
+    @Test
+    public void processShouldReturnFullViewWhenRequestedTextBody() throws Exception {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
+
+        MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
+        messageIdManager.setInMailboxes(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId(), customMailboxId),
+            session);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message1.getMessageId()))
+            .properties(ImmutableList.of("mailboxIds", "textBody"))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1);
+        Method.Response response = result.get(0).getResponse();
+        assertThat(response).isInstanceOf(GetMessagesResponse.class);
+        GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
+        assertThat(getMessagesResponse.list())
+            .hasSize(1)
+            .hasOnlyElementsOfType(MessageFullView.class);
+    }
+
+    @Test
+    public void processShouldReturnHeaderViewWhenRequestedTo() throws Exception {
+        MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
+
+        ComposedMessageId message1 = inbox.appendMessage(
+            AppendCommand.from(
+                org.apache.james.mime4j.dom.Message.Builder.of()
+                    .setFrom("user@domain.tld")
+                    .setField(new RawField("header1", "Header1Content"))
+                    .setField(new RawField("HEADer2", "Header2Content"))
+                    .setSubject("message 1 subject")
+                    .setBody("my message", StandardCharsets.UTF_8)),
+            session);
+
+        MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
+        messageIdManager.setInMailboxes(message1.getMessageId(),
+            ImmutableList.of(message1.getMailboxId(), customMailboxId),
+            session);
+
+        GetMessagesRequest request = GetMessagesRequest.builder()
+            .ids(ImmutableList.of(message1.getMessageId()))
+            .properties(ImmutableList.of("mailboxIds", "to"))
+            .build();
+
+        List<JmapResponse> result = testee.process(request, methodCallId, session).collect(Collectors.toList());
+
+        assertThat(result).hasSize(1);
+        Method.Response response = result.get(0).getResponse();
+        assertThat(response).isInstanceOf(GetMessagesResponse.class);
+        GetMessagesResponse getMessagesResponse = (GetMessagesResponse) response;
+        assertThat(getMessagesResponse.list())
+            .hasSize(1)
+            .hasOnlyElementsOfType(MessageHeaderView.class);
     }
 
     @Test
@@ -493,7 +608,7 @@ public class GetMessagesMethodTest {
 
         doCallRealMethod()
             .doThrow(new RuntimeException())
-            .when(messageFullViewFactory)
+            .when(messageMetadataViewFactory)
             .fromMessageResults(any());
 
         GetMessagesRequest request = GetMessagesRequest.builder()
