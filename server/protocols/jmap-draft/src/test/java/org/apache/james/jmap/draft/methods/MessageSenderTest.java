@@ -36,7 +36,6 @@ import org.apache.james.core.MaybeSender;
 import org.apache.james.jmap.draft.model.EnvelopeUtils;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
@@ -84,14 +83,12 @@ class MessageSenderTest {
             .messageId(TestMessageId.of(2))
             .build();
 
-        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
         HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
-        when(messagePreview.compute(any())).thenReturn("text preview");
 
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
-        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor);
         jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message);
         envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }

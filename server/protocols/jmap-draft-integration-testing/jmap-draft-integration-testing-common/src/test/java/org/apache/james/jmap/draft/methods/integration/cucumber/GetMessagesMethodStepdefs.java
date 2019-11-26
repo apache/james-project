@@ -43,15 +43,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.TestingConstants;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.methods.integration.cucumber.util.TableRow;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.util.ClassLoaderUtils;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.SMTPMessageSender;
 import org.javatuples.Pair;
 
@@ -76,6 +75,7 @@ public class GetMessagesMethodStepdefs {
     private static final String ATTACHMENTS = FIRST_MESSAGE + ".attachments";
     private static final String FIRST_ATTACHMENT = ATTACHMENTS + "[0]";
     private static final String SECOND_ATTACHMENT = ATTACHMENTS + "[1]";
+    private static final int PREVIEW_LENGTH = 256;
 
 
     private final MainStepdefs mainStepdefs;
@@ -659,7 +659,7 @@ public class GetMessagesMethodStepdefs {
     @Then("^the preview should not contain consecutive spaces or blank characters$")
     public void assertPreviewShouldBeNormalized() {
         String actual = httpClient.jsonPath.read(FIRST_MESSAGE + ".preview");
-        assertThat(actual).hasSize(MessagePreviewGenerator.MAX_PREVIEW_LENGTH)
+        assertThat(actual).hasSize(PREVIEW_LENGTH)
             .doesNotMatch("  ")
             .doesNotContain(StringUtils.CR)
             .doesNotContain(StringUtils.LF);

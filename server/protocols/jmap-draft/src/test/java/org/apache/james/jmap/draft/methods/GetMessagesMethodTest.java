@@ -40,7 +40,6 @@ import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
@@ -107,13 +106,12 @@ public class GetMessagesMethodTest {
     public void setup() throws Exception {
         methodCallId = MethodCallId.of("#0");
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
-        MessagePreviewGenerator messagePreview = new MessagePreviewGenerator();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         messageMetadataViewFactory = spy(new MessageMetadataViewFactory(blobManager));
         MetaMessageViewFactory metaMessageViewFactory = new MetaMessageViewFactory(
-            new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor),
+            new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor),
             new MessageHeaderViewFactory(blobManager),
             messageMetadataViewFactory);
 

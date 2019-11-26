@@ -24,12 +24,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Instant;
 import java.util.Optional;
 
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keyword;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.Number;
+import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 class MessageFullViewTest {
+
+    private static final Preview PREVIEW = Preview.from("preview");
+    private static final PreviewDTO PREVIEW_DTO = PreviewDTO.from(PREVIEW);
 
     @Test
     void buildShouldThrowWhenIdIsNull() {
@@ -153,22 +158,6 @@ class MessageFullViewTest {
     }
 
     @Test
-    void buildShouldThrowWhenPreviewIsEmpty() {
-        assertThatThrownBy(() -> MessageFullView.builder()
-                .id(TestMessageId.of(1))
-                .blobId(BlobId.of("blobId"))
-                .threadId("threadId")
-                .fluentMailboxIds()
-                .headers(ImmutableMap.of())
-                .subject("subject")
-                .size(123)
-                .date(Instant.now())
-                .preview("")
-                .build())
-            .isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
     void buildShouldWorkWhenMandatoryFieldsArePresent() {
         Instant currentDate = Instant.now();
         Number messageSize = Number.fromLong(123);
@@ -176,7 +165,7 @@ class MessageFullViewTest {
         MessageFullView expected = new MessageFullView(TestMessageId.of(1), BlobId.of("blobId"), "threadId",
             ImmutableList.of(InMemoryId.of(456)), Optional.empty(), false, ImmutableMap.of("key", "value"),
             Optional.empty(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of(),
-            "subject", currentDate, messageSize, "preview", Optional.empty(), Optional.empty(),
+            "subject", currentDate, messageSize, PREVIEW_DTO, Optional.empty(), Optional.empty(),
             ImmutableList.of(), ImmutableMap.of(), Keywords.DEFAULT_VALUE);
 
         MessageFullView tested = MessageFullView.builder()
@@ -188,7 +177,7 @@ class MessageFullViewTest {
                 .subject("subject")
                 .size(123)
                 .date(currentDate)
-                .preview("preview")
+                .preview(PREVIEW)
                 .build();
         assertThat(tested).isEqualToComparingFieldByField(expected);
     }
@@ -215,7 +204,7 @@ class MessageFullViewTest {
                 .subject("subject")
                 .size(123)
                 .date(Instant.now())
-                .preview("preview")
+                .preview(PREVIEW)
                 .attachments(attachments)
                 .attachedMessages(attachedMessages)
                 .build())
@@ -261,7 +250,7 @@ class MessageFullViewTest {
             "subject",
             currentDate,
             messageSize,
-            "preview",
+            PREVIEW_DTO,
             Optional.of("textBody"),
             Optional.of("htmlBody"),
             attachments,
@@ -284,7 +273,7 @@ class MessageFullViewTest {
             .subject("subject")
             .date(currentDate)
             .size(123)
-            .preview("preview")
+            .preview(PREVIEW)
             .textBody(Optional.of("textBody"))
             .htmlBody(Optional.of("htmlBody"))
             .attachments(attachments)
@@ -305,7 +294,7 @@ class MessageFullViewTest {
                 .subject("subject")
                 .size(1)
                 .date(Instant.now())
-                .preview("preview")
+                .preview(PREVIEW)
                 .attachedMessages(ImmutableMap.of(BlobId.of("key"), SubMessage.builder()
                         .headers(ImmutableMap.of("key", "value"))
                         .subject("subject")
@@ -326,7 +315,7 @@ class MessageFullViewTest {
             .subject("subject")
             .size(1)
             .date(Instant.now())
-            .preview("preview")
+            .preview(PREVIEW)
             .attachments(ImmutableList.of(Attachment.builder()
                     .blobId(BlobId.of("key"))
                     .size(1)
@@ -351,7 +340,7 @@ class MessageFullViewTest {
             .subject("subject")
             .size(1)
             .date(Instant.now())
-            .preview("preview")
+            .preview(PREVIEW)
             .attachments(ImmutableList.of())
             .build();
 
@@ -369,7 +358,7 @@ class MessageFullViewTest {
             .subject("subject")
             .size(1)
             .date(Instant.now())
-            .preview("preview")
+            .preview(PREVIEW)
             .attachments(ImmutableList.of(
                     Attachment.builder()
                         .blobId(BlobId.of("key"))
@@ -401,7 +390,7 @@ class MessageFullViewTest {
             .subject("subject")
             .size(1)
             .date(Instant.now())
-            .preview("preview")
+            .preview(PREVIEW)
             .attachments(ImmutableList.of(
                     Attachment.builder()
                         .blobId(BlobId.of("key"))
@@ -439,7 +428,7 @@ class MessageFullViewTest {
             .subject("subject")
             .size(1)
             .date(Instant.now())
-            .preview("preview")
+            .preview(PREVIEW)
             .attachments(ImmutableList.of(
                     Attachment.builder()
                         .blobId(BlobId.of("key"))

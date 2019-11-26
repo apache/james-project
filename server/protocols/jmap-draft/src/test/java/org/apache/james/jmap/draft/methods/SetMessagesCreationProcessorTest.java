@@ -37,7 +37,6 @@ import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.CreationMessageId;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.SetMessagesRequest;
 import org.apache.james.jmap.draft.model.SetMessagesResponse;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
@@ -122,12 +121,10 @@ public class SetMessagesCreationProcessorTest {
     @Before
     public void setUp() throws MailboxException {
         HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
-        MessagePreviewGenerator messagePreview = mock(MessagePreviewGenerator.class);
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
-        when(messagePreview.compute(any())).thenReturn("text preview");
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
-        messageFullViewFactory = new MessageFullViewFactory(blobManager, messagePreview, messageContentExtractor, htmlTextExtractor);
+        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor);
         mockedMailSpool = mock(MailSpool.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
         mockedMailboxManager = mock(MailboxManager.class);

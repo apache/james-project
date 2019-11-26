@@ -25,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.time.Instant;
 
 import org.apache.commons.lang3.NotImplementedException;
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.MessageId;
@@ -35,6 +36,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SetMessagesResponseTest {
+
+    private static final Preview PREVIEW = Preview.from("preview");
 
     @Test
     public void builderShouldThrowWhenAccountIdIsGiven() {
@@ -67,7 +70,7 @@ public class SetMessagesResponseTest {
                 .subject("subject")
                 .size(123)
                 .date(currentDate)
-                .preview("preview")
+                .preview(PREVIEW)
                 .build());
         ImmutableList<MessageId> updated = ImmutableList.of(TestMessageId.of(2));
         ImmutableList<MessageId> destroyed = ImmutableList.of(TestMessageId.of(3));
@@ -121,7 +124,7 @@ public class SetMessagesResponseTest {
                 .subject("subject")
                 .size(0)
                 .date(Instant.now())
-                .preview("preview")
+                .preview(PREVIEW)
                 .build());
     }
 

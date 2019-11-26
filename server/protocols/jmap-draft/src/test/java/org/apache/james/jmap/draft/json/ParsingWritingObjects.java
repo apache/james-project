@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keyword;
@@ -66,7 +67,7 @@ public interface ParsingWritingObjects {
         String SUBJECT = "mySubject";
         Instant DATE = Instant.parse("2014-10-30T14:12:00Z");
         int SIZE = 1024;
-        String PREVIEW = "myPreview";
+        Preview PREVIEW = Preview.from("myPreview");
         Optional<String> TEXT_BODY = Optional.of("myTextBody");
         Optional<String> HTML_BODY = Optional.of("<h1>myHtmlBody</h1>");
     }
