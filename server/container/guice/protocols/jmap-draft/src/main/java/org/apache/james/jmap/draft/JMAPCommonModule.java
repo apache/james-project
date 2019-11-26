@@ -34,7 +34,6 @@ import org.apache.james.jmap.draft.crypto.SignatureHandler;
 import org.apache.james.jmap.draft.crypto.SignedTokenFactory;
 import org.apache.james.jmap.draft.crypto.SignedTokenManager;
 import org.apache.james.jmap.draft.model.MailboxFactory;
-import org.apache.james.jmap.draft.model.MessagePreviewGenerator;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
@@ -69,7 +68,6 @@ public class JMAPCommonModule extends AbstractModule {
         bind(AutomaticallySentMailDetectorImpl.class).in(Scopes.SINGLETON);
         bind(MailboxFactory.class).in(Scopes.SINGLETON);
         bind(MessageFullViewFactory.class).in(Scopes.SINGLETON);
-        bind(MessagePreviewGenerator.class).in(Scopes.SINGLETON);
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
         bind(SecurityKeyLoader.class).in(Scopes.SINGLETON);
