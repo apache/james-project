@@ -44,6 +44,7 @@ import org.apache.james.webadmin.routes.GroupsRoutes;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
 import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
+import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.routes.UserMailboxesRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
@@ -306,5 +307,21 @@ public abstract class WebAdminServerIntegrationTest {
             .get(HealthCheckRoutes.HEALTHCHECK)
         .then()
             .statusCode(HttpStatus.OK_200);
+    }
+
+    @Test
+    public void jmapTasksShouldBeExposed() {
+        String taskId = with()
+            .queryParam("task", "recomputeFastViewProjectionItems")
+            .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"));
     }
 }
