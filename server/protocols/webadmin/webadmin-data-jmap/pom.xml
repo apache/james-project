@@ -19,30 +19,29 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-project</artifactId>
+        <artifactId>james-server</artifactId>
         <version>3.5.0-SNAPSHOT</version>
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-webadmin</artifactId>
-    <packaging>pom</packaging>
+    <artifactId>james-server-webadmin-data-jmap</artifactId>
 
-    <name>Apache James :: Server :: Web Admin</name>
+    <name>Apache James :: Server :: Web Admin :: data :: JMAP</name>
 
-    <modules>
-        <module>webadmin-cassandra</module>
-        <module>webadmin-cassandra-data</module>
-        <module>webadmin-core</module>
-        <module>webadmin-data</module>
-        <module>webadmin-data-jmap</module>
-        <module>webadmin-mailbox</module>
-        <module>webadmin-mailbox-deleted-message-vault</module>
-        <module>webadmin-mailqueue</module>
-        <module>webadmin-mailrepository</module>
-        <module>webadmin-swagger</module>
-    </modules>
-
+    <dependencies>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-data-jmap</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>james-server-jmap-draft</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-core</artifactId>
+        </dependency>
+    </dependencies>
 </project>
