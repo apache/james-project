@@ -224,7 +224,7 @@ You need a running *cassandra* in docker. To achieve this run:
 
 You need a running *rabbitmq* in docker. To achieve this run:
 
-    $ docker run -d --name=rabbitmq rabbitmq:3.7.7-management
+    $ docker run -d --name=rabbitmq rabbitmq:3.8.1-management
 
 You need a running *swift* objectstorage in docker. To achieve this run:
 

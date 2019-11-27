@@ -59,7 +59,7 @@ pipeline {
                             sh 'docker run -d --name=elasticsearch -p 9200:9200 -v /srv/bench-running-docker/elasticsearch:/usr/share/elasticsearch/data/elasticsearch  --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
                             sh 'docker run -d --name=tika linagora/docker-tikaserver:1.22'
                             sh 'docker run -d --name=swift -p 8080:8080 -v /srv/bench-running-docker/swift:/srv/1/node/sdb1 jeantil/openstack-keystone-swift:pike'
-                            sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.7.7-management'
+                            sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.8.1-management'
 
                             sh 'docker run -d --hostname HOSTNAME -p 25:25 -p 1080:80 -p 8000:8000 -p 110:110 -p 143:143 -p 465:465 -p 587:587 -p 993:993 --link cassandra:cassandra --link rabbitmq:rabbitmq --link elasticsearch:elasticsearch --link tika:tika --link swift:swift --name james_run -t james_run'
                             timeout(time: 20, unit: 'MINUTES') {

@@ -37,7 +37,7 @@ services:
     image: linagora/docker-tikaserver:1.22
 
   rabbitmq:
-    image: rabbitmq:3.7.7-management
+    image: rabbitmq:3.8.1-management
     ports:
       - "5672:5672"
       - "15672:15672"
