@@ -21,13 +21,11 @@ package org.apache.james.imap.processor.fetch;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
-import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -47,7 +45,6 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
-import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -148,7 +145,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
      */
     protected void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
         final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
-        FetchGroup resultToFetch = getFetchGroup(fetch);
+        FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
         for (MessageRange range : ranges) {
             MessageResultIterator messages = mailbox.getMessages(range, resultToFetch, mailboxSession);
@@ -184,58 +181,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
 
     }
 
-    protected FetchGroup getFetchGroup(FetchData fetch) {
-        FetchGroup result = FetchGroup.MINIMAL;
-
-        if (fetch.isEnvelope()) {
-            result = result.or(FetchGroup.HEADERS_MASK);
-        }
-        if (fetch.isBody() || fetch.isBodyStructure()) {
-            result = result.or(FetchGroup.MIME_DESCRIPTOR_MASK);
-        }
-
-        Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
-        if (bodyElements != null) {
-            for (BodyFetchElement element : bodyElements) {
-                final int sectionType = element.getSectionType();
-                final int[] path = element.getPath();
-                final boolean isBase = (path == null || path.length == 0);
-                switch (sectionType) {
-                    case BodyFetchElement.CONTENT:
-                        if (isBase) {
-                            result = addContent(result, path, isBase, FetchGroup.FULL_CONTENT_MASK);
-                        } else {
-                            result = addContent(result, path, isBase, FetchGroup.MIME_CONTENT_MASK);
-                        }
-                        break;
-                    case BodyFetchElement.HEADER:
-                    case BodyFetchElement.HEADER_NOT_FIELDS:
-                    case BodyFetchElement.HEADER_FIELDS:
-                        result = addContent(result, path, isBase, FetchGroup.HEADERS_MASK);
-                        break;
-                    case BodyFetchElement.MIME:
-                        result = addContent(result, path, isBase, FetchGroup.MIME_HEADERS_MASK);
-                        break;
-                    case BodyFetchElement.TEXT:
-                        result = addContent(result, path, isBase, FetchGroup.BODY_CONTENT_MASK);
-                        break;
-                    default:
-                        break;
-                }
-
-            }
-        }
-        return result;
-    }
-
-    private FetchGroup addContent(FetchGroup result, int[] path, boolean isBase, int content) {
-        if (isBase) {
-            return result.or(content);
-        } else {
-            MimePath mimePath = new MimePath(path);
-            return result.addPartContent(mimePath, content);
-        }
-    }
 
     @Override
     protected Closeable addContextToMDC(FetchRequest request) {

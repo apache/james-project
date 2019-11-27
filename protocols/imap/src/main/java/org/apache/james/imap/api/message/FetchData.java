@@ -58,56 +58,63 @@ public class FetchData {
         return body;
     }
 
-    public void setBody(boolean body) {
+    public FetchData setBody(boolean body) {
         this.body = body;
+        return this;
     }
 
     public boolean isBodyStructure() {
         return bodyStructure;
     }
 
-    public void setBodyStructure(boolean bodyStructure) {
+    public FetchData setBodyStructure(boolean bodyStructure) {
         this.bodyStructure = bodyStructure;
+        return this;
     }
 
     public boolean isEnvelope() {
         return envelope;
     }
 
-    public void setEnvelope(boolean envelope) {
+    public FetchData setEnvelope(boolean envelope) {
         this.envelope = envelope;
+        return this;
     }
 
     public boolean isFlags() {
         return flags;
     }
 
-    public void setFlags(boolean flags) {
+    public FetchData setFlags(boolean flags) {
         this.flags = flags;
+        return this;
     }
 
     public boolean isInternalDate() {
         return internalDate;
     }
 
-    public void setInternalDate(boolean internalDate) {
+    public FetchData setInternalDate(boolean internalDate) {
         this.internalDate = internalDate;
+        return this;
     }
 
     public boolean isSize() {
         return size;
     }
 
-    public void setSize(boolean size) {
+    public FetchData setSize(boolean size) {
         this.size = size;
+        return this;
     }
 
     public boolean isUid() {
         return uid;
     }
 
-    public void setUid(boolean uid) {
+    public FetchData setUid(boolean uid) {
         this.uid = uid;
+        return this;
     }
 
     public boolean isSetSeen() {
@@ -119,13 +126,15 @@ public class FetchData {
         return modSeq;
     }
 
-    public void setModSeq(boolean modSeq) {
+    public FetchData setModSeq(boolean modSeq) {
         this.modSeq = modSeq;
+        return this;
     }
     
-    public void setChangedSince(long changedSince) {
+    public FetchData setChangedSince(long changedSince) {
         this.changedSince = changedSince;
         this.modSeq = true;
+        return this;
     }
     
     public long getChangedSince() {
@@ -137,8 +146,9 @@ public class FetchData {
      * 
      * @param vanished
      */
-    public void setVanished(boolean vanished) {
+    public FetchData setVanished(boolean vanished) {
         this.vanished = vanished;
+        return this;
     }
     
     /**
@@ -150,11 +160,12 @@ public class FetchData {
         return vanished;
     }
     
-    public void add(BodyFetchElement element, boolean peek) {
+    public FetchData add(BodyFetchElement element, boolean peek) {
         if (!peek) {
             setSeen = true;
         }
         bodyElements.add(element);
+        return this;
     }
 
     public int hashCode() {
