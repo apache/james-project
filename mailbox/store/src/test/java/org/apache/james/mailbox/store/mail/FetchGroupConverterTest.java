@@ -47,7 +47,7 @@ class FetchGroupConverterTest {
     @Test
     void getFetchTypeShouldReturnFullWhenBodyAndHeaders() {
         FetchGroup fetchGroup = FetchGroup.BODY_CONTENT
-            .or(FetchGroup.HEADERS_MASK);
+            .with(FetchGroup.HEADERS_MASK);
 
         assertThat(FetchGroupConverter.getFetchType(fetchGroup))
             .isEqualTo(MessageMapper.FetchType.Full);
@@ -62,7 +62,7 @@ class FetchGroupConverterTest {
     @Test
     void getFetchTypeShouldReturnFullWhenMimeContent() {
         FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .or(FetchGroup.MIME_CONTENT_MASK);
+            .with(FetchGroup.MIME_CONTENT_MASK);
         assertThat(FetchGroupConverter.getFetchType(fetchGroup))
             .isEqualTo(MessageMapper.FetchType.Full);
     }
@@ -70,7 +70,7 @@ class FetchGroupConverterTest {
     @Test
     void getFetchTypeShouldReturnFullWhenMimeDescriptor() {
         FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .or(FetchGroup.MIME_DESCRIPTOR_MASK);
+            .with(FetchGroup.MIME_DESCRIPTOR_MASK);
         assertThat(FetchGroupConverter.getFetchType(fetchGroup))
             .isEqualTo(MessageMapper.FetchType.Full);
     }
@@ -78,7 +78,7 @@ class FetchGroupConverterTest {
     @Test
     void getFetchTypeShouldReturnFullWhenMimeHeaders() {
         FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .or(FetchGroup.MIME_HEADERS_MASK);
+            .with(FetchGroup.MIME_HEADERS_MASK);
         assertThat(FetchGroupConverter.getFetchType(fetchGroup))
             .isEqualTo(MessageMapper.FetchType.Full);
     }

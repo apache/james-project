@@ -37,7 +37,7 @@ class FetchGroupTest {
     @Test
     void orShouldReturnAFetchGroupWithUpdatedContent() {
         int expected = FetchGroup.HEADERS_MASK | FetchGroup.FULL_CONTENT_MASK;
-        assertThat(FetchGroup.HEADERS.or(FetchGroup.FULL_CONTENT_MASK))
+        assertThat(FetchGroup.HEADERS.with(FetchGroup.FULL_CONTENT_MASK))
             .isEqualTo(new FetchGroup(expected));
     }
 
@@ -76,8 +76,8 @@ class FetchGroupTest {
     @Test
     void hasMaskShouldReturnFalseWhenNotContained() {
         assertThat(FetchGroup.MINIMAL
-                .or(FetchGroup.MIME_HEADERS_MASK)
-                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
+                .with(FetchGroup.MIME_HEADERS_MASK)
+                .with(FetchGroup.MIME_DESCRIPTOR_MASK)
                 .hasMask(FetchGroup.HEADERS_MASK))
             .isFalse();
     }
@@ -85,8 +85,8 @@ class FetchGroupTest {
     @Test
     void hasMaskShouldReturnTrueWhenContained() {
         assertThat(FetchGroup.MINIMAL
-                .or(FetchGroup.MIME_HEADERS_MASK)
-                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
+                .with(FetchGroup.MIME_HEADERS_MASK)
+                .with(FetchGroup.MIME_DESCRIPTOR_MASK)
                 .hasMask(FetchGroup.MIME_HEADERS_MASK))
             .isTrue();
     }
@@ -108,7 +108,7 @@ class FetchGroupTest {
     @Test
     void hasOnlyMasksShouldReturnTrueWhenExactlyContainMultipleValues() {
         assertThat(FetchGroup.HEADERS
-                .or(FetchGroup.BODY_CONTENT_MASK)
+                .with(FetchGroup.BODY_CONTENT_MASK)
                 .hasOnlyMasks(FetchGroup.HEADERS_MASK, FetchGroup.BODY_CONTENT_MASK))
             .isTrue();
     }
@@ -116,7 +116,7 @@ class FetchGroupTest {
     @Test
     void hasOnlyMasksShouldReturnFalseWhenNotContained() {
         assertThat(FetchGroup.HEADERS
-                .or(FetchGroup.BODY_CONTENT_MASK)
+                .with(FetchGroup.BODY_CONTENT_MASK)
                 .hasOnlyMasks(FetchGroup.FULL_CONTENT_MASK))
             .isFalse();
     }

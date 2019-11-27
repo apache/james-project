@@ -80,7 +80,7 @@ public class FetchGroup {
         return content;
     }
 
-    public FetchGroup or(int content) {
+    public FetchGroup with(int content) {
          return new FetchGroup(this.content | content, partContentDescriptors);
     }
 

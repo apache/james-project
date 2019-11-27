@@ -32,10 +32,10 @@ class FetchDataConverter {
         FetchGroup result = FetchGroup.MINIMAL;
 
         if (fetch.isEnvelope()) {
-            result = result.or(FetchGroup.HEADERS_MASK);
+            result = result.with(FetchGroup.HEADERS_MASK);
         }
         if (fetch.isBody() || fetch.isBodyStructure()) {
-            result = result.or(FetchGroup.MIME_DESCRIPTOR_MASK);
+            result = result.with(FetchGroup.MIME_DESCRIPTOR_MASK);
         }
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
@@ -74,7 +74,7 @@ class FetchDataConverter {
 
     private static FetchGroup addContent(FetchGroup result, int[] path, boolean isBase, int content) {
         if (isBase) {
-            return result.or(content);
+            return result.with(content);
         } else {
             MimePath mimePath = new MimePath(path);
             return result.addPartContent(mimePath, content);

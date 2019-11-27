@@ -44,8 +44,8 @@ class FetchDataConverterTest {
     static Stream<Arguments> getFetchGroupShouldReturnCorrectValue() {
         return Stream.of(
             Arguments.arguments(new FetchData(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().setBody(true), FetchGroup.MINIMAL.or(MIME_DESCRIPTOR_MASK)),
-            Arguments.arguments(new FetchData().setBodyStructure(true), FetchGroup.MINIMAL.or(MIME_DESCRIPTOR_MASK)),
+            Arguments.arguments(new FetchData().setBody(true), FetchGroup.MINIMAL.with(MIME_DESCRIPTOR_MASK)),
+            Arguments.arguments(new FetchData().setBodyStructure(true), FetchGroup.MINIMAL.with(MIME_DESCRIPTOR_MASK)),
             Arguments.arguments(new FetchData().setChangedSince(0L), FetchGroup.MINIMAL),
             Arguments.arguments(new FetchData().setEnvelope(true), FetchGroup.HEADERS),
             Arguments.arguments(new FetchData().setFlags(true), FetchGroup.MINIMAL),
