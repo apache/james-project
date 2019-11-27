@@ -67,7 +67,7 @@ public class FetchGroup {
     /**
      * Contents to be fetched. Composed bitwise.
      *
-     * @return bitwise description
+     * @return masks to be used for bitewise operations.
      * @see #MINIMAL_MASK
      * @see #MIME_DESCRIPTOR_MASK
      * @see #HEADERS_MASK
