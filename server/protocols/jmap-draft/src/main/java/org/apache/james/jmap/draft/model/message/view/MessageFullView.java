@@ -54,7 +54,7 @@ public class MessageFullView extends MessageHeaderView {
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder extends MessageHeaderView.Builder<MessageFullView.Builder> {
-        private Preview preview;
+        private Optional<Preview> preview;
         private Optional<String> textBody = Optional.empty();
         private Optional<String> htmlBody = Optional.empty();
         private final ImmutableList.Builder<Attachment> attachments;
@@ -67,6 +67,11 @@ public class MessageFullView extends MessageHeaderView {
         }
 
         public Builder preview(Preview preview) {
+            this.preview = Optional.of(preview);
+            return this;
+        }
+
+        public Builder preview(Optional<Preview> preview) {
             this.preview = preview;
             return this;
         }

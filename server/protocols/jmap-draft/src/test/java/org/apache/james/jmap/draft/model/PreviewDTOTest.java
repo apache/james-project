@@ -19,58 +19,53 @@
 
 package org.apache.james.jmap.draft.model;
 
-import java.util.Objects;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Optional;
 
 import org.apache.james.jmap.api.preview.Preview;
+import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class PreviewDTO {
+class PreviewDTOTest {
 
-    private static final String NO_BODY_AS_STRING = "(Empty)";
-    private static final PreviewDTO NO_BODY = PreviewDTO.of(NO_BODY_AS_STRING);
+    private static final String EMPTY_PREVIEW = "(Empty)";
+    private static final String SAMPLE_PREVIEW_VALUE = "hello bob!";
 
-    public static PreviewDTO from(Optional<Preview> preview) {
-        return preview.map(Preview::getValue)
-            .map(PreviewDTO::of)
-            .orElse(NO_BODY);
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(PreviewDTO.class)
+            .verify();
     }
 
-    @VisibleForTesting
-    public static PreviewDTO of(String value) {
-        return new PreviewDTO(value);
+    @Test
+    void fromShouldReturnPreviewWithTheValue() {
+        assertThat(PreviewDTO.from(Optional.of(Preview.from(SAMPLE_PREVIEW_VALUE))))
+            .isEqualTo(PreviewDTO.of(SAMPLE_PREVIEW_VALUE));
     }
 
-    private final String value;
-
-    private PreviewDTO(String value) {
-        Preconditions.checkNotNull(value);
-
-        this.value = Optional.of(value)
-            .filter(previewValue -> !previewValue.isEmpty())
-            .orElse(NO_BODY_AS_STRING);
+    @Test
+    void fromShouldReturnNoBodyWhenNoPreview() {
+        assertThat(PreviewDTO.from(Optional.empty()))
+            .isEqualTo(PreviewDTO.of(EMPTY_PREVIEW));
     }
 
-    @JsonValue
-    public String getValue() {
-        return value;
+    @Test
+    void fromShouldReturnNoBodyWhenPreviewOfEmptyString() {
+        assertThat(PreviewDTO.from(Optional.of(Preview.from(""))))
+            .isEqualTo(PreviewDTO.of(EMPTY_PREVIEW));
     }
 
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof PreviewDTO) {
-            PreviewDTO that = (PreviewDTO) o;
-
-            return Objects.equals(this.value, that.value);
-        }
-        return false;
+    @Test
+    void ofShouldReturnPreviewWithTheValue() {
+        assertThat(PreviewDTO.of(SAMPLE_PREVIEW_VALUE))
+            .isEqualTo(PreviewDTO.of(SAMPLE_PREVIEW_VALUE));
     }
 
-    @Override
-    public final int hashCode() {
-        return Objects.hash(value);
+    @Test
+    void ofShouldReturnNoBodyWhenPreviewOfEmptyString() {
+        assertThat(PreviewDTO.of(""))
+            .isEqualTo(PreviewDTO.of(EMPTY_PREVIEW));
     }
 }

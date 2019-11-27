@@ -42,7 +42,7 @@ import com.google.common.collect.ImmutableMap;
 class MessageFullViewTest {
 
     private static final Preview PREVIEW = Preview.from("preview");
-    private static final PreviewDTO PREVIEW_DTO = PreviewDTO.from(PREVIEW);
+    private static final PreviewDTO PREVIEW_DTO = PreviewDTO.of(PREVIEW.getValue());
 
     @Test
     void buildShouldThrowWhenIdIsNull() {

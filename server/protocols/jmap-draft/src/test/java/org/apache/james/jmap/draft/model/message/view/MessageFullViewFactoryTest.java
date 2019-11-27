@@ -171,7 +171,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly(PreviewDTO.of("(Empty)"), Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of(""), Number.ZERO, "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -639,7 +639,7 @@ class MessageFullViewFactoryTest {
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getSize, MessageFullView::getSubject, MessageFullView::getHeaders, MessageFullView::getDate)
-            .containsExactly(PreviewDTO.of("(Empty)"), Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
+            .containsExactly(PreviewDTO.of(""), Number.fromLong(1010L), "", ImmutableMap.of("MIME-Version", "1.0"), INTERNAL_DATE);
     }
 
     @Test
@@ -682,7 +682,7 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
 
-        assertThat(testee.getPreview()).isEqualTo(PreviewDTO.of("(Empty)"));
+        assertThat(testee.getPreview()).isEqualTo(PreviewDTO.of(""));
         assertThat(testee.getHtmlBody()).contains("");
         assertThat(testee.getTextBody()).isEmpty();
     }
@@ -759,7 +759,7 @@ class MessageFullViewFactoryTest {
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
-            .containsExactly(PreviewDTO.of("(Empty)"), Optional.empty(), Optional.of(""));
+            .containsExactly(PreviewDTO.of(""), Optional.empty(), Optional.of(""));
     }
 
     @Test
@@ -783,7 +783,7 @@ class MessageFullViewFactoryTest {
 
         assertThat(testee)
             .extracting(MessageFullView::getPreview, MessageFullView::getHtmlBody, MessageFullView::getTextBody)
-            .containsExactly(PreviewDTO.of("(Empty)"), Optional.of("<html><body></body></html>"), Optional.empty());
+            .containsExactly(PreviewDTO.of(""), Optional.of("<html><body></body></html>"), Optional.empty());
     }
 
     @Test

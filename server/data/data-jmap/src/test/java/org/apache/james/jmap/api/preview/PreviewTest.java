@@ -34,7 +34,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 class PreviewTest {
 
     private static final String PREVIEW_RAW_VALUE = "Hello James!";
-    private static final Preview NO_BODY = new Preview("(Empty)");
+    private static final Preview EMPTY_STRING_PREVIEW = Preview.from("");
 
     @Test
     void shouldMatchBeanContract() {
@@ -78,33 +78,33 @@ class PreviewTest {
     class ComputeTest {
         
         @Test
-        void computeShouldReturnStringEmptyWhenStringEmptyTextBody() throws Exception {
+        void computeShouldReturnEmptyStringPreviewWhenStringEmptyTextBody() throws Exception {
             assertThat(Preview.compute(""))
-                .isEqualTo(NO_BODY);
+                .isEqualTo(EMPTY_STRING_PREVIEW);
         }
 
         @Test
-        void computeShouldReturnStringEmptyWhenOnlySpaceTabAndBreakLines() throws Exception {
+        void computeShouldReturnEmptyStringPreviewWhenOnlySpaceTabAndBreakLines() throws Exception {
             assertThat(Preview.compute(" \n\t "))
-                .isEqualTo(NO_BODY);
+                .isEqualTo(EMPTY_STRING_PREVIEW);
         }
 
         @Test
-        void computeShouldReturnStringEmptyWhenOnlySpace() throws Exception {
+        void computeShouldReturnEmptyStringPreviewWhenOnlySpace() throws Exception {
             assertThat(Preview.compute(" "))
-                .isEqualTo(NO_BODY);
+                .isEqualTo(EMPTY_STRING_PREVIEW);
         }
 
         @Test
-        void computeShouldReturnStringEmptyWhenOnlyTab() throws Exception {
+        void computeShouldReturnEmptyStringPreviewWhenOnlyTab() throws Exception {
             assertThat(Preview.compute("\t"))
-                .isEqualTo(NO_BODY);
+                .isEqualTo(EMPTY_STRING_PREVIEW);
         }
 
         @Test
-        void computeShouldReturnStringEmptyWhenOnlyBreakLines() throws Exception {
+        void computeShouldReturnEmptyStringPreviewWhenOnlyBreakLines() throws Exception {
             assertThat(Preview.compute("\n"))
-                .isEqualTo(NO_BODY);
+                .isEqualTo(EMPTY_STRING_PREVIEW);
         }
 
         @Test

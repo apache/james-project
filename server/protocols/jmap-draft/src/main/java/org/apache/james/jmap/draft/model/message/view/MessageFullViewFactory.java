@@ -78,8 +78,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         Optional<String> mainTextContent = mainTextContent(messageContent);
         Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
 
-        Preview preview = mainTextContent.map(Preview::compute)
-            .orElse(Preview.NO_BODY);
+        Optional<Preview> preview = mainTextContent.map(Preview::compute);
 
         return MessageFullView.builder()
                 .id(message.getMessageId())
