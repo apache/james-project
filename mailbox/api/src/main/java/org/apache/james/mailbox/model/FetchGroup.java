@@ -19,11 +19,9 @@
 
 package org.apache.james.mailbox.model;
 
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.steveash.guavate.Guavate;
@@ -36,39 +34,18 @@ import com.google.common.collect.ImmutableSet;
  */
 public class FetchGroup {
     public enum Profile {
-        MIME_DESCRIPTOR(MIME_DESCRIPTOR_MASK),
-        HEADERS(HEADERS_MASK),
-        FULL_CONTENT(FULL_CONTENT_MASK),
-        BODY_CONTENT(BODY_CONTENT_MASK),
-        MIME_HEADERS(MIME_HEADERS_MASK),
-        MIME_CONTENT(MIME_CONTENT_MASK);
-
-        public static EnumSet<Profile> of(int content) {
-            return Arrays.stream(values())
-                .filter(value -> (content & value.mask) > 0)
-                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Profile.class)));
-        }
-
-        private final int mask;
-
-        Profile(int mask) {
-            this.mask = mask;
-        }
+        MIME_DESCRIPTOR,
+        HEADERS,
+        FULL_CONTENT,
+        BODY_CONTENT,
+        MIME_HEADERS,
+        MIME_CONTENT;
     }
 
     /**
      * For example: could have best performance when doing store and then
      * forget. UIDs are always returned
      */
-    public static final int NO_MASK = 0;
-    public static final int MINIMAL_MASK = 0x00;
-    public static final int MIME_DESCRIPTOR_MASK = 0x01;
-    public static final int HEADERS_MASK = 0x100;
-    public static final int FULL_CONTENT_MASK = 0x200;
-    public static final int BODY_CONTENT_MASK = 0x400;
-    public static final int MIME_HEADERS_MASK = 0x800;
-    public static final int MIME_CONTENT_MASK = 0x1000;
-
     public static final FetchGroup MINIMAL = new FetchGroup(EnumSet.noneOf(Profile.class));
     public static final FetchGroup HEADERS = new FetchGroup(EnumSet.of(Profile.HEADERS));
     public static final FetchGroup FULL_CONTENT = new FetchGroup(EnumSet.of(Profile.FULL_CONTENT));
@@ -96,10 +73,6 @@ public class FetchGroup {
      */
     public EnumSet<Profile> profiles() {
         return content;
-    }
-
-    public FetchGroup with(int content) {
-        return with(Profile.of(content));
     }
 
     public FetchGroup with(Profile... profiles) {

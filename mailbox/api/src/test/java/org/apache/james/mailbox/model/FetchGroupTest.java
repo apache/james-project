@@ -22,37 +22,15 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.EnumSet;
-import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class FetchGroupTest {
-    static Stream<Arguments> ofContentShouldReturnCorrectValue() {
-        return Stream.of(
-            Arguments.arguments(0, EnumSet.noneOf(Profile.class)),
-            Arguments.arguments(FetchGroup.MIME_DESCRIPTOR_MASK, EnumSet.of(Profile.MIME_DESCRIPTOR)),
-            Arguments.arguments(FetchGroup.BODY_CONTENT_MASK, EnumSet.of(Profile.BODY_CONTENT)),
-            Arguments.arguments(FetchGroup.FULL_CONTENT_MASK, EnumSet.of(Profile.FULL_CONTENT)),
-            Arguments.arguments(FetchGroup.HEADERS_MASK, EnumSet.of(Profile.HEADERS)),
-            Arguments.arguments(FetchGroup.MIME_HEADERS_MASK, EnumSet.of(Profile.MIME_HEADERS)),
-            Arguments.arguments(FetchGroup.MIME_CONTENT_MASK, EnumSet.of(Profile.MIME_CONTENT)),
-            Arguments.arguments(FetchGroup.HEADERS_MASK | FetchGroup.MIME_CONTENT_MASK, EnumSet.of(Profile.HEADERS, Profile.MIME_CONTENT)));
-    }
-
-    @ParameterizedTest
-    @MethodSource
-    void ofContentShouldReturnCorrectValue(int content, EnumSet<Profile> expected) {
-        assertThat(Profile.of(content)).isEqualTo(expected);
-    }
-
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FetchGroup.class)
@@ -60,9 +38,15 @@ class FetchGroupTest {
     }
 
     @Test
-    void orShouldReturnAFetchGroupWithUpdatedContent() {
-        assertThat(FetchGroup.HEADERS.with(FetchGroup.FULL_CONTENT_MASK))
+    void withShouldReturnAFetchGroupWithUpdatedContent() {
+        assertThat(FetchGroup.HEADERS.with(Profile.FULL_CONTENT))
             .isEqualTo(new FetchGroup(EnumSet.of(Profile.HEADERS, Profile.FULL_CONTENT)));
+    }
+
+    @Test
+    void withShouldReturnAFetchGroupWithSameContentWhenNoop() {
+        assertThat(FetchGroup.HEADERS.with(Profile.HEADERS))
+            .isEqualTo(new FetchGroup(EnumSet.of(Profile.HEADERS, Profile.HEADERS)));
     }
 
     @Test
