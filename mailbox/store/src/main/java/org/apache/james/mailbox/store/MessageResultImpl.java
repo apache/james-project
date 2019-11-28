@@ -33,7 +33,6 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Content;
-import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.model.Headers;
 import org.apache.james.mailbox.model.MailboxId;
@@ -228,14 +227,12 @@ public class MessageResultImpl implements MessageResult {
 
         private Iterator<Header> mimeHeaders;
 
-        private int content;
 
         public Content getBody() {
             return body;
         }
 
         public void setBody(Content body) {
-            content = content | FetchGroup.BODY_CONTENT_MASK;
             this.body = body;
         }
 
@@ -244,7 +241,6 @@ public class MessageResultImpl implements MessageResult {
         }
 
         void setMimeBody(Content mimeBody) {
-            content = content | FetchGroup.MIME_CONTENT_MASK;
             this.mimeBody = mimeBody;
         }
 
@@ -253,7 +249,6 @@ public class MessageResultImpl implements MessageResult {
         }
 
         public void setFull(Content full) {
-            content = content | FetchGroup.FULL_CONTENT_MASK;
             this.full = full;
         }
 
@@ -262,7 +257,6 @@ public class MessageResultImpl implements MessageResult {
         }
 
         public void setHeaders(Iterator<Header> headers) {
-            content = content | FetchGroup.HEADERS_MASK;
             this.headers = headers;
         }
 
@@ -271,7 +265,6 @@ public class MessageResultImpl implements MessageResult {
         }
 
         void setMimeHeaders(Iterator<Header> mimeHeaders) {
-            content = content | FetchGroup.MIME_HEADERS_MASK;
             this.mimeHeaders = mimeHeaders;
         }
     }
