@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 
 import javax.mail.Flags;
@@ -59,7 +61,7 @@ public class AppendCommandParser extends AbstractImapCommandParser {
      * If the next character in the request is a '"', tries to read a DateTime
      * argument. If not, returns null.
      */
-    public Date optionalDateTime(ImapRequestLineReader request) throws DecodingException {
+    public LocalDateTime optionalDateTime(ImapRequestLineReader request) throws DecodingException {
         char next = request.nextWordChar();
         if (next == '"') {
             return request.dateTime();
@@ -75,12 +77,12 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         if (flags == null) {
             flags = new Flags();
         }
-        Date datetime = optionalDateTime(request);
+        LocalDateTime datetime = optionalDateTime(request);
         if (datetime == null) {
-            datetime = new Date();
+            datetime = LocalDateTime.now();
         }
         request.nextWordChar();
 
-        return new AppendRequest(command, mailboxName, flags, datetime, request.consumeLiteral(true), tag);
+        return new AppendRequest(command, mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), request.consumeLiteral(true), tag);
     }
 }

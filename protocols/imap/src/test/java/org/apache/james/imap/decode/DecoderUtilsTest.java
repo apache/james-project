@@ -22,6 +22,11 @@ package org.apache.james.imap.decode;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Locale;
@@ -150,16 +155,21 @@ class DecoderUtilsTest {
 
     @ParameterizedTest
     @MethodSource
-    @SuppressWarnings("deprecation")
     void nominalDecodeDateTime(String input, String parsed) throws DecodingException {
-        assertThat(DecoderUtils.decodeDateTime(input).toGMTString()).isEqualTo(parsed);
+        LocalDateTime localDateTime = DecoderUtils.decodeDateTime(input);
+        assertThat(ZonedDateTime.of(localDateTime, ZoneId.systemDefault())
+                .withZoneSameInstant(ZoneId.of("GMT"))
+                .format(DateTimeFormatter.ofPattern("dd MMM YYYY HH:mm:ss VV", Locale.US)))
+            .isEqualTo(parsed);
     }
 
     @Test
-    @SuppressWarnings("deprecation")
     void decodeDatetimeShouldAllowAppleMailPrependsZeroNotSpace() throws Exception {
-        assertThat(DecoderUtils.decodeDateTime("09-Apr-2008 15:17:51 +0200").toGMTString())
-            .isEqualTo("9 Apr 2008 13:17:51 GMT");
+        LocalDateTime localDateTime = DecoderUtils.decodeDateTime("09-Apr-2008 15:17:51 +0200");
+        assertThat(ZonedDateTime.of(localDateTime, ZoneId.systemDefault())
+                .withZoneSameInstant(ZoneId.of("GMT"))
+                .format(DateTimeFormatter.ofPattern("dd MMM YYYY HH:mm:ss VV", Locale.US)))
+            .isEqualTo("09 Apr 2008 13:17:51 GMT");
     }
 
     static Stream<Arguments> nominalDecodeDateTimeWithTimezone() {
@@ -218,7 +228,7 @@ class DecoderUtilsTest {
                 1246838821081L,
                 1226795970848L,
                 1260254185119L
-            ).mapToObj(Date::new)
+            ).mapToObj(Instant::ofEpochMilli)
             .collect(Collectors.toSet())
         ).stream()
             .map(list -> Arguments.of(list.toArray()));
@@ -226,12 +236,11 @@ class DecoderUtilsTest {
 
     @ParameterizedTest
     @MethodSource
-    void nominalDecodeDateTimeWithTimezone(TimeZone zone, Date date) throws Exception {
-        FastDateFormat format = FastDateFormat.getInstance("dd-MMM-yyyy hh:mm:ss Z", zone, Locale.US);
-        String in = format.format(date);
-        Date decodedDate = DecoderUtils.decodeDateTime(in);
-        String out = format.format(decodedDate);
-        assertThat(out).describedAs("Round trip").isEqualTo(in);
+    void nominalDecodeDateTimeWithTimezone(TimeZone zone, Instant date) throws Exception {
+        FastDateFormat format = FastDateFormat.getInstance("dd-MMM-yyyy HH:mm:ss Z", zone, Locale.US);
+        String in = format.format(Date.from(date));
+        LocalDateTime decodedDate = DecoderUtils.decodeDateTime(in);
+        assertThat(decodedDate.atZone(ZoneId.systemDefault())).describedAs("Round trip").isEqualToIgnoringNanos(ZonedDateTime.ofInstant(date, zone.toZoneId()));
     }
 
     static Stream<Arguments> nominalDecodeDigit() {

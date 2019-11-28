@@ -28,8 +28,8 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import javax.mail.Flags;
@@ -313,7 +313,7 @@ public abstract class ImapRequestLineReader {
     /**
      * Reads a "date-time" argument from the request.
      */
-    public Date dateTime() throws DecodingException {
+    public LocalDateTime dateTime() throws DecodingException {
         char next = nextWordChar();
         String dateString;
         if (next == '"') {
