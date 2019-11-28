@@ -26,13 +26,12 @@ import java.util.stream.Stream;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
  * Indicates the results fetched.
  */
-public class FetchGroup {
+public class FetchGroup extends Profiles<FetchGroup> {
     public enum Profile {
         MIME_DESCRIPTOR,
         HEADERS,
@@ -51,7 +50,6 @@ public class FetchGroup {
     public static final FetchGroup FULL_CONTENT = new FetchGroup(EnumSet.of(Profile.FULL_CONTENT));
     public static final FetchGroup BODY_CONTENT = new FetchGroup(EnumSet.of(Profile.BODY_CONTENT));
 
-    private final EnumSet<Profile> content;
     private final ImmutableSet<PartContentDescriptor> partContentDescriptors;
 
     @VisibleForTesting
@@ -61,30 +59,13 @@ public class FetchGroup {
 
     @VisibleForTesting
     FetchGroup(EnumSet<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
-        this.content = content;
+        super(content);
         this.partContentDescriptors = partContentDescriptors;
     }
 
-    /**
-     * Profiles to be fetched.
-     *
-     * @return Return an enumset of profiles to be fetched
-     * @see Profile
-     */
-    public EnumSet<Profile> profiles() {
-        return content;
-    }
-
-    public FetchGroup with(Profile... profiles) {
-        Preconditions.checkArgument(profiles.length > 0);
-        return with(EnumSet.copyOf(ImmutableSet.copyOf(profiles)));
-    }
-
-    public FetchGroup with(EnumSet<Profile> profiles) {
-        EnumSet<Profile> result = EnumSet.noneOf(Profile.class);
-        result.addAll(this.content);
-        result.addAll(profiles);
-        return new FetchGroup(result, partContentDescriptors);
+    @Override
+    FetchGroup copyWith(EnumSet<Profile> profiles) {
+        return new FetchGroup(profiles, partContentDescriptors);
     }
 
     /**
@@ -109,7 +90,7 @@ public class FetchGroup {
     public FetchGroup addPartContent(MimePath path, EnumSet<Profile> profiles) {
         PartContentDescriptor newContent = retrieveUpdatedPartContentDescriptor(path, profiles);
 
-        return new FetchGroup(this.content,
+        return new FetchGroup(profiles(),
             Stream.concat(
                 partContentDescriptors.stream()
                     .filter(descriptor -> !descriptor.path().equals(path)),
@@ -126,7 +107,7 @@ public class FetchGroup {
 
     @Override
     public String toString() {
-        return "Fetch " + content;
+        return "Fetch " + profiles();
     }
 
     @Override
@@ -134,7 +115,7 @@ public class FetchGroup {
         if (o instanceof FetchGroup) {
             FetchGroup that = (FetchGroup) o;
 
-            return Objects.equals(this.content, that.content)
+            return Objects.equals(this.profiles(), that.profiles())
                 && Objects.equals(this.partContentDescriptors, that.partContentDescriptors);
         }
         return false;
@@ -142,6 +123,6 @@ public class FetchGroup {
 
     @Override
     public final int hashCode() {
-        return Objects.hash(content, partContentDescriptors);
+        return Objects.hash(profiles(), partContentDescriptors);
     }
 }

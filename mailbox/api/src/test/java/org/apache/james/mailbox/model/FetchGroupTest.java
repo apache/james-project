@@ -38,6 +38,7 @@ class FetchGroupTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FetchGroup.class)
+            .withNonnullFields("profiles")
             .verify();
     }
 

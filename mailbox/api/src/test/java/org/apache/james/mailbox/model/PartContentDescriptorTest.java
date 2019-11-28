@@ -27,7 +27,7 @@ class PartContentDescriptorTest {
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(PartContentDescriptor.class)
-            .withIgnoredFields("content")
+            .withIgnoredFields("profiles")
             .verify();
     }
 }

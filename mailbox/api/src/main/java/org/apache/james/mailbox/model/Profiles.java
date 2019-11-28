@@ -19,52 +19,40 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Collection;
 import java.util.EnumSet;
-import java.util.Objects;
 
-/**
- * Describes the contents to be fetched for a mail part. All
- * implementations MUST implement equals. Two implementations are equal
- * if and only if their paths are equal.
- */
-public class PartContentDescriptor extends Profiles<PartContentDescriptor> {
-    private final MimePath path;
+import org.apache.james.mailbox.model.FetchGroup.Profile;
 
-    public PartContentDescriptor(MimePath path) {
-        this(EnumSet.noneOf(FetchGroup.Profile.class), path);
-    }
+import com.google.common.collect.ImmutableSet;
 
-    public PartContentDescriptor(EnumSet<FetchGroup.Profile> content, MimePath path) {
-        super(content);
-        this.path = path;
-    }
+public abstract class Profiles<T extends Profiles<T>> {
+    private final EnumSet<Profile> profiles;
 
-    @Override
-    PartContentDescriptor copyWith(EnumSet<FetchGroup.Profile> enumSet) {
-        return new PartContentDescriptor(enumSet, path);
+    public Profiles(EnumSet<Profile> profiles) {
+        this.profiles = profiles;
     }
 
     /**
-     * Path describing the part to be fetched.
+     * Profiles to be fetched.
      *
-     * @return path describing the part, not null
+     * @return Return an enumset of profiles to be fetched
+     * @see Profile
      */
-    public MimePath path() {
-        return path;
+    public EnumSet<Profile> profiles() {
+        return EnumSet.copyOf(profiles);
     }
 
-    @Override
-    public final int hashCode() {
-        return Objects.hash(path);
+    public T with(Profile... profiles) {
+        return with(EnumSet.copyOf(ImmutableSet.copyOf(profiles)));
     }
 
-    @Override
-    public final boolean equals(Object obj) {
-        if (obj instanceof PartContentDescriptor) {
-            PartContentDescriptor that = (PartContentDescriptor) obj;
-            return Objects.equals(this.path, that.path);
-        }
-        return false;
+    public T with(Collection<Profile> profiles) {
+        EnumSet<Profile> result = EnumSet.noneOf(Profile.class);
+        result.addAll(this.profiles);
+        result.addAll(profiles);
+        return copyWith(result);
     }
 
+    abstract T copyWith(EnumSet<Profile> profiles);
 }
