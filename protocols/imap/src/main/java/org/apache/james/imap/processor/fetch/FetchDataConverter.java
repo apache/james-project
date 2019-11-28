@@ -20,7 +20,6 @@
 package org.apache.james.imap.processor.fetch;
 
 import java.util.Collection;
-import java.util.EnumSet;
 
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
@@ -78,7 +77,7 @@ class FetchDataConverter {
             return result.with(profile);
         } else {
             MimePath mimePath = new MimePath(path);
-            return result.addPartContent(mimePath, EnumSet.of(profile));
+            return result.addPartContent(mimePath, profile);
         }
     }
 }

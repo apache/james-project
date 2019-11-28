@@ -58,17 +58,17 @@ class FetchDataConverterTest {
             Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Header(), PEEK), FetchGroup.HEADERS),
             Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Text(), PEEK), FetchGroup.BODY_CONTENT),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, HEADER, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.HEADERS))),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.HEADERS)),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, HEADER, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.MIME_CONTENT))),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.MIME_CONTENT)),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, MIME, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.MIME_HEADERS))),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.MIME_HEADERS)),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, TEXT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))));
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)));
     }
 
     @ParameterizedTest

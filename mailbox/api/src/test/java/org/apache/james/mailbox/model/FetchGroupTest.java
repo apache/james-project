@@ -93,7 +93,7 @@ class FetchGroupTest {
         assertThat(
             FetchGroup.MINIMAL
                 .addPartContent(new MimePath(path), EnumSet.noneOf(Profile.class))
-                .addPartContent(new MimePath(path), EnumSet.of(Profile.HEADERS)))
+                .addPartContent(new MimePath(path), Profile.HEADERS))
             .isEqualTo(new FetchGroup(EnumSet.noneOf(Profile.class),
                 ImmutableSet.of(new PartContentDescriptor(EnumSet.of(Profile.HEADERS), new MimePath(path)))));
     }

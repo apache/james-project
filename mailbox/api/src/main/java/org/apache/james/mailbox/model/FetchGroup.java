@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
@@ -96,6 +97,10 @@ public class FetchGroup extends Profiles<FetchGroup> {
                     .filter(descriptor -> !descriptor.path().equals(path)),
                 Stream.of(newContent))
                 .collect(Guavate.toImmutableSet()));
+    }
+
+    public FetchGroup addPartContent(MimePath path, Profile... profiles) {
+        return addPartContent(path, EnumSet.copyOf(Arrays.asList(profiles)));
     }
 
     private PartContentDescriptor retrieveUpdatedPartContentDescriptor(MimePath path, EnumSet<Profile> profiles) {

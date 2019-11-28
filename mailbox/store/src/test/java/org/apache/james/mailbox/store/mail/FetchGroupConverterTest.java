@@ -46,9 +46,9 @@ class FetchGroupConverterTest {
             Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR), FetchType.Full),
             Arguments.arguments(FetchGroup.MINIMAL.with(Profile.MIME_HEADERS), FetchType.Full),
             Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.noneOf(Profile.class)), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.HEADERS)), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.BODY_CONTENT)), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.FULL_CONTENT)), FetchType.Full));
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.HEADERS), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.BODY_CONTENT), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), Profile.FULL_CONTENT), FetchType.Full));
     }
 
     @ParameterizedTest
