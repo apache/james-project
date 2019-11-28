@@ -20,6 +20,7 @@
 package org.apache.james.imap.processor.fetch;
 
 import java.util.Collection;
+import java.util.EnumSet;
 
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
@@ -32,10 +33,10 @@ class FetchDataConverter {
         FetchGroup result = FetchGroup.MINIMAL;
 
         if (fetch.isEnvelope()) {
-            result = result.with(FetchGroup.HEADERS_MASK);
+            result = result.with(FetchGroup.Profile.HEADERS);
         }
         if (fetch.isBody() || fetch.isBodyStructure()) {
-            result = result.with(FetchGroup.MIME_DESCRIPTOR_MASK);
+            result = result.with(FetchGroup.Profile.MIME_DESCRIPTOR);
         }
 
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
@@ -47,21 +48,21 @@ class FetchDataConverter {
                 switch (sectionType) {
                     case BodyFetchElement.CONTENT:
                         if (isBase) {
-                            result = addContent(result, path, isBase, FetchGroup.FULL_CONTENT_MASK);
+                            result = addContent(result, path, isBase, FetchGroup.Profile.FULL_CONTENT);
                         } else {
-                            result = addContent(result, path, isBase, FetchGroup.MIME_CONTENT_MASK);
+                            result = addContent(result, path, isBase, FetchGroup.Profile.MIME_CONTENT);
                         }
                         break;
                     case BodyFetchElement.HEADER:
                     case BodyFetchElement.HEADER_NOT_FIELDS:
                     case BodyFetchElement.HEADER_FIELDS:
-                        result = addContent(result, path, isBase, FetchGroup.HEADERS_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.Profile.HEADERS);
                         break;
                     case BodyFetchElement.MIME:
-                        result = addContent(result, path, isBase, FetchGroup.MIME_HEADERS_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.Profile.MIME_HEADERS);
                         break;
                     case BodyFetchElement.TEXT:
-                        result = addContent(result, path, isBase, FetchGroup.BODY_CONTENT_MASK);
+                        result = addContent(result, path, isBase, FetchGroup.Profile.BODY_CONTENT);
                         break;
                     default:
                         break;
@@ -72,12 +73,12 @@ class FetchDataConverter {
         return result;
     }
 
-    private static FetchGroup addContent(FetchGroup result, int[] path, boolean isBase, int content) {
+    private static FetchGroup addContent(FetchGroup result, int[] path, boolean isBase, FetchGroup.Profile profile) {
         if (isBase) {
-            return result.with(content);
+            return result.with(profile);
         } else {
             MimePath mimePath = new MimePath(path);
-            return result.addPartContent(mimePath, content);
+            return result.addPartContent(mimePath, EnumSet.of(profile));
         }
     }
 }

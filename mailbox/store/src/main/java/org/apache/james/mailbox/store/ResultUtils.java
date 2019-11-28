@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 
 import org.apache.james.mailbox.exception.MailboxException;
@@ -42,6 +43,9 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.RawField;
 import org.apache.james.mime4j.util.ByteSequence;
 import org.apache.james.mime4j.util.ContentUtil;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
 public class ResultUtils {
 
@@ -97,7 +101,7 @@ public class ResultUtils {
             MessageResultImpl messageResult = new MessageResultImpl(message);
             if (fetchGroup != null) {
                 if (!haveValidContent(fetchGroup)) {
-                    throw new UnsupportedOperationException("Unsupported result: " + fetchGroup.content());
+                    throw new UnsupportedOperationException("Unsupported result: " + fetchGroup.profiles());
                 }
                 addPartContent(fetchGroup, message, messageResult);
             }
@@ -107,11 +111,20 @@ public class ResultUtils {
         }
     }
 
-    private static boolean haveValidContent(FetchGroup fetchGroup) {
-        return fetchGroup.hasOnlyMasks(FetchGroup.HEADERS_MASK,
-            FetchGroup.BODY_CONTENT_MASK,
-            FetchGroup.FULL_CONTENT_MASK,
-            FetchGroup.MIME_DESCRIPTOR_MASK);
+    @VisibleForTesting
+    static boolean haveValidContent(FetchGroup fetchGroup) {
+        EnumSet<FetchGroup.Profile> supportedGroups = EnumSet.of(
+            FetchGroup.Profile.HEADERS,
+            FetchGroup.Profile.BODY_CONTENT,
+            FetchGroup.Profile.FULL_CONTENT,
+            FetchGroup.Profile.MIME_DESCRIPTOR);
+
+        Collection<FetchGroup.Profile> unsupportedProfiles = fetchGroup.profiles()
+            .stream()
+            .filter(value -> !supportedGroups.contains(value))
+            .collect(Guavate.toImmutableSet());
+
+        return unsupportedProfiles.isEmpty();
     }
 
     private static void addPartContent(FetchGroup fetchGroup, MailboxMessage message, MessageResultImpl messageResult)
@@ -127,19 +140,20 @@ public class ResultUtils {
     private static void addPartContent(PartContentDescriptor descriptor, MailboxMessage message, MessageResultImpl messageResult)
             throws MailboxException, IOException, MimeException {
         MimePath mimePath = descriptor.path();
-        if (descriptor.hasMask(FetchGroup.FULL_CONTENT_MASK)) {
+        EnumSet<FetchGroup.Profile> profiles = descriptor.profiles();
+        if (profiles.contains(FetchGroup.Profile.FULL_CONTENT)) {
             addFullContent(message, messageResult, mimePath);
         }
-        if (descriptor.hasMask(FetchGroup.BODY_CONTENT_MASK)) {
+        if (profiles.contains(FetchGroup.Profile.BODY_CONTENT)) {
             addBodyContent(message, messageResult, mimePath);
         }
-        if (descriptor.hasMask(FetchGroup.MIME_CONTENT_MASK)) {
+        if (profiles.contains(FetchGroup.Profile.MIME_CONTENT)) {
             addMimeBodyContent(message, messageResult, mimePath);
         }
-        if (descriptor.hasMask(FetchGroup.HEADERS_MASK)) {
+        if (profiles.contains(FetchGroup.Profile.HEADERS)) {
             addHeaders(message, messageResult, mimePath);
         }
-        if (descriptor.hasMask(FetchGroup.MIME_HEADERS_MASK)) {
+        if (profiles.contains(FetchGroup.Profile.MIME_HEADERS)) {
             addMimeHeaders(message, messageResult, mimePath);
         }
     }

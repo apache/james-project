@@ -21,9 +21,11 @@ package org.apache.james.mailbox.store.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.apache.james.mailbox.model.MimePath;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -43,10 +45,10 @@ class FetchGroupConverterTest {
             Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_CONTENT_MASK), FetchType.Full),
             Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_DESCRIPTOR_MASK), FetchType.Full),
             Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_HEADERS_MASK), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.MINIMAL_MASK), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.HEADERS_MASK), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.BODY_CONTENT_MASK), FetchType.Full),
-            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.FULL_CONTENT_MASK), FetchType.Full));
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.noneOf(Profile.class)), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.HEADERS)), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.BODY_CONTENT)), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), EnumSet.of(Profile.FULL_CONTENT)), FetchType.Full));
     }
 
     @ParameterizedTest

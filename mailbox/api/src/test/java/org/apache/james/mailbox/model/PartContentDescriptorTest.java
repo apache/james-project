@@ -19,37 +19,15 @@
 
 package org.apache.james.mailbox.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class PartContentDescriptorTest {
-    private static final int[] POSITION = {12};
-
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(PartContentDescriptor.class)
             .withIgnoredFields("content")
             .verify();
-    }
-
-    @Test
-    void hasMaskShouldReturnFalseWhenNotContained() {
-        assertThat(new PartContentDescriptor(new MimePath(POSITION))
-                .or(FetchGroup.MIME_HEADERS_MASK)
-                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
-                .hasMask(FetchGroup.HEADERS_MASK))
-            .isFalse();
-    }
-
-    @Test
-    void hasMaskShouldReturnTrueWhenContained() {
-        assertThat(new PartContentDescriptor(new MimePath(POSITION))
-                .or(FetchGroup.MIME_HEADERS_MASK)
-                .or(FetchGroup.MIME_DESCRIPTOR_MASK)
-                .hasMask(FetchGroup.MIME_HEADERS_MASK))
-            .isTrue();
     }
 }

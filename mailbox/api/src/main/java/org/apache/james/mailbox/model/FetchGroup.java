@@ -20,18 +20,42 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 /**
  * Indicates the results fetched.
  */
 public class FetchGroup {
+    public enum Profile {
+        MIME_DESCRIPTOR(MIME_DESCRIPTOR_MASK),
+        HEADERS(HEADERS_MASK),
+        FULL_CONTENT(FULL_CONTENT_MASK),
+        BODY_CONTENT(BODY_CONTENT_MASK),
+        MIME_HEADERS(MIME_HEADERS_MASK),
+        MIME_CONTENT(MIME_CONTENT_MASK);
+
+        public static EnumSet<Profile> of(int content) {
+            return Arrays.stream(values())
+                .filter(value -> (content & value.mask) > 0)
+                .collect(Collectors.toCollection(() -> EnumSet.noneOf(Profile.class)));
+        }
+
+        private final int mask;
+
+        Profile(int mask) {
+            this.mask = mask;
+        }
+    }
+
     /**
      * For example: could have best performance when doing store and then
      * forget. UIDs are always returned
@@ -45,43 +69,49 @@ public class FetchGroup {
     public static final int MIME_HEADERS_MASK = 0x800;
     public static final int MIME_CONTENT_MASK = 0x1000;
 
-    public static final FetchGroup MINIMAL = new FetchGroup(MINIMAL_MASK);
-    public static final FetchGroup HEADERS = new FetchGroup(HEADERS_MASK);
-    public static final FetchGroup FULL_CONTENT = new FetchGroup(FULL_CONTENT_MASK);
-    public static final FetchGroup BODY_CONTENT = new FetchGroup(BODY_CONTENT_MASK);
+    public static final FetchGroup MINIMAL = new FetchGroup(EnumSet.noneOf(Profile.class));
+    public static final FetchGroup HEADERS = new FetchGroup(EnumSet.of(Profile.HEADERS));
+    public static final FetchGroup FULL_CONTENT = new FetchGroup(EnumSet.of(Profile.FULL_CONTENT));
+    public static final FetchGroup BODY_CONTENT = new FetchGroup(EnumSet.of(Profile.BODY_CONTENT));
 
-    private final int content;
+    private final EnumSet<Profile> content;
     private final ImmutableSet<PartContentDescriptor> partContentDescriptors;
 
     @VisibleForTesting
-    FetchGroup(int content) {
+    FetchGroup(EnumSet<Profile> content) {
         this(content, ImmutableSet.of());
     }
 
     @VisibleForTesting
-    FetchGroup(int content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
+    FetchGroup(EnumSet<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
         this.content = content;
         this.partContentDescriptors = partContentDescriptors;
     }
 
     /**
-     * Contents to be fetched. Composed bitwise.
+     * Profiles to be fetched.
      *
-     * @return masks to be used for bitewise operations.
-     * @see #MINIMAL_MASK
-     * @see #MIME_DESCRIPTOR_MASK
-     * @see #HEADERS_MASK
-     * @see #FULL_CONTENT_MASK
-     * @see #BODY_CONTENT_MASK
-     * @see #MIME_HEADERS_MASK
-     * @see #MIME_CONTENT_MASK
+     * @return Return an enumset of profiles to be fetched
+     * @see Profile
      */
-    public int content() {
+    public EnumSet<Profile> profiles() {
         return content;
     }
 
     public FetchGroup with(int content) {
-         return new FetchGroup(this.content | content, partContentDescriptors);
+        return with(Profile.of(content));
+    }
+
+    public FetchGroup with(Profile... profiles) {
+        Preconditions.checkArgument(profiles.length > 0);
+        return with(EnumSet.copyOf(ImmutableSet.copyOf(profiles)));
+    }
+
+    public FetchGroup with(EnumSet<Profile> profiles) {
+        EnumSet<Profile> result = EnumSet.noneOf(Profile.class);
+        result.addAll(this.content);
+        result.addAll(profiles);
+        return new FetchGroup(result, partContentDescriptors);
     }
 
     /**
@@ -96,15 +126,15 @@ public class FetchGroup {
     }
 
     /**
-     * Adds content for the particular part.
+     * Adds profiles for the particular part.
      * 
      * @param path
      *            <code>MimePath</code>, not null
-     * @param content
-     *            bitwise content constant
+     * @param profiles
+     *            bitwise profiles constant
      */
-    public FetchGroup addPartContent(MimePath path, int content) {
-        PartContentDescriptor newContent = retrieveUpdatedPartContentDescriptor(path, content);
+    public FetchGroup addPartContent(MimePath path, EnumSet<Profile> profiles) {
+        PartContentDescriptor newContent = retrieveUpdatedPartContentDescriptor(path, profiles);
 
         return new FetchGroup(this.content,
             Stream.concat(
@@ -114,23 +144,11 @@ public class FetchGroup {
                 .collect(Guavate.toImmutableSet()));
     }
 
-    private PartContentDescriptor retrieveUpdatedPartContentDescriptor(MimePath path, int content) {
+    private PartContentDescriptor retrieveUpdatedPartContentDescriptor(MimePath path, EnumSet<Profile> profiles) {
         return partContentDescriptors.stream()
                 .filter(descriptor -> path.equals(descriptor.path()))
                 .findFirst()
-                .orElse(new PartContentDescriptor(path))
-                .or(content);
-    }
-
-    public boolean hasMask(int mask) {
-        return (content & mask) > NO_MASK;
-    }
-
-    public boolean hasOnlyMasks(int... masks) {
-        int allowedMask = Arrays.stream(masks)
-            .reduce((a, b) -> a | b)
-            .orElse(0);
-        return (content & (~ allowedMask)) == 0;
+                .orElse(new PartContentDescriptor(profiles, path));
     }
 
     @Override

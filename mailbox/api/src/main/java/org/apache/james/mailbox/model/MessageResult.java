@@ -84,7 +84,7 @@ public interface MessageResult extends Comparable<MessageResult> {
      * @param path
      *            describing the part's position within a multipart message
      * @return <code>Header</code> <code>Iterator</code>, or null when
-     *         {@link FetchGroup#content()} does not include the index and
+     *         {@link FetchGroup#profiles()} does not include the index and
      *         when the mime part cannot be found
      */
     Iterator<Header> iterateHeaders(MimePath path) throws MailboxException;
@@ -95,7 +95,7 @@ public interface MessageResult extends Comparable<MessageResult> {
      * @param path
      *            describing the part's position within a multipart message
      * @return <code>Header</code> <code>Iterator</code>, or null when
-     *         {@link FetchGroup#content()} does not include the index and
+     *         {@link FetchGroup#profiles()} does not include the index and
      *         when the mime part cannot be found
      */
     Iterator<Header> iterateMimeHeaders(MimePath path) throws MailboxException;
@@ -116,7 +116,7 @@ public interface MessageResult extends Comparable<MessageResult> {
      * @param path
      *            describes the part
      * @return <code>Content</code>, or null when
-     *         {@link FetchGroup#content()} did not been include the given
+     *         {@link FetchGroup#profiles()} did not been include the given
      *         index and when the mime part cannot be found
      */
     Content getFullContent(MimePath path) throws MailboxException;
@@ -137,7 +137,7 @@ public interface MessageResult extends Comparable<MessageResult> {
      * @param path
      *            describes the part
      * @return <code>Content</code>, or null when
-     *         {@link FetchGroup#content()} did not been include the given
+     *         {@link FetchGroup#profiles()} did not been include the given
      *         index and when the mime part cannot be found
      */
     Content getBody(MimePath path) throws MailboxException;
@@ -148,7 +148,7 @@ public interface MessageResult extends Comparable<MessageResult> {
      * @param path
      *            describes the part
      * @return <code>Content</code>, or null when
-     *         {@link FetchGroup#content()} did not been include the given
+     *         {@link FetchGroup#profiles()} did not been include the given
      *         index and when the mime part cannot be found
      */
     Content getMimeBody(MimePath path) throws MailboxException;

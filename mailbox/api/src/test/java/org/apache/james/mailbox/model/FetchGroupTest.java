@@ -21,13 +21,38 @@ package org.apache.james.mailbox.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.EnumSet;
+import java.util.stream.Stream;
+
+import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.collect.ImmutableSet;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class FetchGroupTest {
+    static Stream<Arguments> ofContentShouldReturnCorrectValue() {
+        return Stream.of(
+            Arguments.arguments(0, EnumSet.noneOf(Profile.class)),
+            Arguments.arguments(FetchGroup.MIME_DESCRIPTOR_MASK, EnumSet.of(Profile.MIME_DESCRIPTOR)),
+            Arguments.arguments(FetchGroup.BODY_CONTENT_MASK, EnumSet.of(Profile.BODY_CONTENT)),
+            Arguments.arguments(FetchGroup.FULL_CONTENT_MASK, EnumSet.of(Profile.FULL_CONTENT)),
+            Arguments.arguments(FetchGroup.HEADERS_MASK, EnumSet.of(Profile.HEADERS)),
+            Arguments.arguments(FetchGroup.MIME_HEADERS_MASK, EnumSet.of(Profile.MIME_HEADERS)),
+            Arguments.arguments(FetchGroup.MIME_CONTENT_MASK, EnumSet.of(Profile.MIME_CONTENT)),
+            Arguments.arguments(FetchGroup.HEADERS_MASK | FetchGroup.MIME_CONTENT_MASK, EnumSet.of(Profile.HEADERS, Profile.MIME_CONTENT)));
+    }
+
+    @ParameterizedTest
+    @MethodSource
+    void ofContentShouldReturnCorrectValue(int content, EnumSet<Profile> expected) {
+        assertThat(Profile.of(content)).isEqualTo(expected);
+    }
+
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(FetchGroup.class)
@@ -36,9 +61,8 @@ class FetchGroupTest {
 
     @Test
     void orShouldReturnAFetchGroupWithUpdatedContent() {
-        int expected = FetchGroup.HEADERS_MASK | FetchGroup.FULL_CONTENT_MASK;
         assertThat(FetchGroup.HEADERS.with(FetchGroup.FULL_CONTENT_MASK))
-            .isEqualTo(new FetchGroup(expected));
+            .isEqualTo(new FetchGroup(EnumSet.of(Profile.HEADERS, Profile.FULL_CONTENT)));
     }
 
     @Test
@@ -46,8 +70,9 @@ class FetchGroupTest {
         int[] path = {12};
         assertThat(
             FetchGroup.MINIMAL
-                .addPartContent(new MimePath(path), FetchGroup.MINIMAL_MASK))
-            .isEqualTo(new FetchGroup(FetchGroup.MINIMAL_MASK, ImmutableSet.of(new PartContentDescriptor(FetchGroup.MINIMAL_MASK, new MimePath(path)))));
+                .addPartContent(new MimePath(path), EnumSet.noneOf(Profile.class)))
+            .isEqualTo(new FetchGroup(EnumSet.noneOf(Profile.class),
+                ImmutableSet.of(new PartContentDescriptor(new MimePath(path)))));
     }
 
     @Test
@@ -56,11 +81,11 @@ class FetchGroupTest {
         int[] path2 = {13};
         assertThat(
             FetchGroup.MINIMAL
-                .addPartContent(new MimePath(path), FetchGroup.MINIMAL_MASK)
-                .addPartContent(new MimePath(path2), FetchGroup.MINIMAL_MASK))
-            .isEqualTo(new FetchGroup(FetchGroup.MINIMAL_MASK,
-                ImmutableSet.of(new PartContentDescriptor(FetchGroup.MINIMAL_MASK, new MimePath(path)),
-                    new PartContentDescriptor(FetchGroup.MINIMAL_MASK, new MimePath(path2)))));
+                .addPartContent(new MimePath(path), EnumSet.noneOf(Profile.class))
+                .addPartContent(new MimePath(path2), EnumSet.noneOf(Profile.class)))
+            .isEqualTo(new FetchGroup(EnumSet.noneOf(Profile.class),
+                ImmutableSet.of(new PartContentDescriptor(new MimePath(path)),
+                    new PartContentDescriptor(new MimePath(path2)))));
     }
 
     @Test
@@ -68,64 +93,9 @@ class FetchGroupTest {
         int[] path = {12};
         assertThat(
             FetchGroup.MINIMAL
-                .addPartContent(new MimePath(path), FetchGroup.MINIMAL_MASK)
-                .addPartContent(new MimePath(path), FetchGroup.HEADERS_MASK))
-            .isEqualTo(new FetchGroup(FetchGroup.MINIMAL_MASK, ImmutableSet.of(new PartContentDescriptor(FetchGroup.MINIMAL_MASK, new MimePath(path)).or(FetchGroup.HEADERS_MASK))));
-    }
-
-    @Test
-    void hasMaskShouldReturnFalseWhenNotContained() {
-        assertThat(FetchGroup.MINIMAL
-                .with(FetchGroup.MIME_HEADERS_MASK)
-                .with(FetchGroup.MIME_DESCRIPTOR_MASK)
-                .hasMask(FetchGroup.HEADERS_MASK))
-            .isFalse();
-    }
-
-    @Test
-    void hasMaskShouldReturnTrueWhenContained() {
-        assertThat(FetchGroup.MINIMAL
-                .with(FetchGroup.MIME_HEADERS_MASK)
-                .with(FetchGroup.MIME_DESCRIPTOR_MASK)
-                .hasMask(FetchGroup.MIME_HEADERS_MASK))
-            .isTrue();
-    }
-
-    @Test
-    void hasOnlyMasksShouldReturnTrueWhenSuppliedEmpty() {
-        assertThat(FetchGroup.MINIMAL
-                .hasOnlyMasks())
-            .isTrue();
-    }
-
-    @Test
-    void hasOnlyMasksShouldReturnTrueWhenExactlyContainASingleValue() {
-        assertThat(FetchGroup.HEADERS
-                .hasOnlyMasks(FetchGroup.HEADERS_MASK))
-            .isTrue();
-    }
-
-    @Test
-    void hasOnlyMasksShouldReturnTrueWhenExactlyContainMultipleValues() {
-        assertThat(FetchGroup.HEADERS
-                .with(FetchGroup.BODY_CONTENT_MASK)
-                .hasOnlyMasks(FetchGroup.HEADERS_MASK, FetchGroup.BODY_CONTENT_MASK))
-            .isTrue();
-    }
-
-    @Test
-    void hasOnlyMasksShouldReturnFalseWhenNotContained() {
-        assertThat(FetchGroup.HEADERS
-                .with(FetchGroup.BODY_CONTENT_MASK)
-                .hasOnlyMasks(FetchGroup.FULL_CONTENT_MASK))
-            .isFalse();
-    }
-
-    @Test
-    void minimalShouldAlwaysBeValid() {
-        assertThat(FetchGroup.MINIMAL
-                .hasOnlyMasks(FetchGroup.FULL_CONTENT_MASK, FetchGroup.HEADERS_MASK, FetchGroup.BODY_CONTENT_MASK,
-                    FetchGroup.MIME_DESCRIPTOR_MASK))
-            .isTrue();
+                .addPartContent(new MimePath(path), EnumSet.noneOf(Profile.class))
+                .addPartContent(new MimePath(path), EnumSet.of(Profile.HEADERS)))
+            .isEqualTo(new FetchGroup(EnumSet.noneOf(Profile.class),
+                ImmutableSet.of(new PartContentDescriptor(EnumSet.of(Profile.HEADERS), new MimePath(path)))));
     }
 }

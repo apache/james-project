@@ -19,7 +19,10 @@
 
 package org.apache.james.mailbox.store.mail;
 
+import java.util.EnumSet;
+
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.FetchGroup.Profile;
 
 public class FetchGroupConverter {
     /**
@@ -27,27 +30,28 @@ public class FetchGroupConverter {
      * {@link MessageMapper.FetchType} for it
      */
     public static MessageMapper.FetchType getFetchType(FetchGroup group) {
-        if (group.hasMask(FetchGroup.FULL_CONTENT_MASK)) {
+        EnumSet<Profile> profiles = group.profiles();
+
+        if (profiles.contains(Profile.FULL_CONTENT)) {
             return MessageMapper.FetchType.Full;
         }
-        if (group.hasMask(FetchGroup.MIME_DESCRIPTOR_MASK)) {
-            // If we need the mimedescriptor we MAY need the full content later
-            // too.
+        if (profiles.contains(Profile.MIME_DESCRIPTOR)) {
+            // If we need the mimedescriptor we MAY need the full profile later too.
             // This gives us no other choice then request it
             return MessageMapper.FetchType.Full;
         }
-        if (group.hasMask(FetchGroup.MIME_CONTENT_MASK)) {
+        if (profiles.contains(Profile.MIME_CONTENT)) {
             return MessageMapper.FetchType.Full;
         }
-        if (group.hasMask(FetchGroup.MIME_HEADERS_MASK)) {
+        if (profiles.contains(Profile.MIME_HEADERS)) {
             return MessageMapper.FetchType.Full;
         }
         if (!group.getPartContentDescriptors().isEmpty()) {
             return MessageMapper.FetchType.Full;
         }
 
-        boolean headers = group.hasMask(FetchGroup.HEADERS_MASK);
-        boolean body = group.hasMask(FetchGroup.BODY_CONTENT_MASK);
+        boolean headers = profiles.contains(Profile.HEADERS);
+        boolean body = profiles.contains(Profile.BODY_CONTENT);
 
         if (body && headers) {
             return MessageMapper.FetchType.Full;

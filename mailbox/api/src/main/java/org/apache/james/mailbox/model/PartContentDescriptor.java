@@ -19,9 +19,11 @@
 
 package org.apache.james.mailbox.model;
 
-import static org.apache.james.mailbox.model.FetchGroup.NO_MASK;
-
+import java.util.EnumSet;
 import java.util.Objects;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 
 /**
  * Describes the contents to be fetched for a mail part. All
@@ -29,35 +31,37 @@ import java.util.Objects;
  * if and only if their paths are equal.
  */
 public class PartContentDescriptor {
-    private final int content;
+    private final EnumSet<FetchGroup.Profile> content;
     private final MimePath path;
 
     public PartContentDescriptor(MimePath path) {
-        this(0, path);
+        this(EnumSet.noneOf(FetchGroup.Profile.class), path);
     }
 
-    public PartContentDescriptor(int content, MimePath path) {
+    public PartContentDescriptor(EnumSet<FetchGroup.Profile> content, MimePath path) {
         this.content = content;
         this.path = path;
     }
 
-    public PartContentDescriptor or(int content) {
-        return new PartContentDescriptor(this.content | content, path);
+    public PartContentDescriptor with(FetchGroup.Profile... profiles) {
+        Preconditions.checkArgument(profiles.length > 0);
+        return with(EnumSet.copyOf(ImmutableSet.copyOf(profiles)));
+    }
+
+    public PartContentDescriptor with(EnumSet<FetchGroup.Profile> profiles) {
+        EnumSet<FetchGroup.Profile> result = EnumSet.noneOf(FetchGroup.Profile.class);
+        result.addAll(this.content);
+        result.addAll(profiles);
+        return new PartContentDescriptor(result, path);
     }
 
     /**
-     * Contents to be fetched. Composed bitwise.
+     * Profiles to be fetched.
      *
-     * @return bitwise descripion
-     * @see FetchGroup#MINIMAL_MASK
-     * @see FetchGroup#MIME_DESCRIPTOR_MASK
-     * @see FetchGroup#HEADERS_MASK
-     * @see FetchGroup#FULL_CONTENT_MASK
-     * @see FetchGroup#BODY_CONTENT_MASK
-     * @see FetchGroup#MIME_HEADERS_MASK
-     * @see FetchGroup#MIME_CONTENT_MASK
+     * @return Return an enumset of profiles to be fetched
+     * @see FetchGroup.Profile
      */
-    public int content() {
+    public EnumSet<FetchGroup.Profile> profiles() {
         return content;
     }
 
@@ -68,10 +72,6 @@ public class PartContentDescriptor {
      */
     public MimePath path() {
         return path;
-    }
-
-    public boolean hasMask(int mask) {
-        return (content & mask) > NO_MASK;
     }
 
     @Override

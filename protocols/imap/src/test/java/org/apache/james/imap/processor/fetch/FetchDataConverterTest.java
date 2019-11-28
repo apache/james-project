@@ -23,15 +23,16 @@ import static org.apache.james.imap.api.message.BodyFetchElement.CONTENT;
 import static org.apache.james.imap.api.message.BodyFetchElement.HEADER;
 import static org.apache.james.imap.api.message.BodyFetchElement.MIME;
 import static org.apache.james.imap.api.message.BodyFetchElement.TEXT;
-import static org.apache.james.mailbox.model.FetchGroup.MIME_DESCRIPTOR_MASK;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.apache.james.mailbox.model.MimePath;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -44,8 +45,8 @@ class FetchDataConverterTest {
     static Stream<Arguments> getFetchGroupShouldReturnCorrectValue() {
         return Stream.of(
             Arguments.arguments(new FetchData(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().setBody(true), FetchGroup.MINIMAL.with(MIME_DESCRIPTOR_MASK)),
-            Arguments.arguments(new FetchData().setBodyStructure(true), FetchGroup.MINIMAL.with(MIME_DESCRIPTOR_MASK)),
+            Arguments.arguments(new FetchData().setBody(true), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
+            Arguments.arguments(new FetchData().setBodyStructure(true), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
             Arguments.arguments(new FetchData().setChangedSince(0L), FetchGroup.MINIMAL),
             Arguments.arguments(new FetchData().setEnvelope(true), FetchGroup.HEADERS),
             Arguments.arguments(new FetchData().setFlags(true), FetchGroup.MINIMAL),
@@ -57,17 +58,17 @@ class FetchDataConverterTest {
             Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Header(), PEEK), FetchGroup.HEADERS),
             Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Text(), PEEK), FetchGroup.BODY_CONTENT),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, HEADER, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.HEADERS_MASK)),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.HEADERS))),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, HEADER, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.BODY_CONTENT_MASK)),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.BODY_CONTENT_MASK)),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.MIME_CONTENT_MASK)),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.MIME_CONTENT))),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, MIME, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.MIME_HEADERS_MASK)),
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.MIME_HEADERS))),
             Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, TEXT, PATH, null, null, null), PEEK),
-                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), FetchGroup.BODY_CONTENT_MASK)));
+                FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), EnumSet.of(Profile.BODY_CONTENT))));
     }
 
     @ParameterizedTest
