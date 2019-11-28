@@ -22,9 +22,13 @@ package org.apache.james.mailbox.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.EnumSet;
+import java.util.stream.Stream;
 
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -37,16 +41,26 @@ class FetchGroupTest {
             .verify();
     }
 
-    @Test
-    void withShouldReturnAFetchGroupWithUpdatedContent() {
-        assertThat(FetchGroup.HEADERS.with(Profile.FULL_CONTENT))
-            .isEqualTo(new FetchGroup(EnumSet.of(Profile.HEADERS, Profile.FULL_CONTENT)));
+    static Stream<Arguments> withShouldAddNewValuesInSet() {
+        return Stream.of(
+            Arguments.arguments(EnumSet.noneOf(Profile.class), EnumSet.noneOf(Profile.class), EnumSet.noneOf(Profile.class)),
+            Arguments.arguments(EnumSet.noneOf(Profile.class), EnumSet.allOf(Profile.class), EnumSet.allOf(Profile.class)),
+            Arguments.arguments(EnumSet.allOf(Profile.class), EnumSet.noneOf(Profile.class), EnumSet.allOf(Profile.class)),
+            Arguments.arguments(EnumSet.noneOf(Profile.class), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT)),
+            Arguments.arguments(EnumSet.of(Profile.BODY_CONTENT), EnumSet.of(Profile.FULL_CONTENT), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT)),
+            Arguments.arguments(EnumSet.of(Profile.BODY_CONTENT), EnumSet.of(Profile.BODY_CONTENT), EnumSet.of(Profile.BODY_CONTENT)),
+            Arguments.arguments(EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT)),
+            Arguments.arguments(EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT), EnumSet.of(Profile.BODY_CONTENT), EnumSet.of(Profile.BODY_CONTENT, Profile.FULL_CONTENT))
+        );
     }
 
-    @Test
-    void withShouldReturnAFetchGroupWithSameContentWhenNoop() {
-        assertThat(FetchGroup.HEADERS.with(Profile.HEADERS))
-            .isEqualTo(new FetchGroup(EnumSet.of(Profile.HEADERS, Profile.HEADERS)));
+    @ParameterizedTest
+    @MethodSource
+    void withShouldAddNewValuesInSet(EnumSet<Profile> initial,
+                                      EnumSet<Profile> addition,
+                                      EnumSet<Profile> expected) {
+        FetchGroup fetchGroup = new FetchGroup(initial);
+        assertThat(fetchGroup.with(addition).profiles()).isEqualTo(expected);
     }
 
     @Test
