@@ -34,6 +34,7 @@ import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskStore;
+import org.apache.james.server.task.json.dto.TaskDTO;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.Hostname;
@@ -59,6 +60,7 @@ import scala.Option;
 class TaskEventsSerializationTest {
     static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> ADDITIONAL_INFORMATION_CONVERTER = DTOConverter.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+    static final DTOConverter<Task, TaskDTO> TASK_CONVERTER = DTOConverter.of(TestTaskDTOModules.COMPLETED_TASK_MODULE);
     static final JsonTaskAdditionalInformationSerializer TASK_ADDITIONNAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
     static final TaskAggregateId AGGREGATE_ID = new TaskAggregateId(TaskId.fromString("2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd"));
     static final EventId EVENT_ID = EventId.fromSerialized(42);
@@ -70,11 +72,14 @@ class TaskEventsSerializationTest {
         JsonTaskSerializer.of(
             TestTaskDTOModules.COMPLETED_TASK_MODULE,
             TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())),
-        ADDITIONAL_INFORMATION_CONVERTER);
+        ADDITIONAL_INFORMATION_CONVERTER,
+        TASK_CONVERTER);
 
     JsonEventSerializer serializer = JsonEventSerializer
         .forModules(list)
-        .withNestedTypeModules(MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
+        .withNestedTypeModules(
+            MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
+            TestTaskDTOModules.COMPLETED_TASK_MODULE);
 
     @ParameterizedTest
     @MethodSource
@@ -98,7 +103,7 @@ class TaskEventsSerializationTest {
 
     static Stream<Arguments> validTasks() throws Exception {
         return Stream.of(
-            Arguments.of(new Created(AGGREGATE_ID, EVENT_ID, TASK, HOSTNAME), "{\"task\":\"{\\\"type\\\":\\\"completed-task\\\"}\",\"type\":\"task-manager-created\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"hostname\":\"foo\"}\n"),
+            Arguments.of(new Created(AGGREGATE_ID, EVENT_ID, TASK, HOSTNAME), "{\"task\":{\"type\":\"completed-task\"},\"type\":\"task-manager-created\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"hostname\":\"foo\"}\n"),
             Arguments.of(new Started(AGGREGATE_ID, EVENT_ID, HOSTNAME), "{\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-started\",\"hostname\":\"foo\"}"),
             Arguments.of(new CancelRequested(AGGREGATE_ID, EVENT_ID, HOSTNAME), "{\"type\":\"task-manager-cancel-requested\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"hostname\":\"foo\"}\n"),
             Arguments.of(new Completed(AGGREGATE_ID, EVENT_ID, Task.Result.COMPLETED, Option.empty()), "{\"result\":\"COMPLETED\",\"aggregate\":\"2c7f4081-aa30-11e9-bf6c-2d3b9e84aafd\",\"event\":42,\"type\":\"task-manager-completed\"}"),

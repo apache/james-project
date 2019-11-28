@@ -49,6 +49,8 @@ import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskAdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.MemoryReferenceWithCounterTaskStore;
+import org.apache.james.server.task.json.dto.TaskDTO;
+import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.server.task.json.dto.TestTaskDTOModules;
 import org.apache.james.task.CompletedTask;
 import org.apache.james.task.CountDownLatchExtension;
@@ -74,6 +76,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableBiMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 class DistributedTaskManagerTest implements TaskManagerContract {
 
@@ -101,8 +105,9 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     }
 
     public static final AdditionalInformationDTOModule<?, ?> ADDITIONAL_INFORMATION_MODULE = MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+
     static final JsonTaskAdditionalInformationSerializer JSON_TASK_ADDITIONAL_INFORMATION_SERIALIZER = JsonTaskAdditionalInformationSerializer.of(ADDITIONAL_INFORMATION_MODULE);
-    static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> DTO_CONVERTER = DTOConverter.of(ADDITIONAL_INFORMATION_MODULE);
+    static final DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> TASK_ADDITIONAL_INFORMATION_DTO_CONVERTER = DTOConverter.of(ADDITIONAL_INFORMATION_MODULE);
     static final Hostname HOSTNAME = new Hostname("foo");
     static final Hostname HOSTNAME_2 = new Hostname("bar");
 
@@ -118,18 +123,31 @@ class DistributedTaskManagerTest implements TaskManagerContract {
             CassandraZonedDateTimeModule.MODULE,
             CassandraTaskExecutionDetailsProjectionModule.MODULE()));
 
-    JsonTaskSerializer taskSerializer = JsonTaskSerializer.of(
-        TestTaskDTOModules.COMPLETED_TASK_MODULE,
-        TestTaskDTOModules.FAILED_TASK_MODULE,
-        TestTaskDTOModules.THROWING_TASK_MODULE,
-        TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(new MemoryReferenceTaskStore()),
-        TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore()));
+    MemoryReferenceTaskStore memoryReferenceTaskStore = new MemoryReferenceTaskStore();
+    MemoryReferenceWithCounterTaskStore memoryReferenceWithCounterTaskStore = new MemoryReferenceWithCounterTaskStore();
 
-    Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, DTO_CONVERTER);
+    ImmutableSet<TaskDTOModule<?, ?>> taskDTOModules =
+        ImmutableSet.of(
+            TestTaskDTOModules.COMPLETED_TASK_MODULE,
+            TestTaskDTOModules.FAILED_TASK_MODULE,
+            TestTaskDTOModules.THROWING_TASK_MODULE,
+            TestTaskDTOModules.MEMORY_REFERENCE_TASK_MODULE.apply(memoryReferenceTaskStore),
+            TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(memoryReferenceWithCounterTaskStore));
+
+    JsonTaskSerializer taskSerializer = new JsonTaskSerializer(taskDTOModules);
+
+    DTOConverter<Task, TaskDTO> taskDTOConverter = new DTOConverter<>(taskDTOModules);
+
+    Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, TASK_ADDITIONAL_INFORMATION_DTO_CONVERTER, taskDTOConverter);
 
     @RegisterExtension
     CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(CASSANDRA_CLUSTER,
-        JsonEventSerializer.forModules(eventDtoModule).withNestedTypeModules(ADDITIONAL_INFORMATION_MODULE));
+        JsonEventSerializer.forModules(eventDtoModule)
+            .withNestedTypeModules(
+                Sets.union(
+                    ImmutableSet.of(ADDITIONAL_INFORMATION_MODULE),
+                    taskDTOModules
+                )));
 
     @RegisterExtension
     CountDownLatchExtension countDownLatchExtension = new CountDownLatchExtension();

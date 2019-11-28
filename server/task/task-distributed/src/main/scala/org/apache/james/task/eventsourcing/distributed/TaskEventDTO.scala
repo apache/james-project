@@ -27,23 +27,26 @@ import org.apache.james.eventsourcing.EventId
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO
 import org.apache.james.json.DTOConverter
 import org.apache.james.server.task.json.JsonTaskSerializer
-import org.apache.james.server.task.json.dto.AdditionalInformationDTO
+import org.apache.james.server.task.json.dto.{AdditionalInformationDTO, TaskDTO}
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.eventsourcing._
-import org.apache.james.task.eventsourcing.distributed.distributed.AdditionalInformationConverter
+import org.apache.james.task.eventsourcing.distributed.distributed.{AdditionalInformationConverter, TaskConverter}
 import org.apache.james.task.{Hostname, Task, TaskExecutionDetails, TaskId}
 
 import scala.compat.java8.OptionConverters._
 
 package object distributed {
   type AdditionalInformationConverter = DTOConverter[TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO]
+  type TaskConverter = DTOConverter[Task, TaskDTO]
 }
 
-class NestedAdditionalInformationDTODeserializerNotFound(val dto: AdditionalInformationDTO) extends RuntimeException("Unable to find a deserializer for " + dto) {
-}
+class NestedTaskDTOSerializerNotFound(val domainObject: Task) extends RuntimeException("Unable to find a serializer for " + domainObject) { }
 
-class NestedAdditionalInformationDTOSerializerNotFound(val domainObject: AdditionalInformation) extends RuntimeException("Unable to find a serializer for " + domainObject) {
-}
+class NestedTaskDTODeserializerNotFound(val dto: TaskDTO) extends RuntimeException("Unable to find a deserializer for " + dto) { }
+
+class NestedAdditionalInformationDTODeserializerNotFound(val dto: AdditionalInformationDTO) extends RuntimeException("Unable to find a deserializer for " + dto) { }
+
+class NestedAdditionalInformationDTOSerializerNotFound(val domainObject: AdditionalInformation) extends RuntimeException("Unable to find a serializer for " + domainObject) { }
 
 sealed abstract class TaskEventDTO(val getType: String, val getAggregate: String, val getEvent: Int) extends EventDTO {
   protected def domainAggregateId: TaskAggregateId = TaskAggregateId(TaskId.fromString(getAggregate))
@@ -54,15 +57,20 @@ sealed abstract class TaskEventDTO(val getType: String, val getAggregate: String
 case class CreatedDTO(@JsonProperty("type") typeName: String,
                       @JsonProperty("aggregate") aggregateId: String,
                       @JsonProperty("event") eventId: Int,
-                      @JsonProperty("task") getTask: String,
+                      @JsonProperty("task") getTask: TaskDTO,
                       @JsonProperty("hostname") getHostname: String)
   extends TaskEventDTO(typeName, aggregateId, eventId) {
-  def toDomainObject(serializer: JsonTaskSerializer): Created = Created(domainAggregateId, domainEventId, serializer.deserialize(getTask), Hostname(getHostname))
+  def toDomainObject(taskConverter: TaskConverter): Created = {
+    val task: Task = taskConverter.toDomainObject(getTask).orElseThrow(() => new NestedTaskDTODeserializerNotFound(getTask))
+    Created(domainAggregateId, domainEventId, task, Hostname(getHostname))
+  }
 }
 
 object CreatedDTO {
-  def fromDomainObject(event: Created, typeName: String, serializer: JsonTaskSerializer): CreatedDTO =
-    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), serializer.serialize(event.task), event.hostname.asString)
+  def fromDomainObject(taskConverter: TaskConverter)(event: Created, typeName: String): CreatedDTO = {
+    val taskDTO = taskConverter.toDTO(event.task).orElseThrow(() => new NestedTaskDTOSerializerNotFound(event.task))
+    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), taskDTO, event.hostname.asString)
+  }
 }
 
 case class StartedDTO(@JsonProperty("type") typeName: String,

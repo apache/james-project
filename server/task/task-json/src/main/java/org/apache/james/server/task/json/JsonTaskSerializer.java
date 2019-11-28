@@ -30,6 +30,7 @@ import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.Task;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 
 public class JsonTaskSerializer {
@@ -53,7 +54,8 @@ public class JsonTaskSerializer {
     private JsonGenericSerializer<Task, TaskDTO> jsonGenericSerializer;
 
     @Inject
-    private JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
+    @VisibleForTesting
+    public JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 
