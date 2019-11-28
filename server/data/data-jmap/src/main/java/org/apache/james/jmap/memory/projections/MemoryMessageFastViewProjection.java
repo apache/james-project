@@ -21,9 +21,13 @@ package org.apache.james.jmap.memory.projections;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import javax.inject.Inject;
+
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
 import com.google.common.base.Preconditions;
@@ -33,9 +37,14 @@ import reactor.core.publisher.Mono;
 public class MemoryMessageFastViewProjection implements MessageFastViewProjection {
 
     private final ConcurrentHashMap<MessageId, MessageFastViewPrecomputedProperties> previews;
+    private final Metric metricRetrieveHitCount;
+    private final Metric metricRetrieveMissCount;
 
-    public MemoryMessageFastViewProjection() {
+    @Inject
+    public MemoryMessageFastViewProjection(MetricFactory metricFactory) {
         this.previews = new ConcurrentHashMap<>();
+        this.metricRetrieveHitCount = metricFactory.generate(METRIC_RETRIEVE_HIT_COUNT);
+        this.metricRetrieveMissCount = metricFactory.generate(METRIC_RETRIEVE_MISS_COUNT);
     }
 
     @Override
@@ -50,7 +59,9 @@ public class MemoryMessageFastViewProjection implements MessageFastViewProjectio
     public Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
         Preconditions.checkNotNull(messageId);
 
-        return Mono.fromSupplier(() -> previews.get(messageId));
+        return Mono.fromSupplier(() -> previews.get(messageId))
+            .doOnNext(preview -> metricRetrieveHitCount.increment())
+            .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment));
     }
 
     @Override

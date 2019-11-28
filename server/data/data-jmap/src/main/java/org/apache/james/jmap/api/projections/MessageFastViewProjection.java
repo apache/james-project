@@ -34,6 +34,10 @@ import reactor.core.scheduler.Schedulers;
 
 public interface MessageFastViewProjection {
 
+    String MESSAGE_FAST_VIEW_PROJECTION = "MessageFastViewProjection";
+    String METRIC_RETRIEVE_HIT_COUNT = MESSAGE_FAST_VIEW_PROJECTION + ":retrieveHitCount";
+    String METRIC_RETRIEVE_MISS_COUNT = MESSAGE_FAST_VIEW_PROJECTION + ":retrieveMissCount";
+
     Publisher<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties preview);
 
     Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId);

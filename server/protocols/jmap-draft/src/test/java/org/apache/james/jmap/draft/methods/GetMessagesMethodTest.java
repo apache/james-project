@@ -67,6 +67,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
@@ -124,9 +125,9 @@ public class GetMessagesMethodTest {
         messageMetadataViewFactory = spy(new MessageMetadataViewFactory(blobManager, messageIdManager));
         MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor,
             htmlTextExtractor, messageIdManager,
-            new MemoryMessageFastViewProjection());
+            new MemoryMessageFastViewProjection(new NoopMetricFactory()));
         MessageFastViewFactory messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager,
-            new MemoryMessageFastViewProjection(), messageFullViewFactory);
+            new MemoryMessageFastViewProjection(new NoopMetricFactory()), messageFullViewFactory);
 
         MetaMessageViewFactory metaMessageViewFactory = new MetaMessageViewFactory(
             messageFullViewFactory,

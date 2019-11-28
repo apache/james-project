@@ -19,18 +19,20 @@
 
 package org.apache.james.jmap.api.projections;
 
+import static org.apache.james.jmap.api.projections.MessageFastViewProjection.METRIC_RETRIEVE_HIT_COUNT;
+import static org.apache.james.jmap.api.projections.MessageFastViewProjection.METRIC_RETRIEVE_MISS_COUNT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import org.apache.james.jmap.api.model.Preview;
-import java.util.List;
-
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,8 @@ public interface MessageFastViewProjectionContract {
     MessageFastViewProjection testee();
 
     MessageId newMessageId();
+
+    RecordingMetricFactory metricFactory();
 
     @Test
     default void retrieveShouldThrowWhenNullMessageId() {
@@ -308,5 +312,51 @@ public interface MessageFastViewProjectionContract {
 
         assertThat(Mono.from(testee().retrieve(messageId1)).blockOptional())
             .isEmpty();
+    }
+
+    @Test
+    default void retrieveShouldIncrementMetricHitCountWhenPreviewIsFound() {
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+
+        Mono.from(testee().retrieve(messageId1))
+            .block();
+
+        assertThat(metricFactory().countFor(METRIC_RETRIEVE_HIT_COUNT))
+            .isEqualTo(1);
+    }
+
+    @Test
+    default void retrieveShouldNotIncrementMetricMissCountWhenPreviewIsFound() {
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+
+        Mono.from(testee().retrieve(messageId1))
+            .block();
+
+        assertThat(metricFactory().countFor(METRIC_RETRIEVE_MISS_COUNT))
+            .isEqualTo(0);
+    }
+
+    @Test
+    default void retrieveShouldIncrementMetricMissCountWhenPreviewIsNotFound() {
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().retrieve(messageId1))
+            .block();
+
+        assertThat(metricFactory().countFor(METRIC_RETRIEVE_MISS_COUNT))
+            .isEqualTo(1);
+    }
+
+    @Test
+    default void retrieveShouldNotIncrementMetricHitCountWhenPreviewIsNotFound() {
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().retrieve(messageId1))
+            .block();
+
+        assertThat(metricFactory().countFor(METRIC_RETRIEVE_HIT_COUNT))
+            .isEqualTo(0);
     }
 }

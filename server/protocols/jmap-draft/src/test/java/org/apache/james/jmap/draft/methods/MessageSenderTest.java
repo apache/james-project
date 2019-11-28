@@ -48,6 +48,7 @@ import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.server.core.Envelope;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
@@ -91,7 +92,7 @@ class MessageSenderTest {
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
-            new MemoryMessageFastViewProjection());
+            new MemoryMessageFastViewProjection(new NoopMetricFactory()));
         jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message);
         envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }

@@ -36,6 +36,8 @@ import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedPropertie
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
 import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
@@ -44,7 +46,12 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Mono;
+
 public class CassandraMessageFastViewProjection implements MessageFastViewProjection {
+
+    private final Metric metricRetrieveHitCount;
+    private final Metric metricRetrieveMissCount;
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
@@ -53,7 +60,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     private final PreparedStatement deleteStatement;
 
     @Inject
-    CassandraMessageFastViewProjection(Session session) {
+    CassandraMessageFastViewProjection(MetricFactory metricFactory, Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.deleteStatement = session.prepare(QueryBuilder.delete()
@@ -68,6 +75,9 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         this.retrieveStatement = session.prepare(select()
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
+
+        this.metricRetrieveHitCount = metricFactory.generate(METRIC_RETRIEVE_HIT_COUNT);
+        this.metricRetrieveMissCount = metricFactory.generate(METRIC_RETRIEVE_MISS_COUNT);
     }
 
     @Override
@@ -86,7 +96,9 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
-            .map(this::fromRow);
+            .map(this::fromRow)
+            .doOnNext(preview -> metricRetrieveHitCount.increment())
+            .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment));
     }
 
     @Override

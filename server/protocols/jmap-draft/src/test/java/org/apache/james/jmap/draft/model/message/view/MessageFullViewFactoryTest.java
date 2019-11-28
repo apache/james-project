@@ -69,6 +69,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
@@ -118,7 +119,7 @@ class MessageFullViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        fastViewProjection = spy(new MemoryMessageFastViewProjection());
+        fastViewProjection = spy(new MemoryMessageFastViewProjection(new NoopMetricFactory()));
         messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             fastViewProjection);

@@ -23,17 +23,20 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 
 class MemoryMessageFastViewProjectionTest implements MessageFastViewProjectionContract {
 
     private MemoryMessageFastViewProjection testee;
     private TestMessageId.Factory messageIdFactory;
+    private RecordingMetricFactory metricFactory;
 
     @BeforeEach
     void setUp() {
+        metricFactory = new RecordingMetricFactory();
         messageIdFactory = new TestMessageId.Factory();
-        testee = new MemoryMessageFastViewProjection();
+        testee = new MemoryMessageFastViewProjection(metricFactory);
     }
 
     @Override
@@ -44,5 +47,10 @@ class MemoryMessageFastViewProjectionTest implements MessageFastViewProjectionCo
     @Override
     public MessageId newMessageId() {
         return messageIdFactory.generate();
+    }
+
+    @Override
+    public RecordingMetricFactory metricFactory() {
+        return metricFactory;
     }
 }

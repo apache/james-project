@@ -27,6 +27,7 @@ import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -38,11 +39,13 @@ class CassandraMessageFastViewProjectionTest implements MessageFastViewProjectio
 
     private CassandraMessageFastViewProjection testee;
     private CassandraMessageId.Factory cassandraMessageIdFactory;
+    private RecordingMetricFactory metricFactory;
 
     @BeforeEach
     void setUp() {
+        metricFactory = new RecordingMetricFactory();
         cassandraMessageIdFactory = new CassandraMessageId.Factory();
-        testee = new CassandraMessageFastViewProjection(cassandra.getCassandraCluster().getConf());
+        testee = new CassandraMessageFastViewProjection(metricFactory, cassandra.getCassandraCluster().getConf());
     }
 
     @Override
@@ -53,6 +56,11 @@ class CassandraMessageFastViewProjectionTest implements MessageFastViewProjectio
     @Override
     public MessageId newMessageId() {
         return cassandraMessageIdFactory.generate();
+    }
+
+    @Override
+    public RecordingMetricFactory metricFactory() {
+        return metricFactory;
     }
 
     @Test

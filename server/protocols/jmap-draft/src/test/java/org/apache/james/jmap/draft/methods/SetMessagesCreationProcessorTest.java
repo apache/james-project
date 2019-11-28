@@ -128,7 +128,7 @@ public class SetMessagesCreationProcessorTest {
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
-            new MemoryMessageFastViewProjection());
+            new MemoryMessageFastViewProjection(new NoopMetricFactory()));
         mockedMailSpool = mock(MailSpool.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
         mockedMailboxManager = mock(MailboxManager.class);
