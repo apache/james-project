@@ -21,101 +21,37 @@ package org.apache.james.mailbox.store.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.stream.Stream;
+
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MimePath;
-import org.junit.jupiter.api.Test;
+import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class FetchGroupConverterTest {
-    @Test
-    void getFetchTypeShouldReturnMetadataWhenMinimal() {
-        assertThat(FetchGroupConverter.getFetchType(FetchGroup.MINIMAL))
-            .isEqualTo(MessageMapper.FetchType.Metadata);
+    private static final int[] PARTS = new int[]{12};
+
+    static Stream<Arguments> getFetchTypeShouldReturnCorrectValue() {
+        return Stream.of(
+            Arguments.arguments(FetchGroup.MINIMAL, FetchType.Metadata),
+            Arguments.arguments(FetchGroup.HEADERS, FetchType.Headers),
+            Arguments.arguments(FetchGroup.BODY_CONTENT, FetchType.Body),
+            Arguments.arguments(FetchGroup.FULL_CONTENT, FetchType.Full),
+            Arguments.arguments(FetchGroup.BODY_CONTENT.with(FetchGroup.HEADERS_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_CONTENT_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_DESCRIPTOR_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.with(FetchGroup.MIME_HEADERS_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.MINIMAL_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.HEADERS_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.BODY_CONTENT_MASK), FetchType.Full),
+            Arguments.arguments(FetchGroup.MINIMAL.addPartContent(new MimePath(PARTS), FetchGroup.FULL_CONTENT_MASK), FetchType.Full));
     }
 
-    @Test
-    void getFetchTypeShouldReturnHeadersWhenHeaders() {
-        assertThat(FetchGroupConverter.getFetchType(FetchGroup.HEADERS))
-            .isEqualTo(MessageMapper.FetchType.Headers);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnBodyContentWhenBody() {
-        assertThat(FetchGroupConverter.getFetchType(FetchGroup.BODY_CONTENT))
-            .isEqualTo(MessageMapper.FetchType.Body);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenBodyAndHeaders() {
-        FetchGroup fetchGroup = FetchGroup.BODY_CONTENT
-            .with(FetchGroup.HEADERS_MASK);
-
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenFull() {
-        assertThat(FetchGroupConverter.getFetchType(FetchGroup.FULL_CONTENT))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimeContent() {
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .with(FetchGroup.MIME_CONTENT_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimeDescriptor() {
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .with(FetchGroup.MIME_DESCRIPTOR_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimeHeaders() {
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .with(FetchGroup.MIME_HEADERS_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimePartIsReadMinimally() {
-        int[] parts = {12};
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .addPartContent(new MimePath(parts), FetchGroup.MINIMAL_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimePartHeadersIsRead() {
-        int[] parts = {12};
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .addPartContent(new MimePath(parts), FetchGroup.HEADERS_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimePartBodyIsRead() {
-        int[] parts = {12};
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .addPartContent(new MimePath(parts), FetchGroup.BODY_CONTENT_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
-    }
-
-    @Test
-    void getFetchTypeShouldReturnFullWhenMimePartIsFullyRead() {
-        int[] parts = {12};
-        FetchGroup fetchGroup = FetchGroup.MINIMAL
-            .addPartContent(new MimePath(parts), FetchGroup.FULL_CONTENT_MASK);
-        assertThat(FetchGroupConverter.getFetchType(fetchGroup))
-            .isEqualTo(MessageMapper.FetchType.Full);
+    @ParameterizedTest
+    @MethodSource
+    void getFetchTypeShouldReturnCorrectValue(FetchGroup fetchGroup, FetchType expected) {
+        assertThat(FetchGroupConverter.getFetchType(fetchGroup)).isEqualTo(expected);
     }
 }
