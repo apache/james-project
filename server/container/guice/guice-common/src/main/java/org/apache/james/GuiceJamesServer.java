@@ -31,6 +31,8 @@ import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.utils.GuiceProbe;
 import org.apache.james.utils.GuiceProbeProvider;
 import org.apache.james.utils.InitializationOperations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Iterables;
 import com.google.inject.Guice;
@@ -41,6 +43,7 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.util.Modules;
 
 public class GuiceJamesServer {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GuiceJamesServer.class);
 
     protected final Module module;
     private final IsStartedProbe isStartedProbe;
@@ -76,13 +79,19 @@ public class GuiceJamesServer {
     }
 
     public void start() throws Exception {
-        Injector injector = Guice.createInjector(module);
-        preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {}));
-        injector.getInstance(StartUpChecksPerformer.class)
-            .performCheck();
-        injector.getInstance(InitializationOperations.class).initModules();
-        guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
-        isStartedProbe.notifyStarted();
+        try {
+            Injector injector = Guice.createInjector(module);
+            preDestroy = injector.getInstance(Key.get(new TypeLiteral<Stager<PreDestroy>>() {
+            }));
+            injector.getInstance(StartUpChecksPerformer.class)
+                .performCheck();
+            injector.getInstance(InitializationOperations.class).initModules();
+            guiceProbeProvider = injector.getInstance(GuiceProbeProvider.class);
+            isStartedProbe.notifyStarted();
+        } catch (Throwable e) {
+            LOGGER.error("Fatal error while starting James", e);
+            throw e;
+        }
     }
 
     public void stop() {
