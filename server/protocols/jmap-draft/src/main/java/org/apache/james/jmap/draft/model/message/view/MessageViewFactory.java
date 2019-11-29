@@ -24,18 +24,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.address.AddressList;
 import org.apache.james.mime4j.dom.address.Mailbox;
 import org.apache.james.mime4j.dom.address.MailboxList;
 import org.apache.james.mime4j.stream.Field;
 import org.apache.james.mime4j.util.MimeUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -44,96 +49,127 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 
 public interface MessageViewFactory<T extends MessageView> {
+
+    Logger LOGGER = LoggerFactory.getLogger(MessageViewFactory.class);
+
     KeywordsCombiner KEYWORDS_COMBINER = new KeywordsCombiner();
     Keywords.KeywordsFactory KEYWORDS_FACTORY = Keywords.lenientFactory();
     String JMAP_MULTIVALUED_FIELD_DELIMITER = "\n";
 
-    T fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException;
+    List<T> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException;
 
-    default void assertOneMessageId(Collection<MessageResult> messageResults) {
-        Preconditions.checkArgument(!messageResults.isEmpty(), "MessageResults cannot be empty");
-        Preconditions.checkArgument(hasOnlyOneMessageId(messageResults), "MessageResults need to share the same messageId");
-    }
+    class Helpers {
+        interface FromMessageResult<T extends MessageView> {
+            T fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException;
+        }
 
-    default boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
-        return messageResults
-            .stream()
-            .map(MessageResult::getMessageId)
-            .distinct()
-            .count() == 1;
-    }
+        static void assertOneMessageId(Collection<MessageResult> messageResults) {
+            Preconditions.checkArgument(!messageResults.isEmpty(), "MessageResults cannot be empty");
+            Preconditions.checkArgument(hasOnlyOneMessageId(messageResults), "MessageResults need to share the same messageId");
+        }
 
-    default List<MailboxId> getMailboxIds(Collection<MessageResult> messageResults) {
-        return messageResults.stream()
+        static boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
+            return messageResults
+                .stream()
+                .map(MessageResult::getMessageId)
+                .distinct()
+                .count() == 1;
+        }
+
+        static List<MailboxId> getMailboxIds(Collection<MessageResult> messageResults) {
+            return messageResults.stream()
                 .map(MessageResult::getMailboxId)
                 .distinct()
                 .collect(Guavate.toImmutableList());
-    }
+        }
 
-    default Keywords getKeywords(Collection<MessageResult> messageResults) {
-        return messageResults.stream()
+        static Keywords getKeywords(Collection<MessageResult> messageResults) {
+            return messageResults.stream()
                 .map(MessageResult::getFlags)
                 .map(KEYWORDS_FACTORY::fromFlags)
                 .reduce(KEYWORDS_COMBINER)
                 .get();
-    }
-
-    default String getHeader(org.apache.james.mime4j.dom.Message message, String header) {
-        Field field = message.getHeader().getField(header);
-        if (field == null) {
-            return null;
         }
-        return field.getBody();
-    }
 
-    default ImmutableMap<String, String> toMap(List<Field> fields) {
-        Function<Map.Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
-            .stream()
-            .map(Field::getBody)
-            .map(MimeUtil::unscrambleHeaderValue)
-            .collect(Collectors.toList())
-            .stream()
-            .collect(Collectors.joining(JMAP_MULTIVALUED_FIELD_DELIMITER));
-
-        return Multimaps.index(fields, Field::getName)
-            .asMap()
-            .entrySet()
-            .stream()
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
-    }
-
-    default Emailer firstFromMailboxList(MailboxList list) {
-        if (list == null) {
-            return null;
+        static String getHeader(org.apache.james.mime4j.dom.Message message, String header) {
+            Field field = message.getHeader().getField(header);
+            if (field == null) {
+                return null;
+            }
+            return field.getBody();
         }
-        return list.stream()
-            .map(this::fromMailbox)
-            .findFirst()
-            .orElse(null);
-    }
 
-    default Emailer fromMailbox(Mailbox mailbox) {
-        return Emailer.builder()
-            .name(getNameOrAddress(mailbox))
-            .email(mailbox.getAddress())
-            .allowInvalid()
-            .build();
-    }
+        static ImmutableMap<String, String> toMap(List<Field> fields) {
+            Function<Map.Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
+                .stream()
+                .map(Field::getBody)
+                .map(MimeUtil::unscrambleHeaderValue)
+                .collect(Collectors.toList())
+                .stream()
+                .collect(Collectors.joining(JMAP_MULTIVALUED_FIELD_DELIMITER));
 
-    default String getNameOrAddress(Mailbox mailbox) {
-        if (mailbox.getName() != null) {
-            return mailbox.getName();
+            return Multimaps.index(fields, Field::getName)
+                .asMap()
+                .entrySet()
+                .stream()
+                .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
         }
-        return mailbox.getAddress();
-    }
 
-    default ImmutableList<Emailer> fromAddressList(AddressList list) {
-        if (list == null) {
-            return ImmutableList.of();
+        static Emailer firstFromMailboxList(MailboxList list) {
+            if (list == null) {
+                return null;
+            }
+            return list.stream()
+                .map(Helpers::fromMailbox)
+                .findFirst()
+                .orElse(null);
         }
-        return list.flatten()
-            .stream()
-            .map(this::fromMailbox)
-            .collect(Guavate.toImmutableList());
+
+        static Emailer fromMailbox(Mailbox mailbox) {
+            return Emailer.builder()
+                .name(getNameOrAddress(mailbox))
+                .email(mailbox.getAddress())
+                .allowInvalid()
+                .build();
+        }
+
+        static String getNameOrAddress(Mailbox mailbox) {
+            if (mailbox.getName() != null) {
+                return mailbox.getName();
+            }
+            return mailbox.getAddress();
+        }
+
+        static ImmutableList<Emailer> fromAddressList(AddressList list) {
+            if (list == null) {
+                return ImmutableList.of();
+            }
+            return list.flatten()
+                .stream()
+                .map(Helpers::fromMailbox)
+                .collect(Guavate.toImmutableList());
+        }
+
+        static <T extends MessageView>  Function<Collection<MessageResult>, Stream<T>> toMessageViews(FromMessageResult<T> converter) {
+            return messageResults -> {
+                try {
+                    return Stream.of(converter.fromMessageResults(messageResults));
+                } catch (Exception e) {
+                    LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
+                    return Stream.of();
+                }
+            };
+        }
+
+        static <T extends MessageView> List<T> toMessageViews(List<MessageResult> messageResults, FromMessageResult<T> converter) {
+            return messageResults.stream()
+                .collect(Guavate.toImmutableListMultimap(MessageResult::getMessageId))
+                .asMap()
+                .values()
+                .stream()
+                .filter(collection -> !collection.isEmpty())
+                .flatMap(toMessageViews(converter))
+                .collect(Guavate.toImmutableList());
+        }
     }
 }

@@ -34,8 +34,11 @@ import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Keywords;
+import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
@@ -57,18 +60,21 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
     private final BlobManager blobManager;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
+    private final MessageIdManager messageIdManager;
 
     @Inject
     public MessageFullViewFactory(BlobManager blobManager, MessageContentExtractor messageContentExtractor,
-                                  HtmlTextExtractor htmlTextExtractor) {
+                                  HtmlTextExtractor htmlTextExtractor, MessageIdManager messageIdManager) {
         this.blobManager = blobManager;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
+        this.messageIdManager = messageIdManager;
     }
 
     @Override
-    public MessageFullView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
-        return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
+    public List<MessageFullView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+        List<MessageResult> messages = messageIdManager.getMessages(messageIds, MessageProperties.ReadProfile.Full.getFetchGroup(), mailboxSession);
+        return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
     public MessageFullView fromMetaDataWithContent(MetaDataWithContent message) throws MailboxException {
@@ -85,15 +91,15 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 .blobId(BlobId.of(blobManager.toBlobId(message.getMessageId())))
                 .threadId(message.getMessageId().serialize())
                 .mailboxIds(message.getMailboxIds())
-                .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
+                .inReplyToMessageId(Helpers.getHeader(mimeMessage, "in-reply-to"))
                 .keywords(message.getKeywords())
                 .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
-                .headers(toMap(mimeMessage.getHeader().getFields()))
-                .from(firstFromMailboxList(mimeMessage.getFrom()))
-                .to(fromAddressList(mimeMessage.getTo()))
-                .cc(fromAddressList(mimeMessage.getCc()))
-                .bcc(fromAddressList(mimeMessage.getBcc()))
-                .replyTo(fromAddressList(mimeMessage.getReplyTo()))
+                .headers(Helpers.toMap(mimeMessage.getHeader().getFields()))
+                .from(Helpers.firstFromMailboxList(mimeMessage.getFrom()))
+                .to(Helpers.fromAddressList(mimeMessage.getTo()))
+                .cc(Helpers.fromAddressList(mimeMessage.getCc()))
+                .bcc(Helpers.fromAddressList(mimeMessage.getBcc()))
+                .replyTo(Helpers.fromAddressList(mimeMessage.getReplyTo()))
                 .size(message.getSize())
                 .date(getDateFromHeaderOrInternalDateOtherwise(mimeMessage, message))
                 .textBody(textBody)
@@ -103,12 +109,16 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 .build();
     }
 
+    private MessageFullView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
+        return fromMetaDataWithContent(toMetaDataWithContent(messageResults));
+    }
+
     private MetaDataWithContent toMetaDataWithContent(Collection<MessageResult> messageResults) throws MailboxException {
-        assertOneMessageId(messageResults);
+        Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = getMailboxIds(messageResults);
-        Keywords keywords = getKeywords(messageResults);
+        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
+        Keywords keywords = Helpers.getKeywords(messageResults);
 
         return MetaDataWithContent.builderFromMessageResult(firstMessageResult)
             .messageId(firstMessageResult.getMessageId())

@@ -19,9 +19,8 @@
 
 package org.apache.james.jmap.draft.methods;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -39,7 +38,6 @@ import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -47,7 +45,6 @@ import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ser.PropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
@@ -123,35 +120,16 @@ public class GetMessagesMethod implements Method {
 
         try {
             MessageProperties.ReadProfile readProfile = getMessagesRequest.getProperties().computeReadLevel();
-            MessageViewFactory factory = messageViewFactory.getFactory(readProfile);
+            MessageViewFactory<? extends MessageView> factory = messageViewFactory.getFactory(readProfile);
+            List<? extends MessageView> messageViews = factory.fromMessageIds(getMessagesRequest.getIds(), mailboxSession);
 
             return GetMessagesResponse.builder()
-                .messages(
-                    messageIdManager.getMessages(getMessagesRequest.getIds(), readProfile.getFetchGroup(), mailboxSession)
-                        .stream()
-                        .collect(Guavate.toImmutableListMultimap(MessageResult::getMessageId))
-                        .asMap()
-                        .values()
-                        .stream()
-                        .filter(collection -> !collection.isEmpty())
-                        .flatMap(toMessageViews(factory))
-                        .collect(Guavate.toImmutableList()))
+                .messages(messageViews)
                 .expectedMessageIds(getMessagesRequest.getIds())
                 .build();
         } catch (MailboxException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    private Function<Collection<MessageResult>, Stream<MessageView>> toMessageViews(MessageViewFactory factory) {
-        return messageResults -> {
-            try {
-                return Stream.of(factory.fromMessageResults(messageResults));
-            } catch (Exception e) {
-                LOGGER.error("Can not convert MessageResults to Message for {}", messageResults.iterator().next().getMessageId().serialize(), e);
-                return Stream.of();
-            }
-        };
     }
 
     private static void notImplemented(String field) {

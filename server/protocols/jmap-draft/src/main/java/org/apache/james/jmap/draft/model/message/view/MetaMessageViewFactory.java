@@ -35,7 +35,7 @@ public class MetaMessageViewFactory {
         this.messageMetadataViewFactory = messageMetadataViewFactory;
     }
 
-    public MessageViewFactory getFactory(MessageProperties.ReadProfile readProfile) {
+    public MessageViewFactory<? extends MessageView> getFactory(MessageProperties.ReadProfile readProfile) {
         switch (readProfile) {
             case Full:
                 return messageFullViewFactory;

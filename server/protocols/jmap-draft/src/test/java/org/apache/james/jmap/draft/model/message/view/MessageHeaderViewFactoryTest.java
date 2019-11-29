@@ -26,7 +26,6 @@ import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACK_EMAIL;
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACOB_EMAIL;
 
-import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -41,11 +40,9 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.util.ClassLoaderUtils;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -79,15 +76,12 @@ class MessageHeaderViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        testee = new MessageHeaderViewFactory(resources.getBlobManager());
+        testee = new MessageHeaderViewFactory(resources.getBlobManager(), messageIdManager);
     }
 
     @Test
     void fromMessageResultsShouldReturnCorrectView() throws Exception {
-        List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.HEADERS, session);
-
-        MessageHeaderView actual = testee.fromMessageResults(messages);
+        MessageHeaderView actual = testee.fromMessageIds(ImmutableList.of(message1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(message1.getMessageId());
             softly.assertThat(actual.getMailboxIds()).containsExactly(bobInbox.getId());
@@ -112,10 +106,7 @@ class MessageHeaderViewFactoryTest {
         messageIdManager.setInMailboxes(message1.getMessageId(), ImmutableList.of(bobInbox.getId(), bobMailbox.getId()), session);
         bobMailbox.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), session);
 
-        List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.HEADERS, session);
-
-        MessageHeaderView actual = testee.fromMessageResults(messages);
+        MessageHeaderView actual = testee.fromMessageIds(ImmutableList.of(message1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(message1.getMessageId());
             softly.assertThat(actual.getKeywords()).isEqualTo(Keywords.strictFactory().from(Keyword.SEEN, Keyword.FLAGGED).asMap());

@@ -55,7 +55,7 @@ public class GetMessagesResponse implements Method.Response {
             return this;
         }
 
-        public Builder messages(List<MessageView> messages) {
+        public Builder messages(List<? extends MessageView> messages) {
             this.messages = ImmutableList.copyOf(messages);
             return this;
         }

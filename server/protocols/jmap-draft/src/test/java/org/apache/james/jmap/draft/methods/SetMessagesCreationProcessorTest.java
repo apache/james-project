@@ -124,7 +124,8 @@ public class SetMessagesCreationProcessorTest {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
-        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor);
+        MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager);
         mockedMailSpool = mock(MailSpool.class);
         mockedAttachmentManager = mock(AttachmentManager.class);
         mockedMailboxManager = mock(MailboxManager.class);

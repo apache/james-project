@@ -29,9 +29,13 @@ import java.util.Optional;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.mailbox.BlobManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.MimeConfig;
@@ -41,19 +45,26 @@ import com.google.common.base.Strings;
 
 public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeaderView> {
     private final BlobManager blobManager;
+    private final MessageIdManager messageIdManager;
 
     @Inject
     @VisibleForTesting
-    public MessageHeaderViewFactory(BlobManager blobManager) {
+    public MessageHeaderViewFactory(BlobManager blobManager, MessageIdManager messageIdManager) {
         this.blobManager = blobManager;
+        this.messageIdManager = messageIdManager;
     }
 
     @Override
-    public MessageHeaderView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
-        assertOneMessageId(messageResults);
+    public List<MessageHeaderView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
+        List<MessageResult> messages = messageIdManager.getMessages(messageIds, MessageProperties.ReadProfile.Header.getFetchGroup(), mailboxSession);
+        return Helpers.toMessageViews(messages, this::fromMessageResults);
+    }
+
+    private MessageHeaderView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
+        Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = getMailboxIds(messageResults);
+        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
         Message mimeMessage = parse(firstMessageResult);
 
@@ -62,16 +73,16 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
             .mailboxIds(mailboxIds)
             .blobId(BlobId.of(blobManager.toBlobId(firstMessageResult.getMessageId())))
             .threadId(firstMessageResult.getMessageId().serialize())
-            .keywords(getKeywords(messageResults))
+            .keywords(Helpers.getKeywords(messageResults))
             .size(firstMessageResult.getSize())
-            .inReplyToMessageId(getHeader(mimeMessage, "in-reply-to"))
+            .inReplyToMessageId(Helpers.getHeader(mimeMessage, "in-reply-to"))
             .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
-            .headers(toMap(mimeMessage.getHeader().getFields()))
-            .from(firstFromMailboxList(mimeMessage.getFrom()))
-            .to(fromAddressList(mimeMessage.getTo()))
-            .cc(fromAddressList(mimeMessage.getCc()))
-            .bcc(fromAddressList(mimeMessage.getBcc()))
-            .replyTo(fromAddressList(mimeMessage.getReplyTo()))
+            .headers(Helpers.toMap(mimeMessage.getHeader().getFields()))
+            .from(Helpers.firstFromMailboxList(mimeMessage.getFrom()))
+            .to(Helpers.fromAddressList(mimeMessage.getTo()))
+            .cc(Helpers.fromAddressList(mimeMessage.getCc()))
+            .bcc(Helpers.fromAddressList(mimeMessage.getBcc()))
+            .replyTo(Helpers.fromAddressList(mimeMessage.getReplyTo()))
             .date(getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
             .build();
     }

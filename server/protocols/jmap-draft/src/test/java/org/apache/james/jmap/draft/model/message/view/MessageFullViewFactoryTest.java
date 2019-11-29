@@ -29,7 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
@@ -56,12 +55,10 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
-import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
-import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -106,15 +103,12 @@ class MessageFullViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor);
+        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor, messageIdManager);
     }
 
     @Test
     void fromMessageResultsShouldReturnCorrectView() throws Exception {
-        List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
-
-        MessageFullView actual = messageFullViewFactory.fromMessageResults(messages);
+        MessageFullView actual = messageFullViewFactory.fromMessageIds(ImmutableList.of(message1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(message1.getMessageId());
             softly.assertThat(actual.getMailboxIds()).containsExactly(bobInbox.getId());
@@ -145,10 +139,7 @@ class MessageFullViewFactoryTest {
         messageIdManager.setInMailboxes(message1.getMessageId(), ImmutableList.of(bobInbox.getId(), bobMailbox.getId()), session);
         bobMailbox.setFlags(new Flags(Flags.Flag.FLAGGED), MessageManager.FlagsUpdateMode.REPLACE, MessageRange.all(), session);
 
-        List<MessageResult> messages = messageIdManager
-            .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
-
-        MessageFullView actual = messageFullViewFactory.fromMessageResults(messages);
+        MessageFullView actual = messageFullViewFactory.fromMessageIds(ImmutableList.of(message1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(message1.getMessageId());
             softly.assertThat(actual.getKeywords()).isEqualTo(Keywords.strictFactory().from(Keyword.SEEN, Keyword.FLAGGED).asMap());

@@ -25,36 +25,50 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.MessageProperties.ReadProfile;
 import org.apache.james.mailbox.BlobManager;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 
 import com.google.common.annotations.VisibleForTesting;
 
 public class MessageMetadataViewFactory implements MessageViewFactory<MessageMetadataView> {
+
     private final BlobManager blobManager;
+    private final MessageIdManager messageIdManager;
 
     @Inject
     @VisibleForTesting
-    public MessageMetadataViewFactory(BlobManager blobManager) {
+    public MessageMetadataViewFactory(BlobManager blobManager, MessageIdManager messageIdManager) {
         this.blobManager = blobManager;
+        this.messageIdManager = messageIdManager;
     }
 
     @Override
-    public MessageMetadataView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
-        assertOneMessageId(messageResults);
+    public List<MessageMetadataView> fromMessageIds(List<MessageId> messageIds, MailboxSession session) throws MailboxException {
+        List<MessageResult> messages = messageIdManager.getMessages(messageIds, ReadProfile.Metadata.getFetchGroup(), session);
+        return Helpers.toMessageViews(messages, this::fromMessageResults);
+    }
+
+    @VisibleForTesting
+    public MessageMetadataView fromMessageResults(Collection<MessageResult> messageResults) {
+        Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
-        List<MailboxId> mailboxIds = getMailboxIds(messageResults);
+        List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
         return MessageMetadataView.messageMetadataBuilder()
             .id(firstMessageResult.getMessageId())
             .mailboxIds(mailboxIds)
             .blobId(BlobId.of(blobManager.toBlobId(firstMessageResult.getMessageId())))
             .threadId(firstMessageResult.getMessageId().serialize())
-            .keywords(getKeywords(messageResults))
+            .keywords(Helpers.getKeywords(messageResults))
             .size(firstMessageResult.getSize())
             .build();
     }
+
 }
