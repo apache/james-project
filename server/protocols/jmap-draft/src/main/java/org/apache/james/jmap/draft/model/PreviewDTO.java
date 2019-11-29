@@ -26,6 +26,7 @@ import org.apache.james.jmap.api.model.Preview;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class PreviewDTO {
@@ -72,5 +73,12 @@ public class PreviewDTO {
     @Override
     public final int hashCode() {
         return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
     }
 }
