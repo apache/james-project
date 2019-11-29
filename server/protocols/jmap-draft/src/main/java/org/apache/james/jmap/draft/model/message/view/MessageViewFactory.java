@@ -19,14 +19,18 @@
 
 package org.apache.james.jmap.draft.model.message.view;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.Instant;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.utils.KeywordsCombiner;
 import org.apache.james.mailbox.MailboxSession;
@@ -34,17 +38,15 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mime4j.dom.address.AddressList;
-import org.apache.james.mime4j.dom.address.Mailbox;
-import org.apache.james.mime4j.dom.address.MailboxList;
+import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.stream.Field;
+import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.util.MimeUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Multimaps;
 
@@ -60,7 +62,7 @@ public interface MessageViewFactory<T extends MessageView> {
 
     class Helpers {
         interface FromMessageResult<T extends MessageView> {
-            T fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException;
+            T fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException;
         }
 
         static void assertOneMessageId(Collection<MessageResult> messageResults) {
@@ -68,7 +70,7 @@ public interface MessageViewFactory<T extends MessageView> {
             Preconditions.checkArgument(hasOnlyOneMessageId(messageResults), "MessageResults need to share the same messageId");
         }
 
-        static boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
+        private static boolean hasOnlyOneMessageId(Collection<MessageResult> messageResults) {
             return messageResults
                 .stream()
                 .map(MessageResult::getMessageId)
@@ -91,7 +93,7 @@ public interface MessageViewFactory<T extends MessageView> {
                 .get();
         }
 
-        static String getHeader(org.apache.james.mime4j.dom.Message message, String header) {
+        static String getHeaderValue(org.apache.james.mime4j.dom.Message message, String header) {
             Field field = message.getHeader().getField(header);
             if (field == null) {
                 return null;
@@ -99,7 +101,7 @@ public interface MessageViewFactory<T extends MessageView> {
             return field.getBody();
         }
 
-        static ImmutableMap<String, String> toMap(List<Field> fields) {
+        static ImmutableMap<String, String> toHeaderMap(List<Field> fields) {
             Function<Map.Entry<String, Collection<Field>>, String> bodyConcatenator = fieldListEntry -> fieldListEntry.getValue()
                 .stream()
                 .map(Field::getBody)
@@ -113,41 +115,6 @@ public interface MessageViewFactory<T extends MessageView> {
                 .entrySet()
                 .stream()
                 .collect(Guavate.toImmutableMap(Map.Entry::getKey, bodyConcatenator));
-        }
-
-        static Emailer firstFromMailboxList(MailboxList list) {
-            if (list == null) {
-                return null;
-            }
-            return list.stream()
-                .map(Helpers::fromMailbox)
-                .findFirst()
-                .orElse(null);
-        }
-
-        static Emailer fromMailbox(Mailbox mailbox) {
-            return Emailer.builder()
-                .name(getNameOrAddress(mailbox))
-                .email(mailbox.getAddress())
-                .allowInvalid()
-                .build();
-        }
-
-        static String getNameOrAddress(Mailbox mailbox) {
-            if (mailbox.getName() != null) {
-                return mailbox.getName();
-            }
-            return mailbox.getAddress();
-        }
-
-        static ImmutableList<Emailer> fromAddressList(AddressList list) {
-            if (list == null) {
-                return ImmutableList.of();
-            }
-            return list.flatten()
-                .stream()
-                .map(Helpers::fromMailbox)
-                .collect(Guavate.toImmutableList());
         }
 
         static <T extends MessageView>  Function<Collection<MessageResult>, Stream<T>> toMessageViews(FromMessageResult<T> converter) {
@@ -170,6 +137,20 @@ public interface MessageViewFactory<T extends MessageView> {
                 .filter(collection -> !collection.isEmpty())
                 .flatMap(toMessageViews(converter))
                 .collect(Guavate.toImmutableList());
+        }
+
+        static Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MessageResult message) {
+            return Optional.ofNullable(mimeMessage.getDate())
+                .map(Date::toInstant)
+                .orElse(message.getInternalDate().toInstant());
+        }
+
+        static Message parse(InputStream messageContent) throws IOException {
+            return Message.Builder
+                .of()
+                .use(MimeConfig.PERMISSIVE)
+                .parse(messageContent)
+                .build();
         }
     }
 }

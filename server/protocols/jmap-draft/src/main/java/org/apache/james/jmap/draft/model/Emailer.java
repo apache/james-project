@@ -48,22 +48,20 @@ public class Emailer {
     private static final Logger LOGGER = LoggerFactory.getLogger(Emailer.class);
 
     public static List<Emailer> fromAddressList(AddressList list) {
-        if (list == null) {
-            return ImmutableList.of();
-        }
-        return list.flatten()
-            .stream()
-            .map(Emailer::fromMailbox)
-            .collect(Guavate.toImmutableList());
+        return Optional.ofNullable(list)
+            .map(addresses -> addresses.flatten()
+                .stream()
+                .map(Emailer::fromMailbox)
+                .collect(Guavate.toImmutableList()))
+            .orElse(ImmutableList.of());
     }
 
     public static Emailer firstFromMailboxList(MailboxList list) {
-        if (list == null) {
-            return null;
-        }
-        return list.stream()
-            .map(Emailer::fromMailbox)
-            .findFirst()
+        return Optional.ofNullable(list)
+            .map(mailboxes -> mailboxes.stream()
+                .map(Emailer::fromMailbox)
+                .findFirst()
+                .orElse(null))
             .orElse(null);
     }
 
@@ -76,10 +74,8 @@ public class Emailer {
     }
 
     private static String getNameOrAddress(Mailbox mailbox) {
-        if (mailbox.getName() != null) {
-            return mailbox.getName();
-        }
-        return mailbox.getAddress();
+        return Optional.ofNullable(mailbox.getName())
+            .orElseGet(mailbox::getAddress);
     }
 
 

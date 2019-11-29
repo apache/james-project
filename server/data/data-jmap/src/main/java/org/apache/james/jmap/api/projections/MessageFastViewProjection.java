@@ -19,8 +19,18 @@
 
 package org.apache.james.jmap.api.projections;
 
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
+
+import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public interface MessageFastViewProjection {
 
@@ -29,4 +39,14 @@ public interface MessageFastViewProjection {
     Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId);
 
     Publisher<Void> delete(MessageId messageId);
+
+    default Publisher<Map<MessageId, MessageFastViewPrecomputedProperties>> retrieve(List<MessageId> messageIds) {
+        Preconditions.checkNotNull(messageIds);
+
+        return Flux.fromIterable(messageIds)
+            .flatMap(messageId -> Mono.from(this.retrieve(messageId))
+                .map(preview -> Pair.of(messageId, preview)))
+            .collectMap(Pair::getLeft, Pair::getRight)
+            .subscribeOn(Schedulers.boundedElastic());
+    }
 }

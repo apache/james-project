@@ -57,6 +57,7 @@ public class MessageFastView extends MessageHeaderView {
 
         protected Builder() {
             super();
+            this.preview = Optional.empty();
         }
 
         public S preview(Preview preview) {
@@ -77,12 +78,12 @@ public class MessageFastView extends MessageHeaderView {
                 keywords.orElse(Keywords.DEFAULT_VALUE));
         }
 
+        @Override
         public void checkState() {
             super.checkState();
             Preconditions.checkState(preview != null, "'preview' is mandatory");
         }
     }
-
 
     private final PreviewDTO preview;
 

@@ -20,15 +20,13 @@
 package org.apache.james.jmap.draft.model.message.view;
 
 import java.io.IOException;
-import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.model.BlobId;
+import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -38,7 +36,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
-import org.apache.james.mime4j.stream.MimeConfig;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Strings;
@@ -60,13 +57,13 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
-    private MessageHeaderView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException {
+    private MessageHeaderView fromMessageResults(Collection<MessageResult> messageResults) throws MailboxException, IOException {
         Helpers.assertOneMessageId(messageResults);
 
         MessageResult firstMessageResult = messageResults.iterator().next();
         List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
-        Message mimeMessage = parse(firstMessageResult);
+        Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
 
         return MessageHeaderView.messageHeaderBuilder()
             .id(firstMessageResult.getMessageId())
@@ -75,33 +72,15 @@ public class MessageHeaderViewFactory implements MessageViewFactory<MessageHeade
             .threadId(firstMessageResult.getMessageId().serialize())
             .keywords(Helpers.getKeywords(messageResults))
             .size(firstMessageResult.getSize())
-            .inReplyToMessageId(Helpers.getHeader(mimeMessage, "in-reply-to"))
+            .inReplyToMessageId(Helpers.getHeaderValue(mimeMessage, "in-reply-to"))
             .subject(Strings.nullToEmpty(mimeMessage.getSubject()).trim())
-            .headers(Helpers.toMap(mimeMessage.getHeader().getFields()))
-            .from(Helpers.firstFromMailboxList(mimeMessage.getFrom()))
-            .to(Helpers.fromAddressList(mimeMessage.getTo()))
-            .cc(Helpers.fromAddressList(mimeMessage.getCc()))
-            .bcc(Helpers.fromAddressList(mimeMessage.getBcc()))
-            .replyTo(Helpers.fromAddressList(mimeMessage.getReplyTo()))
-            .date(getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
+            .headers(Helpers.toHeaderMap(mimeMessage.getHeader().getFields()))
+            .from(Emailer.firstFromMailboxList(mimeMessage.getFrom()))
+            .to(Emailer.fromAddressList(mimeMessage.getTo()))
+            .cc(Emailer.fromAddressList(mimeMessage.getCc()))
+            .bcc(Emailer.fromAddressList(mimeMessage.getBcc()))
+            .replyTo(Emailer.fromAddressList(mimeMessage.getReplyTo()))
+            .date(Helpers.getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
             .build();
-    }
-
-    private Message parse(MessageResult message) throws MailboxException {
-        try {
-            return Message.Builder
-                .of()
-                .use(MimeConfig.PERMISSIVE)
-                .parse(message.getFullContent().getInputStream())
-                .build();
-        } catch (IOException e) {
-            throw new MailboxException("Unable to parse message: " + e.getMessage(), e);
-        }
-    }
-
-    private Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MessageResult message) {
-        return Optional.ofNullable(mimeMessage.getDate())
-            .map(Date::toInstant)
-            .orElse(message.getInternalDate().toInstant());
     }
 }

@@ -28,10 +28,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import org.apache.james.jmap.api.model.Preview;
+import java.util.List;
+
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import reactor.core.publisher.Mono;
 
@@ -54,7 +59,7 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void retrieveShouldThrowWhenNullMessageId() {
-        assertThatThrownBy(() -> Mono.from(testee().retrieve(null)).block())
+        assertThatThrownBy(() -> Mono.from(testee().retrieve((MessageId) null)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -94,6 +99,66 @@ public interface MessageFastViewProjectionContract {
            softly.assertThat(Mono.from(testee().retrieve(messageId2)).block())
                .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2);
         });
+    }
+
+    @Test
+    default void retrieveShouldThrowWhenNullMessageIds() {
+        assertThatThrownBy(() -> Mono.from(testee().retrieve((List<MessageId>) null)).block())
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    default void retrieveShouldReturnEmptyWhenEmptyMessageIds() {
+        assertThat(Mono.from(testee().retrieve(ImmutableList.of())).block())
+            .isEmpty();
+    }
+
+    @Test
+    default void retrieveShouldReturnAMapContainingStoredPreviews() {
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+        Mono.from(testee().store(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
+            .block();
+
+        assertThat(Mono.from(testee().retrieve(ImmutableList.of(messageId1, messageId2))).block())
+            .isEqualTo(ImmutableMap.builder()
+                .put(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1)
+                .put(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2)
+                .build());
+    }
+
+    @Test
+    default void retrieveShouldReturnOnlyPreviewsAvailableInTheStore() {
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        MessageId messageId3 = newMessageId();
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+        Mono.from(testee().store(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
+            .block();
+
+        assertThat(Mono.from(testee().retrieve(ImmutableList.of(messageId1, messageId2, messageId3))).block())
+            .isEqualTo(ImmutableMap.builder()
+                .put(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1)
+                .put(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2)
+                .build());
+    }
+
+    @Test
+    default void retrieveShouldReturnOnlyPreviewsByAskedMessageIds() {
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+        Mono.from(testee().store(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
+            .block();
+
+        assertThat(Mono.from(testee().retrieve(ImmutableList.of(messageId1))).block())
+            .isEqualTo(ImmutableMap.builder()
+                .put(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1)
+                .build());
     }
 
     @Test

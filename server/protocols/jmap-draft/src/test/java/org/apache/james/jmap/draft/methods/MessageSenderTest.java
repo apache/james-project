@@ -43,7 +43,6 @@ import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.model.BlobId;
 import org.apache.james.mailbox.model.MessageId;
@@ -64,7 +63,7 @@ class MessageSenderTest {
     private MessageFullView jmapMessage;
 
     @BeforeEach
-    void setup() throws MailboxException {
+    void setup() throws Exception {
         String headers = "From: me@example.com\n"
             + "To: 1@example.com\n"
             + "Cc: 2@example.com, 3@example.com\n"

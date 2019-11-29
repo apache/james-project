@@ -21,6 +21,7 @@ package org.apache.james.jmap.draft.methods;
 
 import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -195,7 +196,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     .description(e.getMessage())
                     .build());
 
-        } catch (MailboxException | MessagingException e) {
+        } catch (MailboxException | MessagingException | IOException e) {
             LOG.error("Unexpected error while creating message", e);
             responseBuilder.notCreated(create.getCreationId(), 
                     SetError.builder()
@@ -213,7 +214,9 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             .collect(Guavate.toImmutableList());
     }
 
-    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException {
+    private void performCreate(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+        throws MailboxException, InvalidMailboxForCreationException, MessagingException, AttachmentsNotFoundException, IOException {
+
         if (isAppendToMailboxWithRole(Role.OUTBOX, entry.getValue(), session)) {
             sendMailViaOutbox(entry, responseBuilder, session);
         } else if (entry.getValue().isDraft()) {
@@ -239,13 +242,17 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
+    private void sendMailViaOutbox(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+        throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
+
         validateArguments(entry, session);
         MessageWithId created = handleOutboxMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
     }
 
-    private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session) throws AttachmentsNotFoundException, MailboxException, MessagingException {
+    private void saveDraft(CreationMessageEntry entry, Builder responseBuilder, MailboxSession session)
+        throws AttachmentsNotFoundException, MailboxException, MessagingException, IOException {
+
         attachmentChecker.assertAttachmentsExist(entry, session);
         MessageWithId created = handleDraftMessages(entry, session);
         responseBuilder.created(created.getCreationId(), created.getValue());
@@ -273,7 +280,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             .allMatch(path -> path.belongsTo(session));
     }
 
-    private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
+    private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException, IOException {
         assertUserIsSender(session, entry.getValue().getFrom());
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
@@ -292,7 +299,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         }
     }
 
-    private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException {
+    private MessageWithId handleDraftMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException, IOException {
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
