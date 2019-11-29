@@ -24,14 +24,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
@@ -126,9 +124,8 @@ public interface MessagePreviewStoreContract {
         int stepCount = 100;
 
         ConcurrentTestRunner.builder()
-            .operation((thread, step) -> Mono.from(testee()
+            .reactorOperation((thread, step) -> testee()
                 .store(TestMessageId.of(thread), Preview.from(String.valueOf(step))))
-                .block())
             .threadCount(threadCount)
             .operationCount(stepCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -146,9 +143,8 @@ public interface MessagePreviewStoreContract {
         int operationCount = 100;
 
         ConcurrentTestRunner.builder()
-            .operation((thread, step) -> Mono.from(testee()
+            .reactorOperation((thread, step) -> testee()
                 .store(MESSAGE_ID_1, Preview.from(String.valueOf(step * threadCount + thread))))
-                .block())
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));

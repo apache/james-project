@@ -34,10 +34,13 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.james.util.concurrent.NamedThreadFactory;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+
+import reactor.core.publisher.Mono;
 
 public class ConcurrentTestRunner implements Closeable {
 
@@ -46,6 +49,10 @@ public class ConcurrentTestRunner implements Closeable {
     @FunctionalInterface
     public interface RequireOperation {
         RequireThreadCount operation(ConcurrentOperation operation);
+
+        default RequireThreadCount reactorOperation(ReactorOperation reactorOperation) {
+            return operation(reactorOperation.blocking());
+        }
     }
 
     @FunctionalInterface
@@ -97,8 +104,20 @@ public class ConcurrentTestRunner implements Closeable {
         }
     }
 
+    @FunctionalInterface
     public interface ConcurrentOperation {
         void execute(int threadNumber, int step) throws Exception;
+    }
+
+    @FunctionalInterface
+    public interface ReactorOperation {
+        Publisher<Void> execute(int threadNumber, int step) throws Exception;
+
+        default ConcurrentOperation blocking() {
+            return (threadNumber, step) -> Mono.from(execute(threadNumber, step))
+                .then()
+                .block();
+        }
     }
 
     private class ConcurrentRunnableTask implements Runnable {
