@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Username;
+import org.assertj.core.api.Assertions;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -83,7 +84,7 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
     }
 
     public boolean hasAMessage() throws IOException {
-        imapClient.fetch("1:1", "ALL");
+        imapClient.fetch("1", "UID");
         return imapClient.getReplyString()
             .contains("OK FETCH completed");
     }
@@ -94,13 +95,9 @@ public class IMAPMessageReader extends ExternalResource implements Closeable, Af
     }
 
     public IMAPMessageReader awaitMessageCount(ConditionFactory conditionFactory, int messageCount) {
-        conditionFactory.until(() -> {
-            try {
-                imapClient.fetch("1:*", "ALL");
-                return countFetchedEntries() == messageCount;
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
+        conditionFactory.untilAsserted(() -> {
+            imapClient.fetch("1:*", "UID");
+            Assertions.assertThat(countFetchedEntries()).isEqualTo(messageCount);
         });
         return this;
     }
