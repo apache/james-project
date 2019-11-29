@@ -19,11 +19,16 @@
 
 package org.apache.james;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 import org.apache.james.core.Domain;
+import org.apache.james.mailbox.DefaultMailboxes;
+import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -33,14 +38,15 @@ import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
 
-import com.github.fge.lambdas.runnable.ThrowingRunnable;
+import com.github.fge.lambdas.Throwing;
+import com.google.common.io.Resources;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 interface MailsShouldBeWellReceived {
 
     String JAMES_SERVER_HOST = "127.0.0.1";
-    String DOMAIN = "domain";
+    String DOMAIN = "apache.org";
     String JAMES_USER = "james-user@" + DOMAIN;
     String PASSWORD = "secret";
     ConditionFactory CALMLY_AWAIT = Awaitility
@@ -72,17 +78,25 @@ interface MailsShouldBeWellReceived {
     }
 
     @Test
-    default void twoHundredMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
+    default void oneHundredMailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
         server.getProbe(DataProbeImpl.class).fluent()
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD);
 
-        int messageCount = 200;
+        MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+
+        int messageCount = 100;
+
+        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            Mono.fromRunnable(((ThrowingRunnable) () ->
-                sender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                    .sendMessageWithHeaders("bob@any.com", JAMES_USER, "UUID " + UUID.randomUUID().toString())))
+            Mono.fromRunnable(
+                Throwing.runnable(() -> {
+                    sender.connect(JAMES_SERVER_HOST, smtpPort);
+                    sendUniqueMessage(sender, message);
+            }))
                 .repeat(messageCount - 1)
                 .subscribeOn(Schedulers.elastic())
                 .blockLast();
@@ -94,7 +108,12 @@ interface MailsShouldBeWellReceived {
             reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(JAMES_USER, PASSWORD)
                 .select(IMAPMessageReader.INBOX)
-                .awaitMessageCount(CALMLY_AWAIT_FIVE_MINUTE, messageCount);
+                .awaitMessageCount(CALMLY_AWAIT, messageCount);
         }
+    }
+
+    default void sendUniqueMessage(SMTPMessageSender sender, String message) throws IOException {
+        String uniqueMessage = message.replace("banana", "UUID " + UUID.randomUUID().toString());
+        sender.sendMessageWithHeaders("bob@apache.org", JAMES_USER, uniqueMessage);
     }
 }
