@@ -19,10 +19,16 @@
 
 package org.apache.james.jmap.cassandra.preview;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.jmap.api.preview.MessagePreviewStore;
 import org.apache.james.jmap.api.preview.MessagePreviewStoreContract;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMessagePreviewStoreTest implements MessagePreviewStoreContract {
@@ -31,14 +37,42 @@ class CassandraMessagePreviewStoreTest implements MessagePreviewStoreContract {
     static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraMessagePreviewModule.MODULE);
 
     private CassandraMessagePreviewStore testee;
+    private CassandraMessageId.Factory cassandraMessageIdFactory;
 
     @BeforeEach
     void setUp() {
+        cassandraMessageIdFactory = new CassandraMessageId.Factory();
         testee = new CassandraMessagePreviewStore(cassandra.getCassandraCluster().getConf());
     }
 
     @Override
     public MessagePreviewStore testee() {
         return testee;
+    }
+
+    @Override
+    public MessageId newMessageId() {
+        return cassandraMessageIdFactory.generate();
+    }
+
+    @Test
+    void storeShouldThrowWhenMessageIdIsNotCassandraType() {
+        assertThatThrownBy(() -> testee.store(TestMessageId.of(1), PREVIEW_1))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("MessageId type is required to be CassandraMessageId");
+    }
+
+    @Test
+    void retrieveShouldThrowWhenMessageIdIsNotCassandraType() {
+        assertThatThrownBy(() -> testee.retrieve(TestMessageId.of(1)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("MessageId type is required to be CassandraMessageId");
+    }
+
+    @Test
+    void deleteShouldThrowWhenMessageIdIsNotCassandraType() {
+        assertThatThrownBy(() -> testee.retrieve(TestMessageId.of(1)))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("MessageId type is required to be CassandraMessageId");
     }
 }

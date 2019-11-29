@@ -21,19 +21,28 @@ package org.apache.james.jmap.memory.preview;
 
 import org.apache.james.jmap.api.preview.MessagePreviewStore;
 import org.apache.james.jmap.api.preview.MessagePreviewStoreContract;
+import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;
 
 class MemoryMessagePreviewStoreTest implements MessagePreviewStoreContract {
 
     private MemoryMessagePreviewStore testee;
+    private TestMessageId.Factory messageIdFactory;
 
     @BeforeEach
     void setUp() {
+        messageIdFactory = new TestMessageId.Factory();
         testee = new MemoryMessagePreviewStore();
     }
 
     @Override
     public MessagePreviewStore testee() {
         return testee;
+    }
+
+    @Override
+    public MessageId newMessageId() {
+        return messageIdFactory.generate();
     }
 }

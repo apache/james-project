@@ -20,6 +20,7 @@
 package org.apache.james.jmap.cassandra.preview;
 
 import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.uuid;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraConstants;
@@ -34,7 +35,7 @@ public interface CassandraMessagePreviewModule {
             .caching(SchemaBuilder.KeyCaching.ALL,
                 SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
-            .addPartitionKey(CassandraMessagePreviewTable.MESSAGE_ID, text())
+            .addPartitionKey(CassandraMessagePreviewTable.MESSAGE_ID, uuid())
             .addColumn(CassandraMessagePreviewTable.PREVIEW, text()))
         .build();
 }

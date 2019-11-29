@@ -32,12 +32,14 @@ import javax.inject.Inject;
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.preview.MessagePreviewStore;
 import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
+import com.google.common.base.Preconditions;
 
 public class CassandraMessagePreviewStore implements MessagePreviewStore {
 
@@ -66,22 +68,34 @@ public class CassandraMessagePreviewStore implements MessagePreviewStore {
 
     @Override
     public Publisher<Void> store(MessageId messageId, Preview preview) {
+        checkMessage(messageId);
+
         return cassandraAsyncExecutor.executeVoid(storeStatement.bind()
-            .setString(MESSAGE_ID, messageId.serialize())
+            .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
             .setString(PREVIEW, preview.getValue()));
     }
 
     @Override
     public Publisher<Preview> retrieve(MessageId messageId) {
+        checkMessage(messageId);
+
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
-                .setString(MESSAGE_ID, messageId.serialize()))
+                .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
             .map(row -> row.getString(PREVIEW))
             .map(Preview::from);
     }
 
     @Override
     public Publisher<Void> delete(MessageId messageId) {
+        checkMessage(messageId);
+
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
-            .setString(MESSAGE_ID, messageId.serialize()));
+            .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()));
+    }
+
+    private void checkMessage(MessageId messageId) {
+        Preconditions.checkNotNull(messageId);
+        Preconditions.checkArgument(messageId instanceof CassandraMessageId,
+            "MessageId type is required to be CassandraMessageId");
     }
 }

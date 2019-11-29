@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -36,12 +36,12 @@ import reactor.core.publisher.Mono;
 
 public interface MessagePreviewStoreContract {
 
-    MessageId MESSAGE_ID_1 = TestMessageId.of(1);
-    Preview PREVIEW_1 = Preview.from("message id 1");
-    MessageId MESSAGE_ID_2 = TestMessageId.of(2);
-    Preview PREVIEW_2 = Preview.from("message id 2");
+    Preview PREVIEW_1 = Preview.from("preview 1");
+    Preview PREVIEW_2 = Preview.from("preview 2");
 
     MessagePreviewStore testee();
+
+    MessageId newMessageId();
 
     @Test
     default void retrieveShouldThrowWhenNullMessageId() {
@@ -51,33 +51,38 @@ public interface MessagePreviewStoreContract {
 
     @Test
     default void retrieveShouldReturnStoredPreview() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, PREVIEW_1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).block())
+        assertThat(Mono.from(testee().retrieve(messageId)).block())
             .isEqualTo(PREVIEW_1);
     }
 
     @Test
     default void retrieveShouldReturnEmptyWhenMessageIdNotFound() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_2)).blockOptional())
+        assertThat(Mono.from(testee().retrieve(messageId2)).blockOptional())
             .isEmpty();
     }
 
     @Test
     default void retrieveShouldReturnTheRightPreviewWhenStoringMultipleMessageIds() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
-        Mono.from(testee().store(MESSAGE_ID_2, PREVIEW_2))
+        Mono.from(testee().store(messageId2, PREVIEW_2))
             .block();
 
         SoftAssertions.assertSoftly(softly -> {
-           softly.assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).block())
+           softly.assertThat(Mono.from(testee().retrieve(messageId1)).block())
                .isEqualTo(PREVIEW_1);
-           softly.assertThat(Mono.from(testee().retrieve(MESSAGE_ID_2)).block())
+           softly.assertThat(Mono.from(testee().retrieve(messageId2)).block())
                .isEqualTo(PREVIEW_2);
         });
     }
@@ -90,31 +95,34 @@ public interface MessagePreviewStoreContract {
 
     @Test
     default void storeShouldThrowWhenNullPreview() {
-        assertThatThrownBy(() -> Mono.from(testee().store(MESSAGE_ID_1, null)).block())
+        MessageId messageId1 = newMessageId();
+        assertThatThrownBy(() -> Mono.from(testee().store(messageId1, null)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void storeShouldOverrideOldRecord() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_2))
+        Mono.from(testee().store(messageId1, PREVIEW_2))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).block())
+        assertThat(Mono.from(testee().retrieve(messageId1)).block())
             .isEqualTo(PREVIEW_2);
     }
 
     @Test
     default void storeShouldBeIdempotent() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).block())
+        assertThat(Mono.from(testee().retrieve(messageId1)).block())
             .isEqualTo(PREVIEW_1);
     }
 
@@ -123,33 +131,38 @@ public interface MessagePreviewStoreContract {
         int threadCount = 10;
         int stepCount = 100;
 
+        ConcurrentHashMap<Integer, MessageId> messageIds = new ConcurrentHashMap<>();
+        IntStream.range(0, threadCount)
+            .forEach(thread -> messageIds.put(thread, newMessageId()));
+
         ConcurrentTestRunner.builder()
             .reactorOperation((thread, step) -> testee()
-                .store(TestMessageId.of(thread), Preview.from(String.valueOf(step))))
+                .store(messageIds.get(thread), Preview.from(String.valueOf(step))))
             .threadCount(threadCount)
             .operationCount(stepCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
         IntStream.range(0, threadCount)
             .forEach(index -> assertThat(Mono.from(testee()
-                    .retrieve(TestMessageId.of(index)))
+                    .retrieve(messageIds.get(index)))
                     .block())
                 .isEqualTo(Preview.from(String.valueOf(stepCount - 1))));
     }
 
     @Test
     default void storeShouldBeConsistentUponSingleKeyOperation() throws Exception {
+        MessageId messageId = newMessageId();
         int threadCount = 10;
         int operationCount = 100;
 
         ConcurrentTestRunner.builder()
             .reactorOperation((thread, step) -> testee()
-                .store(MESSAGE_ID_1, Preview.from(String.valueOf(step * threadCount + thread))))
+                .store(messageId, Preview.from(String.valueOf(step * threadCount + thread))))
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        Preview preview = Mono.from(testee().retrieve(MESSAGE_ID_1)).block();
+        Preview preview = Mono.from(testee().retrieve(messageId)).block();
         Integer previewAsInt = Integer.valueOf(preview.getValue());
 
         assertThat(previewAsInt)
@@ -165,47 +178,52 @@ public interface MessagePreviewStoreContract {
 
     @Test
     default void deleteShouldNotThrowWhenMessageIdNotFound() {
-        assertThatCode(() -> Mono.from(testee().delete(MESSAGE_ID_1)).block())
+        MessageId messageId1 = newMessageId();
+        assertThatCode(() -> Mono.from(testee().delete(messageId1)).block())
             .doesNotThrowAnyException();
     }
 
     @Test
     default void deleteShouldDeleteStoredRecord() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        Mono.from(testee().delete(MESSAGE_ID_1))
+        Mono.from(testee().delete(messageId1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).blockOptional())
+        assertThat(Mono.from(testee().retrieve(messageId1)).blockOptional())
             .isEmpty();
     }
 
     @Test
     default void deleteShouldNotDeleteAnotherRecord() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        MessageId messageId2 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
-        Mono.from(testee().store(MESSAGE_ID_2, PREVIEW_2))
+        Mono.from(testee().store(messageId2, PREVIEW_2))
             .block();
 
-        Mono.from(testee().delete(MESSAGE_ID_1))
+        Mono.from(testee().delete(messageId1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_2)).block())
+        assertThat(Mono.from(testee().retrieve(messageId2)).block())
             .isEqualTo(PREVIEW_2);
     }
 
     @Test
     default void deleteShouldBeIdempotent() {
-        Mono.from(testee().store(MESSAGE_ID_1, PREVIEW_1))
+        MessageId messageId1 = newMessageId();
+        Mono.from(testee().store(messageId1, PREVIEW_1))
             .block();
 
-        Mono.from(testee().delete(MESSAGE_ID_1))
+        Mono.from(testee().delete(messageId1))
             .block();
-        Mono.from(testee().delete(MESSAGE_ID_1))
+        Mono.from(testee().delete(messageId1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(MESSAGE_ID_1)).blockOptional())
+        assertThat(Mono.from(testee().retrieve(messageId1)).blockOptional())
             .isEmpty();
     }
 }
