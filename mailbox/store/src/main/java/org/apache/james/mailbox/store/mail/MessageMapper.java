@@ -26,7 +26,6 @@ import java.util.Optional;
 
 import javax.mail.Flags;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;

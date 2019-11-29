@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.mail;
 
 import java.util.Collection;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.mailbox.model.FetchGroup;

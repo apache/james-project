@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
@@ -54,18 +55,18 @@ public class FetchGroup extends Profiles<FetchGroup> {
     private final ImmutableSet<PartContentDescriptor> partContentDescriptors;
 
     @VisibleForTesting
-    FetchGroup(EnumSet<Profile> content) {
+    FetchGroup(Collection<Profile> content) {
         this(content, ImmutableSet.of());
     }
 
     @VisibleForTesting
-    FetchGroup(EnumSet<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
+    FetchGroup(Collection<Profile> content, ImmutableSet<PartContentDescriptor> partContentDescriptors) {
         super(content);
         this.partContentDescriptors = partContentDescriptors;
     }
 
     @Override
-    FetchGroup copyWith(EnumSet<Profile> profiles) {
+    protected FetchGroup copyWith(Collection<Profile> profiles) {
         return new FetchGroup(profiles, partContentDescriptors);
     }
 

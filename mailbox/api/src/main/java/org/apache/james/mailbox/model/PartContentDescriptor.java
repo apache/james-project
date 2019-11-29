@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Collection;
 import java.util.EnumSet;
 import java.util.Objects;
 
@@ -34,13 +35,13 @@ public class PartContentDescriptor extends Profiles<PartContentDescriptor> {
         this(EnumSet.noneOf(FetchGroup.Profile.class), path);
     }
 
-    public PartContentDescriptor(EnumSet<FetchGroup.Profile> content, MimePath path) {
+    public PartContentDescriptor(Collection<FetchGroup.Profile> content, MimePath path) {
         super(content);
         this.path = path;
     }
 
     @Override
-    PartContentDescriptor copyWith(EnumSet<FetchGroup.Profile> enumSet) {
+    protected PartContentDescriptor copyWith(Collection<FetchGroup.Profile> enumSet) {
         return new PartContentDescriptor(enumSet, path);
     }
 

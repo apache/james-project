@@ -19,18 +19,17 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 
-import com.google.common.collect.ImmutableSet;
-
 public abstract class Profiles<T extends Profiles<T>> {
     private final EnumSet<Profile> profiles;
 
-    public Profiles(EnumSet<Profile> profiles) {
-        this.profiles = profiles;
+    protected Profiles(Collection<Profile> profiles) {
+        this.profiles = EnumSet.copyOf(profiles);
     }
 
     /**
@@ -44,7 +43,7 @@ public abstract class Profiles<T extends Profiles<T>> {
     }
 
     public T with(Profile... profiles) {
-        return with(EnumSet.copyOf(ImmutableSet.copyOf(profiles)));
+        return with(Arrays.asList(profiles));
     }
 
     public T with(Collection<Profile> profiles) {
@@ -54,5 +53,5 @@ public abstract class Profiles<T extends Profiles<T>> {
         return copyWith(result);
     }
 
-    abstract T copyWith(EnumSet<Profile> profiles);
+    protected abstract T copyWith(Collection<Profile> profiles);
 }
