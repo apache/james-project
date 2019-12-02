@@ -34,7 +34,7 @@ import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMessageFastViewProjectionModule {
     CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
-        .comment("Storing the JMAP preview property extracted from message bodies")
+        .comment("Storing the JMAP projections for MessageFastView, an aggregation of JMAP properties expected to be fast to fetch.")
         .options(options -> options
             .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement

@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra.projections.table;
 
 public interface CassandraMessageFastViewProjectionTable {
-    String TABLE_NAME = "message_preview";
+    String TABLE_NAME = "message_fast_view_projection";
 
     String MESSAGE_ID = "messageId";
     String PREVIEW = "preview";
