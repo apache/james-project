@@ -19,12 +19,16 @@
 
 package org.apache.james.jmap.draft.model;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.address.MailboxList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,14 +36,52 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
 
 @JsonDeserialize(builder = Emailer.Builder.class)
 public class Emailer {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Emailer.class);
+
+    public static List<Emailer> fromAddressList(AddressList list) {
+        if (list == null) {
+            return ImmutableList.of();
+        }
+        return list.flatten()
+            .stream()
+            .map(Emailer::fromMailbox)
+            .collect(Guavate.toImmutableList());
+    }
+
+    public static Emailer firstFromMailboxList(MailboxList list) {
+        if (list == null) {
+            return null;
+        }
+        return list.stream()
+            .map(Emailer::fromMailbox)
+            .findFirst()
+            .orElse(null);
+    }
+
+    private static Emailer fromMailbox(Mailbox mailbox) {
+        return Emailer.builder()
+            .name(getNameOrAddress(mailbox))
+            .email(mailbox.getAddress())
+            .allowInvalid()
+            .build();
+    }
+
+    private static String getNameOrAddress(Mailbox mailbox) {
+        if (mailbox.getName() != null) {
+            return mailbox.getName();
+        }
+        return mailbox.getAddress();
+    }
+
 
     public static Builder builder() {
         return new Builder();

@@ -22,6 +22,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.Optional;
 
+import org.apache.james.mime4j.dom.address.AddressList;
+import org.apache.james.mime4j.dom.address.Mailbox;
+import org.apache.james.mime4j.dom.address.MailboxList;
 import org.junit.Test;
 
 public class EmailerTest {
@@ -110,5 +113,60 @@ public class EmailerTest {
             .build();
 
         assertThat(actual).isEqualToComparingFieldByField(expected);
+    }
+
+    @Test
+    public void fromAddressListShouldReturnEmptyWhenNullAddress() {
+        assertThat(Emailer.fromAddressList(null))
+            .isEmpty();
+    }
+
+    @Test
+    public void fromAddressListShouldReturnListOfEmailersContainingAddresses() {
+        assertThat(Emailer.fromAddressList(new AddressList(
+                new Mailbox("user1", "james.org"),
+                new Mailbox("user2", "james.org"))))
+            .containsExactly(
+                Emailer.builder()
+                    .name("user1@james.org")
+                    .email("user1@james.org")
+                    .build(),
+                Emailer.builder()
+                    .name("user2@james.org")
+                    .email("user2@james.org")
+                    .build());
+    }
+
+    @Test
+    public void fromAddressListShouldReturnListOfEmailersContainingAddressesWithNames() {
+        assertThat(Emailer.fromAddressList(new AddressList(
+                new Mailbox("myInbox", "user1", "james.org"),
+                new Mailbox("hisInbox", "user2", "james.org"))))
+            .containsExactly(
+                Emailer.builder()
+                    .name("myInbox")
+                    .email("user1@james.org")
+                    .build(),
+                Emailer.builder()
+                    .name("hisInbox")
+                    .email("user2@james.org")
+                    .build());
+    }
+
+    @Test
+    public void firstFromMailboxListShouldReturnNullWhenNullMailboxList() {
+        assertThat(Emailer.firstFromMailboxList(null))
+            .isNull();
+    }
+
+    @Test
+    public void firstFromMailboxListShouldReturnTheFirstAddressInList() {
+        assertThat(Emailer.firstFromMailboxList(new MailboxList(
+                new Mailbox("user1Inbox", "user1", "james.org"),
+                new Mailbox("user2Inbox", "user2", "james.org"))))
+            .isEqualTo(Emailer.builder()
+                .name("user1Inbox")
+                .email("user1@james.org")
+                .build());
     }
 }
