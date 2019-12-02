@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.preview;
+package org.apache.james.jmap.memory.projections;
 
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.preview;
+package org.apache.james.jmap.memory.projections;
 
 import java.util.concurrent.ConcurrentHashMap;
 
