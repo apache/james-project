@@ -41,7 +41,7 @@ public interface MessageIdManager {
 
     void setFlags(Flags newState, FlagsUpdateMode replace, MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 
-    List<MessageResult> getMessages(List<MessageId> messageId, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
+    List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup minimal, MailboxSession mailboxSession) throws MailboxException;
 
     DeleteResult delete(MessageId messageId, List<MailboxId> mailboxIds, MailboxSession mailboxSession) throws MailboxException;
 

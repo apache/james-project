@@ -137,7 +137,7 @@ public class StoreMessageIdManager implements MessageIdManager {
     }
 
     @Override
-    public List<MessageResult> getMessages(List<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
+    public List<MessageResult> getMessages(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) throws MailboxException {
         MessageIdMapper messageIdMapper = mailboxSessionMapperFactory.getMessageIdMapper(mailboxSession);
 
         MessageMapper.FetchType fetchType = FetchGroupConverter.getFetchType(fetchGroup);
