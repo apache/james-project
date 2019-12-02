@@ -20,7 +20,6 @@
 package org.apache.james.jmap.event;
 
 import java.io.IOException;
-import java.util.List;
 
 import javax.inject.Inject;
 
@@ -37,13 +36,11 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
-import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.parboiled.common.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
@@ -85,20 +82,12 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
     }
 
     private void handleAddedEvent(Added addedEvent, MailboxSession session) throws MailboxException {
-        Flux.fromIterable(messageIdManager.getMessages(getEventMessageIds(addedEvent), FetchGroup.BODY_CONTENT, session))
+        Flux.fromIterable(messageIdManager.getMessages(addedEvent.getMessageIds().asList(), FetchGroup.BODY_CONTENT, session))
             .publishOn(Schedulers.boundedElastic())
             .map(Throwing.function(messageResult -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult))))
             .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()))
             .then()
             .block();
-    }
-
-    private List<MessageId> getEventMessageIds(Added addedEvent) {
-        return addedEvent.getUids()
-            .stream()
-            .map(uid -> addedEvent.getMetaData(uid).getMessageId())
-            .collect(Guavate.toImmutableSet())
-            .asList();
     }
 
     @VisibleForTesting

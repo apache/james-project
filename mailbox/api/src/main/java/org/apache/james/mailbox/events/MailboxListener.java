@@ -36,6 +36,7 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.acl.ACLDiff;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 
 /**
@@ -424,6 +426,12 @@ public interface MailboxListener {
          */
         public abstract MessageMetaData getMetaData(MessageUid uid);
 
+        public ImmutableSet<MessageId> getMessageIds() {
+            return getUids()
+                .stream()
+                .map(uid -> getMetaData(uid).getMessageId())
+                .collect(Guavate.toImmutableSet());
+        }
     }
 
     class Expunged extends MetaDataHoldingEvent {
