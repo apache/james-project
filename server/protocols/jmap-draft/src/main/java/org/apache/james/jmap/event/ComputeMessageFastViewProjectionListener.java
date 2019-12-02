@@ -44,6 +44,7 @@ import org.parboiled.common.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
@@ -100,7 +101,8 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
             .asList();
     }
 
-    private MessageFastViewPrecomputedProperties computeFastViewPrecomputedProperties(MessageResult messageResult) throws MailboxException, IOException {
+    @VisibleForTesting
+    MessageFastViewPrecomputedProperties computeFastViewPrecomputedProperties(MessageResult messageResult) throws MailboxException, IOException {
         MessageFullView message = messageFullViewFactory.fromMessageResults(ImmutableList.of(messageResult));
 
         return MessageFastViewPrecomputedProperties.builder()

@@ -20,7 +20,11 @@
 package org.apache.james.jmap.event;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
@@ -37,6 +41,11 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.events.Group;
+import org.apache.james.mailbox.events.InVMEventBus;
+import org.apache.james.mailbox.events.MemoryEventDeadLetters;
+import org.apache.james.mailbox.events.RetryBackoffConfiguration;
+import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.FetchGroup;
@@ -48,6 +57,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -78,12 +88,26 @@ class ComputeMessageFastViewProjectionListenerTest {
 
     private MessageManager inboxMessageManager;
     private MessageManager otherBoxMessageManager;
+    private ComputeMessageFastViewProjectionListener listener;
+    private MessageIdManager messageIdManager;
+    private MemoryEventDeadLetters eventDeadLetters;
 
     @BeforeEach
     void setup() throws Exception {
-        InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
+        eventDeadLetters = new MemoryEventDeadLetters();
+        InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
+            .preProvisionnedFakeAuthenticator()
+            .fakeAuthorizator()
+            .eventBus(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()), RetryBackoffConfiguration.DEFAULT, eventDeadLetters))
+            .defaultAnnotationLimits()
+            .defaultMessageParser()
+            .scanningSearchIndex()
+            .noPreDeletionHooks()
+            .storeQuotaManager()
+            .build();
+
         mailboxManager = resources.getMailboxManager();
-        MessageIdManager messageIdManager = resources.getMessageIdManager();
+        messageIdManager = spy(resources.getMessageIdManager());
 
         messageFastViewProjection = new MemoryMessageFastViewProjection();
 
@@ -97,8 +121,8 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.defaultReject());
 
-        ComputeMessageFastViewProjectionListener listener = new ComputeMessageFastViewProjectionListener(sessionProvider, messageIdManager,
-            messageFastViewProjection, messageFullViewFactory);
+        listener = spy(new ComputeMessageFastViewProjectionListener(sessionProvider, messageIdManager,
+            messageFastViewProjection, messageFullViewFactory));
 
         resources.getEventBus().register(listener);
 
@@ -185,6 +209,36 @@ class ComputeMessageFastViewProjectionListenerTest {
         MessageResult result = otherBoxMessageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).next();
         assertThat(Mono.from(messageFastViewProjection.retrieve(result.getMessageId())).block())
             .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES);
+    }
+
+    @Test
+    void shouldStoreEventInDeadLettersWhenComputeFastViewPrecomputedPropertiesException() throws Exception {
+        doThrow(new IOException())
+            .when(listener)
+            .computeFastViewPrecomputedProperties(any());
+
+        inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(previewMessage()),
+            mailboxSession);
+
+        assertThat(eventDeadLetters.failedIds(ComputeMessageFastViewProjectionListener.GROUP).collectList().block())
+            .hasSize(1);
+    }
+
+    @Test
+    void shouldStoreEventInDeadLettersWhenGetMessagesException() throws Exception {
+        doThrow(new MailboxException())
+            .when(messageIdManager)
+            .getMessages(any(), any(), any());
+
+        inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(previewMessage()),
+            mailboxSession);
+
+        assertThat(eventDeadLetters.failedIds(ComputeMessageFastViewProjectionListener.GROUP).collectList().block())
+            .hasSize(1);
     }
 
     private Message previewMessage() throws Exception {
