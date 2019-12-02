@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.preview;
+package org.apache.james.jmap.api.projections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
+import org.apache.james.jmap.api.preview.Preview;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;

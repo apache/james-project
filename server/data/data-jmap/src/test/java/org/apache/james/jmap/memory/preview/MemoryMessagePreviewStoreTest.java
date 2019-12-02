@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.memory.preview;
 
-import org.apache.james.jmap.api.preview.MessagePreviewStore;
-import org.apache.james.jmap.api.preview.MessagePreviewStoreContract;
+import org.apache.james.jmap.api.projections.MessagePreviewStore;
+import org.apache.james.jmap.api.projections.MessagePreviewStoreContract;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.junit.jupiter.api.BeforeEach;

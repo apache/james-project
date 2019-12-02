@@ -17,9 +17,11 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.preview;
+package org.apache.james.jmap.api.projections;
 
 import java.util.Objects;
+
+import org.apache.james.jmap.api.preview.Preview;
 
 import com.google.common.base.Preconditions;
 

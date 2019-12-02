@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.preview.table;
+package org.apache.james.jmap.cassandra.projections.table;
 
 public interface CassandraMessagePreviewTable {
     String TABLE_NAME = "message_preview";

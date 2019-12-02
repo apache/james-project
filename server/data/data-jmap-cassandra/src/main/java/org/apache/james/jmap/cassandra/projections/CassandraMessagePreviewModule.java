@@ -17,16 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.preview;
+package org.apache.james.jmap.cassandra.projections;
 
-import org.junit.jupiter.api.Test;
+import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.uuid;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable;
 
-class MessageFastViewPrecomputedPropertiesTest {
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(MessageFastViewPrecomputedProperties.class)
-            .verify();
-    }
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
+
+public interface CassandraMessagePreviewModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraMessagePreviewTable.TABLE_NAME)
+        .comment("Storing the JMAP preview property extracted from message bodies")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMessagePreviewTable.MESSAGE_ID, uuid())
+            .addColumn(CassandraMessagePreviewTable.PREVIEW, text()))
+        .build();
 }

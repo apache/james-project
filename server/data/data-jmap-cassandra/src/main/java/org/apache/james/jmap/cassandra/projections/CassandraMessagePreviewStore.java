@@ -17,21 +17,21 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.preview;
+package org.apache.james.jmap.cassandra.projections;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.jmap.cassandra.preview.table.CassandraMessagePreviewTable.MESSAGE_ID;
-import static org.apache.james.jmap.cassandra.preview.table.CassandraMessagePreviewTable.PREVIEW;
-import static org.apache.james.jmap.cassandra.preview.table.CassandraMessagePreviewTable.TABLE_NAME;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.MESSAGE_ID;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.PREVIEW;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.TABLE_NAME;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.jmap.api.preview.MessagePreviewStore;
 import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.projections.MessagePreviewStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;

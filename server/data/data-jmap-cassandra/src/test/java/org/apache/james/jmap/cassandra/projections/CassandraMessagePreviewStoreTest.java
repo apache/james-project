@@ -17,13 +17,13 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.cassandra.preview;
+package org.apache.james.jmap.cassandra.projections;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.jmap.api.preview.MessagePreviewStore;
-import org.apache.james.jmap.api.preview.MessagePreviewStoreContract;
+import org.apache.james.jmap.api.projections.MessagePreviewStore;
+import org.apache.james.jmap.api.projections.MessagePreviewStoreContract;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
