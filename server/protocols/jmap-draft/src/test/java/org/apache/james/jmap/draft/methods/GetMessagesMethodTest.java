@@ -42,6 +42,7 @@ import org.apache.james.jmap.draft.model.GetMessagesRequest;
 import org.apache.james.jmap.draft.model.GetMessagesResponse;
 import org.apache.james.jmap.draft.model.MessageProperties.MessageProperty;
 import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.jmap.draft.model.message.view.MessageFastViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageHeaderView;
@@ -51,6 +52,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory
 import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
+import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MailboxSession;
@@ -120,10 +122,16 @@ public class GetMessagesMethodTest {
         messageIdManager = resources.getMessageIdManager();
 
         messageMetadataViewFactory = spy(new MessageMetadataViewFactory(blobManager, messageIdManager));
+        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor,
+            htmlTextExtractor, messageIdManager);
+        MessageFastViewFactory messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager,
+            new MemoryMessageFastViewProjection(), messageFullViewFactory);
+
         MetaMessageViewFactory metaMessageViewFactory = new MetaMessageViewFactory(
-            new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager),
+            messageFullViewFactory,
             new MessageHeaderViewFactory(blobManager, messageIdManager),
-            messageMetadataViewFactory);
+            messageMetadataViewFactory,
+            messageFastViewFactory);
         testee = new GetMessagesMethod(metaMessageViewFactory, messageIdManager, new DefaultMetricFactory());
 
         messageContent1 = org.apache.james.mime4j.dom.Message.Builder.of()

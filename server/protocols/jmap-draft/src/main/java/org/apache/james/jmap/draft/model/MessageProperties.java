@@ -24,8 +24,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.model.FetchGroup;
-
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -152,7 +150,7 @@ public class MessageProperties {
         isAnswered("isAnswered", ReadProfile.Metadata),
         isDraft("isDraft", ReadProfile.Metadata),
         isForwarded("isForwarded", ReadProfile.Metadata),
-        hasAttachment("hasAttachment", ReadProfile.Full),
+        hasAttachment("hasAttachment", ReadProfile.Fast),
         headers("headers", ReadProfile.Header),
         from("from", ReadProfile.Header),
         to("to", ReadProfile.Header),
@@ -162,7 +160,7 @@ public class MessageProperties {
         subject("subject", ReadProfile.Header),
         date("date", ReadProfile.Header),
         size("size", ReadProfile.Metadata),
-        preview("preview", ReadProfile.Full),
+        preview("preview", ReadProfile.Fast),
         textBody("textBody", ReadProfile.Full),
         htmlBody("htmlBody", ReadProfile.Full),
         attachments("attachments", ReadProfile.Full),
@@ -215,9 +213,10 @@ public class MessageProperties {
     }
 
     public enum ReadProfile {
-        Metadata(0, FetchGroup.MINIMAL),
-        Header(1, FetchGroup.HEADERS),
-        Full(2, FetchGroup.FULL_CONTENT);
+        Metadata(0),
+        Header(1),
+        Fast(2),
+        Full(3);
 
         static ReadProfile combine(ReadProfile readProfile1, ReadProfile readProfile2) {
             if (readProfile1.priority > readProfile2.priority) {
@@ -227,15 +226,9 @@ public class MessageProperties {
         }
 
         private final int priority;
-        private final FetchGroup fetchGroup;
 
-        ReadProfile(int priority, FetchGroup fetchGroup) {
+        ReadProfile(int priority) {
             this.priority = priority;
-            this.fetchGroup = fetchGroup;
-        }
-
-        public FetchGroup getFetchGroup() {
-            return fetchGroup;
         }
     }
 

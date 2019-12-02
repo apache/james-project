@@ -27,12 +27,15 @@ public class MetaMessageViewFactory {
     private final MessageFullViewFactory messageFullViewFactory;
     private final MessageHeaderViewFactory messageHeaderViewFactory;
     private final MessageMetadataViewFactory messageMetadataViewFactory;
+    private final MessageFastViewFactory messageFastViewFactory;
 
     @Inject
-    public MetaMessageViewFactory(MessageFullViewFactory messageFullViewFactory, MessageHeaderViewFactory messageHeaderViewFactory, MessageMetadataViewFactory messageMetadataViewFactory) {
+    public MetaMessageViewFactory(MessageFullViewFactory messageFullViewFactory, MessageHeaderViewFactory messageHeaderViewFactory,
+                                  MessageMetadataViewFactory messageMetadataViewFactory, MessageFastViewFactory messageFastViewFactory) {
         this.messageFullViewFactory = messageFullViewFactory;
         this.messageHeaderViewFactory = messageHeaderViewFactory;
         this.messageMetadataViewFactory = messageMetadataViewFactory;
+        this.messageFastViewFactory = messageFastViewFactory;
     }
 
     public MessageViewFactory<? extends MessageView> getFactory(MessageProperties.ReadProfile readProfile) {
@@ -41,6 +44,8 @@ public class MetaMessageViewFactory {
                 return messageFullViewFactory;
             case Header:
                 return messageHeaderViewFactory;
+            case Fast:
+                return messageFastViewFactory;
             case Metadata:
                 return messageMetadataViewFactory;
             default:

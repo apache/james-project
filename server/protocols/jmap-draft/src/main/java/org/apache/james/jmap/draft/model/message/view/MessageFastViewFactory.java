@@ -108,8 +108,8 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
 
     @Inject
     @VisibleForTesting
-    MessageFastViewFactory(BlobManager blobManager, MessageIdManager messageIdManager, MessageFastViewProjection fastViewProjection,
-                           MessageFullViewFactory messageFullViewFactory) {
+    public MessageFastViewFactory(BlobManager blobManager, MessageIdManager messageIdManager, MessageFastViewProjection fastViewProjection,
+                                  MessageFullViewFactory messageFullViewFactory) {
         this.blobManager = blobManager;
         this.messageIdManager = messageIdManager;
         this.fastViewProjection = fastViewProjection;

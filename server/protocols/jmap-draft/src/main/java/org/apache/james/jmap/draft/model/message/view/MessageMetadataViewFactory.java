@@ -25,11 +25,11 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.jmap.draft.model.BlobId;
-import org.apache.james.jmap.draft.model.MessageProperties.ReadProfile;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
@@ -50,7 +50,7 @@ public class MessageMetadataViewFactory implements MessageViewFactory<MessageMet
 
     @Override
     public List<MessageMetadataView> fromMessageIds(List<MessageId> messageIds, MailboxSession session) throws MailboxException {
-        List<MessageResult> messages = messageIdManager.getMessages(messageIds, ReadProfile.Metadata.getFetchGroup(), session);
+        List<MessageResult> messages = messageIdManager.getMessages(messageIds, FetchGroup.MINIMAL, session);
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 

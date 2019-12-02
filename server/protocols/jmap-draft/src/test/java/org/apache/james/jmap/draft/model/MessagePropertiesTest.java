@@ -152,6 +152,14 @@ class MessagePropertiesTest {
         }
 
         @Test
+        void combineShouldReturnFastWhenOnlyFast() {
+            assertThat(MessageProperties.ReadProfile.combine(
+                    MessageProperties.ReadProfile.Fast,
+                    MessageProperties.ReadProfile.Fast))
+                .isEqualTo(MessageProperties.ReadProfile.Fast);
+        }
+
+        @Test
         void combineShouldReturnHeaderWhenHeaderAndMetadata() {
             assertThat(MessageProperties.ReadProfile.combine(
                 MessageProperties.ReadProfile.Metadata,
@@ -168,9 +176,17 @@ class MessagePropertiesTest {
         }
 
         @Test
-        void combineShouldReturnFullWhenFullAndHeader() {
+        void combineShouldReturnFastWhenFastAndHeader() {
             assertThat(MessageProperties.ReadProfile.combine(
                 MessageProperties.ReadProfile.Header,
+                MessageProperties.ReadProfile.Fast))
+                .isEqualTo(MessageProperties.ReadProfile.Fast);
+        }
+
+        @Test
+        void combineShouldReturnFullWhenFullAndFast() {
+            assertThat(MessageProperties.ReadProfile.combine(
+                MessageProperties.ReadProfile.Fast,
                 MessageProperties.ReadProfile.Full))
                 .isEqualTo(MessageProperties.ReadProfile.Full);
         }
@@ -179,7 +195,7 @@ class MessagePropertiesTest {
         void combineShouldCommute() {
             assertThat(MessageProperties.ReadProfile.combine(
                 MessageProperties.ReadProfile.Full,
-                MessageProperties.ReadProfile.Header))
+                MessageProperties.ReadProfile.Fast))
                 .isEqualTo(MessageProperties.ReadProfile.Full);
         }
     }

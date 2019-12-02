@@ -35,7 +35,6 @@ import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
 import org.apache.james.jmap.draft.model.Keywords;
-import org.apache.james.jmap.draft.model.MessageProperties;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -43,6 +42,7 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Cid;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
@@ -73,7 +73,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
 
     @Override
     public List<MessageFullView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) throws MailboxException {
-        List<MessageResult> messages = messageIdManager.getMessages(messageIds, MessageProperties.ReadProfile.Full.getFetchGroup(), mailboxSession);
+        List<MessageResult> messages = messageIdManager.getMessages(messageIds, FetchGroup.FULL_CONTENT, mailboxSession);
         return Helpers.toMessageViews(messages, this::fromMessageResults);
     }
 
