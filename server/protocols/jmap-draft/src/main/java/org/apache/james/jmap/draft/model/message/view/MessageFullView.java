@@ -76,7 +76,7 @@ public class MessageFullView extends MessageFastView {
 
         public Builder attachments(List<Attachment> attachments) {
             this.attachments.addAll(attachments);
-            boolean hasAttachments = this.hasAttachment(this.attachments.build());
+            boolean hasAttachments = MessageFullView.hasAttachment(this.attachments.build());
             return super.hasAttachment(hasAttachments);
         }
 
@@ -100,12 +100,11 @@ public class MessageFullView extends MessageFastView {
             super.checkState();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
         }
+    }
 
-        private boolean hasAttachment(List<Attachment> attachments) {
-            return attachments.stream()
-                .anyMatch(attachment -> !attachment.isInlinedWithCid());
-        }
-
+    static boolean hasAttachment(List<Attachment> attachments) {
+        return attachments.stream()
+            .anyMatch(attachment -> !attachment.isInlinedWithCid());
     }
 
     protected static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {

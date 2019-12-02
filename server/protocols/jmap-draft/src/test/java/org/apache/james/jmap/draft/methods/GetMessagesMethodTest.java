@@ -123,7 +123,8 @@ public class GetMessagesMethodTest {
 
         messageMetadataViewFactory = spy(new MessageMetadataViewFactory(blobManager, messageIdManager));
         MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor,
-            htmlTextExtractor, messageIdManager);
+            htmlTextExtractor, messageIdManager,
+            new MemoryMessageFastViewProjection());
         MessageFastViewFactory messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager,
             new MemoryMessageFastViewProjection(), messageFullViewFactory);
 

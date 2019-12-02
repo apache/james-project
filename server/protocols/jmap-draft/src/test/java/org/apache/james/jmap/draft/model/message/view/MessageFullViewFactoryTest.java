@@ -25,16 +25,21 @@ import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACK_EMAIL;
 import static org.apache.james.jmap.draft.model.message.view.MessageViewFixture.JACOB_EMAIL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.spy;
 
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
@@ -45,6 +50,7 @@ import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
+import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
@@ -55,24 +61,32 @@ import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Cid;
 import org.apache.james.mailbox.model.ComposedMessageId;
+import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
+import reactor.core.publisher.Mono;
+
 class MessageFullViewFactoryTest {
     private static final String FORWARDED = "forwarded";
     private static final InMemoryId MAILBOX_ID = InMemoryId.of(18L);
     private static final Instant INTERNAL_DATE = Instant.parse("2012-02-03T14:30:42Z");
+    private static final String DEFAULT_PREVIEW_AS_STRING = "blabla bloblo";
+    private static final Preview DEFAULT_PREVIEW = Preview.from(DEFAULT_PREVIEW_AS_STRING);
 
     private MessageIdManager messageIdManager;
     private MailboxSession session;
@@ -80,6 +94,7 @@ class MessageFullViewFactoryTest {
     private MessageManager bobMailbox;
     private ComposedMessageId message1;
     private MessageFullViewFactory messageFullViewFactory;
+    private MemoryMessageFastViewProjection fastViewProjection;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -103,7 +118,10 @@ class MessageFullViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor, messageIdManager);
+        fastViewProjection = spy(new MemoryMessageFastViewProjection());
+        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor,
+            messageIdManager,
+            fastViewProjection);
     }
 
     @Test
@@ -850,5 +868,63 @@ class MessageFullViewFactoryTest {
             .build();
         MessageFullView testee = messageFullViewFactory.fromMetaDataWithContent(testMail);
         assertThat(testee.getKeywords()).containsAllEntriesOf(keywords.asMap());
+    }
+
+    @Nested
+    class WithProjectionInvolvedTest {
+
+        @Test
+        void fromMessageResultsShouldComputeWhenProjectionReturnEmpty() throws Exception {
+            List<MessageResult> messages = messageIdManager
+                .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
+            messageFullViewFactory.fromMessageResults(messages);
+
+            assertThat(Mono.from(fastViewProjection.retrieve(message1.getMessageId())).block())
+                .extracting(MessageFastViewPrecomputedProperties::getPreview)
+                .isEqualTo(DEFAULT_PREVIEW);
+        }
+
+        @Test
+        void fromMessageResultsShouldUseReturnedPreviewFromProjections() throws Exception {
+            String preview = "my pre computed preview";
+            Mono.from(fastViewProjection.store(message1.getMessageId(), MessageFastViewPrecomputedProperties.builder()
+                    .preview(Preview.from(preview))
+                    .hasAttachment(false)
+                    .build()))
+                .block();
+
+            List<MessageResult> messages = messageIdManager
+                .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
+
+            assertThat(messageFullViewFactory.fromMessageResults(messages))
+                .extracting(MessageFullView::getPreview)
+                .isEqualTo(PreviewDTO.of(preview));
+        }
+
+        @Test
+        void fromMessageResultsShouldFallbackToComputeWhenProjectionRetrievingError() throws Exception {
+            doReturn(Mono.error(new RuntimeException("mock exception")))
+                .when(fastViewProjection).retrieve(any(MessageId.class));
+
+            List<MessageResult> messages = messageIdManager
+                .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
+
+            assertThat(messageFullViewFactory.fromMessageResults(messages))
+                .extracting(MessageFullView::getPreview)
+                .isEqualTo(PreviewDTO.of(DEFAULT_PREVIEW_AS_STRING));
+        }
+
+        @Test
+        void fromMessageResultsShouldNotBeAffectedByProjectionStoringError() throws Exception {
+            doReturn(Mono.error(new RuntimeException("mock exception")))
+                .when(fastViewProjection).store(any(), any());
+
+            List<MessageResult> messages = messageIdManager
+                .getMessages(ImmutableList.of(message1.getMessageId()), FetchGroup.FULL_CONTENT, session);
+
+            assertThat(messageFullViewFactory.fromMessageResults(messages))
+                .extracting(MessageFullView::getPreview)
+                .isEqualTo(PreviewDTO.of(DEFAULT_PREVIEW_AS_STRING));
+        }
     }
 }

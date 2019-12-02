@@ -144,7 +144,8 @@ class MessageFastViewFactoryTest {
             .block();
 
         blobManager = resources.getBlobManager();
-        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager);
+        messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
+            new MemoryMessageFastViewProjection());
         messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager, fastViewProjection, messageFullViewFactory);
     }
 

@@ -40,6 +40,7 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
 import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
+import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageUid;
@@ -89,7 +90,8 @@ class MessageSenderTest {
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
-        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager);
+        MessageFullViewFactory messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
+            new MemoryMessageFastViewProjection());
         jmapMessage = messageFullViewFactory.fromMetaDataWithContent(message);
         envelope = EnvelopeUtils.fromMessage(jmapMessage);
     }

@@ -29,6 +29,8 @@ import com.google.common.base.Preconditions;
 
 public class Preview {
 
+    public static final Preview EMPTY = Preview.from("");
+
     private static final int MAX_LENGTH = 256;
 
     public static Preview from(String value) {

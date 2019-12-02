@@ -26,11 +26,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.inject.Inject;
 import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
@@ -50,25 +53,36 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.james.util.mime.MessageContentExtractor.MessageContent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.Sets;
 
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
 public class MessageFullViewFactory implements MessageViewFactory<MessageFullView> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MessageFullViewFactory.class);
+
     private final BlobManager blobManager;
     private final MessageContentExtractor messageContentExtractor;
     private final HtmlTextExtractor htmlTextExtractor;
     private final MessageIdManager messageIdManager;
+    private final MessageFastViewProjection fastViewProjection;
 
     @Inject
     public MessageFullViewFactory(BlobManager blobManager, MessageContentExtractor messageContentExtractor,
-                                  HtmlTextExtractor htmlTextExtractor, MessageIdManager messageIdManager) {
+                                  HtmlTextExtractor htmlTextExtractor, MessageIdManager messageIdManager,
+                                  MessageFastViewProjection fastViewProjection) {
         this.blobManager = blobManager;
         this.messageContentExtractor = messageContentExtractor;
         this.htmlTextExtractor = htmlTextExtractor;
         this.messageIdManager = messageIdManager;
+        this.fastViewProjection = fastViewProjection;
     }
 
     @Override
@@ -84,7 +98,10 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         Optional<String> mainTextContent = mainTextContent(messageContent);
         Optional<String> textBody = computeTextBodyIfNeeded(messageContent, mainTextContent);
 
-        Optional<Preview> preview = mainTextContent.map(Preview::compute);
+        MessageFastViewPrecomputedProperties messageProjection = retrieveProjection(
+            messageContent,
+            message.getMessageId(),
+            () -> MessageFullView.hasAttachment(getAttachments(message.getAttachments())));
 
         return MessageFullView.builder()
                 .id(message.getMessageId())
@@ -104,9 +121,45 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
                 .date(getDateFromHeaderOrInternalDateOtherwise(mimeMessage, message))
                 .textBody(textBody)
                 .htmlBody(htmlBody)
-                .preview(preview)
+                .preview(messageProjection.getPreview())
                 .attachments(getAttachments(message.getAttachments()))
                 .build();
+    }
+
+    private MessageFastViewPrecomputedProperties retrieveProjection(MessageContent messageContent,
+                                                                    MessageId messageId, Supplier<Boolean> hasAttachments) {
+        return Mono.from(fastViewProjection.retrieve(messageId))
+            .onErrorResume(throwable -> fallBackToCompute(messageContent, hasAttachments, throwable))
+            .switchIfEmpty(computeThenStoreAsync(messageContent, messageId, hasAttachments))
+            .subscribeOn(Schedulers.boundedElastic())
+            .block();
+    }
+
+    private Mono<MessageFastViewPrecomputedProperties> fallBackToCompute(MessageContent messageContent,
+                                                                         Supplier<Boolean> hasAttachments,
+                                                                         Throwable throwable) {
+        LOGGER.error("Cannot retrieve the computed preview from MessageFastViewProjection", throwable);
+        return computeProjection(messageContent, hasAttachments);
+    }
+
+    private Mono<MessageFastViewPrecomputedProperties> computeThenStoreAsync(MessageContent messageContent,
+                                                                             MessageId messageId,
+                                                                             Supplier<Boolean> hasAttachments) {
+        return computeProjection(messageContent, hasAttachments)
+            .doOnNext(projection -> Mono.from(fastViewProjection.store(messageId, projection))
+                .doOnError(throwable -> LOGGER.error("Cannot store the projection to MessageFastViewProjection", throwable))
+                .subscribeOn(Schedulers.boundedElastic())
+                .subscribe());
+    }
+
+    private Mono<MessageFastViewPrecomputedProperties> computeProjection(MessageContent messageContent, Supplier<Boolean> hasAttachments) {
+        return Mono.justOrEmpty(mainTextContent(messageContent))
+            .map(Preview::compute)
+            .switchIfEmpty(Mono.just(Preview.EMPTY))
+            .map(extractedPreview -> MessageFastViewPrecomputedProperties.builder()
+                .preview(extractedPreview)
+                .hasAttachment(hasAttachments.get())
+                .build());
     }
 
     private Instant getDateFromHeaderOrInternalDateOtherwise(Message mimeMessage, MessageFullViewFactory.MetaDataWithContent message) {
