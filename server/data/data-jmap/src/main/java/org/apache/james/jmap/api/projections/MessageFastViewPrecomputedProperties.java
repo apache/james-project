@@ -29,35 +29,56 @@ public class MessageFastViewPrecomputedProperties {
     public static class Builder {
         @FunctionalInterface
         public interface RequirePreview {
-            FinalStage preview(Preview preview);
+            RequireHasAttachment preview(Preview preview);
+        }
+
+        @FunctionalInterface
+        public interface RequireHasAttachment {
+            FinalStage hasAttachment(boolean hasAttachment);
+
+            default FinalStage hasAttachment() {
+                return hasAttachment(true);
+            }
+
+            default FinalStage noAttachments() {
+                return hasAttachment(false);
+            }
         }
 
         public static class FinalStage {
             private final Preview preview;
+            private final boolean hasAttachment;
 
-            private FinalStage(Preview preview) {
+            private FinalStage(Preview preview, boolean hasAttachment) {
+                this.hasAttachment = hasAttachment;
                 Preconditions.checkNotNull(preview, "'preview' cannot be null");
                 this.preview = preview;
             }
 
             public MessageFastViewPrecomputedProperties build() {
-                return new MessageFastViewPrecomputedProperties(preview);
+                return new MessageFastViewPrecomputedProperties(preview, hasAttachment);
             }
         }
     }
 
     public static Builder.RequirePreview builder() {
-        return preview -> new Builder.FinalStage(preview);
+        return preview -> hasAttachment -> new Builder.FinalStage(preview, hasAttachment);
     }
 
     private final Preview preview;
+    private final boolean hasAttachment;
 
-    private MessageFastViewPrecomputedProperties(Preview preview) {
+    private MessageFastViewPrecomputedProperties(Preview preview, boolean hasAttachment) {
         this.preview = preview;
+        this.hasAttachment = hasAttachment;
     }
 
     public Preview getPreview() {
         return preview;
+    }
+
+    public boolean hasAttachment() {
+        return hasAttachment;
     }
 
     @Override
@@ -65,13 +86,14 @@ public class MessageFastViewPrecomputedProperties {
         if (o instanceof MessageFastViewPrecomputedProperties) {
             MessageFastViewPrecomputedProperties that = (MessageFastViewPrecomputedProperties) o;
 
-            return Objects.equals(this.preview, that.preview);
+            return Objects.equals(this.preview, that.preview)
+                && Objects.equals(this.hasAttachment, that.hasAttachment);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(preview);
+        return Objects.hash(preview, hasAttachment);
     }
 }

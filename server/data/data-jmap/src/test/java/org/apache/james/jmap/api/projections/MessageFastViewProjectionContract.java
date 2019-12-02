@@ -41,9 +41,11 @@ public interface MessageFastViewProjectionContract {
     Preview PREVIEW_2 = Preview.from("preview 2");
     MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1 = MessageFastViewPrecomputedProperties.builder()
         .preview(PREVIEW_1)
+        .hasAttachment()
         .build();
     MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2 = MessageFastViewPrecomputedProperties.builder()
         .preview(PREVIEW_2)
+        .noAttachments()
         .build();
 
     MessageFastViewProjection testee();
@@ -146,6 +148,7 @@ public interface MessageFastViewProjectionContract {
             .reactorOperation((thread, step) -> testee()
                 .store(messageIds.get(thread), MessageFastViewPrecomputedProperties.builder()
                     .preview(Preview.from(String.valueOf(step)))
+                    .hasAttachment()
                     .build()))
             .threadCount(threadCount)
             .operationCount(stepCount)
@@ -157,6 +160,7 @@ public interface MessageFastViewProjectionContract {
                     .block())
                 .isEqualTo(MessageFastViewPrecomputedProperties.builder()
                     .preview(Preview.from(String.valueOf(stepCount - 1)))
+                    .hasAttachment()
                     .build()));
     }
 
@@ -170,6 +174,7 @@ public interface MessageFastViewProjectionContract {
             .reactorOperation((thread, step) -> testee()
                 .store(messageId, MessageFastViewPrecomputedProperties.builder()
                     .preview(Preview.from(String.valueOf(step * threadCount + thread)))
+                    .hasAttachment()
                     .build()))
             .threadCount(threadCount)
             .operationCount(operationCount)

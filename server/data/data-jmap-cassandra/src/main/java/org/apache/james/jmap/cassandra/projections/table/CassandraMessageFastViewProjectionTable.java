@@ -24,4 +24,5 @@ public interface CassandraMessageFastViewProjectionTable {
 
     String MESSAGE_ID = "messageId";
     String PREVIEW = "preview";
+    String HAS_ATTACHMENT = "hasAttachment";
 }

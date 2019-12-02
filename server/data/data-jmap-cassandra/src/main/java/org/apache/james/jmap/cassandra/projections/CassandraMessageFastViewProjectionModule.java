@@ -19,23 +19,27 @@
 
 package org.apache.james.jmap.cassandra.projections;
 
+import static com.datastax.driver.core.DataType.cboolean;
 import static com.datastax.driver.core.DataType.text;
 import static com.datastax.driver.core.DataType.uuid;
+import static org.apache.james.backends.cassandra.utils.CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.TABLE_NAME;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
-import org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable;
 
 import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
 public interface CassandraMessageFastViewProjectionModule {
-    CassandraModule MODULE = CassandraModule.table(CassandraMessageFastViewProjectionTable.TABLE_NAME)
+    CassandraModule MODULE = CassandraModule.table(TABLE_NAME)
         .comment("Storing the JMAP preview property extracted from message bodies")
         .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+            .caching(SchemaBuilder.KeyCaching.ALL, SchemaBuilder.rows(DEFAULT_CACHED_ROW_PER_PARTITION)))
         .statement(statement -> statement
-            .addPartitionKey(CassandraMessageFastViewProjectionTable.MESSAGE_ID, uuid())
-            .addColumn(CassandraMessageFastViewProjectionTable.PREVIEW, text()))
+            .addPartitionKey(MESSAGE_ID, uuid())
+            .addColumn(PREVIEW, text())
+            .addColumn(HAS_ATTACHMENT, cboolean()))
         .build();
 }
