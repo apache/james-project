@@ -44,6 +44,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 public class ComputeMessageFastViewProjectionListener implements MailboxListener.GroupMailboxListener {
@@ -83,8 +84,10 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
 
     private void handleAddedEvent(Added addedEvent, MailboxSession session) throws MailboxException {
         Flux.fromIterable(messageIdManager.getMessages(addedEvent.getMessageIds(), FetchGroup.BODY_CONTENT, session))
+            .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
+                () -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult)))
+                    .subscribeOn(Schedulers.parallel())))
             .publishOn(Schedulers.boundedElastic())
-            .map(Throwing.function(messageResult -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult))))
             .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()))
             .then()
             .block();
