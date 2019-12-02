@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.api.projections;
 
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 

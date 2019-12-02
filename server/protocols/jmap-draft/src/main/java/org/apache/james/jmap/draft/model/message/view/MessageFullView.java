@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.draft.methods.JmapResponseWriterImpl;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;

@@ -27,7 +27,7 @@ import java.time.Duration;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.IntStream;
 
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.assertj.core.api.SoftAssertions;

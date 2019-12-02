@@ -30,7 +30,7 @@ import static org.apache.james.jmap.cassandra.projections.table.CassandraMessage
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessagePreviewStore;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;

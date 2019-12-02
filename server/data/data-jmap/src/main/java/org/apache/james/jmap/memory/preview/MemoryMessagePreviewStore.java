@@ -21,7 +21,7 @@ package org.apache.james.jmap.memory.preview;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessagePreviewStore;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;

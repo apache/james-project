@@ -22,7 +22,7 @@ package org.apache.james.jmap.draft.model;
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.google.common.annotations.VisibleForTesting;

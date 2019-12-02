@@ -35,7 +35,7 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.jmap.api.preview.Preview;
+import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.draft.model.Attachment;
 import org.apache.james.jmap.draft.model.BlobId;
 import org.apache.james.jmap.draft.model.Emailer;
