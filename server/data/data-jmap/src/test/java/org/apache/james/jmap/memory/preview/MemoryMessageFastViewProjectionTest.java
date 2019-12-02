@@ -17,17 +17,32 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.api.projections;
+package org.apache.james.jmap.memory.preview;
 
-import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;
 import org.apache.james.mailbox.model.MessageId;
-import org.reactivestreams.Publisher;
+import org.apache.james.mailbox.model.TestMessageId;
+import org.junit.jupiter.api.BeforeEach;
 
-public interface MessagePreviewStore {
+class MemoryMessageFastViewProjectionTest implements MessageFastViewProjectionContract {
 
-    Publisher<Void> store(MessageId messageId, Preview preview);
+    private MemoryMessageFastViewProjection testee;
+    private TestMessageId.Factory messageIdFactory;
 
-    Publisher<Preview> retrieve(MessageId messageId);
+    @BeforeEach
+    void setUp() {
+        messageIdFactory = new TestMessageId.Factory();
+        testee = new MemoryMessageFastViewProjection();
+    }
 
-    Publisher<Void> delete(MessageId messageId);
+    @Override
+    public MessageFastViewProjection testee() {
+        return testee;
+    }
+
+    @Override
+    public MessageId newMessageId() {
+        return messageIdFactory.generate();
+    }
 }

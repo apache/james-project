@@ -23,15 +23,15 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.MESSAGE_ID;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.PREVIEW;
-import static org.apache.james.jmap.cassandra.projections.table.CassandraMessagePreviewTable.TABLE_NAME;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
+import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.TABLE_NAME;
 
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.model.Preview;
-import org.apache.james.jmap.api.projections.MessagePreviewStore;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
@@ -41,7 +41,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
 
-public class CassandraMessagePreviewStore implements MessagePreviewStore {
+public class CassandraMessageFastViewProjection implements MessageFastViewProjection {
 
     private final CassandraAsyncExecutor cassandraAsyncExecutor;
 
@@ -50,7 +50,7 @@ public class CassandraMessagePreviewStore implements MessagePreviewStore {
     private final PreparedStatement deleteStatement;
 
     @Inject
-    CassandraMessagePreviewStore(Session session) {
+    CassandraMessageFastViewProjection(Session session) {
         this.cassandraAsyncExecutor = new CassandraAsyncExecutor(session);
 
         this.deleteStatement = session.prepare(QueryBuilder.delete()

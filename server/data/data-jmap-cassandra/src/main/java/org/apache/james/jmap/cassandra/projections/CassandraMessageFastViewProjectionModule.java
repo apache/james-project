@@ -17,32 +17,25 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.preview;
+package org.apache.james.jmap.cassandra.projections;
 
-import org.apache.james.jmap.api.projections.MessagePreviewStore;
-import org.apache.james.jmap.api.projections.MessagePreviewStoreContract;
-import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.TestMessageId;
-import org.junit.jupiter.api.BeforeEach;
+import static com.datastax.driver.core.DataType.text;
+import static com.datastax.driver.core.DataType.uuid;
 
-class MemoryMessagePreviewStoreTest implements MessagePreviewStoreContract {
+import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.backends.cassandra.utils.CassandraConstants;
+import org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable;
 
-    private MemoryMessagePreviewStore testee;
-    private TestMessageId.Factory messageIdFactory;
+import com.datastax.driver.core.schemabuilder.SchemaBuilder;
 
-    @BeforeEach
-    void setUp() {
-        messageIdFactory = new TestMessageId.Factory();
-        testee = new MemoryMessagePreviewStore();
-    }
-
-    @Override
-    public MessagePreviewStore testee() {
-        return testee;
-    }
-
-    @Override
-    public MessageId newMessageId() {
-        return messageIdFactory.generate();
-    }
+public interface CassandraMessageFastViewProjectionModule {
+    CassandraModule MODULE = CassandraModule.table(CassandraMessageFastViewProjectionTable.TABLE_NAME)
+        .comment("Storing the JMAP preview property extracted from message bodies")
+        .options(options -> options
+            .caching(SchemaBuilder.KeyCaching.ALL,
+                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+        .statement(statement -> statement
+            .addPartitionKey(CassandraMessageFastViewProjectionTable.MESSAGE_ID, uuid())
+            .addColumn(CassandraMessageFastViewProjectionTable.PREVIEW, text()))
+        .build();
 }

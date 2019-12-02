@@ -35,12 +35,12 @@ import org.junit.jupiter.api.Test;
 
 import reactor.core.publisher.Mono;
 
-public interface MessagePreviewStoreContract {
+public interface MessageFastViewProjectionContract {
 
     Preview PREVIEW_1 = Preview.from("preview 1");
     Preview PREVIEW_2 = Preview.from("preview 2");
 
-    MessagePreviewStore testee();
+    MessageFastViewProjection testee();
 
     MessageId newMessageId();
 

@@ -22,8 +22,8 @@ package org.apache.james.jmap.cassandra.projections;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.jmap.api.projections.MessagePreviewStore;
-import org.apache.james.jmap.api.projections.MessagePreviewStoreContract;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.api.projections.MessageFastViewProjectionContract;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
@@ -31,22 +31,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class CassandraMessagePreviewStoreTest implements MessagePreviewStoreContract {
+class CassandraMessageFastViewProjectionTest implements MessageFastViewProjectionContract {
 
     @RegisterExtension
-    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraMessagePreviewModule.MODULE);
+    static CassandraClusterExtension cassandra = new CassandraClusterExtension(CassandraMessageFastViewProjectionModule.MODULE);
 
-    private CassandraMessagePreviewStore testee;
+    private CassandraMessageFastViewProjection testee;
     private CassandraMessageId.Factory cassandraMessageIdFactory;
 
     @BeforeEach
     void setUp() {
         cassandraMessageIdFactory = new CassandraMessageId.Factory();
-        testee = new CassandraMessagePreviewStore(cassandra.getCassandraCluster().getConf());
+        testee = new CassandraMessageFastViewProjection(cassandra.getCassandraCluster().getConf());
     }
 
     @Override
-    public MessagePreviewStore testee() {
+    public MessageFastViewProjection testee() {
         return testee;
     }
 

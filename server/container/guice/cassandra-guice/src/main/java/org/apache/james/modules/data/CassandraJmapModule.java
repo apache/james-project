@@ -24,14 +24,14 @@ import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
-import org.apache.james.jmap.api.projections.MessagePreviewStore;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
 import org.apache.james.jmap.cassandra.access.CassandraAccessTokenRepository;
 import org.apache.james.jmap.cassandra.filtering.FilteringRuleSetDefineDTOModules;
-import org.apache.james.jmap.cassandra.projections.CassandraMessagePreviewModule;
-import org.apache.james.jmap.cassandra.projections.CassandraMessagePreviewStore;
+import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjection;
+import org.apache.james.jmap.cassandra.projections.CassandraMessageFastViewProjectionModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistry;
 import org.apache.james.jmap.cassandra.vacation.CassandraNotificationRegistryModule;
 import org.apache.james.jmap.cassandra.vacation.CassandraVacationModule;
@@ -58,14 +58,14 @@ public class CassandraJmapModule extends AbstractModule {
         bind(EventSourcingFilteringManagement.class).in(Scopes.SINGLETON);
         bind(FilteringManagement.class).to(EventSourcingFilteringManagement.class);
 
-        bind(CassandraMessagePreviewStore.class).in(Scopes.SINGLETON);
-        bind(MessagePreviewStore.class).to(CassandraMessagePreviewStore.class);
+        bind(CassandraMessageFastViewProjection.class).in(Scopes.SINGLETON);
+        bind(MessageFastViewProjection.class).to(CassandraMessageFastViewProjection.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraVacationModule.MODULE);
         cassandraDataDefinitions.addBinding().toInstance(CassandraNotificationRegistryModule.MODULE);
-        cassandraDataDefinitions.addBinding().toInstance(CassandraMessagePreviewModule.MODULE);
+        cassandraDataDefinitions.addBinding().toInstance(CassandraMessageFastViewProjectionModule.MODULE);
 
         Multibinder<EventDTOModule<?, ?>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
         eventDTOModuleBinder.addBinding().toInstance(FilteringRuleSetDefineDTOModules.FILTERING_RULE_SET_DEFINED);

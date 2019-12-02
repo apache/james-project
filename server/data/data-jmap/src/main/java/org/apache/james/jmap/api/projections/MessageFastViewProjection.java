@@ -17,46 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.memory.preview;
-
-import java.util.concurrent.ConcurrentHashMap;
+package org.apache.james.jmap.api.projections;
 
 import org.apache.james.jmap.api.model.Preview;
-import org.apache.james.jmap.api.projections.MessagePreviewStore;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
-import com.google.common.base.Preconditions;
+public interface MessageFastViewProjection {
 
-import reactor.core.publisher.Mono;
+    Publisher<Void> store(MessageId messageId, Preview preview);
 
-public class MemoryMessagePreviewStore implements MessagePreviewStore {
+    Publisher<Preview> retrieve(MessageId messageId);
 
-    private final ConcurrentHashMap<MessageId, Preview> previews;
-
-    public MemoryMessagePreviewStore() {
-        this.previews = new ConcurrentHashMap<>();
-    }
-
-    @Override
-    public Publisher<Void> store(MessageId messageId, Preview preview) {
-        Preconditions.checkNotNull(messageId);
-        Preconditions.checkNotNull(preview);
-
-        return Mono.fromRunnable(() -> previews.put(messageId, preview));
-    }
-
-    @Override
-    public Publisher<Preview> retrieve(MessageId messageId) {
-        Preconditions.checkNotNull(messageId);
-
-        return Mono.fromSupplier(() -> previews.get(messageId));
-    }
-
-    @Override
-    public Publisher<Void> delete(MessageId messageId) {
-        Preconditions.checkNotNull(messageId);
-
-        return Mono.fromRunnable(() -> previews.remove(messageId));
-    }
+    Publisher<Void> delete(MessageId messageId);
 }
