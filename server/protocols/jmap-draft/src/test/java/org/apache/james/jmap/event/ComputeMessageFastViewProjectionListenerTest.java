@@ -86,11 +86,11 @@ class ComputeMessageFastViewProjectionListenerTest {
     MailboxSession mailboxSession;
     StoreMailboxManager mailboxManager;
 
-    private MessageManager inboxMessageManager;
-    private MessageManager otherBoxMessageManager;
-    private ComputeMessageFastViewProjectionListener listener;
-    private MessageIdManager messageIdManager;
-    private MemoryEventDeadLetters eventDeadLetters;
+    MessageManager inboxMessageManager;
+    MessageManager otherBoxMessageManager;
+    ComputeMessageFastViewProjectionListener listener;
+    MessageIdManager messageIdManager;
+    MemoryEventDeadLetters eventDeadLetters;
 
     @BeforeEach
     void setup() throws Exception {
