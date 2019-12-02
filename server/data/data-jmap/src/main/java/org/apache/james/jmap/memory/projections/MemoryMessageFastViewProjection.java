@@ -21,7 +21,7 @@ package org.apache.james.jmap.memory.projections;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
@@ -32,22 +32,22 @@ import reactor.core.publisher.Mono;
 
 public class MemoryMessageFastViewProjection implements MessageFastViewProjection {
 
-    private final ConcurrentHashMap<MessageId, Preview> previews;
+    private final ConcurrentHashMap<MessageId, MessageFastViewPrecomputedProperties> previews;
 
     public MemoryMessageFastViewProjection() {
         this.previews = new ConcurrentHashMap<>();
     }
 
     @Override
-    public Publisher<Void> store(MessageId messageId, Preview preview) {
+    public Publisher<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties precomputedProperties) {
         Preconditions.checkNotNull(messageId);
-        Preconditions.checkNotNull(preview);
+        Preconditions.checkNotNull(precomputedProperties);
 
-        return Mono.fromRunnable(() -> previews.put(messageId, preview));
+        return Mono.fromRunnable(() -> previews.put(messageId, precomputedProperties));
     }
 
     @Override
-    public Publisher<Preview> retrieve(MessageId messageId) {
+    public Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
         Preconditions.checkNotNull(messageId);
 
         return Mono.fromSupplier(() -> previews.get(messageId));

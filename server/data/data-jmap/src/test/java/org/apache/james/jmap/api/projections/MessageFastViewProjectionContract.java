@@ -39,6 +39,12 @@ public interface MessageFastViewProjectionContract {
 
     Preview PREVIEW_1 = Preview.from("preview 1");
     Preview PREVIEW_2 = Preview.from("preview 2");
+    MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1 = MessageFastViewPrecomputedProperties.builder()
+        .preview(PREVIEW_1)
+        .build();
+    MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2 = MessageFastViewPrecomputedProperties.builder()
+        .preview(PREVIEW_2)
+        .build();
 
     MessageFastViewProjection testee();
 
@@ -53,18 +59,18 @@ public interface MessageFastViewProjectionContract {
     @Test
     default void retrieveShouldReturnStoredPreview() {
         MessageId messageId = newMessageId();
-        Mono.from(testee().store(messageId, PREVIEW_1))
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
         assertThat(Mono.from(testee().retrieve(messageId)).block())
-            .isEqualTo(PREVIEW_1);
+            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1);
     }
 
     @Test
     default void retrieveShouldReturnEmptyWhenMessageIdNotFound() {
         MessageId messageId1 = newMessageId();
         MessageId messageId2 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
         assertThat(Mono.from(testee().retrieve(messageId2)).blockOptional())
@@ -75,22 +81,22 @@ public interface MessageFastViewProjectionContract {
     default void retrieveShouldReturnTheRightPreviewWhenStoringMultipleMessageIds() {
         MessageId messageId1 = newMessageId();
         MessageId messageId2 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
-        Mono.from(testee().store(messageId2, PREVIEW_2))
+        Mono.from(testee().store(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
             .block();
 
         SoftAssertions.assertSoftly(softly -> {
            softly.assertThat(Mono.from(testee().retrieve(messageId1)).block())
-               .isEqualTo(PREVIEW_1);
+               .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1);
            softly.assertThat(Mono.from(testee().retrieve(messageId2)).block())
-               .isEqualTo(PREVIEW_2);
+               .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2);
         });
     }
 
     @Test
     default void storeShouldThrowWhenNullMessageId() {
-        assertThatThrownBy(() -> Mono.from(testee().store(null, PREVIEW_1)).block())
+        assertThatThrownBy(() -> Mono.from(testee().store(null, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -104,27 +110,27 @@ public interface MessageFastViewProjectionContract {
     @Test
     default void storeShouldOverrideOldRecord() {
         MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().store(messageId1, PREVIEW_2))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
             .block();
 
         assertThat(Mono.from(testee().retrieve(messageId1)).block())
-            .isEqualTo(PREVIEW_2);
+            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2);
     }
 
     @Test
     default void storeShouldBeIdempotent() {
         MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
         assertThat(Mono.from(testee().retrieve(messageId1)).block())
-            .isEqualTo(PREVIEW_1);
+            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1);
     }
 
     @Test
@@ -138,7 +144,9 @@ public interface MessageFastViewProjectionContract {
 
         ConcurrentTestRunner.builder()
             .reactorOperation((thread, step) -> testee()
-                .store(messageIds.get(thread), Preview.from(String.valueOf(step))))
+                .store(messageIds.get(thread), MessageFastViewPrecomputedProperties.builder()
+                    .preview(Preview.from(String.valueOf(step)))
+                    .build()))
             .threadCount(threadCount)
             .operationCount(stepCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
@@ -147,7 +155,9 @@ public interface MessageFastViewProjectionContract {
             .forEach(index -> assertThat(Mono.from(testee()
                     .retrieve(messageIds.get(index)))
                     .block())
-                .isEqualTo(Preview.from(String.valueOf(stepCount - 1))));
+                .isEqualTo(MessageFastViewPrecomputedProperties.builder()
+                    .preview(Preview.from(String.valueOf(stepCount - 1)))
+                    .build()));
     }
 
     @Test
@@ -158,13 +168,15 @@ public interface MessageFastViewProjectionContract {
 
         ConcurrentTestRunner.builder()
             .reactorOperation((thread, step) -> testee()
-                .store(messageId, Preview.from(String.valueOf(step * threadCount + thread))))
+                .store(messageId, MessageFastViewPrecomputedProperties.builder()
+                    .preview(Preview.from(String.valueOf(step * threadCount + thread)))
+                    .build()))
             .threadCount(threadCount)
             .operationCount(operationCount)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
 
-        Preview preview = Mono.from(testee().retrieve(messageId)).block();
-        Integer previewAsInt = Integer.valueOf(preview.getValue());
+        MessageFastViewPrecomputedProperties preview = Mono.from(testee().retrieve(messageId)).block();
+        Integer previewAsInt = Integer.valueOf(preview.getPreview().getValue());
 
         assertThat(previewAsInt)
             .describedAs("Ensure the stored result was generated by the last operation of one of the threads")
@@ -187,7 +199,7 @@ public interface MessageFastViewProjectionContract {
     @Test
     default void deleteShouldDeleteStoredRecord() {
         MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
         Mono.from(testee().delete(messageId1))
@@ -201,22 +213,22 @@ public interface MessageFastViewProjectionContract {
     default void deleteShouldNotDeleteAnotherRecord() {
         MessageId messageId1 = newMessageId();
         MessageId messageId2 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
-        Mono.from(testee().store(messageId2, PREVIEW_2))
+        Mono.from(testee().store(messageId2, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
             .block();
 
         Mono.from(testee().delete(messageId1))
             .block();
 
         assertThat(Mono.from(testee().retrieve(messageId2)).block())
-            .isEqualTo(PREVIEW_2);
+            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2);
     }
 
     @Test
     default void deleteShouldBeIdempotent() {
         MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, PREVIEW_1))
+        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
         Mono.from(testee().delete(messageId1))

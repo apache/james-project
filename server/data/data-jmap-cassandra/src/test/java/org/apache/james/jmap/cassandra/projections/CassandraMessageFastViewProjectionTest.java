@@ -57,7 +57,7 @@ class CassandraMessageFastViewProjectionTest implements MessageFastViewProjectio
 
     @Test
     void storeShouldThrowWhenMessageIdIsNotCassandraType() {
-        assertThatThrownBy(() -> testee.store(TestMessageId.of(1), PREVIEW_1))
+        assertThatThrownBy(() -> testee.store(TestMessageId.of(1), MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("MessageId type is required to be CassandraMessageId");
     }

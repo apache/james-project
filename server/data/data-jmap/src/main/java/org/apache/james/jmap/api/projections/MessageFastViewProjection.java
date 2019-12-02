@@ -19,15 +19,14 @@
 
 package org.apache.james.jmap.api.projections;
 
-import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
 public interface MessageFastViewProjection {
 
-    Publisher<Void> store(MessageId messageId, Preview preview);
+    Publisher<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties preview);
 
-    Publisher<Preview> retrieve(MessageId messageId);
+    Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId);
 
     Publisher<Void> delete(MessageId messageId);
 }

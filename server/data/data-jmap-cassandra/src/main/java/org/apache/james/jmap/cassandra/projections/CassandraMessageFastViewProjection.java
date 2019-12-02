@@ -31,12 +31,14 @@ import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.utils.CassandraAsyncExecutor;
 import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
+import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.google.common.base.Preconditions;
@@ -67,22 +69,21 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     }
 
     @Override
-    public Publisher<Void> store(MessageId messageId, Preview preview) {
+    public Publisher<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties precomputedProperties) {
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeVoid(storeStatement.bind()
             .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
-            .setString(PREVIEW, preview.getValue()));
+            .setString(PREVIEW, precomputedProperties.getPreview().getValue()));
     }
 
     @Override
-    public Publisher<Preview> retrieve(MessageId messageId) {
+    public Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
                 .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
-            .map(row -> row.getString(PREVIEW))
-            .map(Preview::from);
+            .map(this::fromRow);
     }
 
     @Override
@@ -97,5 +98,11 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         Preconditions.checkNotNull(messageId);
         Preconditions.checkArgument(messageId instanceof CassandraMessageId,
             "MessageId type is required to be CassandraMessageId");
+    }
+
+    private MessageFastViewPrecomputedProperties fromRow(Row row) {
+        return MessageFastViewPrecomputedProperties.builder()
+            .preview(Preview.from(row.getString(PREVIEW)))
+            .build();
     }
 }
