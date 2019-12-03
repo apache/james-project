@@ -6,6 +6,8 @@ Date: 2019-10-02
 
 Accepted (lazy consensus)
 
+Superceded by [16. Distributed WorkQueue](0016-distributed-workqueue.md)
+
 ## Context
 
 By switching the task manager to a distributed implementation, we need to be able to run a `Task` on any node of the cluster.
