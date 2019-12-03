@@ -71,6 +71,7 @@ public class SetMessagesResponseTest {
                 .size(123)
                 .date(currentDate)
                 .preview(PREVIEW)
+                .hasAttachment(false)
                 .build());
         ImmutableList<MessageId> updated = ImmutableList.of(TestMessageId.of(2));
         ImmutableList<MessageId> destroyed = ImmutableList.of(TestMessageId.of(3));
@@ -125,6 +126,7 @@ public class SetMessagesResponseTest {
                 .size(0)
                 .date(Instant.now())
                 .preview(PREVIEW)
+                .hasAttachment(false)
                 .build());
     }
 

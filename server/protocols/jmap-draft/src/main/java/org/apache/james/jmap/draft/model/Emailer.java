@@ -56,13 +56,11 @@ public class Emailer {
             .orElse(ImmutableList.of());
     }
 
-    public static Emailer firstFromMailboxList(MailboxList list) {
+    public static Optional<Emailer> firstFromMailboxList(MailboxList list) {
         return Optional.ofNullable(list)
-            .map(mailboxes -> mailboxes.stream()
+            .flatMap(mailboxes -> mailboxes.stream()
                 .map(Emailer::fromMailbox)
-                .findFirst()
-                .orElse(null))
-            .orElse(null);
+                .findFirst());
     }
 
     private static Emailer fromMailbox(Mailbox mailbox) {

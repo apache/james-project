@@ -91,6 +91,7 @@ public interface ParsingWritingObjects {
             .preview(Common.PREVIEW)
             .textBody(Common.TEXT_BODY)
             .htmlBody(Common.HTML_BODY)
+            .hasAttachment(false)
             .build();
 
     SubMessage SUB_MESSAGE = SubMessage.builder()

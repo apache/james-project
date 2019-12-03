@@ -149,7 +149,7 @@ class MessageFastViewFactoryTest {
     }
 
     @Test
-    void fromMessageIdsShouldReturnAMessageWithPreviewInThePreviewStore() throws Exception {
+    void fromMessageIdsShouldReturnAMessageWithComputedFastProperties() throws Exception {
         MessageFastView actual = messageFastViewFactory.fromMessageIds(ImmutableList.of(previewComputedMessage1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(previewComputedMessage1.getMessageId());
@@ -168,12 +168,13 @@ class MessageFastViewFactoryTest {
             softly.assertThat(actual.getSubject()).isEqualTo("Full message");
             softly.assertThat(actual.getDate()).isEqualTo("2016-06-07T14:23:37Z");
 
+            softly.assertThat(actual.isHasAttachment()).isTrue();
             softly.assertThat(actual.getPreview()).isEqualTo(PreviewDTO.of(PREVIEW_1_STRING));
         });
     }
 
     @Test
-    void fromMessageIdsShouldReturnAMessageWithPreviewComputedFromFullMessageWhenNotInThePreviewStore() throws Exception {
+    void fromMessageIdsShouldReturnAMessageWithPropertiesComputedFromFullMessageWhenNotPreComputed() throws Exception {
         MessageFastView actual = messageFastViewFactory.fromMessageIds(ImmutableList.of(missingPreviewComputedMessage1.getMessageId()), session).get(0);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(actual.getId()).isEqualTo(missingPreviewComputedMessage1.getMessageId());
@@ -192,6 +193,7 @@ class MessageFastViewFactoryTest {
             softly.assertThat(actual.getSubject()).isEqualTo("Full message");
             softly.assertThat(actual.getDate()).isEqualTo("2016-06-07T14:23:37Z");
 
+            softly.assertThat(actual.isHasAttachment()).isTrue();
             softly.assertThat(actual.getPreview()).isEqualTo(PreviewDTO.of(DEFAULT_PREVIEW_STRING));
         });
     }

@@ -19,6 +19,7 @@
 package org.apache.james.jmap.draft.model.message.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
@@ -151,10 +152,19 @@ class MessageFullViewTest {
     }
 
     @Test
-    void buildShouldThrowWhenPreviewIsNull() {
-        assertThatThrownBy(() -> MessageFullView.builder().id(TestMessageId.of(1)).blobId(BlobId.of("blobId")).threadId("threadId").fluentMailboxIds().headers(ImmutableMap.of())
-            .subject("subject").size(123).date(Instant.now()).build())
-            .isInstanceOf(IllegalStateException.class);
+    void buildShouldNotThrowWhenPreviewIsNotPresent() {
+        assertThatCode(() -> MessageFullView.builder()
+                .id(TestMessageId.of(1))
+                .blobId(BlobId.of("blobId"))
+                .threadId("threadId")
+                .fluentMailboxIds()
+                    .headers(ImmutableMap.of())
+                .subject("subject")
+                .size(123)
+                .date(Instant.now())
+                .hasAttachment(false)
+                .build())
+            .doesNotThrowAnyException();
     }
 
     @Test
@@ -178,6 +188,7 @@ class MessageFullViewTest {
                 .size(123)
                 .date(currentDate)
                 .preview(PREVIEW)
+                .hasAttachment(false)
                 .build();
         assertThat(tested).isEqualToComparingFieldByField(expected);
     }

@@ -42,7 +42,6 @@ import org.apache.james.mime4j.dom.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
@@ -73,7 +72,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
             MessageResult firstMessageResult = messageResults.iterator().next();
             Preconditions.checkArgument(fastProjections.containsKey(firstMessageResult.getMessageId()),
                 "FromMessageResultAndPreview usage requires a precomputed preview");
-
+            MessageFastViewPrecomputedProperties messageProjection = fastProjections.get(firstMessageResult.getMessageId());
             List<MailboxId> mailboxIds = Helpers.getMailboxIds(messageResults);
 
             Message mimeMessage = Helpers.parse(firstMessageResult.getFullContent().getInputStream());
@@ -94,7 +93,8 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
                 .bcc(Emailer.fromAddressList(mimeMessage.getBcc()))
                 .replyTo(Emailer.fromAddressList(mimeMessage.getReplyTo()))
                 .date(Helpers.getDateFromHeaderOrInternalDateOtherwise(mimeMessage, firstMessageResult))
-                .preview(fastProjections.get(firstMessageResult.getMessageId()).getPreview())
+                .preview(messageProjection.getPreview())
+                .hasAttachment(messageProjection.hasAttachment())
                 .build();
         }
     }

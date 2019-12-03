@@ -46,7 +46,7 @@ public class MessageHeaderView extends MessageMetadataView {
     public static class Builder<S extends MessageHeaderView.Builder<S>> extends MessageMetadataView.Builder<S> {
         protected String inReplyToMessageId;
         protected ImmutableMap<String, String> headers;
-        protected Emailer from;
+        protected Optional<Emailer> from;
         protected final ImmutableList.Builder<Emailer> to;
         protected final ImmutableList.Builder<Emailer> cc;
         protected final ImmutableList.Builder<Emailer> bcc;
@@ -56,6 +56,7 @@ public class MessageHeaderView extends MessageMetadataView {
 
         protected Builder() {
             super();
+            from = Optional.empty();
             to = ImmutableList.builder();
             cc = ImmutableList.builder();
             bcc = ImmutableList.builder();
@@ -73,6 +74,11 @@ public class MessageHeaderView extends MessageMetadataView {
         }
 
         public S from(Emailer from) {
+            this.from = Optional.of(from);
+            return (S) this;
+        }
+
+        public S from(Optional<Emailer> from) {
             this.from = from;
             return (S) this;
         }
@@ -111,7 +117,7 @@ public class MessageHeaderView extends MessageMetadataView {
             checkState();
 
             return new MessageHeaderView(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
-                headers, Optional.ofNullable(from),
+                headers, from,
                 to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size,
                 keywords.orElse(Keywords.DEFAULT_VALUE));
         }

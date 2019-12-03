@@ -245,6 +245,7 @@ class MessageFullViewFactoryTest {
                 .textBody(Optional.of(""))
                 .htmlBody(Optional.empty())
                 .keywords(keywords)
+                .hasAttachment(false)
                 .build();
         assertThat(testee).isEqualToComparingFieldByField(expected);
     }
@@ -296,6 +297,7 @@ class MessageFullViewFactoryTest {
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
             .keywords(keywords)
+            .hasAttachment(false)
             .build();
 
         assertThat(testee).isEqualToComparingFieldByField(expected);
@@ -345,6 +347,7 @@ class MessageFullViewFactoryTest {
             .textBody(Optional.of(""))
             .htmlBody(Optional.empty())
             .keywords(keywords)
+            .hasAttachment(false)
             .build();
 
         assertThat(testee).isEqualToComparingFieldByField(expected);

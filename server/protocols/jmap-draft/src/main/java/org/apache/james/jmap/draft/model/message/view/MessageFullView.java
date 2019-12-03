@@ -76,7 +76,8 @@ public class MessageFullView extends MessageFastView {
 
         public Builder attachments(List<Attachment> attachments) {
             this.attachments.addAll(attachments);
-            return this;
+            boolean hasAttachments = this.hasAttachment(this.attachments.build());
+            return super.hasAttachment(hasAttachments);
         }
 
         public Builder attachedMessages(Map<BlobId, SubMessage> attachedMessages) {
@@ -88,18 +89,23 @@ public class MessageFullView extends MessageFastView {
             ImmutableList<Attachment> attachments = this.attachments.build();
             ImmutableMap<BlobId, SubMessage> attachedMessages = this.attachedMessages.build();
             checkState(attachments, attachedMessages);
-            boolean hasAttachment = hasAttachment(attachments);
 
             return new MessageFullView(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
-                hasAttachment, headers, Optional.ofNullable(from),
+                hasAttachment.get(), headers, from,
                 to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, PreviewDTO.from(preview), textBody, htmlBody, attachments, attachedMessages,
                 keywords.orElse(Keywords.DEFAULT_VALUE));
         }
 
-        public void checkState(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
+        private void checkState(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
             super.checkState();
             Preconditions.checkState(areAttachedMessagesKeysInAttachments(attachments, attachedMessages), "'attachedMessages' keys must be in 'attachements'");
         }
+
+        private boolean hasAttachment(List<Attachment> attachments) {
+            return attachments.stream()
+                .anyMatch(attachment -> !attachment.isInlinedWithCid());
+        }
+
     }
 
     protected static boolean areAttachedMessagesKeysInAttachments(ImmutableList<Attachment> attachments, ImmutableMap<BlobId, SubMessage> attachedMessages) {
@@ -111,11 +117,6 @@ public class MessageFullView extends MessageFastView {
         return (key) -> attachments.stream()
             .map(Attachment::getBlobId)
             .anyMatch(blobId -> blobId.equals(key));
-    }
-
-    private static boolean hasAttachment(List<Attachment> attachments) {
-        return attachments.stream()
-                .anyMatch(attachment -> !attachment.isInlinedWithCid());
     }
 
     private final boolean hasAttachment;
@@ -146,7 +147,7 @@ public class MessageFullView extends MessageFastView {
                     ImmutableList<Attachment> attachments,
                     ImmutableMap<BlobId, SubMessage> attachedMessages,
                     Keywords keywords) {
-        super(id, blobId, threadId, mailboxIds, inReplyToMessageId, headers, from, to, cc, bcc, replyTo, subject, date, size, preview, keywords);
+        super(id, blobId, threadId, mailboxIds, inReplyToMessageId, headers, from, to, cc, bcc, replyTo, subject, date, size, preview, keywords, hasAttachment);
         this.hasAttachment = hasAttachment;
         this.textBody = textBody;
         this.htmlBody = htmlBody;

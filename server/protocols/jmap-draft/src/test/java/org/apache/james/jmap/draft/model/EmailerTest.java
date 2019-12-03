@@ -154,9 +154,9 @@ public class EmailerTest {
     }
 
     @Test
-    public void firstFromMailboxListShouldReturnNullWhenNullMailboxList() {
+    public void firstFromMailboxListShouldReturnEmptyWhenNullMailboxList() {
         assertThat(Emailer.firstFromMailboxList(null))
-            .isNull();
+            .isEmpty();
     }
 
     @Test
@@ -164,7 +164,7 @@ public class EmailerTest {
         assertThat(Emailer.firstFromMailboxList(new MailboxList(
                 new Mailbox("user1Inbox", "user1", "james.org"),
                 new Mailbox("user2Inbox", "user2", "james.org"))))
-            .isEqualTo(Emailer.builder()
+            .contains(Emailer.builder()
                 .name("user1Inbox")
                 .email("user1@james.org")
                 .build());

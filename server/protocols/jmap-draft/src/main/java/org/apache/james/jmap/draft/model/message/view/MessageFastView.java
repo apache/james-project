@@ -54,10 +54,12 @@ public class MessageFastView extends MessageHeaderView {
     @JsonPOJOBuilder(withPrefix = "")
     public static class Builder<S extends MessageFastView.Builder<S>> extends MessageHeaderView.Builder<S> {
         protected Optional<Preview> preview;
+        protected Optional<Boolean> hasAttachment;
 
         protected Builder() {
             super();
             this.preview = Optional.empty();
+            this.hasAttachment = Optional.empty();
         }
 
         public S preview(Preview preview) {
@@ -70,22 +72,29 @@ public class MessageFastView extends MessageHeaderView {
             return (S) this;
         }
 
+        public S hasAttachment(boolean hasAttachment) {
+            this.hasAttachment = Optional.of(hasAttachment);
+            return (S) this;
+        }
+
         public MessageFastView build() {
             checkState();
             return new MessageFastView(id, blobId, threadId, mailboxIds, Optional.ofNullable(inReplyToMessageId),
-                headers, Optional.ofNullable(from),
+                headers, from,
                 to.build(), cc.build(), bcc.build(), replyTo.build(), subject, date, size, PreviewDTO.from(preview),
-                keywords.orElse(Keywords.DEFAULT_VALUE));
+                keywords.orElse(Keywords.DEFAULT_VALUE), hasAttachment.get());
         }
 
         @Override
         public void checkState() {
             super.checkState();
             Preconditions.checkState(preview != null, "'preview' is mandatory");
+            Preconditions.checkState(hasAttachment.isPresent(), "'hasAttachment' should be present");
         }
     }
 
     private final PreviewDTO preview;
+    private final boolean hasAttachment;
 
     @VisibleForTesting
     MessageFastView(MessageId id,
@@ -103,12 +112,18 @@ public class MessageFastView extends MessageHeaderView {
                     Instant date,
                     Number size,
                     PreviewDTO preview,
-                    Keywords keywords) {
+                    Keywords keywords,
+                    boolean hasAttachment) {
         super(id, blobId, threadId, mailboxIds, inReplyToMessageId, headers, from, to, cc, bcc, replyTo, subject, date, size, keywords);
         this.preview = preview;
+        this.hasAttachment = hasAttachment;
     }
 
     public PreviewDTO getPreview() {
         return preview;
+    }
+
+    public boolean isHasAttachment() {
+        return hasAttachment;
     }
 }
