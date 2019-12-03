@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMessage;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.html.HtmlTextExtractor;
 import org.junit.Before;
 import org.junit.Test;
 

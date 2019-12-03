@@ -32,6 +32,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.james.mime4j.dom.field.ContentTypeField;
+import org.apache.james.util.html.HtmlTextExtractor;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;

@@ -39,7 +39,7 @@ import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
-import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
+import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MessageIdManager;
@@ -50,6 +50,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.server.core.Envelope;
+import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.apache.mailet.Mail;
 import org.junit.jupiter.api.BeforeEach;
@@ -85,9 +86,9 @@ class MessageSenderTest {
             .messageId(TestMessageId.of(2))
             .build();
 
-        HtmlTextExtractor htmlTextExtractor = mock(HtmlTextExtractor.class);
-
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
+
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);

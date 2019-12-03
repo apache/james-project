@@ -50,7 +50,6 @@ import org.apache.james.jmap.draft.model.message.view.MessageHeaderViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataView;
 import org.apache.james.jmap.draft.model.message.view.MessageMetadataViewFactory;
 import org.apache.james.jmap.draft.model.message.view.MetaMessageViewFactory;
-import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.BlobManager;
@@ -72,6 +71,7 @@ import org.apache.james.metrics.logger.DefaultMetricFactory;
 import org.apache.james.mime4j.message.BodyPartBuilder;
 import org.apache.james.mime4j.message.MultipartBuilder;
 import org.apache.james.mime4j.stream.RawField;
+import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.Condition;
 import org.assertj.core.data.MapEntry;
@@ -108,8 +108,8 @@ public class GetMessagesMethodTest {
     @Before
     public void setup() throws Exception {
         methodCallId = MethodCallId.of("#0");
-        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(BlobId.fromString("fake"));
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();

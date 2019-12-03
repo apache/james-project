@@ -48,7 +48,6 @@ import org.apache.james.jmap.draft.model.Keywords;
 import org.apache.james.jmap.draft.model.Number;
 import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory.MetaDataWithContent;
-import org.apache.james.jmap.draft.utils.HtmlTextExtractor;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
 import org.apache.james.mailbox.MailboxSession;
@@ -71,6 +70,7 @@ import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
+import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,9 +99,8 @@ class MessageFullViewFactoryTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
-
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
+        HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
         messageIdManager = resources.getMessageIdManager();

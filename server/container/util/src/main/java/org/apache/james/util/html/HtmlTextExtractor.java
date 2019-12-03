@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.utils;
+package org.apache.james.util.html;
 
 public interface HtmlTextExtractor {
 

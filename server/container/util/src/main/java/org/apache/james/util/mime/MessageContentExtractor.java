@@ -34,9 +34,11 @@ import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Multipart;
 import org.apache.james.mime4j.dom.TextBody;
+import org.apache.james.util.html.HtmlTextExtractor;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.functions.ThrowingFunction;
+import com.google.common.base.Strings;
 
 public class MessageContentExtractor {
 
@@ -218,6 +220,13 @@ public class MessageContentExtractor {
             return new MessageContent(
                     textBody.map(Optional::of).orElse(fromInnerMultipart.getTextBody()),
                     htmlBody.map(Optional::of).orElse(fromInnerMultipart.getHtmlBody()));
+        }
+
+        public Optional<String> extractMainTextContent(HtmlTextExtractor htmlTextExtractor) {
+            return htmlBody.map(htmlTextExtractor::toPlainText)
+                .filter(s -> !Strings.isNullOrEmpty(s))
+                .map(Optional::of)
+                .orElse(textBody);
         }
 
         @Override
