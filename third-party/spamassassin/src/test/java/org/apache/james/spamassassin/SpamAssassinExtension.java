@@ -38,6 +38,7 @@ import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
+import org.testcontainers.utility.Base58;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -48,8 +49,9 @@ public class SpamAssassinExtension implements BeforeAllCallback, AfterEachCallba
     private SpamAssassin spamAssassin;
 
     public SpamAssassinExtension() {
+        boolean deleteOnExit = false;
         spamAssassinContainer = new GenericContainer<>(
-            new ImageFromDockerfile()
+            new ImageFromDockerfile("james-spamassassin/" + Base58.randomString(16).toLowerCase(), deleteOnExit)
                 .withFileFromClasspath("Dockerfile", "docker/spamassassin/Dockerfile")
                 .withFileFromClasspath("local.cf", "docker/spamassassin/local.cf")
                 .withFileFromClasspath("run.sh", "docker/spamassassin/run.sh")
