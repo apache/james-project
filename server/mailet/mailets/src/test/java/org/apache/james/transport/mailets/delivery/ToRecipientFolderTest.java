@@ -37,7 +37,6 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.NoopMetricFactory;
@@ -83,11 +82,7 @@ public class ToRecipientFolderTest {
 
         session = mock(MailboxSession.class);
         when(session.getPathDelimiter()).thenReturn('.');
-        try {
-            when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(session);
-        } catch (MailboxException e) {
-            throw new RuntimeException(e);
-        }
+        when(mailboxManager.createSystemSession(any(Username.class))).thenReturn(session);
         when(session.getUser()).thenReturn(Username.of(USER));
     }
 

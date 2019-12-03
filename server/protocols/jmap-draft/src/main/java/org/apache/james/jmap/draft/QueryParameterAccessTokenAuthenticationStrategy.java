@@ -25,14 +25,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
-import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
-import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -50,22 +47,14 @@ public class QueryParameterAccessTokenAuthenticationStrategy implements Authenti
     }
 
     @Override
-    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) {
 
         return getAccessToken(httpRequest)
             .filter(tokenManager::isValid)
             .map(AttachmentAccessToken::getUsername)
             .map(Username::of)
-            .map(this::createSystemSession)
+            .map(mailboxManager::createSystemSession)
             .orElseThrow(UnauthorizedException::new);
-    }
-
-    private MailboxSession createSystemSession(Username username) {
-        try {
-            return mailboxManager.createSystemSession(username);
-        } catch (MailboxException e) {
-            throw new MailboxSessionCreationException(e);
-        }
     }
 
     private Optional<AttachmentAccessToken> getAccessToken(HttpServletRequest httpRequest) {

@@ -36,7 +36,6 @@ import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +71,7 @@ public class JWTAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrownWhenAuthHeadersIsInvalid() throws Exception {
+    public void createMailboxSessionShouldThrownWhenAuthHeadersIsInvalid() {
         String username = "123456789";
         String validAuthHeader = "valid";
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
@@ -100,24 +99,7 @@ public class JWTAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        String username = "username";
-        String validAuthHeader = "valid";
-        String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
-
-        when(stubTokenVerifier.verify(validAuthHeader)).thenReturn(true);
-        when(stubTokenVerifier.extractLogin(validAuthHeader)).thenReturn(username);
-        when(mockedMailboxManager.createSystemSession(eq(Username.of(username))))
-                .thenThrow(new MailboxException());
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(fakeAuthHeaderWithPrefix));
-
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
-                .isExactlyInstanceOf(MailboxSessionCreationException.class);
-    }
-
-    @Test
-    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() throws Exception {
+    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid(){
         String username = "123456789";
         String validAuthHeader = "valid";
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;
@@ -136,7 +118,7 @@ public class JWTAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() throws Exception {
+    public void createMailboxSessionShouldThrowUponInvalidVirtualHosting() {
         String username = "123456789@domain.tld";
         String validAuthHeader = "valid";
         String fakeAuthHeaderWithPrefix = JWTAuthenticationStrategy.AUTHORIZATION_HEADER_PREFIX + validAuthHeader;

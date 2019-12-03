@@ -37,6 +37,7 @@
         <constructor-arg index="1" ref="mailboxIdFactory"/>
         <constructor-arg index="2" type="org.apache.lucene.store.Directory" ref="fsDirectory"/>
         <constructor-arg index="3" ref="messageIdFactory"/>
+        <constructor-arg index="4" ref="sessionProvider"/>
         <property name="enableSuffixMatch" value="true"/>
     </bean>
     <bean id="fsDirectory"  class="org.apache.lucene.store.FSDirectory" factory-method="open">

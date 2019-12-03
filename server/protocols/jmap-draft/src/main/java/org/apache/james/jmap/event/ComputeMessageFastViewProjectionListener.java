@@ -31,13 +31,13 @@ import org.apache.james.jmap.draft.model.message.view.MessageFullView;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.parboiled.common.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;

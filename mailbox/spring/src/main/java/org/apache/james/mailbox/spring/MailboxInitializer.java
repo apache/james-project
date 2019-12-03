@@ -22,9 +22,9 @@ package org.apache.james.mailbox.spring;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxManager;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.event.MailboxAnnotationListener;
 import org.apache.james.mailbox.store.quota.ListeningCurrentQuotaUpdater;
 import org.apache.james.mailbox.store.quota.QuotaUpdater;

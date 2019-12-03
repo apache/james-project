@@ -27,9 +27,9 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.apache.james.mailbox.store.quota.StoreCurrentQuotaManager;
 

@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.model.Mailbox;
@@ -31,7 +32,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.util.streams.Iterators;

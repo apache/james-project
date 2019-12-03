@@ -24,33 +24,21 @@ import static org.mockito.Mockito.when;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.QueryParameterAccessTokenAuthenticationStrategy;
 import org.apache.james.jmap.draft.api.SimpleTokenManager;
-import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.UnauthorizedException;
-import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Before;
 import org.junit.Test;
 
 public class QueryParameterAccessTokenAuthenticationStrategyTest {
 
-    private static final Username USERNAME = Username.of("usera@domain.tld");
-    private static final String VALID_ATTACHMENT_TOKEN = "usera@domain.tld_"
-            + "2016-06-29T13:41:22.124Z_"
-            + "DiZa0O14MjLWrAA8P6MG35Gt5CBp7mt5U1EH/M++rIoZK7nlGJ4dPW0dvZD7h4m3o5b/Yd8DXU5x2x4+s0HOOKzD7X0RMlsU7JHJMNLvTvRGWF/C+MUyC8Zce7DtnRVPEQX2uAZhL2PBABV07Vpa8kH+NxoS9CL955Bc1Obr4G+KN2JorADlocFQA6ElXryF5YS/HPZSvq1MTC6aJIP0ku8WRpRnbwgwJnn26YpcHXcJjbkCBtd9/BhlMV6xNd2hTBkfZmYdoNo+UKBaXWzLxAlbLuxjpxwvDNJfOEyWFPgHDoRvzP+G7KzhVWjanHAHrhF0GilEa/MKpOI1qHBSwA==";
-
-    private SimpleTokenManager mockedSimpleTokenManager;
-    private MailboxManager mockedMailboxManager;
     private QueryParameterAccessTokenAuthenticationStrategy testee;
     private HttpServletRequest request;
 
     @Before
     public void setup() {
-        mockedSimpleTokenManager = mock(SimpleTokenManager.class);
-        mockedMailboxManager = mock(MailboxManager.class);
+        SimpleTokenManager mockedSimpleTokenManager = mock(SimpleTokenManager.class);
+        MailboxManager mockedMailboxManager = mock(MailboxManager.class);
         request = mock(HttpServletRequest.class);
 
         testee = new QueryParameterAccessTokenAuthenticationStrategy(mockedSimpleTokenManager, mockedMailboxManager);
@@ -72,22 +60,5 @@ public class QueryParameterAccessTokenAuthenticationStrategyTest {
 
         assertThatThrownBy(() -> testee.createMailboxSession(request))
                 .isExactlyInstanceOf(UnauthorizedException.class);
-    }
-
-    @Test
-    public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        when(mockedMailboxManager.createSystemSession(USERNAME))
-                .thenThrow(new MailboxException());
-
-        when(request.getParameter("access_token"))
-            .thenReturn(VALID_ATTACHMENT_TOKEN);
-        when(request.getPathInfo())
-            .thenReturn("/blobId");
-
-        when(mockedSimpleTokenManager.isValid(AttachmentAccessToken.from(VALID_ATTACHMENT_TOKEN, "blobId")))
-            .thenReturn(true);
-
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
-                .isExactlyInstanceOf(MailboxSessionCreationException.class);
     }
 }

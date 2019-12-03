@@ -33,12 +33,10 @@ import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.access.exceptions.NotAnAccessTokenException;
 import org.apache.james.jmap.draft.crypto.AccessTokenManagerImpl;
-import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -79,7 +77,7 @@ public class AccessTokenAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() throws Exception {
+    public void createMailboxSessionShouldThrowWhenAuthHeaderIsInvalid() {
         Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 
@@ -98,26 +96,7 @@ public class AccessTokenAuthenticationStrategyTest {
     }
 
     @Test
-    public void createMailboxSessionShouldThrowWhenMailboxExceptionHasOccurred() throws Exception {
-        Username username = Username.of("username");
-        when(mockedMailboxManager.createSystemSession(eq(username)))
-                .thenThrow(new MailboxException());
-
-        UUID authHeader = UUID.randomUUID();
-        AccessToken accessToken = AccessToken.fromString(authHeader.toString());
-        when(mockedAccessTokenManager.getUsernameFromToken(accessToken))
-                .thenReturn(username);
-        when(mockAuthenticationExtractor.authHeaders(request))
-            .thenReturn(Stream.of(authHeader.toString()));
-        when(mockedAccessTokenManager.isValid(accessToken))
-            .thenReturn(true);
-
-        assertThatThrownBy(() -> testee.createMailboxSession(request))
-                .isExactlyInstanceOf(MailboxSessionCreationException.class);
-    }
-
-    @Test
-    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() throws Exception {
+    public void createMailboxSessionShouldReturnWhenAuthHeadersAreValid() {
         Username username = Username.of("123456789");
         MailboxSession fakeMailboxSession = mock(MailboxSession.class);
 

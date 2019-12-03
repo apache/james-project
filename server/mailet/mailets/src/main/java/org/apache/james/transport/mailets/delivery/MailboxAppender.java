@@ -26,7 +26,6 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -96,14 +95,8 @@ public class MailboxAppender {
         }
     }
 
-    public MailboxSession createMailboxSession(Username user) throws MessagingException {
-        try {
-            return mailboxManager.createSystemSession(user);
-        } catch (BadCredentialsException e) {
-            throw new MessagingException("Unable to authenticate to mailbox", e);
-        } catch (MailboxException e) {
-            throw new MessagingException("Can not access mailbox", e);
-        }
+    public MailboxSession createMailboxSession(Username user) {
+        return mailboxManager.createSystemSession(user);
     }
 
     private void closeProcessing(MailboxSession session) throws MessagingException {

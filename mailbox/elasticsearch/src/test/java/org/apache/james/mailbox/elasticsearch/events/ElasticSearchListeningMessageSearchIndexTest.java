@@ -67,7 +67,7 @@ import org.apache.james.mailbox.store.Authorizator;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
+import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
@@ -138,7 +138,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     private MailboxSessionMapperFactory mapperFactory;
     private ElasticSearchIndexer elasticSearchIndexer;
     private ElasticSearchSearcher elasticSearchSearcher;
-    private SessionProvider sessionProvider;
+    private SessionProviderImpl sessionProvider;
 
     @Rule
     public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
@@ -169,7 +169,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         FakeAuthenticator fakeAuthenticator = new FakeAuthenticator();
         fakeAuthenticator.addUser(ManagerTestProvisionner.USER, ManagerTestProvisionner.USER_PASS);
         Authorizator authorizator = FakeAuthorizator.defaultReject();
-        sessionProvider = new SessionProvider(fakeAuthenticator, authorizator);
+        sessionProvider = new SessionProviderImpl(fakeAuthenticator, authorizator);
 
         elasticSearchIndexer = new ElasticSearchIndexer(client, MailboxElasticSearchConstants.DEFAULT_MAILBOX_WRITE_ALIAS);
         

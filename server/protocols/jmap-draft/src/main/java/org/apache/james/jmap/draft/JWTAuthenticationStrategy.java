@@ -30,7 +30,6 @@ import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jwt.JwtTokenVerifier;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
@@ -69,13 +68,7 @@ public class JWTAuthenticationStrategy implements AuthenticationStrategy {
             });
 
         Stream<MailboxSession> mailboxSessionStream = userLoginStream
-                .map(login -> {
-                    try {
-                        return mailboxManager.createSystemSession(login);
-                    } catch (MailboxException e) {
-                        throw new MailboxSessionCreationException(e);
-                    }
-                });
+                .map(mailboxManager::createSystemSession);
 
         return mailboxSessionStream
                 .findFirst()

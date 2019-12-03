@@ -42,6 +42,7 @@ import org.apache.james.mailbox.MailboxPathLocker.LockAwareExecution;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MetadataWithMailboxId;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.InboxAlreadyCreated;
@@ -240,11 +241,8 @@ public class StoreMailboxManager implements MailboxManager {
         return sessionProvider.loginAsOtherUser(adminUserid, passwd, otherUserId);
     }
 
-    /**
-     * Close the {@link MailboxSession} if not null
-     */
     @Override
-    public void logout(MailboxSession session, boolean force) {
+    public void logout(MailboxSession session) {
         sessionProvider.logout(session);
     }
 

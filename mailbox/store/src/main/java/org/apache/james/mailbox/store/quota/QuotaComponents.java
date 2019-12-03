@@ -21,11 +21,11 @@ package org.apache.james.mailbox.store.quota;
 
 import javax.inject.Inject;
 
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
 
 public class QuotaComponents {
     public static QuotaComponents disabled(SessionProvider sessionProvider, MailboxSessionMapperFactory mailboxSessionMapperFactory) {

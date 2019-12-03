@@ -55,7 +55,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
-import org.apache.james.mailbox.store.SessionProvider;
+import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
@@ -119,7 +119,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(BOB, "12345");
 
-        SessionProvider sessionProvider = new SessionProvider(authenticator, FakeAuthorizator.defaultReject());
+        SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.defaultReject());
 
         listener = spy(new ComputeMessageFastViewProjectionListener(sessionProvider, messageIdManager,
             messageFastViewProjection, messageFullViewFactory));

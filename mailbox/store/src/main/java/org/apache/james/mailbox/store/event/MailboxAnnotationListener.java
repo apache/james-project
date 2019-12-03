@@ -23,6 +23,7 @@ import java.util.List;
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.MailboxListener;
@@ -30,7 +31,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxAnnotation;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.mail.AnnotationMapper;
 
 public class MailboxAnnotationListener implements MailboxListener.GroupMailboxListener {

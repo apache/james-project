@@ -27,8 +27,8 @@ import java.util.Optional;
 
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.quota.CurrentQuotaCalculator;
 import org.junit.Before;
 import org.junit.Test;

@@ -23,8 +23,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.james.core.Username;
-import org.apache.james.mailbox.exception.BadCredentialsException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -69,7 +67,7 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
  * </p>
  */
 
-public interface MailboxManager extends RequestAware, RightManager, MailboxAnnotationManager {
+public interface MailboxManager extends RequestAware, RightManager, MailboxAnnotationManager, SessionProvider {
 
     int MAX_MAILBOX_NAME_LENGTH = 200;
 
@@ -107,14 +105,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     }
     
     EnumSet<SearchCapabilities> getSupportedSearchCapabilities();
-
-    
-    /**
-     * Return the delimiter to use for folders
-     * 
-     * @return delimiter
-     */
-    char getDelimiter();
 
     /**
      * Gets an object managing the given mailbox.
@@ -261,59 +251,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     }
 
     /**
-     * Creates a new system session.<br>
-     * A system session is intended to be used for programmatic access.<br>
-     * Use {@link #login(Username, String)} when accessing this API from a
-     * protocol.
-     * 
-     * @param userName
-     *            the name of the user whose session is being created
-     * @return <code>MailboxSession</code>, not null
-     * @throws BadCredentialsException
-     *            when system access is not allowed for the given user
-     * @throws MailboxException
-     *            when the creation fails for other reasons
-     */
-    MailboxSession createSystemSession(Username userName) throws BadCredentialsException, MailboxException;
-
-    /**
-     * Autenticates the given user against the given password.<br>
-     * When authenticated and authorized, a session will be supplied
-     * 
-     * @param userid
-     *            user name
-     * @param passwd
-     *            password supplied
-     * @return a <code>MailboxSession</code> when the user is authenticated and
-     *            authorized to access
-     * @throws BadCredentialsException
-     *            when system access is denied for the given user
-     * @throws MailboxException
-     *            when the creation fails for other reasons
-     */
-    MailboxSession login(Username userid, String passwd) throws BadCredentialsException, MailboxException;
-
-    /**
-     * Autenticates the given administrator against the given password,
-     * then switch to an other user<br>
-     * When authenticated and authorized, a session for the other user will be supplied
-     * 
-     * @param adminUserId
-     *            user name of the admin user, matching the credentials
-     * @param passwd
-     *            password supplied for the admin user
-     * @param otherUserId
-     *            user name of the real user
-     * @return a <code>MailboxSession</code> for the real user
-     *            when the admin is authenticated and authorized to access
-     * @throws BadCredentialsException
-     *            when system access is denied for the given user
-     * @throws MailboxException
-     *             when the creation fails for other reasons
-     */
-    MailboxSession loginAsOtherUser(Username adminUserId, String passwd, Username otherUserId) throws BadCredentialsException, MailboxException;
-
-    /**
      * <p>
      * Logs the session out, freeing any resources. Clients who open session
      * should make best efforts to call this when the session is closed.
@@ -337,7 +274,9 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @throws MailboxException
      *             when logout fails
      */
-    void logout(MailboxSession session, boolean force) throws MailboxException;
+    default void logout(MailboxSession session, boolean force) throws MailboxException {
+        logout(session);
+    }
 
     /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects

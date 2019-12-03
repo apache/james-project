@@ -21,11 +21,11 @@ package org.apache.james.mailbox.jpa;
 import java.util.EnumSet;
 
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.SessionProvider;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreRightManager;

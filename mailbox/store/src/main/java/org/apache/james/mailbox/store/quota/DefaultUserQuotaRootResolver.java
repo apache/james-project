@@ -26,6 +26,7 @@ import javax.inject.Inject;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -36,7 +37,6 @@ import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.quota.QuotaRootDeserializer;
 import org.apache.james.mailbox.quota.UserQuotaRootResolver;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
-import org.apache.james.mailbox.store.SessionProvider;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;

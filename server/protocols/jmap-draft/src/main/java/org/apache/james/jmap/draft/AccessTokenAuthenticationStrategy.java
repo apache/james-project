@@ -26,12 +26,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.draft.api.AccessTokenManager;
-import org.apache.james.jmap.draft.exceptions.MailboxSessionCreationException;
 import org.apache.james.jmap.draft.exceptions.NoValidAuthHeaderException;
 import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -50,7 +48,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
     }
 
     @Override
-    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws MailboxSessionCreationException, NoValidAuthHeaderException {
+    public MailboxSession createMailboxSession(HttpServletRequest httpRequest) throws NoValidAuthHeaderException {
 
         Optional<Username> username = authenticationExtractor.authHeaders(httpRequest)
             .map(AccessToken::fromString)
@@ -59,11 +57,7 @@ public class AccessTokenAuthenticationStrategy implements AuthenticationStrategy
             .findFirst();
 
         if (username.isPresent()) {
-            try {
-                return mailboxManager.createSystemSession(username.get());
-            } catch (MailboxException e) {
-                throw new MailboxSessionCreationException(e);
-            }
+            return mailboxManager.createSystemSession(username.get());
         }
         throw new NoValidAuthHeaderException();
     }

@@ -49,7 +49,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.SessionProvider;
+import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreBlobManager;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
@@ -298,7 +298,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory,
                 storeRightManager, limitAnnotationCount.get(), limitAnnotationSize.get());
 
-            SessionProvider sessionProvider = new SessionProvider(authenticator.get(), authorizator.get());
+            SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator.get(), authorizator.get());
 
             InMemoryPerUserMaxQuotaManager maxQuotaManager = new InMemoryPerUserMaxQuotaManager();
             DefaultUserQuotaRootResolver quotaRootResolver = new DefaultUserQuotaRootResolver(sessionProvider, mailboxSessionMapperFactory);
@@ -360,9 +360,9 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
 
     public static class MailboxManagerPreInstanciationStage {
         private final InMemoryMailboxSessionMapperFactory mapperFactory;
-        private final SessionProvider sessionProvider;
+        private final SessionProviderImpl sessionProvider;
 
-        public MailboxManagerPreInstanciationStage(InMemoryMailboxSessionMapperFactory mapperFactory, SessionProvider sessionProvider) {
+        public MailboxManagerPreInstanciationStage(InMemoryMailboxSessionMapperFactory mapperFactory, SessionProviderImpl sessionProvider) {
             this.mapperFactory = mapperFactory;
             this.sessionProvider = sessionProvider;
         }
@@ -371,7 +371,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             return mapperFactory;
         }
 
-        public SessionProvider getSessionProvider() {
+        public SessionProviderImpl getSessionProvider() {
             return sessionProvider;
         }
     }
