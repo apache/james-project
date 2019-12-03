@@ -112,10 +112,10 @@ public abstract class GetMessageListMethodTest {
 
     protected abstract void await();
 
-    private AccessToken aliceAccessToken;
+    protected AccessToken aliceAccessToken;
     private AccessToken bobAccessToken;
     private GuiceJamesServer jmapServer;
-    private MailboxProbeImpl mailboxProbe;
+    protected MailboxProbeImpl mailboxProbe;
     private DataProbe dataProbe;
 
     @Before

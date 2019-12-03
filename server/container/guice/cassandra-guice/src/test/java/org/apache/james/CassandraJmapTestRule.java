@@ -84,4 +84,8 @@ public class CassandraJmapTestRule implements TestRule {
     public void await() {
         guiceModuleTestRule.await();
     }
+
+    public DockerElasticSearchRule getDockerElasticSearchRule() {
+        return dockerElasticSearchRule;
+    }
 }
