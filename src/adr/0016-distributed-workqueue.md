@@ -18,7 +18,7 @@ By switching the task manager to a distributed implementation, we need to be abl
   This is an intermediate milestone toward the final implementation which will drop this property.
 
  * Use a RabbitMQ queue as a workqueue where only the `Created` events are pushed into.
-   Instead of using the brittle exclusive queue mechanism described in [3. Distributed WorkQueue](0003-distributed-workqueue.md) ,we will
+   Instead of using the brittle exclusive queue mechanism described in [3. Distributed WorkQueue](0003-distributed-workqueue.md), we will
    now use the natively supported [Single Active Consumer](https://www.rabbitmq.com/consumers.html#single-active-consumer) mechanism. 
 
 
