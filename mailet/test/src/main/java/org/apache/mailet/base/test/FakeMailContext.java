@@ -251,6 +251,9 @@ public class FakeMailContext implements MailetContext {
             return subject;
         }
 
+        public Map<AttributeName, Attribute> getAttributes() {
+            return ImmutableMap.copyOf(attributes);
+        }
 
         public Optional<Delay> getDelay() {
             return delay;

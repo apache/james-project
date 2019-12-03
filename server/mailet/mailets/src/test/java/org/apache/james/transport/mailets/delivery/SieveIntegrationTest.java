@@ -810,6 +810,7 @@ public class SieveIntegrationTest {
             .recipient(RECEIVER_DOMAIN_COM)
             .sender(new MailAddress(RECEIVER_DOMAIN_COM))
             .fromMailet()
+            .attribute(new Attribute(SieveExecutor.SIEVE_NOTIFICATION, AttributeValue.of(true)))
             .build());
         // No action taken
         assertThat(mail.getAttribute(ATTRIBUTE_NAME)).isEmpty();
