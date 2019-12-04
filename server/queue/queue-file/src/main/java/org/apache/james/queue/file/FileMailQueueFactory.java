@@ -35,7 +35,11 @@ import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileMailQueue} instances
+ *
+ * @deprecated FileMailQueue implementation is unmaintained, incomplete and not thread safe
+ * We recommend using embedded ActiveMQMailQueue implementation instead
  */
+@Deprecated
 public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
 
     private final Map<String, ManageableMailQueue> queues = new HashMap<>();
