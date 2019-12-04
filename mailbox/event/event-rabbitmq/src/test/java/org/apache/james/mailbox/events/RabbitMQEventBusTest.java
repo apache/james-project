@@ -195,8 +195,8 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
             await()
                 .pollInterval(org.awaitility.Duration.FIVE_SECONDS)
-                .timeout(org.awaitility.Duration.TEN_MINUTES).until(() ->
-                    countingListener1.numberOfEventCalls() == (totalGlobalRegistrations * totalDispatchOperations));
+                .timeout(org.awaitility.Duration.TEN_MINUTES).untilAsserted(() ->
+                    assertThat(countingListener1.numberOfEventCalls()).isEqualTo((totalGlobalRegistrations * totalDispatchOperations)));
         }
 
         @Override
@@ -238,15 +238,15 @@ class RabbitMQEventBusTest implements GroupContract.SingleEventBusGroupContract,
 
             eventBus.dispatch(EVENT, NO_KEYS).block();
             WAIT_CONDITION
-                .until(() -> eventBusListener.numberOfEventCalls() == 1);
+                .untilAsserted(() -> assertThat(eventBusListener.numberOfEventCalls()).isEqualTo(1));
             eventBus.stop();
 
             WAIT_CONDITION
-                .until(() -> eventBus2Listener.numberOfEventCalls() == 1);
+                .untilAsserted(() -> assertThat(eventBus2Listener.numberOfEventCalls()).isEqualTo(1));
             eventBus2.stop();
 
             WAIT_CONDITION
-                .until(() -> eventBus3Listener.numberOfEventCalls() == 1);
+                .untilAsserted(() -> assertThat(eventBus3Listener.numberOfEventCalls()).isEqualTo(1));
         }
     }
 
