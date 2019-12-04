@@ -20,8 +20,6 @@
 
 package org.apache.james.transport.mailets.jsieve.delivery;
 
-import java.io.IOException;
-
 import javax.mail.MessagingException;
 
 import org.apache.commons.logging.Log;
@@ -124,7 +122,7 @@ public class SieveExecutor {
         return !isSieveNotification ? sieveMessage(recipient, mail) : false;
     }
 
-    protected boolean sieveMessage(MailAddress recipient, Mail aMail) throws MessagingException {
+    private boolean sieveMessage(MailAddress recipient, Mail aMail) {
         try {
             ResourceLocator.UserSieveInformation userSieveInformation = resourceLocator.get(recipient);
             sieveMessageEvaluate(recipient, aMail, userSieveInformation);
@@ -138,7 +136,7 @@ public class SieveExecutor {
         }
     }
 
-    private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation) throws MessagingException, IOException {
+    private void sieveMessageEvaluate(MailAddress recipient, Mail aMail, ResourceLocator.UserSieveInformation userSieveInformation) throws MessagingException {
         try {
             SieveMailAdapter aMailAdapter = new SieveMailAdapter(aMail,
                 mailetContext, actionDispatcher, sievePoster, userSieveInformation.getScriptActivationDate(),
@@ -156,7 +154,7 @@ public class SieveExecutor {
     }
 
     @VisibleForTesting
-    void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException, IOException {
+    void handleFailure(MailAddress recipient, Mail aMail, Exception ex) throws MessagingException {
         MailImpl errorMail = MailImpl.builder()
             .name(MailImpl.getId())
             .addAttribute(new Attribute(SIEVE_NOTIFICATION, AttributeValue.of(true)))
