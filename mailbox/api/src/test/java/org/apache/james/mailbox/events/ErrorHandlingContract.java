@@ -101,7 +101,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION
-            .until(() -> eventCollector.getEvents().size() == 1);
+            .untilAsserted(() -> assertThat(eventCollector.getEvents()).hasSize(1));
     }
 
     @Test
@@ -118,7 +118,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION
-            .until(() -> eventCollector.getEvents().size() == 1);
+            .untilAsserted(() -> assertThat(eventCollector.getEvents()).hasSize(1));
     }
 
     @Test
@@ -238,7 +238,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().dispatch(EVENT, NO_KEYS).block();
 
         WAIT_CONDITION
-            .until(() -> eventCollector.getEvents().size() == 1);
+            .untilAsserted(() -> assertThat(eventCollector.getEvents()).hasSize(1));
 
         assertThat(deadLetter().groupsWithFailedEvents().toIterable())
             .isEmpty();
@@ -317,7 +317,7 @@ interface ErrorHandlingContract extends EventBusContract {
         eventBus().reDeliver(GROUP_A, EVENT).block();
 
         WAIT_CONDITION
-            .until(() -> eventCollector.getEvents().size() == 1);
+            .untilAsserted(() -> assertThat(eventCollector.getEvents()).hasSize(1));
         assertThat(eventCollector2.getEvents()).isEmpty();
     }
 }
