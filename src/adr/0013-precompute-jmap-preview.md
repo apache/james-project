@@ -4,9 +4,7 @@ Date: 2019-10-09
 
 ## Status
 
-Proposed
-
-Adoption needs to be backed by some performance tests.
+Accepted
 
 ## Context
 
@@ -35,9 +33,20 @@ Some performance tests will be run in order to evaluate the improvements.
 
 ## Consequences
 
-We expect a huge performance enhancement for JMAP clients relying on preview for listing mails.
+Given the following scenario played by 2500 users per hour (constant rate)
+ - Authenticate
+ - List mailboxes
+ - List messages in one of their mailboxes
+ - Get 8 times the properties expected to be fast to fetch with JMAP
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
+We went from:
+ - A 7% failure and timeout rate before this change to almost no failure
+ - Mean time for GetMessages went from 9 710 ms to 434 ms (22 time improvment), for all operation from
+ 12 802 ms to 407 ms (31 time improvment)
+ - P99 is a metric that did not make sense because the initial simulation exceeded Gatling (the performance measuring tool 
+ we use) timeout (60s) at the p95 percentile. After this proposal p99 for the entire scenario is of 1 747 ms
+
+As such, this changeset significantly increases the JMAP performance.
 
 ## References
 

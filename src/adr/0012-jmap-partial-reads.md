@@ -4,9 +4,7 @@ Date: 2019-10-09
 
 ## Status
 
-Proposed
-
-Adoption needs to be backed by some performance tests.
+Accepted
 
 ## Context
 
@@ -29,10 +27,21 @@ Some performance tests will be run in order to evaluate the improvements.
 
 ## Consequences
 
-GetMessages with a limited set of requested properties will no longer result necessarily in full database message read. We
-thus expect a significant improvement, for instance when only metadata are requested.
+GetMessages with a limited set of requested properties no longer result necessarily in full database message read. We
+thus have a significant improvement, for instance when only metadata are requested.
 
-In case of a less than 5% improvement, the code will not be added to the codebase and the proposal will get the status 'rejected'.
+Given the following scenario played by 5000 users per hour (constant rate)
+ - Authenticate
+ - List mailboxes
+ - List messages in one of their mailboxes
+ - Get 10 times the mailboxIds and keywords of the given messages
+
+We went from:
+ - A 20% failure and timeout rate before this change to no failure
+ - Mean time for GetMessages went from 27 159 ms to 27 ms (1000 time improvment), for all operation from
+ 27 591 ms to 60 ms (460 time improvment)
+ - P99 is a metric that did not make sense because the initial simulation exceeded Gatling (the performance measuring tool 
+ we use) timeout (60s) at the p50 percentile. After this proposal p99 for the entire scenario is of 1 383 ms
 
 ## References
 
