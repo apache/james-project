@@ -50,10 +50,10 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.TestId;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
-import org.junit.jupiter.api.Test;
 
 public interface GroupContract {
 
@@ -92,7 +92,7 @@ public interface GroupContract {
             IntStream.range(0, eventCount)
                 .forEach(i -> eventBus().dispatch(EVENT, NO_KEYS).block());
 
-            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).until(() -> finishedExecutions.get() == eventCount);
+            WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
 
@@ -262,7 +262,7 @@ public interface GroupContract {
             eventBus().dispatch(EVENT_2, NO_KEYS).block();
 
             WAIT_CONDITION
-                .until(() -> listener.numberOfEventCalls() == 1);
+                .untilAsserted(() -> assertThat(listener.numberOfEventCalls()).isEqualTo(1));
         }
 
         @Test
