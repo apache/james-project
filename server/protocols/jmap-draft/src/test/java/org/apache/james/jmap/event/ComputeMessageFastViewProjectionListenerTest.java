@@ -26,13 +26,11 @@ import static org.mockito.Mockito.spy;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 import org.apache.james.core.Username;
 import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.jmap.draft.model.PreviewDTO;
 import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
@@ -59,6 +57,7 @@ import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.mime4j.dom.Message;
+import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
 import org.assertj.core.api.SoftAssertions;
@@ -69,16 +68,24 @@ import reactor.core.publisher.Mono;
 
 class ComputeMessageFastViewProjectionListenerTest {
     private static final Username BOB = Username.of("bob");
-    private static final Preview PREVIEW = Preview.from("This should be the preview of the message...");
+    private static final Preview PREVIEW = Preview.from("blabla bloblo");
     private static final MailboxPath BOB_INBOX_PATH = MailboxPath.inbox(BOB);
     private static final MailboxPath BOB_OTHER_BOX_PATH = MailboxPath.forUser(BOB, "otherBox");
-    private static final MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES = MessageFastViewPrecomputedProperties.builder()
+    private static final MessageFastViewPrecomputedProperties PRECOMPUTED_PROPERTIES_PREVIEW = MessageFastViewPrecomputedProperties.builder()
         .preview(PREVIEW)
         .noAttachments()
         .build();
-    private static final MessageFastViewPrecomputedProperties MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_EMPTY = MessageFastViewPrecomputedProperties.builder()
-        .preview(Preview.from(PreviewDTO.from(Optional.empty()).getValue()))
+    private static final MessageFastViewPrecomputedProperties PRECOMPUTED_PROPERTIES_EMPTY = MessageFastViewPrecomputedProperties.builder()
+        .preview(Preview.from(""))
         .noAttachments()
+        .build();
+    private static final MessageFastViewPrecomputedProperties PRECOMPUTED_PROPERTIES_PREVIEW_HAS_ATTACHMENT = MessageFastViewPrecomputedProperties.builder()
+        .preview(PREVIEW)
+        .hasAttachment()
+        .build();
+    private static final MessageFastViewPrecomputedProperties PRECOMPUTED_PROPERTIES_HAS_ATTACHMENT = MessageFastViewPrecomputedProperties.builder()
+        .preview(Preview.from(""))
+        .hasAttachment()
         .build();
 
     MessageFastViewProjection messageFastViewProjection;
@@ -109,12 +116,12 @@ class ComputeMessageFastViewProjectionListenerTest {
         mailboxManager = resources.getMailboxManager();
         messageIdManager = spy(resources.getMessageIdManager());
 
-        messageFastViewProjection = new MemoryMessageFastViewProjection();
+        messageFastViewProjection = new MemoryMessageFastViewProjection(new NoopMetricFactory());
 
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
 
-        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor);
+        messageFullViewFactory = new MessageFullViewFactory(resources.getBlobManager(), messageContentExtractor, htmlTextExtractor, messageIdManager, messageFastViewProjection);
 
         FakeAuthenticator authenticator = new FakeAuthenticator();
         authenticator.addUser(BOB, "12345");
@@ -142,25 +149,47 @@ class ComputeMessageFastViewProjectionListenerTest {
     }
 
     @Test
-    void shouldStorePreviewWhenBodyMessageNotEmpty() throws Exception {
+    void shouldStorePreviewWithNoAttachmentsWhenBodyMessageNotEmptyAndNoAttachments() throws Exception {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(previewMessage()),
             mailboxSession);
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
-            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES);
+            .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW);
     }
 
     @Test
-    void shouldStoreEmptyPreviewWhenEmptyBodyMessage() throws Exception {
+    void shouldStoreEmptyPreviewWithNoAttachmentsWhenEmptyBodyMessageAndNoAttachments() throws Exception {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(emptyMessage()),
             mailboxSession);
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
-            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_EMPTY);
+            .isEqualTo(PRECOMPUTED_PROPERTIES_EMPTY);
+    }
+
+    @Test
+    void shouldStorePreviewWithHasAttachmentWhenBodyMessageNotEmptyAndHasAttachment() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
+            mailboxSession);
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW_HAS_ATTACHMENT);
+    }
+
+    @Test
+    void shouldStoreEmptyPreviewWithHasAttachmentWhenEmptyBodyMessageAndHasAttachment() throws Exception {
+        ComposedMessageId composedId = inboxMessageManager.appendMessage(
+            MessageManager.AppendCommand.builder()
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("emptyBodyMessageWithOneAttachment.eml")),
+            mailboxSession);
+
+        assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
+            .isEqualTo(PRECOMPUTED_PROPERTIES_HAS_ATTACHMENT);
     }
 
     @Test
@@ -177,9 +206,9 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Mono.from(messageFastViewProjection.retrieve(composedId1.getMessageId())).block())
-                .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES);
+                .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW);
             softly.assertThat(Mono.from(messageFastViewProjection.retrieve(composedId2.getMessageId())).block())
-                .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_EMPTY);
+                .isEqualTo(PRECOMPUTED_PROPERTIES_EMPTY);
         });
     }
 
@@ -194,7 +223,7 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         MessageResult result = otherBoxMessageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).next();
         assertThat(Mono.from(messageFastViewProjection.retrieve(result.getMessageId())).block())
-            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES);
+            .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW);
     }
 
     @Test
@@ -208,7 +237,7 @@ class ComputeMessageFastViewProjectionListenerTest {
 
         MessageResult result = otherBoxMessageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession).next();
         assertThat(Mono.from(messageFastViewProjection.retrieve(result.getMessageId())).block())
-            .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES);
+            .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW);
     }
 
     @Test

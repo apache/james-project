@@ -32,7 +32,8 @@ import com.google.common.base.Preconditions;
 public class PreviewDTO {
 
     private static final String NO_BODY_AS_STRING = "(Empty)";
-    private static final PreviewDTO NO_BODY = PreviewDTO.of(NO_BODY_AS_STRING);
+
+    public static final PreviewDTO NO_BODY = PreviewDTO.of(NO_BODY_AS_STRING);
 
     public static PreviewDTO from(Optional<Preview> preview) {
         return preview.map(Preview::getValue)
