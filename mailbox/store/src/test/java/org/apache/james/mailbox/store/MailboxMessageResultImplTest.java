@@ -25,10 +25,10 @@ import java.util.Date;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MailboxMessageResultImplTest {
+class MailboxMessageResultImplTest {
     private MessageResultImpl msgResultA;
     private MessageResultImpl msgResultACopy;
     private MessageResultImpl msgResultB;
@@ -37,8 +37,8 @@ public class MailboxMessageResultImplTest {
     /**
      * Initialize name instances
      */
-    @Before
-    public void initNames() throws Exception {
+    @BeforeEach
+    void initNames() throws Exception {
         Date dateAB = new Date();
         MailboxMessage msgA = buildMessage(MessageUid.of(100), dateAB);
         MailboxMessage msgB = buildMessage(MessageUid.of(100), dateAB);
@@ -60,45 +60,45 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testEqualsNull() {
+    void testEqualsNull() {
         assertThat(msgResultA).isNotNull();
     }
 
 
     @Test
-    public void testEqualsReflexive() {
+    void testEqualsReflexive() {
         assertThat(msgResultA).isEqualTo(msgResultA);
     }
 
 
     @Test
-    public void testCompareToReflexive() {
+    void testCompareToReflexive() {
         assertThat(msgResultA.compareTo(msgResultA)).isEqualTo(0);
     }
 
 
     @Test
-    public void testHashCodeReflexive() {
+    void testHashCodeReflexive() {
         assertThat(msgResultA.hashCode()).isEqualTo(msgResultA.hashCode());
     }
 
 
     @Test
-    public void testEqualsSymmetric() {
+    void testEqualsSymmetric() {
         assertThat(msgResultACopy).isEqualTo(msgResultA);
         assertThat(msgResultA).isEqualTo(msgResultACopy);
     }
 
 
     @Test
-    public void testHashCodeSymmetric() {
+    void testHashCodeSymmetric() {
         assertThat(msgResultACopy.hashCode()).isEqualTo(msgResultA.hashCode());
         assertThat(msgResultA.hashCode()).isEqualTo(msgResultACopy.hashCode());
     }
 
 
     @Test
-    public void testEqualsTransitive() {
+    void testEqualsTransitive() {
         assertThat(msgResultACopy).isEqualTo(msgResultA);
         assertThat(msgResultB).isEqualTo(msgResultACopy);
         assertThat(msgResultB).isEqualTo(msgResultA);
@@ -106,7 +106,7 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testCompareToTransitive() {
+    void testCompareToTransitive() {
         assertThat(msgResultA.compareTo(msgResultACopy)).isEqualTo(0);
         assertThat(msgResultACopy.compareTo(msgResultB)).isEqualTo(0);
         assertThat(msgResultA.compareTo(msgResultB)).isEqualTo(0);
@@ -114,7 +114,7 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testHashCodeTransitive() {
+    void testHashCodeTransitive() {
         assertThat(msgResultACopy.hashCode()).isEqualTo(msgResultA.hashCode());
         assertThat(msgResultB.hashCode()).isEqualTo(msgResultACopy.hashCode());
         assertThat(msgResultB.hashCode()).isEqualTo(msgResultA.hashCode());
@@ -122,18 +122,18 @@ public class MailboxMessageResultImplTest {
 
 
     @Test
-    public void testNotEqualDiffValue() {
+    void testNotEqualDiffValue() {
         assertThat(msgResultA).isNotEqualTo(msgResultC);
         assertThat(msgResultC).isNotEqualTo(msgResultA);
     }
 
     @Test
-    public void testShouldReturnPositiveWhenFirstGreaterThanSecond() {
+    void testShouldReturnPositiveWhenFirstGreaterThanSecond() {
         assertThat(msgResultC.compareTo(msgResultB) > 0).isTrue();
     }
 
     @Test
-    public void testShouldReturnNegativeWhenFirstLessThanSecond() {
+    void testShouldReturnNegativeWhenFirstLessThanSecond() {
         assertThat(msgResultB.compareTo(msgResultC) < 0).isTrue();
     }
 }
