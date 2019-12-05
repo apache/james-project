@@ -27,19 +27,19 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JsoupTextExtractorTest {
-    private TextExtractor textExtractor;
+class JsoupTextExtractorTest {
+    TextExtractor textExtractor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         textExtractor = new JsoupTextExtractor();
     }
 
     @Test
-    public void extractedTextFromHtmlShouldNotContainTheContentOfTitleTag() throws Exception {
+    void extractedTextFromHtmlShouldNotContainTheContentOfTitleTag() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
 
         assertThat(textExtractor.extractContent(inputStream, "text/html").getTextualContent().get())
@@ -47,7 +47,7 @@ public class JsoupTextExtractorTest {
     }
 
     @Test
-    public void extractContentShouldHandlePlainText() throws Exception {
+    void extractContentShouldHandlePlainText() throws Exception {
         InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
 
         assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
@@ -55,7 +55,7 @@ public class JsoupTextExtractorTest {
     }
 
     @Test
-    public void extractContentShouldHandleArbitraryTextMediaType() throws Exception {
+    void extractContentShouldHandleArbitraryTextMediaType() throws Exception {
         InputStream inputStream = new ByteArrayInputStream("myText".getBytes(StandardCharsets.UTF_8));
 
         assertThat(textExtractor.extractContent(inputStream, "text/arbitrary").getTextualContent())
@@ -63,13 +63,13 @@ public class JsoupTextExtractorTest {
     }
 
     @Test
-    public void extractContentShouldReturnEmptyWhenNullData() throws Exception {
+    void extractContentShouldReturnEmptyWhenNullData() throws Exception {
         assertThat(textExtractor.extractContent(null, "text/html"))
             .isEqualTo(ParsedContent.empty());
     }
 
     @Test
-    public void extractContentShouldReturnEmptyWhenNullContentType() throws Exception {
+    void extractContentShouldReturnEmptyWhenNullContentType() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/html.txt");
 
         assertThat(textExtractor.extractContent(inputStream, null))
