@@ -310,7 +310,6 @@ public class MaildirMessageMapper extends AbstractMessageMapper {
             }
             try (FileOutputStream fos = new FileOutputStream(messageFile);
                 InputStream input = message.getFullContent()) {
-                byte[] b = new byte[BUF_SIZE];
                 IOUtils.copy(input, fos, BUF_SIZE);
             }
         } catch (IOException ioe) {
