@@ -50,7 +50,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
     case _ =>
   }
 
-  import scala.collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
 
   private val loadHistory: AggregateId => History = eventStore.getEventsOfAggregate _
   private val eventSourcingSystem = ScalaEventSourcingSystem(

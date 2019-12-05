@@ -22,7 +22,7 @@ import org.apache.james.eventsourcing.eventstore.EventStore
 import org.apache.james.eventsourcing.{CommandHandler, EventSourcingSystem, Subscriber}
 
 object ScalaEventSourcingSystem {
-  import scala.collection.JavaConverters._
+  import scala.jdk.CollectionConverters._
   def apply(handlers: Set[CommandHandler[_]], subscribers: Set[Subscriber], eventStore: EventStore): EventSourcingSystem =
     new EventSourcingSystem(handlers.asJava, subscribers.asJava, eventStore)
 }

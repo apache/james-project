@@ -37,7 +37,7 @@ import org.apache.james.mailbox.quota.QuotaRootDeserializer
 import org.apache.james.mailbox.{MessageUid, ModSeq}
 import play.api.libs.json._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 private sealed trait Event {
   def toJava: JavaEvent
@@ -162,7 +162,7 @@ private object ScalaConverter {
     user = event.getUsername,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    added = event.getAdded.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    added = event.getAdded.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaExpunged): DTO.Expunged = DTO.Expunged(
     eventId = event.getEventId,
@@ -170,14 +170,14 @@ private object ScalaConverter {
     user = event.getUsername,
     path = MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    expunged = event.getExpunged.asScala.mapValues(DTOs.MessageMetaData.fromJava).toMap)
+    expunged = event.getExpunged.asScala.view.mapValues(DTOs.MessageMetaData.fromJava).toMap)
 
   private def toScala(event: JavaMessageMoveEvent): DTO.MessageMoveEvent = DTO.MessageMoveEvent(
     eventId = event.getEventId,
     user = event.getUsername,
-    previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala,
-    targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala,
-    messageIds = event.getMessageIds.asScala)
+    previousMailboxIds = event.getMessageMoves.getPreviousMailboxIds.asScala.toSet,
+    targetMailboxIds = event.getMessageMoves.getTargetMailboxIds.asScala.toSet,
+    messageIds = event.getMessageIds.asScala.toSet)
 
   private def toScala(event: JavaFlagsUpdated): DTO.FlagsUpdated = DTO.FlagsUpdated(
     eventId = event.getEventId,
@@ -185,7 +185,7 @@ private object ScalaConverter {
     user = event.getUsername,
     path = DTOs.MailboxPath.fromJava(event.getMailboxPath),
     mailboxId = event.getMailboxId,
-    updatedFlags = event.getUpdatedFlags.asScala.map(DTOs.UpdatedFlags.toUpdatedFlags).toList)
+    updatedFlags = event.getUpdatedFlags.asScala.toList.map(DTOs.UpdatedFlags.toUpdatedFlags))
 
   def toScala(javaEvent: JavaEvent): Event = javaEvent match {
     case e: JavaAdded => toScala(e)

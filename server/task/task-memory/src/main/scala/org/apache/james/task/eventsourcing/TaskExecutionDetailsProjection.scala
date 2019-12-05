@@ -24,7 +24,7 @@ import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
 import scala.compat.java8.OptionConverters._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait TaskExecutionDetailsProjection {
   def asSubscriber(hostname: Hostname): Subscriber = {

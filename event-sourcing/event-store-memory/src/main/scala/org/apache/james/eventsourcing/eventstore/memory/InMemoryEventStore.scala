@@ -25,12 +25,12 @@ import com.google.common.base.Preconditions
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Event}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class InMemoryEventStore() extends EventStore {
   private val storeRef: AtomicReference[Map[AggregateId, History]] = new AtomicReference(Map().withDefault(_ => History.empty()))
 
-  override def appendAll(events: util.List[Event]): Unit = if (!events.isEmpty) appendAll(events.asScala)
+  override def appendAll(events: util.List[Event]): Unit = if (!events.isEmpty) appendAll(events.asScala.toSeq)
 
   override def getEventsOfAggregate(aggregateId: AggregateId): History = {
     Preconditions.checkNotNull(aggregateId)
@@ -40,7 +40,7 @@ class InMemoryEventStore() extends EventStore {
   def appendAll(events: Seq[Event]): Unit = {
     val aggregateId: AggregateId = getAggregateId(events)
     storeRef.updateAndGet(store => {
-      val updatedHistory = History.of((store(aggregateId).getEvents.asScala ++ events).asJava)
+      val updatedHistory = History.of((store(aggregateId).getEvents.asScala.toSeq ++ events).asJava)
       store.updated(aggregateId, updatedHistory)
     })
   }

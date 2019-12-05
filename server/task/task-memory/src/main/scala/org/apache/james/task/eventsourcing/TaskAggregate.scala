@@ -27,7 +27,7 @@ import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.TaskManager.Status
 import org.apache.james.task.{Hostname, Task}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class TaskAggregate private(val aggregateId: TaskAggregateId, private val history: History) {
 
@@ -39,6 +39,7 @@ class TaskAggregate private(val aggregateId: TaskAggregateId, private val histor
   private val currentDecisionProjection: DecisionProjection = history
     .getEvents
     .asScala
+    .toSeq
     .tail
     .foldLeft(DecisionProjection.initial(initialEvent))((decision, event) => decision.update(event))
 

@@ -23,8 +23,8 @@ import javax.inject.Inject
 import org.apache.james.task.eventsourcing.TaskExecutionDetailsProjection
 import org.apache.james.task.{TaskExecutionDetails, TaskId}
 
-import scala.collection.JavaConverters._
 import scala.compat.java8.OptionConverters._
+import scala.jdk.CollectionConverters._
 
 class CassandraTaskExecutionDetailsProjection  @Inject()(cassandraTaskExecutionDetailsProjectionDAO: CassandraTaskExecutionDetailsProjectionDAO) extends TaskExecutionDetailsProjection {
 

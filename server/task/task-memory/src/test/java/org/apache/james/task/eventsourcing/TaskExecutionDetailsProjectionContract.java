@@ -26,6 +26,7 @@ import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_D
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_EXECUTION_DETAILS_WITH_ADDITIONAL_INFORMATION;
 import static org.apache.james.task.TaskExecutionDetailsFixture.TASK_ID;
 import static org.assertj.core.api.Assertions.assertThat;
+import static scala.jdk.javaapi.CollectionConverters.asJava;
 
 import java.util.List;
 import java.util.Optional;
@@ -33,7 +34,6 @@ import java.util.Optional;
 import org.apache.james.task.TaskExecutionDetails;
 import org.junit.jupiter.api.Test;
 
-import scala.collection.JavaConverters;
 import scala.compat.java8.OptionConverters;
 
 public interface TaskExecutionDetailsProjectionContract {
@@ -79,7 +79,7 @@ public interface TaskExecutionDetailsProjectionContract {
     @Test
     default void listShouldReturnEmptyWhenNone() {
         TaskExecutionDetailsProjection testee = testee();
-        List<TaskExecutionDetails> taskExecutionDetails = JavaConverters.seqAsJavaList(testee.list());
+        List<TaskExecutionDetails> taskExecutionDetails = asJava(testee.list());
         assertThat(taskExecutionDetails).isEmpty();
     }
 
@@ -89,7 +89,7 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS());
         testee.update(TASK_EXECUTION_DETAILS_2());
 
-        List<TaskExecutionDetails> taskExecutionDetails = JavaConverters.seqAsJavaList(testee.list());
+        List<TaskExecutionDetails> taskExecutionDetails = asJava(testee.list());
         assertThat(taskExecutionDetails).containsOnly(TASK_EXECUTION_DETAILS(), TASK_EXECUTION_DETAILS_2());
     }
 
@@ -99,7 +99,7 @@ public interface TaskExecutionDetailsProjectionContract {
         testee.update(TASK_EXECUTION_DETAILS());
         testee.update(TASK_EXECUTION_DETAILS_UPDATED());
 
-        List<TaskExecutionDetails> taskExecutionDetails = JavaConverters.seqAsJavaList(testee.list());
+        List<TaskExecutionDetails> taskExecutionDetails = asJava(testee.list());
         assertThat(taskExecutionDetails).containsOnly(TASK_EXECUTION_DETAILS_UPDATED());
     }
 }
