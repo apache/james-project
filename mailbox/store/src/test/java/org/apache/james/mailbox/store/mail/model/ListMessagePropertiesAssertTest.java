@@ -20,62 +20,71 @@
 package org.apache.james.mailbox.store.mail.model;
 
 import static org.apache.james.mailbox.store.mail.model.ListMessagePropertiesAssert.assertProperties;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class ListMessagePropertiesAssertTest {
-    private static final String OTHER_VALUE = "US-ASCII";
-    private static final String OTHER_LOCAL_NAME = StandardNames.MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME;
-    private static final String OTHER_NAMESPACE = StandardNames.MIME_CONTENT_TYPE_PARAMETER_SPACE;
-    private static final String VALUE = "7bit";
-    private static final String LOCAL_NAME = StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;
-    private static final String NAMESPACE = StandardNames.NAMESPACE_RFC_2045;
+class ListMessagePropertiesAssertTest {
+    static final String OTHER_VALUE = "US-ASCII";
+    static final String OTHER_LOCAL_NAME = StandardNames.MIME_CONTENT_TYPE_PARAMETER_CHARSET_NAME;
+    static final String OTHER_NAMESPACE = StandardNames.MIME_CONTENT_TYPE_PARAMETER_SPACE;
+    static final String VALUE = "7bit";
+    static final String LOCAL_NAME = StandardNames.MIME_CONTENT_TRANSFER_ENCODING_NAME;
+    static final String NAMESPACE = StandardNames.NAMESPACE_RFC_2045;
 
-    private static final Property PROPERTY1 = new Property(NAMESPACE, LOCAL_NAME, VALUE);
-    private static final Property PROPERTY2 = new Property(OTHER_NAMESPACE, OTHER_LOCAL_NAME, OTHER_VALUE);
+    static final Property PROPERTY1 = new Property(NAMESPACE, LOCAL_NAME, VALUE);
+    static final Property PROPERTY2 = new Property(OTHER_NAMESPACE, OTHER_LOCAL_NAME, OTHER_VALUE);
     
-    private List<Property> actual;
+    List<Property> actual;
     
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         actual = ImmutableList.of(PROPERTY1, PROPERTY2);
     }
     
     @Test
-    public void containsOnlyShouldWork() {
+    void containsOnlyShouldWork() {
         assertProperties(actual).containsOnly(ImmutableList.of(createProperty(NAMESPACE, LOCAL_NAME, VALUE),
             createProperty(OTHER_NAMESPACE, OTHER_LOCAL_NAME, OTHER_VALUE)));
     }
     
-    @Test(expected = AssertionError.class)
-    public void containsOnlyShouldFailWhenNotEnoughElement() {
-        assertProperties(actual).containsOnly(ImmutableList.of(createProperty(NAMESPACE, LOCAL_NAME, VALUE)));
+    @Test
+    void containsOnlyShouldFailWhenNotEnoughElement() {
+        assertThatThrownBy(() -> assertProperties(actual).containsOnly(ImmutableList.of(
+                createProperty(NAMESPACE, LOCAL_NAME, VALUE))))
+            .isInstanceOf(AssertionError.class);
     }
 
-    @Test(expected = AssertionError.class)
-    public void containsOnlyShouldFailWhenNamespaceMismatch() {
-        assertProperties(actual).containsOnly(ImmutableList.of(createProperty(NAMESPACE, LOCAL_NAME, VALUE),
-            createProperty(OTHER_NAMESPACE, LOCAL_NAME, VALUE)));
+    @Test
+    void containsOnlyShouldFailWhenNamespaceMismatch() {
+        assertThatThrownBy(() -> assertProperties(actual).containsOnly(ImmutableList.of(
+                createProperty(NAMESPACE, LOCAL_NAME, VALUE),
+                createProperty(OTHER_NAMESPACE, LOCAL_NAME, VALUE))))
+            .isInstanceOf(AssertionError.class);
     }
 
-    @Test(expected = AssertionError.class)
-    public void containsOnlyShouldFailWhenNameMismatch() {
-        assertProperties(actual).containsOnly(ImmutableList.of(createProperty(NAMESPACE, LOCAL_NAME, VALUE),
-            createProperty(NAMESPACE, OTHER_LOCAL_NAME, VALUE)));
+    @Test
+    void containsOnlyShouldFailWhenNameMismatch() {
+        assertThatThrownBy(() -> assertProperties(actual).containsOnly(ImmutableList.of(
+                createProperty(NAMESPACE, LOCAL_NAME, VALUE),
+                createProperty(NAMESPACE, OTHER_LOCAL_NAME, VALUE))))
+            .isInstanceOf(AssertionError.class);
     }
 
-    @Test(expected = AssertionError.class)
-    public void containsOnlyShouldFailWhenValueMismatch() {
-        assertProperties(actual).containsOnly(ImmutableList.of(createProperty(NAMESPACE, LOCAL_NAME, VALUE),
-            createProperty(NAMESPACE, LOCAL_NAME, OTHER_VALUE)));
+    @Test
+    void containsOnlyShouldFailWhenValueMismatch() {
+        assertThatThrownBy(() -> assertProperties(actual).containsOnly(ImmutableList.of(
+                createProperty(NAMESPACE, LOCAL_NAME, VALUE),
+                createProperty(NAMESPACE, LOCAL_NAME, OTHER_VALUE))))
+            .isInstanceOf(AssertionError.class);
     }
 
-    private Property createProperty(String namespace, String name, String value) {
+    Property createProperty(String namespace, String name, String value) {
         return new Property(namespace, name, value);
     }
 }
