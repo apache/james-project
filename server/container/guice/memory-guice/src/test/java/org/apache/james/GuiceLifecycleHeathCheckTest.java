@@ -128,7 +128,7 @@ class GuiceLifecycleHeathCheckTest {
                 when()
                     .get("/healthcheck")
                     .then()
-                    .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500);
+                    .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503);
             } finally {
                 latch.countDown();
                 stopMono.block();

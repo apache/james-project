@@ -26,6 +26,7 @@ import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 
+import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.core.healthcheck.Result;
 import org.apache.james.core.healthcheck.ResultStatus;
@@ -138,12 +139,13 @@ public class HealthCheckRoutes implements PublicRoutes {
     
     private int getCorrespondingStatusCode(ResultStatus resultStatus) {
         switch (resultStatus) {
-        case HEALTHY:
-            return HttpStatus.OK_200;
-        case DEGRADED:
-        case UNHEALTHY:
-        default:
-            return HttpStatus.INTERNAL_SERVER_ERROR_500;
+            case HEALTHY:
+            case DEGRADED:
+                return HttpStatus.OK_200;
+            case UNHEALTHY:
+                return HttpStatus.SERVICE_UNAVAILABLE_503;
+            default:
+                throw new NotImplementedException(resultStatus + " is not supported");
         }
     }
 

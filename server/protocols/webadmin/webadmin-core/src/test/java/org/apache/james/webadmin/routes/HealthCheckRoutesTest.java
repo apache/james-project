@@ -162,7 +162,7 @@ public class HealthCheckRoutesTest {
         String retrieveBody = when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503)
                 .extract()
                 .body().asString();
 
@@ -194,7 +194,7 @@ public class HealthCheckRoutesTest {
         String retrieveBody = when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503)
                 .extract()
                 .body().asString();
 
@@ -226,7 +226,7 @@ public class HealthCheckRoutesTest {
         String retrieveBody = when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .statusCode(HttpStatus.OK_200)
                 .extract()
                 .body().asString();
 
@@ -258,7 +258,7 @@ public class HealthCheckRoutesTest {
         String retrieveBody = when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .statusCode(HttpStatus.OK_200)
                 .extract()
                 .body().asString();
 
@@ -289,7 +289,7 @@ public class HealthCheckRoutesTest {
         String retrieveBody = when()
                 .get()
             .then()
-                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503)
                 .extract()
                 .body().asString();
 
@@ -338,7 +338,7 @@ public class HealthCheckRoutesTest {
         .when()
             .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .statusCode(HttpStatus.OK_200)
             .body("componentName", equalTo(NAME_1))
             .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.DEGRADED.getValue()))
@@ -354,7 +354,7 @@ public class HealthCheckRoutesTest {
         .when()
             .get("/checks/{componentName}")
         .then()
-            .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+            .statusCode(HttpStatus.SERVICE_UNAVAILABLE_503)
             .body("componentName", equalTo(NAME_1))
             .body("escapedComponentName", equalTo(NAME_1))
             .body("status", equalTo(ResultStatus.UNHEALTHY.getValue()))

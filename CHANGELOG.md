@@ -22,7 +22,8 @@ of tasks being currently executed.
 - JAMES-2855 Multiple library/plugin/docker images/build tool upgrades
 - By default the cassandra keyspace creation by James is now disabled by default. This allow to have credentials limited to a keyspace. It can be enabled by setting cassandra.keyspace.create=true in the cassandra.properties file.
 - Usernames are assumed to be always lower cased. Many users recently complained about mails non received when sending to upper cased local recipients. We decided to simplify the handling of case for local recipients and users by always storing them lower cased.
-  
+- Unhealthy health checks now return HTTP 503 instead of 500, degraded now returns 200 instead of 500. See JAMES-2576.
+
 ### Fixed
 - JAMES-2828 & JAMES-2929 bugs affecting JDBCMailRepository usage with PostgresSQL thanks to Jörg Thomas & Sergey B
 - JAMES-2936 Creating a mailbox using consecutive delimiter character leads to creation of list of unnamed mailbox

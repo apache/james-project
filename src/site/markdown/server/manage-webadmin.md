@@ -99,8 +99,8 @@ Supported health checks include:
 
 Response codes:
 
- - 200: All checks have answered with a Healthy status
- - 500: At least one check have answered with a Unhealthy or Degraded status
+ - 200: All checks have answered with a Healthy or Degraded status. James services can still be used.
+ - 503: At least one check have answered with a Unhealthy status
 
 ### Check single component
 
@@ -123,9 +123,9 @@ Will return the component's name, the component's escaped name, the health statu
 
 Response codes:
 
- - 200: The check has answered with a Healthy status.
+ - 200: The check has answered with a Healthy or Degraded status.
  - 404: A component with the given name was not found.
- - 500: The check has anwered with a Unhealthy or Degraded status.
+ - 503: The check has anwered with a Unhealthy status.
  
 ### List all health checks
  
