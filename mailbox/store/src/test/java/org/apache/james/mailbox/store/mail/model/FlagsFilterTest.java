@@ -24,29 +24,29 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class FlagsFilterTest {
+class FlagsFilterTest {
 
-    private List<Flags.Flag> listOfFlags = ImmutableList.of(Flags.Flag.SEEN, Flags.Flag.RECENT, Flags.Flag.FLAGGED);
-    private List<String> listOfUserFlags = ImmutableList.of("VeryImportant", "Bof");
+    List<Flags.Flag> listOfFlags = ImmutableList.of(Flags.Flag.SEEN, Flags.Flag.RECENT, Flags.Flag.FLAGGED);
+    List<String> listOfUserFlags = ImmutableList.of("VeryImportant", "Bof");
 
     @Test
-    public void buildShouldNotRequireAnyProperty() {
+    void buildShouldNotRequireAnyProperty() {
         assertThat(FlagsFilter.builder().build()).isNotNull();
     }
 
     @Test
-    public void buildWithoutPropertyShouldReturnNoFilter() {
+    void buildWithoutPropertyShouldReturnNoFilter() {
         FlagsFilter filter = FlagsFilter.builder().build();
         assertThat(listOfFlags.stream().filter(filter.getSystemFlagFilter())).isEqualTo(listOfFlags);
         assertThat(listOfUserFlags.stream().filter(filter.getUserFlagFilter())).isEqualTo(listOfUserFlags);
     }
 
     @Test
-    public void buildWithSystemFlagFilterShouldNotFilterUserFlags() {
+    void buildWithSystemFlagFilterShouldNotFilterUserFlags() {
         FlagsFilter filter = FlagsFilter.builder()
             .systemFlagFilter(flag -> false)
             .build();
@@ -54,7 +54,7 @@ public class FlagsFilterTest {
     }
 
     @Test
-    public void buildWithUSerFlagFilterShouldNotFilterSystemFlags() {
+    void buildWithUSerFlagFilterShouldNotFilterSystemFlags() {
         FlagsFilter filter = FlagsFilter.builder()
             .userFlagFilter(flag -> false)
             .build();
@@ -63,7 +63,7 @@ public class FlagsFilterTest {
 
 
     @Test
-    public void buildWithBothFiltersShouldApplyFilterOnBothFlagTypes() {
+    void buildWithBothFiltersShouldApplyFilterOnBothFlagTypes() {
         FlagsFilter filter = FlagsFilter.builder()
             .userFlagFilter(flag -> false)
             .systemFlagFilter(flag -> false)
