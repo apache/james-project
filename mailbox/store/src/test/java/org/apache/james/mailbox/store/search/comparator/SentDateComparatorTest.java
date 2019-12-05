@@ -21,48 +21,42 @@ package org.apache.james.mailbox.store.search.comparator;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SentDateComparatorTest {
+class SentDateComparatorTest {
     @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveCESTPart() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200 (CEST)"))
+    void sanitizeDateStringHeaderValueShouldRemoveCESTPart() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200 (CEST)"))
             .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
     }
 
     @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveUTCPart() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200  (UTC)  "))
+    void sanitizeDateStringHeaderValueShouldRemoveUTCPart() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200  (UTC)  "))
             .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
     }
 
     @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeAcceptableString() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200"))
+    void sanitizeDateStringHeaderValueShouldNotChangeAcceptableString() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue("Thu, 18 Jun 2015 04:09:35 +0200"))
             .isEqualTo("Thu, 18 Jun 2015 04:09:35 +0200");
     }
 
     @Test
-    public void sanitizeDateStringHeaderValueShouldRemoveBrackets() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue("invalid (removeMe)"))
+    void sanitizeDateStringHeaderValueShouldRemoveBrackets() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue("invalid (removeMe)"))
             .isEqualTo("invalid");
     }
 
     @Test
-    public void sanitizeDateStringHeaderValueShouldKeepUnclosedBrackets() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue("invalid (removeMe"))
+    void sanitizeDateStringHeaderValueShouldKeepUnclosedBrackets() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue("invalid (removeMe"))
             .isEqualTo("invalid (removeMe");
     }
 
     @Test
-    public void sanitizeDateStringHeaderValueShouldNotChangeEmptyString() {
-        assertThat(
-            SentDateComparator.sanitizeDateStringHeaderValue(""))
+    void sanitizeDateStringHeaderValueShouldNotChangeEmptyString() {
+        assertThat(SentDateComparator.sanitizeDateStringHeaderValue(""))
             .isEqualTo("");
     }
 }
