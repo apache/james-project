@@ -38,100 +38,100 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.NameType;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import net.javacrumbs.jsonunit.core.Option;
 
-public class MailboxACLJsonConverterTest {
+class MailboxACLJsonConverterTest {
 
-    public class ACLMapBuilder {
-        private final Map<EntryKey, Rfc4314Rights> map;
+    class ACLMapBuilder {
+        final Map<EntryKey, Rfc4314Rights> map;
 
-        public ACLMapBuilder() {
+        ACLMapBuilder() {
             map = new LinkedHashMap<>();
         }
 
-        public ACLMapBuilder addSingleUserEntryToMap() {
+        ACLMapBuilder addSingleUserEntryToMap() {
             Rfc4314Rights rights = new Rfc4314Rights(CreateMailbox, DeleteMailbox, DeleteMessages, Lookup, Post, Read, WriteSeenFlag, Write);
             EntryKey key = new EntryKey("user", NameType.user, true);
             map.put(key, rights);
             return this;
         }
 
-        public ACLMapBuilder addSingleSpecialEntryToMap() {
+        ACLMapBuilder addSingleSpecialEntryToMap() {
             Rfc4314Rights rights = new Rfc4314Rights(DeleteMailbox, DeleteMessages, Lookup, Post, Write, WriteSeenFlag);
             EntryKey key = new EntryKey("special", NameType.special, true);
             map.put(key, rights);
             return this;
         }
 
-        public ACLMapBuilder addSingleGroupEntryToMap() {
+        ACLMapBuilder addSingleGroupEntryToMap() {
             Rfc4314Rights rights = new Rfc4314Rights(DeleteMailbox, DeleteMessages, Lookup, Post, Read, Write, WriteSeenFlag);
             EntryKey key = new EntryKey("group", NameType.group, true);
             map.put(key, rights);
             return this;
         }
 
-        public MailboxACL buildAsACL() {
+        MailboxACL buildAsACL() {
             return new MailboxACL(new HashMap<>(map));
         }
 
     }
 
     @Test
-    public void emptyACLShouldBeWellSerialized() throws Exception {
+    void emptyACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(MailboxACL.EMPTY))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{\"entries\":{}}");
     }
 
     @Test
-    public void singleUserEntryACLShouldBeWellSerialized() throws Exception {
+    void singleUserEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().buildAsACL()))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\"}}");
     }
 
     @Test
-    public void singleGroupEntryACLShouldBeWellSerialized() throws Exception {
+    void singleGroupEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleGroupEntryToMap().buildAsACL()))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{\"entries\":{\"-$group\":\"lprstwx\"}}");
     }
 
     @Test
-    public void singleSpecialEntryACLShouldBeWellSerialized() throws Exception {
+    void singleSpecialEntryACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleSpecialEntryToMap().buildAsACL()))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{\"entries\":{\"-special\":\"lpstwx\"}}");
     }
 
     @Test
-    public void multipleEntriesACLShouldBeWellSerialized() throws Exception {
+    void multipleEntriesACLShouldBeWellSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toJson(new ACLMapBuilder().addSingleUserEntryToMap().addSingleGroupEntryToMap().buildAsACL()))
             .when(Option.IGNORING_ARRAY_ORDER)
             .isEqualTo("{\"entries\":{\"-user\":\"klprstwx\",\"-$group\":\"lprstwx\"}}");
     }
 
     @Test
-    public void emptyACLShouldBeWellDeSerialized() throws Exception {
+    void emptyACLShouldBeWellDeSerialized() throws Exception {
         assertThat(MailboxACLJsonConverter.toACL("{\"entries\":{}}")).isEqualTo(MailboxACL.EMPTY);
     }
 
     @Test
-    public void singleUserEntryACLShouldBeWellDeSerialized() throws Exception {
+    void singleUserEntryACLShouldBeWellDeSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toACL("{\"entries\":{\"-user\":\"klprstwx\"}}"))
             .isEqualTo(new ACLMapBuilder().addSingleUserEntryToMap().buildAsACL());
     }
 
     @Test
-    public void singleGroupEntryACLShouldBeWellDeSerialized() throws Exception {
+    void singleGroupEntryACLShouldBeWellDeSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toACL("{\"entries\":{\"-$group\":\"lprstwx\"}}"))
             .isEqualTo(new ACLMapBuilder().addSingleGroupEntryToMap().buildAsACL());
     }
 
     @Test
-    public void multipleEntriesACLShouldBeWellDeSerialized() throws Exception {
+    void multipleEntriesACLShouldBeWellDeSerialized() throws Exception {
         assertThatJson(MailboxACLJsonConverter.toACL("{\"entries\":{\"-user\":\"klprstwx\",\"-$group\":\"lprstwx\"}}"))
             .isEqualTo(new ACLMapBuilder().addSingleUserEntryToMap().addSingleGroupEntryToMap().buildAsACL());
     }
