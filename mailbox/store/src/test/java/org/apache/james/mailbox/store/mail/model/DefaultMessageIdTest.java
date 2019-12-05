@@ -24,12 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.TestId;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class DefaultMessageIdTest {
+class DefaultMessageIdTest {
 
     @Test
-    public void composedMessageIdToStringCallShouldNotThrowWhenUsingDefaultMessageId() {
+    void composedMessageIdToStringCallShouldNotThrowWhenUsingDefaultMessageId() {
         ComposedMessageId composedMessageId = new ComposedMessageId(
             TestId.of(52),
             new DefaultMessageId(),
@@ -39,7 +39,7 @@ public class DefaultMessageIdTest {
     }
 
     @Test
-    public void shouldNotBeSerializable() {
+    void shouldNotBeSerializable() {
         assertThat(new DefaultMessageId().isSerializable()).isFalse();
     }
 
