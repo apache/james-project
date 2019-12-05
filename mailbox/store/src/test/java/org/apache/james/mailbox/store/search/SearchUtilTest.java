@@ -24,38 +24,38 @@ import static org.mockito.Mockito.when;
 
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SearchUtilTest {
+class SearchUtilTest {
 
     @Test
-    public void testSimpleSubject() {
+    void testSimpleSubject() {
         String subject = "This is my subject";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo(subject);
     }
     
     @Test
-    public void testReplaceSpacesAndTabsInSubject() {
+    void testReplaceSpacesAndTabsInSubject() {
         String subject = "This   is my\tsubject";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("This is my subject");
     }
     
     @Test
-    public void testRemoveTrailingSpace() {
+    void testRemoveTrailingSpace() {
         String subject = "This is my subject ";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("This is my subject");
     }
     
     
     @Test
-    public void testRemoveTrailingFwd() {
+    void testRemoveTrailingFwd() {
         String subject = "This is my subject (fwd)";
         assertThat(SearchUtil.getBaseSubject(subject)).isEqualTo("This is my subject");
     }
     
 
     @Test
-    public void testSimpleExtraction() {
+    void testSimpleExtraction() {
         String expectedSubject = "Test";
         assertThat(SearchUtil.getBaseSubject("Re: Test")).isEqualTo(expectedSubject);
         assertThat(SearchUtil.getBaseSubject("re: Test")).isEqualTo(expectedSubject);
@@ -66,12 +66,12 @@ public class SearchUtilTest {
     }
   
     @Test
-    public void testComplexExtraction() {
+    void testComplexExtraction() {
         assertThat(SearchUtil.getBaseSubject("Re: re:re: fwd:[fwd: \t  Test]  (fwd)  (fwd)(fwd) ")).isEqualTo("Test");
     }
     
     @Test
-    public void getMessageIdIfSupportedByUnderlyingStorageOrNullForNullMessageIdShouldReturnNull() {
+    void getMessageIdIfSupportedByUnderlyingStorageOrNullForNullMessageIdShouldReturnNull() {
         //given
         MailboxMessage message = mock(MailboxMessage.class);
         when(message.getMessageId())
@@ -85,7 +85,7 @@ public class SearchUtilTest {
     }
 
     @Test
-    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForMessageIdThatSerializeReturnNullShouldReturnNull() {
+    void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForMessageIdThatSerializeReturnNullShouldReturnNull() {
         //given
         MessageId invalidMessageIdThatReturnNull = mock(MessageId.class);
         when(invalidMessageIdThatReturnNull.serialize())
@@ -103,7 +103,7 @@ public class SearchUtilTest {
     }
 
     @Test
-    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnSerializedId() {
+    void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnSerializedId() {
         //given
         String messageIdString = "http://www.labraxeenne.com/#/";
         MessageId messageId = mock(MessageId.class);
@@ -122,7 +122,7 @@ public class SearchUtilTest {
     }
 
     @Test
-    public void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnNullWhenNotSupported() {
+    void getSerializedMessageIdIfSupportedByUnderlyingStorageOrNullForValidMessageIdShouldReturnNullWhenNotSupported() {
         //given
         MessageId messageId = mock(MessageId.class);
         when(messageId.isSerializable()).thenReturn(false);
