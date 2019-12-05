@@ -35,28 +35,28 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 
-public class StoreAttachmentManagerTest {
-    private static final TestMessageId MESSAGE_ID = TestMessageId.of(1L);
-    private static final ImmutableList<MessageId> MESSAGE_IDS = ImmutableList.of(MESSAGE_ID);
-    private static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
-    private static final Attachment ATTACHMENT = Attachment.builder()
+class StoreAttachmentManagerTest {
+    static final TestMessageId MESSAGE_ID = TestMessageId.of(1L);
+    static final ImmutableList<MessageId> MESSAGE_IDS = ImmutableList.of(MESSAGE_ID);
+    static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
+    static final Attachment ATTACHMENT = Attachment.builder()
         .attachmentId(ATTACHMENT_ID)
         .type("type")
         .bytes("Any".getBytes(StandardCharsets.UTF_8))
         .build();
 
-    private StoreAttachmentManager testee;
-    private AttachmentMapper attachmentMapper;
-    private MessageIdManager messageIdManager;
+    StoreAttachmentManager testee;
+    AttachmentMapper attachmentMapper;
+    MessageIdManager messageIdManager;
 
-    @Before
-    public void setup() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         attachmentMapper = mock(AttachmentMapper.class);
         AttachmentMapperFactory attachmentMapperFactory = mock(AttachmentMapperFactory.class);
         when(attachmentMapperFactory.getAttachmentMapper(any(MailboxSession.class)))
@@ -67,7 +67,7 @@ public class StoreAttachmentManagerTest {
     }
 
     @Test
-    public void getAttachmentShouldThrowWhenAttachmentDoesNotBelongToUser() throws Exception {
+    void getAttachmentShouldThrowWhenAttachmentDoesNotBelongToUser() throws Exception {
         MailboxSession mailboxSession = mock(MailboxSession.class);
         when(attachmentMapper.getAttachment(ATTACHMENT_ID)).thenReturn(ATTACHMENT);
         when(attachmentMapper.getRelatedMessageIds(ATTACHMENT_ID)).thenReturn(MESSAGE_IDS);
