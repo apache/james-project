@@ -23,20 +23,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class FlagsFactoryTest {
+class FlagsFactoryTest {
 
-    private ImmutableList<Flag> listOfSystemFlags = ImmutableList.of(Flag.SEEN, Flag.RECENT, Flag.ANSWERED);
-    private ImmutableList<String> listOfUserFlags = ImmutableList.of("userFlag", "soCool");
-    private Flags emptyFlags;
-    private Flags someFlags;
+    ImmutableList<Flag> listOfSystemFlags = ImmutableList.of(Flag.SEEN, Flag.RECENT, Flag.ANSWERED);
+    ImmutableList<String> listOfUserFlags = ImmutableList.of("userFlag", "soCool");
+    Flags emptyFlags;
+    Flags someFlags;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         emptyFlags = new Flags();
         someFlags = new Flags();
         listOfSystemFlags.forEach(someFlags::add);
@@ -44,23 +44,23 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldAllowEmptyFactory() {
+    void builderShouldAllowEmptyFactory() {
         assertThat(FlagsFactory.builder().build()).isEqualTo(emptyFlags);
     }
 
     @Test
-    public void builderShouldNotRequireFlagsInstanceWhenUserFlagsDefined() {
+    void builderShouldNotRequireFlagsInstanceWhenUserFlagsDefined() {
         Flags actual = FlagsFactory.builder().addUserFlags("userFlag").build();
         assertThat(actual.getUserFlags()).containsOnly("userFlag");
     }
 
     @Test
-    public void builderShouldNotRequireUserFlagsWhenFlagsInstanceDefined() {
+    void builderShouldNotRequireUserFlagsWhenFlagsInstanceDefined() {
         assertThat(FlagsFactory.builder().flags(new Flags()).build()).isNotNull();
     }
 
     @Test
-    public void builderShouldAcceptNullUserFlags() {
+    void builderShouldAcceptNullUserFlags() {
         assertThat(
             FlagsFactory.builder()
                 .addUserFlags((String)null)
@@ -69,7 +69,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldFilterUserFlags() {
+    void builderShouldFilterUserFlags() {
         Flags actual = FlagsFactory.builder()
             .flags(someFlags)
             .filteringFlags(
@@ -82,7 +82,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldFilterSystemFlags() {
+    void builderShouldFilterSystemFlags() {
         Flags actual = FlagsFactory.builder()
             .flags(someFlags)
             .filteringFlags(
@@ -95,7 +95,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldAllowFilteringOnEmptyFlags() {
+    void builderShouldAllowFilteringOnEmptyFlags() {
         Flags actual = FlagsFactory.builder()
             .flags(emptyFlags)
             .filteringFlags(
@@ -109,7 +109,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldFilterOnFlags() {
+    void builderShouldFilterOnFlags() {
         Flags actual = FlagsFactory.builder()
             .flags(someFlags)
             .filteringFlags(
@@ -124,7 +124,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldTrimEmptyUserFlags() {
+    void builderShouldTrimEmptyUserFlags() {
         Flags flags = new Flags();
         flags.add("");
         flags.add("value2");
@@ -133,7 +133,7 @@ public class FlagsFactoryTest {
     }
 
     @Test
-    public void builderShouldTrimNullUserFlags() {
+    void builderShouldTrimNullUserFlags() {
         Flags actual = FlagsFactory.builder().addUserFlags(null, "value").build();
         assertThat(actual.getUserFlags()).containsOnly("value");
     }
