@@ -38,7 +38,7 @@ import com.google.common.collect.Lists;
 public class ListMessageAssert {
     private final List<MailboxMessage> actual;
 
-    private final List<InnerMessage> messageToInnerMessage(List<MailboxMessage> messages) {
+    private List<InnerMessage> messageToInnerMessage(List<MailboxMessage> messages) {
         return messages.stream()
             .map(message -> getInnerMessage(message))
             .collect(Guavate.toImmutableList());
@@ -61,7 +61,7 @@ public class ListMessageAssert {
         return new ListMessageAssert(actual);
     }
 
-    public void containOnly(MailboxMessage... expecteds) throws IOException {
+    public void containOnly(MailboxMessage... expecteds) {
         assertThat(messageToInnerMessage(actual)).containsOnlyElementsOf(messageToInnerMessage(Lists.newArrayList(expecteds)));
     }
 
