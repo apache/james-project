@@ -32,26 +32,26 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchUtilsMultipartMixedTest {
+class SearchUtilsMultipartMixedTest {
 
-    private static final String SAMPLE_INNER_MAIL_BODY_ONE = "far a modern quill doth come too";
+    static final String SAMPLE_INNER_MAIL_BODY_ONE = "far a modern quill doth come too";
 
-    private static final String SAMPLE_PART_ONE = "The better angel is a man right fair,\r\n";
+    static final String SAMPLE_PART_ONE = "The better angel is a man right fair,\r\n";
 
-    private static final String SAMPLE_PART_TWO = "My bonds in thee are all determinate.";
+    static final String SAMPLE_PART_TWO = "My bonds in thee are all determinate.";
 
-    private static final String SAMPLE_PART_TWO_FIELD = "948523475273457234952345";
+    static final String SAMPLE_PART_TWO_FIELD = "948523475273457234952345";
 
-    private static final String SAMPLE_INNER_MAIL_FIELD = "Inner mail sample";
+    static final String SAMPLE_INNER_MAIL_FIELD = "Inner mail sample";
 
-    private static final String SAMPLE_INNER_MAIL_MIME_FIELD = "8347673450223534587232312221";
+    static final String SAMPLE_INNER_MAIL_MIME_FIELD = "8347673450223534587232312221";
 
-    private static final String PREMABLE = "This is the premable.";
+    static final String PREMABLE = "This is the premable.";
 
-    private static final String BODY = PREMABLE + "\r\n--1729\r\n"
+    static final String BODY = PREMABLE + "\r\n--1729\r\n"
             + "Content-Type: text/plain; charset=US-ASCII\r\n\r\n"
             + "Two loves I have of comfort and despair,\r\n"
             + "Which like two spirits do suggest me still:\r\n"
@@ -111,10 +111,10 @@ public class SearchUtilsMultipartMixedTest {
 
     MailboxMessage row;
     Collection<MessageUid> recent;
-    private MessageSearches messageSearches;
+    MessageSearches messageSearches;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         final MessageBuilder builder = new MessageBuilder();
         
         builder.header("From", "Alex <alex@example.org");
@@ -134,7 +134,7 @@ public class SearchUtilsMultipartMixedTest {
     
 
     @Test
-    public void testShouldNotFindWhatIsNotThere() throws Exception {
+    void testShouldNotFindWhatIsNotThere() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains("BOGUS"), row,
                 recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery.mailContains("BOGUS"), row,
@@ -142,7 +142,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testBodyShouldFindTextInBody() throws Exception {
+    void testBodyShouldFindTextInBody() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(SAMPLE_PART_ONE),
@@ -152,7 +152,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testBodyShouldFindTextInBodyCaseInsensitive() throws Exception {
+    void testBodyShouldFindTextInBodyCaseInsensitive() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .bodyContains(SAMPLE_INNER_MAIL_BODY_ONE), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(SAMPLE_PART_ONE),
@@ -176,7 +176,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testBodyShouldNotFindTextInHeaders() throws Exception {
+    void testBodyShouldNotFindTextInHeaders() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .bodyContains(SAMPLE_INNER_MAIL_FIELD), row, recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery
@@ -184,7 +184,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testTextShouldFindTextInBody() throws Exception {
+    void testTextShouldFindTextInBody() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_INNER_MAIL_BODY_ONE), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(SAMPLE_PART_ONE),
@@ -194,7 +194,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testTextShouldFindTextInBodyCaseInsensitive() throws Exception {
+    void testTextShouldFindTextInBodyCaseInsensitive() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_INNER_MAIL_BODY_ONE), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(SAMPLE_PART_ONE),
@@ -218,7 +218,7 @@ public class SearchUtilsMultipartMixedTest {
     }
 
     @Test
-    public void testTextShouldFindTextInHeaders() throws Exception {
+    void testTextShouldFindTextInHeaders() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_INNER_MAIL_FIELD), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery
