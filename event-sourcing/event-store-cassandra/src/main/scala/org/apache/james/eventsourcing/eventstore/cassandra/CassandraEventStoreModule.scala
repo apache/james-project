@@ -16,24 +16,21 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra
 
-package org.apache.james.eventsourcing.eventstore.cassandra;
+import org.apache.james.backends.cassandra.components.CassandraModule
+import org.apache.james.backends.cassandra.utils.CassandraConstants
+import com.datastax.driver.core.DataType
+import com.datastax.driver.core.schemabuilder.{Create, SchemaBuilder}
 
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.backends.cassandra.utils.CassandraConstants;
-
-import com.datastax.driver.core.DataType;
-import com.datastax.driver.core.schemabuilder.SchemaBuilder;
-
-public interface CassandraEventStoreModule {
-    CassandraModule MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
-        .comment("Store events of a EventSourcing aggregate")
-        .options(options -> options
-            .caching(SchemaBuilder.KeyCaching.ALL,
-                SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
-        .statement(statement -> statement
-            .addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar())
-            .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint())
-            .addColumn(CassandraEventStoreTable.EVENT, DataType.text()))
-        .build();
+object CassandraEventStoreModule {
+  val MODULE = CassandraModule.table(CassandraEventStoreTable.EVENTS_TABLE)
+    .comment("Store events of a EventSourcing aggregate")
+    .options((options: Create.Options) => options.caching(
+      SchemaBuilder.KeyCaching.ALL,
+      SchemaBuilder.rows(CassandraConstants.DEFAULT_CACHED_ROW_PER_PARTITION)))
+    .statement(_.addPartitionKey(CassandraEventStoreTable.AGGREGATE_ID, DataType.varchar)
+      .addClusteringColumn(CassandraEventStoreTable.EVENT_ID, DataType.cint)
+      .addColumn(CassandraEventStoreTable.EVENT, DataType.text))
+    .build
 }

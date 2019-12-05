@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,25 +15,24 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra.dto
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+import com.fasterxml.jackson.annotation.{JsonCreator, JsonIgnore, JsonProperty}
+import org.apache.james.eventsourcing.{EventId, TestAggregateId, TestEvent}
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.json.DTOModule;
+final case class TestEventDTO @JsonCreator() ( @JsonProperty("type") `type`: String,
+                                    @JsonProperty("data") data: String,
+                                    @JsonProperty("eventId") eventId: Int,
+                                    @JsonProperty("aggregate") aggregate: Int) extends EventDTO {
+  override def getType: String = {
+  `type`
+}
+  def getData: String = data
 
-public class EventDTOModule<T extends Event, U extends EventDTO> extends DTOModule<T, U> {
+  def getEventId: Long = eventId
 
-    public static <EventTypeT extends Event> DTOModule.Builder<EventTypeT> forEvent(Class<EventTypeT> eventType) {
-        return new DTOModule.Builder<>(eventType);
-    }
+  def getAggregate: Int = aggregate
 
-    public EventDTOModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
-        super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);
-    }
-
-    @Override
-    public U toDTO(T domainObject) {
-        return super.toDTO(domainObject);
-    }
+  @JsonIgnore def toEvent: TestEvent = new TestEvent(EventId.fromSerialized (eventId), TestAggregateId.testId (aggregate), data)
 }

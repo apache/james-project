@@ -37,7 +37,7 @@ public class CassandraEventStoreExtension implements BeforeAllCallback, AfterAll
     private EventStoreDao eventStoreDao;
 
     public CassandraEventStoreExtension(JsonEventSerializer eventSerializer) {
-        this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE), eventSerializer);
+        this(new CassandraClusterExtension(CassandraEventStoreModule.MODULE()), eventSerializer);
     }
 
     public CassandraEventStoreExtension(CassandraClusterExtension cassandra, JsonEventSerializer eventSerializer) {

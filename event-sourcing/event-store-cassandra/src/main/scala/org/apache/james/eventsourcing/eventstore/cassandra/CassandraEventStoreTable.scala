@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,35 +16,11 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
-
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.TestAggregateId;
-
-public class OtherEvent implements Event {
-    private final EventId eventId;
-    private final TestAggregateId aggregateId;
-    private final long payload;
-
-    public OtherEvent(EventId eventId, TestAggregateId aggregateId, long payload) {
-        this.eventId = eventId;
-        this.aggregateId = aggregateId;
-        this.payload = payload;
-    }
-
-    @Override
-    public EventId eventId() {
-        return eventId;
-    }
-
-    @Override
-    public TestAggregateId getAggregateId() {
-        return aggregateId;
-    }
-
-    public long getPayload() {
-        return payload;
-    }
+object CassandraEventStoreTable {
+  val EVENTS_TABLE = "eventStore"
+  val AGGREGATE_ID = "aggregateId"
+  val EVENT = "event"
+  val EVENT_ID = "eventId"
 }

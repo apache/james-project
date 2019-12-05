@@ -16,36 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra.dto
 
-package org.apache.james.eventsourcing.eventstore.cassandra.dto;
+import org.apache.james.eventsourcing.Event
+import org.apache.james.json.DTOModule
 
-import org.apache.james.eventsourcing.TestEvent;
+object EventDTOModule {
+  def forEvent[EventTypeT <: Event](eventType: Class[EventTypeT]) = new DTOModule.Builder[EventTypeT](eventType)
+}
 
-public interface TestEventDTOModules {
-
-
-    EventDTOModule<?, ?> TEST_TYPE = EventDTOModule
-            .forEvent(TestEvent.class)
-            .convertToDTO(TestEventDTO.class)
-            .toDomainObjectConverter(TestEventDTO::toEvent)
-            .toDTOConverter((event, typeName) -> new TestEventDTO(
-                typeName,
-                event.getData(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("TestType")
-            .withFactory(EventDTOModule::new);
-
-    EventDTOModule<?, ?> OTHER_TEST_TYPE =
-        EventDTOModule
-            .forEvent(OtherEvent.class)
-            .convertToDTO(OtherTestEventDTO.class)
-            .toDomainObjectConverter(OtherTestEventDTO::toEvent)
-            .toDTOConverter((event, typeName) -> new OtherTestEventDTO(
-                typeName,
-                event.getPayload(),
-                event.eventId().serialize(),
-                event.getAggregateId().getId()))
-            .typeName("other-type")
-            .withFactory(EventDTOModule::new);
+case class EventDTOModule[T <: Event, U <: EventDTO](converter: DTOModule.DTOConverter[T, U],
+                                                     toDomainObjectConverter: DTOModule.DomainObjectConverter[T, U],
+                                                     domainObjectType: Class[T],
+                                                     dtoType: Class[U],
+                                                     typeName: String) extends DTOModule[T, U](converter, toDomainObjectConverter, domainObjectType, dtoType, typeName) {
+  override def toDTO(domainObject: T) : U = super.toDTO(domainObject)
 }

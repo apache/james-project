@@ -16,14 +16,32 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra.dto
 
-package org.apache.james.eventsourcing.eventstore.cassandra;
+import org.apache.james.eventsourcing.TestEvent
+import org.apache.james.json.DTOModule
 
-import org.apache.james.eventsourcing.eventstore.EventStoreTest;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
-import org.junit.jupiter.api.extension.RegisterExtension;
+object TestEventDTOModules {
+  val TEST_TYPE: EventDTOModule[TestEvent, TestEventDTO] = EventDTOModule.forEvent(classOf[TestEvent])
+    .convertToDTO(classOf[TestEventDTO]).toDomainObjectConverter(_.toEvent)
+    .toDTOConverter((event: TestEvent, typeName: String) => TestEventDTO(
+      typeName,
+      event.getData,
+      event.eventId.serialize,
+      event.getAggregateId.getId))
+    .typeName("TestType")
+    .withFactory(EventDTOModule.apply)
 
-class CassandraEventStoreTest implements EventStoreTest {
-    @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE()).withoutNestedType());
+
+  val OTHER_TEST_TYPE: EventDTOModule[OtherEvent, OtherTestEventDTO] = EventDTOModule
+    .forEvent(classOf[OtherEvent])
+    .convertToDTO(classOf[OtherTestEventDTO])
+    .toDomainObjectConverter(_.toEvent)
+    .toDTOConverter((event: OtherEvent, typeName: String) => OtherTestEventDTO(
+      typeName,
+      event.getPayload,
+      event.eventId.serialize,
+      event.getAggregateId.getId))
+    .typeName("other-type")
+    .withFactory(EventDTOModule.apply)
 }

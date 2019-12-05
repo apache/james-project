@@ -44,7 +44,7 @@ import com.google.common.collect.Sets;
 
 public class JsonGenericSerializer<T, U extends DTO> {
 
-    public static <T, U extends DTO> RequireNestedConfiguration<T, U> forModules(Set<? extends DTOModule<? extends T, ? extends U>> modules) {
+    public static <T, U extends DTO> RequireNestedConfiguration<T, U> forModules(java.util.Set<? extends DTOModule<? extends T, ? extends U>> modules) {
         return nestedTypesModules -> {
             ImmutableSet<DTOModule<? extends T, ? extends U>> dtoModules = ImmutableSet.copyOf(modules);
             return new JsonGenericSerializer<>(dtoModules, ImmutableSet.copyOf(nestedTypesModules), new DTOConverter<>(dtoModules));

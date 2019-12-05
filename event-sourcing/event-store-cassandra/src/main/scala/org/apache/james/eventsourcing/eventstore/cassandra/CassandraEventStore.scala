@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *  http://www.apache.org/licenses/LICENSE-2.0                  *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -16,12 +16,29 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra
 
-package org.apache.james.eventsourcing.eventstore.cassandra;
+import com.google.common.base.Preconditions
+import javax.inject.Inject
+import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException, History}
+import org.apache.james.eventsourcing.{AggregateId, Event}
 
-public interface CassandraEventStoreTable {
-    String EVENTS_TABLE = "eventStore";
-    String AGGREGATE_ID = "aggregateId";
-    String EVENT = "event";
-    String EVENT_ID = "eventId";
+class CassandraEventStore @Inject() (eventStoreDao: EventStoreDao) extends EventStore {
+  override def appendAll(events: List[Event]): Unit = {
+    if (events.nonEmpty) {
+      doAppendAll(events)
+    }
+  }
+
+  private def doAppendAll(events: List[Event]): Unit = {
+    Preconditions.checkArgument(Event.belongsToSameAggregate(events))
+    val success: Boolean = eventStoreDao.appendAll(events).block()
+    if (!success) {
+      throw EventStoreFailedException("Concurrent update to the EventStore detected")
+    }
+  }
+
+  override def getEventsOfAggregate(aggregateId: AggregateId): History = {
+    eventStoreDao.getEventsOfAggregate(aggregateId).block()
+  }
 }

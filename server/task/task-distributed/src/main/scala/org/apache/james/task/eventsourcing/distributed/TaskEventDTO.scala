@@ -24,7 +24,6 @@ import java.util.function.Function
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.eventsourcing.EventId
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO
 import org.apache.james.json.DTOConverter
 import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.server.task.json.dto.{AdditionalInformationDTO, TaskDTO}

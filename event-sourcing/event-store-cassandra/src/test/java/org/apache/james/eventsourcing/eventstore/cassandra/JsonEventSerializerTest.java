@@ -44,7 +44,7 @@ class JsonEventSerializerTest {
 
     @Test
     void shouldDeserializeKnownEvent() throws Exception {
-        assertThat(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE).withoutNestedType()
+        assertThat(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE()).withoutNestedType()
             .deserialize(TEST_EVENT_JSON))
             .isEqualTo(TEST_EVENT);
     }
@@ -59,7 +59,7 @@ class JsonEventSerializerTest {
     @Test
     void serializeShouldHandleAllKnownEvents() throws Exception {
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
-            .forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.OTHER_TEST_TYPE)
+            .forModules(TestEventDTOModules.TEST_TYPE(), TestEventDTOModules.OTHER_TEST_TYPE())
             .withoutNestedType();
 
         assertThatJson(
@@ -74,7 +74,7 @@ class JsonEventSerializerTest {
     @Test
     void deserializeShouldHandleAllKnownEvents() throws Exception {
         JsonEventSerializer jsonEventSerializer = JsonEventSerializer
-            .forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.OTHER_TEST_TYPE)
+            .forModules(TestEventDTOModules.TEST_TYPE(), TestEventDTOModules.OTHER_TEST_TYPE())
             .withoutNestedType();
 
         assertThatJson(
@@ -90,7 +90,7 @@ class JsonEventSerializerTest {
     @Test
     void deserializeShouldThrowWhenEventWithDuplicatedTypes() {
         assertThatThrownBy(() -> JsonEventSerializer
-            .forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.OTHER_TEST_TYPE)
+            .forModules(TestEventDTOModules.TEST_TYPE(), TestEventDTOModules.OTHER_TEST_TYPE())
             .withoutNestedType()
             .deserialize(DUPLICATE_TYPE_EVENT_JSON))
             .isInstanceOf(JsonEventSerializer.InvalidEventException.class);
@@ -99,7 +99,7 @@ class JsonEventSerializerTest {
     @Test
     void deserializeShouldThrowWhenEventWithMissingType() {
         assertThatThrownBy(() -> JsonEventSerializer
-            .forModules(TestEventDTOModules.TEST_TYPE, TestEventDTOModules.OTHER_TEST_TYPE)
+            .forModules(TestEventDTOModules.TEST_TYPE(), TestEventDTOModules.OTHER_TEST_TYPE())
             .withoutNestedType()
             .deserialize(MISSING_TYPE_EVENT_JSON))
             .isInstanceOf(JsonEventSerializer.InvalidEventException.class);
@@ -107,7 +107,7 @@ class JsonEventSerializerTest {
 
     @Test
     void shouldSerializeKnownEvent() throws Exception {
-        assertThatJson(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE).withoutNestedType()
+        assertThatJson(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE()).withoutNestedType()
             .serialize(TEST_EVENT))
             .isEqualTo(TEST_EVENT_JSON);
     }
