@@ -20,15 +20,16 @@
 package org.apache.james.mailbox.store;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MessageRange;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-public class MessageBatcherTest {
+class MessageBatcherTest {
 
     private MessageBatcher.BatchedOperation incrementBatcher =
         messageRange -> Lists.<MessageRange>newArrayList(MessageRange.range(
@@ -36,7 +37,7 @@ public class MessageBatcherTest {
             messageRange.getUidTo().next()));
 
     @Test
-    public void batchMessagesShouldWorkOnSingleRangeMode() throws Exception {
+    void batchMessagesShouldWorkOnSingleRangeMode() throws Exception {
         MessageBatcher messageBatcher = new MessageBatcher(0);
         
         assertThat(messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)), incrementBatcher))
@@ -44,30 +45,32 @@ public class MessageBatcherTest {
     }
 
     @Test
-    public void batchMessagesShouldWorkWithNonZeroBatchedSize() throws Exception {
+    void batchMessagesShouldWorkWithNonZeroBatchedSize() throws Exception {
         MessageBatcher messageBatcher = new MessageBatcher(5);
 
         assertThat(messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)), incrementBatcher))
             .containsOnly(MessageRange.range(MessageUid.of(2), MessageUid.of(6)), MessageRange.range(MessageUid.of(7), MessageUid.of(11)));
     }
 
-    @Test(expected = MailboxException.class)
-    public void batchMessagesShouldPropagateExceptions() throws Exception {
+    @Test
+    void batchMessagesShouldPropagateExceptions() {
         MessageBatcher messageBatcher = new MessageBatcher(0);
 
-        messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)),
-            messageRange -> {
-                throw new MailboxException();
-            });
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void messageBatcherShouldThrowOnNegativeBatchSize() throws Exception {
-        new MessageBatcher(-1);
+        assertThatThrownBy(() -> messageBatcher.batchMessages(MessageRange.range(MessageUid.of(1), MessageUid.of(10)),
+                messageRange -> {
+                    throw new MailboxException();
+                }))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
-    public void getBatchSizeShouldReturnTheBatchSize() {
+    void messageBatcherShouldThrowOnNegativeBatchSize() {
+        assertThatThrownBy(() -> new MessageBatcher(-1))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getBatchSizeShouldReturnTheBatchSize() {
         int batchSize = 123;
         MessageBatcher messageBatcher = new MessageBatcher(batchSize);
         assertThat(messageBatcher.getBatchSize()).isEqualTo(batchSize);
