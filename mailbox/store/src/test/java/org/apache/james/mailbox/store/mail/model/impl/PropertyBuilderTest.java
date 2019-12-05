@@ -22,17 +22,17 @@ package org.apache.james.mailbox.store.mail.model.impl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.store.mail.model.Property;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class PropertyBuilderTest {
+class PropertyBuilderTest {
 
     @Test
-    public void emptyPropertyBuilderShouldCreateEmptyProperties() {
+    void emptyPropertyBuilderShouldCreateEmptyProperties() {
         assertThat(new PropertyBuilder().toProperties()).isEmpty();
     }
 
     @Test
-    public void setHasAttachmentShouldAddFalseWhenCalledWithFalse() {
+    void setHasAttachmentShouldAddFalseWhenCalledWithFalse() {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setHasAttachment(false);
         assertThat(propertyBuilder.toProperties())
@@ -40,7 +40,7 @@ public class PropertyBuilderTest {
     }
 
     @Test
-    public void setHasAttachmentShouldAddTrueWhenCalledWithTrue() {
+    void setHasAttachmentShouldAddTrueWhenCalledWithTrue() {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
         propertyBuilder.setHasAttachment(true);
         assertThat(propertyBuilder.toProperties())
