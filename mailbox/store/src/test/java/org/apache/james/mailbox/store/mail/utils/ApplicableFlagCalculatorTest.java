@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.mail.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.Date;
 import java.util.List;
@@ -34,36 +35,28 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.assertj.core.api.JUnitSoftAssertions;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.assertj.core.api.SoftAssertions;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
-public class ApplicableFlagCalculatorTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Rule
-    public final JUnitSoftAssertions softly = new JUnitSoftAssertions();
+class ApplicableFlagCalculatorTest {
 
     @Test
-    public void constructorShouldThrowWhenNull() throws Exception {
-        expectedException.expect(NullPointerException.class);
-        new ApplicableFlagCalculator(null);
+    void constructorShouldThrowWhenNull() {
+        assertThatThrownBy(() -> new ApplicableFlagCalculator(null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagsWhenNoMessage() throws Exception {
+    void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagsWhenNoMessage() {
         ApplicableFlagCalculator calculator = new ApplicableFlagCalculator(ImmutableList.<MailboxMessage>of());
 
         assertThat(calculator.computeApplicableFlags()).isEqualTo(getDefaultApplicableFlag());
     }
 
     @Test
-    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagWhenNoMessageWithUserCustomFlag() throws Exception {
+    void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagWhenNoMessageWithUserCustomFlag() {
         List<MailboxMessage> mailboxMessages = ImmutableList.of(
             createMessage(new Flags(Flag.ANSWERED)),
             createMessage(new Flags(Flag.DELETED)),
@@ -76,7 +69,7 @@ public class ApplicableFlagCalculatorTest {
     }
 
     @Test
-    public void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagAndAllUserCustomFlagUsedOneMessage() throws Exception {
+    void computeApplicableFlagsShouldReturnOnlyDefaultApplicableFlagAndAllUserCustomFlagUsedOneMessage() {
         List<MailboxMessage> mailboxMessages = ImmutableList.of(
             createMessage(new Flags("capture me")),
             createMessage(new Flags("french")));
@@ -92,7 +85,7 @@ public class ApplicableFlagCalculatorTest {
     }
 
     @Test
-    public void unionFlagsShouldAlwaysIgnoreRecentAndUser() throws  Exception {
+    void unionFlagsShouldAlwaysIgnoreRecentAndUser() {
         List<MailboxMessage> mailboxMessages = ImmutableList.of(
             createMessage(new Flags(Flag.RECENT)),
             createMessage(new Flags(Flag.USER)));
@@ -101,13 +94,16 @@ public class ApplicableFlagCalculatorTest {
 
         Flags result = calculator.computeApplicableFlags();
 
-        softly.assertThat(result.contains(Flag.RECENT)).isFalse();
-        softly.assertThat(result.contains(Flag.USER)).isFalse();
+        SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(result.contains(Flag.RECENT)).isFalse();
+            softly.assertThat(result.contains(Flag.USER)).isFalse();
+        });
     }
 
     private MailboxMessage createMessage(Flags messageFlags) {
         String content = "Any content";
         int bodyStart = 10;
+
         return new SimpleMailboxMessage(new DefaultMessageId(), new Date(), content.length(), bodyStart,
             new SharedByteArrayInputStream(content.getBytes()), messageFlags, new PropertyBuilder(), TestId.of(1));
     }
