@@ -39,3 +39,4 @@ Note that you need to run a guice version of James.
  - MailQueue enqueue/dequeue timer & counter statistics
  - BlobStore timer statistics
  - Statistics about pre-deletion hooks execution times
+ - MessageFastViewProjection retrieving hits & miss count 
