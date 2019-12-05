@@ -35,18 +35,18 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.CurrentQuotaManager;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class StoreQuotaManagerTest {
+class StoreQuotaManagerTest {
 
-    private StoreQuotaManager testee;
-    private CurrentQuotaManager mockedCurrentQuotaManager;
-    private MaxQuotaManager mockedMaxQuotaManager;
-    private QuotaRoot quotaRoot;
+    StoreQuotaManager testee;
+    CurrentQuotaManager mockedCurrentQuotaManager;
+    MaxQuotaManager mockedMaxQuotaManager;
+    QuotaRoot quotaRoot;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockedCurrentQuotaManager = mock(CurrentQuotaManager.class);
         mockedMaxQuotaManager = mock(MaxQuotaManager.class);
         testee = new StoreQuotaManager(mockedCurrentQuotaManager, mockedMaxQuotaManager);
@@ -55,7 +55,7 @@ public class StoreQuotaManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
+    void getMessageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.count(360L)));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
         assertThat(testee.getMessageQuota(quotaRoot)).isEqualTo(
@@ -64,7 +64,7 @@ public class StoreQuotaManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
+    void getStorageQuotaShouldWorkWithNumericValues() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.size(360L)));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
         assertThat(testee.getStorageQuota(quotaRoot)).isEqualTo(
@@ -73,7 +73,7 @@ public class StoreQuotaManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
+    void getStorageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
         when(mockedMaxQuotaManager.getMaxStorage(any(Map.class))).thenReturn(Optional.of(QuotaSizeLimit.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentStorage(quotaRoot)).thenReturn(QuotaSizeUsage.size(36L));
 
@@ -83,7 +83,7 @@ public class StoreQuotaManagerTest {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
+    void getMessageQuotaShouldCalculateCurrentQuotaWhenUnlimited() throws Exception {
         when(mockedMaxQuotaManager.getMaxMessage(any(Map.class))).thenReturn(Optional.of(QuotaCountLimit.unlimited()));
         when(mockedCurrentQuotaManager.getCurrentMessageCount(quotaRoot)).thenReturn(QuotaCountUsage.count(36L));
 
