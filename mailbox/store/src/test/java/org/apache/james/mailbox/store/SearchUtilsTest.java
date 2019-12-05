@@ -38,45 +38,45 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchUtilsTest {
+class SearchUtilsTest {
 
-    private static final String RHUBARD = "Rhubard";
+    static final String RHUBARD = "Rhubard";
 
-    private static final String CUSTARD = "Custard";
+    static final String CUSTARD = "Custard";
 
-    private static final Date SUN_SEP_9TH_2001 = new Date(1000000000000L);
+    static final Date SUN_SEP_9TH_2001 = new Date(1000000000000L);
 
-    private static final int SIZE = 1729;
+    static final int SIZE = 1729;
 
-    private static final String DATE_FIELD = "Date";
+    static final String DATE_FIELD = "Date";
 
-    private static final String SUBJECT_FIELD = "Subject";
+    static final String SUBJECT_FIELD = "Subject";
 
-    private static final String RFC822_SUN_SEP_9TH_2001 = "Sun, 9 Sep 2001 09:10:48 +0000 (GMT)";
+    static final String RFC822_SUN_SEP_9TH_2001 = "Sun, 9 Sep 2001 09:10:48 +0000 (GMT)";
 
-    private static final String TEXT = RHUBARD + RHUBARD + RHUBARD;
+    static final String TEXT = RHUBARD + RHUBARD + RHUBARD;
 
     MessageBuilder builder;
 
     Collection<MessageUid> recent;
 
-    private MessageSearches messageSearches;
+    MessageSearches messageSearches;
     
-    private Calendar getGMT() {
+    Calendar getGMT() {
         return Calendar.getInstance(TimeZone.getTimeZone("GMT"), Locale.UK);
     }
     
-    private Date getDate(int day, int month, int year) {
+    Date getDate(int day, int month, int year) {
         Calendar cal = getGMT();
         cal.set(year, month - 1, day);
         return cal.getTime();
     }
     
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         recent = new ArrayList<>();
         builder = new MessageBuilder()
             .uid(MessageUid.of(1009));
@@ -88,7 +88,7 @@ public class SearchUtilsTest {
     }
     
     @Test
-    public void testMatchSizeLessThan() throws Exception {
+    void testMatchSizeLessThan() throws Exception {
         builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeLessThan(SIZE - 1), row,
@@ -102,7 +102,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchSizeMoreThan() throws Exception {
+    void testMatchSizeMoreThan() throws Exception {
         builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeGreaterThan(SIZE - 1), row,
@@ -116,7 +116,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchSizeEquals() throws Exception {
+    void testMatchSizeEquals() throws Exception {
         builder.size(SIZE);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.sizeEquals(SIZE - 1), row,
@@ -129,7 +129,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchInternalDateEquals() throws Exception {
+    void testMatchInternalDateEquals() throws Exception {
         builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.internalDateOn(getDate(9, 9, 2000), DateResolution.Day),
@@ -146,7 +146,7 @@ public class SearchUtilsTest {
 
     
     @Test
-    public void testMatchInternalDateBefore() throws Exception {
+    void testMatchInternalDateBefore() throws Exception {
         builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(
@@ -162,7 +162,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchInternalDateAfter() throws Exception {
+    void testMatchInternalDateAfter() throws Exception {
         builder.internalDate(SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.internalDateAfter(getDate(9, 9, 2000), DateResolution.Day),
@@ -178,7 +178,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderDateAfter() throws Exception {
+    void testMatchHeaderDateAfter() throws Exception {
         builder.header(DATE_FIELD, RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateAfter(DATE_FIELD, getDate(9,
@@ -196,7 +196,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchCapsHeaderDateAfter() throws Exception {
+    void testShouldMatchCapsHeaderDateAfter() throws Exception {
         builder.header(DATE_FIELD.toUpperCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateAfter(DATE_FIELD, getDate(9,
@@ -214,7 +214,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchLowersHeaderDateAfter() throws Exception {
+    void testShouldMatchLowersHeaderDateAfter() throws Exception {
         builder.header(DATE_FIELD.toLowerCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateAfter(DATE_FIELD, getDate(9,
@@ -232,7 +232,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderDateOn() throws Exception {
+    void testMatchHeaderDateOn() throws Exception {
         builder.header(DATE_FIELD, RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateOn(DATE_FIELD, getDate(9, 9,
@@ -250,7 +250,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchCapsHeaderDateOn() throws Exception {
+    void testShouldMatchCapsHeaderDateOn() throws Exception {
         builder.header(DATE_FIELD.toUpperCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateOn(DATE_FIELD, getDate(9, 9,
@@ -268,7 +268,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchLowersHeaderDateOn() throws Exception {
+    void testShouldMatchLowersHeaderDateOn() throws Exception {
         builder.header(DATE_FIELD.toLowerCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateOn(DATE_FIELD, getDate(9, 9,
@@ -286,7 +286,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderDateBefore() throws Exception {
+    void testMatchHeaderDateBefore() throws Exception {
         builder.header(DATE_FIELD.toLowerCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateBefore(DATE_FIELD,
@@ -304,7 +304,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchCapsHeaderDateBefore() throws Exception {
+    void testShouldMatchCapsHeaderDateBefore() throws Exception {
         builder.header(DATE_FIELD.toLowerCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateBefore(DATE_FIELD,
@@ -322,7 +322,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchLowersHeaderDateBefore() throws Exception {
+    void testShouldMatchLowersHeaderDateBefore() throws Exception {
         builder.header(DATE_FIELD.toLowerCase(Locale.US), RFC822_SUN_SEP_9TH_2001);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateBefore(DATE_FIELD,
@@ -340,7 +340,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderContainsCaps() throws Exception {
+    void testMatchHeaderContainsCaps() throws Exception {
         builder.header(SUBJECT_FIELD, TEXT.toUpperCase(Locale.US));
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerContains(DATE_FIELD,
@@ -356,7 +356,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderContainsLowers() throws Exception {
+    void testMatchHeaderContainsLowers() throws Exception {
         builder.header(SUBJECT_FIELD, TEXT.toUpperCase(Locale.US));
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerContains(DATE_FIELD,
@@ -372,7 +372,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderContains() throws Exception {
+    void testMatchHeaderContains() throws Exception {
         builder.header(SUBJECT_FIELD, TEXT.toUpperCase(Locale.US));
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerContains(DATE_FIELD,
@@ -388,7 +388,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchLowerHeaderContains() throws Exception {
+    void testShouldMatchLowerHeaderContains() throws Exception {
         builder.header(SUBJECT_FIELD.toLowerCase(Locale.US), TEXT);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerContains(DATE_FIELD,
@@ -404,7 +404,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchCapsHeaderContains() throws Exception {
+    void testShouldMatchCapsHeaderContains() throws Exception {
         builder.header(SUBJECT_FIELD.toUpperCase(Locale.US), TEXT);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerContains(DATE_FIELD,
@@ -420,7 +420,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testMatchHeaderExists() throws Exception {
+    void testMatchHeaderExists() throws Exception {
         builder.header(SUBJECT_FIELD, TEXT);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerExists(DATE_FIELD), row,
@@ -430,7 +430,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchLowersHeaderExists() throws Exception {
+    void testShouldMatchLowersHeaderExists() throws Exception {
         builder.header(SUBJECT_FIELD.toLowerCase(Locale.US), TEXT);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerExists(DATE_FIELD), row,
@@ -440,7 +440,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchUppersHeaderExists() throws Exception {
+    void testShouldMatchUppersHeaderExists() throws Exception {
         builder.header(SUBJECT_FIELD.toLowerCase(Locale.US), TEXT);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerExists(DATE_FIELD), row,
@@ -450,7 +450,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchUidRange() throws Exception {
+    void testShouldMatchUidRange() throws Exception {
         builder.setKey(1, MessageUid.of(1729));
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.uid(range(MessageUid.of(1), MessageUid.of(1))), row, recent)).isFalse();
@@ -481,7 +481,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchSeenFlagSet() throws Exception {
+    void testShouldMatchSeenFlagSet() throws Exception {
         builder.setFlags(true, false, false, false, false, false);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
@@ -499,7 +499,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchAnsweredFlagSet() throws Exception {
+    void testShouldMatchAnsweredFlagSet() throws Exception {
         builder.setFlags(false, false, true, false, false, false);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
@@ -517,7 +517,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchFlaggedFlagSet() throws Exception {
+    void testShouldMatchFlaggedFlagSet() throws Exception {
         builder.setFlags(false, true, false, false, false, false);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
@@ -535,7 +535,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchDraftFlagSet() throws Exception {
+    void testShouldMatchDraftFlagSet() throws Exception {
         builder.setFlags(false, false, false, true, false, false);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
@@ -554,7 +554,7 @@ public class SearchUtilsTest {
 
     
     @Test
-    public void testShouldMatchDeletedFlagSet() throws Exception {
+    void testShouldMatchDeletedFlagSet() throws Exception {
         builder.setFlags(false, false, false, false, true, false);
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.flagIsSet(Flags.Flag.SEEN),
@@ -572,7 +572,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchSeenRecentSet() throws Exception {
+    void testShouldMatchSeenRecentSet() throws Exception {
         builder.setFlags(false, false, false, false, false, false);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -591,7 +591,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchSeenFlagUnSet() throws Exception {
+    void testShouldMatchSeenFlagUnSet() throws Exception {
         builder.setFlags(false, true, true, true, true, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -610,7 +610,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchAnsweredFlagUnSet() throws Exception {
+    void testShouldMatchAnsweredFlagUnSet() throws Exception {
         builder.setFlags(true, true, false, true, true, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -629,7 +629,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchFlaggedFlagUnSet() throws Exception {
+    void testShouldMatchFlaggedFlagUnSet() throws Exception {
         builder.setFlags(true, false, true, true, true, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -648,7 +648,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchDraftFlagUnSet() throws Exception {
+    void testShouldMatchDraftFlagUnSet() throws Exception {
         builder.setFlags(true, true, true, false, true, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -667,7 +667,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchDeletedFlagUnSet() throws Exception {
+    void testShouldMatchDeletedFlagUnSet() throws Exception {
         builder.setFlags(true, true, true, true, false, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid());
@@ -686,7 +686,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchSeenRecentUnSet() throws Exception {
+    void testShouldMatchSeenRecentUnSet() throws Exception {
         builder.setFlags(true, true, true, true, true, true);
         MailboxMessage row = builder.build();
         recent.add(row.getUid().next());
@@ -705,13 +705,13 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchAll() throws Exception {
+    void testShouldMatchAll() throws Exception {
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.all(), row, recent)).isTrue();
     }
 
     @Test
-    public void testShouldMatchNot() throws Exception {
+    void testShouldMatchNot() throws Exception {
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.not(SearchQuery.all()), row,
                 recent)).isFalse();
@@ -720,7 +720,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchOr() throws Exception {
+    void testShouldMatchOr() throws Exception {
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.or(SearchQuery.all(),
                 SearchQuery.headerExists(DATE_FIELD)), row, recent)).isTrue();
@@ -734,7 +734,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchAnd() throws Exception {
+    void testShouldMatchAnd() throws Exception {
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.and(SearchQuery.all(),
                 SearchQuery.headerExists(DATE_FIELD)), row, recent)).isFalse();
@@ -747,11 +747,11 @@ public class SearchUtilsTest {
                 SearchQuery.all()), row, recent)).isTrue();
     }
     
-    private SearchQuery.UidRange[] range(MessageUid low, MessageUid high) {
+    SearchQuery.UidRange[] range(MessageUid low, MessageUid high) {
         return new SearchQuery.UidRange[]{ new SearchQuery.UidRange(low, high) };
     }
 
-    private SearchQuery.UidRange[] range(MessageUid lowOne, MessageUid highOne,
+    SearchQuery.UidRange[] range(MessageUid lowOne, MessageUid highOne,
             MessageUid lowTwo, MessageUid highTwo) {
         return new SearchQuery.UidRange[]{
                 new SearchQuery.UidRange(lowOne, highOne),
@@ -760,7 +760,7 @@ public class SearchUtilsTest {
     
     
     @Test
-    public void testMatchHeaderDateOnWithOffset() throws Exception {
+    void testMatchHeaderDateOnWithOffset() throws Exception {
         builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateOn(DATE_FIELD, getDate(26, 3,
@@ -774,7 +774,7 @@ public class SearchUtilsTest {
     
 
     @Test
-    public void testShouldMatchHeaderDateBeforeWithOffset() throws Exception {
+    void testShouldMatchHeaderDateBeforeWithOffset() throws Exception {
         builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateBefore(DATE_FIELD, getDate(26, 3,
@@ -787,7 +787,7 @@ public class SearchUtilsTest {
     }
 
     @Test
-    public void testShouldMatchHeaderDateAfterWithOffset() throws Exception {
+    void testShouldMatchHeaderDateAfterWithOffset() throws Exception {
         builder.header(DATE_FIELD, "Mon, 26 Mar 2007 00:00:00 +0300");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.headerDateAfter(DATE_FIELD, getDate(26, 3,
@@ -800,7 +800,7 @@ public class SearchUtilsTest {
     }
     
     @Test
-    public void testShouldMatchAddressHeaderWithComments() throws Exception {
+    void testShouldMatchAddressHeaderWithComments() throws Exception {
         builder.header("To", "<user-from (comment)@ (comment) domain.org>");
         MailboxMessage row = builder.build();
         assertThat(messageSearches.isMatch(SearchQuery.address(AddressType.To, "user-from@domain.org"), row, recent)).isTrue();
