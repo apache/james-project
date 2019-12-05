@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.store.quota;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -37,56 +38,57 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.Lists;
 
-public class DefaultUserQuotaRootResolverTest {
+class DefaultUserQuotaRootResolverTest {
 
-    private static final Username BENWA = Username.of("benwa");
-    private static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
-    public static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
-    private static final MailboxPath PATH_LIKE = MailboxPath.forUser(BENWA, "%");
-    private static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
-    private static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10);
-    private static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
-    private static final MailboxId MAILBOX_ID = TestId.of(42);
-    public static final MailboxSession MAILBOX_SESSION = null;
+    static final Username BENWA = Username.of("benwa");
+    static final MailboxPath MAILBOX_PATH = MailboxPath.inbox(BENWA);
+    static final Mailbox MAILBOX = new Mailbox(MAILBOX_PATH, 10);
+    static final MailboxPath MAILBOX_PATH_2 = MailboxPath.forUser(BENWA, "test");
+    static final Mailbox MAILBOX_2 = new Mailbox(MAILBOX_PATH_2, 10);
+    static final QuotaRoot QUOTA_ROOT = QuotaRoot.quotaRoot("#private&benwa", Optional.empty());
+    static final MailboxId MAILBOX_ID = TestId.of(42);
+    static final MailboxSession MAILBOX_SESSION = null;
 
-    private DefaultUserQuotaRootResolver testee;
-    private MailboxSessionMapperFactory mockedFactory;
+    DefaultUserQuotaRootResolver testee;
+    MailboxSessionMapperFactory mockedFactory;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mockedFactory = mock(MailboxSessionMapperFactory.class);
         testee = new DefaultUserQuotaRootResolver(mock(SessionProvider.class), mockedFactory);
     }
 
     @Test
-    public void getQuotaRootShouldReturnUserRelatedQuotaRoot() {
+    void getQuotaRootShouldReturnUserRelatedQuotaRoot() {
         assertThat(testee.getQuotaRoot(MAILBOX_PATH)).isEqualTo(QUOTA_ROOT);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void getQuotaRootShouldThrowWhenNamespaceContainsSeparator() {
-        testee.getQuotaRoot(new MailboxPath("#pr&ivate", BENWA, "INBOX"));
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void getQuotaRootShouldThrowWhenUserContainsSeparator() {
-        testee.getQuotaRoot(MailboxPath.forUser(Username.of("ben&wa"), "INBOX"));
+    @Test
+    void getQuotaRootShouldThrowWhenNamespaceContainsSeparator() {
+        assertThatThrownBy(() -> testee.getQuotaRoot(new MailboxPath("#pr&ivate", BENWA, "INBOX")))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void getQuotaRootShouldWorkWhenUserIsNull() {
+    void getQuotaRootShouldThrowWhenUserContainsSeparator() {
+        assertThatThrownBy(() -> testee.getQuotaRoot(MailboxPath.forUser(Username.of("ben&wa"), "INBOX")))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void getQuotaRootShouldWorkWhenUserIsNull() {
         QuotaRoot quotaRoot = testee.getQuotaRoot(new MailboxPath("#private", null, "INBOX"));
 
         assertThat(quotaRoot).isEqualTo(QuotaRoot.quotaRoot("#private", Optional.empty()));
     }
 
     @Test
-    public void retrieveAssociatedMailboxesShouldWork() throws Exception {
+    void retrieveAssociatedMailboxesShouldWork() throws Exception {
         MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(MAILBOX_SESSION)).thenReturn(mockedMapper);
         when(mockedMapper.findMailboxWithPathLike(any())).thenReturn(Lists.newArrayList(MAILBOX, MAILBOX_2));
@@ -94,13 +96,15 @@ public class DefaultUserQuotaRootResolverTest {
         assertThat(testee.retrieveAssociatedMailboxes(QUOTA_ROOT, MAILBOX_SESSION)).containsOnly(MAILBOX, MAILBOX_2);
     }
 
-    @Test(expected = MailboxException.class)
-    public void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
-        testee.retrieveAssociatedMailboxes(QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION);
+    @Test
+    void retrieveAssociatedMailboxesShouldThrowWhenQuotaRootContainsSeparator2Times() throws Exception {
+        assertThatThrownBy(() -> testee.retrieveAssociatedMailboxes(
+                QuotaRoot.quotaRoot("#private&be&nwa", Optional.empty()), MAILBOX_SESSION))
+            .isInstanceOf(MailboxException.class);
     }
 
     @Test
-    public void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
+    void getQuotaRootShouldReturnUserValueWhenCalledWithMailboxId() throws Exception {
         MailboxMapper mockedMapper = mock(MailboxMapper.class);
         when(mockedFactory.getMailboxMapper(any())).thenReturn(mockedMapper);
         when(mockedMapper.findMailboxById(MAILBOX_ID)).thenReturn(MAILBOX);
