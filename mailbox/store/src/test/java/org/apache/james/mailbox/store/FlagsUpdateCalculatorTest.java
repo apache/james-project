@@ -25,34 +25,36 @@ import javax.mail.Flags;
 
 import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.store.FlagsUpdateCalculator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class FlagsUpdateCalculatorTest {
+class FlagsUpdateCalculatorTest {
 
     @Test
-    public void flagsShouldBeReplacedWhenReplaceIsTrueAndValueIsTrue() {
+    void flagsShouldBeReplacedWhenReplaceIsTrueAndValueIsTrue() {
         FlagsUpdateCalculator flagsUpdateCalculator = new FlagsUpdateCalculator(
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("userflag").build(),
             MessageManager.FlagsUpdateMode.REPLACE);
+
         assertThat(flagsUpdateCalculator.buildNewFlags(new FlagsBuilder().add(Flags.Flag.RECENT, Flags.Flag.FLAGGED).build()))
             .isEqualTo(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("userflag").build());
     }
 
     @Test
-    public void flagsShouldBeAddedWhenReplaceIsFalseAndValueIsTrue() {
+    void flagsShouldBeAddedWhenReplaceIsFalseAndValueIsTrue() {
         FlagsUpdateCalculator flagsUpdateCalculator = new FlagsUpdateCalculator(
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("userflag").build(),
             MessageManager.FlagsUpdateMode.ADD);
+
         assertThat(flagsUpdateCalculator.buildNewFlags(new FlagsBuilder().add(Flags.Flag.RECENT, Flags.Flag.FLAGGED).build()))
             .isEqualTo(new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED, Flags.Flag.RECENT).add("userflag").build());
     }
 
     @Test
-    public void flagsShouldBeRemovedWhenReplaceIsFalseAndValueIsFalse() {
+    void flagsShouldBeRemovedWhenReplaceIsFalseAndValueIsFalse() {
         FlagsUpdateCalculator flagsUpdateCalculator = new FlagsUpdateCalculator(
             new FlagsBuilder().add(Flags.Flag.DELETED, Flags.Flag.FLAGGED).add("userflag").build(),
             MessageManager.FlagsUpdateMode.REMOVE);
+
         assertThat(flagsUpdateCalculator.buildNewFlags(new FlagsBuilder().add(Flags.Flag.RECENT, Flags.Flag.FLAGGED).build()))
             .isEqualTo(new Flags(Flags.Flag.RECENT));
     }
