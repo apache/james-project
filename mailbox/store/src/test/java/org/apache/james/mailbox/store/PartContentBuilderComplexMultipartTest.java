@@ -32,44 +32,44 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.model.Header;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder;
 import org.apache.james.mailbox.store.streaming.PartContentBuilder.PartNotFoundException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class PartContentBuilderComplexMultipartTest {
+class PartContentBuilderComplexMultipartTest {
 
-    private static final String PREAMBLE = "This is the preamble";
+    static final String PREAMBLE = "This is the preamble";
 
-    private static final String CONTENT_TYPE = "Content-Type";
+    static final String CONTENT_TYPE = "Content-Type";
 
-    private static final String CONTENT_TYPE_HTML = "text/html;charset=us-ascii";
+    static final String CONTENT_TYPE_HTML = "text/html;charset=us-ascii";
 
-    private static final String CONTENT_TYPE_PLAIN = "text/plain;charset=us-ascii";
+    static final String CONTENT_TYPE_PLAIN = "text/plain;charset=us-ascii";
 
-    private static final String CONTENT_TYPE_RFC822 = "message/rfc822";
+    static final String CONTENT_TYPE_RFC822 = "message/rfc822";
 
-    private static final String OUTER_HTML_BODY = "<html><head><title>Rhubard!</title></head><body><p>Rhubarb!Rhubard!Rhubard!</p></body></html>\r\n";
+    static final String OUTER_HTML_BODY = "<html><head><title>Rhubard!</title></head><body><p>Rhubarb!Rhubard!Rhubard!</p></body></html>\r\n";
 
-    private static final String FULL_OUTER_HTML = CONTENT_TYPE + ": "
+    static final String FULL_OUTER_HTML = CONTENT_TYPE + ": "
             + CONTENT_TYPE_HTML + "\r\n\r\n" + OUTER_HTML_BODY;
 
-    private static final String OUTER_PLAIN_BODY = "Rhubarb!Rhubard!Rhubard!\r\n";
+    static final String OUTER_PLAIN_BODY = "Rhubarb!Rhubard!Rhubard!\r\n";
 
-    private static final String FULL_OUTER_PLAIN = CONTENT_TYPE + ": "
+    static final String FULL_OUTER_PLAIN = CONTENT_TYPE + ": "
             + CONTENT_TYPE_PLAIN + "\r\n\r\n" + OUTER_PLAIN_BODY;
 
-    private static final String INNER_HTML_BODY = "<html><head><title>Custard!</title></head><body><p>Custard!Custard!Custard!</p></body></html>\r\n";
+    static final String INNER_HTML_BODY = "<html><head><title>Custard!</title></head><body><p>Custard!Custard!Custard!</p></body></html>\r\n";
 
-    private static final String FULL_INNER_HTML = CONTENT_TYPE + ": "
+    static final String FULL_INNER_HTML = CONTENT_TYPE + ": "
             + CONTENT_TYPE_HTML + "\r\n\r\n" + INNER_HTML_BODY;
 
-    private static final String INNER_PLAIN_BODY = "Custard!Custard!Custard!\r\n";
+    static final String INNER_PLAIN_BODY = "Custard!Custard!Custard!\r\n";
 
-    private static final String FULL_INNER_TXT = CONTENT_TYPE + ": "
+    static final String FULL_INNER_TXT = CONTENT_TYPE + ": "
             + CONTENT_TYPE_PLAIN + "\r\n\r\n" + INNER_PLAIN_BODY;
 
-    private static final String INNERMOST_BODY = "Da!Da!Da!Dah!\r\n";
+    static final String INNERMOST_BODY = "Da!Da!Da!Dah!\r\n";
 
-    private static final String RFC822_PLAIN_MAIL = "From:  Samual Smith <samual@example.org>\r\n"
+    static final String RFC822_PLAIN_MAIL = "From:  Samual Smith <samual@example.org>\r\n"
             + "To: John Smith <john@example.org>\r\n"
             + "Date: Thu, 1 Feb 2007 08:00:00 -0800 (PST)\r\n"
             + "Subject: Rhubard And Custard!\r\n"
@@ -77,10 +77,10 @@ public class PartContentBuilderComplexMultipartTest {
             + ": "
             + CONTENT_TYPE_PLAIN + "\r\n" + "\r\n" + INNERMOST_BODY;
 
-    private static final String FULL_INNERMOST_EMAIL = CONTENT_TYPE + ": "
+    static final String FULL_INNERMOST_EMAIL = CONTENT_TYPE + ": "
             + CONTENT_TYPE_RFC822 + "\r\n\r\n" + RFC822_PLAIN_MAIL;
 
-    private static final String INNER_MAIL = "From: John Smith <john@example.org>\r\n"
+    static final String INNER_MAIL = "From: John Smith <john@example.org>\r\n"
             + "To: Samual Smith <samual@example.org>\r\n"
             + "Date: Fri, 1 Feb 2008 08:00:00 -0800 (PST)\r\n"
             + "Subject: Custard!\r\n"
@@ -94,10 +94,10 @@ public class PartContentBuilderComplexMultipartTest {
             + FULL_INNERMOST_EMAIL
             + "\r\n--1729--\r\n";
 
-    private static final String FULL_INNER_MAIL = CONTENT_TYPE + ": "
+    static final String FULL_INNER_MAIL = CONTENT_TYPE + ": "
             + CONTENT_TYPE_RFC822 + "\r\n\r\n" + INNER_MAIL;
 
-    private static final String MULTIPART_MIXED = "From: Samual Smith <samual@example.org>\r\n"
+    static final String MULTIPART_MIXED = "From: Samual Smith <samual@example.org>\r\n"
             + "To: John Smith <john@example.org>\r\n"
             + "Date: Sun, 10 Feb 2008 08:00:00 -0800 (PST)\r\n"
             + "Subject: Rhubarb!\r\n"
@@ -113,13 +113,13 @@ public class PartContentBuilderComplexMultipartTest {
 
     PartContentBuilder builder;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         builder = new PartContentBuilder();
     }
 
     @Test
-    public void testShouldNotFoundSubPartOfNonMultiPartTopLevel()
+    void testShouldNotFoundSubPartOfNonMultiPartTopLevel()
             throws Exception {
         int[] path = { 1, 1 };
         for (int i = 1; i < 10; i++) {
@@ -129,7 +129,7 @@ public class PartContentBuilderComplexMultipartTest {
     }
 
     @Test
-    public void testShouldNotFoundSubPartOfNonMultiInnerPart() throws Exception {
+    void testShouldNotFoundSubPartOfNonMultiInnerPart() throws Exception {
         int[] path = { 2, 2, 1 };
         for (int i = 1; i < 10; i++) {
             path[2] = i;
@@ -138,38 +138,38 @@ public class PartContentBuilderComplexMultipartTest {
     }
 
     @Test
-    public void testShouldLocateOuterHtml() throws Exception {
+    void testShouldLocateOuterHtml() throws Exception {
         int[] path = { 1 };
         check(FULL_OUTER_HTML, OUTER_HTML_BODY, CONTENT_TYPE_HTML, path);
     }
 
     @Test
-    public void testShouldLocateOuterMail() throws Exception {
+    void testShouldLocateOuterMail() throws Exception {
         int[] path = { 2 };
         check(FULL_INNER_MAIL, INNER_MAIL, CONTENT_TYPE_RFC822, path);
     }
 
     @Test
-    public void testShouldLocateOuterPlain() throws Exception {
+    void testShouldLocateOuterPlain() throws Exception {
         int[] path = { 3 };
         check(FULL_OUTER_PLAIN, OUTER_PLAIN_BODY, CONTENT_TYPE_PLAIN, path);
     }
 
     @Test
-    public void testShouldLocateInnerHtml() throws Exception {
+    void testShouldLocateInnerHtml() throws Exception {
         int[] path = { 2, 2 };
         check(FULL_INNER_HTML, INNER_HTML_BODY, CONTENT_TYPE_HTML, path);
     }
 
     @Test
-    public void testShouldLocateInnerMail() throws Exception {
+    void testShouldLocateInnerMail() throws Exception {
         int[] path = { 2, 3 };
         check(FULL_INNERMOST_EMAIL, RFC822_PLAIN_MAIL, CONTENT_TYPE_RFC822,
                 path);
     }
 
     @Test
-    public void testShouldLocateInnerPlain() throws Exception {
+    void testShouldLocateInnerPlain() throws Exception {
         int[] path = { 2, 1 };
         check(FULL_INNER_TXT, INNER_PLAIN_BODY, CONTENT_TYPE_PLAIN, path);
     }
