@@ -24,19 +24,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.InputStream;
 
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class DefaultTextExtractorTest {
-    private TextExtractor textExtractor;
+class DefaultTextExtractorTest {
+    TextExtractor textExtractor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         textExtractor = new DefaultTextExtractor();
     }
 
     @Test
-    public void textTest() throws Exception {
+    void textTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "text/plain")
@@ -45,7 +45,7 @@ public class DefaultTextExtractorTest {
     }
 
     @Test
-    public void textMicrosoftWorldTest() throws Exception {
+    void textMicrosoftWorldTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.docx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(
