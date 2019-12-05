@@ -32,20 +32,20 @@ import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.MessageSearches;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SearchUtilsRFC822Test {
+class SearchUtilsRFC822Test {
 
-    private static final String FROM_ADDRESS = "Harry <harry@example.org";
+    static final String FROM_ADDRESS = "Harry <harry@example.org";
 
-    private static final String SUBJECT_PART = "Mixed";
+    static final String SUBJECT_PART = "Mixed";
 
-    private static final String CUSTARD = "CUSTARD";
+    static final String CUSTARD = "CUSTARD";
 
-    private static final String RHUBARD = "Rhubard";
+    static final String RHUBARD = "Rhubard";
 
-    private static final String BODY = "This is a simple email\r\n "
+    static final String BODY = "This is a simple email\r\n "
             + "It has " + RHUBARD + ".\r\n" + "It has " + CUSTARD + ".\r\n"
             + "It needs naught else.\r\n";
 
@@ -53,10 +53,10 @@ public class SearchUtilsRFC822Test {
 
     Collection<MessageUid> recent;
 
-    private MessageSearches messageSearches;
+    MessageSearches messageSearches;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         recent = new ArrayList<>();
         MessageBuilder builder = new MessageBuilder();
         builder.header("From", "Alex <alex@example.org");
@@ -74,7 +74,7 @@ public class SearchUtilsRFC822Test {
 
 
     @Test
-    public void testBodyShouldMatchPhraseInBody() throws Exception {
+    void testBodyShouldMatchPhraseInBody() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(CUSTARD), row,
                 recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery
@@ -82,7 +82,7 @@ public class SearchUtilsRFC822Test {
     }
 
     @Test
-    public void testBodyMatchShouldBeCaseInsensitive() throws Exception {
+    void testBodyMatchShouldBeCaseInsensitive() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(RHUBARD), row,
                 recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(RHUBARD
@@ -92,7 +92,7 @@ public class SearchUtilsRFC822Test {
     }
 
     @Test
-    public void testBodyShouldNotMatchPhraseOnlyInHeader() throws Exception {
+    void testBodyShouldNotMatchPhraseOnlyInHeader() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(FROM_ADDRESS),
                 row, recent)).isFalse();
         assertThat(messageSearches.isMatch(SearchQuery.bodyContains(SUBJECT_PART),
@@ -100,7 +100,7 @@ public class SearchUtilsRFC822Test {
     }
 
     @Test
-    public void testTextShouldMatchPhraseInBody() throws Exception {
+    void testTextShouldMatchPhraseInBody() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(CUSTARD), row,
                 recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery
@@ -108,7 +108,7 @@ public class SearchUtilsRFC822Test {
     }
 
     @Test
-    public void testTextMatchShouldBeCaseInsensitive() throws Exception {
+    void testTextMatchShouldBeCaseInsensitive() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(RHUBARD), row,
                 recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(RHUBARD
@@ -118,7 +118,7 @@ public class SearchUtilsRFC822Test {
     }
 
     @Test
-    public void testBodyShouldMatchPhraseOnlyInHeader() throws Exception {
+    void testBodyShouldMatchPhraseOnlyInHeader() throws Exception {
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(FROM_ADDRESS),
                 row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(SUBJECT_PART),
