@@ -21,6 +21,7 @@ package org.apache.james.protocols.netty;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.jboss.netty.channel.ChannelPipeline;
 import org.jboss.netty.channel.group.ChannelGroup;
 import org.jboss.netty.handler.execution.ExecutionHandler;
@@ -46,17 +47,11 @@ public abstract class AbstractSSLAwareChannelPipelineFactory extends AbstractCha
             ChannelHandlerFactory frameHandlerFactory, HashedWheelTimer hashedWheelTimer) {
         this(timeout, maxConnections, maxConnectsPerIp, group, eHandler, frameHandlerFactory, hashedWheelTimer);
         
-        // We need to copy the String array becuase of possible security issues.
+        // We need to copy the String array because of possible security issues.
         // See https://issues.apache.org/jira/browse/PROTOCOLS-18
-        if (enabledCipherSuites != null) {
-            this.enabledCipherSuites = new String[enabledCipherSuites.length];
-            for (int i = 0; i < enabledCipherSuites.length; i++) {
-                this.enabledCipherSuites[i] = new String(enabledCipherSuites[i]);
-            }
-        }
+        this.enabledCipherSuites = ArrayUtils.clone(enabledCipherSuites);
     }
 
-    
     @Override
     public ChannelPipeline getPipeline() throws Exception {
         ChannelPipeline pipeline =  super.getPipeline();
