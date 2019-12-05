@@ -31,25 +31,20 @@ import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.fixture.MailboxFixture;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class SystemMailboxesProviderImplTest {
+class SystemMailboxesProviderImplTest {
 
-    private MailboxSession mailboxSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
-    private SystemMailboxesProviderImpl systemMailboxProvider;
+    MailboxSession mailboxSession = MailboxSessionUtil.create(MailboxFixture.ALICE);
+    SystemMailboxesProviderImpl systemMailboxProvider;
 
-    private MailboxManager mailboxManager;
+    MailboxManager mailboxManager;
 
-    private MessageManager inboxMessageManager;
+    MessageManager inboxMessageManager;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         mailboxManager = mock(MailboxManager.class);
         inboxMessageManager = mock(MessageManager.class);
 
@@ -57,7 +52,7 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    public void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
+    void getMailboxByRoleShouldReturnEmptyWhenNoMailbox() throws Exception {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenThrow(MailboxNotFoundException.class);
 
@@ -65,7 +60,7 @@ public class SystemMailboxesProviderImplTest {
     }
 
     @Test
-    public void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
+    void getMailboxByRoleShouldReturnMailboxByRole() throws Exception {
         when(mailboxManager.createSystemSession(MailboxFixture.ALICE)).thenReturn(mailboxSession);
         when(mailboxManager.getMailbox(eq(MailboxFixture.INBOX_ALICE), eq(mailboxSession))).thenReturn(inboxMessageManager);
 
