@@ -21,20 +21,20 @@ package org.apache.james.mailbox.store.mail.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.MessageUid;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MessageUidProviderTest {
+class MessageUidProviderTest {
 
-    private MessageUidProvider testee;
+    MessageUidProvider testee;
 
-    @Before
-    public void setup() {
+    @BeforeEach
+    void setup() {
         testee = new MessageUidProvider();
     }
 
     @Test
-    public void nextShouldReturn1WhenFirstCall() {
+    void nextShouldReturn1WhenFirstCall() {
         MessageUid messageUid = testee.next();
 
         MessageUid expectedMessageUid = MessageUid.of(1);
@@ -42,7 +42,7 @@ public class MessageUidProviderTest {
     }
 
     @Test
-    public void nextShouldReturn2WhenSecondCall() {
+    void nextShouldReturn2WhenSecondCall() {
         testee.next();
         MessageUid messageUid = testee.next();
 
@@ -51,7 +51,7 @@ public class MessageUidProviderTest {
     }
 
     @Test
-    public void nextShouldReturn3WhenThirdCall() {
+    void nextShouldReturn3WhenThirdCall() {
         testee.next();
         testee.next();
         MessageUid messageUid = testee.next();
