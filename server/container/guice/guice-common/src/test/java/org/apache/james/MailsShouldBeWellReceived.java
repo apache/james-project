@@ -62,9 +62,20 @@ interface MailsShouldBeWellReceived {
             .addDomain(DOMAIN)
             .addUser(JAMES_USER, PASSWORD);
 
+        MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+
+        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
+
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            sender.connect(JAMES_SERVER_HOST, server.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-                .sendMessage("bob@any.com", JAMES_USER);
+            Mono.fromRunnable(
+                Throwing.runnable(() -> {
+                    sender.connect(JAMES_SERVER_HOST, smtpPort);
+                    sendUniqueMessage(sender, message);
+                }))
+                .subscribeOn(Schedulers.elastic())
+                .block();
         }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
@@ -73,8 +84,9 @@ interface MailsShouldBeWellReceived {
             reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(JAMES_USER, PASSWORD)
                 .select(IMAPMessageReader.INBOX)
-                .awaitMessage(CALMLY_AWAIT);
+                .awaitMessageCount(CALMLY_AWAIT, 1);
         }
+
     }
 
     @Test
