@@ -23,6 +23,7 @@ import java.util.Objects;
 
 import org.apache.james.jmap.api.model.Preview;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 
 public class MessageFastViewPrecomputedProperties {
@@ -95,5 +96,13 @@ public class MessageFastViewPrecomputedProperties {
     @Override
     public final int hashCode() {
         return Objects.hash(preview, hasAttachment);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("preview", preview)
+            .add("hasAttachment", hasAttachment)
+            .toString();
     }
 }
