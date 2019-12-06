@@ -24,6 +24,7 @@ import org.apache.mailet.Attribute;
 import org.apache.mailet.AttributeName;
 import org.apache.mailet.AttributeValue;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -84,15 +85,24 @@ public class SpamAssassinResult {
                 headersAsAttributes.add(new Attribute(STATUS_MAIL, AttributeValue.of("No, hits=" + hits + " required=" + requiredHits)));
             }
 
-            return new SpamAssassinResult(hits, requiredHits, headersAsAttributes.build());
+            SpamStatus status = isSpam ? SpamStatus.Spam : SpamStatus.Ham;
+
+            return new SpamAssassinResult(status, hits, requiredHits, headersAsAttributes.build());
         }
     }
 
+    enum SpamStatus {
+        Spam,
+        Ham
+    }
+
+    private final SpamStatus status;
     private final String hits;
     private final String requiredHits;
     private final List<Attribute> headersAsAttributes;
 
-    private SpamAssassinResult(String hits, String requiredHits, List<Attribute> headersAsAttributes) {
+    private SpamAssassinResult(SpamStatus status, String hits, String requiredHits, List<Attribute> headersAsAttributes) {
+        this.status = status;
         this.hits = hits;
         this.requiredHits = requiredHits;
         this.headersAsAttributes = headersAsAttributes;
@@ -110,4 +120,13 @@ public class SpamAssassinResult {
         return headersAsAttributes;
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("status", status)
+            .add("hits", hits)
+            .add("requiredHits", requiredHits)
+            .add("headersAsAttributes", headersAsAttributes)
+            .toString();
+    }
 }
