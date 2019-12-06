@@ -30,7 +30,6 @@ import java.util.Map;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -49,29 +48,16 @@ public class FetchResponseEncoderNoExtensionsTest {
 
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = mock(ImapEncoder.class);
-        encoder = new FetchResponseEncoder(mockNextEncoder, true);
+        encoder = new FetchResponseEncoder(true);
         flags = new Flags(Flags.Flag.DELETED);
         stubStructure = mock(FetchResponse.Structure.class);
-    }
-
-
-    @Test
-    public void testShouldNotAcceptUnknownResponse() {
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-    }
-
-    @Test
-    public void testShouldAcceptFetchResponse() {
-        assertThat(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
-                null, null, null, null, null))).isTrue();
     }
 
     @Test
     public void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
                 null, null, null, null);
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
     }
 
@@ -79,7 +65,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     public void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
     }
@@ -88,7 +74,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     public void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
 
     }
@@ -113,7 +99,7 @@ public class FetchResponseEncoderNoExtensionsTest {
         when(stubStructure.getDescription()).thenReturn("");
 
         final FakeImapSession fakeImapSession = new FakeImapSession();
-        encoder.doEncode(message, composer, fakeImapSession);
+        encoder.encode(message, composer, fakeImapSession);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n");
 
     }

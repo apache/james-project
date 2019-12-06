@@ -19,7 +19,15 @@
 
 package org.apache.james.imap.encode.main;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.Localizer;
+import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ACLResponseEncoder;
 import org.apache.james.imap.encode.AnnotationResponseEncoder;
 import org.apache.james.imap.encode.AuthenticateResponseEncoder;
@@ -33,6 +41,8 @@ import org.apache.james.imap.encode.FetchResponseEncoder;
 import org.apache.james.imap.encode.FlagsResponseEncoder;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapEncoderFactory;
+import org.apache.james.imap.encode.ImapResponseComposer;
+import org.apache.james.imap.encode.ImapResponseEncoder;
 import org.apache.james.imap.encode.LSubResponseEncoder;
 import org.apache.james.imap.encode.ListResponseEncoder;
 import org.apache.james.imap.encode.ListRightsResponseEncoder;
@@ -48,10 +58,36 @@ import org.apache.james.imap.encode.VanishedResponseEncoder;
 import org.apache.james.imap.encode.XListResponseEncoder;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 
+import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableList;
+
 /**
  * TODO: perhaps a POJO would be better
  */
 public class DefaultImapEncoderFactory implements ImapEncoderFactory {
+    private static class DefaultImapEncoder implements ImapEncoder {
+        private final Map<Class<? extends ImapMessage>, ImapResponseEncoder> encoders;
+        private final EndImapEncoder endImapEncoder;
+
+        private DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
+            this.encoders = encoders
+                .collect(Guavate.toImmutableMap(
+                    ImapResponseEncoder::acceptableMessages,
+                    Function.identity()));
+            this.endImapEncoder = endImapEncoder;
+        }
+
+        @Override
+        public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
+            ImapResponseEncoder imapResponseEncoder = encoders.get(message.getClass());
+
+            if (imapResponseEncoder != null) {
+                imapResponseEncoder.encode(message, composer, session);
+            } else {
+                endImapEncoder.encode(message, composer, session);
+            }
+        }
+    }
 
     /**
      * Builds the default encoder
@@ -64,33 +100,32 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
      * @return not null
      */
     public static final ImapEncoder createDefaultEncoder(Localizer localizer, boolean neverAddBodyStructureExtensions) {
-        final EndImapEncoder endImapEncoder = new EndImapEncoder();
-        
-        final AnnotationResponseEncoder annotationResponseEncoder = new AnnotationResponseEncoder(endImapEncoder);
-        final MyRightsResponseEncoder myRightsResponseEncoder = new MyRightsResponseEncoder(annotationResponseEncoder); 
-        final ListRightsResponseEncoder listRightsResponseEncoder = new ListRightsResponseEncoder(myRightsResponseEncoder); 
-        final ACLResponseEncoder aclResponseEncoder = new ACLResponseEncoder(listRightsResponseEncoder); 
-        final NamespaceResponseEncoder namespaceEncoder = new NamespaceResponseEncoder(aclResponseEncoder);
-        final StatusResponseEncoder statusResponseEncoder = new StatusResponseEncoder(namespaceEncoder, localizer);
-        final RecentResponseEncoder recentResponseEncoder = new RecentResponseEncoder(statusResponseEncoder);
-        final FetchResponseEncoder fetchResponseEncoder = new FetchResponseEncoder(recentResponseEncoder, neverAddBodyStructureExtensions);
-        final ExpungeResponseEncoder expungeResponseEncoder = new ExpungeResponseEncoder(fetchResponseEncoder);
-        final ExistsResponseEncoder existsResponseEncoder = new ExistsResponseEncoder(expungeResponseEncoder);
-        final MailboxStatusResponseEncoder statusCommandResponseEncoder = new MailboxStatusResponseEncoder(existsResponseEncoder);
-        final SearchResponseEncoder searchResponseEncoder = new SearchResponseEncoder(statusCommandResponseEncoder);
-        final LSubResponseEncoder lsubResponseEncoder = new LSubResponseEncoder(searchResponseEncoder);
-        final ListResponseEncoder listResponseEncoder = new ListResponseEncoder(lsubResponseEncoder);
-        final XListResponseEncoder xListResponseEncoder = new XListResponseEncoder(listResponseEncoder);
-        final FlagsResponseEncoder flagsResponseEncoder = new FlagsResponseEncoder(xListResponseEncoder);
-        final CapabilityResponseEncoder capabilityResponseEncoder = new CapabilityResponseEncoder(flagsResponseEncoder);
-        final EnableResponseEncoder enableResponseEncoder = new EnableResponseEncoder(capabilityResponseEncoder);
-        final ContinuationResponseEncoder continuationResponseEncoder = new ContinuationResponseEncoder(enableResponseEncoder, localizer);
-        final AuthenticateResponseEncoder authResponseEncoder = new AuthenticateResponseEncoder(continuationResponseEncoder);
-        final ESearchResponseEncoder esearchResponseEncoder = new ESearchResponseEncoder(authResponseEncoder);
-        final VanishedResponseEncoder vanishedResponseEncoder = new VanishedResponseEncoder(esearchResponseEncoder);
-        final QuotaResponseEncoder quotaResponseEncoder = new QuotaResponseEncoder(vanishedResponseEncoder);
-        final QuotaRootResponseEncoder quotaRootResponseEncoder = new QuotaRootResponseEncoder(quotaResponseEncoder);
-        return quotaRootResponseEncoder;
+        return new DefaultImapEncoder(Stream.of(
+            new AnnotationResponseEncoder(),
+            new MyRightsResponseEncoder(),
+            new ListRightsResponseEncoder(),
+            new ListResponseEncoder(),
+            new ACLResponseEncoder(),
+            new NamespaceResponseEncoder(),
+            new StatusResponseEncoder(localizer),
+            new RecentResponseEncoder(),
+            new FetchResponseEncoder(neverAddBodyStructureExtensions),
+            new ExpungeResponseEncoder(),
+            new ExistsResponseEncoder(),
+            new MailboxStatusResponseEncoder(),
+            new SearchResponseEncoder(),
+            new LSubResponseEncoder(),
+            new XListResponseEncoder(),
+            new FlagsResponseEncoder(),
+            new CapabilityResponseEncoder(),
+            new EnableResponseEncoder(),
+            new ContinuationResponseEncoder(localizer),
+            new AuthenticateResponseEncoder(),
+            new ESearchResponseEncoder(),
+            new VanishedResponseEncoder(),
+            new QuotaResponseEncoder(),
+            new QuotaRootResponseEncoder()),
+            new EndImapEncoder());
     }
 
     private final Localizer localizer;
@@ -110,7 +145,6 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
      *            parse BODYSTRUCTURE extensions, false to fully support RFC3501
      */
     public DefaultImapEncoderFactory(Localizer localizer, boolean neverAddBodyStructureExtensions) {
-        super();
         this.localizer = localizer;
         this.neverAddBodyStructureExtensions = neverAddBodyStructureExtensions;
     }

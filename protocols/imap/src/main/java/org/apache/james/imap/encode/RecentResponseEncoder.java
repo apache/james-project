@@ -21,27 +21,20 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.RecentResponse;
 
-public class RecentResponseEncoder extends AbstractChainedImapEncoder {
+public class RecentResponseEncoder implements ImapResponseEncoder<RecentResponse> {
     public static final String RECENT = "RECENT";
 
-    public RecentResponseEncoder(ImapEncoder next) {
-        super(next);
+    @Override
+    public Class<RecentResponse> acceptableMessages() {
+        return RecentResponse.class;
     }
 
     @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return (message instanceof RecentResponse);
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final RecentResponse recentResponse = (RecentResponse) acceptableMessage;
-        final int numberFlaggedRecent = recentResponse.getNumberFlaggedRecent();
+    public void encode(RecentResponse recentResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        int numberFlaggedRecent = recentResponse.getNumberFlaggedRecent();
         composer.untagged().message(numberFlaggedRecent).message(RECENT).end();
     }
 

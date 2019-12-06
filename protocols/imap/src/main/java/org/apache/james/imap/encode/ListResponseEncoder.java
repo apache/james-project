@@ -21,30 +21,20 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
-import org.apache.james.imap.message.response.AbstractListingResponse;
 import org.apache.james.imap.message.response.ListResponse;
 
 /**
  * Encoders IMAP4rev1 <code>List</code> responses.
  */
-public class ListResponseEncoder extends AbstractChainedImapEncoder {
-
-    public ListResponseEncoder(ImapEncoder next) {
-        super(next);
+public class ListResponseEncoder implements ImapResponseEncoder<ListResponse> {
+    @Override
+    public Class<ListResponse> acceptableMessages() {
+        return ListResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final AbstractListingResponse response = (AbstractListingResponse) acceptableMessage;
+    public void encode(ListResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
         ListingEncodingUtils.encodeListingResponse(ImapConstants.LIST_RESPONSE_NAME, composer, response);
     }
-
-    @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return (message instanceof ListResponse);
-    }
-
 }

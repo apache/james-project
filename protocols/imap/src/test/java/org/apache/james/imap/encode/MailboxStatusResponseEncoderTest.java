@@ -20,9 +20,7 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
@@ -34,23 +32,17 @@ public class MailboxStatusResponseEncoderTest  {
 
     MailboxStatusResponseEncoder encoder;
 
-    ImapEncoder mockNextEncoder;
-
     ByteImapResponseWriter writer = new ByteImapResponseWriter();
     ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = mock(ImapEncoder.class);
-        encoder = new MailboxStatusResponseEncoder(mockNextEncoder);
+        encoder = new MailboxStatusResponseEncoder();
     }
 
     @Test
-    public void testIsAcceptable() {
-        assertThat(encoder.isAcceptable(new MailboxStatusResponse(null, null, null,
-                null, null, null, "mailbox"))).isTrue();
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-        assertThat(encoder.isAcceptable(null)).isFalse();
+    public void acceptableMessagesShouldReturnMailboxStatusResponseClass() {
+        assertThat(encoder.acceptableMessages()).isEqualTo(MailboxStatusResponse.class);
     }
 
     @Test

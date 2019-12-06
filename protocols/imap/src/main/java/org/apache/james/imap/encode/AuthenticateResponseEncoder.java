@@ -20,25 +20,17 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 
-public class AuthenticateResponseEncoder  extends AbstractChainedImapEncoder {
-
-    public AuthenticateResponseEncoder(ImapEncoder next) {
-        super(next);
+public class AuthenticateResponseEncoder implements ImapResponseEncoder<AuthenticateResponse> {
+    @Override
+    public Class<AuthenticateResponse> acceptableMessages() {
+        return AuthenticateResponse.class;
     }
 
     @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return message instanceof AuthenticateResponse;
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(AuthenticateResponse message, ImapResponseComposer composer, ImapSession session) throws IOException {
         composer.continuationResponse("");
     }
-
 }

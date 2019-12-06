@@ -20,13 +20,10 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.XListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.junit.Before;
@@ -41,36 +38,12 @@ public class XListResponseEncoderTest {
 
     @Before
     public void setUp() throws Exception {
-        encoder = new XListResponseEncoder(mock(ImapEncoder.class));
+        encoder = new XListResponseEncoder();
     }
 
     @Test
     public void encoderShouldAcceptXListResponse() {
-        assertThat(encoder.isAcceptable(
-            new XListResponse(
-                MailboxMetaData.Children.HAS_CHILDREN,
-                MailboxMetaData.Selectability.NONE,
-                "name",
-                '.',
-                MailboxType.INBOX)))
-        .isTrue();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptLsubResponse() {
-        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-        assertThat(encoder.isAcceptable(null)).isFalse();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptImapMessage() {
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptNull() {
-        assertThat(encoder.isAcceptable(null)).isFalse();
+        assertThat(encoder.acceptableMessages()).isEqualTo(XListResponse.class);
     }
 
     @Test

@@ -22,24 +22,21 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.imap.message.response.NamespaceResponse.Namespace;
 
 /**
  * Encodes namespace responses.
  */
-public class NamespaceResponseEncoder extends AbstractChainedImapEncoder {
-
-    public NamespaceResponseEncoder(ImapEncoder next) {
-        super(next);
+public class NamespaceResponseEncoder implements ImapResponseEncoder<NamespaceResponse> {
+    @Override
+    public Class<NamespaceResponse> acceptableMessages() {
+        return NamespaceResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final NamespaceResponse response = (NamespaceResponse) acceptableMessage;
+    public void encode(NamespaceResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
         composer.untagged();
         composer.commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
 
@@ -77,10 +74,4 @@ public class NamespaceResponseEncoder extends AbstractChainedImapEncoder {
         composer.quote(delimiter);
         composer.closeParen();
     }
-
-    @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return message instanceof NamespaceResponse;
-    }
-
 }

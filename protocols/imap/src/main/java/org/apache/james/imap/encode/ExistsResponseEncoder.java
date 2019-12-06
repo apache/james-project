@@ -21,28 +21,20 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ExistsResponse;
 
-public class ExistsResponseEncoder extends AbstractChainedImapEncoder {
-   
+public class ExistsResponseEncoder implements ImapResponseEncoder<ExistsResponse> {
     public static final String EXISTS = "EXISTS";
 
-    public ExistsResponseEncoder(ImapEncoder next) {
-        super(next);
+    @Override
+    public Class<ExistsResponse> acceptableMessages() {
+        return ExistsResponse.class;
     }
 
     @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return message instanceof ExistsResponse;
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final ExistsResponse existsResponse = (ExistsResponse) acceptableMessage;
-        final long numberOfMessages = existsResponse.getNumberOfMessages();
+    public void encode(ExistsResponse existsResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        long numberOfMessages = existsResponse.getNumberOfMessages();
         
         composer.untagged().message(numberOfMessages).message(EXISTS).end();
 

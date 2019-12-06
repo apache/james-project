@@ -26,7 +26,6 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
-import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.model.Quota;
@@ -43,7 +42,7 @@ public class QuotaResponseEncoderTest {
             Quota.<QuotaCountLimit, QuotaCountUsage>builder().used(QuotaCountUsage.count(231)).computedLimit(QuotaCountLimit.count(1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
-        QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
+        QuotaResponseEncoder encoder = new QuotaResponseEncoder();
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTA root (MESSAGE 231 1024)\r\n");
@@ -55,7 +54,7 @@ public class QuotaResponseEncoderTest {
         Quota.<QuotaSizeLimit, QuotaSizeUsage>builder().used(QuotaSizeUsage.size(231 * 1024)).computedLimit(QuotaSizeLimit.size(1024 * 1024)).build());
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
-        QuotaResponseEncoder encoder = new QuotaResponseEncoder(new EndImapEncoder());
+        QuotaResponseEncoder encoder = new QuotaResponseEncoder();
         encoder.encode(response, composer, null);
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");

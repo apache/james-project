@@ -23,26 +23,21 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.QuotaResponse;
 import org.apache.james.mailbox.model.Quota;
 
 /**
  * Quota response encoder
  */
-public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
-
-    public QuotaResponseEncoder(ImapEncoder next) {
-        super(next);
+public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> {
+    @Override
+    public Class<QuotaResponse> acceptableMessages() {
+        return QuotaResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-
-        QuotaResponse quotaResponse = (QuotaResponse) acceptableMessage;
-
+    public void encode(QuotaResponse quotaResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
         String quotaRoot = quotaResponse.getQuotaRoot();
         Quota<?, ?> quota = quotaResponse.getQuota();
 
@@ -75,10 +70,4 @@ public class QuotaResponseEncoder extends AbstractChainedImapEncoder {
         composer.message(quota.getUsed().asLong());
         composer.message(quota.getLimit().asLong());
     }
-
-    @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return message instanceof QuotaResponse;
-    }
-
 }

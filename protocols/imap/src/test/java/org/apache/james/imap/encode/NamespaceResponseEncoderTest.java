@@ -26,7 +26,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.NamespaceResponse;
 import org.junit.Before;
@@ -35,18 +34,14 @@ import org.mockito.InOrder;
 import org.mockito.Mockito;
 
 public class NamespaceResponseEncoderTest {
-
     ImapSession dummySession;
-
     ImapResponseComposer mockComposer;
-
     NamespaceResponseEncoder subject;
 
     @Before
     public void setUp() throws Exception {
         dummySession = new FakeImapSession();
-        final ImapEncoder stubNextEncoderInChain = mock(ImapEncoder.class);
-        subject = new NamespaceResponseEncoder(stubNextEncoderInChain);
+        subject = new NamespaceResponseEncoder();
         mockComposer = mock(ImapResponseComposer.class);
     }
 
@@ -59,7 +54,7 @@ public class NamespaceResponseEncoderTest {
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
-        subject.doEncode(new NamespaceResponse(null, null, namespaces),
+        subject.encode(new NamespaceResponse(null, null, namespaces),
                 mockComposer, dummySession);
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
@@ -82,7 +77,7 @@ public class NamespaceResponseEncoderTest {
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
-        subject.doEncode(new NamespaceResponse(null, namespaces, null),
+        subject.encode(new NamespaceResponse(null, namespaces, null),
                 mockComposer, dummySession);
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
@@ -106,7 +101,7 @@ public class NamespaceResponseEncoderTest {
         List<NamespaceResponse.Namespace> namespaces = new ArrayList<>();
         namespaces.add(new NamespaceResponse.Namespace(aPrefix, aDeliminator
                 .charAt(0)));
-        subject.doEncode(new NamespaceResponse(namespaces, null, null),
+        subject.encode(new NamespaceResponse(namespaces, null, null),
                 mockComposer, dummySession);
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
@@ -133,7 +128,7 @@ public class NamespaceResponseEncoderTest {
                 .charAt(0)));
         namespaces.add(new NamespaceResponse.Namespace(anotherPrefix,
                 anotherDeliminator.charAt(0)));
-        subject.doEncode(new NamespaceResponse(namespaces, null, null),
+        subject.encode(new NamespaceResponse(namespaces, null, null),
                 mockComposer, dummySession);
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
@@ -154,7 +149,7 @@ public class NamespaceResponseEncoderTest {
     @Test
     public void testAllNullShouldWriteAllNIL() throws Exception {
 
-        subject.doEncode(new NamespaceResponse(null, null, null), mockComposer,
+        subject.encode(new NamespaceResponse(null, null, null), mockComposer,
                 dummySession);
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
@@ -166,9 +161,7 @@ public class NamespaceResponseEncoderTest {
 
     @Test
     public void testNamespaceResponseIsAcceptable() {
-        assertThat(subject.isAcceptable(mock(ImapMessage.class))).isFalse();
-        assertThat(subject
-                .isAcceptable(new NamespaceResponse(null, null, null))).isTrue();
+        assertThat(subject.acceptableMessages()).isEqualTo(NamespaceResponse.class);
     }
 
 }

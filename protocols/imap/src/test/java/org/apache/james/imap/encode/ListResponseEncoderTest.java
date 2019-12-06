@@ -20,50 +20,27 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.ListResponse;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.junit.Before;
 import org.junit.Test;
 
 public class ListResponseEncoderTest {
-
     private ListResponseEncoder encoder;
-
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     @Before
     public void setUp() throws Exception {
-        encoder = new ListResponseEncoder(mock(ImapEncoder.class));
+        encoder = new ListResponseEncoder();
     }
 
     @Test
     public void encoderShouldAcceptListResponse() {
-        assertThat(encoder.isAcceptable(new ListResponse(MailboxMetaData.Children.HAS_CHILDREN, MailboxMetaData.Selectability.NONE, "name", '.')))
-        .isTrue();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptLsubResponse() {
-        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-        assertThat(encoder.isAcceptable(null)).isFalse();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptImapMessage() {
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-    }
-
-    @Test
-    public void encoderShouldNotAcceptNull() {
-        assertThat(encoder.isAcceptable(null)).isFalse();
+        assertThat(encoder.acceptableMessages()).isEqualTo(ListResponse.class);
     }
 
     @Test

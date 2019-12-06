@@ -23,26 +23,18 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.FlagsResponse;
 
-public class FlagsResponseEncoder extends AbstractChainedImapEncoder {
-
-    public FlagsResponseEncoder(ImapEncoder next) {
-        super(next);
+public class FlagsResponseEncoder implements ImapResponseEncoder<FlagsResponse> {
+    @Override
+    public Class<FlagsResponse> acceptableMessages() {
+        return FlagsResponse.class;
     }
 
     @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return message instanceof FlagsResponse;
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final FlagsResponse flagsResponse = (FlagsResponse) acceptableMessage;
-        final Flags flags = flagsResponse.getFlags();
+    public void encode(FlagsResponse flagsResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        Flags flags = flagsResponse.getFlags();
         composer.untagged().flags(flags).end();
     }
 }

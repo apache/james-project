@@ -22,25 +22,22 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.MyRightsResponse;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * MYRIGHTS Response Encoder.
  */
-public class MyRightsResponseEncoder extends AbstractChainedImapEncoder {
-
-    public MyRightsResponseEncoder(ImapEncoder next) {
-        super(next);
+public class MyRightsResponseEncoder implements ImapResponseEncoder<MyRightsResponse> {
+    @Override
+    public Class<MyRightsResponse> acceptableMessages() {
+        return MyRightsResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final MyRightsResponse aclResponse = (MyRightsResponse) acceptableMessage;
-        final Rfc4314Rights myRights = aclResponse.getMyRights();
+    public void encode(MyRightsResponse aclResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        Rfc4314Rights myRights = aclResponse.getMyRights();
         composer.untagged();
         composer.commandName(ImapConstants.MYRIGHTS_RESPONSE_NAME);
         
@@ -48,10 +45,5 @@ public class MyRightsResponseEncoder extends AbstractChainedImapEncoder {
         composer.mailbox(mailboxName == null ? "" : mailboxName);
         composer.quote(myRights == null ? "" : myRights.serialize());
         composer.end();
-    }
-
-    @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return message instanceof MyRightsResponse;
     }
 }

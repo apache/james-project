@@ -20,12 +20,9 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
-import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,27 +32,19 @@ public class SearchResponseEncoderTest {
     private static final long[] IDS = { 1, 4, 9, 16 };
 
     private SearchResponse response;
-
     private SearchResponseEncoder encoder;
-
-    private ImapEncoder mockNextEncoder;
-
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
 
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = mock(ImapEncoder.class);
         response = new SearchResponse(IDS, null);
-        encoder = new SearchResponseEncoder(mockNextEncoder);
+        encoder = new SearchResponseEncoder();
     }
 
     @Test
-    public void testIsAcceptable() {
-        assertThat(encoder.isAcceptable(response)).isTrue();
-        assertThat(encoder.isAcceptable(new LSubResponse("name", true, '.'))).isFalse();
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-        assertThat(encoder.isAcceptable(null)).isFalse();
+    public void acceptableMessagesShouldReturnSearchResponseClass() {
+        assertThat(encoder.acceptableMessages()).isEqualTo(SearchResponse.class);
     }
 
     @Test

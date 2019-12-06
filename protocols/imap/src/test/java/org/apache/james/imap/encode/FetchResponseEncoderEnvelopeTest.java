@@ -51,9 +51,6 @@ public class FetchResponseEncoderEnvelopeTest {
 
     private static final int MSN = 100;
 
-
-    private ImapEncoder mockNextEncoder;
-
     private FetchResponseEncoder encoder;
 
     private FetchResponse message;
@@ -100,8 +97,7 @@ public class FetchResponseEncoderEnvelopeTest {
         to = null;
 
         message = new FetchResponse(MSN, null, null, null, null, null, envelope, null, null, null);
-        mockNextEncoder = mock(ImapEncoder.class);
-        encoder = new FetchResponseEncoder(mockNextEncoder, false);
+        encoder = new FetchResponseEncoder(false);
     }
 
     private Address[] mockOneAddress() {
@@ -144,7 +140,7 @@ public class FetchResponseEncoderEnvelopeTest {
     @Test
     public void testShouldNilAllNullProperties() throws Exception {
         envelopExpects();
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL NIL NIL NIL NIL))\r\n");
     }
@@ -155,7 +151,7 @@ public class FetchResponseEncoderEnvelopeTest {
         envelopExpects();
         
         
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (\"a date\" NIL NIL NIL NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -165,7 +161,7 @@ public class FetchResponseEncoderEnvelopeTest {
         subject = "some subject";
         envelopExpects();
         
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL \"some subject\" NIL NIL NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -175,7 +171,7 @@ public class FetchResponseEncoderEnvelopeTest {
         inReplyTo = "some reply to";
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL NIL NIL \"some reply to\" NIL))\r\n");
     }
 
@@ -184,7 +180,7 @@ public class FetchResponseEncoderEnvelopeTest {
         messageId = "some message id";
         envelopExpects();
         
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL NIL NIL NIL \"some message id\"))\r\n");
 
     }
@@ -193,7 +189,7 @@ public class FetchResponseEncoderEnvelopeTest {
     public void testShouldComposeOneFromAddress() throws Exception {
         from = mockOneAddress();
         envelopExpects();
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -203,7 +199,7 @@ public class FetchResponseEncoderEnvelopeTest {
         from = mockManyAddresses();
         envelopExpects();
         
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -213,7 +209,7 @@ public class FetchResponseEncoderEnvelopeTest {
         sender = mockOneAddress();
         envelopExpects();
      
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -223,7 +219,7 @@ public class FetchResponseEncoderEnvelopeTest {
         sender = mockManyAddresses();
         envelopExpects();
      
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -234,7 +230,7 @@ public class FetchResponseEncoderEnvelopeTest {
         replyTo = mockOneAddress();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -244,7 +240,7 @@ public class FetchResponseEncoderEnvelopeTest {
         replyTo = mockManyAddresses();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL NIL NIL NIL))\r\n");
 
     }
@@ -254,7 +250,7 @@ public class FetchResponseEncoderEnvelopeTest {
         to = mockOneAddress();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL NIL NIL))\r\n");
 
     }
@@ -264,7 +260,7 @@ public class FetchResponseEncoderEnvelopeTest {
         to = mockManyAddresses();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL NIL NIL))\r\n");
 
     }
@@ -274,7 +270,7 @@ public class FetchResponseEncoderEnvelopeTest {
         cc = mockOneAddress();
         envelopExpects();
 
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL NIL))\r\n");
 
     }
@@ -284,7 +280,7 @@ public class FetchResponseEncoderEnvelopeTest {
         cc = mockManyAddresses();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL NIL))\r\n");
 
     }
@@ -294,7 +290,7 @@ public class FetchResponseEncoderEnvelopeTest {
         bcc = mockOneAddress();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")) NIL NIL))\r\n");
 
     }
@@ -304,7 +300,7 @@ public class FetchResponseEncoderEnvelopeTest {
         bcc = mockManyAddresses();
         envelopExpects();
        
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (ENVELOPE (NIL NIL NIL NIL NIL NIL NIL ((\"NAME\" \"DOMAIN LIST\" \"MAILBOX\" \"HOST\")(\"2NAME\" \"2DOMAIN LIST\" \"2MAILBOX\" \"2HOST\")) NIL NIL))\r\n");
 
     }

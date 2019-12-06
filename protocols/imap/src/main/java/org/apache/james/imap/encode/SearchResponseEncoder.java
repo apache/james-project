@@ -21,24 +21,21 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
 /**
  * Encoders IMAP4rev1 <code>SEARCH</code> responses.
  */
-public class SearchResponseEncoder extends AbstractChainedImapEncoder {
-
-    public SearchResponseEncoder(ImapEncoder next) {
-        super(next);
+public class SearchResponseEncoder implements ImapResponseEncoder<SearchResponse> {
+    @Override
+    public Class<SearchResponse> acceptableMessages() {
+        return SearchResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        SearchResponse response = (SearchResponse) acceptableMessage;
+    public void encode(SearchResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
         final long[] ids = response.getIds();
         ModSeq highestModSeq = response.getHighestModSeq();
         composer.untagged();
@@ -57,10 +54,5 @@ public class SearchResponseEncoder extends AbstractChainedImapEncoder {
             composer.closeParen();
         }
         composer.end();
-    }
-
-    @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return (message instanceof SearchResponse);
     }
 }

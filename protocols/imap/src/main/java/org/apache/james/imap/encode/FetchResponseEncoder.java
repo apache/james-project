@@ -31,9 +31,7 @@ import java.util.TreeSet;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.FetchResponse;
 import org.apache.james.imap.message.response.FetchResponse.Structure;
 import org.apache.james.mailbox.MessageUid;
@@ -41,7 +39,7 @@ import org.apache.james.mailbox.ModSeq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class FetchResponseEncoder extends AbstractChainedImapEncoder {
+public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> {
     private static final Logger LOGGER = LoggerFactory.getLogger(FetchResponseEncoder.class);
     public static final String ENVELOPE = "ENVELOPE";
 
@@ -50,44 +48,38 @@ public class FetchResponseEncoder extends AbstractChainedImapEncoder {
 
     /**
      * Constructs an encoder for FETCH messages.
-     * 
-     * @param next
-     *            not null
+     *
      * @param neverAddBodyStructureExtensions
      *            true to activate a workaround for broken clients who cannot
      *            parse BODYSTRUCTURE extensions, false to fully support RFC3501
      */
-    public FetchResponseEncoder(ImapEncoder next, boolean neverAddBodyStructureExtensions) {
-        super(next);
+    public FetchResponseEncoder(boolean neverAddBodyStructureExtensions) {
         this.neverAddBodyStructureExtensions = neverAddBodyStructureExtensions;
     }
 
     @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return (message instanceof FetchResponse);
+    public Class<FetchResponse> acceptableMessages() {
+        return FetchResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        if (acceptableMessage instanceof FetchResponse) {
-            final FetchResponse fetchResponse = (FetchResponse) acceptableMessage;
-            final long messageNumber = fetchResponse.getMessageNumber();
-            
-            composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND_NAME).openParen();
+    public void encode(FetchResponse fetchResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        long messageNumber = fetchResponse.getMessageNumber();
 
-            
-            encodeModSeq(composer, fetchResponse);
-            encodeFlags(composer, fetchResponse);
-            encodeInternalDate(composer, fetchResponse);
-            encodeSize(composer, fetchResponse);
-            encodeEnvelope(composer, fetchResponse);
-            encodeBody(composer, fetchResponse.getBody(), session);
-            encodeBodyStructure(composer, fetchResponse.getBodyStructure(), session);
-            encodeUid(composer, fetchResponse);
-            encodeBodyElements(composer, fetchResponse.getElements());
-            
-            composer.closeParen().end();
-        }
+        composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND_NAME).openParen();
+
+
+        encodeModSeq(composer, fetchResponse);
+        encodeFlags(composer, fetchResponse);
+        encodeInternalDate(composer, fetchResponse);
+        encodeSize(composer, fetchResponse);
+        encodeEnvelope(composer, fetchResponse);
+        encodeBody(composer, fetchResponse.getBody(), session);
+        encodeBodyStructure(composer, fetchResponse.getBodyStructure(), session);
+        encodeUid(composer, fetchResponse);
+        encodeBodyElements(composer, fetchResponse.getElements());
+
+        composer.closeParen().end();
     }
 
     // Handle the MODSEQ 

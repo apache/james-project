@@ -20,11 +20,9 @@
 package org.apache.james.imap.encode;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -35,36 +33,25 @@ import org.junit.Test;
 public class FetchResponseEncoderTest  {
     private ByteImapResponseWriter writer = new ByteImapResponseWriter();
     private ImapResponseComposer composer = new ImapResponseComposerImpl(writer);
-   
     private Flags flags;
-
-    private ImapEncoder mockNextEncoder;
-
     private FetchResponseEncoder encoder;
 
     @Before
     public void setUp() throws Exception {
-        mockNextEncoder = mock(ImapEncoder.class);
-        encoder = new FetchResponseEncoder(mockNextEncoder, false);
+        encoder = new FetchResponseEncoder(false);
         flags = new Flags(Flags.Flag.DELETED);
     }
 
     @Test
-    public void testShouldNotAcceptUnknownResponse() {
-        assertThat(encoder.isAcceptable(mock(ImapMessage.class))).isFalse();
-    }
-
-    @Test
     public void testShouldAcceptFetchResponse() {
-        assertThat(encoder.isAcceptable(new FetchResponse(11, null, null, null, null,
-                null, null, null, null, null))).isTrue();
+        assertThat(encoder.acceptableMessages()).isEqualTo(FetchResponse.class);
     }
 
     @Test
     public void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
                 null, null, null, null);
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
 
 
@@ -74,7 +61,7 @@ public class FetchResponseEncoderTest  {
     public void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
 
@@ -84,7 +71,7 @@ public class FetchResponseEncoderTest  {
     public void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.doEncode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer, new FakeImapSession());
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
         
     }

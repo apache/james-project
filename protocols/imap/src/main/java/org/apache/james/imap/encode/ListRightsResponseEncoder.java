@@ -22,24 +22,21 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 
 /**
  * ACL Response Encoder.
  */
-public class ListRightsResponseEncoder extends AbstractChainedImapEncoder {
-
-    public ListRightsResponseEncoder(ImapEncoder next) {
-        super(next);
+public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRightsResponse> {
+    @Override
+    public Class<ListRightsResponse> acceptableMessages() {
+        return ListRightsResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final ListRightsResponse listRightsResponse = (ListRightsResponse) acceptableMessage;
+    public void encode(ListRightsResponse listRightsResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
         composer.untagged();
         composer.commandName(ImapConstants.LISTRIGHTS_RESPONSE_NAME);
         
@@ -55,10 +52,5 @@ public class ListRightsResponseEncoder extends AbstractChainedImapEncoder {
             composer.quote(entry.serialize());
        }
         composer.end();
-    }
-
-    @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return message instanceof ListRightsResponse;
     }
 }

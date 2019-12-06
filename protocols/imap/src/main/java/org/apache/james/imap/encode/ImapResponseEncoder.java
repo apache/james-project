@@ -16,33 +16,28 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+
 package org.apache.james.imap.encode;
 
 import java.io.IOException;
-import java.util.Set;
 
-import org.apache.james.imap.api.message.Capability;
+import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.message.response.EnableResponse;
 
-/**
- * Encodes <code>Enable</code> response.
- */
-public class EnableResponseEncoder implements ImapResponseEncoder<EnableResponse> {
-    @Override
-    public Class<EnableResponse> acceptableMessages() {
-        return EnableResponse.class;
-    }
+public interface ImapResponseEncoder<T extends ImapMessage> {
+    Class<T> acceptableMessages();
 
-    @Override
-    public void encode(EnableResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
-        Set<Capability> capabilities = response.getCapabilities();
-        composer.untagged();
-        // Return ENABLED capabilities. See IMAP-323
-        composer.message("ENABLED");
-        for (Capability capability : capabilities) {
-            composer.message(capability.asString());
-        }
-        composer.end();
-    }
+    /**
+     * Writes response.
+     * 
+     * @param message
+     *            <code>ImapMessage</code>, not null
+     * @param composer
+     *            <code>ImapResponseComposer</code>, not null
+     * @param session
+     *            TODO
+     * @throws IOException
+     *             when message encoding fails
+     */
+    void encode(T message, ImapResponseComposer composer, ImapSession session) throws IOException;
 }

@@ -21,28 +21,25 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ESearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
 /**
  * Encoders IMAP4rev1 <code>ESEARCH</code> responses.
  */
-public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
-
-    public ESearchResponseEncoder(ImapEncoder next) {
-        super(next);
+public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchResponse> {
+    @Override
+    public Class<ESearchResponse> acceptableMessages() {
+        return ESearchResponse.class;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        ESearchResponse response = (ESearchResponse) acceptableMessage;
+    public void encode(ESearchResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
         Tag tag = response.getTag();
         long min = response.getMinUid();
         long max = response.getMaxUid();
@@ -83,10 +80,5 @@ public class ESearchResponseEncoder extends AbstractChainedImapEncoder {
             composer.message(highestModSeq.asLong());
         }
         composer.end();
-    }
-
-    @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return (message instanceof ESearchResponse);
     }
 }

@@ -21,27 +21,20 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.ExpungeResponse;
 
-public class ExpungeResponseEncoder extends AbstractChainedImapEncoder {
+public class ExpungeResponseEncoder implements ImapResponseEncoder<ExpungeResponse> {
     public static final String EXPUNGE = "EXPUNGE";
 
-    public ExpungeResponseEncoder(ImapEncoder next) {
-        super(next);
+    @Override
+    public Class<ExpungeResponse> acceptableMessages() {
+        return ExpungeResponse.class;
     }
 
     @Override
-    public boolean isAcceptable(ImapMessage message) {
-        return (message instanceof ExpungeResponse);
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        final ExpungeResponse expungeResponse = (ExpungeResponse) acceptableMessage;
-        final int messageSequenceNumber = expungeResponse.getMessageSequenceNumber();
+    public void encode(ExpungeResponse expungeResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+        int messageSequenceNumber = expungeResponse.getMessageSequenceNumber();
         composer.untagged().message(messageSequenceNumber).message(EXPUNGE).end();
     }
 }

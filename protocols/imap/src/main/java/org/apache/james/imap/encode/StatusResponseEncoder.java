@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.Locales;
@@ -33,20 +32,22 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponse.Type;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
+import org.apache.james.imap.message.response.ImmutableStatusResponse;
 
-public class StatusResponseEncoder extends AbstractChainedImapEncoder {
-
+public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatusResponse> {
     private final Localizer localizer;
 
-    public StatusResponseEncoder(ImapEncoder next, Localizer localizer) {
-        super(next);
+    public StatusResponseEncoder(Localizer localizer) {
         this.localizer = localizer;
     }
 
     @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        StatusResponse response = (StatusResponse) acceptableMessage;
+    public Class<ImmutableStatusResponse> acceptableMessages() {
+        return ImmutableStatusResponse.class;
+    }
+
+    @Override
+    public void encode(ImmutableStatusResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
         final Type serverResponseType = response.getServerResponseType();
         final String type = asString(serverResponseType);
         final ResponseCode responseCode = response.getResponseCode();
@@ -127,10 +128,4 @@ public class StatusResponseEncoder extends AbstractChainedImapEncoder {
         }
         return result;
     }
-
-    @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return (message instanceof StatusResponse);
-    }
-
 }

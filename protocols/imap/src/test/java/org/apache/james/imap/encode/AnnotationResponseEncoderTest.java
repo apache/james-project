@@ -24,7 +24,6 @@ import static org.mockito.Mockito.mock;
 
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.base.ByteImapResponseWriter;
-import org.apache.james.imap.encode.base.EndImapEncoder;
 import org.apache.james.imap.encode.base.ImapResponseComposerImpl;
 import org.apache.james.imap.message.response.AnnotationResponse;
 import org.apache.james.mailbox.model.MailboxAnnotation;
@@ -53,7 +52,7 @@ public class AnnotationResponseEncoderTest {
         imapSession = mock(ImapSession.class);
 
         composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
-        encoder = new AnnotationResponseEncoder(new EndImapEncoder());
+        encoder = new AnnotationResponseEncoder();
     }
 
     @Test

@@ -20,35 +20,25 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.process.ImapSession;
-import org.apache.james.imap.encode.base.AbstractChainedImapEncoder;
 import org.apache.james.imap.message.response.VanishedResponse;
 
-public class VanishedResponseEncoder extends AbstractChainedImapEncoder {
-
-    public VanishedResponseEncoder(ImapEncoder next) {
-        super(next);
+public class VanishedResponseEncoder implements ImapResponseEncoder<VanishedResponse> {
+    @Override
+    public Class<VanishedResponse> acceptableMessages() {
+        return VanishedResponse.class;
     }
 
     @Override
-    protected boolean isAcceptable(ImapMessage message) {
-        return message instanceof VanishedResponse;
-    }
-
-    @Override
-    protected void doEncode(ImapMessage acceptableMessage, ImapResponseComposer composer, ImapSession session) throws IOException {
-        VanishedResponse vr = (VanishedResponse) acceptableMessage;
+    public void encode(VanishedResponse message, ImapResponseComposer composer, ImapSession session) throws IOException {
         composer.untagged();
         composer.message("VANISHED");
-        if (vr.isEarlier()) {
+        if (message.isEarlier()) {
             composer.openParen();
             composer.message("EARLIER");
             composer.closeParen();
         }
-        composer.sequenceSet(vr.getUids());
+        composer.sequenceSet(message.getUids());
         composer.end();
-        
     }
-
 }
