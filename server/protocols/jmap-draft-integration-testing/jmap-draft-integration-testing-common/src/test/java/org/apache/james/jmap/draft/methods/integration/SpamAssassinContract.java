@@ -162,19 +162,7 @@ public interface SpamAssassinContract {
             .post("/jmap");
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
 
-        // Alice is moving this message to Spam -> learning in SpamAssassin
-        with()
-            .header("Authorization", aliceAccessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasSize(1))
-            .extract()
-            .path(ARGUMENTS + ".messageIds");
-
+        // Alice is copying this message to Spam -> learning in SpamAssassin
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
             imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(ALICE, ALICE_PASSWORD)
@@ -209,19 +197,6 @@ public interface SpamAssassinContract {
         .when()
             .post("/jmap");
         calmlyAwait.atMost(Duration.ONE_MINUTE).untilAsserted(() -> assertMessagesFoundInMailbox(aliceAccessToken, getInboxId(aliceAccessToken), 1));
-
-        // Alice is moving this message to Spam -> learning in SpamAssassin
-        with()
-            .header("Authorization", aliceAccessToken.serialize())
-            .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + getInboxId(aliceAccessToken) + "\"]}}, \"#0\"]]")
-        .when()
-            .post("/jmap")
-        .then()
-            .statusCode(200)
-            .body(NAME, equalTo("messageList"))
-            .body(ARGUMENTS + ".messageIds", hasSize(1))
-            .extract()
-            .path(ARGUMENTS + ".messageIds");
 
         try (IMAPMessageReader imapMessageReader = new IMAPMessageReader()) {
             imapMessageReader.connect(LOCALHOST_IP, jamesServer.getProbe(ImapGuiceProbe.class).getImapPort())
