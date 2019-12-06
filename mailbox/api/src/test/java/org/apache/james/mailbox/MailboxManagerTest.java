@@ -283,6 +283,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renamingMailboxByIdShouldNotFailWhenLimitNameLength() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatCode(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session))
+                .doesNotThrowAnyException();
+        }
+
+        @Test
         void creatingMailboxShouldThrowWhenOverLimitNameLength() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
@@ -302,6 +315,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(originPath, session);
 
             assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(TooLongMailboxNameException.class);
+        }
+
+        @Test
+        void renamingMailboxByIdShouldThrowWhenOverLimitNameLength() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH + 1);
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session))
                 .isInstanceOf(TooLongMailboxNameException.class);
         }
 
@@ -367,6 +393,18 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renamingMailboxByIdShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a.b.c";
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatCode(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session)).doesNotThrowAnyException();
+        }
+
+        @Test
         void renamingMailboxShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
@@ -379,6 +417,18 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renamingMailboxByIdShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a.b.";
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatCode(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session)).doesNotThrowAnyException();
+        }
+
+        @Test
         void renamingMailboxShouldThrowWhenNameWithMoreThanOneTrailingDelimiter() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
@@ -388,6 +438,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(originPath, session);
 
             assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
+        @Test
+        void renamingMailboxByIdShouldThrowWhenNameWithMoreThanOneTrailingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a..";
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session))
                 .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
         }
 
@@ -405,6 +468,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void renamingMailboxByIdShouldThrowWhenNameWithHeadingDelimiter() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  ".a";
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
+        @Test
         void renamingMailboxShouldThrowWhenNameWithEmptyHierarchicalLevel() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
@@ -414,6 +490,19 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(originPath, session);
 
             assertThatThrownBy(() -> mailboxManager.renameMailbox(originPath, MailboxPath.forUser(USER_1, mailboxName), session))
+                .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
+        }
+
+        @Test
+        void renamingMailboxByIdShouldThrowWhenNameWithEmptyHierarchicalLevel() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            String mailboxName =  "a..b";
+
+            MailboxPath originPath = MailboxPath.forUser(USER_1, "origin");
+            MailboxId mailboxId = mailboxManager.createMailbox(originPath, session).get();
+
+            assertThatThrownBy(() -> mailboxManager.renameMailbox(mailboxId, MailboxPath.forUser(USER_1, mailboxName), session))
                 .isInstanceOf(HasEmptyMailboxNameInHierarchyException.class);
         }
     }
@@ -1456,6 +1545,20 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath1, session);
 
             mailboxManager.renameMailbox(mailboxPath1, mailboxPath2, session);
+
+            assertThat(mailboxManager.getMailbox(mailboxId.get(), session).getMailboxPath())
+                .isEqualTo(mailboxPath2);
+        }
+
+        @Test
+        protected void renameMailboxByIdShouldChangeTheMailboxPathOfAMailbox() throws Exception {
+            MailboxSession session = mailboxManager.createSystemSession(USER_1);
+
+            MailboxPath mailboxPath1 = MailboxPath.forUser(USER_1, "mbx1");
+            MailboxPath mailboxPath2 = MailboxPath.forUser(USER_1, "mbx2");
+            Optional<MailboxId> mailboxId = mailboxManager.createMailbox(mailboxPath1, session);
+
+            mailboxManager.renameMailbox(mailboxId.get(), mailboxPath2, session);
 
             assertThat(mailboxManager.getMailbox(mailboxId.get(), session).getMailboxPath())
                 .isEqualTo(mailboxPath2);

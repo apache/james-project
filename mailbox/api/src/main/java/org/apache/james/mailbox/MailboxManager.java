@@ -179,6 +179,24 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException;
 
     /**
+     * Renames a mailbox.
+     *
+     * @param mailboxId
+     *            original mailbox
+     * @param newMailboxPath
+     *            new mailbox
+     * @param session
+     *            the context for this call, not nul
+     * @throws MailboxException
+     *            otherwise
+     * @throws MailboxExistsException
+     *            when the <code>to</code> mailbox exists
+     * @throws MailboxNotFoundException
+     *            when the <code>from</code> mailbox does not exist
+     */
+    void renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException;
+
+    /**
      * Copy the given {@link MessageRange} from one Mailbox to the other. 
      * 
      * Be aware that the copied Messages MUST get the \RECENT flag set!

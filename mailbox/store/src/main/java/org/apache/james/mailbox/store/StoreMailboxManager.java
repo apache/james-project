@@ -475,14 +475,39 @@ public class StoreMailboxManager implements MailboxManager {
     public void renameMailbox(MailboxPath from, MailboxPath to, MailboxSession session) throws MailboxException {
         LOGGER.debug("renameMailbox {} to {}", from, to);
         MailboxPath sanitizedMailboxPath = to.sanitize(session.getPathDelimiter());
-        if (mailboxExists(sanitizedMailboxPath, session)) {
-            throw new MailboxExistsException(sanitizedMailboxPath.toString());
-        }
-        sanitizedMailboxPath.assertAcceptable(session.getPathDelimiter());
+        validateDestinationPath(sanitizedMailboxPath, session);
 
         assertIsOwner(session, from);
         MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        mapper.execute(Mapper.toTransaction(() -> doRenameMailbox(from, sanitizedMailboxPath, session, mapper)));
+
+        mapper.execute(Mapper.toTransaction(() -> {
+            Mailbox mailbox = Optional.ofNullable(mapper.findMailboxByPath(from))
+                .orElseThrow(() -> new MailboxNotFoundException(from));
+            doRenameMailbox(mailbox, sanitizedMailboxPath, session, mapper);
+        }));
+    }
+
+    @Override
+    public void renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
+        LOGGER.debug("renameMailbox {} to {}", mailboxId, newMailboxPath);
+        MailboxPath sanitizedMailboxPath = newMailboxPath.sanitize(session.getPathDelimiter());
+        validateDestinationPath(sanitizedMailboxPath, session);
+
+        MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+
+        mapper.execute(Mapper.toTransaction(() -> {
+            Mailbox mailbox = Optional.ofNullable(mapper.findMailboxById(mailboxId))
+                .orElseThrow(() -> new MailboxNotFoundException(mailboxId));
+            assertIsOwner(session, mailbox.generateAssociatedPath());
+            doRenameMailbox(mailbox, sanitizedMailboxPath, session, mapper);
+        }));
+    }
+
+    private void validateDestinationPath(MailboxPath newMailboxPath, MailboxSession session) throws MailboxException {
+        if (mailboxExists(newMailboxPath, session)) {
+            throw new MailboxExistsException(newMailboxPath.toString());
+        }
+        newMailboxPath.assertAcceptable(session.getPathDelimiter());
     }
 
     private void assertIsOwner(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxNotFoundException {
@@ -492,14 +517,13 @@ public class StoreMailboxManager implements MailboxManager {
         }
     }
 
-    private void doRenameMailbox(MailboxPath from, MailboxPath to, MailboxSession session, MailboxMapper mapper) throws MailboxException {
+    private void doRenameMailbox(Mailbox mailbox, MailboxPath newMailboxPath, MailboxSession session, MailboxMapper mapper) throws MailboxException {
         // TODO put this into a serilizable transaction
-        Mailbox mailbox = Optional.ofNullable(mapper.findMailboxByPath(from))
-            .orElseThrow(() -> new MailboxNotFoundException(from));
 
-        mailbox.setNamespace(to.getNamespace());
-        mailbox.setUser(to.getUser());
-        mailbox.setName(to.getName());
+        MailboxPath from = mailbox.generateAssociatedPath();
+        mailbox.setNamespace(newMailboxPath.getNamespace());
+        mailbox.setUser(newMailboxPath.getUser());
+        mailbox.setName(newMailboxPath.getName());
         mapper.save(mailbox);
 
         eventBus.dispatch(EventFactory.mailboxRenamed()
@@ -507,7 +531,7 @@ public class StoreMailboxManager implements MailboxManager {
             .mailboxSession(session)
             .mailboxId(mailbox.getMailboxId())
             .oldPath(from)
-            .newPath(to)
+            .newPath(newMailboxPath)
             .build(),
             new MailboxIdRegistrationKey(mailbox.getMailboxId()))
             .block();
@@ -522,7 +546,7 @@ public class StoreMailboxManager implements MailboxManager {
             List<Mailbox> subMailboxes = mapper.findMailboxWithPathLike(query);
             for (Mailbox sub : subMailboxes) {
                 String subOriginalName = sub.getName();
-                String subNewName = to.getName() + subOriginalName.substring(from.getName().length());
+                String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
                 MailboxPath fromPath = new MailboxPath(from, subOriginalName);
                 sub.setName(subNewName);
                 mapper.save(sub);
