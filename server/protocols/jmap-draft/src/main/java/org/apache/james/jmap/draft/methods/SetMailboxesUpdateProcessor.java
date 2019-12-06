@@ -259,7 +259,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
         MailboxPath originMailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
         MailboxPath destinationMailboxPath = computeNewMailboxPath(mailbox, originMailboxPath, updateRequest, mailboxSession);
         if (updateRequest.getSharedWith().isPresent()) {
-            mailboxManager.setRights(originMailboxPath,
+            mailboxManager.setRights(mailbox.getId(),
                 updateRequest.getSharedWith()
                     .get()
                     .removeEntriesFor(originMailboxPath.getUser())
@@ -267,7 +267,7 @@ public class SetMailboxesUpdateProcessor implements SetMailboxesProcessor {
                 mailboxSession);
         }
         if (!originMailboxPath.equals(destinationMailboxPath)) {
-            mailboxManager.renameMailbox(originMailboxPath, destinationMailboxPath, mailboxSession);
+            mailboxManager.renameMailbox(mailbox.getId(), destinationMailboxPath, mailboxSession);
 
             subscriptionManager.unsubscribe(mailboxSession, originMailboxPath.getName());
             subscriptionManager.subscribe(mailboxSession, destinationMailboxPath.getName());
