@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.inject.Inject;
 
@@ -118,30 +119,27 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
 
     @Override
     public List<MessageFastView> fromMessageIds(List<MessageId> messageIds, MailboxSession mailboxSession) {
+        ImmutableSet<MessageId> messageIdSet = ImmutableSet.copyOf(messageIds);
         return Mono.from(fastViewProjection.retrieve(messageIds))
-            .flatMapMany(fastProjections -> gatherMessageViews(messageIds, mailboxSession, fastProjections))
+            .flatMapMany(fastProjections -> gatherMessageViews(messageIdSet, mailboxSession, fastProjections))
             .collectList()
             .subscribeOn(Schedulers.boundedElastic())
             .block();
     }
 
-    private Flux<MessageFastView> gatherMessageViews(List<MessageId> messageIds, MailboxSession mailboxSession,
+    private Flux<MessageFastView> gatherMessageViews(Set<MessageId> messageIds, MailboxSession mailboxSession,
                                                      Map<MessageId, MessageFastViewPrecomputedProperties> fastProjections) {
+        Set<MessageId> withPreview = fastProjections.keySet();
+        Set<MessageId> withoutPreviews = Sets.difference(messageIds, fastProjections.keySet());
         return Flux.merge(
-                fetch(ImmutableList.copyOf(fastProjections.keySet()), FetchGroup.HEADERS, mailboxSession)
+                fetch(withPreview, FetchGroup.HEADERS, mailboxSession)
                     .map(messageResults -> Helpers.toMessageViews(messageResults, new FromMessageResultAndPreview(blobManager, fastProjections))),
-                fetch(withoutPreviews(messageIds, fastProjections), FetchGroup.FULL_CONTENT, mailboxSession)
+                fetch(withoutPreviews, FetchGroup.FULL_CONTENT, mailboxSession)
                     .map(messageResults -> Helpers.toMessageViews(messageResults, messageFullViewFactory::fromMessageResults)))
             .flatMap(Flux::fromIterable);
     }
 
-    private List<MessageId> withoutPreviews(List<MessageId> messageIds, Map<MessageId, MessageFastViewPrecomputedProperties> fastProjections) {
-        return ImmutableList.copyOf(Sets.difference(
-            ImmutableSet.copyOf(messageIds),
-            fastProjections.keySet()));
-    }
-
-    private Mono<List<MessageResult>> fetch(List<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
+    private Mono<List<MessageResult>> fetch(Collection<MessageId> messageIds, FetchGroup fetchGroup, MailboxSession mailboxSession) {
         return Mono.fromCallable(() -> messageIdManager.getMessages(messageIds, fetchGroup, mailboxSession))
             .onErrorResume(MailboxException.class, ex -> {
                 LOGGER.error("cannot read messages {}", messageIds, ex);
