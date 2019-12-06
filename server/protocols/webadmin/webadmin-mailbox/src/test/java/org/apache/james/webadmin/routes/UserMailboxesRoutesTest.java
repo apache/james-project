@@ -783,7 +783,7 @@ class UserMailboxesRoutesTest {
                         ImmutableList.of(
                                 MailboxMetaData.unselectableMailbox(
                                         MailboxPath.forUser(USERNAME, MAILBOX_NAME), mailboxId, '.')));
-            doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete(MAILBOX_NAME)
@@ -808,7 +808,7 @@ class UserMailboxesRoutesTest {
                 .thenReturn(
                         ImmutableList.of(
                                 MailboxMetaData.unselectableMailbox(MailboxPath.forUser(USERNAME, MAILBOX_NAME), mailboxId, '.')));
-            doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete(MAILBOX_NAME)
@@ -828,7 +828,7 @@ class UserMailboxesRoutesTest {
 
         @Test
         void deleteShouldReturnOkOnMailboxDoesNotExists() throws Exception {
-            doThrow(new MailboxNotFoundException(MAILBOX_NAME)).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new MailboxNotFoundException(MAILBOX_NAME)).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete(MAILBOX_NAME)
@@ -864,7 +864,7 @@ class UserMailboxesRoutesTest {
                 .thenReturn(
                         ImmutableList.of(
                                 MailboxMetaData.unselectableMailbox(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
-            doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new RuntimeException()).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete()
@@ -878,7 +878,7 @@ class UserMailboxesRoutesTest {
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
                         ImmutableList.of(MailboxMetaData.unselectableMailbox(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
-            doThrow(new MailboxNotFoundException("any")).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new MailboxNotFoundException("any")).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete()
@@ -892,7 +892,7 @@ class UserMailboxesRoutesTest {
             when(mailboxManager.search(any(MailboxQuery.class), any()))
                 .thenReturn(
                         ImmutableList.of(MailboxMetaData.unselectableMailbox(MailboxPath.forUser(USERNAME, "any"), mailboxId, '.')));
-            doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(), any());
+            doThrow(new MailboxException()).when(mailboxManager).deleteMailbox(any(MailboxPath.class), any());
 
             when()
                 .delete()

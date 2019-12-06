@@ -26,6 +26,7 @@ import java.util.Optional;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
+import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
@@ -151,6 +152,13 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * Delete the mailbox with the name
      */
     void deleteMailbox(MailboxPath mailboxPath, MailboxSession session) throws MailboxException;
+
+    /**
+     * Delete the mailbox with the given id
+     *
+     * @return the Mailbox when deleted
+     */
+    Mailbox deleteMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException;
 
     /**
      * Renames a mailbox.

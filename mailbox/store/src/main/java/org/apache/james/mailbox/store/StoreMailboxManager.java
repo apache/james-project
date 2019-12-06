@@ -412,45 +412,63 @@ public class StoreMailboxManager implements MailboxManager {
         LOGGER.info("deleteMailbox {}", mailboxPath);
         assertIsOwner(session, mailboxPath);
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
-        MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
 
         mailboxMapper.execute(() -> {
             Mailbox mailbox = mailboxMapper.findMailboxByPath(mailboxPath);
             if (mailbox == null) {
                 throw new MailboxNotFoundException(mailboxPath);
             }
-
-            QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailboxPath);
-            long messageCount = messageMapper.countMessagesInMailbox(mailbox);
-
-            List<MetadataWithMailboxId> metadata = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED))
-                .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
-                .collect(Guavate.toImmutableList());
-
-            long totalSize = metadata.stream()
-                .map(MetadataWithMailboxId::getMessageMetaData)
-                .mapToLong(MessageMetaData::getSize)
-                .sum();
-
-            preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadata)).block();
-
-            // We need to create a copy of the mailbox as maybe we can not refer to the real
-            // mailbox once we remove it
-            Mailbox m = new Mailbox(mailbox);
-            mailboxMapper.delete(mailbox);
-            eventBus.dispatch(EventFactory.mailboxDeleted()
-                .randomEventId()
-                .mailboxSession(session)
-                .mailbox(mailbox)
-                .quotaRoot(quotaRoot)
-                .quotaCount(QuotaCountUsage.count(messageCount))
-                .quotaSize(QuotaSizeUsage.size(totalSize))
-                .build(),
-                new MailboxIdRegistrationKey(mailbox.getMailboxId()))
-                .block();
-            return m;
+            return doDeleteMailbox(mailboxMapper, mailbox, session);
         });
+    }
 
+    @Override
+    public Mailbox deleteMailbox(MailboxId mailboxId, MailboxSession session) throws MailboxException {
+        LOGGER.info("deleteMailbox {}", mailboxId);
+        MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
+
+        return mailboxMapper.execute(() -> {
+            Mailbox mailbox = mailboxMapper.findMailboxById(mailboxId);
+            if (mailbox == null) {
+                throw new MailboxNotFoundException(mailboxId);
+            }
+            assertIsOwner(session, mailbox.generateAssociatedPath());
+            return doDeleteMailbox(mailboxMapper, mailbox, session);
+        });
+    }
+
+    private Mailbox doDeleteMailbox(MailboxMapper mailboxMapper, Mailbox mailbox, MailboxSession session) throws MailboxException {
+        MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
+
+        QuotaRoot quotaRoot = quotaRootResolver.getQuotaRoot(mailbox.generateAssociatedPath());
+        long messageCount = messageMapper.countMessagesInMailbox(mailbox);
+
+        List<MetadataWithMailboxId> metadata = Iterators.toStream(messageMapper.findInMailbox(mailbox, MessageRange.all(), MessageMapper.FetchType.Metadata, UNLIMITED))
+            .map(message -> MetadataWithMailboxId.from(message.metaData(), message.getMailboxId()))
+            .collect(Guavate.toImmutableList());
+
+        long totalSize = metadata.stream()
+            .map(MetadataWithMailboxId::getMessageMetaData)
+            .mapToLong(MessageMetaData::getSize)
+            .sum();
+
+        preDeletionHooks.runHooks(PreDeletionHook.DeleteOperation.from(metadata)).block();
+
+        // We need to create a copy of the mailbox as maybe we can not refer to the real
+        // mailbox once we remove it
+        Mailbox m = new Mailbox(mailbox);
+        mailboxMapper.delete(mailbox);
+        eventBus.dispatch(EventFactory.mailboxDeleted()
+            .randomEventId()
+            .mailboxSession(session)
+            .mailbox(mailbox)
+            .quotaRoot(quotaRoot)
+            .quotaCount(QuotaCountUsage.count(messageCount))
+            .quotaSize(QuotaSizeUsage.size(totalSize))
+            .build(),
+            new MailboxIdRegistrationKey(mailbox.getMailboxId()))
+            .block();
+        return m;
     }
 
     @Override

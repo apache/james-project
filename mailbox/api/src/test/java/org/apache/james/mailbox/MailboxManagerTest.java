@@ -643,6 +643,24 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
+        void deleteMailboxByIdShouldFireMailboxDeletionEvent() throws Exception {
+            assumeTrue(mailboxManager.hasCapability(MailboxCapabilities.Quota));
+            retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
+
+            mailboxManager.deleteMailbox(inboxId, session);
+
+            assertThat(listener.getEvents())
+                .filteredOn(event -> event instanceof MailboxListener.MailboxDeletion)
+                .hasSize(1)
+                .extracting(event -> (MailboxListener.MailboxDeletion) event)
+                .element(0)
+                .satisfies(event -> assertThat(event.getMailboxId()).isEqualTo(inboxId))
+                .satisfies(event -> assertThat(event.getQuotaRoot()).isEqualTo(quotaRoot))
+                .satisfies(event -> assertThat(event.getDeletedMessageCount()).isEqualTo(QuotaCountUsage.count(0)))
+                .satisfies(event -> assertThat(event.getTotalDeletedSize()).isEqualTo(QuotaSizeUsage.size(0)));
+        }
+
+        @Test
         void createMailboxShouldFireMailboxAddedEvent() throws Exception {
             retrieveEventBus(mailboxManager).register(listener);
 
@@ -1494,6 +1512,23 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
         }
 
+
+        @Test
+        void user1ShouldBeAbleToDeleteInboxById() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            MailboxPath inbox = MailboxPath.inbox(session);
+            MailboxId inboxId = mailboxManager.createMailbox(inbox, session).get();
+            MailboxPath inboxSubMailbox = new MailboxPath(inbox, "INBOX.Test");
+            mailboxManager.createMailbox(inboxSubMailbox, session);
+
+            mailboxManager.deleteMailbox(inboxId, session);
+
+            assertThat(mailboxManager.mailboxExists(inbox, session)).isFalse();
+            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isTrue();
+        }
+
         @Test
         void user1ShouldBeAbleToDeleteSubmailbox() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
@@ -1505,6 +1540,22 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             mailboxManager.createMailbox(inboxSubMailbox, session);
 
             mailboxManager.deleteMailbox(inboxSubMailbox, session);
+
+            assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
+            assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isFalse();
+        }
+
+        @Test
+        void user1ShouldBeAbleToDeleteSubmailboxByid() throws Exception {
+            session = mailboxManager.createSystemSession(USER_1);
+            mailboxManager.startProcessingRequest(session);
+
+            MailboxPath inbox = MailboxPath.inbox(session);
+            mailboxManager.createMailbox(inbox, session);
+            MailboxPath inboxSubMailbox = new MailboxPath(inbox, "INBOX.Test");
+            MailboxId inboxSubMailboxId = mailboxManager.createMailbox(inboxSubMailbox, session).get();
+
+            mailboxManager.deleteMailbox(inboxSubMailboxId, session);
 
             assertThat(mailboxManager.mailboxExists(inbox, session)).isTrue();
             assertThat(mailboxManager.mailboxExists(inboxSubMailbox, session)).isFalse();
@@ -1654,6 +1705,27 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                     .withFlags(new Flags(Flags.Flag.DELETED))
                     .build(message), session);
                 mailboxManager.deleteMailbox(inbox, session);
+
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
+                verify(preDeletionHook1, times(1)).notifyDelete(preDeleteCaptor1.capture());
+                verify(preDeletionHook2, times(1)).notifyDelete(preDeleteCaptor2.capture());
+
+                assertThat(preDeleteCaptor1.getValue().getDeletionMetadataList())
+                    .hasSize(1)
+                    .hasSameElementsAs(preDeleteCaptor2.getValue().getDeletionMetadataList())
+                    .allSatisfy(deleteMetadata -> SoftAssertions.assertSoftly(softy -> {
+                        softy.assertThat(deleteMetadata.getMailboxId()).isEqualTo(inboxId);
+                        softy.assertThat(deleteMetadata.getMessageMetaData().getMessageId()).isEqualTo(composeId.getMessageId());
+                    }));
+            }
+
+            @Test
+            void deleteMailboxByIdShouldCallAllPreDeletionHooks() throws Exception {
+                ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
+                    .withFlags(new Flags(Flags.Flag.DELETED))
+                    .build(message), session);
+                mailboxManager.deleteMailbox(inboxId, session);
 
                 ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
                 ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor2 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
