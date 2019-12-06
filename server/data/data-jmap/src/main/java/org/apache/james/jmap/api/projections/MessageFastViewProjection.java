@@ -19,7 +19,7 @@
 
 package org.apache.james.jmap.api.projections;
 
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -44,7 +44,7 @@ public interface MessageFastViewProjection {
 
     Publisher<Void> delete(MessageId messageId);
 
-    default Publisher<Map<MessageId, MessageFastViewPrecomputedProperties>> retrieve(List<MessageId> messageIds) {
+    default Publisher<Map<MessageId, MessageFastViewPrecomputedProperties>> retrieve(Collection<MessageId> messageIds) {
         Preconditions.checkNotNull(messageIds);
 
         return Flux.fromIterable(messageIds)
