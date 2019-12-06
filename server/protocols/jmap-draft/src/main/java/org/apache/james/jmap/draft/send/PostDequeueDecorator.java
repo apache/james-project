@@ -143,7 +143,7 @@ public class PostDequeueDecorator extends MailQueueItemDecorator {
 
     private void assertMessageBelongsToOutbox(MessageId messageId, MailboxSession mailboxSession) throws MailboxException, MailShouldBeInOutboxException {
         MailboxId outboxMailboxId = getOutboxMailboxId(mailboxSession);
-        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, mailboxSession);
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, mailboxSession);
         for (MessageResult message: messages) {
             if (message.getMailboxId().equals(outboxMailboxId)) {
                 return;

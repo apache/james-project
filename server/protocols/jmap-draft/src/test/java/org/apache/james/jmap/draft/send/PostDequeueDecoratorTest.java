@@ -271,12 +271,12 @@ public class PostDequeueDecoratorTest {
 
         ImmutableList<MessageResult> allMessages = ImmutableList.copyOf(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, mailboxSession));
 
-        when(messageIdManager.getMessages(eq(ImmutableList.of(messageId.getMessageId())), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenReturn(allMessages);
+        when(messageIdManager.getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenReturn(allMessages);
 
         testee.done(true);
         testee.done(true);
 
-        verify(messageIdManager, times(1)).getMessages(eq(ImmutableList.of(messageId.getMessageId())), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
+        verify(messageIdManager, times(1)).getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class));
         verify(messageIdManager, times(1)).setInMailboxes(eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
         verify(messageIdManager, times(1)).setFlags(eq(new Flags(Flag.SEEN)), eq(MessageManager.FlagsUpdateMode.ADD), eq(messageId.getMessageId()), eq(ImmutableList.of(sentMailboxId)), any(MailboxSession.class));
 
@@ -297,7 +297,7 @@ public class PostDequeueDecoratorTest {
         mail.setAttribute(messageIdAttribute(messageId.getMessageId().serialize()));
         mail.setAttribute(USERNAME_ATTRIBUTE);
 
-        when(messageIdManager.getMessages(eq(ImmutableList.of(messageId.getMessageId())), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenThrow(MailboxException.class);
+        when(messageIdManager.getMessage(eq(messageId.getMessageId()), eq(FetchGroup.MINIMAL), any(MailboxSession.class))).thenThrow(MailboxException.class);
 
         testee.done(true);
     }

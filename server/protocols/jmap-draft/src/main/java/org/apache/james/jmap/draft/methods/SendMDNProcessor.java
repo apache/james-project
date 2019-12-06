@@ -161,9 +161,7 @@ public class SendMDNProcessor implements SetMessagesProcessor {
     }
 
     private Message retrieveOriginalMessage(JmapMDN mdn, MailboxSession mailboxSession) throws MailboxException, IOException, MessageNotFoundException {
-        List<MessageResult> messages = messageIdManager.getMessages(ImmutableList.of(mdn.getMessageId()),
-            FetchGroup.HEADERS,
-            mailboxSession);
+        List<MessageResult> messages = messageIdManager.getMessage(mdn.getMessageId(), FetchGroup.HEADERS, mailboxSession);
 
         if (messages.size() == 0) {
             throw new MessageNotFoundException();

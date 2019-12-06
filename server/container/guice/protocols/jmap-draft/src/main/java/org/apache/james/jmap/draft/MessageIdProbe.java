@@ -40,7 +40,6 @@ import org.apache.james.utils.GuiceProbe;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
 
 public class MessageIdProbe implements GuiceProbe {
     private final MailboxManager mailboxManager;
@@ -55,7 +54,7 @@ public class MessageIdProbe implements GuiceProbe {
     public List<MessageResult> getMessages(MessageId messageId, Username user) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
 
-        return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession);
+        return messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession);
     }
 
     public void updateNewFlags(Username user, Flags newFlags, MessageId messageId, List<MailboxId> mailboxIds) throws MailboxException {
@@ -66,10 +65,7 @@ public class MessageIdProbe implements GuiceProbe {
 
     public List<AttachmentId> retrieveAttachmentIds(MessageId messageId, Username username) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        List<MessageResult> messages = messageIdManager.getMessages(
-            ImmutableList.of(messageId),
-            FetchGroup.FULL_CONTENT,
-            mailboxSession);
+        List<MessageResult> messages = messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession);
 
         return messages.stream()
             .flatMap(Throwing.function(messageResult -> messageResult.getLoadedAttachments().stream()))

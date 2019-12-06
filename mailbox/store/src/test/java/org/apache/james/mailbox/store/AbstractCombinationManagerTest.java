@@ -127,7 +127,7 @@ public abstract class AbstractCombinationManagerTest {
         messageIdManager.setInMailboxes(messageId,
             ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        MessageUid uidInMailbox2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)
+        MessageUid uidInMailbox2 = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session)
             .get(0)
             .getUid();
 
@@ -175,7 +175,7 @@ public abstract class AbstractCombinationManagerTest {
         messageManager1.setFlags(deleted, FlagsUpdateMode.ADD, MessageRange.all(), session);
         messageManager1.expunge(MessageRange.all(), session);
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)).isEmpty();
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session)).isEmpty();
     }
 
     @Test
@@ -210,7 +210,7 @@ public abstract class AbstractCombinationManagerTest {
         MessageId messageId = messageManager1.appendMessage(MessageManager.AppendCommand.from(mailContent), session)
             .getMessageId();
 
-        assertThat(messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)).hasSize(1);
+        assertThat(messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session)).hasSize(1);
     }
 
     @Test
@@ -220,7 +220,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.copyMessages(MessageRange.all(), mailbox1.getMailboxId(), mailbox2.getMailboxId(), session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(2)
             .extractingResultOf("getMailboxId")
@@ -234,7 +234,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.copyMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(2)
             .extractingResultOf("getMailboxId")
@@ -248,7 +248,7 @@ public abstract class AbstractCombinationManagerTest {
 
         mailboxManager.moveMessages(MessageRange.all(), MailboxFixture.INBOX_ALICE, MailboxFixture.OUTBOX_ALICE, session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session);
 
         assertThat(listMessages).hasSize(1)
             .extractingResultOf("getMailboxId")
@@ -308,7 +308,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId.getMessageId(), ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        List<MessageResult> listMessages = messageIdManager.getMessages(ImmutableList.of(messageId.getMessageId()), FetchGroup.MINIMAL, session);
+        List<MessageResult> listMessages = messageIdManager.getMessage(messageId.getMessageId(), FetchGroup.MINIMAL, session);
 
         long uid2 = listMessages.stream()
             .filter(messageInMailbox2())
@@ -501,7 +501,7 @@ public abstract class AbstractCombinationManagerTest {
 
         messageIdManager.setInMailboxes(messageId, ImmutableList.of(mailbox1.getMailboxId(), mailbox2.getMailboxId()), session);
 
-        MessageUid uid2 = messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.MINIMAL, session)
+        MessageUid uid2 = messageIdManager.getMessage(messageId, FetchGroup.MINIMAL, session)
             .stream()
             .filter(messageInMailbox2())
             .findFirst()

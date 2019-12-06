@@ -39,7 +39,6 @@ import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.collect.ImmutableList;
 
 public class StoreBlobManager implements BlobManager {
     public static final String MESSAGE_RFC822_CONTENT_TYPE = "message/rfc822";
@@ -97,7 +96,7 @@ public class StoreBlobManager implements BlobManager {
 
     private Optional<InputStream> loadMessageAsBlob(MessageId messageId, MailboxSession mailboxSession)  {
         try {
-            return messageIdManager.getMessages(ImmutableList.of(messageId), FetchGroup.FULL_CONTENT, mailboxSession)
+            return messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession)
                 .stream()
                 .map(Throwing.function(message -> message.getFullContent().getInputStream()))
                 .findFirst();

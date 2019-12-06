@@ -94,7 +94,7 @@ class StoreBlobManagerTest {
     void retrieveShouldThrowWhenNotFound() throws Exception {
         when(attachmentManager.getAttachment(ATTACHMENT_ID, session))
             .thenThrow(new AttachmentNotFoundException(ID));
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of());
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_ATTACHMENT, session))
@@ -110,7 +110,7 @@ class StoreBlobManagerTest {
         Content content = mock(Content.class);
         when(content.getInputStream()).thenReturn(new ByteArrayInputStream(BYTES));
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
         assertThat(blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -144,7 +144,7 @@ class StoreBlobManagerTest {
         when(attachmentManager.getAttachment(any(), any()))
             .thenThrow(new AttachmentNotFoundException(ID));
 
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenThrow(new RuntimeException());
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -156,7 +156,7 @@ class StoreBlobManagerTest {
         when(attachmentManager.getAttachment(any(), any()))
             .thenThrow(new AttachmentNotFoundException(ID));
 
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenThrow(new MailboxException());
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -170,7 +170,7 @@ class StoreBlobManagerTest {
 
         MessageResult messageResult = mock(MessageResult.class);
         when(messageResult.getFullContent()).thenThrow(new MailboxException());
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -184,7 +184,7 @@ class StoreBlobManagerTest {
 
         MessageResult messageResult = mock(MessageResult.class);
         when(messageResult.getFullContent()).thenThrow(new RuntimeException());
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -200,7 +200,7 @@ class StoreBlobManagerTest {
         Content content = mock(Content.class);
         when(content.getInputStream()).thenThrow(new IOException());
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
@@ -216,7 +216,7 @@ class StoreBlobManagerTest {
         Content content = mock(Content.class);
         when(content.getInputStream()).thenThrow(new RuntimeException());
         when(messageResult.getFullContent()).thenReturn(content);
-        when(messageIdManager.getMessages(ImmutableList.of(MESSAGE_ID), FetchGroup.FULL_CONTENT, session))
+        when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
