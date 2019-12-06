@@ -26,8 +26,8 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
+import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.MessagingImapCommandParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,30 +36,21 @@ import org.slf4j.LoggerFactory;
  * <strong>Note:</strong>
  * </p>
  */
-public abstract class AbstractImapCommandParser implements MessagingImapCommandParser {
+public abstract class AbstractImapCommandParser implements ImapCommandParser {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractImapCommandParser.class);
 
     private final ImapCommand command;
 
-    private StatusResponseFactory statusResponseFactory;
+    protected final StatusResponseFactory statusResponseFactory;
 
-    public AbstractImapCommandParser(ImapCommand command) {
+    public AbstractImapCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
         this.command = command;
+        this.statusResponseFactory = statusResponseFactory;
     }
 
     public ImapCommand getCommand() {
         return command;
-    }
-
-    @Override
-    public final StatusResponseFactory getStatusResponseFactory() {
-        return statusResponseFactory;
-    }
-
-    @Override
-    public final void setStatusResponseFactory(StatusResponseFactory statusResponseFactory) {
-        this.statusResponseFactory = statusResponseFactory;
     }
 
     /**

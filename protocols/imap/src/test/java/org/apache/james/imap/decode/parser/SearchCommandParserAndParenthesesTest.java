@@ -20,10 +20,10 @@
 package org.apache.james.imap.decode.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,6 +34,7 @@ import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.DayMonthYear;
 import org.apache.james.imap.api.message.request.SearchKey;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -152,7 +153,7 @@ public class SearchCommandParserAndParenthesesTest {
 
     @Before
     public void setUp() throws Exception {
-        parser = new SearchCommandParser();
+        parser = new SearchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
     }
 

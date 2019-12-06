@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.message.request.CopyRequest;
 
 /**
@@ -29,8 +30,8 @@ import org.apache.james.imap.message.request.CopyRequest;
  */
 public class CopyCommandParser extends AbstractMessageRangeCommandParser {
 
-    public CopyCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.COPY_COMMAND_NAME));
+    public CopyCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.COPY_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

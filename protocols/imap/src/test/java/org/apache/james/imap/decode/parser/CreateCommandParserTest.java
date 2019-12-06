@@ -22,6 +22,7 @@ package org.apache.james.imap.decode.parser;
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -30,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.encode.FakeImapSession;
@@ -52,7 +54,7 @@ public class CreateCommandParserTest {
         imapSession = new FakeImapSession();
         imapSession.setMailboxSession(mailboxSession);
 
-        parser = new CreateCommandParser();
+        parser = new CreateCommandParser(mock(StatusResponseFactory.class));
     }
 
     @Test

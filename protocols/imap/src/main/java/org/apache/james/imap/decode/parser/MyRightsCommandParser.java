@@ -23,6 +23,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -34,8 +35,8 @@ import org.apache.james.imap.message.request.MyRightsRequest;
  */
 public class MyRightsCommandParser extends AbstractImapCommandParser {
 
-    public MyRightsCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.MYRIGHTS_COMMAND_NAME));
+    public MyRightsCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.MYRIGHTS_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

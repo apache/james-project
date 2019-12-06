@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.message.request.LsubRequest;
 
 /**
@@ -29,8 +30,8 @@ import org.apache.james.imap.message.request.LsubRequest;
  */
 public class LsubCommandParser extends ListCommandParser {
 
-    public LsubCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.LSUB_COMMAND_NAME));
+    public LsubCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.LSUB_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

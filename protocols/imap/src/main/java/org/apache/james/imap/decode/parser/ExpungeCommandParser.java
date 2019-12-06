@@ -23,6 +23,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -33,8 +34,8 @@ import org.apache.james.imap.message.request.ExpungeRequest;
  */
 public class ExpungeCommandParser extends AbstractUidCommandParser {
 
-    public ExpungeCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.EXPUNGE_COMMAND_NAME));
+    public ExpungeCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.EXPUNGE_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

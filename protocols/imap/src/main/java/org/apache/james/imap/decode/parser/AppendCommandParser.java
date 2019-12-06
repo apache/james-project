@@ -28,6 +28,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -39,8 +40,8 @@ import org.apache.james.imap.message.request.AppendRequest;
  */
 public class AppendCommandParser extends AbstractImapCommandParser {
 
-    public AppendCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.APPEND_COMMAND_NAME));
+    public AppendCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.APPEND_COMMAND_NAME), statusResponseFactory);
     }
 
     /**

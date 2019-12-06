@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -35,11 +36,11 @@ import org.apache.james.imap.message.request.UnselectRequest;
  */
 public class UnselectCommandParser extends AbstractImapCommandParser {
 
-    public UnselectCommandParser() {
+    public UnselectCommandParser(StatusResponseFactory statusResponseFactory) {
         // from the RFC it seems like the command should be valid in any state.
         // At least kind of, as we will return a "BAD" response if no mailbox is
         // currently selected in the UnselectProcessor
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.UNSELECT_COMMAND_NAME));
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.UNSELECT_COMMAND_NAME), statusResponseFactory);
 
     }
 

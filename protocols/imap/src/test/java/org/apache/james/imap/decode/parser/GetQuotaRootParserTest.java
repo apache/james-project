@@ -21,11 +21,13 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.GetQuotaRootRequest;
@@ -38,7 +40,7 @@ public class GetQuotaRootParserTest {
 
     @Test
     public void testNonQuotedMailbox() throws DecodingException {
-        GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser();
+        GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
         ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "INBOX\n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
@@ -50,7 +52,7 @@ public class GetQuotaRootParserTest {
 
     @Test
     public void testQuotedMailbox() throws DecodingException {
-        GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser();
+        GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
         ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "\"INBOX\" \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());

@@ -25,6 +25,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -37,8 +38,8 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
     private static final byte[] CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString().getBytes();
     private static final byte[] QRESYNC = ImapConstants.SUPPORTS_QRESYNC.asString().getBytes();
 
-    public AbstractSelectionCommandParser(ImapCommand command) {
-        super(command);
+    public AbstractSelectionCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
+        super(command, statusResponseFactory);
     }
     
     @Override

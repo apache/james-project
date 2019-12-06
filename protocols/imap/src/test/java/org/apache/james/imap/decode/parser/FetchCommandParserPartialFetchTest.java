@@ -32,6 +32,7 @@ import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.SectionType;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -48,7 +49,7 @@ public class FetchCommandParserPartialFetchTest  {
 
     @Before
     public void setUp() throws Exception {
-        parser = new FetchCommandParser();
+        parser = new FetchCommandParser(mock(StatusResponseFactory.class));
         command = ImapCommand.anyStateCommand("Command");
         session = new FakeImapSession();
     }

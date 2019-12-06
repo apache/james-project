@@ -23,6 +23,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.imap.message.request.ExamineRequest;
 
@@ -31,8 +32,8 @@ import org.apache.james.imap.message.request.ExamineRequest;
  */
 public class ExamineCommandParser extends AbstractSelectionCommandParser {
 
-    public ExamineCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.EXAMINE_COMMAND_NAME));
+    public ExamineCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.EXAMINE_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

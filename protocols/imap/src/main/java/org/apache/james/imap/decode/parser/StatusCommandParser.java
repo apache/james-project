@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -42,8 +43,8 @@ import com.google.common.collect.ImmutableList;
 public class StatusCommandParser extends AbstractImapCommandParser {
     private static final ImapRequestLineReader.NoopCharValidator NOOP_CHAR_VALIDATOR = new ImapRequestLineReader.NoopCharValidator();
 
-    public StatusCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.STATUS_COMMAND_NAME));
+    public StatusCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.STATUS_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

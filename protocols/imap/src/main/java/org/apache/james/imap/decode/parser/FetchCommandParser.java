@@ -38,6 +38,7 @@ import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.SectionType;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.FetchPartPathDecoder;
@@ -52,8 +53,8 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     private static final byte[] CHANGEDSINCE = "CHANGEDSINCE".getBytes();
     private static final byte[] VANISHED = "VANISHED".getBytes();
 
-    public FetchCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.FETCH_COMMAND_NAME));
+    public FetchCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.FETCH_COMMAND_NAME), statusResponseFactory);
     }
 
     /**

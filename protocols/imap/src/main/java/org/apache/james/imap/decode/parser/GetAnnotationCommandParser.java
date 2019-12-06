@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -44,8 +45,8 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     private static final String DEPTH = "DEPTH";
     private static final boolean STOP_ON_PAREN = true;
 
-    public GetAnnotationCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.GETANNOTATION_COMMAND_NAME));
+    public GetAnnotationCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.GETANNOTATION_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

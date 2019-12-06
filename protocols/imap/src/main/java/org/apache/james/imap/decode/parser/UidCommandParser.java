@@ -23,6 +23,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapCommandParser;
@@ -40,8 +41,8 @@ public class UidCommandParser extends AbstractImapCommandParser {
 
     private final ImapCommandParserFactory parserFactory;
 
-    public UidCommandParser(ImapCommandParserFactory parserFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.UID_COMMAND_NAME));
+    public UidCommandParser(ImapCommandParserFactory parserFactory, StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.UID_COMMAND_NAME), statusResponseFactory);
         this.parserFactory = parserFactory;
     }
 

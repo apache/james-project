@@ -21,12 +21,14 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
@@ -43,7 +45,7 @@ public class SetAnnotationCommandParserTest {
     private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "This is my comment");
     private static final MailboxAnnotation SHARED_ANNOTATION = MailboxAnnotation.newInstance(SHARED_KEY, "This one is for you!");
     private static final MailboxAnnotation NIL_ANNOTATION = MailboxAnnotation.nil(PRIVATE_KEY);
-    private SetAnnotationCommandParser parser = new SetAnnotationCommandParser();
+    private SetAnnotationCommandParser parser = new SetAnnotationCommandParser(mock(StatusResponseFactory.class));
     private ImapCommand command = ImapCommand.anyStateCommand("Command");
 
     @Test

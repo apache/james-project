@@ -21,12 +21,14 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.CopyRequest;
@@ -36,7 +38,7 @@ public class CopyParserTest {
 
     @Test
     public void testQuotaParsing() throws DecodingException {
-        CopyCommandParser parser = new CopyCommandParser();
+        CopyCommandParser parser = new CopyCommandParser(mock(StatusResponseFactory.class));
         ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = " 42:69 foo \n";
 

@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -33,12 +34,12 @@ import org.apache.james.imap.message.request.ListRequest;
  */
 public class ListCommandParser extends AbstractUidCommandParser {
 
-    public ListCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.LIST_COMMAND_NAME));
+    public ListCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.LIST_COMMAND_NAME), statusResponseFactory);
     }
 
-    protected ListCommandParser(ImapCommand command) {
-        super(command);
+    protected ListCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
+        super(command, statusResponseFactory);
     }
 
     /**

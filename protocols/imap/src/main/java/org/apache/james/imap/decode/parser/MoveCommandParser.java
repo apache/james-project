@@ -4,6 +4,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.message.request.MoveRequest;
 
 /**
@@ -11,8 +12,8 @@ import org.apache.james.imap.message.request.MoveRequest;
  */
 public class MoveCommandParser extends AbstractMessageRangeCommandParser {
 
-    public MoveCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.MOVE_COMMAND_NAME));
+    public MoveCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.MOVE_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

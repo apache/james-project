@@ -52,8 +52,8 @@ import org.slf4j.LoggerFactory;
 public class SearchCommandParser extends AbstractUidCommandParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
 
-    public SearchCommandParser() {
-        super(ImapCommand.selectedStateCommand(ImapConstants.SEARCH_COMMAND_NAME));
+    public SearchCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.selectedStateCommand(ImapConstants.SEARCH_COMMAND_NAME), statusResponseFactory);
     }
 
     /**
@@ -903,9 +903,8 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     }
 
     private ImapMessage unsupportedCharset(Tag tag, ImapCommand command) {
-        final StatusResponseFactory factory = getStatusResponseFactory();
         final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset();
-        return factory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
+        return statusResponseFactory.taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
     }
 
     /**

@@ -26,6 +26,7 @@ import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.Capability;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -34,8 +35,8 @@ import org.apache.james.imap.message.request.EnableRequest;
 
 public class EnableCommandParser extends AbstractImapCommandParser {
     
-    public EnableCommandParser() {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.ENABLE_COMMAND_NAME));
+    public EnableCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.authenticatedStateCommand(ImapConstants.ENABLE_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

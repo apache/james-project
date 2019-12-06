@@ -22,6 +22,7 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -29,8 +30,8 @@ import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 
 abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
 
-    public AbstractUidCommandParser(ImapCommand command) {
-        super(command);
+    public AbstractUidCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
+        super(command, statusResponseFactory);
     }
 
     @Override

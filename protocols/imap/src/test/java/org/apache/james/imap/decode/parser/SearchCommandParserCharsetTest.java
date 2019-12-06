@@ -72,12 +72,10 @@ public class SearchCommandParserCharsetTest {
 
     @Before
     public void setUp() throws Exception {
-        parser = new SearchCommandParser();
+        mockStatusResponseFactory = mock(StatusResponseFactory.class);
+        parser = new SearchCommandParser(mockStatusResponseFactory);
         command = ImapCommand.anyStateCommand("Command");
         message = mock(ImapMessage.class);
-
-        mockStatusResponseFactory = mock(StatusResponseFactory.class);
-        parser.setStatusResponseFactory(mockStatusResponseFactory);
     }
 
     @Test

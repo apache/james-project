@@ -22,6 +22,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -30,8 +31,8 @@ import org.apache.james.imap.message.request.CompressRequest;
 
 public class CompressCommandParser extends AbstractImapCommandParser {
 
-    public CompressCommandParser() {
-        super(ImapCommand.anyStateCommand(ImapConstants.COMPRESS_COMMAND_NAME));
+    public CompressCommandParser(StatusResponseFactory statusResponseFactory) {
+        super(ImapCommand.anyStateCommand(ImapConstants.COMPRESS_COMMAND_NAME), statusResponseFactory);
     }
 
     @Override

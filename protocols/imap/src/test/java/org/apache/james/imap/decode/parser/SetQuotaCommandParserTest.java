@@ -21,12 +21,14 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
 import org.apache.james.imap.message.request.SetQuotaRequest;
@@ -39,7 +41,7 @@ public class SetQuotaCommandParserTest {
 
     @Test
     public void testQuotaParsing() throws DecodingException {
-        SetQuotaCommandParser parser = new SetQuotaCommandParser();
+        SetQuotaCommandParser parser = new SetQuotaCommandParser(mock(StatusResponseFactory.class));
         ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "quotaRoot (STORAGE 512) ( MESSAGE  1024  ) \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
