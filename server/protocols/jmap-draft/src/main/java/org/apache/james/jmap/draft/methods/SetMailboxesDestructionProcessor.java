@@ -116,9 +116,8 @@ public class SetMailboxesDestructionProcessor implements SetMailboxesProcessor {
             Mailbox mailbox = entry.getValue();
             preconditions(mailbox, mailboxSession);
 
-            MailboxPath mailboxPath = mailboxManager.getMailbox(mailbox.getId(), mailboxSession).getMailboxPath();
-            mailboxManager.deleteMailbox(mailboxPath, mailboxSession);
-            subscriptionManager.unsubscribe(mailboxSession, mailboxPath.getName());
+            MailboxPath deletedMailbox = mailboxManager.deleteMailbox(mailbox.getId(), mailboxSession).generateAssociatedPath();
+            subscriptionManager.unsubscribe(mailboxSession, deletedMailbox.getName());
             builder.destroyed(entry.getKey());
         } catch (MailboxHasChildException e) {
             builder.notDestroyed(entry.getKey(), SetError.builder()
