@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.main;
 
+import java.util.Optional;
+
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.Tag;
@@ -47,7 +49,7 @@ public class DefaultImapDecoder implements ImapDecoder {
     private final int maxInvalidCommands;
 
     private static final String INVALID_COMMAND_COUNT = "INVALID_COMMAND_COUNT";
-    public static final int DEFAULT_MAX_INVALID_COMMANDS = 9;
+    private static final int DEFAULT_MAX_INVALID_COMMANDS = 9;
 
     public DefaultImapDecoder(StatusResponseFactory responseFactory, ImapCommandParserFactory imapCommands) {
         this(responseFactory, imapCommands, DEFAULT_MAX_INVALID_COMMANDS);
@@ -61,65 +63,59 @@ public class DefaultImapDecoder implements ImapDecoder {
 
     @Override
     public ImapMessage decode(ImapRequestLineReader request, ImapSession session) {
-        ImapMessage message;
         try {
-            final Tag tag = request.tag();
-            message = decodeCommandTagged(request, tag, session);
+            Tag tag = request.tag();
+            return decodeCommandTagged(request, tag, session);
         } catch (DecodingException e) {
             LOGGER.debug("Cannot parse tag", e);
-            message = unknownCommand(null, session);
+            return unknownCommand(null, session);
         }
-        return message;
     }
 
     private ImapMessage decodeCommandTagged(ImapRequestLineReader request, Tag tag, ImapSession session) {
-        ImapMessage message;
         LOGGER.debug("Got <tag>: {}", tag);
         try {
-            final String commandName = request.atom();
-            message = decodeCommandNamed(request, tag, commandName, session);
+            String commandName = request.atom();
+            return decodeCommandNamed(request, tag, commandName, session);
         } catch (DecodingException e) {
             LOGGER.debug("Error during initial request parsing", e);
-            message = unknownCommand(tag, session);
+            return unknownCommand(tag, session);
         }
-        return message;
     }
 
     private ImapMessage unknownCommand(Tag tag, ImapSession session) {
-        ImapMessage message;
-        Object c = session.getAttribute(INVALID_COMMAND_COUNT);
-        int count = 0;
-        if (c != null) {
-            count = (Integer) c;
-        }
-        count++;
+        int count = retrieveUnknownCommandCount(session) + 1;
+
         if (count > maxInvalidCommands || session.getState() == ImapSessionState.NON_AUTHENTICATED) {
-            message = responseFactory.bye(HumanReadableText.BYE_UNKNOWN_COMMAND);
+            ImapMessage message = responseFactory.bye(HumanReadableText.BYE_UNKNOWN_COMMAND);
             session.logout();
+            return message;
         } else {
             session.setAttribute(INVALID_COMMAND_COUNT, count);
             if (tag == null) {
-                message = responseFactory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
+                return responseFactory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
             } else {
-                message = responseFactory.taggedBad(tag, null, HumanReadableText.UNKNOWN_COMMAND);
+                return responseFactory.taggedBad(tag, null, HumanReadableText.UNKNOWN_COMMAND);
             }
-
         }
+    }
 
-        return message;
+    private int retrieveUnknownCommandCount(ImapSession session) {
+        return Optional.ofNullable(session.getAttribute(INVALID_COMMAND_COUNT))
+            .map(Integer.class::cast)
+            .orElse(0);
     }
 
     private ImapMessage decodeCommandNamed(ImapRequestLineReader request, Tag tag, String commandName, ImapSession session) {
-        ImapMessage message;
         LOGGER.debug("Got <command>: {}", commandName);
-        final ImapCommandParser command = imapCommands.getParser(commandName);
+        ImapCommandParser command = imapCommands.getParser(commandName);
         if (command == null) {
             LOGGER.info("Missing command implementation for commmand {}", commandName);
-            message = unknownCommand(tag, session);
+            return unknownCommand(tag, session);
         } else {
-            message = command.parse(request, tag, session);
+            ImapMessage message = command.parse(request, tag, session);
             session.setAttribute(INVALID_COMMAND_COUNT, 0);
+            return message;
         }
-        return message;
     }
 }
