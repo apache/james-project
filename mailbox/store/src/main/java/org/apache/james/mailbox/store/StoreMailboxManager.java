@@ -414,7 +414,7 @@ public class StoreMailboxManager implements MailboxManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(session);
         MessageMapper messageMapper = mailboxSessionMapperFactory.getMessageMapper(session);
 
-        mailboxMapper.execute((Mapper.Transaction<Mailbox>) () -> {
+        mailboxMapper.execute(() -> {
             Mailbox mailbox = mailboxMapper.findMailboxByPath(mailboxPath);
             if (mailbox == null) {
                 throw new MailboxNotFoundException(mailboxPath);
