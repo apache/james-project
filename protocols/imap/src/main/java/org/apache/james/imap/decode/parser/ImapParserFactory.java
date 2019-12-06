@@ -25,7 +25,6 @@ import java.util.Map;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.decode.DelegatingImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.MessagingImapCommandParser;
@@ -90,7 +89,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
         imapCommands.put(ImapConstants.SEARCH_COMMAND_NAME, new SearchCommandParser());
         imapCommands.put(ImapConstants.FETCH_COMMAND_NAME, new FetchCommandParser());
         imapCommands.put(ImapConstants.STORE_COMMAND_NAME, new StoreCommandParser());
-        imapCommands.put(ImapConstants.UID_COMMAND_NAME, new UidCommandParser());
+        imapCommands.put(ImapConstants.UID_COMMAND_NAME, new UidCommandParser(this));
         imapCommands.put(ImapConstants.IDLE_COMMAND_NAME, new IdleCommandParser());
         imapCommands.put(ImapConstants.STARTTLS, new StartTLSCommandParser());
 
@@ -127,14 +126,9 @@ public class ImapParserFactory implements ImapCommandParserFactory {
     }
 
     private void initialiseParser(ImapCommandParser cmd) {
-        if (cmd instanceof DelegatingImapCommandParser) {
-            ((DelegatingImapCommandParser) cmd).setParserFactory(this);
-        }
-
         if (cmd instanceof MessagingImapCommandParser) {
             final MessagingImapCommandParser messagingImapCommandParser = (MessagingImapCommandParser) cmd;
             messagingImapCommandParser.setStatusResponseFactory(statusResponseFactory);
         }
     }
-
 }

@@ -25,7 +25,6 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
-import org.apache.james.imap.decode.DelegatingImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParser;
 import org.apache.james.imap.decode.ImapCommandParserFactory;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -36,23 +35,14 @@ import org.slf4j.LoggerFactory;
 /**
  * Parse UID commands
  */
-public class UidCommandParser extends AbstractImapCommandParser implements DelegatingImapCommandParser {
+public class UidCommandParser extends AbstractImapCommandParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(UidCommandParser.class);
 
-    private ImapCommandParserFactory parserFactory;
+    private final ImapCommandParserFactory parserFactory;
 
-    public UidCommandParser() {
+    public UidCommandParser(ImapCommandParserFactory parserFactory) {
         super(ImapCommand.selectedStateCommand(ImapConstants.UID_COMMAND_NAME));
-    }
-
-    @Override
-    public ImapCommandParserFactory getParserFactory() {
-        return parserFactory;
-    }
-
-    @Override
-    public void setParserFactory(ImapCommandParserFactory imapCommandFactory) {
-        this.parserFactory = imapCommandFactory;
+        this.parserFactory = parserFactory;
     }
 
     @Override
