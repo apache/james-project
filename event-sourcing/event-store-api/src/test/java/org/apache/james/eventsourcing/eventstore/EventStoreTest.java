@@ -29,8 +29,6 @@ import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;
 import org.junit.jupiter.api.Test;
 
-import com.google.common.collect.ImmutableList;
-
 public interface EventStoreTest {
 
     TestAggregateId AGGREGATE_1 = testId(1);
@@ -72,7 +70,7 @@ public interface EventStoreTest {
         TestEvent event = new TestEvent(EventId.first(), AGGREGATE_1, "first");
         testee.append(event);
         assertThat(testee.getEventsOfAggregate(AGGREGATE_1))
-            .isEqualTo(History.of(ImmutableList.of(event)));
+            .isEqualTo(History.of(event));
     }
 
     @Test
@@ -82,7 +80,7 @@ public interface EventStoreTest {
         testee.append(event1);
         testee.append(event2);
         assertThat(testee.getEventsOfAggregate(AGGREGATE_1))
-            .isEqualTo(History.of(ImmutableList.of(event1, event2)));
+            .isEqualTo(History.of(event1, event2));
     }
 
 }

@@ -37,6 +37,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import scala.jdk.javaapi.CollectionConverters;
 
 public interface EventSourcingSystemTest {
 
@@ -119,7 +120,7 @@ public interface EventSourcingSystemTest {
         eventSourcingSystem.dispatch(new MyCommand(PAYLOAD_1));
 
         TestEvent expectedEvent = new TestEvent(EventId.first(), AGGREGATE_ID, PAYLOAD_1);
-        assertThat(eventStore.getEventsOfAggregate(AGGREGATE_ID).getEvents())
+        assertThat(CollectionConverters.asJava(eventStore.getEventsOfAggregate(AGGREGATE_ID).getEvents()))
             .containsOnly(expectedEvent);
     }
 
@@ -150,7 +151,7 @@ public interface EventSourcingSystemTest {
 
         TestEvent expectedEvent1 = new TestEvent(EventId.first(), AGGREGATE_ID, PAYLOAD_1);
         TestEvent expectedEvent2 = new TestEvent(expectedEvent1.eventId().next(), AGGREGATE_ID, PAYLOAD_2);
-        assertThat(eventStore.getEventsOfAggregate(AGGREGATE_ID).getEvents())
+        assertThat(CollectionConverters.asJava(eventStore.getEventsOfAggregate(AGGREGATE_ID).getEvents()))
             .containsOnly(expectedEvent1, expectedEvent2);
     }
 

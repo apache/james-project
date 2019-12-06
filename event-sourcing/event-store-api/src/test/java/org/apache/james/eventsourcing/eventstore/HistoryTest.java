@@ -27,15 +27,9 @@ import org.apache.james.eventsourcing.TestAggregateId;
 import org.apache.james.eventsourcing.TestEvent;
 import org.junit.jupiter.api.Test;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
+import scala.compat.java8.OptionConverters;
 
 class HistoryTest {
-
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(History.class)
-            .verify();
-    }
 
     @Test
     void emptyShouldGenerateAnEmptyHistory() {
@@ -45,18 +39,18 @@ class HistoryTest {
 
     @Test
     void getVersionShouldReturnEmptyWhenEmpty() {
-        assertThat(History.empty()
-            .getVersion())
+        assertThat(OptionConverters.toJava(History.empty()
+            .getVersion()))
             .isEmpty();
     }
 
     @Test
     void getVersionShouldReturnSingleEventIdWhenSingleEvent() {
-        assertThat(History
+        assertThat(OptionConverters.toJava(History
             .of(new TestEvent(EventId.first(),
                 TestAggregateId.testId(42),
                 "any"))
-            .getVersion())
+            .getVersion()))
             .contains(EventId.first());
     }
 
@@ -69,8 +63,8 @@ class HistoryTest {
             TestAggregateId.testId(42),
             "any");
 
-        assertThat(History.of(event1, event2)
-            .getVersion())
+        assertThat(OptionConverters.toJava(History.of(event1, event2)
+            .getVersion()))
             .contains(event2.eventId());
     }
 
