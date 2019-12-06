@@ -45,7 +45,6 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
     private StatusResponseFactory statusResponseFactory;
 
     public AbstractImapCommandParser(ImapCommand command) {
-        super();
         this.command = command;
     }
 
@@ -72,19 +71,16 @@ public abstract class AbstractImapCommandParser implements MessagingImapCommandP
      */
     @Override
     public final ImapMessage parse(ImapRequestLineReader request, Tag tag, ImapSession session) {
-        ImapMessage result;
         if (!command.validForState(session.getState())) {
-            result = statusResponseFactory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
+            return statusResponseFactory.taggedNo(tag, command, HumanReadableText.INVALID_COMMAND);
         } else {
             try {
-
-                result = decode(command, request, tag, session);
+                return decode(command, request, tag, session);
             } catch (DecodingException e) {
                 LOGGER.debug("Cannot parse protocol ", e);
-                result = statusResponseFactory.taggedBad(tag, command, e.getKey());
+                return statusResponseFactory.taggedBad(tag, command, e.getKey());
             }
         }
-        return result;
     }
 
     /**
