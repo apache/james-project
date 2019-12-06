@@ -407,10 +407,6 @@ public class StoreMailboxManager implements MailboxManager {
         }
     }
 
-    public boolean isMailboxNameTooLong(MailboxPath mailboxPath) {
-        return mailboxPath.getName().length() > MAX_MAILBOX_NAME_LENGTH;
-    }
-
     @Override
     public void deleteMailbox(final MailboxPath mailboxPath, final MailboxSession session) throws MailboxException {
         LOGGER.info("deleteMailbox {}", mailboxPath);
