@@ -19,17 +19,16 @@
 
 package org.apache.james.mailbox.lucene.search;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.search.AbstractMessageSearchIndexTest;
 import org.apache.lucene.store.RAMDirectory;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 
 import com.github.fge.lambdas.Throwing;
 
-public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
+class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Override
     protected void await() {
@@ -56,92 +55,92 @@ public class LuceneMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         messageSearchIndex = resources.getSearchIndex();
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void uidShouldreturnEveryThing() throws Exception {
+    public void uidShouldreturnEveryThing() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnCcShouldWork() throws Exception {
+    public void sortOnCcShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnFromShouldWork() throws Exception {
+    public void sortOnFromShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void orShouldReturnResultsMatchinganyRequests() throws Exception {
+    public void orShouldReturnResultsMatchinganyRequests() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+    public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+    public void internalDateAfterShouldReturnMessagesAfterAGivenDate() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
+    public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void andShouldReturnResultsMatchingBothRequests() throws Exception {
+    public void andShouldReturnResultsMatchingBothRequests() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
+    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
+    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnDisplayFromShouldWork() throws Exception {
+    public void sortOnDisplayFromShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
+    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
+    public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() {
     }
 
-    @Ignore
+    @Disabled("MAILBOX-273: failing test on Lucene (intended for ES)")
     @Override
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() {
     }
 
-    @Ignore
+    @Disabled("MAILBOX-273: failing test on Lucene (intended for ES)")
     @Override
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
+    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() {
     }
 
-    @Ignore("Lucene implementation is not handling mail addresses with names")
+    @Disabled("JAMES-2590: Lucene implementation is not handling mail addresses with names")
     @Override
     public void sortOnToShouldWork() {
     }

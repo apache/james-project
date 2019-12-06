@@ -19,11 +19,10 @@
 
 package org.apache.james.mailbox.store.search;
 
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 
-public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
+class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest {
 
     @Override
     protected void await() {
@@ -50,197 +49,193 @@ public class SimpleMessageSearchIndexTest extends AbstractMessageSearchIndexTest
         messageSearchIndex = resources.getSearchIndex();
     }
 
-    /**
-     * 32 tests out of 54 are failing
-     */
-
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
+    public void flagIsSetShouldReturnUidOfMessageMarkedAsRecentWhenUsedWithFlagRecent() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void uidShouldreturnEveryThing() throws Exception {
+    public void uidShouldreturnEveryThing() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnCcShouldWork() throws Exception {
+    public void sortOnCcShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnFromShouldWork() throws Exception {
+    public void sortOnFromShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() throws Exception {
+    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void orShouldReturnResultsMatchinganyRequests() throws Exception {
+    public void orShouldReturnResultsMatchinganyRequests() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+    public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void headerContainsShouldReturnUidsOfMessageHavingThisHeaderWithTheSpecifiedValue() throws Exception {
+    public void headerContainsShouldReturnUidsOfMessageHavingThisHeaderWithTheSpecifiedValue() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+    public void internalDateAfterShouldReturnMessagesAfterAGivenDate() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
+    public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void headerExistsShouldReturnUidsOfMessageHavingThisHeader() throws Exception {
+    public void headerExistsShouldReturnUidsOfMessageHavingThisHeader() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() throws Exception {
+    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void andShouldReturnResultsMatchingBothRequests() throws Exception {
+    public void andShouldReturnResultsMatchingBothRequests() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
+    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnDisplayToShouldWork() throws Exception {
+    public void sortOnDisplayToShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
+    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsRecentWhenUsedWithFlagRecent() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
+    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void headerDateBeforeShouldWork() throws Exception {
+    public void headerDateBeforeShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnSentDateShouldWork() throws Exception {
+    public void sortOnSentDateShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
+    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnToShouldWork() throws Exception {
+    public void sortOnToShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnDisplayFromShouldWork() throws Exception {
+    public void sortOnDisplayFromShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void revertSortingShouldReturnElementsInAReversedOrder() throws Exception {
+    public void revertSortingShouldReturnElementsInAReversedOrder() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void headerDateAfterShouldWork() throws Exception {
+    public void headerDateAfterShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
+    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnSubjectShouldWork() throws Exception {
+    public void sortOnSubjectShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void notShouldReturnResultsThatDoNotMatchAQuery() throws Exception {
+    public void notShouldReturnResultsThatDoNotMatchAQuery() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void headerDateOnShouldWork() throws Exception {
+    public void headerDateOnShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortOnSizeShouldWork() throws Exception {
+    public void sortOnSizeShouldWork() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1799: ignoring failing test after generalizing ElasticSearch test suite to other mailbox search backends")
     @Override
-    public void sortShouldOrderMessages() throws Exception {
+    public void sortShouldOrderMessages() {
     }
 
-    @Ignore
+    @Disabled("MAILBOX-273: failing test on memory (intended for ES)")
     @Override
-    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
+    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
     @Override
-    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
     @Override
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
     @Override
-    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() {
     }
 
-    @Ignore
+    @Disabled("JAMES-1804: failing jmap text search test on memory (intended for ES)")
     @Override
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
+    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() {
     }
 
-    @Ignore
+    @Disabled("JAMES-2241: memory does not handle header with dots indexation (intended for ES)")
     @Override
-    public void headerWithDotsShouldBeIndexed() throws MailboxException {
+    public void headerWithDotsShouldBeIndexed() {
     }
 }

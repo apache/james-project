@@ -21,6 +21,8 @@
 package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -60,21 +62,20 @@ import org.apache.james.mime4j.message.SingleBodyBuilder;
 import org.apache.james.util.ClassLoaderUtils;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMessageSearchIndexTest {
 
+    private static final long LIMIT = 100L;
+    private static final boolean RECENT = true;
+    private static final boolean NOT_RECENT = false;
+
     protected static final String INBOX = "INBOX";
     protected static final Username OTHERUSER = Username.of("otheruser");
     protected static final Username USERNAME = Username.of("benwa");
-
-    public static final long LIMIT = 100L;
-    public static final boolean RECENT = true;
-    public static final boolean NOT_RECENT = false;
 
     protected MessageSearchIndex messageSearchIndex;
     protected StoreMailboxManager storeMailboxManager;
@@ -104,8 +105,8 @@ public abstract class AbstractMessageSearchIndexTest {
     private StoreMessageManager inboxMessageManager;
 
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    protected void setUp() throws Exception {
         initializeMailboxManager();
 
         session = storeMailboxManager.createSystemSession(USERNAME);
@@ -233,8 +234,8 @@ public abstract class AbstractMessageSearchIndexTest {
     protected abstract void initializeMailboxManager() throws Exception;
 
     @Test
-    public void searchingMessageInMultipleMailboxShouldNotReturnTwiceTheSameMessage() throws MailboxException {
-        Assume.assumeTrue(messageIdManager != null);
+    void searchingMessageInMultipleMailboxShouldNotReturnTwiceTheSameMessage() throws MailboxException {
+        assumeTrue(messageIdManager != null);
 
         messageIdManager.setInMailboxes(m4.getMessageId(),
             ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()),
@@ -266,8 +267,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchingMessageInMultipleMailboxShouldUnionOfTheTwoMailbox() throws MailboxException {
-        Assume.assumeTrue(messageIdManager != null);
+    void searchingMessageInMultipleMailboxShouldUnionOfTheTwoMailbox() throws MailboxException {
+        assumeTrue(messageIdManager != null);
         messageIdManager.setInMailboxes(m4.getMessageId(),
             ImmutableList.of(mailbox2.getMailboxId()),
             session);
@@ -297,8 +298,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgument() throws MailboxException {
-        Assume.assumeTrue(messageIdManager != null);
+    void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgument() throws MailboxException {
+        assumeTrue(messageIdManager != null);
         messageIdManager.setInMailboxes(m1.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
         messageIdManager.setInMailboxes(m2.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
         messageIdManager.setInMailboxes(m3.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
@@ -322,7 +323,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void whenEmptyListOfMailboxGivenSearchShouldReturnEmpty() throws MailboxException {
+    void whenEmptyListOfMailboxGivenSearchShouldReturnEmpty() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
 
         List<MessageId> result = messageSearchIndex.search(session,
@@ -335,8 +336,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgumentEvenIfDuplicatedMessageAreBeforeLegitimeMessage() throws MailboxException {
-        Assume.assumeTrue(messageIdManager != null);
+    void searchingMessageInMultipleMailboxShouldNotReturnLessMessageThanLimitArgumentEvenIfDuplicatedMessageAreBeforeLegitimeMessage() throws MailboxException {
+        assumeTrue(messageIdManager != null);
         messageIdManager.setInMailboxes(m1.getMessageId(), ImmutableList.of(mailbox.getMailboxId(), mailbox2.getMailboxId()), session);
 
         SearchQuery searchQuery = new SearchQuery();
@@ -358,23 +359,25 @@ public abstract class AbstractMessageSearchIndexTest {
                 .hasSize(limit);
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    public void searchShouldThrowWhenSessionIsNull() throws MailboxException {
+    @Test
+    void searchShouldThrowWhenSessionIsNull() {
         SearchQuery searchQuery = new SearchQuery();
         MailboxSession session = null;
-        assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
-            .isEmpty();
+        
+        assertThatThrownBy(() -> messageSearchIndex.search(session, mailbox, searchQuery))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void emptySearchQueryShouldReturnAllUids() throws MailboxException {
+    void emptySearchQueryShouldReturnAllUids() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery();
+        
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
             .containsOnly(m1.getUid(), m2.getUid(), m3.getUid(), m4.getUid(), m5.getUid(), m6.getUid(), m7.getUid(), m8.getUid(), m9.getUid());
     }
 
     @Test
-    public void allShouldReturnAllUids() throws MailboxException {
+    void allShouldReturnAllUids() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -382,7 +385,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void bodyContainsShouldReturnUidOfMessageContainingTheGivenText() throws MailboxException {
+    void bodyContainsShouldReturnUidOfMessageContainingTheGivenText() throws MailboxException {
         /* Only mail4.eml contains word MAILET-94 */
         SearchQuery searchQuery = new SearchQuery(SearchQuery.bodyContains("MAILET-94"));
 
@@ -391,7 +394,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
+    protected void bodyContainsShouldReturnUidOfMessageContainingTheApproximativeText() throws MailboxException {
         /* mail1.eml contains words created AND summary
            mail.eml contains created and thus matches the query with a low score */
         SearchQuery searchQuery = new SearchQuery(SearchQuery.bodyContains("created summary"));
@@ -401,7 +404,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void hasAttachmentShouldOnlyReturnMessageThatHasAttachmentWhichAreNotInline() throws MailboxException {
+    void hasAttachmentShouldOnlyReturnMessageThatHasAttachmentWhichAreNotInline() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.hasAttachment());
 
         assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
@@ -409,7 +412,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void messageWithDotsInHeaderShouldBeIndexed() throws MailboxException {
+    void messageWithDotsInHeaderShouldBeIndexed() throws MailboxException {
 
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
@@ -424,7 +427,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerWithDotsShouldBeIndexed() throws MailboxException {
+    void headerWithDotsShouldBeIndexed() throws MailboxException {
 
         ComposedMessageId mailWithDotsInHeader = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
@@ -439,8 +442,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldBeExactOnEmailAddresses() throws MailboxException {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchShouldBeExactOnEmailAddresses() throws MailboxException {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
 
         ComposedMessageId m11 = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
@@ -465,7 +468,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void hasNoAttachmenShouldOnlyReturnMessageThatHasNoAttachmentWhichAreNotInline() throws MailboxException {
+    void hasNoAttachmenShouldOnlyReturnMessageThatHasNoAttachmentWhichAreNotInline() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.hasNoAttachment());
 
         assertThat(messageSearchIndex.search(session, mailbox2, searchQuery))
@@ -473,7 +476,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsDeletedWhenUsedWithFlagDeleted() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsDeletedWhenUsedWithFlagDeleted() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.DELETED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -481,7 +484,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsAnsweredWhenUsedWithFlagAnswered() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsAnsweredWhenUsedWithFlagAnswered() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.ANSWERED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -489,7 +492,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsDraftWhenUsedWithFlagDraft() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsDraftWhenUsedWithFlagDraft() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.DRAFT));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -497,7 +500,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
         // Only message 7 is not marked as RECENT
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.RECENT));
 
@@ -506,7 +509,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsFlaggedWhenUsedWithFlagFlagged() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsFlaggedWhenUsedWithFlagFlagged() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.FLAGGED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -514,7 +517,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsSetShouldReturnUidOfMessageMarkedAsSeenWhenUsedWithFlagSeen() throws MailboxException {
+    void flagIsSetShouldReturnUidOfMessageMarkedAsSeenWhenUsedWithFlagSeen() throws MailboxException {
         // Only message 6 is marked as read.
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
@@ -523,7 +526,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldReturnSeenMessagesWhenFlagsGotUpdated() throws MailboxException {
+    void searchShouldReturnSeenMessagesWhenFlagsGotUpdated() throws MailboxException {
         inboxMessageManager.setFlags(
             new Flags(Flags.Flag.SEEN),
             MessageManager.FlagsUpdateMode.ADD,
@@ -539,7 +542,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
     
     @Test
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
+    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInAllMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
         List<MessageId> actual = messageSearchIndex.search(
@@ -552,7 +555,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
+    void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInOneMailbox() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
         List<MessageId> actual = messageSearchIndex.search(session, ImmutableList.of(mailbox.getMailboxId()), searchQuery, LIMIT);
@@ -561,7 +564,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
+    void multimailboxSearchShouldReturnUidOfMessageWithExpectedFromInTwoMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "murari"));
 
         List<MessageId> actual = messageSearchIndex.search(
@@ -574,7 +577,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
+    protected void multimailboxSearchShouldReturnUidOfMessageMarkedAsSeenInTwoMailboxes() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
         List<MessageId> actual = messageSearchIndex.search(
@@ -587,7 +590,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void multimailboxSearchShouldLimitTheSize() throws MailboxException {
+    void multimailboxSearchShouldLimitTheSize() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet(Flags.Flag.SEEN));
 
         long limit = 1;
@@ -602,8 +605,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void multimailboxSearchShouldWorkWithOtherUserMailbox() throws  MailboxException {
-        Assume.assumeTrue(storeMailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL));
+    void multimailboxSearchShouldWorkWithOtherUserMailbox() throws  MailboxException {
+        assumeTrue(storeMailboxManager.hasCapability(MailboxManager.MailboxCapabilities.ACL));
         SearchQuery searchQuery = new SearchQuery();
 
         long limit = 256;
@@ -618,7 +621,7 @@ public abstract class AbstractMessageSearchIndexTest {
 
 
     @Test
-    public void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() throws MailboxException {
+    void flagIsSetShouldReturnUidsOfMessageContainingAGivenUserFlag() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet("Hello"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -626,7 +629,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void userFlagsShouldBeMatchedExactly() throws MailboxException {
+    void userFlagsShouldBeMatchedExactly() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsSet("Hello bonjour"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -634,7 +637,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsDeletedWhenUsedWithFlagDeleted() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsDeletedWhenUsedWithFlagDeleted() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.DELETED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -642,7 +645,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsAnsweredWhenUsedWithFlagAnswered() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsAnsweredWhenUsedWithFlagAnswered() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.ANSWERED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -650,7 +653,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsDraftWhenUsedWithFlagDraft() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsDraftWhenUsedWithFlagDraft() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.DRAFT));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -658,7 +661,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsRecentWhenUsedWithFlagRecent() throws MailboxException {
         // Only message 7 is not marked as RECENT
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.RECENT));
 
@@ -667,7 +670,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsFlaggedWhenUsedWithFlagFlagged() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsFlaggedWhenUsedWithFlagFlagged() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.FLAGGED));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -675,7 +678,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsSeenWhenUsedWithFlagSeen() throws MailboxException {
+    void flagIsUnSetShouldReturnUidOfMessageNotMarkedAsSeenWhenUsedWithFlagSeen() throws MailboxException {
         // Only message 6 is marked as read.
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet(Flags.Flag.SEEN));
 
@@ -684,7 +687,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void flagIsUnSetShouldReturnUidsOfMessageNotContainingAGivenUserFlag() throws MailboxException {
+    void flagIsUnSetShouldReturnUidsOfMessageNotContainingAGivenUserFlag() throws MailboxException {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.flagIsUnSet("Hello"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -692,7 +695,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+    protected void internalDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.internalDateAfter(
             new Date(1404252000000L),
             DateResolution.Day));
@@ -703,7 +706,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+    protected void internalDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.internalDateBefore(
             new Date(1391295600000L),
             DateResolution.Day));
@@ -714,7 +717,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void internalDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
+    void internalDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.internalDateOn(
             new Date(1393714800000L),
             DateResolution.Day));
@@ -725,7 +728,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sentDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
+    void sentDateAfterShouldReturnMessagesAfterAGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.sentDateAfter(
             new Date(1433408400000L),
             DateResolution.Second));
@@ -737,7 +740,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sentDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
+    void sentDateBeforeShouldReturnMessagesBeforeAGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.sentDateBefore(
             new Date(1433109600000L),
             DateResolution.Day));
@@ -749,7 +752,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
+    void sentDateOnShouldReturnMessagesOfTheGivenDate() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.sentDateOn(
             new Date(1433224800000L),
             DateResolution.Day));
@@ -761,7 +764,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
+    protected void modSeqEqualsShouldReturnUidsOfMessageHavingAGivenModSeq() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.modSeqEquals(2L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -769,7 +772,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    protected void modSeqGreaterThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.modSeqGreaterThan(7L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -777,7 +780,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
+    protected void modSeqLessThanShouldReturnUidsOfMessageHavingAGreaterModSeq() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.modSeqLessThan(3L));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -785,7 +788,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sizeGreaterThanShouldReturnUidsOfMessageExceedingTheSpecifiedSize() throws Exception {
+    void sizeGreaterThanShouldReturnUidsOfMessageExceedingTheSpecifiedSize() throws Exception {
         // Only message 6 is over 6.8 KB
         SearchQuery searchQuery = new SearchQuery(SearchQuery.sizeGreaterThan(6800L));
 
@@ -794,7 +797,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sizeLessThanShouldReturnUidsOfMessageNotExceedingTheSpecifiedSize() throws Exception {
+    void sizeLessThanShouldReturnUidsOfMessageNotExceedingTheSpecifiedSize() throws Exception {
         // Only message 2 3 4 5 7 9 are under 5 KB
         SearchQuery searchQuery = new SearchQuery(SearchQuery.sizeLessThan(5000L));
 
@@ -803,7 +806,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerContainsShouldReturnUidsOfMessageHavingThisHeaderWithTheSpecifiedValue() throws Exception {
+    void headerContainsShouldReturnUidsOfMessageHavingThisHeaderWithTheSpecifiedValue() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.headerContains("Precedence", "list"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -811,7 +814,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerExistsShouldReturnUidsOfMessageHavingThisHeader() throws Exception {
+    void headerExistsShouldReturnUidsOfMessageHavingThisHeader() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.headerExists("Precedence"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -819,7 +822,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
+    protected void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecified() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.From, "murari.ksr@gmail.com"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -827,8 +830,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithOnlyUserPartOfEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithOnlyUserPartOfEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -839,8 +842,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithDomainPartOfEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightExpeditorWhenFromIsSpecifiedWithDomainPartOfEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -851,8 +854,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnTheRightUidOfTheMessageContainingUTF8EncodingToHeaderName() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnTheRightUidOfTheMessageContainingUTF8EncodingToHeaderName() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -863,7 +866,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
+    void addressShouldReturnUidHavingRightRecipientWhenToIsSpecified() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.address(AddressType.To, "root@listes.minet.net"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -871,8 +874,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyEmailUserPart() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyEmailUserPart() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -883,8 +886,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyDomainPartSpecified() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenToIsSpecifiedWithOnlyDomainPartSpecified() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -895,8 +898,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecified() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -906,8 +909,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -917,8 +920,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenCcIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -928,8 +931,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyUserPartOfTheEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -940,8 +943,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecifiedWithOnlyDomainPartOfTheEmail() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -951,8 +954,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() throws Exception {
-        Assume.assumeTrue(storeMailboxManager
+    void addressShouldReturnUidHavingRightRecipientWhenBccIsSpecified() throws Exception {
+        assumeTrue(storeMailboxManager
             .getSupportedSearchCapabilities()
             .contains(MailboxManager.SearchCapabilities.PartialEmailMatch));
 
@@ -963,7 +966,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void uidShouldreturnExistingUidsOnTheGivenRanges() throws Exception {
+    void uidShouldreturnExistingUidsOnTheGivenRanges() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m4.getUid()), new SearchQuery.UidRange(m6.getUid(), m7.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
 
@@ -972,7 +975,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void uidShouldreturnEveryThing() throws Exception {
+    protected void uidShouldreturnEveryThing() throws Exception {
         SearchQuery.UidRange[] numericRanges = {};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
 
@@ -981,7 +984,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
+    protected void youShouldBeAbleToSpecifySeveralCriterionOnASingleQuery() throws Exception {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.headerExists("Precedence"));
         searchQuery.andCriteria(SearchQuery.modSeqGreaterThan(6L));
@@ -991,7 +994,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void andShouldReturnResultsMatchingBothRequests() throws Exception {
+    protected void andShouldReturnResultsMatchingBothRequests() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.and(
             SearchQuery.headerExists("Precedence"),
             SearchQuery.modSeqGreaterThan(6L)));
@@ -1001,7 +1004,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void orShouldReturnResultsMatchinganyRequests() throws Exception {
+    protected void orShouldReturnResultsMatchinganyRequests() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m4.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.or(
             SearchQuery.uid(numericRanges),
@@ -1012,7 +1015,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void notShouldReturnResultsThatDoNotMatchAQuery() throws Exception {
+    void notShouldReturnResultsThatDoNotMatchAQuery() throws Exception {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.not(SearchQuery.headerExists("Precedence")));
 
@@ -1021,7 +1024,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortShouldOrderMessages() throws Exception {
+    void sortShouldOrderMessages() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival)));
 
@@ -1030,7 +1033,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void revertSortingShouldReturnElementsInAReversedOrder() throws Exception {
+    void revertSortingShouldReturnElementsInAReversedOrder() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival, Order.REVERSE)));
 
@@ -1039,7 +1042,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerDateAfterShouldWork() throws Exception {
+    void headerDateAfterShouldWork() throws Exception {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateAfter("sentDate", new Date(1433408400000L), DateResolution.Second));
         // Date : 2015/06/04 11:00:00.000 ( Paris time zone )
@@ -1050,7 +1053,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerDateBeforeShouldWork() throws Exception {
+    void headerDateBeforeShouldWork() throws Exception {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateBefore("sentDate", new Date(1433109600000L), DateResolution.Day));
         // Date : 2015/06/01 00:00:00.000 ( Paris time zone )
@@ -1061,7 +1064,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void headerDateOnShouldWork() throws Exception {
+    void headerDateOnShouldWork() throws Exception {
         SearchQuery searchQuery = new SearchQuery(
             SearchQuery.headerDateOn("sentDate", new Date(1433224800000L), DateResolution.Day));
         // Date : 2015/06/02 08:00:00.000 ( Paris time zone )
@@ -1072,7 +1075,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
+    protected void mailsContainsShouldIncludeMailHavingAttachmentsMatchingTheRequest() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.mailContains("root mailing list"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1080,7 +1083,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnCcShouldWork() throws Exception {
+    protected void sortOnCcShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxCc)));
@@ -1094,7 +1097,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnFromShouldWork() throws Exception {
+    protected void sortOnFromShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxFrom)));
@@ -1108,7 +1111,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnToShouldWork() throws Exception {
+    protected void sortOnToShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.MailboxTo)));
@@ -1122,7 +1125,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnSubjectShouldWork() throws Exception {
+    void sortOnSubjectShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.BaseSubject)));
@@ -1136,7 +1139,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnSizeShouldWork() throws Exception {
+    void sortOnSizeShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Size)));
@@ -1150,7 +1153,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnDisplayFromShouldWork() throws Exception {
+    protected void sortOnDisplayFromShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.DisplayFrom)));
@@ -1164,7 +1167,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnDisplayToShouldWork() throws Exception {
+    void sortOnDisplayToShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.DisplayTo)));
@@ -1178,7 +1181,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnSentDateShouldWork() throws Exception {
+    void sortOnSentDateShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.SentDate)));
@@ -1192,7 +1195,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortOnIdShouldWork() throws Exception {
+    void sortOnIdShouldWork() throws Exception {
         SearchQuery.UidRange[] numericRanges = {new SearchQuery.UidRange(m2.getUid(), m5.getUid())};
         SearchQuery searchQuery = new SearchQuery(SearchQuery.uid(numericRanges));
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Uid)));
@@ -1202,8 +1205,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnNoMailWhenNotMatching() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnNoMailWhenNotMatching() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("unmatching"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1211,8 +1214,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenFromMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenFromMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("spam.minet.net"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1220,8 +1223,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("root@listes.minet.net"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1229,8 +1232,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenToIsNotAnExactMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenToIsNotAnExactMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("root"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1238,8 +1241,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenCcMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenCcMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("abc@abc.org"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1247,8 +1250,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenCcIsNotAExactMatch() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenCcIsNotAExactMatch() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1256,8 +1259,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenBccMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenBccMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey@any.com"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1265,8 +1268,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenBccIsNotAExactMatch() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenBccIsNotAExactMatch() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("monkey"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1274,8 +1277,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenTextBodyMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenTextBodyMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reviewing work"));
 
         // text/plain contains: "We are reviewing work I did for this feature."
@@ -1284,8 +1287,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenTextBodyMatchesAndNonContinuousWords() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reviewing feature"));
         // 2: text/plain contains: "Issue Type: New Feature"
         // 3: text/plain contains: "We are reviewing work I did for this feature."
@@ -1295,8 +1298,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenTextBodyMatchesInsensitiveWords() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenTextBodyMatchesInsensitiveWords() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("reVieWing"));
         // text/plain contains: "We are reviewing work I did for this feature."
 
@@ -1305,8 +1308,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenTextBodyWithExtraUnindexedWords() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("a reviewing of the work"));
         // text/plain contains: "We are reviewing work I did for this feature."
 
@@ -1315,8 +1318,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenHtmlBodyMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("contains a banana"));
         // text/html contains: "This is a mail with beautifull html content which contains a banana."
 
@@ -1325,8 +1328,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesWithStemming() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("contain banana"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1334,8 +1337,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
+    void searchWithTextShouldReturnMailsWhenHtmlBodyMatchesAndNonContinuousWords() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Text));
         SearchQuery searchQuery = new SearchQuery(SearchQuery.textContains("beautifull banana"));
 
         assertThat(messageSearchIndex.search(session, mailbox, searchQuery))
@@ -1343,8 +1346,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithFullTextShouldReturnMailsWhenNotAPerfectMatch() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
+    void searchWithFullTextShouldReturnMailsWhenNotAPerfectMatch() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.FullText));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
             .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
@@ -1358,8 +1361,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
+    void searchWithTextAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         ComposedMessageId messageWithBeautifulBananaAsTextAttachment = myFolderMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoader.getSystemResourceAsStream("eml/emailWithTextAttachment.eml")),
@@ -1373,8 +1376,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
-        Assume.assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
+    void searchWithPDFAttachmentShouldReturnMailsWhenAttachmentContentMatches() throws Exception {
+        assumeTrue(storeMailboxManager.getSupportedSearchCapabilities().contains(MailboxManager.SearchCapabilities.Attachment));
         byte[] attachmentContent = ClassLoaderUtils.getSystemResourceAsByteArray("eml/attachment.pdf");
         Multipart multipart = MultipartBuilder.create("mixed")
                 .addBodyPart(BodyPartBuilder.create()
@@ -1397,7 +1400,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void sortShouldNotDiscardResultWhenSearchingFieldIsIdentical() throws Exception {
+    void sortShouldNotDiscardResultWhenSearchingFieldIsIdentical() throws Exception {
         SearchQuery searchQuery = new SearchQuery(SearchQuery.all());
         searchQuery.setSorts(ImmutableList.of(new Sort(SortClause.Arrival)));
 
@@ -1412,7 +1415,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldOrderByInternalDateWhenSortOnSentDateAndNoCorrespondingHeader() throws Exception {
+    void searchShouldOrderByInternalDateWhenSortOnSentDateAndNoCorrespondingHeader() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "sentDate");
         storeMailboxManager.createMailbox(mailboxPath, session);
 
@@ -1452,7 +1455,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldOrderBySentDateThenInternalDateWhenSortOnSentDateAndNonHomogeneousCorrespondingHeader() throws Exception {
+    void searchShouldOrderBySentDateThenInternalDateWhenSortOnSentDateAndNonHomogeneousCorrespondingHeader() throws Exception {
         MailboxPath mailboxPath = MailboxPath.forUser(USERNAME, "sentDate");
         storeMailboxManager.createMailbox(mailboxPath, session);
 
@@ -1492,7 +1495,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldRetrieveExactlyMatchingMimeMessageID() throws Exception {
+    void searchShouldRetrieveExactlyMatchingMimeMessageID() throws Exception {
         SearchQuery searchQuery = new SearchQuery();
         searchQuery.andCriteria(SearchQuery.mimeMessageID("<JIRA.12781874.1426269127000.9353.1433410057953@Atlassian.JIRA>"));
         // Correspond to mail.eml
@@ -1502,7 +1505,7 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void copiedMessageShouldAllBeIndexed() throws Exception {
+    void copiedMessageShouldAllBeIndexed() throws Exception {
         MailboxPath newBoxPath = MailboxPath.forUser(USERNAME, "newBox");
         MailboxId newBoxId = storeMailboxManager.createMailbox(newBoxPath, session).get();
 
@@ -1523,8 +1526,8 @@ public abstract class AbstractMessageSearchIndexTest {
     }
 
     @Test
-    public void searchShouldRetrieveMailByAttachmentFileName() throws Exception {
-        Assume.assumeTrue(messageSearchIndex.getSupportedCapabilities(storeMailboxManager.getSupportedMessageCapabilities())
+    void searchShouldRetrieveMailByAttachmentFileName() throws Exception {
+        assumeTrue(messageSearchIndex.getSupportedCapabilities(storeMailboxManager.getSupportedMessageCapabilities())
             .contains(MailboxManager.SearchCapabilities.AttachmentFileName));
 
         String fileName = "matchme.txt";
