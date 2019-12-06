@@ -251,34 +251,6 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
     }
 
     /**
-     * <p>
-     * Logs the session out, freeing any resources. Clients who open session
-     * should make best efforts to call this when the session is closed.
-     * </p>
-     * <p>
-     * Note that clients may not always be able to call logout (whether forced
-     * or not). Mailboxes that create sessions which are expensive to maintain
-     * <code>MUST</code> retain a reference and periodically check
-     * {@link MailboxSession#isOpen()}.
-     * </p>
-     * <p>
-     * Note that implementations much be aware that it is possible that this
-     * method may be called more than once with the same session.
-     * </p>
-     * 
-     * @param session
-     *            not null
-     * @param force
-     *            true when the session logout is forced by premature connection
-     *            termination
-     * @throws MailboxException
-     *             when logout fails
-     */
-    default void logout(MailboxSession session, boolean force) throws MailboxException {
-        logout(session);
-    }
-
-    /**
      * Return a unmodifiable {@link List} of {@link MailboxPath} objects
      */
     List<MailboxPath> list(MailboxSession session) throws MailboxException;

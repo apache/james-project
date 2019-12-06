@@ -144,8 +144,8 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     }
 
     @AfterEach
-    void tearDown() throws Exception {
-        mailboxManager.logout(session, false);
+    void tearDown() {
+        mailboxManager.logout(session);
         mailboxManager.endProcessingRequest(session);
     }
 
@@ -1591,11 +1591,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void closingSessionShouldWork() throws Exception {
+        void closingSessionShouldWork() {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
 
-            mailboxManager.logout(session, false);
+            mailboxManager.logout(session);
             mailboxManager.endProcessingRequest(session);
 
             assertThat(session.isOpen()).isFalse();

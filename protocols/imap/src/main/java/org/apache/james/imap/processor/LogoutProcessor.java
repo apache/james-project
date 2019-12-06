@@ -22,14 +22,12 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.LogoutRequest;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
@@ -45,16 +43,11 @@ public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
 
     @Override
     protected void processRequest(LogoutRequest request, ImapSession session, Responder responder) {
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
-        try {
-            getMailboxManager().logout(mailboxSession, false);
-            session.logout();
-            bye(responder);
-            okComplete(request, responder);
-        } catch (MailboxException e) {
-            LOGGER.error("Logout failed for user {}", mailboxSession.getUser().asString(), e);
-            no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
-        }
+        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        getMailboxManager().logout(mailboxSession);
+        session.logout();
+        bye(responder);
+        okComplete(request, responder);
     }
 
     @Override

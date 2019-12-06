@@ -166,9 +166,7 @@ public class MailboxAdapter implements Mailbox {
     @Override
     public void close() throws IOException {
         try {
-            mailboxManager.logout(session, true);
-        } catch (MailboxException e) {
-            throw new IOException("Unable to close mailbox", e);
+            mailboxManager.logout(session);
         } finally {
             mailboxManager.endProcessingRequest(session);
         }

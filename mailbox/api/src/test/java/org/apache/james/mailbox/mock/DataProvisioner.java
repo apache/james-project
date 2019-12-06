@@ -30,8 +30,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 
-import com.github.fge.lambdas.Throwing;
-
 public class DataProvisioner {
     
     /**
@@ -81,10 +79,10 @@ public class DataProvisioner {
         IntStream.range(0, USER_COUNT)
             .mapToObj(i -> "user" + i + "@" + domain)
             .map(Username::of)
-            .forEach(Throwing.consumer(user -> provisionUser(mailboxManager, user)));
+            .forEach(user -> provisionUser(mailboxManager, user));
     }
 
-    private static void provisionUser(MailboxManager mailboxManager, Username user) throws MailboxException {
+    private static void provisionUser(MailboxManager mailboxManager, Username user) {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(user);
         mailboxManager.startProcessingRequest(mailboxSession);
 
@@ -96,7 +94,7 @@ public class DataProvisioner {
             .forEach(name ->  createSubSubMailboxes(mailboxManager, mailboxSession, name));
 
         mailboxManager.endProcessingRequest(mailboxSession);
-        mailboxManager.logout(mailboxSession, true);
+        mailboxManager.logout(mailboxSession);
     }
 
     private static void createSubSubMailboxes(MailboxManager mailboxManager,MailboxSession mailboxSession, String subFolderName) {

@@ -126,8 +126,7 @@ public class MailboxCopierTest {
         }
 
         mailboxManager.endProcessingRequest(mailboxSession);
-        mailboxManager.logout(mailboxSession, true);
-
+        mailboxManager.logout(mailboxSession);
     }
 
     /**

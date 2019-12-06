@@ -102,11 +102,7 @@ public class MailboxAppender {
     private void closeProcessing(MailboxSession session) throws MessagingException {
         session.close();
         try {
-            try {
-                mailboxManager.logout(session, true);
-            } catch (MailboxException e) {
-                throw new MessagingException("Can logout from mailbox", e);
-            }
+            mailboxManager.logout(session);
         } finally {
             mailboxManager.endProcessingRequest(session);
         }
