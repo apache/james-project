@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.mailbox.store.mail;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 
@@ -31,6 +33,10 @@ import org.apache.james.mailbox.store.transaction.Mapper;
 import org.reactivestreams.Publisher;
 
 public interface AttachmentMapper extends Mapper {
+
+    default InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
+        return getAttachment(attachmentId).getStream();
+    }
 
     Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
 

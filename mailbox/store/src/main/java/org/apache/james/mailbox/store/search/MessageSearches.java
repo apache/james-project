@@ -39,6 +39,8 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -92,11 +94,15 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private final Iterator<MailboxMessage> messages;
     private final SearchQuery query;
     private final TextExtractor textExtractor;
+    private final AttachmentContentLoader attachmentContentLoader;
+    private final MailboxSession mailboxSession;
 
-    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query, TextExtractor textExtractor) {
+    public MessageSearches(Iterator<MailboxMessage> messages, SearchQuery query, TextExtractor textExtractor, AttachmentContentLoader attachmentContentLoader, MailboxSession mailboxSession) {
         this.messages = messages;
         this.query = query;
         this.textExtractor = textExtractor;
+        this.attachmentContentLoader = attachmentContentLoader;
+        this.mailboxSession = mailboxSession;
     }
 
     @Override
@@ -254,19 +260,19 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
     private boolean isInAttachments(String value, List<MessageAttachment> attachments) {
         return attachments.stream()
             .map(MessageAttachment::getAttachment)
-            .flatMap(this::toAttachmentContent)
+            .flatMap(attachment -> toAttachmentContent(attachment, mailboxSession))
             .anyMatch(string -> string.contains(value));
     }
 
-    private Stream<String> toAttachmentContent(Attachment attachment) {
-        try {
+    private Stream<String> toAttachmentContent(Attachment attachment, MailboxSession mailboxSession) {
+        try (InputStream rawData = attachmentContentLoader.load(attachment, mailboxSession)) {
             return OptionalUtils.toStream(
-                    textExtractor
-                         .extractContent(
-                             attachment.getStream(),
-                             attachment.getType())
-                        .getTextualContent());
-            } catch (Exception e) {
+                textExtractor
+                    .extractContent(
+                        rawData,
+                        attachment.getType())
+                    .getTextualContent());
+        } catch (Exception e) {
             LOGGER.error("Error while parsing attachment content", e);
             return Stream.of();
         }

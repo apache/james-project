@@ -23,6 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
@@ -83,7 +84,8 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
 
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
+        AttachmentContentLoader attachmentContentLoader = null;
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
         mailboxManager = new CassandraMailboxManager(mailboxSessionMapperFactory, sessionProvider, new NoMailboxPathLocker(), new MessageParser(),
             messageIdFactory, eventBus, annotationManager, storeRightManager, quotaComponents,

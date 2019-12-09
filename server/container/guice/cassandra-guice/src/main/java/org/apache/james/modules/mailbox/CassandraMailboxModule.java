@@ -25,6 +25,7 @@ import javax.inject.Singleton;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthenticator;
 import org.apache.james.adapter.mailbox.store.UserRepositoryAuthorizator;
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
@@ -169,6 +170,7 @@ public class CassandraMailboxModule extends AbstractModule {
         bind(AttachmentManager.class).to(StoreAttachmentManager.class);
         bind(RightManager.class).to(StoreRightManager.class);
         bind(SessionProvider.class).to(SessionProviderImpl.class);
+        bind(AttachmentContentLoader.class).to(AttachmentManager.class);
 
         bind(ReIndexer.class).to(ReIndexerImpl.class);
         bind(MessageIdReIndexer.class).to(MessageIdReIndexerImpl.class);

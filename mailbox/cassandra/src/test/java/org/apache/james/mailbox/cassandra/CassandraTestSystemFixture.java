@@ -22,6 +22,7 @@ package org.apache.james.mailbox.cassandra;
 import static org.mockito.Mockito.mock;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
@@ -72,7 +73,8 @@ class CassandraTestSystemFixture {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(mock(Authenticator.class), mock(Authorizator.class));
 
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mapperFactory);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
+        AttachmentContentLoader attachmentContentLoader = null;
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
         CassandraMailboxManager cassandraMailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new NoMailboxPathLocker(), new MessageParser(), new CassandraMessageId.Factory(),
             eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);

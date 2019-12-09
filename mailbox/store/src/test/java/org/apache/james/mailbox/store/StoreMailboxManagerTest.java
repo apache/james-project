@@ -26,6 +26,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -96,7 +97,8 @@ class StoreMailboxManagerTest {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mockedMapperFactory, storeRightManager);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.forUserAndAdmin(ADMIN, CURRENT_USER));
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mockedMapperFactory);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mockedMapperFactory, mockedMapperFactory, new DefaultTextExtractor());
+        AttachmentContentLoader attachmentContentLoader = null;
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mockedMapperFactory, mockedMapperFactory, new DefaultTextExtractor(), attachmentContentLoader);
 
         storeMailboxManager = new StoreMailboxManager(mockedMapperFactory, sessionProvider,
                 new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,

@@ -65,7 +65,7 @@ public class MaildirMailboxManagerProvider {
 
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mf, storeRightManager);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new MaildirAttachmentContentLoader());
 
         StoreMailboxManager manager = new StoreMailboxManager(mf, sessionProvider, new JVMMailboxPathLocker(),
             messageParser, new DefaultMessageId.Factory(), annotationManager, eventBus, storeRightManager,

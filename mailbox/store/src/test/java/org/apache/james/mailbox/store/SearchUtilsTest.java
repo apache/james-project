@@ -31,8 +31,10 @@ import java.util.TimeZone;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
@@ -84,7 +86,8 @@ class SearchUtilsTest {
         Iterator<MailboxMessage> messages = null;
         SearchQuery query = null; 
         TextExtractor textExtractor = null;
-        messageSearches = new MessageSearches(messages, query, textExtractor);
+        MailboxSession session = null;
+        messageSearches = new MessageSearches(messages, query, textExtractor, (attachment, ignore) -> attachment.getStream(), session);
     }
     
     @Test

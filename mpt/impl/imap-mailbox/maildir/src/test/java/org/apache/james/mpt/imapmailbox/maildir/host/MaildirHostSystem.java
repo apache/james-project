@@ -84,7 +84,7 @@ public class MaildirHostSystem extends JamesImapHostSystem {
         StoreMailboxAnnotationManager annotationManager = new StoreMailboxAnnotationManager(mailboxSessionMapperFactory, storeRightManager);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, authorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mailboxSessionMapperFactory);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mailboxSessionMapperFactory, mailboxSessionMapperFactory, new DefaultTextExtractor(), null);
 
         mailboxManager = new StoreMailboxManager(mailboxSessionMapperFactory, sessionProvider, locker,
             messageParser, new DefaultMessageId.Factory(), annotationManager, eventBus, storeRightManager, quotaComponents,

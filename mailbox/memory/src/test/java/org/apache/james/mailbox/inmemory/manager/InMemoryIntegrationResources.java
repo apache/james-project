@@ -129,7 +129,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             RequirePreDeletionHooks listeningSearchIndex(Function<MailboxManagerPreInstanciationStage, ListeningMessageSearchIndex> searchIndex);
 
             default RequirePreDeletionHooks scanningSearchIndex() {
-                return searchIndex(stage -> new SimpleMessageSearchIndex(stage.mapperFactory, stage.mapperFactory, new DefaultTextExtractor()));
+                return searchIndex(stage -> new SimpleMessageSearchIndex(stage.mapperFactory, stage.mapperFactory, new DefaultTextExtractor(), null));
             }
         }
 

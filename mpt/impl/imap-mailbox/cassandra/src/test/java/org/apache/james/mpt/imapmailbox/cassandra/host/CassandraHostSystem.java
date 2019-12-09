@@ -109,7 +109,7 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver);
 
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), null);
 
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,

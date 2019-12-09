@@ -68,7 +68,7 @@ public class JpaMailboxManagerProvider {
             LIMIT_ANNOTATIONS, LIMIT_ANNOTATION_SIZE);
         SessionProviderImpl sessionProvider = new SessionProviderImpl(noAuthenticator, noAuthorizator);
         QuotaComponents quotaComponents = QuotaComponents.disabled(sessionProvider, mf);
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor());
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mf, mf, new DefaultTextExtractor(), new JPAAttachmentContentLoader());
 
         return new OpenJPAMailboxManager(mf, sessionProvider,
             messageParser, new DefaultMessageId.Factory(),
