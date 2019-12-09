@@ -30,6 +30,11 @@ public class BlobNotFoundException extends RuntimeException {
         this.blobId = blobId;
     }
 
+    public BlobNotFoundException(BlobId blobId, Throwable cause) {
+        super("Could not retrieve " + blobId.asString(), cause);
+        this.blobId = blobId;
+    }
+
     public BlobId getBlobId() {
         return blobId;
     }

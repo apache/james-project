@@ -19,12 +19,10 @@
 
 package org.apache.james.mailbox.store;
 
-import java.io.InputStream;
 import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -32,11 +30,14 @@ import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.BlobNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Blob;
 import org.apache.james.mailbox.model.BlobId;
+import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.MessageResult;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -69,7 +70,21 @@ public class StoreBlobManager implements BlobManager {
     private Optional<Blob> getBlobFromAttachment(BlobId blobId, MailboxSession mailboxSession) throws MailboxException {
         try {
             AttachmentId attachmentId = AttachmentId.from(blobId);
-            return Optional.of(attachmentManager.getAttachment(attachmentId, mailboxSession).toBlob());
+            Attachment attachment = attachmentManager.getAttachment(attachmentId, mailboxSession);
+
+            Blob blob = Blob.builder()
+                .id(blobId)
+                .payload(() -> {
+                    try {
+                        return attachmentManager.loadAttachmentContent(attachmentId, mailboxSession);
+                    } catch (AttachmentNotFoundException e) {
+                        throw new BlobNotFoundException(blobId, e);
+                    }
+                })
+                .size(attachment.getSize())
+                .contentType(attachment.getType())
+                .build();
+            return Optional.of(blob);
         } catch (AttachmentNotFoundException e) {
             return Optional.empty();
         }
@@ -77,12 +92,13 @@ public class StoreBlobManager implements BlobManager {
 
     private Optional<Blob> getBlobFromMessage(BlobId blobId, MailboxSession mailboxSession) {
         return retrieveMessageId(blobId)
-                .flatMap(messageId -> loadMessageAsBlob(messageId, mailboxSession))
+                .flatMap(messageId -> loadMessageAsInputStream(messageId, mailboxSession))
                 .map(Throwing.function(
-                    blob -> Blob.builder()
+                    content -> Blob.builder()
                         .id(blobId)
                         .contentType(MESSAGE_RFC822_CONTENT_TYPE)
-                        .payload(IOUtils.toByteArray(blob))
+                        .size(content.size())
+                        .payload(content::getInputStream)
                         .build()));
     }
 
@@ -94,11 +110,11 @@ public class StoreBlobManager implements BlobManager {
         }
     }
 
-    private Optional<InputStream> loadMessageAsBlob(MessageId messageId, MailboxSession mailboxSession)  {
+    private Optional<Content> loadMessageAsInputStream(MessageId messageId, MailboxSession mailboxSession)  {
         try {
             return messageIdManager.getMessage(messageId, FetchGroup.FULL_CONTENT, mailboxSession)
                 .stream()
-                .map(Throwing.function(message -> message.getFullContent().getInputStream()))
+                .map(Throwing.function(MessageResult::getFullContent))
                 .findFirst();
         } catch (MailboxException e) {
             throw new RuntimeException(e);

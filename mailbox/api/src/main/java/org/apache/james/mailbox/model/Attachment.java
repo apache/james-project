@@ -116,13 +116,6 @@ public class Attachment {
         return bytes;
     }
 
-    public Blob toBlob() {
-        return Blob.builder()
-            .id(BlobId.fromBytes(bytes))
-            .payload(bytes)
-            .contentType(type)
-            .build();
-    }
 
     @Override
     public boolean equals(Object obj) {
