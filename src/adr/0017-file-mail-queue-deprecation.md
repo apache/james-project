@@ -10,12 +10,12 @@ Proposed
 
 James offers several implementation for MailQueue, a component allowing asynchronous mail processing upon smtp mail 
 reception. These includes:
- - Default embedded ActiveMQ mail queue implementation, leveraging the JMS APIs.
+ - Default embedded ActiveMQ mail queue implementation, leveraging the JMS APIs and using the filesystem.
  - RabbitMQMailQueue allowing several James instances to share their MailQueue content.
  - And FileMailQueue directly leveraging the file system.
 
 We introduced a junit5 test contract regarding management features, concurrency issues, and FileMailQueue do not meet this 
-contract. This results in some tests being disabled and in an instable test suite.
+contract. This results in some tests being disabled and in an unstable test suite.
 
 FileMailQueue tries to implement a message queue within James code, which does not really makes sense as some other projects
 already provides one.
