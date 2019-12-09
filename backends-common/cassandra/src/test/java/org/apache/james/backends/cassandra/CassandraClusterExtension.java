@@ -23,12 +23,13 @@ import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class CassandraClusterExtension implements BeforeAllCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
+public class CassandraClusterExtension implements BeforeAllCallback, BeforeEachCallback, AfterAllCallback, AfterEachCallback, ParameterResolver {
     private final DockerCassandraExtension cassandraExtension;
     private final CassandraModule cassandraModule;
     private CassandraCluster cassandraCluster;
@@ -43,8 +44,20 @@ public class CassandraClusterExtension implements BeforeAllCallback, AfterAllCal
         Class<?> testClass = extensionContext.getRequiredTestClass();
         if (testClass.getEnclosingClass() == null) {
             cassandraExtension.beforeAll(extensionContext);
-            cassandraCluster = CassandraCluster.create(cassandraModule, cassandraExtension.getDockerCassandra().getHost());
+            start();
         }
+    }
+
+    private void start() {
+        cassandraCluster = CassandraCluster.create(cassandraModule, cassandraExtension.getDockerCassandra().getHost());
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+        DockerCassandraSingleton.incrementTestsPlayed();
+        DockerCassandraSingleton.restartAfterMaxTestsPlayed(
+            cassandraCluster::close,
+            this::start);
     }
 
     @Override

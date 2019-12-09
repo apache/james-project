@@ -21,7 +21,6 @@ package org.apache.james.mailrepository.cassandra;
 
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
-import org.apache.james.backends.cassandra.CassandraRestartExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.utils.CassandraUtils;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
@@ -35,11 +34,8 @@ import org.apache.james.mailrepository.api.MailRepositoryUrl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-
-@ExtendWith(CassandraRestartExtension.class)
 class CassandraMailRepositoryTest implements MailRepositoryContract {
     static final MailRepositoryUrl URL = MailRepositoryUrl.from("proto://url");
     static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();

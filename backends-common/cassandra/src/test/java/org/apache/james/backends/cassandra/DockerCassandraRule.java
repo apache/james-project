@@ -34,7 +34,7 @@ public class DockerCassandraRule extends ExternalResource {
     }
 
     @Override
-    protected void before() {
+    protected void before() throws Exception {
         if (allowRestart) {
             DockerCassandraSingleton.restartAfterMaxTestsPlayed();
         }

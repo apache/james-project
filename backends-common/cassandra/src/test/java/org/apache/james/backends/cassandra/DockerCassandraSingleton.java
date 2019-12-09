@@ -20,6 +20,16 @@
 package org.apache.james.backends.cassandra;
 
 public class DockerCassandraSingleton {
+    @FunctionalInterface
+    interface BeforeHook {
+        void run() throws Exception;
+    }
+
+    @FunctionalInterface
+    interface AfterHook {
+        void run() throws Exception;
+    }
+
     private static final int MAX_TEST_PLAYED = 100;
 
     private static int testsPlayedCount = 0;
@@ -35,11 +45,18 @@ public class DockerCassandraSingleton {
     }
 
     // Call this method to ensure that cassandra is restarted every MAX_TEST_PLAYED tests
-    public static void restartAfterMaxTestsPlayed() {
+    public static void restartAfterMaxTestsPlayed(BeforeHook before, AfterHook after) throws Exception {
         if (testsPlayedCount > MAX_TEST_PLAYED) {
             testsPlayedCount = 0;
+            before.run();
             restart();
+            after.run();
         }
+    }
+
+    // Call this method to ensure that cassandra is restarted every MAX_TEST_PLAYED tests
+    public static void restartAfterMaxTestsPlayed() throws Exception {
+        restartAfterMaxTestsPlayed(() -> {}, () -> {});
     }
 
     private static void restart() {
