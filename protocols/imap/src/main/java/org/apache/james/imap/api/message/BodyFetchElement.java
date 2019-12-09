@@ -20,6 +20,7 @@ package org.apache.james.imap.api.message;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -131,64 +132,24 @@ public class BodyFetchElement {
         return numberOfOctets;
     }
 
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((fieldNames == null) ? 0 : fieldNames.hashCode());
-        result = PRIME * result + ((firstOctet == null) ? 0 : firstOctet.hashCode());
-        result = PRIME * result + ((name == null) ? 0 : name.hashCode());
-        result = PRIME * result + ((numberOfOctets == null) ? 0 : numberOfOctets.hashCode());
-        result = PRIME * result + ((path == null) ? 0 : path.length);
-        result = PRIME * result + sectionType;
-        return result;
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof BodyFetchElement) {
+            BodyFetchElement that = (BodyFetchElement) o;
+
+            return Objects.equals(this.sectionType, that.sectionType)
+                && Objects.equals(this.firstOctet, that.firstOctet)
+                && Objects.equals(this.numberOfOctets, that.numberOfOctets)
+                && Objects.equals(this.name, that.name)
+                && Arrays.equals(this.path, that.path)
+                && Objects.equals(this.fieldNames, that.fieldNames);
+        }
+        return false;
     }
 
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final BodyFetchElement other = (BodyFetchElement) obj;
-        if (fieldNames == null) {
-            if (other.fieldNames != null) {
-                return false;
-            }
-        } else if (!fieldNames.equals(other.fieldNames)) {
-            return false;
-        }
-        if (firstOctet == null) {
-            if (other.firstOctet != null) {
-                return false;
-            }
-        } else if (!firstOctet.equals(other.firstOctet)) {
-            return false;
-        }
-        if (name == null) {
-            if (other.name != null) {
-                return false;
-            }
-        } else if (!name.equals(other.name)) {
-            return false;
-        }
-        if (numberOfOctets == null) {
-            if (other.numberOfOctets != null) {
-                return false;
-            }
-        } else if (!numberOfOctets.equals(other.numberOfOctets)) {
-            return false;
-        }
-        if (!Arrays.equals(path, other.path)) {
-            return false;
-        }
-        if (sectionType != other.sectionType) {
-            return false;
-        }
-        return true;
+    @Override
+    public final int hashCode() {
+        return Objects.hash(firstOctet, numberOfOctets, name, sectionType, Arrays.hashCode(path), fieldNames);
     }
 
     @Override
