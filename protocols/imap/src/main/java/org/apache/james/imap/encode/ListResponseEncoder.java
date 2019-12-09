@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ListResponse;
 
 /**
@@ -34,7 +33,7 @@ public class ListResponseEncoder implements ImapResponseEncoder<ListResponse> {
     }
 
     @Override
-    public void encode(ListResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ListResponse response, ImapResponseComposer composer) throws IOException {
         ListingEncodingUtils.encodeListingResponse(ImapConstants.LIST_RESPONSE_NAME, composer, response);
     }
 }

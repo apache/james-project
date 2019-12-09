@@ -22,7 +22,6 @@ package org.apache.james.imap.encode.base;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 import org.slf4j.Logger;
@@ -37,7 +36,7 @@ public class EndImapEncoder implements ImapEncoder {
     private static final Logger LOGGER = LoggerFactory.getLogger(EndImapEncoder.class);
 
     @Override
-    public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ImapMessage message, ImapResponseComposer composer) throws IOException {
         LOGGER.warn("Unknown message {}", message);
         LOGGER.debug("Chain end reached for {}", message);
         composer.untaggedNoResponse("Unknown message in pipeline", null);

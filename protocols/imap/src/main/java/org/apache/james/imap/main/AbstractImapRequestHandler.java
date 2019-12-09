@@ -53,7 +53,7 @@ public abstract class AbstractImapRequestHandler {
 
     protected boolean doProcessRequest(ImapRequestLineReader request, ImapResponseComposer response, ImapSession session) {
         ImapMessage message = decoder.decode(request, session);
-        final ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response, session);
+        final ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
         processor.process(message, responseEncoder, session);
 
         final boolean result;

@@ -23,7 +23,6 @@ import java.util.Iterator;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.Capability;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.CapabilityResponse;
 
 /**
@@ -38,7 +37,7 @@ public class CapabilityResponseEncoder implements ImapResponseEncoder<Capability
     }
 
     @Override
-    public void encode(CapabilityResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(CapabilityResponse response, ImapResponseComposer composer) throws IOException {
         Iterator<Capability> capabilities = response.getCapabilities().iterator();
         composer.untagged();
         composer.message(ImapConstants.CAPABILITY_COMMAND_NAME);

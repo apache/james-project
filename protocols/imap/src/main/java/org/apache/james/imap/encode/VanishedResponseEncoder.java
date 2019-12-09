@@ -20,7 +20,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.VanishedResponse;
 
 public class VanishedResponseEncoder implements ImapResponseEncoder<VanishedResponse> {
@@ -30,7 +29,7 @@ public class VanishedResponseEncoder implements ImapResponseEncoder<VanishedResp
     }
 
     @Override
-    public void encode(VanishedResponse message, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(VanishedResponse message, ImapResponseComposer composer) throws IOException {
         composer.untagged();
         composer.message("VANISHED");
         if (message.isEarlier()) {

@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
@@ -35,7 +34,7 @@ public class SearchResponseEncoder implements ImapResponseEncoder<SearchResponse
     }
 
     @Override
-    public void encode(SearchResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(SearchResponse response, ImapResponseComposer composer) throws IOException {
         final long[] ids = response.getIds();
         ModSeq highestModSeq = response.getHighestModSeq();
         composer.untagged();

@@ -27,7 +27,6 @@ import java.util.stream.Stream;
 
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.Localizer;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ACLResponseEncoder;
 import org.apache.james.imap.encode.AnnotationResponseEncoder;
 import org.apache.james.imap.encode.AuthenticateResponseEncoder;
@@ -78,13 +77,13 @@ public class DefaultImapEncoderFactory implements ImapEncoderFactory {
         }
 
         @Override
-        public void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException {
+        public void encode(ImapMessage message, ImapResponseComposer composer) throws IOException {
             ImapResponseEncoder imapResponseEncoder = encoders.get(message.getClass());
 
             if (imapResponseEncoder != null) {
-                imapResponseEncoder.encode(message, composer, session);
+                imapResponseEncoder.encode(message, composer);
             } else {
-                endImapEncoder.encode(message, composer, session);
+                endImapEncoder.encode(message, composer);
             }
         }
     }

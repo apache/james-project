@@ -43,7 +43,7 @@ public class QuotaResponseEncoderTest {
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder();
-        encoder.encode(response, composer, null);
+        encoder.encode(response, composer);
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTA root (MESSAGE 231 1024)\r\n");
     }
@@ -55,7 +55,7 @@ public class QuotaResponseEncoderTest {
         ByteImapResponseWriter byteImapResponseWriter = new ByteImapResponseWriter();
         ImapResponseComposer composer = new ImapResponseComposerImpl(byteImapResponseWriter, 1024);
         QuotaResponseEncoder encoder = new QuotaResponseEncoder();
-        encoder.encode(response, composer, null);
+        encoder.encode(response, composer);
         String responseString = byteImapResponseWriter.getString();
         assertThat(responseString).isEqualTo("* QUOTA root (STORAGE 231 1024)\r\n");
     }

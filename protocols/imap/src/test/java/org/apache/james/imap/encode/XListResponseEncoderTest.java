@@ -55,8 +55,7 @@ public class XListResponseEncoderTest {
                 "name",
                 '.',
                 MailboxType.INBOX),
-            composer,
-            new FakeImapSession());
+            composer);
         assertThat(writer.getString()).startsWith("* XLIST");
     }
 }

@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.Locales;
 import org.apache.james.imap.api.display.Localizer;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ContinuationResponse;
 
 public class ContinuationResponseEncoder implements ImapResponseEncoder<ContinuationResponse> {
@@ -42,12 +41,12 @@ public class ContinuationResponseEncoder implements ImapResponseEncoder<Continua
     }
 
     @Override
-    public void encode(ContinuationResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
-        String message = response.getData() != null ? response.getData() : asString(response.getTextKey(), session);
+    public void encode(ContinuationResponse response, ImapResponseComposer composer) throws IOException {
+        String message = response.getData() != null ? response.getData() : asString(response.getTextKey());
         composer.continuationResponse(message);
     }
 
-    private String asString(HumanReadableText text, ImapSession session) {
+    private String asString(HumanReadableText text) {
         // TODO: calculate locales
         return localizer.localize(text, new Locales(new ArrayList<>(), null));
     }

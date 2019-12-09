@@ -51,7 +51,7 @@ public class FetchResponseEncoderTest  {
     public void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
                 null, null, null, null);
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
 
 
@@ -61,7 +61,7 @@ public class FetchResponseEncoderTest  {
     public void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null); 
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
 
@@ -71,7 +71,7 @@ public class FetchResponseEncoderTest  {
     public void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
         
     }

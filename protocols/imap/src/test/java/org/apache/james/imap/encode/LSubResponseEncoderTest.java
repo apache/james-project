@@ -45,7 +45,7 @@ public class LSubResponseEncoderTest  {
 
     @Test
     public void encoderShouldIncludeLSUBCommand() throws Exception {
-        encoder.encode(new LSubResponse("name", true, '.'), composer, new FakeImapSession());
+        encoder.encode(new LSubResponse("name", true, '.'), composer);
         assertThat(writer.getString()).startsWith("* LSUB");
     }
 

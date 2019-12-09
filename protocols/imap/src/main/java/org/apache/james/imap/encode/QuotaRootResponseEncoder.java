@@ -22,7 +22,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.QuotaRootResponse;
 
 /**
@@ -35,7 +34,7 @@ public class QuotaRootResponseEncoder implements ImapResponseEncoder<QuotaRootRe
     }
 
     @Override
-    public void encode(QuotaRootResponse quotaRootResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(QuotaRootResponse quotaRootResponse, ImapResponseComposer composer) throws IOException {
         String quotaRoot = quotaRootResponse.getQuotaRoot();
         String mailbox = quotaRootResponse.getMailboxName();
 

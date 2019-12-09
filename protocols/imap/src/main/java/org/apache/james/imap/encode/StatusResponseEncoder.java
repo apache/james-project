@@ -47,7 +47,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
     }
 
     @Override
-    public void encode(ImmutableStatusResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ImmutableStatusResponse response, ImapResponseComposer composer) throws IOException {
         final Type serverResponseType = response.getServerResponseType();
         final String type = asString(serverResponseType);
         final ResponseCode responseCode = response.getResponseCode();
@@ -55,7 +55,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
         final Tag tag = response.getTag();
         final ImapCommand command = response.getCommand();
         final HumanReadableText textKey = response.getTextKey();
-        final String text = asString(textKey, session);
+        final String text = asString(textKey);
         final Collection<String> parameters;
         final long number;
         final boolean useParens;
@@ -104,7 +104,7 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
         composer.end();
     }
 
-    private String asString(HumanReadableText text, ImapSession session) {
+    private String asString(HumanReadableText text) {
         // TODO: calculate locales
         return localizer.localize(text, new Locales(new ArrayList<>(), null));
     }

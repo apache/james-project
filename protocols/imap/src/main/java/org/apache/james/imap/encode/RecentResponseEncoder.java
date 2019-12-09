@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.RecentResponse;
 
 public class RecentResponseEncoder implements ImapResponseEncoder<RecentResponse> {
@@ -33,7 +32,7 @@ public class RecentResponseEncoder implements ImapResponseEncoder<RecentResponse
     }
 
     @Override
-    public void encode(RecentResponse recentResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(RecentResponse recentResponse, ImapResponseComposer composer) throws IOException {
         int numberFlaggedRecent = recentResponse.getNumberFlaggedRecent();
         composer.untagged().message(numberFlaggedRecent).message(RECENT).end();
     }

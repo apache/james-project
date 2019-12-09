@@ -25,7 +25,6 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchResultOption;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ESearchResponse;
 import org.apache.james.mailbox.ModSeq;
 
@@ -39,7 +38,7 @@ public class ESearchResponseEncoder implements ImapResponseEncoder<ESearchRespon
     }
 
     @Override
-    public void encode(ESearchResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ESearchResponse response, ImapResponseComposer composer) throws IOException {
         Tag tag = response.getTag();
         long min = response.getMinUid();
         long max = response.getMaxUid();

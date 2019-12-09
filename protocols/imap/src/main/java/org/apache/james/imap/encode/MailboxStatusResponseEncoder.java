@@ -22,7 +22,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.MailboxStatusResponse;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
@@ -37,7 +36,7 @@ public class MailboxStatusResponseEncoder implements ImapConstants, ImapResponse
     }
 
     @Override
-    public void encode(MailboxStatusResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(MailboxStatusResponse response, ImapResponseComposer composer) throws IOException {
         Long messages = response.getMessages();
         Long recent = response.getRecent();
         MessageUid uidNext = response.getUidNext();

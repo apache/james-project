@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.LSubResponse;
 
 /**
@@ -34,7 +33,7 @@ public class LSubResponseEncoder implements ImapResponseEncoder<LSubResponse> {
     }
 
     @Override
-    public void encode(LSubResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(LSubResponse response, ImapResponseComposer composer) throws IOException {
         ListingEncodingUtils.encodeListingResponse(ImapConstants.LSUB_RESPONSE_NAME, composer, response);
     }
 }

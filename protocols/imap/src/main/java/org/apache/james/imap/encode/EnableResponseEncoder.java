@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.Set;
 
 import org.apache.james.imap.api.message.Capability;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.EnableResponse;
 
 /**
@@ -35,7 +34,7 @@ public class EnableResponseEncoder implements ImapResponseEncoder<EnableResponse
     }
 
     @Override
-    public void encode(EnableResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(EnableResponse response, ImapResponseComposer composer) throws IOException {
         Set<Capability> capabilities = response.getCapabilities();
         composer.untagged();
         // Return ENABLED capabilities. See IMAP-323

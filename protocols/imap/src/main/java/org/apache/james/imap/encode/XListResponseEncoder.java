@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.XListResponse;
 
 public class XListResponseEncoder implements ImapResponseEncoder<XListResponse> {
@@ -31,7 +30,7 @@ public class XListResponseEncoder implements ImapResponseEncoder<XListResponse> 
     }
 
     @Override
-    public void encode(XListResponse message, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(XListResponse message, ImapResponseComposer composer) throws IOException {
         ListingEncodingUtils.encodeListingResponse(ImapConstants.XLIST_RESPONSE_NAME, composer, message);
     }
 }

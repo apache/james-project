@@ -49,7 +49,7 @@ public class SearchResponseEncoderTest {
 
     @Test
     public void testEncode() throws Exception {
-        encoder.encode(response, composer, new FakeImapSession());
+        encoder.encode(response, composer);
         assertThat(writer.getString()).isEqualTo("* SEARCH 1 4 9 16\r\n");
     }
 }

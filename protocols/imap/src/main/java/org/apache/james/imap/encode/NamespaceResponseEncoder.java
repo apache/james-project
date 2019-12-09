@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.imap.message.response.NamespaceResponse.Namespace;
 
@@ -36,7 +35,7 @@ public class NamespaceResponseEncoder implements ImapResponseEncoder<NamespaceRe
     }
 
     @Override
-    public void encode(NamespaceResponse response, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(NamespaceResponse response, ImapResponseComposer composer) throws IOException {
         composer.untagged();
         composer.commandName(ImapConstants.NAMESPACE_COMMAND_NAME);
 

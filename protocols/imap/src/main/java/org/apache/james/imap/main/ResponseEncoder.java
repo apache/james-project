@@ -23,28 +23,24 @@ import java.io.IOException;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.apache.james.imap.encode.ImapResponseComposer;
 
 public class ResponseEncoder implements Responder {
     private final ImapEncoder encoder;
-    private final ImapSession session;
     private final ImapResponseComposer composer;
 
     private IOException failure;
 
-    public ResponseEncoder(ImapEncoder encoder, ImapResponseComposer composer, ImapSession session) {
-        super();
+    public ResponseEncoder(ImapEncoder encoder, ImapResponseComposer composer) {
         this.encoder = encoder;
         this.composer = composer;
-        this.session = session;
     }
 
     @Override
     public void respond(ImapResponseMessage message) {
         try {
-            encoder.encode(message, composer, session);
+            encoder.encode(message, composer);
         } catch (IOException failure) {
             this.failure = failure;
         }

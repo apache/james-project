@@ -192,7 +192,7 @@ public class ImapChannelUpstreamHandler extends SimpleChannelUpstreamHandler imp
                     cp.addBefore(NettyConstants.CORE_HANDLER, NettyConstants.HEARTBEAT_HANDLER, heartbeatHandler);
 
                 }
-                final ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response, session);
+                final ResponseEncoder responseEncoder = new ResponseEncoder(encoder, response);
                 processor.process(message, responseEncoder, session);
 
                 if (session.getState() == ImapSessionState.LOGOUT) {

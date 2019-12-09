@@ -22,7 +22,6 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.process.ImapSession;
 
 /**
  * TODO: correct this API
@@ -36,10 +35,8 @@ public interface ImapEncoder {
      *            <code>ImapMessage</code>, not null
      * @param composer
      *            <code>ImapResponseComposer</code>, not null
-     * @param session
-     *            TODO
      * @throws IOException
      *             when message encoding fails
      */
-    void encode(ImapMessage message, ImapResponseComposer composer, ImapSession session) throws IOException;
+    void encode(ImapMessage message, ImapResponseComposer composer) throws IOException;
 }

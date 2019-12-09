@@ -55,7 +55,7 @@ public class MailboxStatusResponseEncoderTest  {
         final String mailbox = "A mailbox named desire";
 
         encoder.encode(new MailboxStatusResponse(messages, recent, uidNext,
-                null, uidValidity, unseen, mailbox), composer, new FakeImapSession());
+                null, uidValidity, unseen, mailbox), composer);
         assertThat(writer.getString()).isEqualTo("* STATUS \"A mailbox named desire\" (MESSAGES 2 RECENT 3 UIDNEXT 5 UIDVALIDITY 7 UNSEEN 11)\r\n");
     }
 }

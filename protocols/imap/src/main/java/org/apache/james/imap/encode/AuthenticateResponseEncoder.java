@@ -20,7 +20,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.AuthenticateResponse;
 
 public class AuthenticateResponseEncoder implements ImapResponseEncoder<AuthenticateResponse> {
@@ -30,7 +29,7 @@ public class AuthenticateResponseEncoder implements ImapResponseEncoder<Authenti
     }
 
     @Override
-    public void encode(AuthenticateResponse message, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(AuthenticateResponse message, ImapResponseComposer composer) throws IOException {
         composer.continuationResponse("");
     }
 }

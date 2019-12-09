@@ -57,7 +57,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     public void testShouldEncodeFlagsResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, null, null, null, null,
                 null, null, null, null);
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted))\r\n");
     }
 
@@ -65,7 +65,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     public void testShouldEncodeUidResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, null, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (UID 72)\r\n");
 
     }
@@ -74,7 +74,7 @@ public class FetchResponseEncoderNoExtensionsTest {
     public void testShouldEncodeAllResponse() throws Exception {
         FetchResponse message = new FetchResponse(100, flags, MessageUid.of(72), null,
                 null, null, null, null, null, null);
-        encoder.encode(message, composer, new FakeImapSession());
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) UID 72)\r\n");
 
     }
@@ -98,8 +98,7 @@ public class FetchResponseEncoderNoExtensionsTest {
         when(stubStructure.getId()).thenReturn("");
         when(stubStructure.getDescription()).thenReturn("");
 
-        final FakeImapSession fakeImapSession = new FakeImapSession();
-        encoder.encode(message, composer, fakeImapSession);
+        encoder.encode(message, composer);
         assertThat(writer.getString()).isEqualTo("* 100 FETCH (FLAGS (\\Deleted) BODYSTRUCTURE (\"TEXT\" \"HTML\" (\"CHARSET\" \"US-ASCII\") \"\" \"\" \"7BIT\" 2279 48) UID 72)\r\n");
 
     }

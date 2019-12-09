@@ -23,7 +23,6 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.FlagsResponse;
 
 public class FlagsResponseEncoder implements ImapResponseEncoder<FlagsResponse> {
@@ -33,7 +32,7 @@ public class FlagsResponseEncoder implements ImapResponseEncoder<FlagsResponse> 
     }
 
     @Override
-    public void encode(FlagsResponse flagsResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(FlagsResponse flagsResponse, ImapResponseComposer composer) throws IOException {
         Flags flags = flagsResponse.getFlags();
         composer.untagged().flags(flags).end();
     }

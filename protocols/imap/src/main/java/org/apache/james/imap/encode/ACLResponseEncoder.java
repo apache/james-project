@@ -24,7 +24,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ACLResponse;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
@@ -34,7 +33,7 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
  */
 public class ACLResponseEncoder implements ImapResponseEncoder<ACLResponse> {
     @Override
-    public void encode(ACLResponse aclResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ACLResponse aclResponse, ImapResponseComposer composer) throws IOException {
         Map<EntryKey, Rfc4314Rights> entries = aclResponse.getAcl().getEntries();
         composer.untagged();
         composer.commandName(ImapConstants.ACL_RESPONSE_NAME);

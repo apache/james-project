@@ -21,7 +21,6 @@ package org.apache.james.imap.encode;
 
 import java.io.IOException;
 
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ExistsResponse;
 
 public class ExistsResponseEncoder implements ImapResponseEncoder<ExistsResponse> {
@@ -33,7 +32,7 @@ public class ExistsResponseEncoder implements ImapResponseEncoder<ExistsResponse
     }
 
     @Override
-    public void encode(ExistsResponse existsResponse, ImapResponseComposer composer, ImapSession session) throws IOException {
+    public void encode(ExistsResponse existsResponse, ImapResponseComposer composer) throws IOException {
         long numberOfMessages = existsResponse.getNumberOfMessages();
         
         composer.untagged().message(numberOfMessages).message(EXISTS).end();
