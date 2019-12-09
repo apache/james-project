@@ -228,37 +228,22 @@ public final class FetchResponseBuilder {
     }
 
     private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, int specifier, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
-        final FetchResponse.BodyElement fullResult;
-
         switch (specifier) {
-        case BodyFetchElement.CONTENT:
-            fullResult = content(messageResult, name, path, isBase);
-            break;
-
-        case BodyFetchElement.HEADER_FIELDS:
-            fullResult = fields(messageResult, name, path, names, isBase);
-            break;
-
-        case BodyFetchElement.HEADER_NOT_FIELDS:
-            fullResult = fieldsNot(messageResult, name, path, names, isBase);
-            break;
-
-        case BodyFetchElement.MIME:
-            fullResult = mimeHeaders(messageResult, name, path, isBase);
-            break;
-        case BodyFetchElement.HEADER:
-            fullResult = headers(messageResult, name, path, isBase);
-            break;
-
-        case BodyFetchElement.TEXT:
-            fullResult = text(messageResult, name, path, isBase);
-            break;
-
-        default:
-            fullResult = null;
-            break;
+            case BodyFetchElement.CONTENT:
+                return content(messageResult, name, path, isBase);
+            case BodyFetchElement.HEADER_FIELDS:
+                return fields(messageResult, name, path, names, isBase);
+            case BodyFetchElement.HEADER_NOT_FIELDS:
+                return fieldsNot(messageResult, name, path, names, isBase);
+            case BodyFetchElement.MIME:
+                return mimeHeaders(messageResult, name, path, isBase);
+            case BodyFetchElement.HEADER:
+                return headers(messageResult, name, path, isBase);
+            case BodyFetchElement.TEXT:
+                return text(messageResult, name, path, isBase);
+            default:
+                return null;
         }
-        return fullResult;
     }
 
     private FetchResponse.BodyElement wrapIfPartialFetch(Long firstOctet, Long numberOfOctets, FetchResponse.BodyElement fullResult) {
