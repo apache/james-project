@@ -23,21 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.SectionType;
 
 public class FetchPartPathDecoder {
-
-    public static final int TEXT = 0;
-
-    public static final int MIME = 1;
-
-    public static final int HEADER = 2;
-
-    public static final int HEADER_FIELDS = 3;
-
-    public static final int HEADER_NOT_FIELDS = 4;
-
-    public static final int CONTENT = 5;
-
     /**
      * Going to need to make one array copy so might as well ensure plenty of
      * space
@@ -47,7 +35,7 @@ public class FetchPartPathDecoder {
     /** Embedded RFC882 messages are rare so start size one array */
     private static final int ARRAY_INITIAL_SIZE = 1;
 
-    private int sectionType;
+    private SectionType sectionType;
 
     private int[] path;
 
@@ -60,7 +48,7 @@ public class FetchPartPathDecoder {
     public FetchPartPathDecoder() {
     }
 
-    public int decode(CharSequence sectionSpecification) throws DecodingException {
+    public SectionType decode(CharSequence sectionSpecification) throws DecodingException {
         init();
         sectionType = decode(0, sectionSpecification);
         prunePath();
@@ -78,8 +66,8 @@ public class FetchPartPathDecoder {
         }
     }
 
-    private int decode(int at, CharSequence sectionSpecification) throws DecodingException {
-        int result;
+    private SectionType decode(int at, CharSequence sectionSpecification) throws DecodingException {
+        SectionType result;
         int length = sectionSpecification.length();
         if (at < length) {
             final char next = sectionSpecification.charAt(at);
@@ -149,12 +137,12 @@ public class FetchPartPathDecoder {
             }
         } else {
             storePartial();
-            result = CONTENT;
+            result = SectionType.CONTENT;
         }
         return result;
     }
 
-    private int mime(int at, CharSequence sectionSpecification) throws DecodingException {
+    private SectionType mime(int at, CharSequence sectionSpecification) throws DecodingException {
         if (sectionSpecification.length() == at + 4) {
             mustBeI(sectionSpecification, at + 1);
             mustBeM(sectionSpecification, at + 2);
@@ -163,7 +151,7 @@ public class FetchPartPathDecoder {
         } else {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
-        return MIME;
+        return SectionType.MIME;
     }
 
     private void mustBeI(CharSequence sectionSpecification, int position) throws DecodingException {
@@ -271,8 +259,8 @@ public class FetchPartPathDecoder {
         }
     }
 
-    private int header(int at, CharSequence sectionSpecification) throws DecodingException {
-        int result;
+    private SectionType header(int at, CharSequence sectionSpecification) throws DecodingException {
+        SectionType result;
         int length = sectionSpecification.length();
         if (length > at + 5) {
             mustBeE(sectionSpecification, at + 1);
@@ -282,7 +270,7 @@ public class FetchPartPathDecoder {
             mustBeR(sectionSpecification, at + 5);
             storePartial();
             if (length == at + 6) {
-                result = HEADER;
+                result = SectionType.HEADER;
             } else {
                 result = headerFields(at + 6, sectionSpecification);
             }
@@ -292,8 +280,8 @@ public class FetchPartPathDecoder {
         return result;
     }
 
-    private int headerFields(int at, CharSequence sectionSpecification) throws DecodingException {
-        int result;
+    private SectionType headerFields(int at, CharSequence sectionSpecification) throws DecodingException {
+        SectionType result;
         int length = sectionSpecification.length();
         if (length > at + 7) {
             mustBeDot(sectionSpecification, at);
@@ -307,7 +295,7 @@ public class FetchPartPathDecoder {
             int namesStartAt;
             switch (next) {
             case ' ':
-                result = HEADER_FIELDS;
+                result = SectionType.HEADER_FIELDS;
                 namesStartAt = skipSpaces(at + 7, sectionSpecification);
                 break;
             case '.':
@@ -315,7 +303,7 @@ public class FetchPartPathDecoder {
                     mustBeN(sectionSpecification, at + 8);
                     mustBeO(sectionSpecification, at + 9);
                     mustBeT(sectionSpecification, at + 10);
-                    result = HEADER_NOT_FIELDS;
+                    result = SectionType.HEADER_NOT_FIELDS;
                     namesStartAt = skipSpaces(at + 11, sectionSpecification);
                 } else {
                     throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
@@ -382,7 +370,7 @@ public class FetchPartPathDecoder {
         return result;
     }
 
-    private int text(int at, CharSequence sectionSpecification) throws DecodingException {
+    private SectionType text(int at, CharSequence sectionSpecification) throws DecodingException {
         if (sectionSpecification.length() == at + 4) {
             mustBeE(sectionSpecification, at + 1);
             mustBeX(sectionSpecification, at + 2);
@@ -391,18 +379,16 @@ public class FetchPartPathDecoder {
         } else {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown body specification");
         }
-        return TEXT;
+        return SectionType.TEXT;
     }
 
-    private int digit(int at, CharSequence sectionSpecification, int digit) throws DecodingException {
-        int result;
+    private SectionType digit(int at, CharSequence sectionSpecification, int digit) throws DecodingException {
         digit(digit);
-        result = decode(at + 1, sectionSpecification);
-        return result;
+        return decode(at + 1, sectionSpecification);
     }
 
     private void init() {
-        sectionType = CONTENT;
+        sectionType = SectionType.CONTENT;
         resetPartial();
         path = null;
         used = 0;
@@ -452,13 +438,9 @@ public class FetchPartPathDecoder {
     }
 
     /**
-     * Gets the
-     * 
-     * @return {@link #TEXT}, {@link #MIME}, {@link #HEADER},
-     *         {@link #HEADER_FIELDS}, {@link #HEADER_NOT_FIELDS} or
-     *         {@link #CONTENT}
+     * Gets the{@link SectionType}
      */
-    public final int getSpecifier() {
+    public final SectionType getSpecifier() {
         return sectionType;
     }
 
@@ -466,7 +448,7 @@ public class FetchPartPathDecoder {
      * Gets field names.
      * 
      * @return <code>List</code> of <code>String</code> names when
-     *         {@link #HEADER_FIELDS} or {@link #HEADER_NOT_FIELDS}, null
+     *         {@link SectionType#HEADER_FIELDS} or {@link SectionType#HEADER_NOT_FIELDS}, null
      *         otherwise
      */
     public final List<String> getNames() {

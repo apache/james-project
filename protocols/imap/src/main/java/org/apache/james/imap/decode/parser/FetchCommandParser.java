@@ -28,6 +28,7 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.FetchPartPathDecoder;
@@ -213,31 +214,11 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         final String responseName = "BODY[" + parameter + "]";
         FetchPartPathDecoder decoder = new FetchPartPathDecoder();
         decoder.decode(parameter);
-        final int sectionType = getSectionType(decoder);
+        final SectionType sectionType = decoder.getSpecifier();
 
         final List<String> names = decoder.getNames();
         final int[] path = decoder.getPath();
         return new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
-    }
-
-    private int getSectionType(FetchPartPathDecoder decoder) throws DecodingException {
-        int specifier = decoder.getSpecifier();
-        switch (specifier) {
-            case FetchPartPathDecoder.CONTENT:
-                return BodyFetchElement.CONTENT;
-            case FetchPartPathDecoder.HEADER:
-                return BodyFetchElement.HEADER;
-            case FetchPartPathDecoder.HEADER_FIELDS:
-                return BodyFetchElement.HEADER_FIELDS;
-            case FetchPartPathDecoder.HEADER_NOT_FIELDS:
-                return BodyFetchElement.HEADER_NOT_FIELDS;
-            case FetchPartPathDecoder.MIME:
-                return BodyFetchElement.MIME;
-            case FetchPartPathDecoder.TEXT:
-                return BodyFetchElement.TEXT;
-            default:
-                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Section type is unsupported.");
-        }
     }
 
     private String readWord(ImapRequestLineReader request, String terminator) throws DecodingException {

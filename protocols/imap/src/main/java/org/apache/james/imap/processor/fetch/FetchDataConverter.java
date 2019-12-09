@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MimePath;
 
@@ -41,26 +42,26 @@ class FetchDataConverter {
         Collection<BodyFetchElement> bodyElements = fetch.getBodyElements();
         if (bodyElements != null) {
             for (BodyFetchElement element : bodyElements) {
-                final int sectionType = element.getSectionType();
+                final SectionType sectionType = element.getSectionType();
                 final int[] path = element.getPath();
                 final boolean isBase = (path == null || path.length == 0);
                 switch (sectionType) {
-                    case BodyFetchElement.CONTENT:
+                    case CONTENT:
                         if (isBase) {
                             result = addContent(result, path, isBase, FetchGroup.Profile.FULL_CONTENT);
                         } else {
                             result = addContent(result, path, isBase, FetchGroup.Profile.MIME_CONTENT);
                         }
                         break;
-                    case BodyFetchElement.HEADER:
-                    case BodyFetchElement.HEADER_NOT_FIELDS:
-                    case BodyFetchElement.HEADER_FIELDS:
+                    case HEADER:
+                    case HEADER_NOT_FIELDS:
+                    case HEADER_FIELDS:
                         result = addContent(result, path, isBase, FetchGroup.Profile.HEADERS);
                         break;
-                    case BodyFetchElement.MIME:
+                    case MIME:
                         result = addContent(result, path, isBase, FetchGroup.Profile.MIME_HEADERS);
                         break;
-                    case BodyFetchElement.TEXT:
+                    case TEXT:
                         result = addContent(result, path, isBase, FetchGroup.Profile.BODY_CONTENT);
                         break;
                     default:

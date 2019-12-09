@@ -25,6 +25,7 @@ import static org.assertj.core.api.Fail.fail;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.james.imap.api.message.SectionType;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -40,77 +41,77 @@ public class FetchPartPathDecoderTest {
 
     @Test
     public void testShouldDetectText() throws Exception {
-        assertThat(decoder.decode("TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
-        assertThat(decoder.decode("3.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
-        assertThat(decoder.decode("3.1.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("TEXT")).isEqualTo(SectionType.TEXT);
+        assertThat(decoder.decode("3.TEXT")).isEqualTo(SectionType.TEXT);
+        assertThat(decoder.decode("3.1.TEXT")).isEqualTo(SectionType.TEXT);
         assertThat(decoder
-                .decode("3.2.5.7.8.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+                .decode("3.2.5.7.8.TEXT")).isEqualTo(SectionType.TEXT);
     }
 
     @Test
     public void testShouldDetectHeader() throws Exception {
-        assertThat(decoder.decode("HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("4.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("10.1.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+        assertThat(decoder.decode("HEADER")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("4.HEADER")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("10.1.HEADER")).isEqualTo(SectionType.HEADER);
         assertThat(decoder
-                .decode("8.3.5.11.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
+                .decode("8.3.5.11.HEADER")).isEqualTo(SectionType.HEADER);
     }
 
     @Test
     public void testShouldDetectHeaderFields() throws Exception {
         assertThat(decoder
-                .decode("HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+                .decode("HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("4.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+                .decode("4.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("10.1.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+                .decode("10.1.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
         assertThat(decoder
-                .decode("8.3.5.11.HEADER.FIELDS ()")).isEqualTo(FetchPartPathDecoder.HEADER_FIELDS);
+                .decode("8.3.5.11.HEADER.FIELDS ()")).isEqualTo(SectionType.HEADER_FIELDS);
     }
 
     @Test
     public void testShouldDetectHeaderFieldsNot() throws Exception {
         assertThat(decoder
-                .decode("HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+                .decode("HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("4.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+                .decode("4.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("10.1.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+                .decode("10.1.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
         assertThat(decoder
-                .decode("8.3.5.11.HEADER.FIELDS.NOT ()")).isEqualTo(FetchPartPathDecoder.HEADER_NOT_FIELDS);
+                .decode("8.3.5.11.HEADER.FIELDS.NOT ()")).isEqualTo(SectionType.HEADER_NOT_FIELDS);
     }
 
     @Test
     public void testShouldDetectMime() throws Exception {
-        assertThat(decoder.decode("MIME")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("6.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("2.88.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+        assertThat(decoder.decode("MIME")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("6.MIME")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("2.88.MIME")).isEqualTo(SectionType.MIME);
         assertThat(decoder
-                .decode("32.3.15.11.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
+                .decode("32.3.15.11.MIME")).isEqualTo(SectionType.MIME);
     }
 
     @Test
     public void testShouldDetectContent() throws Exception {
-        assertThat(decoder.decode("34")).isEqualTo(FetchPartPathDecoder.CONTENT);
-        assertThat(decoder.decode("6")).isEqualTo(FetchPartPathDecoder.CONTENT);
-        assertThat(decoder.decode("9.88")).isEqualTo(FetchPartPathDecoder.CONTENT);
-        assertThat(decoder.decode("17.3.15.11")).isEqualTo(FetchPartPathDecoder.CONTENT);
+        assertThat(decoder.decode("34")).isEqualTo(SectionType.CONTENT);
+        assertThat(decoder.decode("6")).isEqualTo(SectionType.CONTENT);
+        assertThat(decoder.decode("9.88")).isEqualTo(SectionType.CONTENT);
+        assertThat(decoder.decode("17.3.15.11")).isEqualTo(SectionType.CONTENT);
     }
 
     @Test
     public void testShouldIgnoreCase() throws Exception {
-        assertThat(decoder.decode("6.MIME")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("6.mime")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("6.miME")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("6.MIme")).isEqualTo(FetchPartPathDecoder.MIME);
-        assertThat(decoder.decode("6.HEADER")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("6.header")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("6.HEadER")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("6.heADEr")).isEqualTo(FetchPartPathDecoder.HEADER);
-        assertThat(decoder.decode("6.TEXT")).isEqualTo(FetchPartPathDecoder.TEXT);
-        assertThat(decoder.decode("6.text")).isEqualTo(FetchPartPathDecoder.TEXT);
-        assertThat(decoder.decode("6.TExt")).isEqualTo(FetchPartPathDecoder.TEXT);
-        assertThat(decoder.decode("6.teXT")).isEqualTo(FetchPartPathDecoder.TEXT);
+        assertThat(decoder.decode("6.MIME")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("6.mime")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("6.miME")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("6.MIme")).isEqualTo(SectionType.MIME);
+        assertThat(decoder.decode("6.HEADER")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("6.header")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("6.HEadER")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("6.heADEr")).isEqualTo(SectionType.HEADER);
+        assertThat(decoder.decode("6.TEXT")).isEqualTo(SectionType.TEXT);
+        assertThat(decoder.decode("6.text")).isEqualTo(SectionType.TEXT);
+        assertThat(decoder.decode("6.TExt")).isEqualTo(SectionType.TEXT);
+        assertThat(decoder.decode("6.teXT")).isEqualTo(SectionType.TEXT);
     }
 
     @Test

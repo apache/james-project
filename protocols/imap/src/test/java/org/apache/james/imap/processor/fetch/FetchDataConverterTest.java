@@ -19,13 +19,12 @@
 
 package org.apache.james.imap.processor.fetch;
 
-import static org.apache.james.imap.api.message.BodyFetchElement.CONTENT;
-import static org.apache.james.imap.api.message.BodyFetchElement.HEADER;
-import static org.apache.james.imap.api.message.BodyFetchElement.MIME;
-import static org.apache.james.imap.api.message.BodyFetchElement.TEXT;
+import static org.apache.james.imap.api.message.SectionType.CONTENT;
+import static org.apache.james.imap.api.message.SectionType.HEADER;
+import static org.apache.james.imap.api.message.SectionType.MIME;
+import static org.apache.james.imap.api.message.SectionType.TEXT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.EnumSet;
 import java.util.stream.Stream;
 
 import org.apache.james.imap.api.ImapConstants;

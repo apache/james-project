@@ -32,6 +32,7 @@ import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -56,7 +57,7 @@ public class FetchCommandParserPartialFetchTest  {
     public void testShouldParseZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = new FetchData();
-        data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
+        data.add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
                 null, 0L, 100L), false);
         check("1 (BODY[]<0.100>)\r\n", ranges, false, data, TAG);
     }
@@ -65,7 +66,7 @@ public class FetchCommandParserPartialFetchTest  {
     public void testShouldParseNonZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
         FetchData data = new FetchData();
-        data.add(new BodyFetchElement("BODY[]", BodyFetchElement.CONTENT, null,
+        data.add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
                 null, 20L, 12342348L), false);
         check("1 (BODY[]<20.12342348>)\r\n", ranges, false, data, TAG);
     }

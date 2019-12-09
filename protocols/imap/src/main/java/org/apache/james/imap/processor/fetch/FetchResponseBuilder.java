@@ -34,6 +34,7 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.imap.message.response.FetchResponse;
@@ -218,7 +219,7 @@ public final class FetchResponseBuilder {
         final Long firstOctet = fetchElement.getFirstOctet();
         final Long numberOfOctets = fetchElement.getNumberOfOctets();
         final String name = fetchElement.getResponseName();
-        final int specifier = fetchElement.getSectionType();
+        final SectionType specifier = fetchElement.getSectionType();
         final int[] path = fetchElement.getPath();
         final Collection<String> names = fetchElement.getFieldNames();
         final boolean isBase = (path == null || path.length == 0);
@@ -227,19 +228,19 @@ public final class FetchResponseBuilder {
 
     }
 
-    private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, int specifier, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
+    private FetchResponse.BodyElement bodyContent(MessageResult messageResult, String name, SectionType specifier, int[] path, Collection<String> names, boolean isBase) throws MailboxException {
         switch (specifier) {
-            case BodyFetchElement.CONTENT:
+            case CONTENT:
                 return content(messageResult, name, path, isBase);
-            case BodyFetchElement.HEADER_FIELDS:
+            case HEADER_FIELDS:
                 return fields(messageResult, name, path, names, isBase);
-            case BodyFetchElement.HEADER_NOT_FIELDS:
+            case HEADER_NOT_FIELDS:
                 return fieldsNot(messageResult, name, path, names, isBase);
-            case BodyFetchElement.MIME:
+            case MIME:
                 return mimeHeaders(messageResult, name, path, isBase);
-            case BodyFetchElement.HEADER:
+            case HEADER:
                 return headers(messageResult, name, path, isBase);
-            case BodyFetchElement.TEXT:
+            case TEXT:
                 return text(messageResult, name, path, isBase);
             default:
                 return null;

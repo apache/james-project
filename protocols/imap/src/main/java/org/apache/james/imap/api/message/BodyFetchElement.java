@@ -29,24 +29,11 @@ import com.google.common.base.MoreObjects;
 import com.google.common.collect.ImmutableList;
 
 public class BodyFetchElement {
+    private static final BodyFetchElement rfc822 = new BodyFetchElement(ImapConstants.FETCH_RFC822, SectionType.CONTENT, null, null, null, null);
 
-    public static final int TEXT = 0;
+    private static final BodyFetchElement rfc822Header = new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, SectionType.HEADER, null, null, null, null);
 
-    public static final int MIME = 1;
-
-    public static final int HEADER = 2;
-
-    public static final int HEADER_FIELDS = 3;
-
-    public static final int HEADER_NOT_FIELDS = 4;
-
-    public static final int CONTENT = 5;
-
-    private static final BodyFetchElement rfc822 = new BodyFetchElement(ImapConstants.FETCH_RFC822, CONTENT, null, null, null, null);
-
-    private static final BodyFetchElement rfc822Header = new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, HEADER, null, null, null, null);
-
-    private static final BodyFetchElement rfc822Text = new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, TEXT, null, null, null, null);
+    private static final BodyFetchElement rfc822Text = new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, SectionType.TEXT, null, null, null, null);
 
     public static final BodyFetchElement createRFC822() {
         return rfc822;
@@ -61,18 +48,13 @@ public class BodyFetchElement {
     }
 
     private final Long firstOctet;
-
     private final Long numberOfOctets;
-
     private final String name;
-
-    private final int sectionType;
-
+    private final SectionType sectionType;
     private final int[] path;
-
     private final Collection<String> fieldNames;
 
-    public BodyFetchElement(String name, int sectionType, int[] path, Collection<String> fieldNames, Long firstOctet, Long numberOfOctets) {
+    public BodyFetchElement(String name, SectionType sectionType, int[] path, Collection<String> fieldNames, Long firstOctet, Long numberOfOctets) {
         this.name = name;
         this.sectionType = sectionType;
         this.fieldNames = fieldNames;
@@ -88,8 +70,8 @@ public class BodyFetchElement {
     /**
      * Gets field names.
      * 
-     * @return <code>String</code> collection, when {@link #HEADER_FIELDS} or
-     *         {@link #HEADER_NOT_FIELDS} or null otherwise
+     * @return <code>String</code> collection, when {@link SectionType#HEADER_FIELDS} or
+     *         {@link SectionType#HEADER_NOT_FIELDS} or null otherwise
      */
     public final Collection<String> getFieldNames() {
         return fieldNames;
@@ -106,11 +88,8 @@ public class BodyFetchElement {
 
     /**
      * Gets the type of section.
-     * 
-     * @return {@link #HEADER_FIELDS}, {@link #TEXT}, {@link #CONTENT},
-     *         {@link #HEADER}, {@link #MIME} or {@link #HEADER_NOT_FIELDS}
      */
-    public final int getSectionType() {
+    public final SectionType getSectionType() {
         return sectionType;
     }
 
