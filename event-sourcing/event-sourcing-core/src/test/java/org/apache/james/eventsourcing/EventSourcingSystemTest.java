@@ -37,6 +37,9 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.apache.james.eventsourcing.Command;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventId;
 import scala.jdk.javaapi.CollectionConverters;
 
 public interface EventSourcingSystemTest {

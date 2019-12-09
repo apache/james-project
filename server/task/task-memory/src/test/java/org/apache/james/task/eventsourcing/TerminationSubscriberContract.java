@@ -29,7 +29,7 @@ import java.util.List;
 
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.task.CompletedTask;
+
 import org.apache.james.task.Hostname;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;

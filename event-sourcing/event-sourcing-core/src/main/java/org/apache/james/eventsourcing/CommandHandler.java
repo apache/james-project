@@ -21,6 +21,8 @@ package org.apache.james.eventsourcing;
 
 import java.util.List;
 
+import org.apache.james.eventsourcing.Event;
+
 public interface CommandHandler<C> {
 
     Class<C> handledClass();

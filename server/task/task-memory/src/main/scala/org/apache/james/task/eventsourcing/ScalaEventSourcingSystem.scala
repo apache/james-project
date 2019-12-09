@@ -18,9 +18,6 @@
   * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
-import org.apache.james.eventsourcing.eventstore.EventStore
-import org.apache.james.eventsourcing.{CommandHandler, EventSourcingSystem, Subscriber}
-
 object ScalaEventSourcingSystem {
   import scala.jdk.CollectionConverters._
   def apply(handlers: Set[CommandHandler[_]], subscribers: Set[Subscriber], eventStore: EventStore): EventSourcingSystem =

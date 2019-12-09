@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,29 +15,7 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ***************************************************************/
+package org.apache.james.eventsourcing
 
-package org.apache.james.eventsourcing;
-
-import java.util.List;
-
-public interface Event extends Comparable<Event> {
-
-    static boolean belongsToSameAggregate(List<? extends Event> events) {
-        return events.stream()
-            .map(Event::getAggregateId)
-            .distinct()
-            .limit(2)
-            .count() == 1;
-    }
-
-    EventId eventId();
-
-    AggregateId getAggregateId();
-
-    @Override
-    default int compareTo(Event o) {
-        return eventId().compareTo(o.eventId());
-    }
-
-}
+trait Command {}

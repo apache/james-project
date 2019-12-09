@@ -20,7 +20,6 @@ package org.apache.james.task.eventsourcing
 
 import java.util.concurrent.ConcurrentHashMap
 
-import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.task.{Hostname, TaskExecutionDetails, TaskId}
 import scala.compat.java8.OptionConverters._
 

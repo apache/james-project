@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import scala.jdk.javaapi.OptionConverters;
 
 class EventIdTest {
 
@@ -41,7 +42,7 @@ class EventIdTest {
 
     @Test
     void previousShouldReturnEmptyWhenBeforeFirst() {
-        assertThat(EventId.first().previous())
+        assertThat(OptionConverters.toJava(EventId.first().previous()))
             .isEmpty();
     }
 
@@ -65,7 +66,7 @@ class EventIdTest {
 
     @Test
     void previousShouldRevertNext() {
-        assertThat(EventId.first().next().previous())
+        assertThat(OptionConverters.toJava(EventId.first().next().previous()))
             .contains(EventId.first());
     }
 

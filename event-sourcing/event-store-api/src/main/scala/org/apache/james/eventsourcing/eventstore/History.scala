@@ -33,15 +33,17 @@ object History {
   def of(events: Event*): History = of(events.toList)
 }
 
-case class History private(events: List[Event]) {
+final case class History private(events: List[Event]) {
   if (hasEventIdDuplicates(events)) throw EventStoreFailedException("Event History contains duplicated EventId")
 
   private def hasEventIdDuplicates(events: List[Event]) = {
-    val eventIdsNumber = events.map(event => event.eventId()).toSet.size
+    val eventIdsNumber = events.map(event => event.eventId).toSet.size
     eventIdsNumber != events.size
   }
 
-  def getVersion: Option[EventId] = events.map(event => event.eventId()).maxOption
+  def getVersion: Option[EventId] = events
+    .map(event => event.eventId)
+    .maxOption
 
   def getEvents = events
 

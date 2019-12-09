@@ -31,6 +31,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
+import org.apache.james.eventsourcing.Event;
 
 public class EventBus {
 

@@ -18,7 +18,6 @@
  * ***************************************************************/
 package org.apache.james.task.eventsourcing
 
-import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.task.WorkQueue
 
 @FunctionalInterface

@@ -31,6 +31,8 @@ import javax.inject.Inject;
 import org.apache.james.eventsourcing.eventstore.EventStoreFailedException;
 
 import com.github.steveash.guavate.Guavate;
+import org.apache.james.eventsourcing.Command;
+import org.apache.james.eventsourcing.Event;
 
 public class CommandDispatcher {
 

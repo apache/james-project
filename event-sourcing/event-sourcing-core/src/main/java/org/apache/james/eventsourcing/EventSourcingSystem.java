@@ -23,6 +23,8 @@ import java.util.Set;
 
 import org.apache.james.eventsourcing.eventstore.EventStore;
 
+import org.apache.james.eventsourcing.Command;
+
 public class EventSourcingSystem {
     private final CommandDispatcher commandDispatcher;
 

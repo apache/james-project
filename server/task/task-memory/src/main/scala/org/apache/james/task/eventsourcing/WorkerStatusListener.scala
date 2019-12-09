@@ -22,7 +22,6 @@ package org.apache.james.task.eventsourcing
 import java.util.Optional
 
 import com.google.common.base.Throwables
-import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.task.Task.Result
 import org.apache.james.task.eventsourcing.TaskCommand._
 import org.apache.james.task.{TaskExecutionDetails, TaskId, TaskManagerWorker}

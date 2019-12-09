@@ -22,8 +22,9 @@ package org.apache.james.eventsourcing;
 import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
+import org.apache.james.eventsourcing.AggregateId;
 
-public class TestAggregateId implements AggregateId  {
+public class TestAggregateId implements AggregateId {
 
     public static TestAggregateId testId(int id) {
         return new TestAggregateId(id);

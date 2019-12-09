@@ -23,6 +23,8 @@ import java.util.Comparator;
 import java.util.Objects;
 
 import com.google.common.base.MoreObjects;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.EventId;
 
 public class TestEvent implements Event {
     private final EventId id;
