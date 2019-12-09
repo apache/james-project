@@ -27,6 +27,7 @@ import org.apache.james.jmap.api.filtering.Rule;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import scala.jdk.javaapi.CollectionConverters;
 
 public class FilteringAggregate {
 
@@ -58,7 +59,7 @@ public class FilteringAggregate {
     private FilteringAggregate(FilteringAggregateId aggregateId, History history) {
         this.aggregateId = aggregateId;
         this.state = State.initial();
-        history.getEvents().forEach(this::apply);
+        CollectionConverters.asJava(history.getEvents()).forEach(this::apply);
         this.history = history;
     }
 

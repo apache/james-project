@@ -50,7 +50,7 @@ public class EventSourcingDLPConfigurationStore implements DLPConfigurationStore
 
     @Inject
     public EventSourcingDLPConfigurationStore(EventStore eventStore) {
-        this.eventSourcingSystem = new EventSourcingSystem(
+        this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(
                 new ClearCommandHandler(eventStore),
                 new StoreCommandHandler(eventStore)),

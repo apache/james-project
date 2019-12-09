@@ -21,11 +21,11 @@ package org.apache.james.jmap.api.filtering.impl;
 
 import java.util.List;
 
-import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
 
-public class DefineRulesCommandHandler implements CommandHandler<DefineRulesCommand> {
+public class DefineRulesCommandHandler implements CommandHandlerJava<DefineRulesCommand> {
 
     private final EventStore eventStore;
 
@@ -39,7 +39,7 @@ public class DefineRulesCommandHandler implements CommandHandler<DefineRulesComm
     }
 
     @Override
-    public List<? extends Event> handle(DefineRulesCommand storeCommand) {
+    public List<? extends Event> handleJava(DefineRulesCommand storeCommand) {
         FilteringAggregateId aggregateId = new FilteringAggregateId(storeCommand.getUsername());
 
         return FilteringAggregate

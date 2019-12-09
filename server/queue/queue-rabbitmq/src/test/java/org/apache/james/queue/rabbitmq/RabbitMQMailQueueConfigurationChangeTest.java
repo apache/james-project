@@ -81,7 +81,7 @@ class RabbitMQMailQueueConfigurationChangeTest {
         CassandraSchemaVersionModule.MODULE,
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
-        CassandraEventStoreModule.MODULE));
+        CassandraEventStoreModule.MODULE()));
 
     @RegisterExtension
     static RabbitMQExtension rabbitMQExtension = RabbitMQExtension.singletonRabbitMQ();

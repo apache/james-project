@@ -23,6 +23,7 @@ import java.time.Duration
 import com.google.common.annotations.VisibleForTesting
 import javax.inject.Inject
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool
+import org.apache.james.eventsourcing.EventSourcingSystem
 import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.task.SerialTaskManagerWorker
 import org.apache.james.task.eventsourcing.{WorkQueueSupplier, WorkerStatusListener}

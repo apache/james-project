@@ -22,24 +22,21 @@ package org.apache.james.eventsourcing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.List;
-
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.History;
 import org.junit.jupiter.api.Test;
+import org.mockito.internal.matchers.InstanceOf;
+import org.mockito.internal.progress.ThreadSafeMockingProgress;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import org.apache.james.eventsourcing.Command;
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.EventId;
+import scala.collection.immutable.List;
 import scala.jdk.javaapi.CollectionConverters;
 
 public interface EventSourcingSystemTest {
@@ -63,7 +60,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void dispatchShouldApplyCommandHandlerThenCallSubscribers(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
@@ -76,7 +73,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void throwingSubscribersShouldNotAbortSubscriberChain(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(
                 events -> {
@@ -91,13 +88,13 @@ public interface EventSourcingSystemTest {
     }
 
     @Test
-    default void throwingStoreShouldNotLeadToPusblishing() {
+    default void throwingStoreShouldNotLeadToPublishing() {
         EventStore eventStore = mock(EventStore.class);
-        doThrow(new RuntimeException()).when(eventStore).appendAll(anyList());
+        doThrow(new RuntimeException()).when(eventStore).appendAll(anyScalaList());
         when(eventStore.getEventsOfAggregate(any())).thenReturn(History.empty());
 
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(
                 events -> {
@@ -115,7 +112,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void dispatchShouldApplyCommandHandlerThenStoreGeneratedEvents(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
@@ -130,7 +127,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void dispatchShouldCallSubscriberForSubsequentCommands(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
@@ -144,7 +141,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void dispatchShouldStoreEventsForSubsequentCommands(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(simpleDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
@@ -161,7 +158,7 @@ public interface EventSourcingSystemTest {
     @Test
     default void dispatcherShouldBeAbleToReturnSeveralEvents(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(wordCuttingDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
@@ -174,12 +171,13 @@ public interface EventSourcingSystemTest {
     @Test
     default void unknownCommandsShouldBeIgnored(EventStore eventStore) {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
-        EventSourcingSystem eventSourcingSystem = new EventSourcingSystem(
+        EventSourcingSystem eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(wordCuttingDispatcher(eventStore)),
             ImmutableSet.of(subscriber),
             eventStore);
 
-        assertThatThrownBy(() -> eventSourcingSystem.dispatch(new Command() {}))
+        assertThatThrownBy(() -> eventSourcingSystem.dispatch(new Command() {
+        }))
             .isInstanceOf(CommandDispatcher.UnknownCommandException.class);
     }
 
@@ -188,7 +186,7 @@ public interface EventSourcingSystemTest {
         DataCollectorSubscriber subscriber = new DataCollectorSubscriber();
 
         assertThatThrownBy(() ->
-            new EventSourcingSystem(
+            EventSourcingSystem.fromJava(
                 ImmutableSet.of(wordCuttingDispatcher(eventStore),
                     simpleDispatcher(eventStore)),
                 ImmutableSet.of(subscriber),
@@ -204,13 +202,13 @@ public interface EventSourcingSystemTest {
             }
 
             @Override
-            public List<? extends Event> handle(MyCommand myCommand) {
+            public scala.collection.immutable.List<? extends Event> handle(MyCommand myCommand) {
                 History history = eventStore.getEventsOfAggregate(AGGREGATE_ID);
 
-                return ImmutableList.of(new TestEvent(
+                return CollectionConverters.asScala(ImmutableList.of(new TestEvent(
                     history.getNextEventId(),
                     AGGREGATE_ID,
-                    myCommand.getPayload()));
+                    myCommand.getPayload()))).toList();
             }
         };
     }
@@ -223,19 +221,19 @@ public interface EventSourcingSystemTest {
             }
 
             @Override
-            public List<? extends Event> handle(MyCommand myCommand) {
+            public scala.collection.immutable.List<? extends Event> handle(MyCommand myCommand) {
                 History history = eventStore.getEventsOfAggregate(AGGREGATE_ID);
 
                 EventIdIncrementer eventIdIncrementer = new EventIdIncrementer(history.getNextEventId());
 
-                return Splitter.on(" ")
+                return CollectionConverters.asScala(Splitter.on(" ")
                     .splitToList(myCommand.getPayload())
                     .stream()
                     .map(word -> new TestEvent(
                         eventIdIncrementer.next(),
                         AGGREGATE_ID,
                         word))
-                    .collect(Guavate.toImmutableList());
+                    .collect(Guavate.toImmutableList())).toList();
             }
         };
     }
@@ -251,6 +249,11 @@ public interface EventSourcingSystemTest {
             currentEventId = currentEventId.next();
             return currentEventId;
         }
+    }
+
+    static <T> List<T> anyScalaList() {
+        ThreadSafeMockingProgress.mockingProgress().getArgumentMatcherStorage().reportMatcher(new InstanceOf(scala.collection.immutable.List.class, "<any scala List>"));
+        return scala.collection.immutable.List.<T>newBuilder().result();
     }
 
 }

@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,24 +16,25 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing
 
-package org.apache.james.eventsourcing;
+import org.apache.james.eventsourcing.eventstore.EventStore
 
-import java.util.Set;
 
-import org.apache.james.eventsourcing.eventstore.EventStore;
+object EventSourcingSystem {
+  def fromJava(handlers: java.util.Set[CommandHandler[_ <: Command]],
+               subscribers: java.util.Set[Subscriber],
+               eventStore: EventStore) : EventSourcingSystem = {
+    import scala.jdk.CollectionConverters._
+    new EventSourcingSystem(handlers.asScala.toSet, subscribers.asScala.toSet, eventStore)
+  }
+}
 
-import org.apache.james.eventsourcing.Command;
+class EventSourcingSystem(handlers: Set[CommandHandler[_ <: Command]],
+                          subscribers: Set[Subscriber],
+                          eventStore: EventStore) {
+  private val eventBus = new EventBus(eventStore, subscribers)
+  private val commandDispatcher = new CommandDispatcher(eventBus, handlers)
 
-public class EventSourcingSystem {
-    private final CommandDispatcher commandDispatcher;
-
-    public EventSourcingSystem(Set<CommandHandler<?>> handlers, Set<Subscriber> subscribers, EventStore eventStore) {
-        EventBus eventBus = new EventBus(eventStore, subscribers);
-        this.commandDispatcher = new CommandDispatcher(eventBus, handlers);
-    }
-
-    public void dispatch(Command c) {
-        commandDispatcher.dispatch(c);
-    }
+  def dispatch(c: Command): Unit = commandDispatcher.dispatch(c)
 }

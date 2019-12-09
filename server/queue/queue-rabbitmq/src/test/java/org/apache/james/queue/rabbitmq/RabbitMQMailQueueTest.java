@@ -88,7 +88,7 @@ class RabbitMQMailQueueTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraBlobModule.MODULE,
         CassandraMailQueueViewModule.MODULE,
-        CassandraEventStoreModule.MODULE,
+        CassandraEventStoreModule.MODULE(),
         CassandraSchemaVersionModule.MODULE));
 
     @RegisterExtension

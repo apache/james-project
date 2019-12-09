@@ -24,6 +24,7 @@ import javax.inject.Inject;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
+import org.apache.james.eventsourcing.Command;
 import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.Subscriber;
@@ -60,9 +61,9 @@ public class QuotaThresholdCrossingListener implements MailboxListener.GroupMail
     public QuotaThresholdCrossingListener(MailetContext mailetContext, UsersRepository usersRepository,
                                           FileSystem fileSystem, EventStore eventStore,
                                           QuotaMailingListenerConfiguration config) {
-        ImmutableSet<CommandHandler<?>> handlers = ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, config));
+        ImmutableSet<CommandHandler<? extends Command>> handlers = ImmutableSet.of(new DetectThresholdCrossingHandler(eventStore, config));
         ImmutableSet<Subscriber> subscribers = ImmutableSet.of(new QuotaThresholdMailer(mailetContext, usersRepository, fileSystem, config));
-        eventSourcingSystem = new EventSourcingSystem(handlers, subscribers, eventStore);
+        eventSourcingSystem = EventSourcingSystem.fromJava(handlers, subscribers, eventStore);
     }
 
     @Override

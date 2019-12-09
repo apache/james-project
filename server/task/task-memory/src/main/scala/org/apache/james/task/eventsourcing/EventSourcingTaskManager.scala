@@ -25,12 +25,11 @@ import java.util
 import com.google.common.annotations.VisibleForTesting
 import javax.annotation.PreDestroy
 import javax.inject.Inject
+import org.apache.james.eventsourcing.{AggregateId, EventSourcingSystem, Subscriber}
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
-import org.apache.james.eventsourcing.Subscriber
 import org.apache.james.lifecycle.api.Startable
 import org.apache.james.task.TaskManager.ReachedTimeoutException
 import org.apache.james.task._
-import eventsourcing.AggregateId
 import org.apache.james.task.eventsourcing.TaskCommand._
 import reactor.core.publisher.{Flux, Mono}
 import reactor.core.scheduler.Schedulers
@@ -54,7 +53,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
   import scala.jdk.CollectionConverters._
 
   private val loadHistory: AggregateId => History = eventStore.getEventsOfAggregate _
-  private val eventSourcingSystem = ScalaEventSourcingSystem(
+  private val eventSourcingSystem = new EventSourcingSystem(
     handlers = Set(
       new CreateCommandHandler(loadHistory, hostname),
       new StartCommandHandler(loadHistory, hostname),

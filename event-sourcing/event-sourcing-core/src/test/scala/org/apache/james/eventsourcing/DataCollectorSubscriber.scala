@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,11 +16,16 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing
 
-package org.apache.james.eventsourcing;
+import scala.collection.mutable
 
-import org.apache.james.eventsourcing.Event;
+class DataCollectorSubscriber() extends Subscriber {
+  private val data = new mutable.ListBuffer[String]
 
-public interface Subscriber {
-    void handle(Event event);
+  override def handle(event: Event): Unit = event match {
+    case event: TestEvent => data += event.getData
+  }
+
+  def getData: List[String] = data.toList
 }

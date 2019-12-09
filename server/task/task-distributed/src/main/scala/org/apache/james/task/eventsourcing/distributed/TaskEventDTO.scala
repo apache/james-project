@@ -20,12 +20,11 @@
 package org.apache.james.task.eventsourcing.distributed
 
 import java.util.Optional
-import java.util.function.Function
 
 import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.james.eventsourcing.EventId
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO
 import org.apache.james.json.DTOConverter
-import org.apache.james.server.task.json.JsonTaskSerializer
 import org.apache.james.server.task.json.dto.{AdditionalInformationDTO, TaskDTO}
 import org.apache.james.task.TaskExecutionDetails.AdditionalInformation
 import org.apache.james.task.eventsourcing._
@@ -68,7 +67,7 @@ case class CreatedDTO(@JsonProperty("type") typeName: String,
 object CreatedDTO {
   def fromDomainObject(taskConverter: TaskConverter)(event: Created, typeName: String): CreatedDTO = {
     val taskDTO = taskConverter.toDTO(event.task).orElseThrow(() => new NestedTaskDTOSerializerNotFound(event.task))
-    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), taskDTO, event.hostname.asString)
+    CreatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, taskDTO, event.hostname.asString)
   }
 }
 
@@ -82,7 +81,7 @@ case class StartedDTO(@JsonProperty("type") typeName: String,
 
 object StartedDTO {
   def fromDomainObject(event: Started, typeName: String): StartedDTO =
-    StartedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), event.hostname.asString)
+    StartedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, event.hostname.asString)
 }
 
 case class CancelRequestedDTO(@JsonProperty("type") typeName: String,
@@ -95,7 +94,7 @@ case class CancelRequestedDTO(@JsonProperty("type") typeName: String,
 
 object CancelRequestedDTO {
   def fromDomainObject(event: CancelRequested, typeName: String): CancelRequestedDTO =
-    CancelRequestedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), event.hostname.asString)
+    CancelRequestedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, event.hostname.asString)
 }
 
 case class CompletedDTO(@JsonProperty("type") typeName: String,
@@ -121,7 +120,7 @@ object CompletedDTO {
       .additionalInformation
       .asJava
       .map(domainObject => dtoConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
-    CompletedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), resultToString(event.result), additionalInformationDTO)
+    CompletedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, resultToString(event.result), additionalInformationDTO)
   }
 
   private def resultToString(result: Task.Result): String = result match {
@@ -149,7 +148,7 @@ object FailedDTO {
     val additionalInformationDTO: Optional[AdditionalInformationDTO] = event
       .additionalInformation
       .asJava.map(domainObject => dtoConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
-    FailedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO, event.errorMessage.asJava, event.exception.asJava)
+    FailedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, additionalInformationDTO, event.errorMessage.asJava, event.exception.asJava)
   }
 }
 
@@ -171,7 +170,7 @@ object CancelledDTO {
       .additionalInformation
       .asJava
       .map(domainObject => additionalInformationConverter.toDTO(domainObject).orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(domainObject)))
-    CancelledDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
+    CancelledDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, additionalInformationDTO)
   }
 }
 
@@ -193,6 +192,6 @@ object AdditionalInformationUpdatedDTO {
     val additionalInformationDTO = additionalInformationConverter
         .toDTO(event.additionalInformation)
         .orElseThrow(() => new NestedAdditionalInformationDTOSerializerNotFound(event.additionalInformation))
-    AdditionalInformationUpdatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize(), additionalInformationDTO)
+    AdditionalInformationUpdatedDTO(typeName, event.aggregateId.taskId.asString(), event.eventId.serialize, additionalInformationDTO)
   }
 }

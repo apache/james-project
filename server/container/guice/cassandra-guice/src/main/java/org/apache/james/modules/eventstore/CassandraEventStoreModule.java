@@ -38,7 +38,7 @@ public class CassandraEventStoreModule extends AbstractModule {
 
         Multibinder.newSetBinder(binder(), CassandraModule.class)
             .addBinding()
-            .toInstance(org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule.MODULE);
+            .toInstance(org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule.MODULE());
 
         Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
     }

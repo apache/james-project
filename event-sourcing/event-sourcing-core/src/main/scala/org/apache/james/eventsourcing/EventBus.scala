@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,32 +16,31 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing
 
-package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
+import javax.inject.Inject
+import org.apache.james.eventsourcing.eventstore.{EventStore, EventStoreFailedException}
+import org.slf4j.LoggerFactory
 
-import java.util.List;
+object EventBus {
+  private val LOGGER = LoggerFactory.getLogger(classOf[EventBus])
+}
 
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
+class EventBus @Inject() (eventStore: EventStore, subscribers: Set[Subscriber]) {
+  @throws[EventStoreFailedException]
+  def publish(events: List[Event]): Unit = {
+    eventStore.appendAll(events)
+    events
+      .flatMap((event: Event) => subscribers.map(subscriber => (event, subscriber)))
+      .foreach {case (event, subscriber) => handle(event, subscriber)}
+  }
 
-class RegisterConfigurationCommandHandler implements CommandHandlerJava<RegisterConfigurationCommand> {
-
-    private final EventStore eventStore;
-
-    RegisterConfigurationCommandHandler(EventStore eventStore) {
-        this.eventStore = eventStore;
+  private def handle(event : Event, subscriber: Subscriber) : Unit = {
+    try {
+      subscriber.handle(event)
+    } catch {
+      case e: Exception =>
+        EventBus.LOGGER.error("Error while calling {} for {}", subscriber, event, e)
     }
-
-    @Override
-    public Class<RegisterConfigurationCommand> handledClass() {
-        return RegisterConfigurationCommand.class;
-    }
-
-    @Override
-    public List<? extends Event> handleJava(RegisterConfigurationCommand command) {
-        return ConfigurationAggregate
-            .load(command.getAggregateId(), eventStore.getEventsOfAggregate(command.getAggregateId()))
-            .registerConfiguration(command.getConfiguration());
-    }
+  }
 }

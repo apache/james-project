@@ -23,11 +23,11 @@ import java.util.List;
 
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPDomainConfiguration;
-import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
+import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
 
-public class ClearCommandHandler implements CommandHandler<ClearCommand> {
+public class ClearCommandHandler implements CommandHandlerJava<ClearCommand> {
 
     private final EventStore eventStore;
 
@@ -41,7 +41,7 @@ public class ClearCommandHandler implements CommandHandler<ClearCommand> {
     }
 
     @Override
-    public List<? extends Event> handle(ClearCommand clearCommand) {
+    public List<? extends Event> handleJava(ClearCommand clearCommand) {
         DLPAggregateId aggregateId = new DLPAggregateId(clearCommand.getDomain());
 
         return DLPDomainConfiguration.load(

@@ -48,7 +48,7 @@ public class CassandraEventSourcingDLPConfigurationStoreExtension implements Bef
     public void beforeAll(ExtensionContext context) throws Exception {
         dockerCassandraExtension.beforeAll(context);
         cassandra = CassandraCluster.create(
-            CassandraEventStoreModule.MODULE,
+            CassandraEventStoreModule.MODULE(),
             dockerCassandraExtension.getDockerCassandra().getHost());
     }
 

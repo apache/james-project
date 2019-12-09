@@ -37,6 +37,7 @@ import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
+import scala.jdk.javaapi.CollectionConverters;
 
 public class DLPDomainConfiguration {
 
@@ -74,7 +75,7 @@ public class DLPDomainConfiguration {
     private DLPDomainConfiguration(DLPAggregateId aggregateId, History history) {
         this.aggregateId = aggregateId;
         this.state = State.initial();
-        history.getEvents().forEach(this::apply);
+        CollectionConverters.asJava(history.getEvents()).forEach(this::apply);
         this.history = history;
     }
 

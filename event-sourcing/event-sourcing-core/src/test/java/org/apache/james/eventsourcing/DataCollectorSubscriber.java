@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import org.apache.james.eventsourcing.Event;
 
 public class DataCollectorSubscriber implements Subscriber {
 

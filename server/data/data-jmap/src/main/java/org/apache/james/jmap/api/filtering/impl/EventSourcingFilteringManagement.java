@@ -42,7 +42,7 @@ public class EventSourcingFilteringManagement implements FilteringManagement {
 
     @Inject
     public EventSourcingFilteringManagement(EventStore eventStore) {
-        this.eventSourcingSystem = new EventSourcingSystem(
+        this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(new DefineRulesCommandHandler(eventStore)),
             NO_SUBSCRIBER,
             eventStore);

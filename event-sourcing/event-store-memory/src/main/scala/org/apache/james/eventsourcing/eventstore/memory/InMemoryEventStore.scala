@@ -6,29 +6,27 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- * *
- * http://www.apache.org/licenses/LICENSE-2.0                 *
- * *
+ *                                                              *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 package org.apache.james.eventsourcing.eventstore.memory
 
-import java.util
 import java.util.concurrent.atomic.AtomicReference
 
 import com.google.common.base.Preconditions
 import org.apache.james.eventsourcing.eventstore.{EventStore, History}
 import org.apache.james.eventsourcing.{AggregateId, Event}
 
-import scala.jdk.CollectionConverters._
-
 class InMemoryEventStore() extends EventStore {
-  private val storeRef: AtomicReference[Map[AggregateId, History]] = new AtomicReference(Map().withDefault(_ => History.empty))
+  private val storeRef: AtomicReference[Map[AggregateId, History]] =
+    new AtomicReference(Map().withDefault(_ => History.empty))
 
   override def appendAll(events: List[Event]): Unit = if (events.nonEmpty) doAppendAll(events)
 

@@ -119,7 +119,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
     static final CassandraClusterExtension CASSANDRA_CLUSTER = new CassandraClusterExtension(
         CassandraModule.aggregateModules(
             CassandraSchemaVersionModule.MODULE,
-            CassandraEventStoreModule.MODULE,
+            CassandraEventStoreModule.MODULE(),
             CassandraZonedDateTimeModule.MODULE,
             CassandraTaskExecutionDetailsProjectionModule.MODULE()));
 

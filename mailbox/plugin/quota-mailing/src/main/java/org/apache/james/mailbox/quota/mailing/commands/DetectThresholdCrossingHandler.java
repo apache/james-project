@@ -21,14 +21,14 @@ package org.apache.james.mailbox.quota.mailing.commands;
 
 import java.util.List;
 
-import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.History;
+import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
 import org.apache.james.mailbox.quota.mailing.QuotaMailingListenerConfiguration;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
 
-public class DetectThresholdCrossingHandler implements CommandHandler<DetectThresholdCrossing> {
+public class DetectThresholdCrossingHandler implements CommandHandlerJava<DetectThresholdCrossing> {
 
     private final EventStore eventStore;
     private final QuotaMailingListenerConfiguration quotaMailingListenerConfiguration;
@@ -41,7 +41,7 @@ public class DetectThresholdCrossingHandler implements CommandHandler<DetectThre
     }
 
     @Override
-    public List<? extends Event> handle(DetectThresholdCrossing command) {
+    public List<? extends Event> handleJava(DetectThresholdCrossing command) {
         return loadAggregate(command)
             .detectThresholdCrossing(quotaMailingListenerConfiguration, command);
     }

@@ -33,6 +33,8 @@ import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+import scala.jdk.javaapi.CollectionConverters;
+
 class EventsourcingConfigurationManagementTest {
 
     @RegisterExtension
@@ -241,9 +243,9 @@ class EventsourcingConfigurationManagementTest {
         testee.registerConfiguration(FIRST_CONFIGURATION);
         testee.registerConfiguration(FIRST_CONFIGURATION);
 
-        List<Event> eventsStored = eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID)
+        scala.collection.immutable.List<Event> eventsStored = eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID)
             .getEvents();
-        assertThat(eventsStored)
+        assertThat(CollectionConverters.asJava(eventsStored))
             .hasSize(1);
     }
 }

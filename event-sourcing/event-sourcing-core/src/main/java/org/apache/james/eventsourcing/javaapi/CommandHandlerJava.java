@@ -16,32 +16,19 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.javaapi;
 
-package org.apache.james.queue.rabbitmq.view.cassandra.configuration;
-
-import java.util.List;
-
+import org.apache.james.eventsourcing.Command;
+import org.apache.james.eventsourcing.CommandHandler;
 import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.javaapi.CommandHandlerJava;
 
-class RegisterConfigurationCommandHandler implements CommandHandlerJava<RegisterConfigurationCommand> {
+import scala.jdk.javaapi.CollectionConverters;
 
-    private final EventStore eventStore;
+public interface CommandHandlerJava<C extends Command> extends CommandHandler<C> {
 
-    RegisterConfigurationCommandHandler(EventStore eventStore) {
-        this.eventStore = eventStore;
-    }
+    java.util.List<? extends Event> handleJava(C command);
 
-    @Override
-    public Class<RegisterConfigurationCommand> handledClass() {
-        return RegisterConfigurationCommand.class;
-    }
-
-    @Override
-    public List<? extends Event> handleJava(RegisterConfigurationCommand command) {
-        return ConfigurationAggregate
-            .load(command.getAggregateId(), eventStore.getEventsOfAggregate(command.getAggregateId()))
-            .registerConfiguration(command.getConfiguration());
+    default scala.collection.immutable.List<? extends Event> handle(C command) {
+        return CollectionConverters.asScala(handleJava(command)).toList();
     }
 }

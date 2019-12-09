@@ -36,7 +36,7 @@ sealed abstract class TaskCommandHandler[T <: TaskCommand] extends CommandHandle
 class CreateCommandHandler(private val loadHistory: TaskAggregateId => History, hostname: Hostname) extends TaskCommandHandler[Create] {
   override def handledClass: Class[Create] = classOf[Create]
 
-  override def handle(command: Create): util.List[_ <: Event] = {
+  override def handle(command: Create): List[_ <: Event] = {
     TaskAggregate.create(TaskAggregateId(command.id), command.task, hostname)
   }
 }
@@ -45,7 +45,7 @@ class StartCommandHandler(private val loadHistory: TaskAggregateId => History,
                           private val hostname: Hostname) extends TaskCommandHandler[Start] {
   override def handledClass: Class[Start] = classOf[Start]
 
-  override def handle(command: Start): util.List[_ <: Event] = {
+  override def handle(command: Start): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).start(hostname)
   }
 }
@@ -54,7 +54,7 @@ class RequestCancelCommandHandler(private val loadHistory: TaskAggregateId => Hi
                                   private val hostname: Hostname) extends TaskCommandHandler[RequestCancel] {
   override def handledClass: Class[RequestCancel] = classOf[RequestCancel]
 
-  override def handle(command: RequestCancel): util.List[_ <: Event] = {
+  override def handle(command: RequestCancel): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).requestCancel(hostname)
   }
 }
@@ -62,7 +62,7 @@ class RequestCancelCommandHandler(private val loadHistory: TaskAggregateId => Hi
 class CompleteCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[Complete] {
   override def handledClass: Class[Complete] = classOf[Complete]
 
-  override def handle(command: Complete): util.List[_ <: Event] = {
+  override def handle(command: Complete): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).complete(command.result, command.additionalInformation)
   }
 }
@@ -70,7 +70,7 @@ class CompleteCommandHandler(private val loadHistory: TaskAggregateId => History
 class CancelCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[Cancel] {
   override def handledClass: Class[Cancel] = classOf[Cancel]
 
-  override def handle(command: Cancel): util.List[_ <: Event] = {
+  override def handle(command: Cancel): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).cancel(command.additionalInformation)
   }
 }
@@ -78,7 +78,7 @@ class CancelCommandHandler(private val loadHistory: TaskAggregateId => History) 
 class FailCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[Fail] {
   override def handledClass: Class[Fail] = classOf[Fail]
 
-  override def handle(command: Fail): util.List[_ <: Event] = {
+  override def handle(command: Fail): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).fail(command.additionalInformation, command.errorMessage, command.exception)
   }
 }
@@ -86,7 +86,7 @@ class FailCommandHandler(private val loadHistory: TaskAggregateId => History) ex
 class UpdateCommandHandler(private val loadHistory: TaskAggregateId => History) extends TaskCommandHandler[UpdateAdditionalInformation] {
   override def handledClass: Class[UpdateAdditionalInformation] = classOf[UpdateAdditionalInformation]
 
-  override def handle(command: UpdateAdditionalInformation): util.List[_ <: Event] = {
+  override def handle(command: UpdateAdditionalInformation): List[_ <: Event] = {
     loadAggregate(loadHistory, command.id).update(command.additionalInformation)
   }
 }

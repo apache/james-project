@@ -1,4 +1,4 @@
-/****************************************************************
+/***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,16 +16,12 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-
 package org.apache.james.eventsourcing;
 
-import java.util.List;
+import scala.collection.immutable.List;
 
-import org.apache.james.eventsourcing.Event;
+public interface CommandHandler<C extends Command> {
+  Class<C> handledClass();
 
-public interface CommandHandler<C> {
-
-    Class<C> handledClass();
-
-    List<? extends Event> handle(C c);
+  List<? extends Event> handle(C command);
 }

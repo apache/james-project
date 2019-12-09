@@ -43,7 +43,7 @@ public class EventsourcingConfigurationManagement {
 
     @Inject
     public EventsourcingConfigurationManagement(EventStore eventStore) {
-        this.eventSourcingSystem = new EventSourcingSystem(
+        this.eventSourcingSystem = EventSourcingSystem.fromJava(
             ImmutableSet.of(new RegisterConfigurationCommandHandler(eventStore)),
             NO_SUBSCRIBER,
             eventStore);
