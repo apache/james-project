@@ -19,59 +19,50 @@
 
 package org.apache.james.mailbox.elasticsearch.query;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import java.util.Date;
 
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
-public class SearchQueryTest {
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+class SearchQueryTest {
 
     @Test
-    public void sentDateOnShouldThrowOnNullDate() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateOn(null, DateResolution.Day);
+    void sentDateOnShouldThrowOnNullDate() {
+        assertThatThrownBy(() -> SearchQuery.sentDateOn(null, DateResolution.Day))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void sentDateOnShouldThrowOnNullResolution() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateOn(new Date(), null);
+    void sentDateOnShouldThrowOnNullResolution() {
+        assertThatThrownBy(() -> SearchQuery.sentDateOn(new Date(), null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void sentDateAfterShouldThrowOnNullDate() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateAfter(null, DateResolution.Day);
+    void sentDateAfterShouldThrowOnNullDate() {
+        assertThatThrownBy(() -> SearchQuery.sentDateAfter(null, DateResolution.Day))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void sentDateAfterShouldThrowOnNullResolution() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateAfter(new Date(), null);
+    void sentDateAfterShouldThrowOnNullResolution() {
+        assertThatThrownBy(() -> SearchQuery.sentDateAfter(new Date(), null))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void sentDateBeforeShouldThrowOnNullDate() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateBefore(null, DateResolution.Day);
+    void sentDateBeforeShouldThrowOnNullDate() {
+        assertThatThrownBy(() -> SearchQuery.sentDateBefore(null, DateResolution.Day))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void sentDateBeforeShouldThrowOnNullResolution() {
-        expectedException.expect(NullPointerException.class);
-
-        SearchQuery.sentDateOn(new Date(), null);
+    void sentDateBeforeShouldThrowOnNullResolution() {
+        assertThatThrownBy(() -> SearchQuery.sentDateOn(new Date(), null))
+            .isInstanceOf(NullPointerException.class);
     }
 
 }
