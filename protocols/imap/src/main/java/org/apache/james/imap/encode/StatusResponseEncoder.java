@@ -31,7 +31,6 @@ import org.apache.james.imap.api.display.Localizer;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponse.Type;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.response.ImmutableStatusResponse;
 
 public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatusResponse> {
@@ -110,22 +109,18 @@ public class StatusResponseEncoder implements ImapResponseEncoder<ImmutableStatu
     }
 
     private String asString(StatusResponse.ResponseCode code) {
-        final String result;
         if (code == null) {
-            result = null;
+            return null;
         } else {
-            result = code.getCode();
+            return code.getCode();
         }
-        return result;
     }
 
     private String asString(StatusResponse.Type type) {
-        final String result;
         if (type == null) {
-            result = null;
+            return null;
         } else {
-            result = type.getCode();
+            return type.getCode();
         }
-        return result;
     }
 }
