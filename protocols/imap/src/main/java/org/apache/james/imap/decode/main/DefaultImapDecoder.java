@@ -90,14 +90,12 @@ public class DefaultImapDecoder implements ImapDecoder {
             ImapMessage message = responseFactory.bye(HumanReadableText.BYE_UNKNOWN_COMMAND);
             session.logout();
             return message;
-        } else {
-            session.setAttribute(INVALID_COMMAND_COUNT, count);
-            if (tag == null) {
-                return responseFactory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
-            } else {
-                return responseFactory.taggedBad(tag, null, HumanReadableText.UNKNOWN_COMMAND);
-            }
         }
+        session.setAttribute(INVALID_COMMAND_COUNT, count);
+        if (tag == null) {
+            return responseFactory.untaggedBad(HumanReadableText.UNKNOWN_COMMAND);
+        }
+        return responseFactory.taggedBad(tag, null, HumanReadableText.UNKNOWN_COMMAND);
     }
 
     private int retrieveUnknownCommandCount(ImapSession session) {
@@ -112,10 +110,9 @@ public class DefaultImapDecoder implements ImapDecoder {
         if (command == null) {
             LOGGER.info("Missing command implementation for commmand {}", commandName);
             return unknownCommand(tag, session);
-        } else {
-            ImapMessage message = command.parse(request, tag, session);
-            session.setAttribute(INVALID_COMMAND_COUNT, 0);
-            return message;
         }
+        ImapMessage message = command.parse(request, tag, session);
+        session.setAttribute(INVALID_COMMAND_COUNT, 0);
+        return message;
     }
 }
