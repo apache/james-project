@@ -22,29 +22,29 @@ package org.apache.james.mailbox.elasticsearch.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
-public class EMailersTest {
+class EMailersTest {
 
     @Test
-    public void fromShouldThrowWhenSetIsNull() {
+    void fromShouldThrowWhenSetIsNull() {
         assertThatThrownBy(() -> EMailers.from(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("'emailers' is mandatory");
     }
 
     @Test
-    public void serializeShouldReturnEmptyWhenEmptySet() {
+    void serializeShouldReturnEmptyWhenEmptySet() {
         EMailers eMailers = EMailers.from(ImmutableSet.of());
 
         assertThat(eMailers.serialize()).isEmpty();
     }
 
     @Test
-    public void serializeShouldNotJoinWhenOneElement() {
+    void serializeShouldNotJoinWhenOneElement() {
         EMailer emailer = new EMailer("name", "address");
         EMailers eMailers = EMailers.from(ImmutableSet.of(emailer));
 
@@ -52,7 +52,7 @@ public class EMailersTest {
     }
 
     @Test
-    public void serializeShouldJoinWhenMultipleElements() {
+    void serializeShouldJoinWhenMultipleElements() {
         EMailer emailer = new EMailer("name", "address");
         EMailer emailer2 = new EMailer("name2", "address2");
         EMailer emailer3 = new EMailer("name3", "address3");
