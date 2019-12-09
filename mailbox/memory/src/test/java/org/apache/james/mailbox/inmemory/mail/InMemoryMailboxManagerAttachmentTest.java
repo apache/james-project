@@ -35,9 +35,9 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.jupiter.api.BeforeEach;
 
 class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
+/*
     InMemoryMailboxManager mailboxManager;
     InMemoryMailboxManager parseFailingMailboxManager;
-
 
     @BeforeEach
     void setup() throws Exception {
@@ -80,4 +80,6 @@ class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachm
     protected AttachmentMapperFactory getAttachmentMapperFactory() {
         return (AttachmentMapperFactory) mailboxManager.getMapperFactory();
     }
+
+ */
 }

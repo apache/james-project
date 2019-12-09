@@ -38,7 +38,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SearchUtilsMultipartMixedTest {
-
+/*
     static final String SAMPLE_INNER_MAIL_BODY_ONE = "far a modern quill doth come too";
 
     static final String SAMPLE_PART_ONE = "The better angel is a man right fair,\r\n";
@@ -229,4 +229,6 @@ class SearchUtilsMultipartMixedTest {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_PART_TWO_FIELD), row, recent)).isTrue();
     }
+
+ */
 }

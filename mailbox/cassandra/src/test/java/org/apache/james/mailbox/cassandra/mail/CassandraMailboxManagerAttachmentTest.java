@@ -56,7 +56,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
-
+/*
     @RegisterExtension
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(MailboxAggregateModule.MODULE);
 
@@ -117,4 +117,6 @@ class CassandraMailboxManagerAttachmentTest extends AbstractMailboxManagerAttach
     protected AttachmentMapperFactory getAttachmentMapperFactory() {
         return mailboxSessionMapperFactory;
     }
+
+ */
 }

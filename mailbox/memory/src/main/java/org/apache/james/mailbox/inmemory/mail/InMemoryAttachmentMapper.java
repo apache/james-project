@@ -18,6 +18,9 @@
  ****************************************************************/
 package org.apache.james.mailbox.inmemory.mail;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -44,11 +47,13 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     
     private static final int INITIAL_SIZE = 128;
     private final Map<AttachmentId, Attachment> attachmentsById;
+    private final Map<AttachmentId, byte[]> attachmentsRawContentById;
     private final Multimap<AttachmentId, MessageId> messageIdsByAttachmentId;
     private final Multimap<AttachmentId, Username> ownersByAttachmentId;
 
     public InMemoryAttachmentMapper() {
         attachmentsById = new ConcurrentHashMap<>(INITIAL_SIZE);
+        attachmentsRawContentById = new ConcurrentHashMap<>(INITIAL_SIZE);
         messageIdsByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
         ownersByAttachmentId = Multimaps.synchronizedSetMultimap(HashMultimap.create());
     }
@@ -78,6 +83,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     public Mono<Void> storeAttachmentForOwner(Attachment attachment, Username owner) {
         return Mono.fromRunnable(() -> {
             attachmentsById.put(attachment.getAttachmentId(), attachment);
+            attachmentsRawContentById.put(attachment.getAttachmentId(), attachment.getBytes());
             ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
         });
     }
@@ -96,6 +102,7 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
         for (Attachment attachment: attachments) {
             attachmentsById.put(attachment.getAttachmentId(), attachment);
+            attachmentsRawContentById.put(attachment.getAttachmentId(), attachment.getBytes());
             messageIdsByAttachmentId.put(attachment.getAttachmentId(), ownerMessageId);
         }
     }
@@ -108,5 +115,14 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     @Override
     public Collection<Username> getOwners(final AttachmentId attachmentId) throws MailboxException {
         return ownersByAttachmentId.get(attachmentId);
+    }
+
+    @Override
+    public InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
+        byte[] buf = attachmentsRawContentById.get(attachmentId);
+        if (buf == null) {
+            throw new AttachmentNotFoundException(attachmentId.toString());
+        }
+        return new ByteArrayInputStream(buf);
     }
 }

@@ -42,6 +42,7 @@ import org.junit.jupiter.api.Test;
 
 class MessageParserTest {
 
+    /*
     MessageParser testee;
 
     @BeforeEach
@@ -317,4 +318,6 @@ class MessageParserTest {
         assertThat(result).hasSize(1)
             .allMatch(attachment -> attachment.getAttachment().getType().equals(MDN.DISPOSITION_CONTENT_TYPE));
     }
+
+     */
 }

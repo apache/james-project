@@ -44,7 +44,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SearchUtilsTest {
-
+/*
     static final String RHUBARD = "Rhubard";
 
     static final String CUSTARD = "Custard";
@@ -810,4 +810,6 @@ class SearchUtilsTest {
         assertThat(messageSearches.isMatch(SearchQuery.address(AddressType.From, "user-from@domain.org"), row, recent)).isFalse();
     }
 
+
+ */
 }

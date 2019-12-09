@@ -19,9 +19,6 @@
 
 package org.apache.james.mailbox.model;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 
 import com.google.common.base.MoreObjects;
@@ -101,10 +98,6 @@ public class Attachment {
 
     public long getSize() {
         return size;
-    }
-
-    public InputStream getStream() throws IOException {
-        return new ByteArrayInputStream(bytes);
     }
 
     /**

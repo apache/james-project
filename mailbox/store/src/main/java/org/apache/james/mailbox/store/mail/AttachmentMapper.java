@@ -34,9 +34,7 @@ import org.reactivestreams.Publisher;
 
 public interface AttachmentMapper extends Mapper {
 
-    default InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException {
-        return getAttachment(attachmentId).getStream();
-    }
+    InputStream loadAttachmentContent(AttachmentId attachmentId) throws AttachmentNotFoundException, IOException;
 
     Attachment getAttachment(AttachmentId attachmentId) throws AttachmentNotFoundException;
 

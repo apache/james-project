@@ -140,7 +140,7 @@ import io.restassured.http.ContentType;
 import io.restassured.parsing.Parser;
 
 public abstract class SetMessagesMethodTest {
-    private static final String FORWARDED = "$Forwarded";
+/*    private static final String FORWARDED = "$Forwarded";
     private static final int _1MB = 1024 * 1024;
     private static final Username USERNAME = Username.of("username@" + DOMAIN);
     private static final String ALIAS_OF_USERNAME_MAIL = "alias@" + DOMAIN;
@@ -6147,4 +6147,6 @@ public abstract class SetMessagesMethodTest {
         assertThat(receivedMimeMessageId).isEqualTo(creationMimeMessageId);
     }
 
+
+ */
 }

@@ -51,6 +51,7 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMailboxManagerAttachmentTest {
+/*
     private static final Username USERNAME = Username.of("user@domain.tld");
 
     private MailboxManager mailboxManager;
@@ -198,5 +199,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(0);
     }
+
+ */
 }
 
