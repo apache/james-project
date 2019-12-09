@@ -22,29 +22,29 @@ package org.apache.james.mailbox.elasticsearch.json;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
-public class SubjectsTest {
+class SubjectsTest {
 
     @Test
-    public void fromShouldThrowWhenSetIsNull() {
+    void fromShouldThrowWhenSetIsNull() {
         assertThatThrownBy(() -> Subjects.from(null))
             .isInstanceOf(NullPointerException.class)
             .hasMessage("'subjects' is mandatory");
     }
 
     @Test
-    public void serializeShouldReturnEmptyWhenEmptySet() {
+    void serializeShouldReturnEmptyWhenEmptySet() {
         Subjects subjects = Subjects.from(ImmutableSet.of());
 
         assertThat(subjects.serialize()).isEmpty();
     }
 
     @Test
-    public void serializeShouldNotJoinWhenOneElement() {
+    void serializeShouldNotJoinWhenOneElement() {
         String expected = "subject";
         Subjects subjects = Subjects.from(ImmutableSet.of(expected));
 
@@ -52,7 +52,7 @@ public class SubjectsTest {
     }
 
     @Test
-    public void serializeShouldJoinWhenMultipleElements() {
+    void serializeShouldJoinWhenMultipleElements() {
         String subject = "subject";
         String subject2 = "subject2";
         String subject3 = "subject3";
