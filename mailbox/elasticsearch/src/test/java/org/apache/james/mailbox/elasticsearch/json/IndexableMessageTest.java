@@ -44,28 +44,28 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
+import org.apache.james.mailbox.tika.TikaExtension;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.assertj.core.api.iterable.Extractor;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-public class IndexableMessageTest {
-    private static final MessageUid MESSAGE_UID = MessageUid.of(154);
+class IndexableMessageTest {
+    static final MessageUid MESSAGE_UID = MessageUid.of(154);
 
-    @ClassRule
-    public static TikaContainerSingletonRule tika = TikaContainerSingletonRule.rule;
+    @RegisterExtension
+    static TikaExtension tika = new TikaExtension();
 
-    private TikaTextExtractor textExtractor;
+    TikaTextExtractor textExtractor;
 
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
@@ -74,7 +74,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldBeEmptyWhenNoMatchingHeaders() throws Exception {
+    void textShouldBeEmptyWhenNoMatchingHeaders() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -101,7 +101,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsFromWhenFrom() throws Exception {
+    void textShouldContainsFromWhenFrom() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -130,7 +130,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsToWhenTo() throws Exception {
+    void textShouldContainsToWhenTo() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -159,7 +159,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsCcWhenCc() throws Exception {
+    void textShouldContainsCcWhenCc() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -188,7 +188,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsBccWhenBcc() throws Exception {
+    void textShouldContainsBccWhenBcc() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -217,7 +217,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsSubjectsWhenSubjects() throws Exception {
+    void textShouldContainsSubjectsWhenSubjects() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -244,7 +244,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsBodyWhenBody() throws Exception {
+    void textShouldContainsBodyWhenBody() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -271,7 +271,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void textShouldContainsAllFieldsWhenAllSet() throws Exception {
+    void textShouldContainsAllFieldsWhenAllSet() throws Exception {
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
         when(mailboxMessage.getMailboxId())
@@ -306,7 +306,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void hasAttachmentsShouldReturnTrueWhenPropertyIsPresentAndTrue() throws IOException {
+    void hasAttachmentsShouldReturnTrueWhenPropertyIsPresentAndTrue() throws IOException {
         //Given
         MailboxMessage  mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -337,7 +337,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void hasAttachmentsShouldReturnFalseWhenPropertyIsPresentButFalse() throws IOException {
+    void hasAttachmentsShouldReturnFalseWhenPropertyIsPresentButFalse() throws IOException {
         //Given
         MailboxMessage  mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -369,7 +369,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void hasAttachmentsShouldReturnFalseWhenPropertyIsAbsent() throws IOException {
+    void hasAttachmentsShouldReturnFalseWhenPropertyIsAbsent() throws IOException {
         //Given
         MailboxMessage  mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -401,7 +401,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void attachmentsShouldNotBeenIndexedWhenAsked() throws Exception {
+    void attachmentsShouldNotBeenIndexedWhenAsked() throws Exception {
         //Given
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -431,7 +431,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void attachmentsShouldBeenIndexedWhenAsked() throws Exception {
+    void attachmentsShouldBeenIndexedWhenAsked() throws Exception {
         //Given
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -461,7 +461,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
+    void otherAttachmentsShouldBeenIndexedWhenOneOfThemCannotBeParsed() throws Exception {
         //Given
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -498,9 +498,9 @@ public class IndexableMessageTest {
             .contains("first attachment content", TextualBodyExtractor.NO_TEXTUAL_BODY, "third attachment content");
     }
 
-    private static class TextualBodyExtractor implements Extractor<MimePart, String> {
+    static class TextualBodyExtractor implements Extractor<MimePart, String> {
 
-        public static final String NO_TEXTUAL_BODY = "The textual body is not present";
+        static final String NO_TEXTUAL_BODY = "The textual body is not present";
 
         @Override
         public String extract(MimePart input) {
@@ -509,7 +509,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void messageShouldBeIndexedEvenIfTikaParserThrowsAnError() throws Exception {
+    void messageShouldBeIndexedEvenIfTikaParserThrowsAnError() throws Exception {
         //Given
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
         TestId mailboxId = TestId.of(1);
@@ -539,7 +539,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void shouldHandleCorrectlyMessageIdHavingSerializeMethodThatReturnNull() throws Exception {
+    void shouldHandleCorrectlyMessageIdHavingSerializeMethodThatReturnNull() throws Exception {
        MessageId invalidMessageIdThatReturnNull = mock(MessageId.class);
        when(invalidMessageIdThatReturnNull.serialize())
            .thenReturn(null);
@@ -572,7 +572,7 @@ public class IndexableMessageTest {
     }
 
     @Test
-    public void shouldHandleCorrectlyNullMessageId() throws Exception {
+    void shouldHandleCorrectlyNullMessageId() throws Exception {
        
         // When
         MailboxMessage mailboxMessage = mock(MailboxMessage.class);
