@@ -258,7 +258,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
     }
 
     @Nested
-    class MailboxNameLimitTests {
+    public class MailboxNameLimitTests {
         @Test
         void creatingMailboxShouldNotFailWhenLimitNameLength() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
@@ -283,7 +283,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renamingMailboxByIdShouldNotFailWhenLimitNameLength() throws Exception {
+        protected void renamingMailboxByIdShouldNotFailWhenLimitNameLength() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
             String mailboxName = Strings.repeat("a", MailboxManager.MAX_MAILBOX_NAME_LENGTH);
@@ -393,7 +393,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renamingMailboxByIdShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() throws Exception {
+        protected void renamingMailboxByIdShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
             String mailboxName =  "a.b.c";
@@ -417,7 +417,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void renamingMailboxByIdShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() throws Exception {
+        protected void renamingMailboxByIdShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() throws Exception {
             MailboxSession session = mailboxManager.createSystemSession(USER_1);
 
             String mailboxName =  "a.b.";
@@ -1617,7 +1617,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
 
         @Test
-        void user1ShouldBeAbleToDeleteInboxById() throws Exception {
+        protected void user1ShouldBeAbleToDeleteInboxById() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
 
@@ -1649,7 +1649,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         }
 
         @Test
-        void user1ShouldBeAbleToDeleteSubmailboxByid() throws Exception {
+        protected void user1ShouldBeAbleToDeleteSubmailboxByid() throws Exception {
             session = mailboxManager.createSystemSession(USER_1);
             mailboxManager.startProcessingRequest(session);
 

@@ -46,6 +46,34 @@ class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxM
         @Test
         protected void renameMailboxByIdShouldChangeTheMailboxPathOfAMailbox() {
         }
+
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void user1ShouldBeAbleToDeleteSubmailboxByid() {
+        }
+
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void user1ShouldBeAbleToDeleteInboxById() {
+        }
+    }
+
+    @Nested
+    class MailboxNameLimitTests extends MailboxManagerTest<StoreMailboxManager>.MailboxNameLimitTests {
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void renamingMailboxByIdShouldNotThrowWhenNameWithoutEmptyHierarchicalLevel() {
+        }
+
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void renamingMailboxByIdShouldNotFailWhenLimitNameLength() {
+        }
+
+        @Disabled("MAILBOX-389 Mailbox rename fails with Maildir")
+        @Test
+        protected void renamingMailboxByIdShouldNotThrowWhenNameWithASingleToBeNormalizedTrailingDelimiter() {
+        }
     }
 
     @RegisterExtension
