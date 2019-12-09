@@ -46,36 +46,35 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.tika.TikaConfiguration;
-import org.apache.james.mailbox.tika.TikaContainerSingletonRule;
+import org.apache.james.mailbox.tika.TikaExtension;
 import org.apache.james.mailbox.tika.TikaHttpClientImpl;
 import org.apache.james.mailbox.tika.TikaTextExtractor;
 import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.common.collect.ImmutableList;
 
-public class MessageToElasticSearchJsonTest {
-    private static final int SIZE = 25;
-    private static final int BODY_START_OCTET = 100;
-    private static final TestId MAILBOX_ID = TestId.of(18L);
-    private static final MessageId MESSAGE_ID = TestMessageId.of(184L);
-    private static final ModSeq MOD_SEQ = ModSeq.of(42L);
-    private static final MessageUid UID = MessageUid.of(25);
-    private static final Username USERNAME = Username.of("username");
+class MessageToElasticSearchJsonTest {
+    static final int SIZE = 25;
+    static final int BODY_START_OCTET = 100;
+    static final TestId MAILBOX_ID = TestId.of(18L);
+    static final MessageId MESSAGE_ID = TestMessageId.of(184L);
+    static final ModSeq MOD_SEQ = ModSeq.of(42L);
+    static final MessageUid UID = MessageUid.of(25);
+    static final Username USERNAME = Username.of("username");
 
-    private TextExtractor textExtractor;
+    TextExtractor textExtractor;
+    Date date;
+    PropertyBuilder propertyBuilder;
 
-    private Date date;
-    private PropertyBuilder propertyBuilder;
+    @RegisterExtension
+    static TikaExtension tika = new TikaExtension();
 
-    @ClassRule
-    public static TikaContainerSingletonRule tika = TikaContainerSingletonRule.rule;
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
@@ -91,7 +90,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void spamEmailShouldBeWellConvertedToJson() throws IOException {
+    void spamEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -111,7 +110,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void htmlEmailShouldBeWellConvertedToJson() throws IOException {
+    void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -131,7 +130,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void pgpSignedEmailShouldBeWellConvertedToJson() throws IOException {
+    void pgpSignedEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -151,7 +150,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void simpleEmailShouldBeWellConvertedToJson() throws IOException {
+    void simpleEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -172,7 +171,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
+    void recursiveEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -192,7 +191,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void emailWithNoInternalDateShouldUseNowDate() throws IOException {
+    void emailWithNoInternalDateShouldUseNowDate() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -213,7 +212,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void emailWithAttachmentsShouldConvertAttachmentsWhenIndexAttachmentsIsTrue() throws IOException {
+    void emailWithAttachmentsShouldConvertAttachmentsWhenIndexAttachmentsIsTrue() throws IOException {
         // Given
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
                 null,
@@ -241,7 +240,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void emailWithAttachmentsShouldNotConvertAttachmentsWhenIndexAttachmentsIsFalse() throws IOException {
+    void emailWithAttachmentsShouldNotConvertAttachmentsWhenIndexAttachmentsIsFalse() throws IOException {
         // Given
         MailboxMessage mailWithNoInternalDate = new SimpleMailboxMessage(MESSAGE_ID,
                 null,
@@ -269,7 +268,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void emailWithNoMailboxIdShouldThrow() {
+    void emailWithNoMailboxIdShouldThrow() {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"), IndexAttachments.YES);
@@ -289,7 +288,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void getUpdatedJsonMessagePartShouldBehaveWellOnEmptyFlags() throws Exception {
+    void getUpdatedJsonMessagePartShouldBehaveWellOnEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
@@ -299,7 +298,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void getUpdatedJsonMessagePartShouldBehaveWellOnNonEmptyFlags() throws Exception {
+    void getUpdatedJsonMessagePartShouldBehaveWellOnNonEmptyFlags() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
@@ -308,17 +307,19 @@ public class MessageToElasticSearchJsonTest {
             .isEqualTo("{\"modSeq\":42,\"isAnswered\":false,\"isDeleted\":true,\"isDraft\":false,\"isFlagged\":true,\"isRecent\":false,\"userFlags\":[\"user\"],\"isUnread\":true}");
     }
 
-    @Test(expected = NullPointerException.class)
-    public void getUpdatedJsonMessagePartShouldThrowIfFlagsIsNull() throws Exception {
+    @Test
+    void getUpdatedJsonMessagePartShouldThrowIfFlagsIsNull() {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
             ZoneId.of("Europe/Paris"),
             IndexAttachments.YES);
-        messageToElasticSearchJson.getUpdatedJsonMessagePart(null, MOD_SEQ);
+
+        assertThatThrownBy(() -> messageToElasticSearchJson.getUpdatedJsonMessagePart(null, MOD_SEQ))
+            .isInstanceOf(NullPointerException.class);
     }
 
     @Test
-    public void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
+    void spamEmailShouldBeWellConvertedToJsonWithApacheTika() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             textExtractor,
             ZoneId.of("Europe/Paris"),
@@ -340,7 +341,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void convertToJsonWithoutAttachmentShouldConvertEmailBoby() throws IOException {
+    void convertToJsonWithoutAttachmentShouldConvertEmailBoby() throws IOException {
         // Given
         MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
             null,
@@ -368,7 +369,7 @@ public class MessageToElasticSearchJsonTest {
     }
 
     @Test
-    public void convertToJsonShouldExtractHtmlText() throws IOException {
+    void convertToJsonShouldExtractHtmlText() throws IOException {
         // Given
         MailboxMessage message = new SimpleMailboxMessage(MESSAGE_ID,
             date,
