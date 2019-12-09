@@ -221,31 +221,23 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private int getSectionType(FetchPartPathDecoder decoder) throws DecodingException {
-        final int specifier = decoder.getSpecifier();
-        final int sectionType;
+        int specifier = decoder.getSpecifier();
         switch (specifier) {
-        case FetchPartPathDecoder.CONTENT:
-            sectionType = BodyFetchElement.CONTENT;
-            break;
-        case FetchPartPathDecoder.HEADER:
-            sectionType = BodyFetchElement.HEADER;
-            break;
-        case FetchPartPathDecoder.HEADER_FIELDS:
-            sectionType = BodyFetchElement.HEADER_FIELDS;
-            break;
-        case FetchPartPathDecoder.HEADER_NOT_FIELDS:
-            sectionType = BodyFetchElement.HEADER_NOT_FIELDS;
-            break;
-        case FetchPartPathDecoder.MIME:
-            sectionType = BodyFetchElement.MIME;
-            break;
-        case FetchPartPathDecoder.TEXT:
-            sectionType = BodyFetchElement.TEXT;
-            break;
-        default:
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Section type is unsupported.");
+            case FetchPartPathDecoder.CONTENT:
+                return BodyFetchElement.CONTENT;
+            case FetchPartPathDecoder.HEADER:
+                return BodyFetchElement.HEADER;
+            case FetchPartPathDecoder.HEADER_FIELDS:
+                return BodyFetchElement.HEADER_FIELDS;
+            case FetchPartPathDecoder.HEADER_NOT_FIELDS:
+                return BodyFetchElement.HEADER_NOT_FIELDS;
+            case FetchPartPathDecoder.MIME:
+                return BodyFetchElement.MIME;
+            case FetchPartPathDecoder.TEXT:
+                return BodyFetchElement.TEXT;
+            default:
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Section type is unsupported.");
         }
-        return sectionType;
     }
 
     private String readWord(ImapRequestLineReader request, String terminator) throws DecodingException {
