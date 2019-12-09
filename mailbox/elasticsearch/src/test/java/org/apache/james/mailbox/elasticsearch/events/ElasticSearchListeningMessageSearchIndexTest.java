@@ -31,7 +31,7 @@ import java.util.Date;
 import javax.mail.Flags;
 import javax.mail.util.SharedByteArrayInputStream;
 
-import org.apache.james.backends.es.DockerElasticSearchRule;
+import org.apache.james.backends.es.DockerElasticSearchExtension;
 import org.apache.james.backends.es.ElasticSearchIndexer;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -73,27 +73,27 @@ import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.awaitility.Duration;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.google.common.collect.Lists;
 
-public class ElasticSearchListeningMessageSearchIndexTest {
-    private static final int SIZE = 25;
-    private static final int BODY_START_OCTET = 100;
-    private static final TestId MAILBOX_ID = TestId.of(1L);
-    private static final ModSeq MOD_SEQ = ModSeq.of(42L);
-    private static final Username USERNAME = Username.of("user");
-    private static final MessageUid MESSAGE_UID_1 = MessageUid.of(25);
-    private static final MessageUid MESSAGE_UID_2 = MessageUid.of(26);
-    private static final MessageUid MESSAGE_UID_3 = MessageUid.of(27);
-    private static final MessageId MESSAGE_ID_1 = TestMessageId.of(18L);
-    private static final MessageId MESSAGE_ID_2 = TestMessageId.of(19L);
-    private static final MessageId MESSAGE_ID_3 = TestMessageId.of(20L);
+class ElasticSearchListeningMessageSearchIndexTest {
+    static final int SIZE = 25;
+    static final int BODY_START_OCTET = 100;
+    static final TestId MAILBOX_ID = TestId.of(1L);
+    static final ModSeq MOD_SEQ = ModSeq.of(42L);
+    static final Username USERNAME = Username.of("user");
+    static final MessageUid MESSAGE_UID_1 = MessageUid.of(25);
+    static final MessageUid MESSAGE_UID_2 = MessageUid.of(26);
+    static final MessageUid MESSAGE_UID_3 = MessageUid.of(27);
+    static final MessageId MESSAGE_ID_1 = TestMessageId.of(18L);
+    static final MessageId MESSAGE_ID_2 = TestMessageId.of(19L);
+    static final MessageId MESSAGE_ID_3 = TestMessageId.of(20L);
 
-    private static final SimpleMailboxMessage.Builder MESSAGE_BUILDER = SimpleMailboxMessage.builder()
+    static final SimpleMailboxMessage.Builder MESSAGE_BUILDER = SimpleMailboxMessage.builder()
         .mailboxId(MAILBOX_ID)
         .flags(new Flags())
         .bodyStartOctet(BODY_START_OCTET)
@@ -103,15 +103,15 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         .propertyBuilder(new PropertyBuilder())
         .modseq(MOD_SEQ);
 
-    private static final SimpleMailboxMessage MESSAGE_1 = MESSAGE_BUILDER.messageId(MESSAGE_ID_1)
+    static final SimpleMailboxMessage MESSAGE_1 = MESSAGE_BUILDER.messageId(MESSAGE_ID_1)
         .uid(MESSAGE_UID_1)
         .build();
 
-    private static final SimpleMailboxMessage MESSAGE_2 = MESSAGE_BUILDER.messageId(MESSAGE_ID_2)
+    static final SimpleMailboxMessage MESSAGE_2 = MESSAGE_BUILDER.messageId(MESSAGE_ID_2)
         .uid(MESSAGE_UID_2)
         .build();
 
-    private static final MessageAttachment MESSAGE_ATTACHMENT = MessageAttachment.builder()
+    static final MessageAttachment MESSAGE_ATTACHMENT = MessageAttachment.builder()
         .attachment(Attachment.builder()
             .bytes("".getBytes(StandardCharsets.UTF_8))
             .type("type")
@@ -120,31 +120,31 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         .isInline(false)
         .build();
 
-    private static final SimpleMailboxMessage MESSAGE_WITH_ATTACHMENT = MESSAGE_BUILDER.messageId(MESSAGE_ID_3)
+    static final SimpleMailboxMessage MESSAGE_WITH_ATTACHMENT = MESSAGE_BUILDER.messageId(MESSAGE_ID_3)
         .uid(MESSAGE_UID_3)
         .addAttachments(ImmutableList.of(MESSAGE_ATTACHMENT))
         .build();
 
     static class FailingTextExtractor implements TextExtractor {
         @Override
-        public ParsedContent extractContent(InputStream inputStream, String contentType) throws Exception {
+        public ParsedContent extractContent(InputStream inputStream, String contentType) {
             throw new RuntimeException();
         }
     }
 
-    private ElasticSearchListeningMessageSearchIndex testee;
-    private MailboxSession session;
-    private Mailbox mailbox;
-    private MailboxSessionMapperFactory mapperFactory;
-    private ElasticSearchIndexer elasticSearchIndexer;
-    private ElasticSearchSearcher elasticSearchSearcher;
-    private SessionProviderImpl sessionProvider;
+    ElasticSearchListeningMessageSearchIndex testee;
+    MailboxSession session;
+    Mailbox mailbox;
+    MailboxSessionMapperFactory mapperFactory;
+    ElasticSearchIndexer elasticSearchIndexer;
+    ElasticSearchSearcher elasticSearchSearcher;
+    SessionProviderImpl sessionProvider;
 
-    @Rule
-    public DockerElasticSearchRule elasticSearch = new DockerElasticSearchRule();
+    @RegisterExtension
+    DockerElasticSearchExtension elasticSearch = new DockerElasticSearchExtension();
 
-    @Before
-    public void setup() throws MailboxException, IOException {
+    @BeforeEach
+    void setup() throws MailboxException, IOException {
         mapperFactory = new InMemoryMailboxSessionMapperFactory();
 
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
@@ -155,7 +155,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
         InMemoryMessageId.Factory messageIdFactory = new InMemoryMessageId.Factory();
 
         RestHighLevelClient client = MailboxIndexCreationUtil.prepareDefaultClient(
-            elasticSearch.clientProvider().get(),
+            elasticSearch.getDockerElasticSearch().clientProvider().get(),
             elasticSearch.getDockerElasticSearch().configuration());
 
         elasticSearchSearcher = new ElasticSearchSearcher(client,
@@ -182,13 +182,13 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deserializeElasticSearchListeningMessageSearchIndexGroup() throws Exception {
+    void deserializeElasticSearchListeningMessageSearchIndexGroup() throws Exception {
         assertThat(Group.deserialize("org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup"))
             .isEqualTo(new ElasticSearchListeningMessageSearchIndex.ElasticSearchListeningMessageSearchIndexGroup());
     }
     
     @Test
-    public void addShouldIndexMessageWithoutAttachment() throws Exception {
+    void addShouldIndexMessageWithoutAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -199,7 +199,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
 
 
     @Test
-    public void addShouldIndexMessageWithAttachment() throws Exception {
+    void addShouldIndexMessageWithAttachment() throws Exception {
         testee.add(session, mailbox, MESSAGE_WITH_ATTACHMENT);
         elasticSearch.awaitForElasticSearch();
 
@@ -209,7 +209,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void addShouldBeIndempotent() throws Exception {
+    void addShouldBeIndempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         testee.add(session, mailbox, MESSAGE_1);
 
@@ -221,7 +221,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void addShouldIndexMultipleMessages() throws Exception {
+    void addShouldIndexMultipleMessages() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         testee.add(session, mailbox, MESSAGE_2);
 
@@ -233,7 +233,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void addShouldIndexEmailBodyWhenNotIndexableAttachment() throws Exception {
+    void addShouldIndexEmailBodyWhenNotIndexableAttachment() throws Exception {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new FailingTextExtractor(),
             ZoneId.of("Europe/Paris"),
@@ -251,7 +251,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void addShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
+    void addShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
 
@@ -262,7 +262,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteShouldRemoveIndex() throws IOException {
+    void deleteShouldRemoveIndex() throws IOException {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -275,7 +275,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteShouldOnlyRemoveIndexesPassedAsArguments() throws IOException {
+    void deleteShouldOnlyRemoveIndexesPassedAsArguments() throws IOException {
         testee.add(session, mailbox, MESSAGE_1);
         testee.add(session, mailbox, MESSAGE_2);
 
@@ -290,7 +290,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteShouldRemoveMultipleIndexes() throws IOException {
+    void deleteShouldRemoveMultipleIndexes() throws IOException {
         testee.add(session, mailbox, MESSAGE_1);
         testee.add(session, mailbox, MESSAGE_2);
 
@@ -305,7 +305,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteShouldBeIdempotent() throws IOException {
+    void deleteShouldBeIdempotent() throws IOException {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -319,13 +319,13 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteShouldNotThrowOnUnknownMessageUid() throws Exception {
+    void deleteShouldNotThrowOnUnknownMessageUid() {
         assertThatCode(() -> testee.delete(session, mailbox, Lists.newArrayList(MESSAGE_UID_1)))
             .doesNotThrowAnyException();
     }
 
     @Test
-    public void deleteShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
+    void deleteShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
 
@@ -336,7 +336,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void updateShouldUpdateIndex() throws Exception {
+    void updateShouldUpdateIndex() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -357,7 +357,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void updateShouldNotUpdateNorThrowOnUnknownMessageUid() throws Exception {
+    void updateShouldNotUpdateNorThrowOnUnknownMessageUid() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -378,7 +378,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void updateShouldBeIdempotent() throws Exception {
+    void updateShouldBeIdempotent() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         elasticSearch.awaitForElasticSearch();
 
@@ -400,7 +400,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void updateShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
+    void updateShouldPropagateExceptionWhenExceptionOccurs() throws Exception {
         elasticSearch.getDockerElasticSearch().pause();
         Thread.sleep(Duration.FIVE_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it
 
@@ -419,7 +419,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteAllShouldRemoveAllIndexes() throws Exception {
+    void deleteAllShouldRemoveAllIndexes() throws Exception {
         testee.add(session, mailbox, MESSAGE_1);
         testee.add(session, mailbox, MESSAGE_2);
 
@@ -434,7 +434,7 @@ public class ElasticSearchListeningMessageSearchIndexTest {
     }
 
     @Test
-    public void deleteAllShouldNotThrowWhenEmptyIndex() {
+    void deleteAllShouldNotThrowWhenEmptyIndex() {
         assertThatCode(() -> testee.deleteAll(session, mailbox.getMailboxId()))
             .doesNotThrowAnyException();
     }
