@@ -43,6 +43,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -56,6 +57,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import reactor.core.scheduler.Schedulers;
 
 public interface KeyContract extends EventBusContract {
 
@@ -84,6 +86,36 @@ public interface KeyContract extends EventBusContract {
                 .untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
         }
+
+        @Test
+        default void notificationShouldDeliverASingleEventToAllListenersAtTheSameTime() {
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            try {
+                ConcurrentLinkedQueue<String> threads = new ConcurrentLinkedQueue<>();
+                eventBus().register(event -> {
+                    threads.add(Thread.currentThread().getName());
+                    countDownLatch.await();
+                }, KEY_1);
+                eventBus().register(event -> {
+                    threads.add(Thread.currentThread().getName());
+                    countDownLatch.await();
+                }, KEY_1);
+                eventBus().register(event -> {
+                    threads.add(Thread.currentThread().getName());
+                    countDownLatch.await();
+                }, KEY_1);
+
+                eventBus().dispatch(EVENT, KEY_1).subscribeOn(Schedulers.elastic()).subscribe();
+
+
+                WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_SECONDS)
+                    .untilAsserted(() -> assertThat(threads).hasSize(3));
+                assertThat(threads).doesNotHaveDuplicates();
+            } finally {
+                countDownLatch.countDown();
+            }
+        }
+
 
         @Test
         default void registeredListenersShouldNotReceiveNoopEvents() throws Exception {
@@ -291,6 +323,18 @@ public interface KeyContract extends EventBusContract {
 
             verify(listener, after(FIVE_HUNDRED_MS.toMillis()).never())
                 .event(any());
+        }
+
+
+        @Test
+        default void dispatchShouldNotifyAsynchronousListener() throws Exception {
+            MailboxListener listener = newListener();
+            when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
+            eventBus().register(listener, KEY_1);
+
+            eventBus().dispatch(EVENT, KEY_1).block();
+
+            verify(listener, after(FIVE_HUNDRED_MS.toMillis())).event(EVENT);
         }
 
         @Test

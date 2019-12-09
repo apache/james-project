@@ -26,6 +26,7 @@ import static org.apache.james.mailbox.events.EventBusTestFixture.EVENT_UNSUPPOR
 import static org.apache.james.mailbox.events.EventBusTestFixture.FIVE_HUNDRED_MS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_A;
 import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_B;
+import static org.apache.james.mailbox.events.EventBusTestFixture.GROUP_C;
 import static org.apache.james.mailbox.events.EventBusTestFixture.NO_KEYS;
 import static org.apache.james.mailbox.events.EventBusTestFixture.ONE_SECOND;
 import static org.apache.james.mailbox.events.EventBusTestFixture.WAIT_CONDITION;
@@ -42,6 +43,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Duration;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -54,6 +57,7 @@ import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedMap;
+import reactor.core.scheduler.Schedulers;
 
 public interface GroupContract {
 
@@ -94,6 +98,59 @@ public interface GroupContract {
 
             WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_MINUTES).untilAsserted(() -> assertThat(finishedExecutions.get()).isEqualTo(eventCount));
             assertThat(rateExceeded).isFalse();
+        }
+
+        @Test
+        default void groupNotificationShouldDeliverASingleEventToAllListenersAtTheSameTime() {
+            CountDownLatch countDownLatch = new CountDownLatch(1);
+            try {
+                ConcurrentLinkedQueue<String> threads = new ConcurrentLinkedQueue<>();
+                eventBus().register(new MailboxListener.GroupMailboxListener() {
+                    @Override
+                    public Group getDefaultGroup() {
+                        return new GenericGroup("groupA");
+                    }
+
+                    @Override
+                    public void event(Event event) throws Exception {
+                        threads.add(Thread.currentThread().getName());
+                        countDownLatch.await();
+                    }
+                }, GROUP_A);
+                eventBus().register(new MailboxListener.GroupMailboxListener() {
+                    @Override
+                    public Group getDefaultGroup() {
+                        return new GenericGroup("groupB");
+                    }
+
+                    @Override
+                    public void event(Event event) throws Exception {
+                        threads.add(Thread.currentThread().getName());
+                        countDownLatch.await();
+                    }
+                }, GROUP_B);
+                eventBus().register(new MailboxListener.GroupMailboxListener() {
+                    @Override
+                    public Group getDefaultGroup() {
+                        return new GenericGroup("groupC");
+                    }
+
+                    @Override
+                    public void event(Event event) throws Exception {
+                        threads.add(Thread.currentThread().getName());
+                        countDownLatch.await();
+                    }
+                }, GROUP_C);
+
+                eventBus().dispatch(EVENT, NO_KEYS).subscribeOn(Schedulers.elastic()).subscribe();
+
+
+                WAIT_CONDITION.atMost(org.awaitility.Duration.TEN_SECONDS)
+                    .untilAsserted(() -> assertThat(threads).hasSize(3));
+                assertThat(threads).doesNotHaveDuplicates();
+            } finally {
+                countDownLatch.countDown();
+            }
         }
 
         @Test

@@ -90,13 +90,13 @@ class EventDispatcher {
         return Flux.fromIterable(keys)
             .flatMap(key -> localListenerRegistry.getLocalMailboxListeners(key)
                 .map(listener -> Tuples.of(key, listener)))
-            .filter(pair -> pair.getT2().getExecutionMode().equals(MailboxListener.ExecutionMode.SYNCHRONOUS))
-            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()))
+            .filter(pair -> pair.getT2().getExecutionMode() == MailboxListener.ExecutionMode.SYNCHRONOUS)
+            .flatMap(pair -> executeListener(event, pair.getT2(), pair.getT1()).subscribeOn(Schedulers.elastic()))
             .then();
     }
 
     private Mono<Void> executeListener(Event event, MailboxListener mailboxListener, RegistrationKey registrationKey) {
-        return Mono.from((sink) -> {
+        return Mono.from(sink -> {
             try {
                 mailboxListenerExecutor.execute(mailboxListener,
                     MDCBuilder.create()

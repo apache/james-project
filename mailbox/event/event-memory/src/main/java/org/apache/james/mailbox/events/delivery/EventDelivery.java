@@ -32,7 +32,6 @@ import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -129,44 +128,5 @@ public interface EventDelivery {
         Mono<Void> handle(Event event);
     }
 
-    class ExecutionStages {
-
-        public static ExecutionStages empty() {
-            return new ExecutionStages(Mono.empty(), Mono.empty());
-        }
-
-        static ExecutionStages synchronous(Mono<Void> synchronousListenerFuture) {
-            return new ExecutionStages(synchronousListenerFuture, Mono.empty());
-        }
-
-        static ExecutionStages asynchronous(Mono<Void> asynchronousListenerFuture) {
-            return new ExecutionStages(Mono.empty(),asynchronousListenerFuture);
-        }
-
-        private final Mono<Void> synchronousListenerFuture;
-        private final Mono<Void> asynchronousListenerFuture;
-
-        private ExecutionStages(Mono<Void> synchronousListenerFuture, Mono<Void> asynchronousListenerFuture) {
-            this.synchronousListenerFuture = synchronousListenerFuture;
-            this.asynchronousListenerFuture = asynchronousListenerFuture;
-        }
-
-        public Mono<Void> synchronousListenerFuture() {
-            return synchronousListenerFuture;
-        }
-
-        public Mono<Void> allListenerFuture() {
-            return synchronousListenerFuture
-                .concatWith(asynchronousListenerFuture)
-                .then();
-        }
-
-        public ExecutionStages combine(ExecutionStages another) {
-            return new ExecutionStages(
-                Flux.concat(this.synchronousListenerFuture, another.synchronousListenerFuture).then(),
-                Flux.concat(this.asynchronousListenerFuture, another.asynchronousListenerFuture).then());
-        }
-    }
-
-    ExecutionStages deliver(MailboxListener listener, Event event, DeliveryOption option);
+    Mono<Void> deliver(MailboxListener listener, Event event, DeliveryOption option);
 }

@@ -34,9 +34,9 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 public class InVMEventBus implements EventBus {
 
@@ -79,8 +79,6 @@ public class InVMEventBus implements EventBus {
     public Mono<Void> dispatch(Event event, Set<RegistrationKey> keys) {
         if (!event.isNoop()) {
             return Flux.merge(groupDeliveries(event), keyDeliveries(event, keys))
-                .reduceWith(EventDelivery.ExecutionStages::empty, EventDelivery.ExecutionStages::combine)
-                .flatMap(EventDelivery.ExecutionStages::synchronousListenerFuture)
                 .then()
                 .onErrorResume(throwable -> Mono.empty());
         }
@@ -90,9 +88,7 @@ public class InVMEventBus implements EventBus {
     @Override
     public Mono<Void> reDeliver(Group group, Event event) {
         if (!event.isNoop()) {
-            return Mono.fromCallable(() -> groupDelivery(event, retrieveListenerFromGroup(group), group))
-                .flatMap(EventDelivery.ExecutionStages::synchronousListenerFuture)
-                .then();
+            return groupDelivery(event, retrieveListenerFromGroup(group), group);
         }
         return Mono.empty();
     }
@@ -102,17 +98,19 @@ public class InVMEventBus implements EventBus {
             .orElseThrow(() -> new GroupRegistrationNotFound(group));
     }
 
-    private Flux<EventDelivery.ExecutionStages> keyDeliveries(Event event, Set<RegistrationKey> keys) {
+    private Mono<Void> keyDeliveries(Event event, Set<RegistrationKey> keys) {
         return Flux.fromIterable(registeredListenersByKeys(keys))
-            .map(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()));
+            .flatMap(listener -> eventDelivery.deliver(listener, event, EventDelivery.DeliveryOption.none()).subscribeOn(Schedulers.elastic()))
+            .then();
     }
 
-    private Flux<EventDelivery.ExecutionStages> groupDeliveries(Event event) {
+    private Mono<Void> groupDeliveries(Event event) {
         return Flux.fromIterable(groups.entrySet())
-            .map(entry -> groupDelivery(event, entry.getValue(), entry.getKey()));
+            .flatMap(entry -> groupDelivery(event, entry.getValue(), entry.getKey()).subscribeOn(Schedulers.elastic()))
+            .then();
     }
 
-    private EventDelivery.ExecutionStages groupDelivery(Event event, MailboxListener mailboxListener, Group group) {
+    private Mono<Void> groupDelivery(Event event, MailboxListener mailboxListener, Group group) {
         return eventDelivery.deliver(
             mailboxListener,
             event,

@@ -63,7 +63,6 @@ class InVmEventDeliveryTest {
         void deliverShouldDeliverEvent() {
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
             inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .allListenerFuture()
                 .block();
 
             assertThat(listener.numberOfEventCalls())
@@ -74,7 +73,6 @@ class InVmEventDeliveryTest {
         void deliverShouldReturnSuccessSynchronousMono() {
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.SYNCHRONOUS);
             assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                    .synchronousListenerFuture()
                     .block())
                 .doesNotThrowAnyException();
         }
@@ -86,7 +84,6 @@ class InVmEventDeliveryTest {
                 .when(listener).event(EVENT);
 
             assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .allListenerFuture()
                 .block())
             .isInstanceOf(RuntimeException.class);
 
@@ -101,7 +98,6 @@ class InVmEventDeliveryTest {
                 .when(listener).event(EVENT);
 
             assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .synchronousListenerFuture()
                 .block())
             .isInstanceOf(RuntimeException.class);
         }
@@ -114,7 +110,6 @@ class InVmEventDeliveryTest {
         void deliverShouldDeliverEvent() {
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
             inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .allListenerFuture()
                 .block();
 
             assertThat(listener.numberOfEventCalls())
@@ -125,24 +120,19 @@ class InVmEventDeliveryTest {
         void deliverShouldReturnSuccessSynchronousMono() {
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
             assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                    .synchronousListenerFuture()
                     .block())
                 .doesNotThrowAnyException();
         }
 
         @Test
-        void deliverShouldNotDeliverWhenListenerGetException() {
+        void deliverShouldNotFailWhenListenerGetException() {
             when(listener.getExecutionMode()).thenReturn(MailboxListener.ExecutionMode.ASYNCHRONOUS);
             doThrow(new RuntimeException())
                 .when(listener).event(EVENT);
 
-            assertThatThrownBy(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .allListenerFuture()
+            assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
                 .block())
-            .isInstanceOf(RuntimeException.class);
-
-            assertThat(listener.numberOfEventCalls())
-                .isEqualTo(0);
+            .doesNotThrowAnyException();
         }
 
         @Test
@@ -152,7 +142,6 @@ class InVmEventDeliveryTest {
                 .when(listener).event(EVENT);
 
             assertThatCode(() -> inVmEventDelivery.deliver(listener, EVENT, DeliveryOption.none())
-                .synchronousListenerFuture()
                 .block())
             .doesNotThrowAnyException();
         }
@@ -174,7 +163,6 @@ class InVmEventDeliveryTest {
                 DeliveryOption.of(
                     BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
                     PermanentFailureHandler.NO_HANDLER))
-                .allListenerFuture()
                 .block();
 
             assertThat(listener.numberOfEventCalls())
@@ -193,7 +181,6 @@ class InVmEventDeliveryTest {
                 DeliveryOption.of(
                     Retryer.NO_RETRYER,
                     PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
-                .allListenerFuture()
                 .block();
 
             assertThat(deadLetter.groupsWithFailedEvents().toStream())
@@ -214,7 +201,6 @@ class InVmEventDeliveryTest {
                 DeliveryOption.of(
                     BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
                     PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
-                .allListenerFuture()
                 .block();
 
             SoftAssertions.assertSoftly(softy -> {
@@ -242,7 +228,6 @@ class InVmEventDeliveryTest {
                 DeliveryOption.of(
                     BackoffRetryer.of(RetryBackoffConfiguration.DEFAULT, listener),
                     PermanentFailureHandler.StoreToDeadLetters.of(GROUP_A, deadLetter)))
-                .allListenerFuture()
                 .block();
 
             SoftAssertions.assertSoftly(softy -> {

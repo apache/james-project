@@ -51,18 +51,17 @@ public class InVmEventDelivery implements EventDelivery {
     }
 
     @Override
-    public ExecutionStages deliver(MailboxListener listener, Event event, DeliveryOption option) {
+    public Mono<Void> deliver(MailboxListener listener, Event event, DeliveryOption option) {
         Mono<Void> executionResult = deliverByOption(listener, event, option);
 
-        return toExecutionStages(listener.getExecutionMode(), executionResult);
+        return waitForResultIfNeeded(listener.getExecutionMode(), executionResult);
     }
 
-    private ExecutionStages toExecutionStages(MailboxListener.ExecutionMode executionMode, Mono<Void> executionResult) {
+    private Mono<Void> waitForResultIfNeeded(MailboxListener.ExecutionMode executionMode, Mono<Void> executionResult) {
         if (executionMode.equals(MailboxListener.ExecutionMode.SYNCHRONOUS)) {
-            return ExecutionStages.synchronous(executionResult);
+            return executionResult;
         }
-
-        return ExecutionStages.asynchronous(executionResult);
+        return executionResult.or(Mono.empty()).onErrorResume(throwable -> Mono.empty());
     }
 
     private Mono<Void> deliverByOption(MailboxListener listener, Event event, DeliveryOption deliveryOption) {
