@@ -22,19 +22,18 @@ package org.apache.james.mailbox.elasticsearch.query;
 import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.text.ParseException;
 import java.time.ZonedDateTime;
 
 import org.apache.james.mailbox.model.SearchQuery;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 
-public class DateResolutionFormaterTest {
+class DateResolutionFormaterTest {
 
-    private final String dateString = "2014-01-02T15:15:15Z";
+    final String dateString = "2014-01-02T15:15:15Z";
 
     @Test
-    public void calculateUpperDateShouldReturnDateUpToTheNextMinuteUsingMinuteUnit() throws ParseException {
+    void calculateUpperDateShouldReturnDateUpToTheNextMinuteUsingMinuteUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
@@ -43,7 +42,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateUpperDateShouldReturnDateUpToTheNextHourUsingHourUnit() throws ParseException {
+    void calculateUpperDateShouldReturnDateUpToTheNextHourUsingHourUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Hour)
@@ -52,7 +51,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateUpperDateShouldReturnDateUpToTheNextMonthUsingMonthUnit() throws ParseException {
+    void calculateUpperDateShouldReturnDateUpToTheNextMonthUsingMonthUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Month)
@@ -61,7 +60,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateUpperDateShouldReturnDateUpToTheNextYearUsingYearUnit() throws ParseException {
+    void calculateUpperDateShouldReturnDateUpToTheNextYearUsingYearUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Year)
@@ -70,7 +69,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() throws ParseException {
+    void calculateUpperDateShouldReturnDateUpToTheNextDayUsingDayUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeUpperDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
@@ -79,7 +78,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateLowerDateShouldReturnDateUpToThePreviousMinuteUsingMinuteUnit() throws ParseException {
+    void calculateLowerDateShouldReturnDateUpToThePreviousMinuteUsingMinuteUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Minute)
@@ -88,7 +87,7 @@ public class DateResolutionFormaterTest {
     }
 
     @Test
-    public void calculateLowerDateShouldReturnDateUpToThePreviousDayUsingDayUnit() throws ParseException {
+    void calculateLowerDateShouldReturnDateUpToThePreviousDayUsingDayUnit() {
         assertThat(
             ISO_OFFSET_DATE_TIME.format(
                 DateResolutionFormater.computeLowerDate(ZonedDateTime.parse(dateString, ISO_OFFSET_DATE_TIME), SearchQuery.DateResolution.Day)
