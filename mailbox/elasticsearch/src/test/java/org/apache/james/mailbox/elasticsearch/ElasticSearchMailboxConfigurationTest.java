@@ -25,19 +25,19 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.backends.es.IndexName;
 import org.apache.james.backends.es.ReadAliasName;
 import org.apache.james.backends.es.WriteAliasName;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class ElasticSearchMailboxConfigurationTest {
+class ElasticSearchMailboxConfigurationTest {
     @Test
-    public void elasticSearchMailboxConfigurationShouldRespectBeanContract() {
+    void elasticSearchMailboxConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(ElasticSearchMailboxConfiguration.class)
             .verify();
     }
 
     @Test
-    public void getIndexMailboxNameShouldReturnOldConfiguredValue() {
+    void getIndexMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.index.name", name);
@@ -50,7 +50,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
+    void getIndexMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.index.name", "other");
@@ -64,7 +64,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexMailboxNameShouldReturnConfiguredValue() {
+    void getIndexMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.index.mailbox.name", name);
@@ -77,7 +77,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexMailboxNameShouldReturnDefaultValueWhenMissing() {
+    void getIndexMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -88,7 +88,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getReadAliasMailboxNameShouldReturnOldConfiguredValue() {
+    void getReadAliasMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.read.name", name);
@@ -101,7 +101,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getReadAliasMailboxNameShouldReturnConfiguredValue() {
+    void getReadAliasMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
@@ -114,7 +114,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getReadAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
+    void getReadAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.read.mailbox.name", name);
@@ -128,7 +128,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getReadAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
+    void getReadAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -139,7 +139,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasMailboxNameShouldReturnOldConfiguredValue() {
+    void getWriteAliasMailboxNameShouldReturnOldConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.write.name", name);
@@ -152,7 +152,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasMailboxNameShouldReturnConfiguredValue() {
+    void getWriteAliasMailboxNameShouldReturnConfiguredValue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
@@ -165,7 +165,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
+    void getWriteAliasMailboxNameShouldReturnNewConfiguredValueWhenBoth() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         String name = "name";
         configuration.addProperty("elasticsearch.alias.write.mailbox.name", name);
@@ -179,7 +179,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getWriteAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
+    void getWriteAliasMailboxNameShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
@@ -190,7 +190,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexAttachmentShouldReturnConfiguredValueWhenTrue() {
+    void getIndexAttachmentShouldReturnConfiguredValueWhenTrue() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.indexAttachments", true);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
@@ -202,7 +202,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexAttachmentShouldReturnConfiguredValueWhenFalse() {
+    void getIndexAttachmentShouldReturnConfiguredValueWhenFalse() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.indexAttachments", false);
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
@@ -214,7 +214,7 @@ public class ElasticSearchMailboxConfigurationTest {
     }
 
     @Test
-    public void getIndexAttachmentShouldReturnDefaultValueWhenMissing() {
+    void getIndexAttachmentShouldReturnDefaultValueWhenMissing() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
         configuration.addProperty("elasticsearch.hosts", "127.0.0.1");
 
