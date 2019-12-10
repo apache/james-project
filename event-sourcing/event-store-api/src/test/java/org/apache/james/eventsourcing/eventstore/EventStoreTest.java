@@ -19,7 +19,6 @@
 
 package org.apache.james.eventsourcing.eventstore;
 
-import static org.apache.james.eventsourcing.TestAggregateId.testId;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -31,8 +30,8 @@ import org.junit.jupiter.api.Test;
 
 public interface EventStoreTest {
 
-    TestAggregateId AGGREGATE_1 = testId(1);
-    TestAggregateId AGGREGATE_2 = testId(2);
+    TestAggregateId AGGREGATE_1 = TestAggregateId.apply(1);
+    TestAggregateId AGGREGATE_2 = TestAggregateId.apply(2);
 
     @Test
     default void getEventsOfAggregateShouldThrowOnNullAggregateId(EventStore testee) {

@@ -34,5 +34,5 @@ final case class TestEventDTO @JsonCreator() ( @JsonProperty("type") `type`: Str
 
   def getAggregate: Int = aggregate
 
-  @JsonIgnore def toEvent: TestEvent = new TestEvent(EventId.fromSerialized (eventId), TestAggregateId.testId (aggregate), data)
+  @JsonIgnore def toEvent: TestEvent = new TestEvent(EventId.fromSerialized (eventId), TestAggregateId(aggregate), data)
 }

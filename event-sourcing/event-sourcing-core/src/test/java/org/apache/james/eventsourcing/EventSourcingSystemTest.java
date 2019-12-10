@@ -43,7 +43,7 @@ public interface EventSourcingSystemTest {
 
     String PAYLOAD_1 = "payload1";
     String PAYLOAD_2 = "payload2";
-    TestAggregateId AGGREGATE_ID = TestAggregateId.testId(42);
+    TestAggregateId AGGREGATE_ID = TestAggregateId.apply(42);
 
     class MyCommand implements Command {
         private final String payload;

@@ -18,4 +18,14 @@
  * ***************************************************************/
 package org.apache.james.eventsourcing
 
-trait Command
+import java.util.Comparator
+
+final case class TestEvent(id: EventId, aggregateId: TestAggregateId, data: String) extends Event {
+  override def eventId: EventId = id
+
+  override def getAggregateId: TestAggregateId = aggregateId
+
+  def getData: String = data
+
+  override def compareTo(o: Event): Int = Comparator.naturalOrder[EventId].compare(id, o.eventId)
+}

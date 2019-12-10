@@ -48,7 +48,7 @@ class HistoryTest {
     void getVersionShouldReturnSingleEventIdWhenSingleEvent() {
         assertThat(OptionConverters.toJava(History
             .of(new TestEvent(EventId.first(),
-                TestAggregateId.testId(42),
+                TestAggregateId.apply(42),
                 "any"))
             .getVersion()))
             .contains(EventId.first());
@@ -57,10 +57,10 @@ class HistoryTest {
     @Test
     void getVersionShouldReturnHighestEventId() {
         TestEvent event1 = new TestEvent(EventId.first(),
-            TestAggregateId.testId(42),
+            TestAggregateId.apply(42),
             "any");
         TestEvent event2 = new TestEvent(event1.eventId().next(),
-            TestAggregateId.testId(42),
+            TestAggregateId.apply(42),
             "any");
 
         assertThat(OptionConverters.toJava(History.of(event1, event2)
@@ -71,10 +71,10 @@ class HistoryTest {
     @Test
     void duplicateHistoryShouldThrow() {
         TestEvent event1 = new TestEvent(EventId.first(),
-            TestAggregateId.testId(42),
+            TestAggregateId.apply(42),
             "any");
         TestEvent event2 = new TestEvent(EventId.first(),
-            TestAggregateId.testId(42),
+            TestAggregateId.apply(42),
             "any");
 
         assertThatThrownBy(() -> History.of(event1, event2))

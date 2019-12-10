@@ -32,7 +32,7 @@ import org.junit.jupiter.api.Test;
 
 class JsonEventSerializerTest {
     public static final EventId EVENT_ID = EventId.fromSerialized(0);
-    public static final TestAggregateId AGGREGATE_ID = TestAggregateId.testId(1);
+    public static final TestAggregateId AGGREGATE_ID = TestAggregateId.apply(1);
 
     public static final OtherEvent OTHER_EVENT = new OtherEvent(EVENT_ID, AGGREGATE_ID, 1);
     public static final TestEvent TEST_EVENT = new TestEvent(EVENT_ID, AGGREGATE_ID, "first");

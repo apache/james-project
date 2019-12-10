@@ -19,7 +19,7 @@
 package org.apache.james.eventsourcing
 
 object Event {
-  def belongsToSameAggregate(events: List[_ <: Event]) = events
+  def belongsToSameAggregate(events: List[_ <: Event]): Boolean = events
     .view
     .map(event => event.getAggregateId)
     .distinct

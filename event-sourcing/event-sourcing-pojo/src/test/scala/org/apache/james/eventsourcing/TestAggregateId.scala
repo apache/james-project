@@ -18,4 +18,8 @@
  * ***************************************************************/
 package org.apache.james.eventsourcing
 
-trait Command
+final case class TestAggregateId(id: Int) extends AggregateId {
+  override def asAggregateKey: String = "TestAggregateId-" + id
+
+  def getId: Int = id
+}
