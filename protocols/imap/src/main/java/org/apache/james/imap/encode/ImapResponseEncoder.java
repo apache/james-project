@@ -27,14 +27,7 @@ public interface ImapResponseEncoder<T extends ImapMessage> {
     Class<T> acceptableMessages();
 
     /**
-     * Writes response.
-     * 
-     * @param message
-     *            <code>ImapMessage</code>, not null
-     * @param composer
-     *            <code>ImapResponseComposer</code>, not null
-     * @throws IOException
-     *             when message encoding fails
+     * Encodes the given message by the mean of the provided composer
      */
     void encode(T message, ImapResponseComposer composer) throws IOException;
 }
