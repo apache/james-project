@@ -164,13 +164,13 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * Renames a mailbox.
      * 
      * @param from
-     *            original mailbox
+     *            original mailbox path
      * @param to
-     *            new mailbox
+     *            new mailbox path
      * @param session
-     *            the context for this call, not nul
+     *            the context for this call, not null
      * @throws MailboxException
-     *            otherwise
+     *            upon unexpected failure
      * @throws MailboxExistsException
      *            when the <code>to</code> mailbox exists
      * @throws MailboxNotFoundException
@@ -184,15 +184,15 @@ public interface MailboxManager extends RequestAware, RightManager, MailboxAnnot
      * @param mailboxId
      *            original mailbox
      * @param newMailboxPath
-     *            new mailbox
+     *            new mailbox path
      * @param session
-     *            the context for this call, not nul
+     *            the context for this call, not null
      * @throws MailboxException
-     *            otherwise
+     *            upon unexpected failure
      * @throws MailboxExistsException
-     *            when the <code>to</code> mailbox exists
+     *            when the <code>newMailboxPath</code> mailbox exists
      * @throws MailboxNotFoundException
-     *            when the <code>from</code> mailbox does not exist
+     *            when the <code>mailboxId</code> original mailbox does not exist
      */
     void renameMailbox(MailboxId mailboxId, MailboxPath newMailboxPath, MailboxSession session) throws MailboxException;
 
