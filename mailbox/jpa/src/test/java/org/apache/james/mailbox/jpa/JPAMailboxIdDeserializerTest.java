@@ -20,32 +20,34 @@
 package org.apache.james.mailbox.jpa;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class JPAMailboxIdDeserializerTest {
+class JPAMailboxIdDeserializerTest {
 
-    private static final String SERIALIZED_ID = "123456789012";
-    private static final String MALFORMED_SERIALIZED_ID = "abcz";
-    private static final JPAId JPA_ID = JPAId.of(Long.parseLong(SERIALIZED_ID));
+    static final String SERIALIZED_ID = "123456789012";
+    static final String MALFORMED_SERIALIZED_ID = "abcz";
+    static final JPAId JPA_ID = JPAId.of(Long.parseLong(SERIALIZED_ID));
 
-    private JPAMailboxIdDeserializer mailboxIdDeserializer;
+    JPAMailboxIdDeserializer mailboxIdDeserializer;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailboxIdDeserializer = new JPAMailboxIdDeserializer();
     }
 
     @Test
-    public void deserializeShouldWork() throws Exception {
+    void deserializeShouldWork() throws Exception {
         assertThat(mailboxIdDeserializer.deserialize(SERIALIZED_ID)).isEqualTo(JPA_ID);
     }
 
-    @Test(expected = MailboxIdDeserialisationException.class)
-    public void deserializeShouldThrowOnMalformedData() throws Exception {
-        mailboxIdDeserializer.deserialize(MALFORMED_SERIALIZED_ID);
+    @Test
+    void deserializeShouldThrowOnMalformedData() {
+        assertThatThrownBy(() -> mailboxIdDeserializer.deserialize(MALFORMED_SERIALIZED_ID))
+            .isInstanceOf(MailboxIdDeserialisationException.class);
     }
 
 }
