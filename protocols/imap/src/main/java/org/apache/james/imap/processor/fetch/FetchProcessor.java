@@ -64,7 +64,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         final FetchData fetch = request.getFetch();
         
         try {
-            final Long changedSince = fetch.getChangedSince();
+            final long changedSince = fetch.getChangedSince();
 
             final MessageManager mailbox = getSelectedMailbox(session);
 
@@ -132,17 +132,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     /**
      * Process the given message ranges by fetch them and pass them to the
      * {@link org.apache.james.imap.api.process.ImapProcessor.Responder}
-     * 
-     * @param session
-     * @param mailbox
-     * @param ranges
-     * @param fetch
-     * @param useUids
-     * @param mailboxSession
-     * @param responder
-     * @throws MailboxException
      */
-    protected void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
+    private void processMessageRanges(ImapSession session, MessageManager mailbox, List<MessageRange> ranges, FetchData fetch, boolean useUids, MailboxSession mailboxSession, Responder responder) throws MailboxException {
         final FetchResponseBuilder builder = new FetchResponseBuilder(new EnvelopeBuilder());
         FetchGroup resultToFetch = FetchDataConverter.getFetchGroup(fetch);
 
