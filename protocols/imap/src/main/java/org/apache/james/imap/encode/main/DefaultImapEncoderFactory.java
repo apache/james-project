@@ -20,7 +20,6 @@
 package org.apache.james.imap.encode.main;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -58,17 +57,16 @@ import org.apache.james.imap.encode.XListResponseEncoder;
 import org.apache.james.imap.encode.base.EndImapEncoder;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.collect.ImmutableList;
 
 /**
  * TODO: perhaps a POJO would be better
  */
 public class DefaultImapEncoderFactory implements ImapEncoderFactory {
-    private static class DefaultImapEncoder implements ImapEncoder {
+    static class DefaultImapEncoder implements ImapEncoder {
         private final Map<Class<? extends ImapMessage>, ImapResponseEncoder> encoders;
         private final EndImapEncoder endImapEncoder;
 
-        private DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
+        DefaultImapEncoder(Stream<ImapResponseEncoder> encoders, EndImapEncoder endImapEncoder) {
             this.encoders = encoders
                 .collect(Guavate.toImmutableMap(
                     ImapResponseEncoder::acceptableMessages,
