@@ -31,6 +31,7 @@ import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
 import org.apache.james.imap.message.request.StoreRequest;
+import org.apache.james.mailbox.MessageManager;
 
 /**
  * Parse STORE commands
@@ -46,7 +47,6 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         final IdRange[] idSet = request.parseIdRange(session);
-        final Boolean sign;
         boolean silent = false;
         long unchangedSince = -1;
         char next = request.nextWordChar();
@@ -70,15 +70,16 @@ public class StoreCommandParser extends AbstractUidCommandParser {
             request.consumeChar(')');
             next = request.nextWordChar();
         }
-        
+
+        final MessageManager.FlagsUpdateMode flagsUpdateMode;
         if (next == '+') {
-            sign = Boolean.TRUE;
+            flagsUpdateMode = MessageManager.FlagsUpdateMode.ADD;
             request.consume();
         } else if (next == '-') {
-            sign = Boolean.FALSE;
+            flagsUpdateMode = MessageManager.FlagsUpdateMode.REMOVE;
             request.consume();
         } else {
-            sign = null;
+            flagsUpdateMode = MessageManager.FlagsUpdateMode.REPLACE;
         }
 
         String directive = request.consumeWord(new ImapRequestLineReader.NoopCharValidator());
@@ -109,6 +110,6 @@ public class StoreCommandParser extends AbstractUidCommandParser {
         }
 
         request.eol();
-        return new StoreRequest(command, idSet, silent, flags, useUids, tag, sign, unchangedSince);
+        return new StoreRequest(command, idSet, silent, flags, useUids, tag, flagsUpdateMode, unchangedSince);
     }
 }

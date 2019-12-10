@@ -23,39 +23,23 @@ import javax.mail.Flags;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
+import org.apache.james.mailbox.MessageManager;
 
 public class StoreRequest extends AbstractImapRequest {
-
     private final IdRange[] idSet;
-
     private final Flags flags;
-
     private final boolean useUids;
-
     private final boolean silent;
-
-    private final boolean signedMinus;
-
-    private final boolean signedPlus;
-
+    private final MessageManager.FlagsUpdateMode flagsUpdateMode;
     private final long unchangedSince;
 
-    public StoreRequest(ImapCommand command, IdRange[] idSet, boolean silent, Flags flags, boolean useUids, Tag tag, Boolean sign, long unchangedSince) {
+    public StoreRequest(ImapCommand command, IdRange[] idSet, boolean silent, Flags flags, boolean useUids, Tag tag, MessageManager.FlagsUpdateMode flagsUpdateMode, long unchangedSince) {
         super(tag, command);
         this.idSet = idSet;
         this.silent = silent;
         this.flags = flags;
         this.useUids = useUids;
-        if (sign == null) {
-            signedMinus = false;
-            signedPlus = false;
-        } else if (sign) {
-            signedMinus = false;
-            signedPlus = true;
-        } else {
-            signedMinus = true;
-            signedPlus = false;
-        }
+        this.flagsUpdateMode = flagsUpdateMode;
         this.unchangedSince = unchangedSince;
     }
 
@@ -68,24 +52,8 @@ public class StoreRequest extends AbstractImapRequest {
         return silent;
     }
 
-    /**
-     * Is the store signed MINUS? Note that {@link #isSignedPlus()} must be
-     * false when this property is true.
-     * 
-     * @return true if the store is subtractive
-     */
-    public final boolean isSignedMinus() {
-        return signedMinus;
-    }
-
-    /**
-     * Is the store signed PLUS? Note that {@link #isSignedMinus()} must be
-     * false when this property is true.
-     * 
-     * @return true if the store is additive
-     */
-    public final boolean isSignedPlus() {
-        return signedPlus;
+    public final MessageManager.FlagsUpdateMode getFlagsUpdateMode() {
+        return flagsUpdateMode;
     }
 
     public final Flags getFlags() {
@@ -113,10 +81,10 @@ public class StoreRequest extends AbstractImapRequest {
         if (isSilent()) {
             builder.append("SILENT ");
         }
-        if (isSignedPlus()) {
+        if (flagsUpdateMode == MessageManager.FlagsUpdateMode.ADD) {
             builder.append("+ ");
         }
-        if (isSignedMinus()) {
+        if (flagsUpdateMode == MessageManager.FlagsUpdateMode.REMOVE) {
             builder.append("- ");
         }
         if (flags.contains(Flags.Flag.ANSWERED)) {

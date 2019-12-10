@@ -225,17 +225,8 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         final Flags flags = request.getFlags();
         final boolean useUids = request.isUseUids();
         final boolean silent = request.isSilent();
-        final boolean isSignedPlus = request.isSignedPlus();
-        final boolean isSignedMinus = request.isSignedMinus();
         final long unchangedSince = request.getUnchangedSince();
-        final MessageManager.FlagsUpdateMode mode;
-        if (isSignedMinus) {
-            mode = MessageManager.FlagsUpdateMode.REMOVE;
-        } else if (isSignedPlus) {
-            mode = MessageManager.FlagsUpdateMode.ADD;
-        } else {
-            mode = MessageManager.FlagsUpdateMode.REPLACE;
-        }
+        final MessageManager.FlagsUpdateMode mode = request.getFlagsUpdateMode();
         
         SelectedMailbox selected = session.getSelected();
         final Map<MessageUid, Flags> flagsByUid = mailbox.setFlags(flags, mode, messageSet, mailboxSession);
