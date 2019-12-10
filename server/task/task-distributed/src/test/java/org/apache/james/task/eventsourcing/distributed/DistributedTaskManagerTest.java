@@ -35,11 +35,13 @@ import org.apache.james.backends.cassandra.init.CassandraZonedDateTimeModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.backends.rabbitmq.ReactorRabbitMQChannelPool;
+import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventSourcingSystem;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
@@ -138,7 +140,7 @@ class DistributedTaskManagerTest implements TaskManagerContract {
 
     DTOConverter<Task, TaskDTO> taskDTOConverter = new DTOConverter<>(taskDTOModules);
 
-    Set<EventDTOModule<?, ?>> eventDtoModule = TasksSerializationModule.list(taskSerializer, TASK_ADDITIONAL_INFORMATION_DTO_CONVERTER, taskDTOConverter);
+    Set<EventDTOModule<? extends Event, ? extends EventDTO>> eventDtoModule = TasksSerializationModule.list(taskSerializer, TASK_ADDITIONAL_INFORMATION_DTO_CONVERTER, taskDTOConverter);
 
     @RegisterExtension
     CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(CASSANDRA_CLUSTER,

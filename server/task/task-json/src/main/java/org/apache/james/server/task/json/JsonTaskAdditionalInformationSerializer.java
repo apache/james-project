@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableSet;
 
 public class JsonTaskAdditionalInformationSerializer {
 
-    public static JsonTaskAdditionalInformationSerializer of(AdditionalInformationDTOModule<?, ?>... modules) {
+    public static JsonTaskAdditionalInformationSerializer of(AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>... modules) {
         return new JsonTaskAdditionalInformationSerializer(ImmutableSet.copyOf(modules));
     }
 
@@ -52,7 +52,7 @@ public class JsonTaskAdditionalInformationSerializer {
     private JsonGenericSerializer<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> jsonGenericSerializer;
 
     @Inject
-    private JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<?, ?>> modules) {
+    private JsonTaskAdditionalInformationSerializer(Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> modules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 

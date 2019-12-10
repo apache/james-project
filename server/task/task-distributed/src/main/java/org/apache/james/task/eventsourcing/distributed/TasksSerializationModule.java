@@ -1,4 +1,4 @@
-/** **************************************************************
+/****************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- * http://www.apache.org/licenses/LICENSE-2.0                   *
+ *   http://www.apache.org/licenses/LICENSE-2.0                 *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,13 +15,15 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- * ***************************************************************/
+ ****************************************************************/
 
 package org.apache.james.task.eventsourcing.distributed;
 
 import java.util.Set;
 import java.util.stream.Stream;
 
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -42,7 +44,7 @@ import com.github.steveash.guavate.Guavate;
 public interface TasksSerializationModule {
     @FunctionalInterface
     interface TaskSerializationModuleFactory {
-        EventDTOModule<?, ?> create(JsonTaskSerializer taskSerializer,
+        EventDTOModule<? extends Event, ? extends EventDTO> create(JsonTaskSerializer taskSerializer,
                                     DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                     DTOConverter<Task, TaskDTO> dtoConverter);
     }
@@ -103,9 +105,9 @@ public interface TasksSerializationModule {
         .typeName("task-manager-updated")
         .withFactory(EventDTOModule::new);
 
-    static Set<EventDTOModule<?, ?>> list(JsonTaskSerializer jsonTaskSerializer,
-                                          DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
-                                          DTOConverter<Task, TaskDTO> dtoConverter) {
+    static Set<EventDTOModule<? extends Event, ? extends EventDTO>> list(JsonTaskSerializer jsonTaskSerializer,
+                                                                         DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
+                                                                         DTOConverter<Task, TaskDTO> dtoConverter) {
         return Stream
             .of(CREATED, STARTED, CANCEL_REQUESTED, CANCELLED, COMPLETED, FAILED, UPDATED)
             .map(moduleFactory -> moduleFactory.create(jsonTaskSerializer, additionalInformationConverter, dtoConverter))

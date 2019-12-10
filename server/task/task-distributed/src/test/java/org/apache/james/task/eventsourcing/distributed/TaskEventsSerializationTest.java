@@ -23,7 +23,9 @@ import java.time.Instant;
 import java.util.Set;
 
 import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.EventId;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.json.JsonGenericSerializer;
@@ -60,7 +62,7 @@ class TaskEventsSerializationTest {
     static final Hostname HOSTNAME = new Hostname("foo");
     static final MemoryReferenceWithCounterTask.AdditionalInformation COUNTER_ADDITIONAL_INFORMATION = new MemoryReferenceWithCounterTask.AdditionalInformation(3, TIMESTAMP);
 
-    private final Set<EventDTOModule<?, ?>> list = TasksSerializationModule.list(
+    private final Set<EventDTOModule<? extends Event, ? extends EventDTO>> list = TasksSerializationModule.list(
         JsonTaskSerializer.of(
             TestTaskDTOModules.COMPLETED_TASK_MODULE,
             TestTaskDTOModules.MEMORY_REFERENCE_WITH_COUNTER_TASK_MODULE.apply(new MemoryReferenceWithCounterTaskStore())),
@@ -71,7 +73,7 @@ class TaskEventsSerializationTest {
     void taskManagerEventsShouldBeSerializable() throws Exception {
         JsonSerializationVerifier.serializer(JsonGenericSerializer
             .forModules(list)
-            .withNestedTypeModules(
+            .withMultipleNestedTypeModules(
                 MemoryReferenceWithCounterTaskAdditionalInformationDTO.SERIALIZATION_MODULE,
                 TestTaskDTOModules.COMPLETED_TASK_MODULE))
             .testCase(new Created(AGGREGATE_ID, EVENT_ID, TASK, HOSTNAME),

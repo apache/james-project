@@ -19,6 +19,8 @@
 
 package org.apache.james.modules.mailbox;
 
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules;
 
@@ -29,7 +31,7 @@ import com.google.inject.multibindings.Multibinder;
 public class CassandraQuotaMailingModule extends AbstractModule {
     @Override
     protected void configure() {
-        Multibinder<EventDTOModule<?, ?>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<?, ?>>() {});
+        Multibinder<EventDTOModule<? extends Event, ? extends EventDTO>> eventDTOModuleBinder = Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
 
         eventDTOModuleBinder.addBinding()
             .toInstance(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE);

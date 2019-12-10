@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.james.backends.rabbitmq.RabbitMQExtension;
 import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.server.task.json.JsonTaskSerializer;
@@ -43,7 +44,7 @@ import reactor.core.publisher.Flux;
 
 class RabbitMQTerminationSubscriberTest implements TerminationSubscriberContract {
     private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of();
-    private static final Set<EventDTOModule<?, ?>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, DTOConverter.of(), DTOConverter.of());
+    private static final Set<EventDTOModule<? extends Event, ? extends EventDTO>> MODULES = TasksSerializationModule.list(TASK_SERIALIZER, DTOConverter.of(), DTOConverter.of());
     private static final JsonEventSerializer SERIALIZER = JsonEventSerializer.forModules(MODULES).withoutNestedType();
 
     @RegisterExtension

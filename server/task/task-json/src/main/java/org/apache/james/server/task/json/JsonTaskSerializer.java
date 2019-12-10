@@ -55,7 +55,7 @@ public class JsonTaskSerializer {
 
     @Inject
     @VisibleForTesting
-    public JsonTaskSerializer(Set<TaskDTOModule<?, ?>> modules) {
+    public JsonTaskSerializer(Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> modules) {
         jsonGenericSerializer = JsonGenericSerializer.forModules(modules).withoutNestedType();
     }
 

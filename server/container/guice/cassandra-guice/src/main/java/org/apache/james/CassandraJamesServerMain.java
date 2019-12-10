@@ -19,10 +19,9 @@
 
 package org.apache.james;
 
-import static org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer.EVENT_NESTED_TYPES_INJECTION_NAME;
-
 import java.util.Set;
 
+import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
 import org.apache.james.json.DTOModule;
 import org.apache.james.modules.BlobExportMechanismModule;
 import org.apache.james.modules.MailboxModule;
@@ -116,7 +115,7 @@ public class CassandraJamesServerMain {
         new BlobExportMechanismModule());
 
     private static final Module CASSANDRA_EVENT_STORE_JSON_SERIALIZATION_DEFAULT_MODULE = binder ->
-        binder.bind(new TypeLiteral<Set<DTOModule<?, ?>>>() {}).annotatedWith(Names.named(EVENT_NESTED_TYPES_INJECTION_NAME))
+        binder.bind(new TypeLiteral<Set<DTOModule<?, ? extends org.apache.james.json.DTO>>>() {}).annotatedWith(Names.named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME))
             .toInstance(ImmutableSet.of());
 
     public static final Module CASSANDRA_SERVER_CORE_MODULE = Modules.combine(

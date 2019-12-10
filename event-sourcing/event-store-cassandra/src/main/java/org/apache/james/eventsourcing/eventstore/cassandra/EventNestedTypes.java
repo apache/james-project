@@ -16,32 +16,8 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra;
 
-package org.apache.james.modules.eventstore;
-
-import org.apache.james.backends.cassandra.components.CassandraModule;
-import org.apache.james.eventsourcing.Event;
-import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStore;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
-
-import com.google.inject.AbstractModule;
-import com.google.inject.Scopes;
-import com.google.inject.TypeLiteral;
-import com.google.inject.multibindings.Multibinder;
-
-public class CassandraEventStoreModule extends AbstractModule {
-
-    @Override
-    protected void configure() {
-        bind(CassandraEventStore.class).in(Scopes.SINGLETON);
-        bind(EventStore.class).to(CassandraEventStore.class);
-
-        Multibinder.newSetBinder(binder(), CassandraModule.class)
-            .addBinding()
-            .toInstance(org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreModule.MODULE());
-
-        Multibinder.newSetBinder(binder(), new TypeLiteral<EventDTOModule<? extends Event, ? extends EventDTO>>() {});
-    }
+public interface EventNestedTypes {
+    String EVENT_NESTED_TYPES_INJECTION_NAME = "EventNestedTypes";
 }

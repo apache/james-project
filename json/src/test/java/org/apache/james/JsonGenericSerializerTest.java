@@ -57,7 +57,7 @@ class JsonGenericSerializerTest {
     void shouldDeserializeNestedTypeWithSecond() throws Exception {
         assertThat(JsonGenericSerializer
             .forModules(TestModules.FIRST_TYPE, TestModules.SECOND_TYPE)
-            .withNestedTypeModules(TestModules.FIRST_NESTED, TestModules.SECOND_NESTED)
+            .withMultipleNestedTypeModules(TestModules.FIRST_NESTED, TestModules.SECOND_NESTED)
             .deserialize(SECOND_WITH_NESTED_JSON))
             .isEqualTo(SECOND_WITH_NESTED);
     }
@@ -66,7 +66,7 @@ class JsonGenericSerializerTest {
     void shouldDeserializeNestedTypeWithFirst() throws Exception {
         assertThat(JsonGenericSerializer
             .forModules(TestModules.FIRST_TYPE, TestModules.SECOND_TYPE)
-            .withNestedTypeModules(TestModules.FIRST_NESTED, TestModules.SECOND_NESTED)
+            .withMultipleNestedTypeModules(TestModules.FIRST_NESTED, TestModules.SECOND_NESTED)
             .deserialize(FIRST_JSON_WITH_NESTED))
             .isEqualTo(FIRST_WITH_NESTED);
     }
@@ -152,7 +152,7 @@ class JsonGenericSerializerTest {
     void shouldThrowWhenRegisteringDuplicateTypeIds() {
         assertThatThrownBy(() -> JsonGenericSerializer
             .forModules(TestModules.FIRST_NESTED)
-            .withNestedTypeModules(TestModules.FIRST_NESTED))
+            .withMultipleNestedTypeModules(TestModules.FIRST_NESTED))
             .isInstanceOf(IllegalArgumentException.class);
     }
 

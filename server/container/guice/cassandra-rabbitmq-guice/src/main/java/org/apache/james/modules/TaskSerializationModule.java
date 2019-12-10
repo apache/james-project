@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.modules;
 
-import static org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer.EVENT_NESTED_TYPES_INJECTION_NAME;
-
 import java.time.Clock;
 import java.util.Set;
 
@@ -28,6 +26,9 @@ import javax.inject.Named;
 import org.apache.james.backends.cassandra.migration.MigrationTask;
 import org.apache.james.backends.cassandra.migration.MigrationTaskAdditionalInformationDTO;
 import org.apache.james.backends.cassandra.migration.MigrationTaskDTO;
+import org.apache.james.eventsourcing.Event;
+import org.apache.james.eventsourcing.eventstore.cassandra.EventNestedTypes;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTO;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.json.DTOConverter;
 import org.apache.james.json.DTOModule;
@@ -113,310 +114,310 @@ public class TaskSerializationModule extends AbstractModule {
 
     @Provides
     @Singleton
-    public DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter(Set<AdditionalInformationDTOModule<?, ?>> modules) {
+    public DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationDTOConverter(Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends AdditionalInformationDTO>> modules) {
         return new DTOConverter<>(modules);
     }
 
     @Provides
     @Singleton
-    public DTOConverter<Task, TaskDTO> taskDTOConverter(Set<TaskDTOModule<?, ?>> taskDTOModules) {
+    public DTOConverter<Task, TaskDTO> taskDTOConverter(Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules) {
         return new DTOConverter<>(taskDTOModules);
 
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCreatedSerialization(JsonTaskSerializer jsonTaskSerializer,
-                                                         DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
-                                                         DTOConverter<Task, TaskDTO> taskConverter) {
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskCreatedSerialization(JsonTaskSerializer jsonTaskSerializer,
+                                                                                        DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
+                                                                                        DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.CREATED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskStartedSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskStartedSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                          DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                          DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.STARTED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCancelRequestedSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskCancelRequestedSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                                  DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                                  DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.CANCEL_REQUESTED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCancelledSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskCancelledSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                            DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                            DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.CANCELLED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskCompletedSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskCompletedSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                            DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                            DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.COMPLETED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskFailedSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskFailedSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                         DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                         DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.FAILED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public EventDTOModule<?, ?> taskUpdatedSerialization(JsonTaskSerializer jsonTaskSerializer,
+    public EventDTOModule<? extends Event, ? extends EventDTO> taskUpdatedSerialization(JsonTaskSerializer jsonTaskSerializer,
                                                         DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
                                                         DTOConverter<Task, TaskDTO> taskConverter) {
         return TasksSerializationModule.UPDATED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> blobStoreVaultGarbageCollectionTask(BlobStoreVaultGarbageCollectionTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> blobStoreVaultGarbageCollectionTask(BlobStoreVaultGarbageCollectionTask.Factory factory) {
         return BlobStoreVaultGarbageCollectionTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> cassandraMappingsSolveInconsistenciesTask(MappingsSourcesMigration migration, CassandraMappingsSourcesDAO dao) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> cassandraMappingsSolveInconsistenciesTask(MappingsSourcesMigration migration, CassandraMappingsSourcesDAO dao) {
         return CassandraMappingsSolveInconsistenciesTask.module(migration, dao);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> clearMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> clearMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return ClearMailQueueTaskDTO.module(mailQueueFactory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> recomputeAllJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeAllJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeAllFastViewProjectionItemsTask.module(corrector);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> recomputeUserJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> recomputeUserJmapPreviewsTask(MessageFastViewProjectionCorrector corrector) {
         return RecomputeUserFastViewProjectionItemsTask.module(corrector);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> clearMailRepositoryTask(ClearMailRepositoryTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> clearMailRepositoryTask(ClearMailRepositoryTask.Factory factory) {
         return ClearMailRepositoryTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> deleteMailsFromMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deleteMailsFromMailQueueTask(MailQueueFactory<? extends ManageableMailQueue> mailQueueFactory) {
         return DeleteMailsFromMailQueueTaskDTO.module(mailQueueFactory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> deletedMessagesVaultDeleteTask(DeletedMessagesVaultDeleteTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deletedMessagesVaultDeleteTask(DeletedMessagesVaultDeleteTask.Factory factory) {
         return DeletedMessagesVaultDeleteTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> deletedMessagesVaultExportTask(DeletedMessagesVaultExportTaskDTO.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deletedMessagesVaultExportTask(DeletedMessagesVaultExportTaskDTO.Factory factory) {
         return DeletedMessagesVaultExportTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> deletedMessagesVaultRestoreTask(DeletedMessagesVaultRestoreTaskDTO.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> deletedMessagesVaultRestoreTask(DeletedMessagesVaultRestoreTaskDTO.Factory factory) {
         return DeletedMessagesVaultRestoreTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> eventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> eventDeadLettersRedeliverAllTask(EventDeadLettersRedeliverService service) {
         return EventDeadLettersRedeliverAllTaskDTO.module(service);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> eventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> eventDeadLettersRedeliverGroupTask(EventDeadLettersRedeliverService service) {
         return EventDeadLettersRedeliverGroupTaskDTO.module(service);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> eventDeadLettersRedeliverOneTask(EventDeadLettersRedeliverService service) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> eventDeadLettersRedeliverOneTask(EventDeadLettersRedeliverService service) {
         return EventDeadLettersRedeliverOneTaskDTO.module(service);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> fullReindexTask(ReIndexerPerformer performer) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> fullReindexTask(ReIndexerPerformer performer) {
         return FullReindexingTask.module(performer);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> errorRecoveryIndexationTask(ErrorRecoveryIndexationTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> errorRecoveryIndexationTask(ErrorRecoveryIndexationTask.Factory factory) {
         return ErrorRecoveryIndexationTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> mailboxMergingTask(MailboxMergingTaskRunner taskRunner) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> mailboxMergingTask(MailboxMergingTaskRunner taskRunner) {
         return MailboxMergingTaskDTO.module(taskRunner);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> solveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> solveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
         return SolveMailboxInconsistenciesTaskDTO.module(service);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
         return MessageIdReindexingTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> migrationTask(MigrationTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> migrationTask(MigrationTask.Factory factory) {
         return MigrationTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> reprocessingAllMailsTask(ReprocessingService reprocessingService) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> reprocessingAllMailsTask(ReprocessingService reprocessingService) {
         return ReprocessingAllMailsTaskDTO.module(reprocessingService);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> reprocessingOneMailsTask(ReprocessingService reprocessingService) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> reprocessingOneMailsTask(ReprocessingService reprocessingService) {
         return ReprocessingOneMailTaskDTO.module(Clock.systemUTC(), reprocessingService);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> singleMailboxReindexingTask(SingleMailboxReindexingTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> singleMailboxReindexingTask(SingleMailboxReindexingTask.Factory factory) {
         return SingleMailboxReindexingTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> singleMessageReindexingTask(SingleMessageReindexingTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> singleMessageReindexingTask(SingleMessageReindexingTask.Factory factory) {
         return SingleMessageReindexingTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public TaskDTOModule<?, ?> userReindexingTask(UserReindexingTask.Factory factory) {
+    public TaskDTOModule<? extends Task, ? extends TaskDTO> userReindexingTask(UserReindexingTask.Factory factory) {
         return UserReindexingTaskDTO.module(factory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> blobStoreVaultGarbageCollectionAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> blobStoreVaultGarbageCollectionAdditionalInformation() {
         return BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> cassandraMappingsSolveInconsistenciesAdditionalInformation() {
         return MappingsSourcesMigrationTaskAdditionalInformationDTO.serializationModule(CassandraMappingsSolveInconsistenciesTask.TYPE);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> clearMailQueueAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> clearMailQueueAdditionalInformation() {
         return ClearMailQueueTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> clearMailRepositoryAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> clearMailRepositoryAdditionalInformation() {
         return ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> deleteMailsFromMailQueueAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deleteMailsFromMailQueueAdditionalInformation() {
         return DeleteMailsFromMailQueueTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultDeleteAdditionalInformation(MessageId.Factory factory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultDeleteAdditionalInformation(MessageId.Factory factory) {
         return DeletedMessagesVaultDeleteTaskAdditionalInformationDTO.serializationModule(factory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultExportAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultExportAdditionalInformation() {
         return DeletedMessagesVaultExportTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> deletedMessagesVaultRestoreAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> deletedMessagesVaultRestoreAdditionalInformation() {
         return DeletedMessagesVaultRestoreTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> errorRecoveryAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return ReprocessingContextInformationDTO.ReprocessingContextInformationForErrorRecoveryIndexationTask.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForAll() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> eventDeadLettersRedeliveryAdditionalInformationForAll() {
         return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForAll.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForGroup() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> eventDeadLettersRedeliveryAdditionalInformationForGroup() {
         return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForGroup.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> eventDeadLettersRedeliveryAdditionalInformationForOne() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> eventDeadLettersRedeliveryAdditionalInformationForOne() {
         return EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> fullReindexAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return ReprocessingContextInformationDTO.ReprocessingContextInformationForFullReindexingTask.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> mailboxMergingAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> mailboxMergingAdditionalInformation() {
         return MailboxMergingTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> solveMailboxInconsistenciesAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> solveMailboxInconsistenciesAdditionalInformation() {
         return SolveMailboxInconsistenciesTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> messageIdReindexingAdditionalInformation(MessageId.Factory messageIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> messageIdReindexingAdditionalInformation(MessageId.Factory messageIdFactory) {
         return MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> migrationTaskAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> migrationTaskAdditionalInformation() {
         return MigrationTaskAdditionalInformationDTO.serializationModule();
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> reprocessingAllMailsAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingAllMailsAdditionalInformation() {
         return ReprocessingAllMailsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> reprocessingOneMailAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> reprocessingOneMailAdditionalInformation() {
         return ReprocessingOneMailTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> singleMailboxReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMailboxReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return SingleMailboxReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> singleMessageReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return SingleMessageReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> userReindexingAdditionalInformation(MailboxId.Factory mailboxIdFactory) {
         return UserReindexingTaskAdditionalInformationDTO.serializationModule(mailboxIdFactory);
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> recomputeAllJmapPreviewsAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeAllJmapPreviewsAdditionalInformation() {
         return RecomputeAllFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
-    public AdditionalInformationDTOModule<?, ?> recomputeUserJmapPreviewsAdditionalInformation() {
+    public AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO> recomputeUserJmapPreviewsAdditionalInformation() {
         return RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
-    @Named(EVENT_NESTED_TYPES_INJECTION_NAME)
+    @Named(EventNestedTypes.EVENT_NESTED_TYPES_INJECTION_NAME)
     @Provides
-    public Set<DTOModule<?, ?>> eventNestedTypes(Set<AdditionalInformationDTOModule<?, ?>> additionalInformationDTOModules,
-                                                 Set<TaskDTOModule<?, ?>> taskDTOModules) {
+    public Set<DTOModule<?, ? extends org.apache.james.json.DTO>> eventNestedTypes(Set<AdditionalInformationDTOModule<? extends TaskExecutionDetails.AdditionalInformation, ? extends  AdditionalInformationDTO>> additionalInformationDTOModules,
+                                                                                   Set<TaskDTOModule<? extends Task, ? extends TaskDTO>> taskDTOModules) {
         return Sets.union(additionalInformationDTOModules, taskDTOModules);
     }
 }
