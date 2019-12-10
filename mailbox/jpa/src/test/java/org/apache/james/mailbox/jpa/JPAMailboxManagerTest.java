@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-public class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
+class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxManager> {
 
     @Disabled("JPAMailboxManager is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
         " element of the Vault")
@@ -37,8 +37,8 @@ public class JPAMailboxManagerTest extends MailboxManagerTest<OpenJPAMailboxMana
     class HookTests {
     }
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-    private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
     
     @Override
     protected OpenJPAMailboxManager provideMailboxManager() {

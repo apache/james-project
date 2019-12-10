@@ -27,7 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 
 class JPACurrentQuotaManagerTest extends StoreCurrentQuotaManagerTest {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
 
     @Override
     protected StoreCurrentQuotaManager provideTestee() {

@@ -31,9 +31,9 @@ import org.junit.jupiter.api.BeforeEach;
 
 class JPASubscriptionManagerTest implements SubscriptionManagerContract {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
-    private SubscriptionManager subscriptionManager;
+    SubscriptionManager subscriptionManager;
 
     @Override
     public SubscriptionManager getSubscriptionManager() {

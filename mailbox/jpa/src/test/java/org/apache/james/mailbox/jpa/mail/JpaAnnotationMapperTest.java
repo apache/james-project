@@ -31,9 +31,9 @@ import org.junit.jupiter.api.AfterEach;
 
 class JpaAnnotationMapperTest extends AnnotationMapperTest {
 
-    public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
-    private final AtomicInteger counter = new AtomicInteger();
+    final AtomicInteger counter = new AtomicInteger();
 
     @AfterEach
     void tearDown() {

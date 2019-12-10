@@ -27,7 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 
 class JPAPerUserMaxQuotaTest extends GenericMaxQuotaManagerTest {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.QUOTA_PERSISTANCE_CLASSES);
 
     @Override
     protected MaxQuotaManager provideMaxQuotaManager() {

@@ -31,9 +31,9 @@ import org.junit.jupiter.api.AfterEach;
 
 class JpaMailboxMapperTest extends MailboxMapperTest {
 
-    public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
-    private final AtomicInteger counter = new AtomicInteger();
+    final AtomicInteger counter = new AtomicInteger();
 
     @Override
     protected MailboxMapper createMailboxMapper() {

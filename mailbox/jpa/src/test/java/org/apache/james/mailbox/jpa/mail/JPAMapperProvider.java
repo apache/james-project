@@ -51,7 +51,7 @@ public class JPAMapperProvider implements MapperProvider {
     }
 
     @Override
-    public MailboxMapper createMailboxMapper() throws MailboxException {
+    public MailboxMapper createMailboxMapper() {
         return new TransactionalMailboxMapper(new JPAMailboxMapper(jpaTestCluster.getEntityManagerFactory()));
     }
 

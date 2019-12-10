@@ -27,7 +27,7 @@ import org.junit.jupiter.api.AfterEach;
 
 class JpaMessageMoveTest extends MessageMoveTest {
     
-    public static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
 
     @Override
     protected MapperProvider createMapperProvider() {

@@ -30,8 +30,8 @@ import org.junit.jupiter.api.BeforeEach;
 
 class JpaMailboxManagerStressTest implements MailboxManagerStressContract<OpenJPAMailboxManager> {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
-    private Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAMailboxFixture.MAILBOX_PERSISTANCE_CLASSES);
+    Optional<OpenJPAMailboxManager> openJPAMailboxManager = Optional.empty();
 
     @Override
     public OpenJPAMailboxManager getManager() {
