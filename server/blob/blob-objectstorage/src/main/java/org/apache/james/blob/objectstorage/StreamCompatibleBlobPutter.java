@@ -52,14 +52,14 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
     @Override
     public void putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
         Mono.fromRunnable(() -> blobStore.putBlob(bucketName.asString(), blob))
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .retryWhen(Retry.onlyIf(retryContext -> needToCreateBucket(retryContext.exception(), bucketName))
                 .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
-                .withBackoffScheduler(Schedulers.boundedElastic())
+                .withBackoffScheduler(Schedulers.elastic())
                 .retryMax(MAX_RETRIES)
                 .doOnRetry(retryContext -> blobStore.createContainerInLocation(DEFAULT_LOCATION, bucketName.asString())))
             .retryWhen(Retry.onlyIf(RetryContext -> isPutMethod(RetryContext.exception()))
-                .withBackoffScheduler(Schedulers.boundedElastic())
+                .withBackoffScheduler(Schedulers.elastic())
                 .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
                 .retryMax(RETRY_ONE_LAST_TIME_ON_CONCURRENT_SAVING))
             .block();

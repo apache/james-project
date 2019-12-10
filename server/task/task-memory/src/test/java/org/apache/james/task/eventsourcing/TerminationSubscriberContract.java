@@ -127,7 +127,7 @@ public interface TerminationSubscriberContract {
 
         List<Event> listenedEvents = Mono.delay(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(3).dividedBy(2)))
             .then(Mono.defer(() -> collectEvents(subscriber.listenEvents())))
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .block();
         assertThat(listenedEvents).containsExactly(FAILED_EVENT, CANCELLED_EVENT);
     }
@@ -139,7 +139,7 @@ public interface TerminationSubscriberContract {
 
     default Mono<List<Event>> collectEvents(Publisher<Event> listener) {
         return Flux.from(listener)
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .take(DELAY_BEFORE_PUBLISHING.plus(DELAY_BETWEEN_EVENTS.multipliedBy(7)))
             .collectList();
     }
@@ -147,7 +147,7 @@ public interface TerminationSubscriberContract {
     default void sendEvents(TerminationSubscriber subscriber, Event... events) {
         Mono.delay(DELAY_BEFORE_PUBLISHING)
             .flatMapMany(ignored -> Flux.fromArray(events)
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(Schedulers.elastic())
                 .delayElements(DELAY_BETWEEN_EVENTS)
                 .doOnNext(subscriber::handle))
             .subscribe();

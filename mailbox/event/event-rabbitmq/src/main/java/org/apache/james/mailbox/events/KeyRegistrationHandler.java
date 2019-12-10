@@ -128,7 +128,7 @@ class KeyRegistrationHandler {
                     .log(logger -> logger.error("Exception happens when handling event", e)))
                 .onErrorResume(e -> Mono.empty())
                 .then())
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .then();
     }
 

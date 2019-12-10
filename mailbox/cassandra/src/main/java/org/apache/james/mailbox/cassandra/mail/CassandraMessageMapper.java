@@ -139,7 +139,7 @@ public class CassandraMessageMapper implements MessageMapper {
     @Override
     public List<MailboxCounters> getMailboxCounters(Collection<Mailbox> mailboxes) {
         return Flux.fromIterable(mailboxes)
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .concatMap(this::getMailboxCountersAsMono)
             .toStream()
             .collect(Guavate.toImmutableList());

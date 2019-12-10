@@ -84,7 +84,7 @@ class RabbitMQWorkQueueTest {
             tasks.add(taskWithId);
             return Mono.fromCallable(() -> taskWithId.getTask().run())
                 .doOnNext(result -> results.add(result))
-                .subscribeOn(Schedulers.boundedElastic());
+                .subscribeOn(Schedulers.elastic());
         }
 
         @Override

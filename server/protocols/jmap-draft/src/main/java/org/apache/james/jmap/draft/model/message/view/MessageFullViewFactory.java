@@ -131,7 +131,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         return Mono.from(fastViewProjection.retrieve(messageId))
             .onErrorResume(throwable -> fallBackToCompute(messageContent, hasAttachments, throwable))
             .switchIfEmpty(computeThenStoreAsync(messageContent, messageId, hasAttachments))
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 
@@ -148,7 +148,7 @@ public class MessageFullViewFactory implements MessageViewFactory<MessageFullVie
         return computeProjection(messageContent, hasAttachments)
             .doOnNext(projection -> Mono.from(fastViewProjection.store(messageId, projection))
                 .doOnError(throwable -> LOGGER.error("Cannot store the projection to MessageFastViewProjection", throwable))
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(Schedulers.elastic())
                 .subscribe());
     }
 

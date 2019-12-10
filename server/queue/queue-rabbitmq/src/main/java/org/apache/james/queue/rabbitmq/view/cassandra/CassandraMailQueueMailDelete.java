@@ -62,7 +62,7 @@ public class CassandraMailQueueMailDelete {
     void updateBrowseStart(MailQueueName mailQueueName) {
         findNewBrowseStart(mailQueueName)
             .flatMap(newBrowseStart -> updateNewBrowseStart(mailQueueName, newBrowseStart))
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .subscribe();
     }
 

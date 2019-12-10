@@ -732,7 +732,7 @@ public class StoreMessageManager implements MessageManager {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
 
         DeleteOperation deleteOperation = Flux.fromIterable(MessageRange.toRanges(uids))
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .flatMap(range -> Mono.fromCallable(() -> messageMapper.findInMailbox(mailbox, range, FetchType.Metadata, UNLIMITED))
                 .flatMapMany(iterator -> Flux.fromStream(Iterators.toStream(iterator))))
             .map(mailboxMessage -> MetadataWithMailboxId.from(mailboxMessage.metaData(), mailboxMessage.getMailboxId()))

@@ -35,7 +35,7 @@ public class MemoryWorkQueue implements WorkQueue {
         this.worker = worker;
         this.tasks = UnicastProcessor.create();
         this.subscription = tasks
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .limitRate(1)
             .concatMap(this::dispatchTaskToWorker)
             .subscribe();

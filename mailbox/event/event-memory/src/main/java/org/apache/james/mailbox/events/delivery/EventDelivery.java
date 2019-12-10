@@ -89,7 +89,7 @@ public interface EventDelivery {
             @Override
             public Mono<Void> doRetry(Mono<Void> executionResult, Event event) {
                 return executionResult
-                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.boundedElastic())
+                    .retryBackoff(retryBackoff.getMaxRetries(), retryBackoff.getFirstBackoff(), FOREVER, retryBackoff.getJitterFactor(), Schedulers.elastic())
                     .doOnError(throwable -> LOGGER.error("listener {} exceeded maximum retry({}) to handle event {}",
                         mailboxListener.getClass().getCanonicalName(),
                         retryBackoff.getMaxRetries(),

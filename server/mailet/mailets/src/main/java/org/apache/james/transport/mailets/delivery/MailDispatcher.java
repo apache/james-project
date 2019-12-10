@@ -94,7 +94,7 @@ public class MailDispatcher {
         this.mailStore = mailStore;
         this.consume = consume;
         this.mailetContext = mailetContext;
-        this.scheduler = Schedulers.boundedElastic();
+        this.scheduler = Schedulers.elastic();
     }
 
     public void dispatch(Mail mail) throws MessagingException {

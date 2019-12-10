@@ -85,7 +85,7 @@ class ReactorUtilsTest {
         void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.range(0, 10)
-                .subscribeOn(Schedulers.boundedElastic())
+                .subscribeOn(Schedulers.elastic())
                 .limitRate(2)
                 .doOnRequest(request -> generateElements.getAndAdd((int) request))
                 .map(index -> new byte[] {(byte) (int) index})
@@ -104,7 +104,7 @@ class ReactorUtilsTest {
         void givenAFluxOf3BytesShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8})
-                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
@@ -122,7 +122,7 @@ class ReactorUtilsTest {
         void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8}, new byte[] {9, 10, 11})
-                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
@@ -140,7 +140,7 @@ class ReactorUtilsTest {
         void givenAnEmptyFluxShouldConsumeOnlyThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
             Flux<ByteBuffer> source = Flux.<byte[]>empty()
-                    .subscribeOn(Schedulers.boundedElastic())
+                    .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));

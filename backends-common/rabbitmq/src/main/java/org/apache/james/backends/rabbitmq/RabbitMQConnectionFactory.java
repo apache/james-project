@@ -60,6 +60,6 @@ public class RabbitMQConnectionFactory {
     Mono<Connection> connectionMono() {
         Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         return Mono.fromCallable(connectionFactory::newConnection)
-            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()), forever, Schedulers.boundedElastic());
+            .retryBackoff(configuration.getMaxRetries(), Duration.ofMillis(configuration.getMinDelayInMs()), forever, Schedulers.elastic());
     }
 }

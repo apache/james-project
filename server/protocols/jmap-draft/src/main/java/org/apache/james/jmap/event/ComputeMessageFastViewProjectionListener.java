@@ -87,7 +87,7 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
             .flatMap(Throwing.function(messageResult -> Mono.fromCallable(
                 () -> Pair.of(messageResult.getMessageId(), computeFastViewPrecomputedProperties(messageResult)))
                     .subscribeOn(Schedulers.parallel())))
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .flatMap(message -> messageFastViewProjection.store(message.getKey(), message.getValue()))
             .then()
             .block();

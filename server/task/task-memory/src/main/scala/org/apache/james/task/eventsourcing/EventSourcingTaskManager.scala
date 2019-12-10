@@ -113,7 +113,7 @@ class EventSourcingTaskManager @Inject @VisibleForTesting private[eventsourcing]
         .then(details)
 
       Flux.merge(findEvent, details)
-        .subscribeOn(Schedulers.boundedElastic)
+        .subscribeOn(Schedulers.elastic)
         .blockFirst(timeout)
     } catch {
       case _: IllegalStateException => throw new ReachedTimeoutException

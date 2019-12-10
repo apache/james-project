@@ -178,7 +178,7 @@ public class ObjectStorageBlobStoreTest implements MetricableBlobStoreContract {
         // String need to be big enough to get async thread busy hence could not return result instantly
         Mono<BlobId> blobIdFuture = testee
             .save(testee.getDefaultBucketName(), BIG_STRING.getBytes(StandardCharsets.UTF_8))
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
 
@@ -186,7 +186,7 @@ public class ObjectStorageBlobStoreTest implements MetricableBlobStoreContract {
     void saveStringShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
             .save(testee.getDefaultBucketName(), BIG_STRING)
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
 
@@ -194,14 +194,14 @@ public class ObjectStorageBlobStoreTest implements MetricableBlobStoreContract {
     void saveInputStreamShouldNotCompleteWhenDoesNotAwait() {
         Mono<BlobId> blobIdFuture = testee
             .save(testee.getDefaultBucketName(), new ByteArrayInputStream(BIG_STRING.getBytes(StandardCharsets.UTF_8)))
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.elastic());
         assertThat(blobIdFuture.toFuture()).isNotCompleted();
     }
 
     @Test
     void readBytesShouldNotCompleteWhenDoesNotAwait() {
         BlobId blobId = testee().save(testee.getDefaultBucketName(), BIG_STRING).block();
-        Mono<byte[]> resultFuture = testee.readBytes(testee.getDefaultBucketName(), blobId).subscribeOn(Schedulers.boundedElastic());
+        Mono<byte[]> resultFuture = testee.readBytes(testee.getDefaultBucketName(), blobId).subscribeOn(Schedulers.elastic());
         assertThat(resultFuture.toFuture()).isNotCompleted();
     }
 }
