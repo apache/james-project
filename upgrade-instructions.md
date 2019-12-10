@@ -22,6 +22,21 @@ Change list:
  - [UsersFileRepository](#usersfilerepository)
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
+ - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
+ 
+#### Health checks routes return code changes
+
+Date 10/12/2019
+
+SHA-1 cdbc0ee65f
+
+Concerned products: Guice products
+
+Health check return codes had been changed:
+ - Degraded James server will now answer 200 instead of 500. JSON payload needs to be read in order to act upon a degraded server.
+ - Unhealthy James server will now answer 503 instead of 500.
+ 
+Depending on specific deployment usage of health-checks, management scripts might need to be updated.
 
 #### RabbitMQ minimal version
 
