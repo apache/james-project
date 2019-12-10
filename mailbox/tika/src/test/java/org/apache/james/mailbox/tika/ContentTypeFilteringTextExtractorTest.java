@@ -31,25 +31,25 @@ import java.nio.charset.StandardCharsets;
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import com.google.common.collect.ImmutableSet;
 
-public class ContentTypeFilteringTextExtractorTest {
+class ContentTypeFilteringTextExtractorTest {
 
     @Mock
     TextExtractor textExtractor;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
-    public void extractContentReturnEmptyWithContentTypeInBlacklist() throws Exception {
+    void extractContentReturnEmptyWithContentTypeInBlacklist() throws Exception {
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
                 ImmutableSet.of("application/ics", "application/zip"));
@@ -61,7 +61,7 @@ public class ContentTypeFilteringTextExtractorTest {
     }
 
     @Test
-    public void extractContentCallUnderlyingWithContentTypeNotInBlacklist() throws Exception {
+    void extractContentCallUnderlyingWithContentTypeNotInBlacklist() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         ContentTypeFilteringTextExtractor contentTypeFilteringTextExtractor =
             new ContentTypeFilteringTextExtractor(textExtractor,
