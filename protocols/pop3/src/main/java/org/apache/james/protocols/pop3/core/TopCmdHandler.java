@@ -130,7 +130,7 @@ public class TopCmdHandler extends RetrCmdHandler implements CapaCapability {
      * This {@link InputStream} implementation can be used to return all message headers 
      * and limit the body lines which will be read from the wrapped {@link InputStream}.
      */   
-    private final class CountingBodyInputStream extends InputStream {
+    private static final class CountingBodyInputStream extends InputStream {
 
         private int count = 0;
         private int limit = -1;

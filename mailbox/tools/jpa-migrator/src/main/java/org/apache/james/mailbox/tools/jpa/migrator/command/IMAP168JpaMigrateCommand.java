@@ -75,7 +75,7 @@ public class IMAP168JpaMigrateCommand implements JpaMigrateCommand {
     /**
      *
      */
-    private class MailboxPath {
+    private static class MailboxPath {
 
         protected String namespace;
         protected String userName;

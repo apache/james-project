@@ -57,7 +57,7 @@ public class BypassAuthOnRequestMethod implements Filter {
             return new InitializedBuilder(this);
         }
 
-        public class InitializedBuilder {
+        public static class InitializedBuilder {
             private final Builder builder;
 
             private InitializedBuilder(Builder builder) {

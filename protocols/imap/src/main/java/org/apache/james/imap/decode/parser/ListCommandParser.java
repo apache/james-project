@@ -60,7 +60,7 @@ public class ListCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private class ListCharValidator extends AtomCharValidator {
+    private static class ListCharValidator extends AtomCharValidator {
         @Override
         public boolean isValid(char chr) {
             if (ImapRequestLineReader.isListWildcard(chr)) {

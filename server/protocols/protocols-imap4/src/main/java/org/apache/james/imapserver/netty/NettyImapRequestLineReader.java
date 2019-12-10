@@ -115,7 +115,7 @@ public class NettyImapRequestLineReader extends AbstractNettyImapRequestLineRead
      * {@link NettyImapRequestLineReader#read(int, boolean)} if not enough data is
      * readable in the underlying {@link ChannelBuffer}
      */
-    public final class NotEnoughDataException extends RuntimeException {
+    public static final class NotEnoughDataException extends RuntimeException {
 
         public static final int UNKNOWN_SIZE = -1;
         private final int size;

@@ -142,7 +142,7 @@ public class BayesianAnalyzer {
      * <p/>
      * It implements Comparable so that it's sorting is automatic.
      */
-    private class TokenProbabilityStrength implements Comparable<TokenProbabilityStrength> {
+    private static class TokenProbabilityStrength implements Comparable<TokenProbabilityStrength> {
         /**
          * Message token.
          */

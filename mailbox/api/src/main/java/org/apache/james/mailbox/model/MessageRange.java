@@ -205,7 +205,7 @@ public class MessageRange implements Iterable<MessageUid> {
         return new RangeIterator(getUidFrom(), getUidTo());
     }
     
-    private final class RangeIterator implements Iterator<MessageUid> {
+    private static final class RangeIterator implements Iterator<MessageUid> {
 
         private final long to;
         private long current;

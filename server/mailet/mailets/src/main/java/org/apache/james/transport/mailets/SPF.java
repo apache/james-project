@@ -94,7 +94,7 @@ public class SPF extends GenericMailet {
         }
     }
 
-    private class SPFLoggerAdapter implements Logger {
+    private static class SPFLoggerAdapter implements Logger {
         private boolean debug = false;
         private String name = "SPFLogger";
 

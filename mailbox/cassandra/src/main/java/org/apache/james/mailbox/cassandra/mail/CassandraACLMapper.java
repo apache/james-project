@@ -189,7 +189,7 @@ public class CassandraACLMapper {
     private Mono<ACLWithVersion> getAclWithVersion(CassandraId cassandraId) {
         return getStoredACLRow(cassandraId)
             .map(acl -> new ACLWithVersion(acl.getLong(CassandraACLTable.VERSION),
-                                deserializeACL(cassandraId, acl.getString(CassandraACLTable.ACL))));
+                deserializeACL(cassandraId, acl.getString(CassandraACLTable.ACL))));
     }
 
     private MailboxACL deserializeACL(CassandraId cassandraId, String serializedACL) {
@@ -204,7 +204,7 @@ public class CassandraACLMapper {
         }
     }
 
-    private class ACLWithVersion {
+    private static class ACLWithVersion {
         private final long version;
         private final MailboxACL mailboxACL;
 

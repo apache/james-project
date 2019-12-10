@@ -224,7 +224,7 @@ public class DataLineJamesMessageHookHandler implements DataLineFilter, Extensib
         return classes;
     }
 
-    protected class MailToMailEnvelopeWrapper implements MailEnvelope {
+    protected static class MailToMailEnvelopeWrapper implements MailEnvelope {
         private final Mail mail;
         private final OutputStream out;
 

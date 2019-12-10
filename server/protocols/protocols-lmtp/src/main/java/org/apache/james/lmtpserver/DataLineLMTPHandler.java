@@ -88,7 +88,7 @@ public class DataLineLMTPHandler extends DataLineJamesMessageHookHandler {
         }
     }
 
-    private final class ReadOnlyMailEnvelope extends MailToMailEnvelopeWrapper {
+    private static final class ReadOnlyMailEnvelope extends MailToMailEnvelopeWrapper {
 
         public ReadOnlyMailEnvelope(Mail mail) {
             super(mail, null);

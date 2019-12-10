@@ -98,7 +98,7 @@ public class InMemoryCurrentQuotaManager implements StoreCurrentQuotaManager {
         Preconditions.checkArgument(size > 0, "Size should be positive");
     }
 
-    class Entry {
+    static class Entry {
         private final AtomicLong count;
         private final AtomicLong size;
 

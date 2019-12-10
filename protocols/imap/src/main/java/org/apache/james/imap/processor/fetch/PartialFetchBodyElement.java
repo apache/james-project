@@ -71,7 +71,7 @@ final class PartialFetchBodyElement implements BodyElement {
         return new LimitingInputStream(delegate.getInputStream(), firstOctet, size());
     }
 
-    private final class LimitingInputStream extends FilterInputStream {
+    private static final class LimitingInputStream extends FilterInputStream {
         private long pos = 0;
         private final long length;
         private long offset;

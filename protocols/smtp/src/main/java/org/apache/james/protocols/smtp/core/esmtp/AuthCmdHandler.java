@@ -82,7 +82,7 @@ public class AuthCmdHandler
     private static final Response AUTH_FAILED = new SMTPResponse(SMTPRetCode.AUTH_FAILED, "Authentication Failed").immutable();
     private static final Response UNKNOWN_AUTH_TYPE = new SMTPResponse(SMTPRetCode.PARAMETER_NOT_IMPLEMENTED, "Unrecognized Authentication Type").immutable();
     
-    private abstract class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
+    private abstract static class AbstractSMTPLineHandler implements LineHandler<SMTPSession> {
 
         @Override
         public Response onLine(SMTPSession session, ByteBuffer line) {

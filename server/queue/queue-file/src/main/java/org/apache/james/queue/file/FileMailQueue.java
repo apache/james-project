@@ -310,7 +310,7 @@ public class FileMailQueue implements ManageableMailQueue {
         }
     }
 
-    private final class FileMimeMessageSource extends MimeMessageSource implements Disposable {
+    private static final class FileMimeMessageSource extends MimeMessageSource implements Disposable {
 
         private File file;
         private final SharedFileInputStream in;
@@ -355,7 +355,7 @@ public class FileMailQueue implements ManageableMailQueue {
     /**
      * Helper class which is used to reference the path to the object and msg file
      */
-    private final class FileItem {
+    private static final class FileItem {
         private final String objectfile;
         private final String messagefile;
 

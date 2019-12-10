@@ -33,7 +33,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class SetQuotaRequest extends AbstractImapRequest {
 
-    public class ResourceLimit {
+    public static class ResourceLimit {
         private final String resource;
         private final Long limit;
 
