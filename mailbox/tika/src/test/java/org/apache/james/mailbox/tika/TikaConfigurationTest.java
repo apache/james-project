@@ -19,14 +19,14 @@
 
 package org.apache.james.mailbox.tika;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class TikaConfigurationTest {
+class TikaConfigurationTest {
 
     @Test
-    public void shouldMatchBeanContract() {
+    void shouldMatchBeanContract() {
         EqualsVerifier.forClass(TikaConfiguration.class)
             .verify();
     }
