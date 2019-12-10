@@ -19,31 +19,19 @@
 
 package org.apache.james.backends.es;
 
-import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
-import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class DockerElasticSearchExtension implements AfterAllCallback, BeforeAllCallback, AfterEachCallback, ParameterResolver {
+public class DockerElasticSearchExtension implements AfterEachCallback, ParameterResolver {
 
     private final DockerElasticSearch elasticSearch = DockerElasticSearchSingleton.INSTANCE;
 
     @Override
-    public void beforeAll(ExtensionContext context) throws Exception {
-        elasticSearch.start();
-    }
-
-    @Override
-    public void afterEach(ExtensionContext context) throws Exception {
+    public void afterEach(ExtensionContext context) {
         elasticSearch.cleanUpData();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext context) throws Exception {
-        elasticSearch.stop();
     }
 
     @Override
