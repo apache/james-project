@@ -23,15 +23,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class JPAMailboxMessageTest {
+class JPAMailboxMessageTest {
 
     /**
      * Even though there should never be a null body, it does happen. See JAMES-2384
      */
     @Test
-    public void getFullContentShouldReturnOriginalContentWhenBodyFieldIsNull() throws Exception {
+    void getFullContentShouldReturnOriginalContentWhenBodyFieldIsNull() throws Exception {
 
         // Prepare the message
         byte[] content = "Subject: the null message".getBytes(StandardCharsets.UTF_8);
