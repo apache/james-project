@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.mailbox.lucene.search;
 
-public class StrictLuceneMessageSearchIndexText extends LuceneMailboxMessageSearchIndexTest {
+class StrictLuceneMessageSearchIndexText extends LuceneMailboxMessageSearchIndexTest {
 
     @Override
     protected boolean useLenient() {
