@@ -34,7 +34,7 @@ class MaildirSubscriptionManagerTest implements SubscriptionManagerContract {
     @TempDir
     File tmpFolder;
 
-    private SubscriptionManager subscriptionManager;
+    SubscriptionManager subscriptionManager;
 
     @Override
     public SubscriptionManager getSubscriptionManager() {

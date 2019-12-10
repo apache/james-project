@@ -32,7 +32,7 @@ class DomainUserMaildirMailboxManagerStressTest implements MailboxManagerStressC
     @TempDir
     File tmpFolder;
 
-    private StoreMailboxManager mailboxManager;
+    StoreMailboxManager mailboxManager;
 
     @Override
     public StoreMailboxManager getManager() {

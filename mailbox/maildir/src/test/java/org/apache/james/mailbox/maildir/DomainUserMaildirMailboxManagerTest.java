@@ -27,7 +27,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
+class DomainUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxManager> {
 
     @Disabled("Maildir is using DefaultMessageId which doesn't support full feature of a messageId, which is an essential" +
         " element of the Vault")
