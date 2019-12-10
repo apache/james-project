@@ -37,7 +37,7 @@ public class SetQuotaRequest extends AbstractImapRequest {
         private final String resource;
         private final long limit;
 
-        public ResourceLimit(String resource, long limit) {
+        ResourceLimit(String resource, long limit) {
             this.limit = limit;
             this.resource = resource;
         }
