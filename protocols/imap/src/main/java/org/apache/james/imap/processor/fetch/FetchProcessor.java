@@ -26,6 +26,7 @@ import java.util.List;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -61,8 +62,8 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
     protected void processRequest(FetchRequest request, ImapSession session, Responder responder) {
         final boolean useUids = request.isUseUids();
         final IdRange[] idSet = request.getIdSet();
-        final FetchData fetch = request.getFetch();
-        
+        final FetchData fetch = computeFetchData(request, session);
+
         try {
             final long changedSince = fetch.getChangedSince();
 
@@ -85,7 +86,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
             final MailboxSession mailboxSession = session.getMailboxSession();
 
             MetaData metaData = mailbox.getMetaData(false, mailboxSession, org.apache.james.mailbox.MessageManager.MetaData.FetchGroup.NO_COUNT);
-            if (fetch.getChangedSince() != -1 || fetch.isModSeq()) {
+            if (fetch.getChangedSince() != -1 || fetch.contains(Item.MODSEQ)) {
                 // Enable CONDSTORE as this is a CONDSTORE enabling command
                 condstoreEnablingCommand(session, responder,  metaData, true);
             }
@@ -106,10 +107,6 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 //       If we do so we could prolly save one mailbox access which should give use some more speed up
                 respondVanished(mailboxSession, mailbox, ranges, changedSince, metaData, responder);
             }
-            // if QRESYNC is enable its necessary to also return the UID in all cases
-            if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
-                fetch.fetchUid();
-            }
             processMessageRanges(session, mailbox, ranges, fetch, useUids, mailboxSession, responder);
 
             
@@ -127,8 +124,16 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
         }
     }
 
+    private FetchData computeFetchData(FetchRequest request, ImapSession session) {
+        // if QRESYNC is enable its necessary to also return the UID in all cases
+        if (EnableProcessor.getEnabledCapabilities(session).contains(ImapConstants.SUPPORTS_QRESYNC)) {
+            return FetchData.Builder.from(request.getFetch())
+                .fetch(Item.UID)
+                .build();
+        }
+        return request.getFetch();
+    }
 
-    
     /**
      * Process the given message ranges by fetch them and pass them to the
      * {@link org.apache.james.imap.api.process.ImapProcessor.Responder}
@@ -143,7 +148,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 final MessageResult result = messages.next();
 
                 //skip unchanged messages - this should be filtered at the mailbox level to take advantage of indexes
-                if (fetch.isModSeq() && result.getModSeq().asLong() <= fetch.getChangedSince()) {
+                if (fetch.contains(Item.MODSEQ) && result.getModSeq().asLong() <= fetch.getChangedSince()) {
                     continue;
                 }
 

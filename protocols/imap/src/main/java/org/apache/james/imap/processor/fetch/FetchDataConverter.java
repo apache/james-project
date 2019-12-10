@@ -23,6 +23,7 @@ import java.util.Collection;
 
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MimePath;
@@ -32,10 +33,10 @@ class FetchDataConverter {
     static FetchGroup getFetchGroup(FetchData fetch) {
         FetchGroup result = FetchGroup.MINIMAL;
 
-        if (fetch.isEnvelope()) {
+        if (fetch.contains(Item.ENVELOPE)) {
             result = result.with(FetchGroup.Profile.HEADERS);
         }
-        if (fetch.isBody() || fetch.isBodyStructure()) {
+        if (fetch.contains(Item.BODY) || fetch.contains(Item.BODY_STRUCTURE)) {
             result = result.with(FetchGroup.Profile.MIME_DESCRIPTOR);
         }
 

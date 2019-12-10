@@ -18,6 +18,15 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import static org.apache.james.imap.api.message.FetchData.Item.BODY;
+import static org.apache.james.imap.api.message.FetchData.Item.BODY_STRUCTURE;
+import static org.apache.james.imap.api.message.FetchData.Item.ENVELOPE;
+import static org.apache.james.imap.api.message.FetchData.Item.FLAGS;
+import static org.apache.james.imap.api.message.FetchData.Item.INTERNAL_DATE;
+import static org.apache.james.imap.api.message.FetchData.Item.MODSEQ;
+import static org.apache.james.imap.api.message.FetchData.Item.SIZE;
+import static org.apache.james.imap.api.message.FetchData.Item.UID;
+
 import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
@@ -53,8 +62,12 @@ public class FetchCommandParser extends AbstractUidCommandParser {
      *
      * @return fetchData
      */
-    protected FetchData fetchRequest(ImapRequestLineReader request) throws DecodingException {
-        FetchData fetch = new FetchData();
+    private FetchData fetchRequest(ImapRequestLineReader request, boolean useUid) throws DecodingException {
+        FetchData.Builder fetch = FetchData.builder();
+
+        if (useUid) {
+            fetch.fetch(UID);
+        }
 
         char next = nextNonSpaceChar(request);
         if (request.nextChar() == '(') {
@@ -87,7 +100,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                             }
                         }
                     });
-                    fetch.setChangedSince(request.number(true));
+                    fetch.changedSince(request.number(true));
                     
                     break;
                 
@@ -104,7 +117,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                             }
                         }
                     });
-                    fetch.setVanished(true);
+                    fetch.vanished(true);
                     break;
                 default:
                     break;
@@ -119,44 +132,35 @@ public class FetchCommandParser extends AbstractUidCommandParser {
 
         }
 
-        return fetch;
+        return fetch.build();
     }
 
-    private void addNextElement(ImapRequestLineReader reader, FetchData fetch) throws DecodingException {
+    private void addNextElement(ImapRequestLineReader reader, FetchData.Builder fetch) throws DecodingException {
         // String name = element.toString();
         String name = readWord(reader, " [)\r\n");
         char next = reader.nextChar();
         // Simple elements with no '[]' parameters.
         if (next != '[') {
             if ("FAST".equalsIgnoreCase(name)) {
-                fetch.fetchFlags();
-                fetch.fetchInternalDate();
-                fetch.fetchSize();
+                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE);
             } else if ("FULL".equalsIgnoreCase(name)) {
-                fetch.fetchFlags();
-                fetch.fetchInternalDate();
-                fetch.fetchSize();
-                fetch.fetchEnvelope();
-                fetch.fetchBody();
+                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE, BODY);
             } else if ("ALL".equalsIgnoreCase(name)) {
-                fetch.fetchFlags();
-                fetch.fetchInternalDate();
-                fetch.fetchSize();
-                fetch.fetchEnvelope();
+                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE);
             } else if ("FLAGS".equalsIgnoreCase(name)) {
-                fetch.fetchFlags();
+                fetch.fetch(FLAGS);
             } else if ("RFC822.SIZE".equalsIgnoreCase(name)) {
-                fetch.fetchSize();
+                fetch.fetch(SIZE);
             } else if ("ENVELOPE".equalsIgnoreCase(name)) {
-                fetch.fetchEnvelope();
+                fetch.fetch(ENVELOPE);
             } else if ("INTERNALDATE".equalsIgnoreCase(name)) {
-                fetch.fetchInternalDate();
+                fetch.fetch(INTERNAL_DATE);
             } else if ("BODY".equalsIgnoreCase(name)) {
-                fetch.fetchBody();
+                fetch.fetch(BODY);
             } else if ("BODYSTRUCTURE".equalsIgnoreCase(name)) {
-                fetch.fetchBodyStructure();
+                fetch.fetch(BODY_STRUCTURE);
             } else if ("UID".equalsIgnoreCase(name)) {
-                fetch.fetchUid();
+                fetch.fetch(UID);
             } else if ("RFC822".equalsIgnoreCase(name)) {
                 fetch.add(BodyFetchElement.createRFC822(), false);
             } else if ("RFC822.HEADER".equalsIgnoreCase(name)) {
@@ -164,7 +168,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             } else if ("RFC822.TEXT".equalsIgnoreCase(name)) {
                 fetch.add(BodyFetchElement.createRFC822Text(), false);
             } else if ("MODSEQ".equalsIgnoreCase(name)) {
-                fetch.fetchModSeq();
+                fetch.fetch(MODSEQ);
             } else {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attribute: " + name);
             }
@@ -244,7 +248,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         IdRange[] idSet = request.parseIdRange(session);
-        FetchData fetch = fetchRequest(request);
+        FetchData fetch = fetchRequest(request, useUids);
 
         // Check if we have VANISHED and and UID FETCH as its only allowed there
         //

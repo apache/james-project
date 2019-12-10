@@ -56,18 +56,20 @@ public class FetchCommandParserPartialFetchTest  {
     @Test
     public void testShouldParseZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
-        FetchData data = new FetchData();
-        data.add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
-                null, 0L, 100L), false);
+        FetchData data = FetchData.builder()
+            .add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
+                null, 0L, 100L), false)
+            .build();
         check("1 (BODY[]<0.100>)\r\n", ranges, false, data, TAG);
     }
 
     @Test
     public void testShouldParseNonZeroAndLength() throws Exception {
         IdRange[] ranges = { new IdRange(1) };
-        FetchData data = new FetchData();
-        data.add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
-                null, 20L, 12342348L), false);
+        FetchData data = FetchData.builder()
+            .add(new BodyFetchElement("BODY[]", SectionType.CONTENT, null,
+                null, 20L, 12342348L), false)
+            .build();
         check("1 (BODY[]<20.12342348>)\r\n", ranges, false, data, TAG);
     }
 

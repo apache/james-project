@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.FetchGroup.Profile;
 import org.apache.james.mailbox.model.MimePath;
@@ -43,37 +44,37 @@ class FetchDataConverterTest {
 
     static Stream<Arguments> getFetchGroupShouldReturnCorrectValue() {
         return Stream.of(
-            Arguments.arguments(new FetchData(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().fetchBody(), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
-            Arguments.arguments(new FetchData().fetchBodyStructure(), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
-            Arguments.arguments(new FetchData().setChangedSince(0L), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().fetchEnvelope(), FetchGroup.HEADERS),
-            Arguments.arguments(new FetchData().fetchFlags(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().fetchInternalDate(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().fetchModSeq(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().fetchUid(), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().setVanished(true), FetchGroup.MINIMAL),
-            Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822(), PEEK), FetchGroup.FULL_CONTENT),
-            Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Header(), PEEK), FetchGroup.HEADERS),
-            Arguments.arguments(new FetchData().add(BodyFetchElement.createRFC822Text(), PEEK), FetchGroup.BODY_CONTENT),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, HEADER, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder(), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().fetch(Item.BODY), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
+            Arguments.arguments(FetchData.builder().fetch(Item.BODY_STRUCTURE), FetchGroup.MINIMAL.with(Profile.MIME_DESCRIPTOR)),
+            Arguments.arguments(FetchData.builder().changedSince(0L), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().fetch(Item.ENVELOPE), FetchGroup.HEADERS),
+            Arguments.arguments(FetchData.builder().fetch(Item.FLAGS), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().fetch(Item.INTERNAL_DATE), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().fetch(Item.MODSEQ), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().fetch(Item.UID), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().vanished(true), FetchGroup.MINIMAL),
+            Arguments.arguments(FetchData.builder().add(BodyFetchElement.createRFC822(), PEEK), FetchGroup.FULL_CONTENT),
+            Arguments.arguments(FetchData.builder().add(BodyFetchElement.createRFC822Header(), PEEK), FetchGroup.HEADERS),
+            Arguments.arguments(FetchData.builder().add(BodyFetchElement.createRFC822Text(), PEEK), FetchGroup.BODY_CONTENT),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_HEADER, HEADER, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.HEADERS)),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, HEADER, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, HEADER, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, CONTENT, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.MIME_CONTENT)),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, MIME, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, MIME, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.MIME_HEADERS)),
-            Arguments.arguments(new FetchData().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, TEXT, PATH, null, null, null), PEEK),
+            Arguments.arguments(FetchData.builder().add(new BodyFetchElement(ImapConstants.FETCH_RFC822_TEXT, TEXT, PATH, null, null, null), PEEK),
                 FetchGroup.MINIMAL.addPartContent(new MimePath(PATH), Profile.BODY_CONTENT)));
     }
 
     @ParameterizedTest
     @MethodSource
-    void getFetchGroupShouldReturnCorrectValue(FetchData initial, FetchGroup expected) {
-        assertThat(FetchDataConverter.getFetchGroup(initial))
+    void getFetchGroupShouldReturnCorrectValue(FetchData.Builder initial, FetchGroup expected) {
+        assertThat(FetchDataConverter.getFetchGroup(initial.build()))
             .isEqualTo(expected);
     }
 }

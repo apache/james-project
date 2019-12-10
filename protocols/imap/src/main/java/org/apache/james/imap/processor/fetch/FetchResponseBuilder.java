@@ -33,6 +33,7 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
+import org.apache.james.imap.api.message.FetchData.Item;
 import org.apache.james.imap.api.message.SectionType;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
@@ -132,7 +133,7 @@ public final class FetchResponseBuilder {
         }
 
         // FLAGS response
-        if (fetch.isFlags() || ensureFlagsResponse) {
+        if (fetch.contains(Item.FLAGS) || ensureFlagsResponse) {
             if (selected.isRecent(resultUid)) {
                 resultFlags.add(Flags.Flag.RECENT);
             }
@@ -140,16 +141,16 @@ public final class FetchResponseBuilder {
         }
 
         // INTERNALDATE response
-        if (fetch.isInternalDate()) {
+        if (fetch.contains(Item.INTERNAL_DATE)) {
             setInternalDate(result.getInternalDate());
         }
 
         // RFC822.SIZE response
-        if (fetch.isSize()) {
+        if (fetch.contains(Item.SIZE)) {
             setSize(result.getSize());
         }
 
-        if (fetch.isEnvelope()) {
+        if (fetch.contains(Item.ENVELOPE)) {
             this.envelope = buildEnvelope(result);
         }
 
@@ -165,29 +166,29 @@ public final class FetchResponseBuilder {
         }
         
         // Only create when needed
-        if (fetch.isBody() || fetch.isBodyStructure()) {
+        if (fetch.contains(Item.BODY) || fetch.contains(Item.BODY_STRUCTURE)) {
             // BODY response
             //
             // the STRUCTURE is only needed when no specific element is requested otherwise we don't need 
             // to access it and may be able to not parse the message
             //
             // See IMAP-333
-            if (fetch.isBody() && this.elements.isEmpty()) {
+            if (fetch.contains(Item.BODY) && this.elements.isEmpty()) {
                 body = new MimeDescriptorStructure(false, result.getMimeDescriptor(), envelopeBuilder);
             }
 
             // BODYSTRUCTURE response
-            if (fetch.isBodyStructure()) {
+            if (fetch.contains(Item.BODY_STRUCTURE)) {
                 bodystructure = new MimeDescriptorStructure(true, result.getMimeDescriptor(), envelopeBuilder);
             }
         }
         // UID response
-        if (fetch.isUid()) {
+        if (fetch.contains(Item.UID)) {
             setUid(resultUid);
         }
 
         
-        if (fetch.isModSeq()) {
+        if (fetch.contains(Item.MODSEQ)) {
             long changedSince = fetch.getChangedSince();
             if (changedSince != -1) {
                 // check if the modsequence if higher then the one specified by the CHANGEDSINCE option
