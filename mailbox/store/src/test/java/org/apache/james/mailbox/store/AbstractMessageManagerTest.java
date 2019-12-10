@@ -31,23 +31,19 @@ import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.fixture.MailboxFixture;
 import org.apache.james.mailbox.model.MailboxACL;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractMessageManagerTest {
 
-    private static final boolean NO_RESET_RECENT = false;
+    static final boolean NO_RESET_RECENT = false;
 
-    private MessageManagerTestSystem testSystem;
-    private MailboxManager mailboxManager;
-    private MailboxSession aliceSession;
-    private MailboxSession bobSession;
+    MailboxManager mailboxManager;
+    MailboxSession aliceSession;
+    MailboxSession bobSession;
 
-    protected abstract MessageManagerTestSystem createTestSystem() throws Exception;
-
-    public void setUp() throws Exception {
+    protected void setup(MessageManagerTestSystem testSystem) throws Exception {
         aliceSession = MailboxSessionUtil.create(ALICE);
         bobSession = MailboxSessionUtil.create(BOB);
-        testSystem = createTestSystem();
         mailboxManager = testSystem.getMailboxManager();
 
         testSystem.createMailbox(INBOX_ALICE, aliceSession);
@@ -57,7 +53,7 @@ public abstract class AbstractMessageManagerTest {
     }
 
     @Test
-    public void getMetadataShouldListUsersAclWhenShared() throws Exception {
+    void getMetadataShouldListUsersAclWhenShared() throws Exception {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(BOB).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);
@@ -67,7 +63,7 @@ public abstract class AbstractMessageManagerTest {
     }
 
     @Test
-    public void getMetadataShouldNotExposeOtherUsersWhenSessionIsNotOwner() throws Exception {
+    void getMetadataShouldNotExposeOtherUsersWhenSessionIsNotOwner() throws Exception {
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(BOB).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         mailboxManager.applyRightsCommand(INBOX_ALICE, MailboxACL.command().forUser(CEDRIC).rights(MailboxACL.Right.Read).asAddition(), aliceSession);
         MessageManager messageManager = mailboxManager.getMailbox(INBOX_ALICE, aliceSession);

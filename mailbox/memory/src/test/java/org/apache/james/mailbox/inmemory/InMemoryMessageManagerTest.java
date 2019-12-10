@@ -21,19 +21,14 @@ package org.apache.james.mailbox.inmemory;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.store.AbstractMessageManagerTest;
 import org.apache.james.mailbox.store.MessageManagerTestSystem;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 
-public class InMemoryMessageManagerTest extends AbstractMessageManagerTest {
+class InMemoryMessageManagerTest extends AbstractMessageManagerTest {
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
-        super.setUp();
-    }
-    
-    @Override
-    protected MessageManagerTestSystem createTestSystem() {
-        return new InMemoryMessageManagerTestSystem(InMemoryIntegrationResources.defaultResources().getMailboxManager());
+    @BeforeEach
+    void setUp() throws Exception {
+        MessageManagerTestSystem testSystem = new InMemoryMessageManagerTestSystem(InMemoryIntegrationResources.defaultResources().getMailboxManager());
+        super.setup(testSystem);
     }
 
 }
