@@ -19,33 +19,12 @@
 
 package org.apache.james.mailbox.tika;
 
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
+public class TikaContainerSingleton {
+    public static final TikaContainer INSTANCE = new TikaContainer();
 
-public class TikaExtension implements ParameterResolver {
-    private final TikaContainer tika = TikaContainerSingleton.INSTANCE;
-
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == TikaContainer.class);
+    static {
+        INSTANCE.start();
     }
 
-    @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return tika;
-    }
-
-    public String getIp() {
-        return tika.getIp();
-    }
-
-    public int getPort() {
-        return tika.getPort();
-    }
-
-    public int getTimeoutInMillis() {
-        return tika.getTimeoutInMillis();
-    }
+    // Cleanup will be performed by test container resource reaper
 }
