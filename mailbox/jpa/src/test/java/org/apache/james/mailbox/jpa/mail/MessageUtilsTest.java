@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.jpa.mail;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,62 +40,58 @@ import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class MessageUtilsTest {
-    private static final MessageUid MESSAGE_UID = MessageUid.of(1);
-    private static final MessageId MESSAGE_ID = new DefaultMessageId();
-    private static final int BODY_START = 16;
-    private static final String CONTENT = "anycontent";
+class MessageUtilsTest {
+    static final MessageUid MESSAGE_UID = MessageUid.of(1);
+    static final MessageId MESSAGE_ID = new DefaultMessageId();
+    static final int BODY_START = 16;
+    static final String CONTENT = "anycontent";
     
-    @Mock private ModSeqProvider modSeqProvider;
-    @Mock private UidProvider uidProvider;
-    @Mock private Mailbox mailbox;
+    @Mock ModSeqProvider modSeqProvider;
+    @Mock UidProvider uidProvider;
+    @Mock Mailbox mailbox;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    MessageUtils messageUtils;
+    MailboxMessage message;
 
-    private MessageUtils messageUtils;
-    private MailboxMessage message;
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.initMocks(this);
         messageUtils = new MessageUtils(uidProvider, modSeqProvider);
-        message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START, new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
+        message = new SimpleMailboxMessage(MESSAGE_ID, new Date(), CONTENT.length(), BODY_START,
+            new SharedByteArrayInputStream(CONTENT.getBytes()), new Flags(), new PropertyBuilder(), mailbox.getMailboxId());
     }
     
     @Test
-    public void newInstanceShouldFailWhenNullUidProvider() {
-        expectedException.expect(NullPointerException.class);
-        new MessageUtils(null, modSeqProvider);
+    void newInstanceShouldFailWhenNullUidProvider() {
+        assertThatThrownBy(() -> new MessageUtils(null, modSeqProvider))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
-    public void newInstanceShouldFailWhenNullModSeqProvider() {
-        expectedException.expect(NullPointerException.class);
-        new MessageUtils(uidProvider, null);
+    void newInstanceShouldFailWhenNullModSeqProvider() {
+        assertThatThrownBy(() -> new MessageUtils(uidProvider, null))
+            .isInstanceOf(NullPointerException.class);
     }
     
     @Test
-    public void nextModSeqShouldCallModSeqProvider() throws Exception {
+    void nextModSeqShouldCallModSeqProvider() throws Exception {
         messageUtils.nextModSeq(mailbox);
         verify(modSeqProvider).nextModSeq(eq(mailbox));
     }
     
     @Test
-    public void nextUidShouldCallUidProvider() throws Exception {
+    void nextUidShouldCallUidProvider() throws Exception {
         messageUtils.nextUid(mailbox);
         verify(uidProvider).nextUid(eq(mailbox));
     }
     
     @Test
-    public void enrichMesageShouldEnrichUidAndModSeq() throws Exception {
+    void enrichMesageShouldEnrichUidAndModSeq() throws Exception {
         when(uidProvider.nextUid(eq(mailbox))).thenReturn(MESSAGE_UID);
         when(modSeqProvider.nextModSeq(eq(mailbox))).thenReturn(ModSeq.of(11));
 
