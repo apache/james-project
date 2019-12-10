@@ -25,7 +25,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.google.common.base.MoreObjects;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 
 public class FetchData {
@@ -55,8 +54,7 @@ public class FetchData {
         return itemToFetch.contains(Item.BODY);
     }
 
-    public FetchData setBody(boolean body) {
-        Preconditions.checkArgument(body, "'body' can not be unset");
+    public FetchData fetchBody() {
         itemToFetch.add(Item.BODY);
         return this;
     }
@@ -65,8 +63,7 @@ public class FetchData {
         return itemToFetch.contains(Item.BODY_STRUCTURE);
     }
 
-    public FetchData setBodyStructure(boolean bodyStructure) {
-        Preconditions.checkArgument(bodyStructure, "'bodyStructure' can not be unset");
+    public FetchData fetchBodyStructure() {
         itemToFetch.add(Item.BODY_STRUCTURE);
         return this;
     }
@@ -75,8 +72,7 @@ public class FetchData {
         return itemToFetch.contains(Item.ENVELOPE);
     }
 
-    public FetchData setEnvelope(boolean envelope) {
-        Preconditions.checkArgument(envelope, "'envelope' can not be unset");
+    public FetchData fetchEnvelope() {
         itemToFetch.add(Item.ENVELOPE);
         return this;
     }
@@ -85,8 +81,7 @@ public class FetchData {
         return itemToFetch.contains(Item.FLAGS);
     }
 
-    public FetchData setFlags(boolean flags) {
-        Preconditions.checkArgument(flags, "'flags' can not be unset");
+    public FetchData fetchFlags() {
         itemToFetch.add(Item.FLAGS);
         return this;
     }
@@ -95,8 +90,7 @@ public class FetchData {
         return itemToFetch.contains(Item.INTERNAL_DATE);
     }
 
-    public FetchData setInternalDate(boolean internalDate) {
-        Preconditions.checkArgument(internalDate, "'internalDate' can not be unset");
+    public FetchData fetchInternalDate() {
         itemToFetch.add(Item.INTERNAL_DATE);
         return this;
     }
@@ -105,8 +99,7 @@ public class FetchData {
         return itemToFetch.contains(Item.SIZE);
     }
 
-    public FetchData setSize(boolean size) {
-        Preconditions.checkArgument(size, "'size' can not be unset");
+    public FetchData fetchSize() {
         itemToFetch.add(Item.SIZE);
         return this;
     }
@@ -115,8 +108,7 @@ public class FetchData {
         return itemToFetch.contains(Item.UID);
     }
 
-    public FetchData setUid(boolean uid) {
-        Preconditions.checkArgument(uid, "'uid' can not be unset");
+    public FetchData fetchUid() {
         itemToFetch.add(Item.UID);
         return this;
     }
@@ -130,8 +122,7 @@ public class FetchData {
         return itemToFetch.contains(Item.MODSEQ);
     }
 
-    public FetchData setModSeq(boolean modSeq) {
-        Preconditions.checkArgument(modSeq, "'modSeq' can not be unset");
+    public FetchData fetchModSeq() {
         itemToFetch.add(Item.MODSEQ);
         return this;
     }

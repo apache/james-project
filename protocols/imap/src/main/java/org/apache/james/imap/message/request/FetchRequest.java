@@ -36,7 +36,7 @@ public class FetchRequest extends AbstractImapRequest {
         this.idSet = idSet;
         this.fetch = fetch;
         if (useUids) {
-            fetch.setUid(true);
+            fetch.fetchUid();
         }
     }
 

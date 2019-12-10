@@ -129,34 +129,34 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         // Simple elements with no '[]' parameters.
         if (next != '[') {
             if ("FAST".equalsIgnoreCase(name)) {
-                fetch.setFlags(true);
-                fetch.setInternalDate(true);
-                fetch.setSize(true);
+                fetch.fetchFlags();
+                fetch.fetchInternalDate();
+                fetch.fetchSize();
             } else if ("FULL".equalsIgnoreCase(name)) {
-                fetch.setFlags(true);
-                fetch.setInternalDate(true);
-                fetch.setSize(true);
-                fetch.setEnvelope(true);
-                fetch.setBody(true);
+                fetch.fetchFlags();
+                fetch.fetchInternalDate();
+                fetch.fetchSize();
+                fetch.fetchEnvelope();
+                fetch.fetchBody();
             } else if ("ALL".equalsIgnoreCase(name)) {
-                fetch.setFlags(true);
-                fetch.setInternalDate(true);
-                fetch.setSize(true);
-                fetch.setEnvelope(true);
+                fetch.fetchFlags();
+                fetch.fetchInternalDate();
+                fetch.fetchSize();
+                fetch.fetchEnvelope();
             } else if ("FLAGS".equalsIgnoreCase(name)) {
-                fetch.setFlags(true);
+                fetch.fetchFlags();
             } else if ("RFC822.SIZE".equalsIgnoreCase(name)) {
-                fetch.setSize(true);
+                fetch.fetchSize();
             } else if ("ENVELOPE".equalsIgnoreCase(name)) {
-                fetch.setEnvelope(true);
+                fetch.fetchEnvelope();
             } else if ("INTERNALDATE".equalsIgnoreCase(name)) {
-                fetch.setInternalDate(true);
+                fetch.fetchInternalDate();
             } else if ("BODY".equalsIgnoreCase(name)) {
-                fetch.setBody(true);
+                fetch.fetchBody();
             } else if ("BODYSTRUCTURE".equalsIgnoreCase(name)) {
-                fetch.setBodyStructure(true);
+                fetch.fetchBodyStructure();
             } else if ("UID".equalsIgnoreCase(name)) {
-                fetch.setUid(true);
+                fetch.fetchUid();
             } else if ("RFC822".equalsIgnoreCase(name)) {
                 fetch.add(BodyFetchElement.createRFC822(), false);
             } else if ("RFC822.HEADER".equalsIgnoreCase(name)) {
@@ -164,7 +164,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
             } else if ("RFC822.TEXT".equalsIgnoreCase(name)) {
                 fetch.add(BodyFetchElement.createRFC822Text(), false);
             } else if ("MODSEQ".equalsIgnoreCase(name)) {
-                fetch.setModSeq(true);
+                fetch.fetchModSeq();
             } else {
                 throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attribute: " + name);
             }
