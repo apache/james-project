@@ -20,6 +20,7 @@
 package org.apache.james.mailbox.tika;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -32,28 +33,23 @@ import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
 import org.apache.james.metrics.api.NoopMetricFactory;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.TextNode;
 
-public class TikaTextExtractorTest {
+class TikaTextExtractorTest {
 
-    private TextExtractor textExtractor;
+    TextExtractor textExtractor;
 
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
+    @RegisterExtension
+    static TikaExtension tika = new TikaExtension();
 
-    @ClassRule
-    public static TikaContainer tika = new TikaContainer();
-
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setUp() throws Exception {
         textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
@@ -62,13 +58,13 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void textualContentShouldReturnEmptyWhenInputStreamIsEmpty() throws Exception {
+    void textualContentShouldReturnEmptyWhenInputStreamIsEmpty() throws Exception {
         assertThat(textExtractor.extractContent(IOUtils.toInputStream("", StandardCharsets.UTF_8), "text/plain").getTextualContent())
             .contains("");
     }
 
     @Test
-    public void textTest() throws Exception {
+    void textTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/Text.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "text/plain").getTextualContent())
@@ -78,7 +74,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void textMicrosoftWorldTest() throws Exception {
+    void textMicrosoftWorldTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.docx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.wordprocessingml.document").getTextualContent())
@@ -88,7 +84,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void textOdtTest() throws Exception {
+    void textOdtTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/writter.odt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
@@ -98,7 +94,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void documentWithBadDeclaredMetadataShouldBeWellHandled() throws Exception {
+    void documentWithBadDeclaredMetadataShouldBeWellHandled() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/fake.txt");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.text").getTextualContent())
@@ -108,7 +104,7 @@ public class TikaTextExtractorTest {
     }
     
     @Test
-    public void slidePowerPointTest() throws Exception {
+    void slidePowerPointTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.pptx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.presentationml.presentation").getTextualContent())
@@ -119,7 +115,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void slideOdpTest() throws Exception {
+    void slideOdpTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/slides.odp");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.presentation").getTextualContent())
@@ -130,7 +126,7 @@ public class TikaTextExtractorTest {
     }
     
     @Test
-    public void pdfTest() throws Exception {
+    void pdfTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/PDF.pdf");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/pdf").getTextualContent())
@@ -140,7 +136,7 @@ public class TikaTextExtractorTest {
     }
     
     @Test
-    public void odsTest() throws Exception {
+    void odsTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.ods");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.oasis.opendocument.spreadsheet").getTextualContent())
@@ -150,7 +146,7 @@ public class TikaTextExtractorTest {
     }
     
     @Test
-    public void excelTest() throws Exception {
+    void excelTest() throws Exception {
         InputStream inputStream = ClassLoader.getSystemResourceAsStream("documents/calc.xlsx");
         assertThat(inputStream).isNotNull();
         assertThat(textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet").getTextualContent())
@@ -161,7 +157,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
+    void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
             new NoopMetricFactory(), 
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
@@ -173,7 +169,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
+    void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
         String expectedExtractedContent = "content A";
         TikaTextExtractor textExtractor = new TikaTextExtractor(
             new NoopMetricFactory(), 
@@ -188,21 +184,21 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void deserializerShouldThrowWhenNodeIsNotAnObject() throws Exception {
-        expectedException.expect(IllegalStateException.class);
-        expectedException.expectMessage("The element should be a Json object");
-
+    void deserializerShouldThrowWhenNodeIsNotAnObject() {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
             new NoopMetricFactory(), 
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream("[\"value1\"]"
                                                         .getBytes(StandardCharsets.UTF_8))));
 
         InputStream inputStream = new ByteArrayInputStream("toto".getBytes(StandardCharsets.UTF_8));
-        textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+
+        assertThatThrownBy(() -> textExtractor.extractContent(inputStream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("The element should be a Json object");
     }
 
     @Test
-    public void asListOfStringShouldReturnASingletonWhenOneElement() {
+    void asListOfStringShouldReturnASingletonWhenOneElement() {
         ContentAndMetadataDeserializer deserializer = new TikaTextExtractor.ContentAndMetadataDeserializer();
         List<String> listOfString = deserializer.asListOfString(TextNode.valueOf("text"));
         
@@ -210,7 +206,7 @@ public class TikaTextExtractorTest {
     }
 
     @Test
-    public void asListOfStringShouldReturnAListWhenMultipleElements() {
+    void asListOfStringShouldReturnAListWhenMultipleElements() {
         ArrayNode jsonArray = new ArrayNode(JsonNodeFactory.instance)
             .add("first")
             .add("second")
