@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.response;
 
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.james.imap.api.message.Capability;
@@ -52,33 +53,18 @@ public class CapabilityResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((capabilities == null) ? 0 : capabilities.hashCode());
-        return result;
+    public final boolean equals(Object o) {
+        if (o instanceof CapabilityResponse) {
+            CapabilityResponse that = (CapabilityResponse) o;
+
+            return Objects.equals(this.capabilities, that.capabilities);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final CapabilityResponse other = (CapabilityResponse) obj;
-        if (capabilities == null) {
-            if (other.capabilities != null) {
-                return false;
-            }
-        } else if (!capabilities.equals(other.capabilities)) {
-            return false;
-        }
-        return true;
+    public final int hashCode() {
+        return Objects.hash(capabilities);
     }
 
     /**
