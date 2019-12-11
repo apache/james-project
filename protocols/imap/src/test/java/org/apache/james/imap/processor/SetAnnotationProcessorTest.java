@@ -34,14 +34,11 @@ import java.util.List;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SetAnnotationRequest;
 import org.apache.james.mailbox.MailboxManager;
@@ -73,7 +70,7 @@ public class SetAnnotationProcessorTest {
     private MailboxManager mockMailboxManager;
     private StatusResponseFactory mockStatusResponseFactory;
     private ImapProcessor.Responder mockResponder;
-    private ImapSession mockImapSession;
+    private FakeImapSession imapSession;
     private MailboxSession mockMailboxSession;
 
     private List<MailboxAnnotation> mailboxAnnotations;
@@ -90,7 +87,7 @@ public class SetAnnotationProcessorTest {
         mockMailboxManager = mock(MailboxManager.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         mockResponder = mock(ImapProcessor.Responder.class);
-        mockImapSession = mock(ImapSession.class);
+        imapSession = new FakeImapSession();
 
         Username username = Username.of("username");
         mockMailboxSession = MailboxSessionUtil.create(username);
@@ -99,8 +96,8 @@ public class SetAnnotationProcessorTest {
         request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);
 
-        when(mockImapSession.getState()).thenReturn(ImapSessionState.SELECTED);
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mockMailboxSession);
+        imapSession.authenticated();
+        imapSession.setMailboxSession(mockMailboxSession);
     }
 
     @Before
@@ -125,7 +122,7 @@ public class SetAnnotationProcessorTest {
         doThrow(MailboxNotFoundException.class).when(mockMailboxManager).updateAnnotations(eq(inbox),
             eq(mockMailboxSession), eq(mailboxAnnotations));
 
-        processor.process(request, mockResponder, mockImapSession);
+        processor.process(request, mockResponder, imapSession);
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class),
                 humanTextCaptor.capture(), any(StatusResponse.ResponseCode.class));
@@ -137,7 +134,7 @@ public class SetAnnotationProcessorTest {
     public void processShouldResponseNoWithGenericFailureWhenManagerThrowMailboxException() throws Exception {
         doThrow(MailboxException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
-        processor.process(request, mockResponder, mockImapSession);
+        processor.process(request, mockResponder, imapSession);
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 
@@ -149,7 +146,7 @@ public class SetAnnotationProcessorTest {
         when(mockStatusResponseFactory.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(okResponse);
 
-        processor.process(request, mockResponder, mockImapSession);
+        processor.process(request, mockResponder, imapSession);
 
         verify(mockMailboxManager).updateAnnotations(inbox, mockMailboxSession, mailboxAnnotations);
         verify(mockResponder).respond(okResponse);
@@ -162,7 +159,7 @@ public class SetAnnotationProcessorTest {
     public void processShouldResponseNoWhenManagerThrowsAnnotationException() throws Exception {
         doThrow(AnnotationException.class).when(mockMailboxManager).updateAnnotations(eq(inbox), eq(mockMailboxSession), eq(mailboxAnnotations));
 
-        processor.process(request, mockResponder, mockImapSession);
+        processor.process(request, mockResponder, imapSession);
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(any(Tag.class), any(ImapCommand.class), humanTextCaptor.capture());
 

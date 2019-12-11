@@ -31,7 +31,6 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -83,7 +82,7 @@ public class StoreProcessor extends AbstractMailboxProcessor<StoreRequest> {
         
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
             final Flags flags = request.getFlags();
             
             if (unchangedSince != -1) {

@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -47,7 +46,7 @@ public class SubscribeProcessor extends AbstractSubscriptionProcessor<SubscribeR
     @Override
     protected void doProcessRequest(SubscribeRequest request, ImapSession session, Responder responder) {
         final String mailboxName = request.getMailboxName();
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         try {
             getSubscriptionManager().subscribe(mailboxSession, mailboxName);
 

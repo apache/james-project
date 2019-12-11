@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.processor;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -55,7 +54,7 @@ public abstract class AbstractSubscriptionProcessor<R extends ImapRequest> exten
     protected final void processRequest(R request, ImapSession session, Responder responder) {
 
         // take care of calling the start/end processing
-        MailboxSession mSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mSession = session.getMailboxSession();
         getSubscriptionManager().startProcessingRequest(mSession);
         doProcessRequest(request, session, responder);
         getSubscriptionManager().endProcessingRequest(mSession);

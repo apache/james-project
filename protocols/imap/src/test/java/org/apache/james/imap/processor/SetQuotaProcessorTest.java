@@ -29,7 +29,6 @@ import static org.mockito.Mockito.when;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -66,7 +65,7 @@ public class SetQuotaProcessorTest {
         SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), "quotaRoot");
 
         when(mockedImapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
-        when(mockedImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
+        when(mockedImapSession.getMailboxSession())
             .thenReturn(mailboxSession);
 
         testee.doProcess(setQuotaRequest, mockedResponder, mockedImapSession);

@@ -20,12 +20,9 @@
 package org.apache.james.imap.main;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapSessionUtils;
-import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -40,17 +37,17 @@ public class PathConverterTest {
     private static final Username USERNAME = Username.of("username");
     private static final char PATH_DELIMITER = '.';
 
-    private ImapSession imapSession;
+    private FakeImapSession imapSession;
     private MailboxSession mailboxSession;
     private PathConverter pathConverter;
     @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void setUp() {
-        imapSession = mock(ImapSession.class);
+        imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USERNAME);
         pathConverter = PathConverter.forSession(imapSession);
-        when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        imapSession.setMailboxSession(mailboxSession);
     }
 
     @Test

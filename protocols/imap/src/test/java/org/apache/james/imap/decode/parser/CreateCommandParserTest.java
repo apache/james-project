@@ -32,7 +32,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -55,7 +54,7 @@ public class CreateCommandParserTest {
         mockImapSession = mock(ImapSession.class);
         mailboxSession = MailboxSessionUtil.create(Username.of("userName"));
 
-        when(mockImapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(mockImapSession.getMailboxSession()).thenReturn(mailboxSession);
 
         parser = new CreateCommandParser();
     }

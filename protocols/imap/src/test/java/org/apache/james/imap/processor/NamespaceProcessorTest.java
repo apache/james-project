@@ -33,7 +33,6 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -81,7 +80,7 @@ public class NamespaceProcessorTest {
     @Test
     public void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
         when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(imapSessionStub.getMailboxSession()).thenReturn(mailboxSession);
         when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
@@ -106,7 +105,7 @@ public class NamespaceProcessorTest {
     @Test
     public void testNamespaceResponseShouldContainSharedSpaces() {
         when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(imapSessionStub.getMailboxSession()).thenReturn(mailboxSession);
         when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);

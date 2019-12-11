@@ -27,7 +27,6 @@ import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -100,7 +99,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
 
     private boolean hasRight(QuotaRoot quotaRoot, ImapSession session) throws MailboxException {
         // If any of the mailboxes owned by quotaRoot user can be read by the current user, then we should respond to him.
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         List<Mailbox> mailboxList = quotaRootResolver.retrieveAssociatedMailboxes(quotaRoot, mailboxSession);
         for (Mailbox mailbox : mailboxList) {
             if (getMailboxManager().hasRight(mailbox.generateAssociatedPath(), MailboxACL.Right.Read, mailboxSession)) {

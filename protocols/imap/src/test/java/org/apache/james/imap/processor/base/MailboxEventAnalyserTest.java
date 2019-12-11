@@ -32,7 +32,6 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -133,7 +132,7 @@ public class MailboxEventAnalyserTest {
     public void setUp() throws MailboxException {
         ImapSession imapSession = mock(ImapSession.class);
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
+        when(imapSession.getMailboxSession())
             .thenReturn(MAILBOX_SESSION);
         when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
 

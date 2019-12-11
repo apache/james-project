@@ -37,7 +37,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -102,7 +101,7 @@ public class SelectedMailboxImplTest {
             .then(delayedSearchAnswer());
         when(messageManager.getId()).thenReturn(mailboxId);
 
-        when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mock(MailboxSession.class));
+        when(imapSession.getMailboxSession()).thenReturn(mock(MailboxSession.class));
 
         when(mailbox.generateAssociatedPath()).thenReturn(mailboxPath);
         when(mailbox.getMailboxId()).thenReturn(mailboxId);

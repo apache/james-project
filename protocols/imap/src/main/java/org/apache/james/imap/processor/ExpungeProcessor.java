@@ -24,7 +24,6 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -63,7 +62,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     protected void processRequest(ExpungeRequest request, ImapSession session, Responder responder) {
         try {
             final MessageManager mailbox = getSelectedMailbox(session);
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
 
             int expunged = 0;
             MetaData mdata = mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT);

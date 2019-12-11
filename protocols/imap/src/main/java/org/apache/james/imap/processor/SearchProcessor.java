@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -93,7 +92,7 @@ public class SearchProcessor extends AbstractMailboxProcessor<SearchRequest> imp
             final MessageManager mailbox = getSelectedMailbox(session);
 
             final SearchQuery query = toQuery(searchKey, session);
-            MailboxSession msession = ImapSessionUtils.getMailboxSession(session);
+            MailboxSession msession = session.getMailboxSession();
 
             final Collection<MessageUid> uids = performUidSearch(mailbox, query, msession);
             final Collection<Long> results = asResults(session, useUids, uids);

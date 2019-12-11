@@ -24,7 +24,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
@@ -83,7 +82,7 @@ public class FetchProcessor extends AbstractMailboxProcessor<FetchRequest> {
                 taggedBad(request, responder, HumanReadableText.QRESYNC_VANISHED_WITHOUT_CHANGEDSINCE);
                 return;
             }
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
 
             MetaData metaData = mailbox.getMetaData(false, mailboxSession, org.apache.james.mailbox.MessageManager.MetaData.FetchGroup.NO_COUNT);
             if (fetch.getChangedSince() != -1 || fetch.isModSeq()) {

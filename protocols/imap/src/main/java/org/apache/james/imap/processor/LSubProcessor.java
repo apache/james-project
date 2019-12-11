@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -67,7 +66,7 @@ public class LSubProcessor extends AbstractSubscriptionProcessor<LsubRequest> {
     }
 
     private void listSubscriptions(ImapSession session, Responder responder, String referenceName, String mailboxName) throws SubscriptionException, MailboxException {
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = session.getMailboxSession();
         Collection<String> mailboxes = getSubscriptionManager().subscriptions(mailboxSession);
 
         String decodedMailName = ModifiedUtf7.decodeModifiedUTF7(referenceName);

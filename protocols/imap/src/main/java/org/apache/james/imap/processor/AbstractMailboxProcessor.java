@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -94,11 +93,11 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
                 responder.respond(response);
 
             } else {
-                getMailboxManager().startProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+                getMailboxManager().startProcessingRequest(session.getMailboxSession());
 
                 processRequest(acceptableMessage, session, responder);
 
-                getMailboxManager().endProcessingRequest(ImapSessionUtils.getMailboxSession(session));
+                getMailboxManager().endProcessingRequest(session.getMailboxSession());
             }
         } catch (DeniedAccessOnSharedMailboxException e) {
             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
@@ -196,7 +195,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             // To be lazily initialized only if needed, which is in minority of cases.
             MessageManager messageManager = null;
             MetaData metaData = null;
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
 
             // Check if we need to send a FLAGS and PERMANENTFLAGS response before the FETCH response
             // This is the case if some new flag/keyword was used
@@ -295,7 +294,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     
     private MessageManager getMailbox(ImapSession session, SelectedMailbox selected) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
-        return mailboxManager.getMailbox(selected.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
+        return mailboxManager.getMailbox(selected.getMailboxId(), session.getMailboxSession());
     }
 
     private void addRecentResponses(SelectedMailbox selected, ImapProcessor.Responder responder) {
@@ -401,7 +400,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
             result = null;
         } else {
             final MailboxManager mailboxManager = getMailboxManager();
-            result = mailboxManager.getMailbox(selectedMailbox.getMailboxId(), ImapSessionUtils.getMailboxSession(session));
+            result = mailboxManager.getMailbox(selectedMailbox.getMailboxId(), session.getMailboxSession());
         }
         return result;
     }

@@ -32,7 +32,6 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
 import org.apache.james.mailbox.MailboxManager;
@@ -77,13 +76,13 @@ public class SelectedMailboxImpl implements SelectedMailbox, MailboxListener {
 
     public SelectedMailboxImpl(MailboxManager mailboxManager, EventBus eventBus, ImapSession session, MailboxPath path) throws MailboxException {
         this.session = session;
-        this.sessionId = ImapSessionUtils.getMailboxSession(session).getSessionId();
+        this.sessionId = session.getMailboxSession().getSessionId();
         this.mailboxManager = mailboxManager;
         
         // Ignore events from our session
         setSilentFlagChanges(true);
 
-        mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        mailboxSession = session.getMailboxSession();
 
         uidMsnConverter = new UidMsnConverter();
 

@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -68,7 +67,7 @@ public abstract class AbstractMessageRangeProcessor<R extends AbstractMessageRan
         MailboxPath targetMailbox = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
 
         try {
-            MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            MailboxSession mailboxSession = session.getMailboxSession();
 
             if (!getMailboxManager().mailboxExists(targetMailbox, mailboxSession)) {
                 no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, StatusResponse.ResponseCode.tryCreate());

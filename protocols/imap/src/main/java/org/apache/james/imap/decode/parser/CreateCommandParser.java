@@ -21,7 +21,6 @@ package org.apache.james.imap.decode.parser;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.process.ImapSession;
@@ -47,7 +46,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String mailboxName = request.mailbox();
 
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = session.getMailboxSession();
 
         // Check if we have an mailboxsession. This is a workaround for
         // IMAP-240:

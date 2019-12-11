@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -71,7 +70,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                     final MailboxSession mailboxSession = mailboxManager.login(authenticationAttempt.getAuthenticationId(),
                         authenticationAttempt.getPassword());
                     session.authenticated();
-                    session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
+                    session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
                     okComplete(request, responder);
                 } catch (BadCredentialsException e) {
@@ -101,7 +100,7 @@ public abstract class AbstractAuthProcessor<R extends ImapRequest> extends Abstr
                         authenticationAttempt.getPassword(),
                         authenticationAttempt.getDelegateUserName().get());
                     session.authenticated();
-                    session.setAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
+                    session.setMailboxSession(mailboxSession);
                     provisionInbox(session, mailboxManager, mailboxSession);
                     okComplete(request, responder);
                 } catch (BadCredentialsException e) {

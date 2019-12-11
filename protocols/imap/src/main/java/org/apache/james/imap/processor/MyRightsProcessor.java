@@ -24,7 +24,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -61,7 +60,7 @@ public class MyRightsProcessor extends AbstractMailboxProcessor<MyRightsRequest>
     protected void processRequest(MyRightsRequest request, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
         try {
 

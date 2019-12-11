@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.message.request.SystemMessage;
@@ -64,7 +63,7 @@ public class SystemMessageProcessor extends AbstractChainedProcessor<SystemMessa
      *            not null
      */
     private void forceLogout(ImapSession imapSession) {
-        final MailboxSession session = ImapSessionUtils.getMailboxSession(imapSession);
+        final MailboxSession session = imapSession.getMailboxSession();
         if (session == null) {
             LOGGER.trace("No mailbox session so no force logout needed");
         } else {

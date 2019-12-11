@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -51,7 +50,7 @@ public class CreateProcessor extends AbstractMailboxProcessor<CreateRequest> {
         final MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();
-            mailboxManager.createMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
+            mailboxManager.createMailbox(mailboxPath, session.getMailboxSession());
             unsolicitedResponses(session, responder, false);
             okComplete(request, responder);
         } catch (MailboxExistsException e) {

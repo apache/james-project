@@ -25,10 +25,8 @@ import java.net.SocketAddress;
 import java.util.Optional;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
-import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.util.MDCBuilder;
 import org.jboss.netty.channel.ChannelHandlerContext;
 import org.jboss.netty.channel.ChannelLocal;
@@ -64,11 +62,9 @@ public class IMAPMDCContext {
     private static MDCBuilder from(Object o) {
         if (o instanceof ImapSession) {
             ImapSession imapSession = (ImapSession) o;
-            MailboxSession mailboxSession = (MailboxSession) imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
 
             return MDCBuilder.create()
-                .addContext(MDCBuilder.USER, Optional.ofNullable(mailboxSession)
-                    .map(MailboxSession::getUser)
+                .addContext(MDCBuilder.USER, Optional.ofNullable(imapSession.getUserName())
                     .map(Username::asString))
                 .addContext(from(Optional.ofNullable(imapSession.getSelected())));
         }

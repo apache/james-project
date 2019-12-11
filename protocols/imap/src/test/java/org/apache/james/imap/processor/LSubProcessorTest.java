@@ -31,7 +31,6 @@ import java.util.Collection;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -184,7 +183,7 @@ public class LSubProcessorTest {
     }
 
     private void expectSubscriptions() throws Exception {
-        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(session.getMailboxSession()).thenReturn(mailboxSession);
         when(manager.subscriptions(mailboxSession)).thenReturn(subscriptions);
     }
 }

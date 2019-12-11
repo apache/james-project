@@ -22,7 +22,6 @@ package org.apache.james.imap.processor;
 import java.io.Closeable;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -56,7 +55,7 @@ public class RenameProcessor extends AbstractMailboxProcessor<RenameRequest> {
         MailboxPath newPath = pathConverter.buildFullPath(request.getNewName());
         try {
             final MailboxManager mailboxManager = getMailboxManager();
-            MailboxSession mailboxsession = ImapSessionUtils.getMailboxSession(session);
+            MailboxSession mailboxsession = session.getMailboxSession();
             mailboxManager.renameMailbox(existingPath, newPath, mailboxsession);
 
             if (existingPath.getName().equalsIgnoreCase(ImapConstants.INBOX_NAME) && !mailboxManager.mailboxExists(existingPath, mailboxsession)) {

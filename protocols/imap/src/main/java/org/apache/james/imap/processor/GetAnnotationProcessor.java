@@ -28,7 +28,6 @@ import java.util.function.Predicate;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
@@ -75,7 +74,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
             LOGGER.info("The command: {} is failed because not found mailbox {}", request.getCommand().getName(), request.getMailboxName());
             no(request, responder, HumanReadableText.FAILURE_NO_SUCH_MAILBOX, ResponseCode.tryCreate());
         } catch (MailboxException e) {
-            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), ImapSessionUtils.getUserName(session), e);
+            LOGGER.error("GetAnnotation on mailbox {} failed for user {}", request.getMailboxName(), session.getUserName(), e);
             no(request, responder, HumanReadableText.GENERIC_FAILURE_DURING_PROCESSING);
         }
     }
@@ -120,7 +119,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     private List<MailboxAnnotation> getMailboxAnnotations(ImapSession session, Set<MailboxAnnotationKey> keys, GetAnnotationRequest.Depth depth, MailboxPath mailboxPath) throws MailboxException {
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = session.getMailboxSession();
         switch (depth) {
             case ZERO:
                 return getMailboxAnnotationsWithDepthZero(keys, mailboxPath, mailboxSession);

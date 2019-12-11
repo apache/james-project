@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -64,7 +63,7 @@ public class GetACLProcessor extends AbstractMailboxProcessor<GetACLRequest> imp
     protected void processRequest(GetACLRequest request, ImapSession session, Responder responder) {
 
         final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
         try {
 

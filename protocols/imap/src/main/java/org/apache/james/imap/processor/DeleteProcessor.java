@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -57,7 +56,7 @@ public class DeleteProcessor extends AbstractMailboxProcessor<DeleteRequest> {
                 session.deselect();
             }
             final MailboxManager mailboxManager = getMailboxManager();
-            mailboxManager.deleteMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
+            mailboxManager.deleteMailbox(mailboxPath, session.getMailboxSession());
             unsolicitedResponses(session, responder, false);
             okComplete(request, responder);
         } catch (MailboxNotFoundException e) {

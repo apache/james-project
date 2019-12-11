@@ -32,12 +32,10 @@ import static org.mockito.Mockito.when;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
-import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.ListRightsRequest;
 import org.apache.james.imap.message.response.ListRightsResponse;
 import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
@@ -65,7 +63,7 @@ public class ListRightsProcessorTest {
     private static final String MAILBOX_NAME = ImapConstants.INBOX_NAME;
     private static final Username USER_1 = Username.of("user1");
 
-    private ImapSession imapSession;
+    private FakeImapSession imapSession;
     private MailboxManager mailboxManager;
     private MailboxSession mailboxSession;
     private MetaData metaData;
@@ -83,7 +81,7 @@ public class ListRightsProcessorTest {
         UnpooledStatusResponseFactory statusResponseFactory = new UnpooledStatusResponseFactory();
         mailboxManager = mock(MailboxManager.class);
         subject = new ListRightsProcessor(mock(ImapProcessor.class), mailboxManager, statusResponseFactory, new NoopMetricFactory());
-        imapSession = mock(ImapSession.class);
+        imapSession = new FakeImapSession();
         mailboxSession = MailboxSessionUtil.create(USER_1);
         MessageManager messageManager = mock(MessageManager.class);
         metaData = mock(MetaData.class);
@@ -91,10 +89,8 @@ public class ListRightsProcessorTest {
 
         argumentCaptor = ArgumentCaptor.forClass(ImapResponseMessage.class);
 
-        when(imapSession.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY))
-            .thenReturn(mailboxSession);
-        when(imapSession.getState())
-            .thenReturn(ImapSessionState.AUTHENTICATED);
+        imapSession.authenticated();
+        imapSession.setMailboxSession(mailboxSession);
         when(messageManager.getMetaData(anyBoolean(), any(MailboxSession.class), any(MetaData.FetchGroup.class)))
             .thenReturn(metaData);
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))

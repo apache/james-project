@@ -24,7 +24,6 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -157,7 +156,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
             if (lastKnownUidValidity == metaData.getUidValidity()) {
                 
                 final MailboxManager mailboxManager = getMailboxManager();
-                final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+                final MailboxSession mailboxSession = session.getMailboxSession();
                 final MessageManager mailbox = mailboxManager.getMailbox(fullMailboxPath, mailboxSession);
 
                 //  If the provided UIDVALIDITY matches that of the selected mailbox, the
@@ -382,7 +381,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
     private MessageManager.MetaData selectMailbox(MailboxPath mailboxPath, ImapSession session) throws MailboxException {
         final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, mailboxSession);
 
         final SelectedMailbox sessionMailbox;
@@ -443,7 +442,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
                     boolean send = false;
                     if (sm != null) {
                         MessageManager mailbox = getSelectedMailbox(session);
-                        metaData = mailbox.getMetaData(false, ImapSessionUtils.getMailboxSession(session), FetchGroup.NO_COUNT);
+                        metaData = mailbox.getMetaData(false, session.getMailboxSession(), FetchGroup.NO_COUNT);
                         send = true;
                     }
                     condstoreEnablingCommand(session, responder, metaData, send);

@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
@@ -71,7 +70,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     protected void processRequest(ListRequest request, ImapSession session, Responder responder) {
         String baseReferenceName = request.getBaseReferenceName();
         String mailboxPatternString = request.getMailboxPattern();
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = session.getMailboxSession();
 
         try {
             if (mailboxPatternString.length() == 0) {
@@ -149,7 +148,7 @@ public class ListProcessor extends AbstractMailboxProcessor<ListRequest> {
     private MailboxPath computeBasePath(ImapSession session, String finalReferencename, boolean isRelative) {
         String decodedName = ModifiedUtf7.decodeModifiedUTF7(finalReferencename);
         if (isRelative) {
-            return MailboxPath.forUser(ImapSessionUtils.getUserName(session), decodedName);
+            return MailboxPath.forUser(session.getUserName(), decodedName);
         } else {
             return PathConverter.forSession(session).buildFullPath(decodedName);
         }

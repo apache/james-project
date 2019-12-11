@@ -42,7 +42,6 @@ import javax.mail.Flags.Flag;
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
@@ -142,8 +141,7 @@ public class SearchProcessorTest {
     }
 
     private void allowUnsolicitedResponses() {
-        when(session.getAttribute(ImapSessionUtils.MAILBOX_USER_ATTRIBUTE_SESSION_KEY)).thenReturn(USER);
-        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(session.getMailboxSession()).thenReturn(mailboxSession);
     }
 
     @Test
@@ -469,7 +467,7 @@ public class SearchProcessorTest {
 
     private void check(SearchKey key, final SearchQuery query) throws Exception {
         when(session.getAttribute(SearchProcessor.SEARCH_MODSEQ)).thenReturn(null);
-        when(session.getAttribute(ImapSessionUtils.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY)).thenReturn(mailboxSession);
+        when(session.getMailboxSession()).thenReturn(mailboxSession);
         when(mailbox.search(query, mailboxSession)).thenReturn(Stream.empty());
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);

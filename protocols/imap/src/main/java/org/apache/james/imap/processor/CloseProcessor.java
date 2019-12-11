@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -50,7 +49,7 @@ public class CloseProcessor extends AbstractMailboxProcessor<CloseRequest> {
     protected void processRequest(CloseRequest request, ImapSession session, Responder responder) {
         try {
             MessageManager mailbox = getSelectedMailbox(session);
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
             if (mailbox.getMetaData(false, mailboxSession, FetchGroup.NO_COUNT).isWriteable()) {
                 mailbox.expunge(MessageRange.all(), mailboxSession);
                 session.deselect();

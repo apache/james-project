@@ -19,7 +19,11 @@
 
 package org.apache.james.imap.api.process;
 
+import java.util.Optional;
+
+import org.apache.james.core.Username;
 import org.apache.james.imap.api.ImapSessionState;
+import org.apache.james.mailbox.MailboxSession;
 
 /**
  * Encapsulates all state held for an ongoing Imap session, which commences when
@@ -29,6 +33,7 @@ import org.apache.james.imap.api.ImapSessionState;
  * @version $Revision: 109034 $
  */
 public interface ImapSession {
+    String MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY = "org.apache.james.api.imap.MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY";
 
     /**
      * Logs out the session. Marks the connection for closure;
@@ -158,4 +163,17 @@ public interface ImapSession {
      */
     boolean isPlainAuthDisallowed();
 
+    default void setMailboxSession(MailboxSession mailboxSession) {
+        setAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY, mailboxSession);
+    }
+
+    default MailboxSession getMailboxSession() {
+        return (MailboxSession) getAttribute(MAILBOX_SESSION_ATTRIBUTE_SESSION_KEY);
+    }
+
+    default Username getUserName() {
+        return Optional.ofNullable(getMailboxSession())
+            .map(MailboxSession::getUser)
+            .orElse(null);
+    }
 }

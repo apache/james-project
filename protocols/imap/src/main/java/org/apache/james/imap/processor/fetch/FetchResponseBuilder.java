@@ -31,7 +31,6 @@ import java.util.List;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.SectionType;
@@ -123,7 +122,7 @@ public final class FetchResponseBuilder {
         // Check if this fetch will cause the "SEEN" flag to be set on this
         // message. If so, update the flags, and ensure that a flags response is
         // included in the response.
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         boolean ensureFlagsResponse = false;
         final Flags resultFlags = result.getFlags();
         if (fetch.isSetSeen() && !resultFlags.contains(Flags.Flag.SEEN)) {

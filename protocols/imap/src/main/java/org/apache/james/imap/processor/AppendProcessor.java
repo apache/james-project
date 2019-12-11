@@ -29,7 +29,6 @@ import java.util.Date;
 import javax.mail.Flags;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.response.StatusResponse;
@@ -71,7 +70,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
         try {
 
             final MailboxManager mailboxManager = getMailboxManager();
-            final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, ImapSessionUtils.getMailboxSession(session));
+            final MessageManager mailbox = mailboxManager.getMailbox(mailboxPath, session.getMailboxSession());
             appendToMailbox(messageIn, datetime, flags, session, request, mailbox, responder, mailboxPath);
         } catch (MailboxNotFoundException e) {
             // consume message on exception
@@ -124,7 +123,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
 
     private void appendToMailbox(InputStream message, Date datetime, Flags flagsToBeSet, ImapSession session, AppendRequest request, MessageManager mailbox, Responder responder, MailboxPath mailboxPath) {
         try {
-            final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+            final MailboxSession mailboxSession = session.getMailboxSession();
             final SelectedMailbox selectedMailbox = session.getSelected();
             final MailboxManager mailboxManager = getMailboxManager();
             final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getPath().equals(mailboxPath);

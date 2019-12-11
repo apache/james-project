@@ -21,7 +21,6 @@ package org.apache.james.imap.processor;
 
 import java.io.Closeable;
 
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.StatusDataItems;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -54,7 +53,7 @@ public class StatusProcessor extends AbstractMailboxProcessor<StatusRequest> {
     protected void processRequest(StatusRequest request, ImapSession session, Responder responder) {
         MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(request.getMailboxName());
         StatusDataItems statusDataItems = request.getStatusDataItems();
-        MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        MailboxSession mailboxSession = session.getMailboxSession();
 
         try {
             LOGGER.debug("Status called on mailbox named {}", mailboxPath);

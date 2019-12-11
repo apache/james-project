@@ -23,7 +23,6 @@ import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
-import org.apache.james.imap.api.ImapSessionUtils;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -60,7 +59,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     @Override
     protected void processRequest(SetAnnotationRequest request, ImapSession session, Responder responder) {
         final MailboxManager mailboxManager = getMailboxManager();
-        final MailboxSession mailboxSession = ImapSessionUtils.getMailboxSession(session);
+        final MailboxSession mailboxSession = session.getMailboxSession();
         final String mailboxName = request.getMailboxName();
         try {
             MailboxPath mailboxPath = PathConverter.forSession(session).buildFullPath(mailboxName);
