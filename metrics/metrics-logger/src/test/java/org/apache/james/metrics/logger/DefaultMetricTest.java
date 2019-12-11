@@ -17,17 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.api;
+package org.apache.james.metrics.logger;
 
-public interface Metric {
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricContract;
+import org.junit.jupiter.api.BeforeEach;
 
-    void increment();
+class DefaultMetricTest implements MetricContract {
 
-    void decrement();
+    private DefaultMetric testee;
 
-    void add(int value);
+    @BeforeEach
+    void setUp() {
+        testee = new DefaultMetric();
+    }
 
-    void remove(int value);
-
-    long getCount();
+    @Override
+    public Metric testee() {
+        return testee;
+    }
 }

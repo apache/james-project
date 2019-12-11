@@ -50,4 +50,9 @@ public class DropWizardMetric implements Metric {
     public void remove(int value) {
         counter.dec(value);
     }
+
+    @Override
+    public long getCount() {
+        return counter.getCount();
+    }
 }

@@ -17,17 +17,28 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.api;
+package org.apache.james.metrics.dropwizard;
 
-public interface Metric {
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricContract;
+import org.junit.jupiter.api.BeforeEach;
 
-    void increment();
+import com.codahale.metrics.MetricRegistry;
 
-    void decrement();
+class DropWizardMetricTest implements MetricContract {
 
-    void add(int value);
+    private static final String METRIC_NAME = "myMetric";
 
-    void remove(int value);
+    private DropWizardMetric testee;
 
-    long getCount();
+    @BeforeEach
+    void setUp() {
+        MetricRegistry registry = new MetricRegistry();
+        testee = new DropWizardMetric(registry.counter(METRIC_NAME));
+    }
+
+    @Override
+    public Metric testee() {
+        return testee;
+    }
 }

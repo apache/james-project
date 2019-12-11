@@ -17,17 +17,27 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.metrics.api;
+package org.apache.james.metrics.tests;
 
-public interface Metric {
+import java.util.function.Consumer;
 
-    void increment();
+import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricContract;
+import org.junit.jupiter.api.BeforeEach;
 
-    void decrement();
+class RecordingMetricTest implements MetricContract {
 
-    void add(int value);
+    private static final Consumer<Integer> NO_CALLBACK = counterValue -> {};
 
-    void remove(int value);
+    private RecordingMetric testee;
 
-    long getCount();
+    @BeforeEach
+    void setUp() {
+        testee = new RecordingMetric(NO_CALLBACK);
+    }
+
+    @Override
+    public Metric testee() {
+        return testee;
+    }
 }

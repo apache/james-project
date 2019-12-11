@@ -49,4 +49,9 @@ public class DefaultMetric implements Metric {
     public void remove(int i) {
         value.addAndGet(-1 * i);
     }
+
+    @Override
+    public long getCount() {
+        return value.get();
+    }
 }

@@ -52,4 +52,9 @@ public class RecordingMetric implements Metric {
     public void remove(int i) {
         publishCallback.accept(value.addAndGet(-1 * i));
     }
+
+    @Override
+    public long getCount() {
+        return value.get();
+    }
 }
