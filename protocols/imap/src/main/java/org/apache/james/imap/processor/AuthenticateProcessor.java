@@ -28,6 +28,7 @@ import java.util.StringTokenizer;
 
 import org.apache.james.core.Username;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -134,15 +135,15 @@ public class AuthenticateProcessor extends AbstractAuthProcessor<AuthenticateReq
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
-        List<String> caps = new ArrayList<>();
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        List<Capability> caps = new ArrayList<>();
         // Only ounce AUTH=PLAIN if the session does allow plain auth or TLS is active.
         // See IMAP-304
         if (session.isPlainAuthDisallowed()  == false || session.isTLSActive()) {
-            caps.add("AUTH=PLAIN");
+            caps.add(Capability.of("AUTH=PLAIN"));
         }
         // Support for SASL-IR. See RFC4959
-        caps.add("SASL-IR");
+        caps.add(Capability.of("SASL-IR"));
         return ImmutableList.copyOf(caps);
     }
 

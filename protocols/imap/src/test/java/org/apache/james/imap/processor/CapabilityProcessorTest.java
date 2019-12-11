@@ -24,6 +24,7 @@ import java.util.Set;
 
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.processor.base.UnknownRequestProcessor;
@@ -49,7 +50,7 @@ public class CapabilityProcessorTest {
     public void condstoreShouldBeSupportedWhenSelectedFor() {
         testee.configure(ImapConfiguration.builder().isCondstoreEnable(true).build());
 
-        Set<String> supportedCapabilities = testee.getSupportedCapabilities(null);
+        Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);
         assertThat(supportedCapabilities).contains(ImapConstants.SUPPORTS_CONDSTORE);
     }
 
@@ -57,7 +58,7 @@ public class CapabilityProcessorTest {
     public void condstoreShouldBeNotSupportedByDefault() {
         testee.configure(ImapConfiguration.builder().build());
 
-        Set<String> supportedCapabilities = testee.getSupportedCapabilities(null);
+        Set<Capability> supportedCapabilities = testee.getSupportedCapabilities(null);
         assertThat(supportedCapabilities).doesNotContain(ImapConstants.SUPPORTS_CONDSTORE);
     }
 }

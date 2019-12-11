@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -52,7 +53,7 @@ public class SetAnnotationProcessor extends AbstractMailboxProcessor<SetAnnotati
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
     }
 

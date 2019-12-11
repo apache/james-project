@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -51,7 +52,7 @@ import com.google.common.collect.ImmutableList;
 public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ListRightsProcessor.class);
 
-    private static final List<String> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
+    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
     public ListRightsProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -123,7 +124,7 @@ public class ListRightsProcessor extends AbstractMailboxProcessor<ListRightsRequ
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }
 

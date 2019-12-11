@@ -17,23 +17,51 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.processor;
+package org.apache.james.imap.api.message;
 
-import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
-import org.apache.james.imap.api.message.Capability;
-import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Preconditions;
 
-/**
- * {@link ImapProcessor} which implements one ore more Capabilities
- */
-public interface CapabilityImplementingProcessor extends ImapProcessor {
+public class Capability {
+    public static Capability of(String value) {
+        Preconditions.checkNotNull(value, "'value' can not be null");
+        Preconditions.checkArgument(!value.isEmpty(), "'value' can not be empty");
 
-    /**
-     * Return a list of all Capabilities that are implemented by the Processor
-     *
-     * @return list not null
-     */
-    List<Capability> getImplementedCapabilities(ImapSession session);
+        return new Capability(value.toUpperCase(Locale.US));
+    }
+
+    private final String value;
+
+    private Capability(String value) {
+        this.value = value;
+    }
+
+    public String asString() {
+        return value;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Capability) {
+            Capability that = (Capability) o;
+
+            return Objects.equals(this.value, that.value);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(value);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("value", value)
+            .toString();
+    }
 }

@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -44,7 +45,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class XListProcessor extends ListProcessor implements CapabilityImplementingProcessor {
 
-    private static final List<String> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
+    private static final List<Capability> XLIST_CAPS = ImmutableList.of(SUPPORTS_XLIST);
     private final MailboxTyper mailboxTyper;
 
     // some interface
@@ -55,7 +56,7 @@ public class XListProcessor extends ListProcessor implements CapabilityImplement
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         // if there's no mailboxTyper, do not annnoyce XLIST capability
         if (mailboxTyper == null) {
             return Collections.emptyList();

@@ -22,12 +22,13 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.Capability;
 
 public class EnableRequest extends AbstractImapRequest {
 
-    private final List<String> capabilities;
+    private final List<Capability> capabilities;
 
-    public EnableRequest(Tag tag, ImapCommand command, List<String> capabilities) {
+    public EnableRequest(Tag tag, ImapCommand command, List<Capability> capabilities) {
         super(tag, command);
         this.capabilities = capabilities;
     }
@@ -37,7 +38,7 @@ public class EnableRequest extends AbstractImapRequest {
      * 
      * @return caps
      */
-    public List<String> getCapabilities() {
+    public List<Capability> getCapabilities() {
         return capabilities;
     }
 }

@@ -19,6 +19,8 @@
 
 package org.apache.james.imap.api;
 
+import org.apache.james.imap.api.message.Capability;
+
 public interface ImapConstants {
     // Basic response types
     String OK = "OK";
@@ -81,33 +83,41 @@ public interface ImapConstants {
 
     String VERSION = "IMAP4rev1";
 
-    String SUPPORTS_LITERAL_PLUS = "LITERAL+";
+    Capability BASIC_CAPABILITIES = Capability.of(VERSION);
 
-    String SUPPORTS_RFC3348 = "CHILDREN";
+    Capability SUPPORTS_LITERAL_PLUS = Capability.of("LITERAL+");
+
+    Capability SUPPORTS_RFC3348 = Capability.of("CHILDREN");
 
     String UTF8 = "UTF-8";
-    
-    String SUPPORTS_I18NLEVEL_1 = "I18NLEVEL=1";
 
-    String SUPPORTS_NAMESPACES = "NAMESPACE";
+    Capability SUPPORTS_I18NLEVEL_1 = Capability.of("I18NLEVEL=1");
 
-    String SUPPORTS_STARTTLS = "STARTTLS";
+    Capability SUPPORTS_NAMESPACES = Capability.of("NAMESPACE");
 
-    String SUPPORTS_IDLE = "IDLE";
+    Capability SUPPORTS_STARTTLS = Capability.of("STARTTLS");
 
-    String SUPPORTS_XLIST = "XLIST";
+    Capability SUPPORTS_IDLE = Capability.of("IDLE");
 
-    String SUPPORTS_ENABLE = "ENABLE";
-    
-    String SUPPORTS_CONDSTORE = "CONDSTORE";
-    
-    String SUPPORTS_QRESYNC = "QRESYNC";
+    Capability SUPPORTS_XLIST = Capability.of("XLIST");
 
-    String SUPPORTS_ACL = "ACL";
+    Capability SUPPORTS_ENABLE = Capability.of("ENABLE");
 
-    String SUPPORTS_QUOTA = "QUOTA";
+    Capability SUPPORTS_CONDSTORE = Capability.of("CONDSTORE");
 
-    String SUPPORTS_ANNOTATION = "ANNOTATION";
+    Capability SUPPORTS_UNSELECT = Capability.of("UNSELECT");
+
+    Capability SUPPORTS_QRESYNC = Capability.of("QRESYNC");
+
+    Capability SUPPORTS_ACL = Capability.of("ACL");
+
+    Capability SUPPORTS_QUOTA = Capability.of("QUOTA");
+
+    Capability SUPPORTS_MOVE = Capability.of("MOVE");
+
+    Capability SUPPORTS_UIDPLUS = Capability.of("UIDPLUS");
+
+    Capability SUPPORTS_ANNOTATION = Capability.of("ANNOTATION");
     
     String INBOX_NAME = "INBOX";
 

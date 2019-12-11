@@ -20,6 +20,7 @@ package org.apache.james.imap.message.response;
 
 import java.util.Set;
 
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
 /**
@@ -29,7 +30,7 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
  */
 public class CapabilityResponse implements ImapResponseMessage {
 
-    private final Set<String> capabilities;
+    private final Set<Capability> capabilities;
 
     /**
      * Constructs a response based on the given capabilities.
@@ -37,8 +38,7 @@ public class CapabilityResponse implements ImapResponseMessage {
      * @param capabilities
      *            not null
      */
-    public CapabilityResponse(Set<String> capabilities) {
-        super();
+    public CapabilityResponse(Set<Capability> capabilities) {
         this.capabilities = capabilities;
     }
 
@@ -47,7 +47,7 @@ public class CapabilityResponse implements ImapResponseMessage {
      * 
      * @return not null
      */
-    public Set<String> getCapabilities() {
+    public Set<Capability> getCapabilities() {
         return capabilities;
     }
 

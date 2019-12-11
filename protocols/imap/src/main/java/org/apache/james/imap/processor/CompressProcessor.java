@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -35,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CompressProcessor extends AbstractChainedProcessor<CompressRequest> implements CapabilityImplementingProcessor {
     private static final String ALGO = "DEFLATE";
-    private static final List<String> CAPA = ImmutableList.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO);
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO));
     private final StatusResponseFactory factory;
     private static final String COMPRESSED = "COMPRESSED";
 
@@ -67,7 +68,7 @@ public class CompressProcessor extends AbstractChainedProcessor<CompressRequest>
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         if (session.isCompressionSupported()) {
             return CAPA;
         }

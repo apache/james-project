@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.james.imap.api.message.Capability;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.MoreObjects;
@@ -97,9 +98,10 @@ public class ImapConfiguration {
         }
 
         public ImapConfiguration build() {
-            ImmutableSet<String> normalizeDisableCaps = disabledCaps.stream()
+            ImmutableSet<Capability> normalizeDisableCaps = disabledCaps.stream()
                     .filter(Builder::noBlankString)
                     .map(StringUtils::normalizeSpace)
+                    .map(Capability::of)
                     .collect(Guavate.toImmutableSet());
             return new ImapConfiguration(
                     enableIdle.orElse(DEFAULT_ENABLE_IDLE),
@@ -112,11 +114,11 @@ public class ImapConfiguration {
 
     private final long idleTimeInterval;
     private final TimeUnit idleTimeIntervalUnit;
-    private final ImmutableSet<String> disabledCaps;
+    private final ImmutableSet<Capability> disabledCaps;
     private final boolean enableIdle;
     private final boolean isCondstoreEnable;
 
-    private ImapConfiguration(boolean enableIdle, long idleTimeInterval, TimeUnit idleTimeIntervalUnit, ImmutableSet<String> disabledCaps, boolean isCondstoreEnable) {
+    private ImapConfiguration(boolean enableIdle, long idleTimeInterval, TimeUnit idleTimeIntervalUnit, ImmutableSet<Capability> disabledCaps, boolean isCondstoreEnable) {
         this.enableIdle = enableIdle;
         this.idleTimeInterval = idleTimeInterval;
         this.idleTimeIntervalUnit = idleTimeIntervalUnit;
@@ -132,7 +134,7 @@ public class ImapConfiguration {
         return idleTimeIntervalUnit;
     }
 
-    public ImmutableSet<String> getDisabledCaps() {
+    public ImmutableSet<Capability> getDisabledCaps() {
         return disabledCaps;
     }
 

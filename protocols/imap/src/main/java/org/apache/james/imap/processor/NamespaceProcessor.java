@@ -22,11 +22,10 @@ import static org.apache.james.imap.api.ImapConstants.SUPPORTS_NAMESPACES;
 
 import java.io.Closeable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -37,12 +36,13 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * Processes a NAMESPACE command into a suitable set of responses.
  */
 public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceRequest> implements CapabilityImplementingProcessor {
-    private static final List<String> CAPS = Collections.unmodifiableList(Arrays.asList(SUPPORTS_NAMESPACES));
-    
+    private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_NAMESPACES);
     
     public NamespaceProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -103,7 +103,7 @@ public class NamespaceProcessor extends AbstractMailboxProcessor<NamespaceReques
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPS;
     }
 

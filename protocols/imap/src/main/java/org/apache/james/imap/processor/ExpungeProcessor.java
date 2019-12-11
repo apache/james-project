@@ -19,12 +19,15 @@
 
 package org.apache.james.imap.processor;
 
+import static org.apache.james.imap.api.ImapConstants.SUPPORTS_UIDPLUS;
+
 import java.io.Closeable;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -51,7 +54,7 @@ import com.google.common.collect.ImmutableList;
 public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExpungeProcessor.class);
 
-    private static final List<String> UIDPLUS = ImmutableList.of("UIDPLUS");
+    private static final List<Capability> UIDPLUS = ImmutableList.of(SUPPORTS_UIDPLUS);
 
     public ExpungeProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -121,7 +124,7 @@ public class ExpungeProcessor extends AbstractMailboxProcessor<ExpungeRequest> i
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return UIDPLUS;
     }
 

@@ -28,6 +28,7 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -52,7 +53,7 @@ import com.google.common.collect.ImmutableList;
  */
 public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest> implements CapabilityImplementingProcessor {
 
-    private static final List<String> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
+    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
 
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
@@ -65,7 +66,7 @@ public class GetQuotaProcessor extends AbstractMailboxProcessor<GetQuotaRequest>
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }
 

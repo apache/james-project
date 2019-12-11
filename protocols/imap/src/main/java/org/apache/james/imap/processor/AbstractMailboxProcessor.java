@@ -30,6 +30,7 @@ import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
@@ -278,7 +279,7 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     }
 
     protected void condstoreEnablingCommand(ImapSession session, Responder responder, MetaData metaData, boolean sendHighestModSeq) {
-        Set<String> enabled = EnableProcessor.getEnabledCapabilities(session);
+        Set<Capability> enabled = EnableProcessor.getEnabledCapabilities(session);
         if (!enabled.contains(ImapConstants.SUPPORTS_CONDSTORE)) {
             if (sendHighestModSeq) {
                 if (metaData.isModSeqPermanent()) {

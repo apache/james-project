@@ -20,12 +20,12 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
@@ -40,13 +40,11 @@ public class EnableCommandParser extends AbstractImapCommandParser {
 
     @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        List<String> caps = new ArrayList<>();
-        String cap = request.astring();
-        caps.add(cap.toUpperCase(Locale.US));
+        List<Capability> caps = new ArrayList<>();
+        caps.add(Capability.of(request.astring()));
         while (request.nextChar() == ' ') {
             request.consume();
-            cap = request.astring();
-            caps.add(cap.toUpperCase(Locale.US));
+            caps.add(Capability.of(request.astring()));
         }
         request.eol();
         return new EnableRequest(tag, command, caps);

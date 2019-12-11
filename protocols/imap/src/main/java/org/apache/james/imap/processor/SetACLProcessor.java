@@ -20,11 +20,11 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -45,13 +45,15 @@ import org.apache.james.util.MDCBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * SETACL Processor.
  */
 public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> implements CapabilityImplementingProcessor {
     private static final Logger LOGGER = LoggerFactory.getLogger(SetACLProcessor.class);
 
-    private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_ACL);
+    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_ACL);
 
     public SetACLProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
@@ -151,7 +153,7 @@ public class SetACLProcessor extends AbstractMailboxProcessor<SetACLRequest> imp
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPABILITIES;
     }
 

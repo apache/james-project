@@ -29,6 +29,7 @@ import java.util.function.Predicate;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.request.ImapRequest;
 import org.apache.james.imap.api.message.response.StatusResponse.ResponseCode;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -62,7 +63,7 @@ public class GetAnnotationProcessor extends AbstractMailboxProcessor<GetAnnotati
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return ImmutableList.of(ImapConstants.SUPPORTS_ANNOTATION);
     }
 

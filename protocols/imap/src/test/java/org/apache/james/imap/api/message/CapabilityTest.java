@@ -17,23 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.imap.processor;
+package org.apache.james.imap.api.message;
 
-import java.util.List;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import org.apache.james.imap.api.message.Capability;
-import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
+import org.junit.jupiter.api.Test;
 
-/**
- * {@link ImapProcessor} which implements one ore more Capabilities
- */
-public interface CapabilityImplementingProcessor extends ImapProcessor {
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    /**
-     * Return a list of all Capabilities that are implemented by the Processor
-     *
-     * @return list not null
-     */
-    List<Capability> getImplementedCapabilities(ImapSession session);
+class CapabilityTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Capability.class)
+            .verify();
+    }
+
+    @Test
+    void ofShouldThrowWhenNull() {
+        assertThatThrownBy(() -> Capability.of(null))
+            .isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void ofShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> Capability.of(""))
+            .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void ofShouldNormalizeCase() {
+        assertThat(Capability.of("a"))
+            .isEqualTo(Capability.of("A"));
+    }
 }

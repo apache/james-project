@@ -34,15 +34,12 @@ import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.mailbox.MessageUid;
 
 public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
-    private static final byte[] CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.getBytes();
-    private static final byte[] QRESYNC = ImapConstants.SUPPORTS_QRESYNC.getBytes();
+    private static final byte[] CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString().getBytes();
+    private static final byte[] QRESYNC = ImapConstants.SUPPORTS_QRESYNC.asString().getBytes();
 
     public AbstractSelectionCommandParser(ImapCommand command) {
         super(command);
     }
-    
-
-
     
     @Override
     protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {

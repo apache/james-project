@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapMessage;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.process.ImapSession;
 
 /**
@@ -33,12 +34,12 @@ public interface PermitEnableCapabilityProcessor extends CapabilityImplementingP
      * 
      * Be sure that these are also returned by {@link #getImplementedCapabilities(ImapSession)}
      */
-    List<String> getPermitEnableCapabilities(ImapSession session);
+    List<Capability> getPermitEnableCapabilities(ImapSession session);
     
     /**
      * Callback which is used when a ENABLED command was used to enable on of the CAPABILITIES which is managed by this implementation
      */
-    void enable(ImapMessage message, Responder responder, ImapSession session, String capability) throws EnableException;
+    void enable(ImapMessage message, Responder responder, ImapSession session, Capability capability) throws EnableException;
 
     /**
      * Exception which should get thrown if for whatever reason its not possible to enable a capability

@@ -20,11 +20,11 @@
 package org.apache.james.imap.processor;
 
 import java.io.Closeable;
-import java.util.Collections;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -33,20 +33,22 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
 
+import com.google.common.collect.ImmutableList;
+
 /**
  * SETQUOTA processor
  */
 public class SetQuotaProcessor extends AbstractMailboxProcessor<SetQuotaRequest> implements CapabilityImplementingProcessor {
-    private static final List<String> CAPABILITIES = Collections.singletonList(ImapConstants.SUPPORTS_QUOTA);
-
-    @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
-        return CAPABILITIES;
-    }
+    private static final List<Capability> CAPABILITIES = ImmutableList.of(ImapConstants.SUPPORTS_QUOTA);
 
     public SetQuotaProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(SetQuotaRequest.class, next, mailboxManager, factory, metricFactory);
+    }
+
+    @Override
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
+        return CAPABILITIES;
     }
 
     @Override

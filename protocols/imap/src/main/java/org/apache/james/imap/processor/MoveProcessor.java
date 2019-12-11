@@ -23,6 +23,7 @@ import java.io.Closeable;
 import java.util.List;
 
 import org.apache.james.imap.api.ImapConstants;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -61,9 +62,9 @@ public class MoveProcessor extends AbstractMessageRangeProcessor<MoveRequest> im
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         if (moveCapabilitySupported) {
-            return ImmutableList.of(ImapConstants.MOVE_COMMAND_NAME);
+            return ImmutableList.of(ImapConstants.SUPPORTS_MOVE);
         } else {
             return ImmutableList.of();
         }

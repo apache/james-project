@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.concurrent.TimeUnit;
 
+import org.apache.james.imap.api.message.Capability;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -105,7 +106,7 @@ public class ImapConfigurationTest {
                 .disabledCaps(ImmutableSet.of("AnyValue"))
                 .build();
 
-        assertThat(imapConfiguration.getDisabledCaps()).containsExactly("AnyValue");
+        assertThat(imapConfiguration.getDisabledCaps()).containsExactly(Capability.of("AnyValue"));
     }
 
     @Test
@@ -114,7 +115,7 @@ public class ImapConfigurationTest {
                 .disabledCaps(ImmutableSet.of("AnyValue", "OtherValue"))
                 .build();
 
-        assertThat(imapConfiguration.getDisabledCaps()).containsExactly("AnyValue", "OtherValue");
+        assertThat(imapConfiguration.getDisabledCaps()).containsExactly(Capability.of("AnyValue"), Capability.of("OtherValue"));
     }
 
     @Test
@@ -123,7 +124,7 @@ public class ImapConfigurationTest {
                 .disabledCaps(ImmutableSet.of("   AnyValue   ", "  OtherValue   "))
                 .build();
 
-        assertThat(imapConfiguration.getDisabledCaps()).containsExactly("AnyValue", "OtherValue");
+        assertThat(imapConfiguration.getDisabledCaps()).containsExactly(Capability.of("AnyValue"), Capability.of("OtherValue"));
     }
 
     @Test
@@ -132,7 +133,7 @@ public class ImapConfigurationTest {
                 .disabledCaps("   AnyValue   ", "  OtherValue   ")
                 .build();
 
-        assertThat(imapConfiguration.getDisabledCaps()).containsExactly("AnyValue", "OtherValue");
+        assertThat(imapConfiguration.getDisabledCaps()).containsExactly(Capability.of("AnyValue"), Capability.of("OtherValue"));
     }
 
     @Test
@@ -141,7 +142,7 @@ public class ImapConfigurationTest {
                 .disabledCap("   AnyValue   ")
                 .build();
 
-        assertThat(imapConfiguration.getDisabledCaps()).containsExactly("AnyValue");
+        assertThat(imapConfiguration.getDisabledCaps()).containsExactly(Capability.of("AnyValue"));
     }
 
     @Test

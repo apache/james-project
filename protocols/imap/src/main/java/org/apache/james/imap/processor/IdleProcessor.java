@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.james.imap.api.ImapConfiguration;
 import org.apache.james.imap.api.ImapSessionState;
 import org.apache.james.imap.api.display.HumanReadableText;
+import org.apache.james.imap.api.message.Capability;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapLineHandler;
@@ -54,7 +55,7 @@ import org.apache.james.util.concurrent.NamedThreadFactory;
 import com.google.common.collect.ImmutableList;
 
 public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> implements CapabilityImplementingProcessor {
-    private static final List<String> CAPS = ImmutableList.of(SUPPORTS_IDLE);
+    private static final List<Capability> CAPS = ImmutableList.of(SUPPORTS_IDLE);
     public static final int DEFAULT_SCHEDULED_POOL_CORE_SIZE = 5;
     private static final String DONE = "DONE";
 
@@ -154,7 +155,7 @@ public class IdleProcessor extends AbstractMailboxProcessor<IdleRequest> impleme
     }
 
     @Override
-    public List<String> getImplementedCapabilities(ImapSession session) {
+    public List<Capability> getImplementedCapabilities(ImapSession session) {
         return CAPS;
     }
 
