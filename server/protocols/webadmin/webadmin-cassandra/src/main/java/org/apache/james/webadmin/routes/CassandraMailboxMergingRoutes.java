@@ -33,8 +33,6 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MailboxMergingRequest;
 import org.apache.james.webadmin.dto.TaskIdDto;
-import org.apache.james.webadmin.utils.ErrorResponder;
-import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -108,31 +106,15 @@ public class CassandraMailboxMergingRoutes implements Routes {
             }),
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Error with supplied data (JSON parsing or invalid mailbox ids)")
         })
-    public Object mergeMailboxes(Request request, Response response) {
-        try {
-            LOGGER.debug("Cassandra upgrade launched");
-            MailboxMergingRequest mailboxMergingRequest = jsonExtractor.parse(request.body());
-            CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
-            CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
+    public Object mergeMailboxes(Request request, Response response) throws JsonExtractException {
+        LOGGER.debug("Cassandra upgrade launched");
+        MailboxMergingRequest mailboxMergingRequest = jsonExtractor.parse(request.body());
+        CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
+        CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
 
-            long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).defaultIfEmpty(0L).block();
-            MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
-            TaskId taskId = taskManager.submit(task);
-            return TaskIdDto.respond(response, taskId);
-        } catch (JsonExtractException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .cause(e)
-                .message("Failed to parse JSON request")
-                .haltError();
-        } catch (IllegalArgumentException e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .cause(e)
-                .message("Invalid mailbox id")
-                .haltError();
-        }
+        long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).defaultIfEmpty(0L).block();
+        MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
+        TaskId taskId = taskManager.submit(task);
+        return TaskIdDto.respond(response, taskId);
     }
 }
