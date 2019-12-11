@@ -51,8 +51,8 @@ import org.apache.james.imap.api.message.request.SearchOperation;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.api.process.SelectedMailbox;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.SearchRequest;
 import org.apache.james.imap.message.response.SearchResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -108,7 +108,7 @@ public class SearchProcessorTest {
     SearchProcessor processor;
     ImapProcessor next;
     ImapProcessor.Responder responder;
-    ImapSession session;
+    FakeImapSession session;
     ImapCommand command;
     StatusResponseFactory serverResponseFactory;
     StatusResponse statusResponse;
@@ -120,7 +120,7 @@ public class SearchProcessorTest {
     @Before
     public void setUp() throws Exception {
         serverResponseFactory = mock(StatusResponseFactory.class);
-        session = mock(ImapSession.class);
+        session = new FakeImapSession();
         command = ImapCommand.anyStateCommand("Command");
         next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
@@ -141,7 +141,7 @@ public class SearchProcessorTest {
     }
 
     private void allowUnsolicitedResponses() {
-        when(session.getMailboxSession()).thenReturn(mailboxSession);
+        session.setMailboxSession(mailboxSession);
     }
 
     @Test
@@ -196,7 +196,7 @@ public class SearchProcessorTest {
 
     private void expectsGetSelectedMailbox() throws Exception {
         when(mailboxManager.getMailbox(mailboxId, mailboxSession)).thenReturn(mailbox, mailbox);
-        when(session.getSelected()).thenReturn(selectedMailbox);
+        session.selected(selectedMailbox);
         when(selectedMailbox.isRecentUidRemoved()).thenReturn(false);
         when(selectedMailbox.isSizeChanged()).thenReturn(false);
         when(selectedMailbox.getPath()).thenReturn(mailboxPath);
@@ -466,8 +466,7 @@ public class SearchProcessorTest {
     }
 
     private void check(SearchKey key, final SearchQuery query) throws Exception {
-        when(session.getAttribute(SearchProcessor.SEARCH_MODSEQ)).thenReturn(null);
-        when(session.getMailboxSession()).thenReturn(mailboxSession);
+        session.setMailboxSession(mailboxSession);
         when(mailbox.search(query, mailboxSession)).thenReturn(Stream.empty());
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
@@ -485,7 +484,6 @@ public class SearchProcessorTest {
     private void verifyCalls() {
         verify(selectedMailbox).resetEvents();
 
-        verify(session).setAttribute(SearchProcessor.SEARCH_MODSEQ, null);
         verify(responder).respond(new SearchResponse(EMPTY, null));
 
         verify(responder).respond(same(statusResponse));

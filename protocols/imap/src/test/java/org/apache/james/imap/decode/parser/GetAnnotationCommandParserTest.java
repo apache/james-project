@@ -31,6 +31,7 @@ import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.GetAnnotationRequest;
 import org.apache.james.imap.message.request.GetAnnotationRequest.Depth;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
@@ -42,7 +43,7 @@ public class GetAnnotationCommandParserTest {
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
     private static final ImapCommand command = ImapCommand.anyStateCommand("Command");
-    private static final ImapSession session = null;
+    private static final ImapSession session = new FakeImapSession();
     private static final OutputStream outputStream = null;
 
     private GetAnnotationCommandParser parser;

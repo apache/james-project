@@ -31,8 +31,7 @@ import javax.mail.Flags;
 
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapSessionState;
-import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -130,11 +129,10 @@ public class MailboxEventAnalyserTest {
 
     @Before
     public void setUp() throws MailboxException {
-        ImapSession imapSession = mock(ImapSession.class);
+        FakeImapSession imapSession = new FakeImapSession();
         InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
-        when(imapSession.getMailboxSession())
-            .thenReturn(MAILBOX_SESSION);
-        when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        imapSession.setMailboxSession(MAILBOX_SESSION);
+        imapSession.authenticated();
 
         MailboxManager mailboxManager = mock(MailboxManager.class);
         MessageManager messageManager = mock(MessageManager.class);

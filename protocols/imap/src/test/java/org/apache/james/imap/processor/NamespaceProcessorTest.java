@@ -21,6 +21,7 @@ package org.apache.james.imap.processor;
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -40,6 +41,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapProcessor.Responder;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.NamespaceRequest;
 import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -58,7 +60,7 @@ public class NamespaceProcessorTest {
     
     NamespaceProcessor subject;
     StatusResponseFactory statusResponseStub;
-    ImapSession imapSessionStub;
+    ImapSession imapSession;
     MailboxSession mailboxSession;
     NamespaceRequest namespaceRequest;
     Collection<String> sharedSpaces;
@@ -70,32 +72,30 @@ public class NamespaceProcessorTest {
         statusResponseStub = mock(StatusResponseFactory.class);
         mailboxManagerStub = mock(MailboxManager.class);
         subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
-        imapSessionStub = mock(ImapSession.class);
+        imapSession = spy(new FakeImapSession());
         mailboxSession = mock(MailboxSession.class);
      
         namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), TAG);
-       
+        imapSession.setMailboxSession(mailboxSession);
     }
 
     @Test
     public void testNamespaceResponseShouldContainPersonalAndUserSpaces() {
-        when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getMailboxSession()).thenReturn(mailboxSession);
-        when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
+        when(imapSession.supportMultipleNamespaces()).thenReturn(true);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
         when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
         when(mailboxSession.getSharedSpaces()).thenReturn(new ArrayList<>());
         when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
-        when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(mock(StatusResponse.class));
 
         final NamespaceResponse response = buildResponse(null);
         final Responder responderMock = mock(Responder.class);
 
-        subject.doProcess(namespaceRequest, responderMock, imapSessionStub);
+        subject.doProcess(namespaceRequest, responderMock, imapSession);
 
         verify(responderMock, times(1)).respond(response);
         verify(responderMock, times(1)).respond(any(StatusResponse.class));
@@ -104,16 +104,14 @@ public class NamespaceProcessorTest {
     
     @Test
     public void testNamespaceResponseShouldContainSharedSpaces() {
-        when(imapSessionStub.supportMultipleNamespaces()).thenReturn(true);
-        when(imapSessionStub.getMailboxSession()).thenReturn(mailboxSession);
-        when(imapSessionStub.getAttribute(EnableProcessor.ENABLED_CAPABILITIES)).thenReturn(null);
+        when(imapSession.supportMultipleNamespaces()).thenReturn(true);
 
         when(mailboxSession.getPersonalSpace()).thenReturn(PERSONAL_PREFIX);
         when(mailboxSession.getOtherUsersSpace()).thenReturn(USERS_PREFIX);
         when(mailboxSession.getSharedSpaces()).thenReturn(Arrays.asList(SHARED_PREFIX));
         when(mailboxSession.getPathDelimiter()).thenReturn(MailboxConstants.DEFAULT_DELIMITER);
 
-        when(imapSessionStub.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
+        when(imapSession.getState()).thenReturn(ImapSessionState.AUTHENTICATED);
         when(statusResponseStub.taggedOk(any(Tag.class), any(ImapCommand.class), any(HumanReadableText.class)))
             .thenReturn(mock(StatusResponse.class));
         
@@ -123,7 +121,7 @@ public class NamespaceProcessorTest {
         
         final Responder responderMock = mock(Responder.class);
 
-        subject.doProcess(namespaceRequest, responderMock, imapSessionStub);
+        subject.doProcess(namespaceRequest, responderMock, imapSession);
 
         verify(responderMock, times(1)).respond(response);
         verify(responderMock, times(1)).respond(any(StatusResponse.class));

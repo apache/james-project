@@ -21,7 +21,6 @@ package org.apache.james.imap.decode.parser;
 
 import static org.apache.james.imap.ImapFixture.TAG;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.mock;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -37,6 +36,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -50,7 +50,7 @@ public class FetchCommandParserPartialFetchTest  {
     public void setUp() throws Exception {
         parser = new FetchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
-        session = mock(ImapSession.class);
+        session = new FakeImapSession();
     }
 
     @Test

@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 import javax.mail.Flags;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -74,7 +74,7 @@ public class SelectedMailboxImplTest {
     private MailboxManager mailboxManager;
     private MessageManager messageManager;
     private MailboxPath mailboxPath;
-    private ImapSession imapSession;
+    private FakeImapSession imapSession;
     private Mailbox mailbox;
     private TestId mailboxId;
     private EventBus eventBus;
@@ -87,7 +87,7 @@ public class SelectedMailboxImplTest {
         mailboxPath = MailboxPath.inbox(Username.of("tellier@linagora.com"));
         mailboxManager = mock(MailboxManager.class);
         messageManager = mock(MessageManager.class);
-        imapSession = mock(ImapSession.class);
+        imapSession = new FakeImapSession();
         mailbox = mock(Mailbox.class);
         mailboxId = TestId.of(42);
         mailboxIdRegistrationKey = new MailboxIdRegistrationKey(mailboxId);
@@ -101,7 +101,7 @@ public class SelectedMailboxImplTest {
             .then(delayedSearchAnswer());
         when(messageManager.getId()).thenReturn(mailboxId);
 
-        when(imapSession.getMailboxSession()).thenReturn(mock(MailboxSession.class));
+        imapSession.setMailboxSession(mock(MailboxSession.class));
 
         when(mailbox.generateAssociatedPath()).thenReturn(mailboxPath);
         when(mailbox.getMailboxId()).thenReturn(mailboxId);

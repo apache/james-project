@@ -36,6 +36,7 @@ import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.message.request.LsubRequest;
 import org.apache.james.imap.message.response.LSubResponse;
 import org.apache.james.mailbox.MailboxManager;
@@ -87,7 +88,7 @@ public class LSubProcessorTest {
     public void setUp() throws Exception {
         subscriptions = new ArrayList<>();
         serverResponseFactory = mock(StatusResponseFactory.class);
-        session = mock(ImapSession.class);
+        session = new FakeImapSession();
         command = ImapCommand.anyStateCommand("Command");
         next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
@@ -97,6 +98,7 @@ public class LSubProcessorTest {
         manager =  mock(SubscriptionManager.class);
         mailboxSession = MailboxSessionUtil.create(USER);
         processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
+        session.setMailboxSession(mailboxSession);
     }
 
     @Test
@@ -183,7 +185,6 @@ public class LSubProcessorTest {
     }
 
     private void expectSubscriptions() throws Exception {
-        when(session.getMailboxSession()).thenReturn(mailboxSession);
         when(manager.subscriptions(mailboxSession)).thenReturn(subscriptions);
     }
 }

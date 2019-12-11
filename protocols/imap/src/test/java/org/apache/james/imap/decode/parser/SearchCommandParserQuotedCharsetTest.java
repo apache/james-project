@@ -44,6 +44,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -138,7 +139,7 @@ public class SearchCommandParserQuotedCharsetTest {
         command = ImapCommand.anyStateCommand("Command");
         message = mock(ImapMessage.class);
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
-        session = mock(ImapSession.class);
+        session = new FakeImapSession();
 
         parser.setStatusResponseFactory(mockStatusResponseFactory);
     }

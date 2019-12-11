@@ -25,9 +25,9 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 import org.apache.james.imap.api.process.ImapProcessor;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapDecoder;
 import org.apache.james.imap.decode.main.ImapRequestStreamHandler;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.apache.james.imap.encode.ImapEncoder;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +45,6 @@ public class ImapRequestHandlerAdandonConnectionTest {
     ImapDecoder decoderStub;
     ImapProcessor processorStub;
     ImapEncoder encoderStub;
-    ImapSession sessionStub;
     
     @Before
     public void setUp() throws Exception {
@@ -55,7 +54,6 @@ public class ImapRequestHandlerAdandonConnectionTest {
         decoderStub = mock(ImapDecoder.class);
         processorStub = mock(ImapProcessor.class);
         encoderStub = mock(ImapEncoder.class);
-        sessionStub = mock(ImapSession.class);
         // System under test
         subject = new ImapRequestStreamHandler(decoderStub, processorStub, encoderStub);
     }
@@ -69,7 +67,7 @@ public class ImapRequestHandlerAdandonConnectionTest {
         // 
         // Exercise
         //
-        boolean result = subject.handleRequest(fakeInput, fakeOutput, sessionStub);
+        boolean result = subject.handleRequest(fakeInput, fakeOutput, new FakeImapSession());
         
         //
         // Verify output

@@ -44,7 +44,7 @@ public class NamespaceResponseEncoderTest {
 
     @Before
     public void setUp() throws Exception {
-        dummySession = mock(ImapSession.class);
+        dummySession = new FakeImapSession();
         final ImapEncoder stubNextEncoderInChain = mock(ImapEncoder.class);
         subject = new NamespaceResponseEncoder(stubNextEncoderInChain);
         mockComposer = mock(ImapResponseComposer.class);

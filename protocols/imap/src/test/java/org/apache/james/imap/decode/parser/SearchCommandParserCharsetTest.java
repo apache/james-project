@@ -39,9 +39,9 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.SearchKey;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
-import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.ImapRequestLineReader;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
+import org.apache.james.imap.encode.FakeImapSession;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -70,14 +70,11 @@ public class SearchCommandParserCharsetTest {
     ImapCommand command;
     ImapMessage message;
 
-    private ImapSession session;
-
     @Before
     public void setUp() throws Exception {
         parser = new SearchCommandParser();
         command = ImapCommand.anyStateCommand("Command");
         message = mock(ImapMessage.class);
-        session = mock(ImapSession.class);
 
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         parser.setStatusResponseFactory(mockStatusResponseFactory);
@@ -88,7 +85,7 @@ public class SearchCommandParserCharsetTest {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
-        parser.decode(command, reader, TAG, false, session);
+        parser.decode(command, reader, TAG, false, new FakeImapSession());
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(
             eq(TAG),
