@@ -41,19 +41,9 @@ public interface ImapConstants {
 
     String UID = "UID";
 
-    String MIME_HEADER_CONTENT_LOCATION = "Content-Location";
-
-    String MIME_HEADER_CONTENT_MD5 = "Content-MD5";
-
-    String MIME_HEADER_CONTENT_LANGUAGE = "Content-Language";
-
-    String[] EMPTY_STRING_ARRAY = {};
-
     byte BYTE_OPENING_PARENTHESIS = 0x28;
 
     byte BYTE_CLOSING_PARENTHESIS = 0x29;
-
-    byte BYTE_SP = 0x20;
 
     byte BYTE_DQUOTE = 0x22;
 
@@ -69,16 +59,6 @@ public interface ImapConstants {
 
     byte BYTE_CLOSE_BRACE = 0x7D;
 
-    char OPENING_PARENTHESIS = '(';
-
-    char CLOSING_PARENTHESIS = ')';
-
-    char OPENING_SQUARE_BRACKET = '[';
-
-    char CLOSING_SQUARE_BRACKET = ']';
-
-    char SP_CHAR = ' ';
-
     char DQUOTE = '\"';
 
     String VERSION = "IMAP4rev1";
@@ -88,8 +68,6 @@ public interface ImapConstants {
     Capability SUPPORTS_LITERAL_PLUS = Capability.of("LITERAL+");
 
     Capability SUPPORTS_RFC3348 = Capability.of("CHILDREN");
-
-    String UTF8 = "UTF-8";
 
     Capability SUPPORTS_I18NLEVEL_1 = Capability.of("I18NLEVEL=1");
 
@@ -279,12 +257,6 @@ public interface ImapConstants {
 
     String NAME_ATTRIBUTE_UNMARKED = "\\Unmarked";
 
-    String PS_TEXT = "TEXT";
-
-    String PS_HEADER = "HEADER";
-
-    String PS_MIME = "MIME";
-
     String FETCH_RFC822 = "RFC822";
 
     String FETCH_RFC822_HEADER = "RFC822.HEADER";
@@ -305,8 +277,6 @@ public interface ImapConstants {
     long MIN_NZ_NUMBER = 1L;
 
     String COMPRESS_COMMAND_NAME = "COMPRESS";
-
-    int DEFAULT_BATCH_SIZE = 100;
 
     // Quota resources definition
 
