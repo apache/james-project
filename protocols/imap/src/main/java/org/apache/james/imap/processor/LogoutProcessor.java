@@ -30,12 +30,8 @@ import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.MDCBuilder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LogoutProcessor extends AbstractMailboxProcessor<LogoutRequest> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(LogoutProcessor.class);
-
     public LogoutProcessor(ImapProcessor next, MailboxManager mailboxManager, StatusResponseFactory factory,
             MetricFactory metricFactory) {
         super(LogoutRequest.class, next, mailboxManager, factory, metricFactory);
