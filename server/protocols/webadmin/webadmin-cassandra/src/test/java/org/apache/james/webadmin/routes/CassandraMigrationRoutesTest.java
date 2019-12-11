@@ -71,7 +71,7 @@ public class CassandraMigrationRoutesTest {
     private CassandraSchemaVersionDAO schemaVersionDAO;
     private MemoryTaskManager taskManager;
 
-    private void createServer() throws InterruptedException {
+    private void createServer() {
         Migration successfulMigration = () -> { };
 
         CassandraSchemaTransitions transitions = new CassandraSchemaTransitions(ImmutableMap.of(
@@ -96,7 +96,7 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         createServer();
     }
 
@@ -166,8 +166,8 @@ public class CassandraMigrationRoutesTest {
         assertThat(errors)
             .containsEntry("statusCode", HttpStatus.BAD_REQUEST_400)
             .containsEntry("type", "InvalidArgument")
-            .containsEntry("message", "Invalid request for version upgrade")
-            .containsEntry("details", "For input string: \"NonInt\"");
+            .containsEntry("message", "Invalid arguments supplied in the user request")
+            .containsEntry("details", "Expecting version to be specified as an integer");
 
         verifyNoMoreInteractions(schemaVersionDAO);
     }

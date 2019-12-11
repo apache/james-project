@@ -141,28 +141,10 @@ public class CassandraMigrationRoutes implements Routes {
     })
     public Object upgradeToVersion(Request request, Response response) {
         LOGGER.debug("Cassandra upgrade launched");
-        try {
-            CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-            Task migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
-            TaskId taskId = taskManager.submit(migration);
-            return TaskIdDto.from(taskId);
-        } catch (NullPointerException | IllegalArgumentException e) {
-            LOGGER.info(INVALID_VERSION_UPGRADE_REQUEST);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorType.INVALID_ARGUMENT)
-                .message(INVALID_VERSION_UPGRADE_REQUEST)
-                .cause(e)
-                .haltError();
-        } catch (IllegalStateException e) {
-            LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.CONFLICT_409)
-                .type(ErrorType.WRONG_STATE)
-                .message(MIGRATION_REQUEST_CAN_NOT_BE_DONE)
-                .cause(e)
-                .haltError();
-        }
+        CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
+        Task migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
+        TaskId taskId = taskManager.submit(migration);
+        return TaskIdDto.from(taskId);
     }
 
     @GET
