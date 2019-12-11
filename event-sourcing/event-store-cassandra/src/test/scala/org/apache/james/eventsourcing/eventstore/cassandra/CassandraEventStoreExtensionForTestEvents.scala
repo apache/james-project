@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,14 +16,9 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.cassandra
 
-package org.apache.james.eventsourcing.eventstore.cassandra;
+import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules
+import org.junit.jupiter.api.extension.Extension
 
-import org.apache.james.eventsourcing.EventSourcingSystemTest;
-import org.apache.james.eventsourcing.eventstore.cassandra.dto.TestEventDTOModules;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
-public class CassandraEventSourcingSystemTest implements EventSourcingSystemTest {
-    @RegisterExtension
-    static CassandraEventStoreExtension eventStoreExtension = new CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE()).withoutNestedType());
-}
+class CassandraEventStoreExtensionForTestEvents extends CassandraEventStoreExtension(JsonEventSerializer.forModules(TestEventDTOModules.TEST_TYPE).withoutNestedType) with Extension
