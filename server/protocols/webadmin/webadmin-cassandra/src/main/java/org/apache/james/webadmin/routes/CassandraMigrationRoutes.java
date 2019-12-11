@@ -144,7 +144,7 @@ public class CassandraMigrationRoutes implements Routes {
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
         Task migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
         TaskId taskId = taskManager.submit(migration);
-        return TaskIdDto.from(taskId);
+        return TaskIdDto.respond(response, taskId);
     }
 
     @GET

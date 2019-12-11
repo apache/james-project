@@ -233,6 +233,18 @@ public class CassandraMigrationRoutesTest {
     }
 
     @Test
+    public void postShouldPositionLocationHeader() {
+        when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(CURRENT_VERSION)));
+
+        given()
+            .body(String.valueOf(OLDER_VERSION.getValue()))
+        .when()
+            .post("/upgrade")
+        .then()
+            .header("Location", notNullValue());
+    }
+
+    @Test
     public void postShouldDoMigrationToLatestVersion() {
         when(schemaVersionDAO.getCurrentSchemaVersion()).thenReturn(Mono.just(Optional.of(OLDER_VERSION)));
 
