@@ -36,7 +36,6 @@ import org.apache.james.queue.api.MailQueue.MailQueueException;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.util.streams.Limit;
@@ -44,9 +43,9 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.ForceDelivery;
 import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
-import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
+import org.apache.james.webadmin.tasks.TaskGenerator;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -297,14 +296,15 @@ public class MailQueueRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void deleteMails(Service service) {
+        TaskGenerator taskGenerator = this::deleteMails;
         service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
-                this::deleteMails,
+                taskGenerator.asRoute(taskManager),
                 jsonTransformer);
     }
 
-    private Object deleteMails(Request request, Response response) {
+    private Task deleteMails(Request request) {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
-        Task task = mailQueueFactory.getQueue(mailQueueName)
+        return mailQueueFactory.getQueue(mailQueueName)
             .map(name -> deleteMailsTask(name,
                     sender(request.queryParams(SENDER_QUERY_PARAM)),
                     name(request.queryParams(NAME_QUERY_PARAM)),
@@ -315,9 +315,6 @@ public class MailQueueRoutes implements Routes {
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
-
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
     }
 
     private Optional<MailAddress> sender(String senderAsString) throws HaltException {
