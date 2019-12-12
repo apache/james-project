@@ -20,14 +20,13 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
@@ -146,33 +145,30 @@ public class AwsS3ObjectStorage {
         }
 
         @Override
-        public void putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
-            writeFileAndAct(blob, (file) -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY).block());
+        public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
+            return writeFileAndAct(blob, file -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY));
         }
 
         @Override
-        public BlobId putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
-            Consumer<File> putChangedBlob = (file) -> {
+        public Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
+            Function<File, Mono<Void>> putChangedBlob = file -> {
                 initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
-                putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY).block();
+                return putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY);
             };
-            writeFileAndAct(initialBlob, putChangedBlob);
-            return blobIdSupplier.get();
+            return writeFileAndAct(initialBlob, putChangedBlob)
+                .then(Mono.fromCallable(blobIdSupplier::get));
         }
 
-        private void writeFileAndAct(Blob blob, Consumer<File> putFile) {
-            File file = null;
-            try {
-                file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
-                FileUtils.copyToFile(blob.getPayload().openStream(), file);
-                putFile.accept(file);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } finally {
-                if (file != null) {
-                    FileUtils.deleteQuietly(file);
-                }
-            }
+        private Mono<Void> writeFileAndAct(Blob blob, Function<File, Mono<Void>> putFile) {
+            return Mono.using(
+                () -> {
+                    File file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
+                    FileUtils.copyToFile(blob.getPayload().openStream(), file);
+                    return file;
+                },
+                putFile::apply,
+                FileUtils::deleteQuietly
+            );
         }
 
         private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {

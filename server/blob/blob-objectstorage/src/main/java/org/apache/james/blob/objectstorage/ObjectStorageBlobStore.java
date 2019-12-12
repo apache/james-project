@@ -100,16 +100,18 @@ public class ObjectStorageBlobStore implements BlobStore {
         Preconditions.checkNotNull(data);
         ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        BlobId blobId = blobIdFactory.forPayload(data);
-        Payload payload = payloadCodec.write(data);
+        return Mono.fromCallable(() -> blobIdFactory.forPayload(data))
+            .flatMap(blobId -> {
+                Payload payload = payloadCodec.write(data);
 
-        Blob blob = blobStore.blobBuilder(blobId.asString())
-            .payload(payload.getPayload())
-            .contentLength(payload.getLength().orElse(Long.valueOf(data.length)))
-            .build();
+                Blob blob = blobStore.blobBuilder(blobId.asString())
+                    .payload(payload.getPayload())
+                    .contentLength(payload.getLength().orElse(Long.valueOf(data.length)))
+                    .build();
 
-        return Mono.fromRunnable(() -> blobPutter.putDirectly(resolvedBucketName, blob))
-            .thenReturn(blobId);
+                return blobPutter.putDirectly(resolvedBucketName, blob)
+                    .thenReturn(blobId);
+            });
     }
 
     @Override
@@ -143,15 +145,17 @@ public class ObjectStorageBlobStore implements BlobStore {
     private Mono<BlobId> saveBigStream(BucketName bucketName, InputStream data) {
         ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
-        BlobId tmpId = blobIdFactory.randomId();
-        HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
-        Payload payload = payloadCodec.write(hashingInputStream);
-        Blob blob = blobStore.blobBuilder(tmpId.asString())
-                            .payload(payload.getPayload())
-                            .build();
+        return Mono.fromCallable(blobIdFactory::randomId)
+            .flatMap(tmpId -> {
+                HashingInputStream hashingInputStream = new HashingInputStream(Hashing.sha256(), data);
+                Payload payload = payloadCodec.write(hashingInputStream);
+                Blob blob = blobStore.blobBuilder(tmpId.asString())
+                    .payload(payload.getPayload())
+                    .build();
 
-        Supplier<BlobId> blobIdSupplier = () -> blobIdFactory.from(hashingInputStream.hash().toString());
-        return Mono.fromRunnable(() -> blobPutter.putAndComputeId(resolvedBucketName, blob, blobIdSupplier));
+                Supplier<BlobId> blobIdSupplier = () -> blobIdFactory.from(hashingInputStream.hash().toString());
+                return blobPutter.putAndComputeId(resolvedBucketName, blob, blobIdSupplier);
+            });
     }
 
     @Override

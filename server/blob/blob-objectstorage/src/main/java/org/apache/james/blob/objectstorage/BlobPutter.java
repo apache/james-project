@@ -24,6 +24,8 @@ import java.util.function.Supplier;
 import org.apache.james.blob.api.BlobId;
 import org.jclouds.blobstore.domain.Blob;
 
+import reactor.core.publisher.Mono;
+
 /**
  * Implementations may have specific behaviour when uploading a blob,
  * such cases are not well handled by jClouds.
@@ -36,7 +38,7 @@ import org.jclouds.blobstore.domain.Blob;
 
 public interface BlobPutter {
 
-    void putDirectly(ObjectStorageBucketName bucketName, Blob blob);
+    Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob);
 
-    BlobId putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier);
+    Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier);
 }
