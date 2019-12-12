@@ -18,7 +18,10 @@
  ****************************************************************/
 package org.apache.james.core.healthcheck;
 
+import java.util.Objects;
 import java.util.Optional;
+
+import com.google.common.base.MoreObjects;
 
 public class Result {
 
@@ -66,5 +69,31 @@ public class Result {
 
     public Optional<String> getCause() {
         return cause;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof Result) {
+            Result result = (Result) o;
+
+            return Objects.equals(this.componentName, result.componentName)
+                && Objects.equals(this.status, result.status)
+                && Objects.equals(this.cause, result.cause);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(componentName, status, cause);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("componentName", componentName)
+            .add("status", status)
+            .add("cause", cause)
+            .toString();
     }
 }

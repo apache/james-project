@@ -23,9 +23,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.junit.jupiter.api.Test;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
+
 class ResultTest {
 
     private static final ComponentName COMPONENT_NAME = new ComponentName("component");
+
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(Result.class)
+            .verify();
+    }
 
     @Test
     void componentNameShouldBeKeptWhenHealthy() {
