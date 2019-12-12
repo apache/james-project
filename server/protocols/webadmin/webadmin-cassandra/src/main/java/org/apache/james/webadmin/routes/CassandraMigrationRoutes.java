@@ -27,12 +27,12 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.backends.cassandra.migration.CassandraMigrationService;
 import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.CassandraVersionRequest;
 import org.apache.james.webadmin.dto.CassandraVersionResponse;
 import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.tasks.TaskGenerator;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -48,7 +48,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
 import spark.Request;
-import spark.Response;
 import spark.Service;
 
 @Api(tags = "Cassandra migration")
@@ -90,9 +89,11 @@ public class CassandraMigrationRoutes implements Routes {
 
         service.get(VERSION_BASE_LATEST, (request, response) -> getCassandraLatestVersion(), jsonTransformer);
 
-        service.post(VERSION_UPGRADE_BASE, this::upgradeToVersion, jsonTransformer);
+        TaskGenerator upgradeToVersionTaskGenerator = this::upgradeToVersion;
+        service.post(VERSION_UPGRADE_BASE, upgradeToVersionTaskGenerator.asRoute(taskManager), jsonTransformer);
 
-        service.post(VERSION_UPGRADE_TO_LATEST_BASE, (request, response) -> upgradeToLatest(response), jsonTransformer);
+        TaskGenerator upgradeToLatestTaskGenerator = request -> upgradeToLatest();
+        service.post(VERSION_UPGRADE_TO_LATEST_BASE, upgradeToLatestTaskGenerator.asRoute(taskManager), jsonTransformer);
     }
 
     @POST
@@ -105,11 +106,9 @@ public class CassandraMigrationRoutes implements Routes {
             }),
         @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
     })
-    public Object upgradeToLatest(Response response) {
+    public Task upgradeToLatest() {
         try {
-            Task migration = cassandraMigrationService.upgradeToLastVersion();
-            TaskId taskId = taskManager.submit(migration);
-            return TaskIdDto.respond(response, taskId);
+            return cassandraMigrationService.upgradeToLastVersion();
         } catch (IllegalStateException e) {
             LOGGER.info(MIGRATION_REQUEST_CAN_NOT_BE_DONE, e);
             throw ErrorResponder.builder()
@@ -139,12 +138,10 @@ public class CassandraMigrationRoutes implements Routes {
         }),
         @ApiResponse(code = HttpStatus.CONFLICT_409, message = "Migration can not be done")
     })
-    public Object upgradeToVersion(Request request, Response response) {
+    public Task upgradeToVersion(Request request) {
         LOGGER.debug("Cassandra upgrade launched");
         CassandraVersionRequest cassandraVersionRequest = CassandraVersionRequest.parse(request.body());
-        Task migration = cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
-        TaskId taskId = taskManager.submit(migration);
-        return TaskIdDto.respond(response, taskId);
+        return cassandraMigrationService.upgradeToVersion(cassandraVersionRequest.getValue());
     }
 
     @GET
