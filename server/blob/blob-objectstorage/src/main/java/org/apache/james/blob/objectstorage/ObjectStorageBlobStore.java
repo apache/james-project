@@ -51,7 +51,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class ObjectStorageBlobsDAO implements BlobStore {
+public class ObjectStorageBlobStore implements BlobStore {
     private static final int BUFFERED_SIZE = 256 * 1024;
 
     private final BlobId.Factory blobIdFactory;
@@ -62,10 +62,10 @@ public class ObjectStorageBlobsDAO implements BlobStore {
     private final PayloadCodec payloadCodec;
     private final ObjectStorageBucketNameResolver bucketNameResolver;
 
-    ObjectStorageBlobsDAO(BucketName defaultBucketName, BlobId.Factory blobIdFactory,
-                          org.jclouds.blobstore.BlobStore blobStore,
-                          BlobPutter blobPutter,
-                          PayloadCodec payloadCodec, ObjectStorageBucketNameResolver bucketNameResolver) {
+    ObjectStorageBlobStore(BucketName defaultBucketName, BlobId.Factory blobIdFactory,
+                           org.jclouds.blobstore.BlobStore blobStore,
+                           BlobPutter blobPutter,
+                           PayloadCodec payloadCodec, ObjectStorageBucketNameResolver bucketNameResolver) {
         this.blobIdFactory = blobIdFactory;
         this.defaultBucketName = defaultBucketName;
         this.blobStore = blobStore;
@@ -74,20 +74,20 @@ public class ObjectStorageBlobsDAO implements BlobStore {
         this.bucketNameResolver = bucketNameResolver;
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
-        return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+        return SwiftTempAuthObjectStorage.blobStoreBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
+        return SwiftKeystone2ObjectStorage.blobStoreBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+        return SwiftKeystone3ObjectStorage.blobStoreBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(AwsS3AuthConfiguration testConfig) {
-        return AwsS3ObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(AwsS3AuthConfiguration testConfig) {
+        return AwsS3ObjectStorage.blobStoreBuilder(testConfig);
     }
 
     @PreDestroy

@@ -26,7 +26,7 @@ import static org.mockito.Mockito.mock;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
 import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration.BlobStoreImplName;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
@@ -38,8 +38,8 @@ class BlobStoreChoosingModuleTest {
 
     private static CassandraBlobStore CASSANDRA_BLOBSTORE = mock(CassandraBlobStore.class);
     private static Provider<CassandraBlobStore> CASSANDRA_BLOBSTORE_PROVIDER = () -> CASSANDRA_BLOBSTORE;
-    private static ObjectStorageBlobsDAO OBJECT_STORAGE_BLOBSTORE = mock(ObjectStorageBlobsDAO.class);
-    private static Provider<ObjectStorageBlobsDAO> OBJECT_STORAGE_BLOBSTORE_PROVIDER = () -> OBJECT_STORAGE_BLOBSTORE;
+    private static ObjectStorageBlobStore OBJECT_STORAGE_BLOBSTORE = mock(ObjectStorageBlobStore.class);
+    private static Provider<ObjectStorageBlobStore> OBJECT_STORAGE_BLOBSTORE_PROVIDER = () -> OBJECT_STORAGE_BLOBSTORE;
 
     @Test
     void provideChoosingConfigurationShouldThrowWhenMissingPropertyField() {

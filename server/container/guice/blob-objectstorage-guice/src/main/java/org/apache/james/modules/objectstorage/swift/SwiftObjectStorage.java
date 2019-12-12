@@ -19,8 +19,8 @@
 
 package org.apache.james.modules.objectstorage.swift;
 
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone2ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftKeystone3ObjectStorage;
 import org.apache.james.blob.objectstorage.swift.SwiftTempAuthObjectStorage;
@@ -29,7 +29,7 @@ import org.apache.james.modules.objectstorage.ObjectStorageProvider;
 
 public class SwiftObjectStorage {
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(ObjectStorageBlobConfiguration configuration) {
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(ObjectStorageBlobConfiguration configuration) {
         if (configuration.getProvider() != ObjectStorageProvider.SWIFT) {
             throw new IllegalArgumentException("unknown provider " + configuration.getProvider());
         }
@@ -37,30 +37,30 @@ public class SwiftObjectStorage {
         switch (authConfiguration.getAuthApiName()) {
             case SwiftTempAuthObjectStorage.AUTH_API_NAME:
                 return authConfiguration.getTempAuth()
-                                    .map(ObjectStorageBlobsDAO::builder)
+                                    .map(ObjectStorageBlobStore::builder)
                                     .orElseThrow(() -> new IllegalArgumentException("No TempAuth configuration found for tmpauth API"));
             case SwiftKeystone2ObjectStorage.AUTH_API_NAME:
                 return authConfiguration.getKeystone2Configuration()
-                                    .map(ObjectStorageBlobsDAO::builder)
+                                    .map(ObjectStorageBlobStore::builder)
                                     .orElseThrow(() -> new IllegalArgumentException("No Keystone2 configuration found for keystone2 API"));
             case SwiftKeystone3ObjectStorage.AUTH_API_NAME:
                 return authConfiguration.getKeystone3Configuration()
-                                    .map(ObjectStorageBlobsDAO::builder)
+                                    .map(ObjectStorageBlobStore::builder)
                                     .orElseThrow(() -> new IllegalArgumentException("No Keystone3 configuration found for keystone3 API"));
             default:
                 throw new IllegalArgumentException("unknown auth api " + authConfiguration.getAuthApiName());
         }
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
-        return SwiftTempAuthObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftTempAuthObjectStorage.Configuration testConfig) {
+        return SwiftTempAuthObjectStorage.blobStoreBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone2ObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone2ObjectStorage.Configuration testConfig) {
+        return SwiftKeystone2ObjectStorage.blobStoreBuilder(testConfig);
     }
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
-        return SwiftKeystone3ObjectStorage.daoBuilder(testConfig);
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory builder(SwiftKeystone3ObjectStorage.Configuration testConfig) {
+        return SwiftKeystone3ObjectStorage.blobStoreBuilder(testConfig);
     }
 }

@@ -32,7 +32,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
 import org.apache.james.blob.union.UnionBlobStore;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
@@ -75,7 +75,7 @@ public class BlobStoreChoosingModule extends AbstractModule {
     @Singleton
     BlobStore provideBlobStore(BlobStoreChoosingConfiguration choosingConfiguration,
                                Provider<CassandraBlobStore> cassandraBlobStoreProvider,
-                               Provider<ObjectStorageBlobsDAO> swiftBlobStoreProvider) {
+                               Provider<ObjectStorageBlobStore> swiftBlobStoreProvider) {
 
         switch (choosingConfiguration.getImplementation()) {
             case OBJECTSTORAGE:

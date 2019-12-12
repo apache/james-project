@@ -28,26 +28,19 @@ import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3ObjectStorage;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Extension;
-import org.apache.james.blob.objectstorage.crypto.CryptoConfig;
-import org.apache.james.blob.objectstorage.swift.Credentials;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSCryptoTest implements MetricableBlobStoreContract {
-    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
-    private static final Credentials PASSWORD = Credentials.of("testing");
-    private static final String SAMPLE_SALT = "c603a7327ee3dcbc031d8d34b1096c605feca5e1";
-    private static final CryptoConfig CRYPTO_CONFIG = CryptoConfig.builder()
-        .salt(SAMPLE_SALT)
-        .password(PASSWORD.value().toCharArray())
-        .build();
+public class ObjectStorageBlobStoreAWSTest implements MetricableBlobStoreContract {
 
-    private ObjectStorageBlobsDAO objectStorageBlobsDAO;
-    private BlobStore testee;
+    private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
+
+    private ObjectStorageBlobStore objectStorageBlobStore;
     private AwsS3ObjectStorage awsS3ObjectStorage;
+    private BlobStore testee;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -58,20 +51,19 @@ public class ObjectStorageBlobsDAOAWSCryptoTest implements MetricableBlobStoreCo
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(configuration)
             .blobIdFactory(BLOB_ID_FACTORY)
-            .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
-        objectStorageBlobsDAO = builder.build();
-        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
+        objectStorageBlobStore = builder.build();
+        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobStore);
     }
 
     @AfterEach
     void tearDown() {
-        objectStorageBlobsDAO.deleteAllBuckets().block();
-        objectStorageBlobsDAO.close();
+        objectStorageBlobStore.deleteAllBuckets().block();
+        objectStorageBlobStore.close();
         awsS3ObjectStorage.tearDown();
     }
 

@@ -35,11 +35,11 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSNamespaceTest implements MetricableBlobStoreContract {
+public class ObjectStorageBlobStoreAWSPrefixAndNamespaceTest implements MetricableBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
     private BlobStore testee;
-    private ObjectStorageBlobsDAO objectStorageBlobsDAO;
+    private ObjectStorageBlobStore objectStorageBlobStore;
     private AwsS3ObjectStorage awsS3ObjectStorage;
 
     @BeforeEach
@@ -51,20 +51,21 @@ public class ObjectStorageBlobsDAOAWSNamespaceTest implements MetricableBlobStor
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(configuration)
             .blobIdFactory(BLOB_ID_FACTORY)
+            .bucketPrefix("prefix")
             .namespace(BucketName.of("namespace"))
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
-        objectStorageBlobsDAO = builder.build();
-        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
+        objectStorageBlobStore = builder.build();
+        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobStore);
     }
 
     @AfterEach
     void tearDown() {
-        objectStorageBlobsDAO.deleteAllBuckets().block();
-        objectStorageBlobsDAO.close();
+        objectStorageBlobStore.deleteAllBuckets().block();
+        objectStorageBlobStore.close();
         awsS3ObjectStorage.tearDown();
     }
 

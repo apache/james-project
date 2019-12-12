@@ -29,7 +29,7 @@ import org.jclouds.blobstore.BlobStore;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 
-public class ObjectStorageBlobsDAOBuilder {
+public class ObjectStorageBlobStoreBuilder {
 
     public static RequireBlobIdFactory forBlobStore(Supplier<BlobStore> supplier) {
         return blobIdFactory -> new ReadyToBuild(supplier, blobIdFactory);
@@ -93,7 +93,7 @@ public class ObjectStorageBlobsDAOBuilder {
             return this;
         }
 
-        public ObjectStorageBlobsDAO build() {
+        public ObjectStorageBlobStore build() {
             Preconditions.checkState(blobIdFactory != null);
 
             BlobStore blobStore = supplier.get();
@@ -103,7 +103,7 @@ public class ObjectStorageBlobsDAOBuilder {
                 .namespace(namespace)
                 .build();
 
-            return new ObjectStorageBlobsDAO(namespace.orElse(BucketName.DEFAULT),
+            return new ObjectStorageBlobStore(namespace.orElse(BucketName.DEFAULT),
                 blobIdFactory,
                 blobStore,
                 blobPutter.orElseGet(() -> defaultPutBlob(blobStore)),

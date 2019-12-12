@@ -21,6 +21,7 @@ package org.apache.james.blob.objectstorage;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -34,13 +35,12 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract {
-
+public class ObjectStorageBlobStoreAWSNamespaceTest implements MetricableBlobStoreContract {
     private static final HashBlobId.Factory BLOB_ID_FACTORY = new HashBlobId.Factory();
 
-    private ObjectStorageBlobsDAO objectStorageBlobsDAO;
-    private AwsS3ObjectStorage awsS3ObjectStorage;
     private BlobStore testee;
+    private ObjectStorageBlobStore objectStorageBlobStore;
+    private AwsS3ObjectStorage awsS3ObjectStorage;
 
     @BeforeEach
     void setUp(DockerAwsS3Container dockerAwsS3) {
@@ -51,19 +51,20 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(configuration)
             .blobIdFactory(BLOB_ID_FACTORY)
+            .namespace(BucketName.of("namespace"))
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
-        objectStorageBlobsDAO = builder.build();
-        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
+        objectStorageBlobStore = builder.build();
+        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobStore);
     }
 
     @AfterEach
     void tearDown() {
-        objectStorageBlobsDAO.deleteAllBuckets().block();
-        objectStorageBlobsDAO.close();
+        objectStorageBlobStore.deleteAllBuckets().block();
+        objectStorageBlobStore.close();
         awsS3ObjectStorage.tearDown();
     }
 
@@ -74,7 +75,7 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
     @Override
     public BlobId.Factory blobIdFactory() {
-        return BLOB_ID_FACTORY;
+        return new HashBlobId.Factory();
     }
 
     @Override
@@ -89,3 +90,4 @@ public class ObjectStorageBlobsDAOAWSTest implements MetricableBlobStoreContract
 
     }
 }
+

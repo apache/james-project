@@ -24,7 +24,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Supplier;
 
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
 import org.jclouds.logging.slf4j.config.SLF4JLoggingModule;
@@ -44,8 +44,8 @@ public class SwiftTempAuthObjectStorage {
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory daoBuilder(Configuration testConfig) {
-        return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory blobStoreBuilder(Configuration testConfig) {
+        return ObjectStorageBlobStoreBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
     }
 
     public static Configuration.Builder configBuilder() {

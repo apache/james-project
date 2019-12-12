@@ -21,7 +21,7 @@ package org.apache.james.modules.objectstorage;
 
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -33,7 +33,7 @@ public class ObjectStorageBlobStoreModule extends AbstractModule {
         install(new ObjectStorageDependenciesModule());
         bind(BlobStore.class)
             .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
-            .to(ObjectStorageBlobsDAO.class);
+            .to(ObjectStorageBlobStore.class);
     }
 
 }

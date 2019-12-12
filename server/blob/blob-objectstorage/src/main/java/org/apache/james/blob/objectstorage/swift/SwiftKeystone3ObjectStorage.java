@@ -25,7 +25,7 @@ import java.util.Properties;
 import java.util.function.Supplier;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
 import org.apache.james.util.OptionalUtils;
 import org.jclouds.ContextBuilder;
 import org.jclouds.blobstore.BlobStore;
@@ -45,8 +45,8 @@ public class SwiftKeystone3ObjectStorage {
     private static final Iterable<Module> JCLOUDS_MODULES =
         ImmutableSet.of(new SLF4JLoggingModule());
 
-    public static ObjectStorageBlobsDAOBuilder.RequireBlobIdFactory daoBuilder(Configuration testConfig) {
-        return ObjectStorageBlobsDAOBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
+    public static ObjectStorageBlobStoreBuilder.RequireBlobIdFactory blobStoreBuilder(Configuration testConfig) {
+        return ObjectStorageBlobStoreBuilder.forBlobStore(new BlobStoreBuilder(testConfig));
     }
 
     public static Configuration.Builder configBuilder() {

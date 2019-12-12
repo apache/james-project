@@ -23,16 +23,16 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOContract;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreContract;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith(DockerAwsS3Extension.class)
-class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
+class AwsS3ObjectStorageBlobStoreBuilderTest implements ObjectStorageBlobStoreContract {
 
     private BucketName defaultBucketName;
     private AwsS3AuthConfiguration configuration;
@@ -60,8 +60,8 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     }
 
     @Test
-    void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+    void blobIdFactoryIsMandatoryToBuildBlobStore() {
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(configuration)
             .blobIdFactory(null)
             .namespace(defaultBucketName);
@@ -70,13 +70,13 @@ class AwsS3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOCont
     }
 
     @Test
-    void builtBlobsDAOCanStoreAndRetrieve() {
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+    void builtBlobStoreCanStoreAndRetrieve() {
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(configuration)
             .blobIdFactory(new HashBlobId.Factory())
             .namespace(defaultBucketName)
             .blobPutter(awsS3ObjectStorage.putBlob(configuration));
 
-        assertBlobsDAOCanStoreAndRetrieve(builder);
+        assertBlobStoreCanStoreAndRetrieve(builder);
     }
 }

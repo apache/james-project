@@ -55,7 +55,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 @ExtendWith(DockerSwiftExtension.class)
-public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
+public class ObjectStorageBlobStoreTest implements MetricableBlobStoreContract {
 
     private static final String BIG_STRING = Strings.repeat("big blob content", 10 * 1024);
     private static final TenantName TENANT_NAME = TenantName.of("test");
@@ -71,7 +71,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     private BucketName defaultBucketName;
     private org.jclouds.blobstore.BlobStore blobStore;
     private SwiftTempAuthObjectStorage.Configuration testConfig;
-    private ObjectStorageBlobsDAO objectStorageBlobsDAO;
+    private ObjectStorageBlobStore objectStorageBlobStore;
     private BlobStore testee;
 
     @BeforeEach
@@ -85,19 +85,19 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
             .tempAuthHeaderPassName(PassHeaderName.of("X-Storage-Pass"))
             .build();
         BlobId.Factory blobIdFactory = blobIdFactory();
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild daoBuilder = ObjectStorageBlobsDAO
+        ObjectStorageBlobStoreBuilder.ReadyToBuild blobStoreBuilder = ObjectStorageBlobStore
             .builder(testConfig)
             .blobIdFactory(blobIdFactory)
             .namespace(defaultBucketName);
-        blobStore = daoBuilder.getSupplier().get();
-        objectStorageBlobsDAO = daoBuilder.build();
-        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobsDAO);
+        blobStore = blobStoreBuilder.getSupplier().get();
+        objectStorageBlobStore = blobStoreBuilder.build();
+        testee = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), objectStorageBlobStore);
     }
 
     @AfterEach
     void tearDown() {
-        objectStorageBlobsDAO.deleteAllBuckets().block();
-        objectStorageBlobsDAO.close();
+        objectStorageBlobStore.deleteAllBuckets().block();
+        objectStorageBlobStore.close();
     }
 
     @Override
@@ -112,37 +112,37 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
 
     @Test
     void supportsEncryptionWithCustomPayloadCodec() throws IOException {
-        ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
+        ObjectStorageBlobStore encryptedBlobStore = ObjectStorageBlobStore
             .builder(testConfig)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .namespace(defaultBucketName)
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
+        BlobId blobId = encryptedBlobStore.save(encryptedBlobStore.getDefaultBucketName(), content).block();
 
-        InputStream read = encryptedDao.read(encryptedDao.getDefaultBucketName(), blobId);
+        InputStream read = encryptedBlobStore.read(encryptedBlobStore.getDefaultBucketName(), blobId);
         String expectedContent = IOUtils.toString(read, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
 
     @Test
-    void encryptionWithCustomPayloadCodeCannotBeReadFromUnencryptedDAO() throws Exception {
-        ObjectStorageBlobsDAO encryptedDao = ObjectStorageBlobsDAO
+    void encryptionWithCustomPayloadCodeCannotBeReadFromUnencryptedBlobStore() throws Exception {
+        ObjectStorageBlobStore encryptedBlobStore = ObjectStorageBlobStore
             .builder(testConfig)
             .blobIdFactory(blobIdFactory())
             .payloadCodec(new AESPayloadCodec(CRYPTO_CONFIG))
             .namespace(defaultBucketName)
             .build();
         String content = "James is the best!";
-        BlobId blobId = encryptedDao.save(encryptedDao.getDefaultBucketName(), content).block();
+        BlobId blobId = encryptedBlobStore.save(encryptedBlobStore.getDefaultBucketName(), content).block();
 
-        InputStream encryptedIs = testee.read(encryptedDao.getDefaultBucketName(), blobId);
+        InputStream encryptedIs = testee.read(encryptedBlobStore.getDefaultBucketName(), blobId);
         assertThat(encryptedIs).isNotNull();
         String encryptedString = IOUtils.toString(encryptedIs, Charsets.UTF_8);
         assertThat(encryptedString).isNotEqualTo(content);
 
-        InputStream clearTextIs = encryptedDao.read(encryptedDao.getDefaultBucketName(), blobId);
+        InputStream clearTextIs = encryptedBlobStore.read(encryptedBlobStore.getDefaultBucketName(), blobId);
         String expectedContent = IOUtils.toString(clearTextIs, Charsets.UTF_8);
         assertThat(content).isEqualTo(expectedContent);
     }
@@ -150,9 +150,9 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
     @Test
     void deleteBucketShouldDeleteSwiftContainer() {
         BucketName bucketName = BucketName.of("azerty");
-        objectStorageBlobsDAO.save(bucketName, "data").block();
+        objectStorageBlobStore.save(bucketName, "data").block();
 
-        objectStorageBlobsDAO.deleteBucket(bucketName).block();
+        objectStorageBlobStore.deleteBucket(bucketName).block();
 
         assertThat(blobStore.containerExists(bucketName.asString()))
             .isFalse();
@@ -165,7 +165,7 @@ public class ObjectStorageBlobsDAOTest implements MetricableBlobStoreContract {
         blobStore.createContainerInLocation(defaultLocation, "bucket2");
         blobStore.createContainerInLocation(defaultLocation, "bucket3");
 
-        objectStorageBlobsDAO.deleteAllBuckets().block();
+        objectStorageBlobStore.deleteAllBuckets().block();
 
         assertThat(blobStore.list()
                 .stream()

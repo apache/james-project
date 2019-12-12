@@ -29,18 +29,18 @@ import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 
 
-public interface ObjectStorageBlobsDAOContract {
+public interface ObjectStorageBlobStoreContract {
 
     String CONTENT = "content";
 
     BucketName defaultBucketName();
 
-    default void assertBlobsDAOCanStoreAndRetrieve(ObjectStorageBlobsDAOBuilder.ReadyToBuild builder) {
-        ObjectStorageBlobsDAO dao = builder.build();
+    default void assertBlobStoreCanStoreAndRetrieve(ObjectStorageBlobStoreBuilder.ReadyToBuild builder) {
+        ObjectStorageBlobStore blobStore = builder.build();
 
-        BlobId blobId = dao.save(dao.getDefaultBucketName(), CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), CONTENT).block();
 
-        InputStream inputStream = dao.read(dao.getDefaultBucketName(), blobId);
+        InputStream inputStream = blobStore.read(blobStore.getDefaultBucketName(), blobId);
         assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));
     }
 }

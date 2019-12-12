@@ -28,9 +28,9 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.objectstorage.DockerSwift;
 import org.apache.james.blob.objectstorage.DockerSwiftExtension;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAO;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOBuilder;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobsDAOContract;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreBuilder;
+import org.apache.james.blob.objectstorage.ObjectStorageBlobStoreContract;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +38,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @ExtendWith(DockerSwiftExtension.class)
-class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlobsDAOContract {
+class SwiftKeystone3ObjectStorageBlobStoreBuilderTest implements ObjectStorageBlobStoreContract {
 
     private static final DomainName DOMAIN_NAME = DomainName.of("Default");
     private static final DomainId DOMAIN_ID = DomainId.of("default");
@@ -95,8 +95,8 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
     }
 
     @Test
-    void blobIdFactoryIsMandatoryToBuildBlobsDAO() {
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+    void blobIdFactoryIsMandatoryToBuildBlobStore() {
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(testConfig)
             .blobIdFactory(null)
             .namespace(defaultBucketName);
@@ -106,14 +106,14 @@ class SwiftKeystone3ObjectStorageBlobsDAOBuilderTest implements ObjectStorageBlo
 
     @ParameterizedTest
     @ValueSource(strings = {PROJECT_CONFIG_KEY, PROJECT_DOMAIN_ID_KEY, PROJECT_DOMAIN_NAME_KEY})
-    void builtBlobsDAOCanStoreAndRetrieve(String key) {
+    void builtBlobStoreCanStoreAndRetrieve(String key) {
         SwiftKeystone3ObjectStorage.Configuration config =
             configBuilders.get(key).endpoint(dockerSwift.keystoneV3Endpoint()).build();
-        ObjectStorageBlobsDAOBuilder.ReadyToBuild builder = ObjectStorageBlobsDAO
+        ObjectStorageBlobStoreBuilder.ReadyToBuild builder = ObjectStorageBlobStore
             .builder(config)
             .blobIdFactory(new HashBlobId.Factory())
             .namespace(defaultBucketName);
 
-        assertBlobsDAOCanStoreAndRetrieve(builder);
+        assertBlobStoreCanStoreAndRetrieve(builder);
     }
 }
