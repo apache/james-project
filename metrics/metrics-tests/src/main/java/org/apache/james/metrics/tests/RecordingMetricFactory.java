@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
@@ -35,11 +36,15 @@ import com.google.common.collect.Multimaps;
 
 public class RecordingMetricFactory implements MetricFactory {
     private final Multimap<String, Duration> executionTimes = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
-    private final ConcurrentHashMap<String, Integer> counters = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, AtomicInteger> counters = new ConcurrentHashMap<>();
 
     @Override
     public Metric generate(String name) {
-        return new RecordingMetric(executionValue -> counters.put(name, executionValue));
+        return new RecordingMetric(atomicCounterFor(name));
+    }
+
+    private AtomicInteger atomicCounterFor(String name) {
+        return counters.computeIfAbsent(name, currentName -> new AtomicInteger());
     }
 
     @Override
@@ -64,12 +69,12 @@ public class RecordingMetricFactory implements MetricFactory {
     }
 
     public int countFor(String name) {
-        return counters.getOrDefault(name, 0);
+        return atomicCounterFor(name).get();
     }
 
     public Map<String, Integer> countForPrefixName(String prefixName) {
         return counters.entrySet().stream()
             .filter(entry -> entry.getKey().startsWith(prefixName))
-            .collect(Guavate.toImmutableMap(Map.Entry::getKey, Map.Entry::getValue));
+            .collect(Guavate.toImmutableMap(Map.Entry::getKey, e -> e.getValue().get()));
     }
 }

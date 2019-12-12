@@ -30,7 +30,6 @@ import org.apache.james.metrics.api.MetricFactoryContract;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class RecordingMetricFactoryTest implements MetricFactoryContract {
@@ -50,11 +49,6 @@ class RecordingMetricFactoryTest implements MetricFactoryContract {
     @Override
     public MetricFactory testee() {
         return testee;
-    }
-
-    @Disabled("Current RecordingMetricFactory doesn't support this")
-    @Override
-    public void generateWithSameNameShouldReturnMetricsWithCorrelatedCounter() {
     }
 
     @Test

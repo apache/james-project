@@ -104,7 +104,11 @@ public interface MailQueueMetricContract extends MailQueueContract {
                 assertThat(values.values()).element(0).isEqualTo(2);
             });
         assertThat(testSystem.getMetricFactory().countForPrefixName(DEQUEUED_METRIC_NAME_PREFIX))
-            .hasSize(0);
+            .hasSize(1)
+            .satisfies(values -> {
+                assertThat(values.values()).hasSize(1);
+                assertThat(values.values()).element(0).isEqualTo(0);
+            });
     }
 
     @Test

@@ -20,37 +20,38 @@
 package org.apache.james.metrics.tests;
 
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 
 import org.apache.james.metrics.api.Metric;
 
 public class RecordingMetric implements Metric {
     private final AtomicInteger value;
-    private final Consumer<Integer> publishCallback;
 
-    public RecordingMetric(Consumer<Integer> publishCallback) {
-        this.value = new AtomicInteger();
-        this.publishCallback = publishCallback;
+    RecordingMetric() {
+        this(new AtomicInteger());
+    }
+
+    RecordingMetric(AtomicInteger value) {
+        this.value = value;
     }
 
     @Override
     public void increment() {
-        publishCallback.accept(value.incrementAndGet());
+        value.incrementAndGet();
     }
 
     @Override
     public void decrement() {
-        publishCallback.accept(value.decrementAndGet());
+        value.decrementAndGet();
     }
 
     @Override
     public void add(int i) {
-        publishCallback.accept(value.addAndGet(i));
+        value.addAndGet(i);
     }
 
     @Override
     public void remove(int i) {
-        publishCallback.accept(value.addAndGet(-1 * i));
+        value.addAndGet(-1 * i);
     }
 
     @Override

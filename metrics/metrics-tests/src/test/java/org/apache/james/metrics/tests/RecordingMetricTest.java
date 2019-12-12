@@ -19,21 +19,17 @@
 
 package org.apache.james.metrics.tests;
 
-import java.util.function.Consumer;
-
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricContract;
 import org.junit.jupiter.api.BeforeEach;
 
 class RecordingMetricTest implements MetricContract {
 
-    private static final Consumer<Integer> NO_CALLBACK = counterValue -> {};
-
     private RecordingMetric testee;
 
     @BeforeEach
     void setUp() {
-        testee = new RecordingMetric(NO_CALLBACK);
+        testee = new RecordingMetric();
     }
 
     @Override
