@@ -31,6 +31,6 @@ public class XListResponseEncoder implements ImapResponseEncoder<XListResponse> 
 
     @Override
     public void encode(XListResponse message, ImapResponseComposer composer) throws IOException {
-        ListingEncodingUtils.encodeListingResponse(ImapConstants.XLIST_RESPONSE_NAME, composer, message);
+        ListingEncodingUtils.encodeListingResponse(ImapConstants.XLIST_COMMAND, composer, message);
     }
 }

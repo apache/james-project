@@ -31,7 +31,7 @@ import org.apache.james.imap.message.request.LsubRequest;
 public class LsubCommandParser extends ListCommandParser {
 
     public LsubCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.LSUB_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.LSUB_COMMAND, statusResponseFactory);
     }
 
     @Override

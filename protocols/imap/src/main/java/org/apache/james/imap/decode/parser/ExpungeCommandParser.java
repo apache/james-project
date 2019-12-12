@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.ExpungeRequest;
 public class ExpungeCommandParser extends AbstractUidCommandParser {
 
     public ExpungeCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.EXPUNGE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.EXPUNGE_COMMAND, statusResponseFactory);
     }
 
     @Override

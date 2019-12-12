@@ -46,7 +46,7 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     private static final boolean STOP_ON_PAREN = true;
 
     public GetAnnotationCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.GETANNOTATION_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.GETANNOTATION_COMMAND, statusResponseFactory);
     }
 
     @Override

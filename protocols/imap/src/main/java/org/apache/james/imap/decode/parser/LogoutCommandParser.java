@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.LogoutRequest;
 public class LogoutCommandParser extends AbstractImapCommandParser {
 
     public LogoutCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.anyStateCommand(ImapConstants.LOGOUT_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.LOGOUT_COMMAND, statusResponseFactory);
     }
 
     @Override

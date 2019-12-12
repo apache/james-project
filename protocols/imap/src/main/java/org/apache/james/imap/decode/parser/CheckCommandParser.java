@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.CheckRequest;
 public class CheckCommandParser extends AbstractImapCommandParser {
 
     public CheckCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.CHECK_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.CHECK_COMMAND, statusResponseFactory);
     }
 
     @Override

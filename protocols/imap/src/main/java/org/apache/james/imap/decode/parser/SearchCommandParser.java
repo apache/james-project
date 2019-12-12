@@ -53,7 +53,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(SearchCommandParser.class);
 
     public SearchCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.SEARCH_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.SEARCH_COMMAND, statusResponseFactory);
     }
 
     /**

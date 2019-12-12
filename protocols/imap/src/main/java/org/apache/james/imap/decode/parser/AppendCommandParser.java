@@ -41,7 +41,7 @@ import org.apache.james.imap.message.request.AppendRequest;
 public class AppendCommandParser extends AbstractImapCommandParser {
 
     public AppendCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.APPEND_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.APPEND_COMMAND, statusResponseFactory);
     }
 
     /**

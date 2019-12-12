@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.DeleteACLRequest;
 public class DeleteACLCommandParser extends AbstractImapCommandParser {
 
     public DeleteACLCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.DELETEACL_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.DELETEACL_COMMAND, statusResponseFactory);
     }
 
     @Override

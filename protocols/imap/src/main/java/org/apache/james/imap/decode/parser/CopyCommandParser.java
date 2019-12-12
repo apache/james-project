@@ -31,7 +31,7 @@ import org.apache.james.imap.message.request.CopyRequest;
 public class CopyCommandParser extends AbstractMessageRangeCommandParser {
 
     public CopyCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.COPY_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.COPY_COMMAND, statusResponseFactory);
     }
 
     @Override

@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.RenameRequest;
 public class RenameCommandParser extends AbstractImapCommandParser {
 
     public RenameCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.RENAME_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.RENAME_COMMAND, statusResponseFactory);
     }
 
     @Override

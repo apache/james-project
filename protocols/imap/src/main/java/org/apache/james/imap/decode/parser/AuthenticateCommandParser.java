@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.IRAuthenticateRequest;
 public class AuthenticateCommandParser extends AbstractImapCommandParser {
 
     public AuthenticateCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.nonAuthenticatedStateCommand(ImapConstants.AUTHENTICATE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.AUTHENTICATE_COMMAND, statusResponseFactory);
     }
 
     @Override

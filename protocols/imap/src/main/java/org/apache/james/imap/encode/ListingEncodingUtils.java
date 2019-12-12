@@ -22,6 +22,7 @@ package org.apache.james.imap.encode;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.process.MailboxType;
 import org.apache.james.imap.message.response.AbstractListingResponse;
@@ -31,10 +32,9 @@ import com.google.common.collect.ImmutableList;
 
 public class ListingEncodingUtils {
 
-    public static void encodeListingResponse(String responseTypeName, ImapResponseComposer composer, AbstractListingResponse response) throws IOException {
-
+    public static void encodeListingResponse(ImapCommand command, ImapResponseComposer composer, AbstractListingResponse response) throws IOException {
         composer.untagged();
-        composer.message(responseTypeName);
+        composer.message(command.getName());
         composer.openParen();
         for (String attribute : getNameAttributes(response)) {
             composer.message(attribute);

@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.CapabilityRequest;
 public class CapabilityCommandParser extends AbstractImapCommandParser {
 
     public CapabilityCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.anyStateCommand(ImapConstants.CAPABILITY_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.CAPABILITY_COMMAND, statusResponseFactory);
     }
 
     @Override

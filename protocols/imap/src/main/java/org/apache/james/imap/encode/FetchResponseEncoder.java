@@ -65,8 +65,7 @@ public class FetchResponseEncoder implements ImapResponseEncoder<FetchResponse> 
     public void encode(FetchResponse fetchResponse, ImapResponseComposer composer) throws IOException {
         long messageNumber = fetchResponse.getMessageNumber();
 
-        composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND_NAME).openParen();
-
+        composer.untagged().message(messageNumber).message(ImapConstants.FETCH_COMMAND.getName()).openParen();
 
         encodeModSeq(composer, fetchResponse);
         encodeFlags(composer, fetchResponse);

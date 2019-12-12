@@ -32,7 +32,7 @@ import org.apache.james.imap.message.request.SelectRequest;
  */
 public class SelectCommandParser extends AbstractSelectionCommandParser {
     public SelectCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.SELECT_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.SELECT_COMMAND, statusResponseFactory);
     }
 
     @Override

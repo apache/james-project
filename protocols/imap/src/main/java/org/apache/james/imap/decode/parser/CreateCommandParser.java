@@ -40,7 +40,7 @@ import com.google.common.base.Strings;
 public class CreateCommandParser extends AbstractImapCommandParser {
 
     public CreateCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.CREATE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.CREATE_COMMAND, statusResponseFactory);
     }
 
     @Override

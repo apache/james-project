@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.LoginRequest;
 public class LoginCommandParser extends AbstractImapCommandParser {
 
     public LoginCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.nonAuthenticatedStateCommand(ImapConstants.LOGIN_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.LOGIN_COMMAND, statusResponseFactory);
     }
 
     @Override

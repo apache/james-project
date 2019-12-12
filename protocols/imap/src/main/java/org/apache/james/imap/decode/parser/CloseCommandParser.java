@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.CloseRequest;
 class CloseCommandParser extends AbstractImapCommandParser {
 
     public CloseCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.CLOSE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.CLOSE_COMMAND, statusResponseFactory);
     }
 
     @Override

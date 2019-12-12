@@ -42,7 +42,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     private static final byte[] UNCHANGEDSINCE = "UNCHANGEDSINCE".getBytes();
     
     public StoreCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.STORE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.STORE_COMMAND, statusResponseFactory);
     }
 
     @Override

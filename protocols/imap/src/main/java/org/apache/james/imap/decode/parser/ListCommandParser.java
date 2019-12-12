@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.ListRequest;
 public class ListCommandParser extends AbstractUidCommandParser {
 
     public ListCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.LIST_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.LIST_COMMAND, statusResponseFactory);
     }
 
     protected ListCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {

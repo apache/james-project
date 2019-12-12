@@ -54,7 +54,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     private static final byte[] VANISHED = "VANISHED".getBytes();
 
     public FetchCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.FETCH_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.FETCH_COMMAND, statusResponseFactory);
     }
 
     /**

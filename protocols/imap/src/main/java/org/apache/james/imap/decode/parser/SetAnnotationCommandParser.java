@@ -40,7 +40,7 @@ import com.google.common.collect.ImmutableList;
 
 public class SetAnnotationCommandParser extends AbstractImapCommandParser {
     public SetAnnotationCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.SETANNOTATION_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.SETANNOTATION_COMMAND, statusResponseFactory);
     }
 
     @Override

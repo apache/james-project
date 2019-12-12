@@ -33,7 +33,7 @@ import org.apache.james.imap.message.request.ExamineRequest;
 public class ExamineCommandParser extends AbstractSelectionCommandParser {
 
     public ExamineCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.EXAMINE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.EXAMINE_COMMAND, statusResponseFactory);
     }
 
     @Override

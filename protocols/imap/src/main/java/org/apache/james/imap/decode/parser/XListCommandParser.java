@@ -31,7 +31,7 @@ import org.apache.james.imap.message.request.XListRequest;
 public class XListCommandParser extends ListCommandParser {
 
     public XListCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.XLIST_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.XLIST_COMMAND, statusResponseFactory);
     }
 
     @Override

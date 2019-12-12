@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.MyRightsRequest;
 public class MyRightsCommandParser extends AbstractImapCommandParser {
 
     public MyRightsCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.MYRIGHTS_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.MYRIGHTS_COMMAND, statusResponseFactory);
     }
 
     @Override

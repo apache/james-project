@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.UnsubscribeRequest;
 public class UnsubscribeCommandParser extends AbstractImapCommandParser {
 
     public UnsubscribeCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.UNSUBSCRIBE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.UNSUBSCRIBE_COMMAND, statusResponseFactory);
     }
 
     @Override

@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.SubscribeRequest;
 public class SubscribeCommandParser extends AbstractImapCommandParser {
 
     public SubscribeCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.SUBSCRIBE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.SUBSCRIBE_COMMAND, statusResponseFactory);
     }
 
     @Override

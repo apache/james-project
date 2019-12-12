@@ -13,7 +13,7 @@ import org.apache.james.imap.message.request.MoveRequest;
 public class MoveCommandParser extends AbstractMessageRangeCommandParser {
 
     public MoveCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.MOVE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.MOVE_COMMAND, statusResponseFactory);
     }
 
     @Override

@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.NoopRequest;
 public class NoopCommandParser extends AbstractImapCommandParser {
 
     public NoopCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.anyStateCommand(ImapConstants.NOOP_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.NOOP_COMMAND, statusResponseFactory);
     }
 
     @Override

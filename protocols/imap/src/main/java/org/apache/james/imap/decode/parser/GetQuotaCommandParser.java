@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.GetQuotaRequest;
  */
 public class GetQuotaCommandParser extends AbstractImapCommandParser {
     public GetQuotaCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.GETQUOTA_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.GETQUOTA_COMMAND, statusResponseFactory);
     }
 
     @Override

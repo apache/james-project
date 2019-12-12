@@ -42,7 +42,7 @@ public class UidCommandParser extends AbstractImapCommandParser {
     private final ImapCommandParserFactory parserFactory;
 
     public UidCommandParser(ImapCommandParserFactory parserFactory, StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.selectedStateCommand(ImapConstants.UID_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.UID_COMMAND, statusResponseFactory);
         this.parserFactory = parserFactory;
     }
 

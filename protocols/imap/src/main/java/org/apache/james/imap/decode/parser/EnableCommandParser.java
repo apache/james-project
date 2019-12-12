@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.EnableRequest;
 public class EnableCommandParser extends AbstractImapCommandParser {
     
     public EnableCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.ENABLE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.ENABLE_COMMAND, statusResponseFactory);
     }
 
     @Override

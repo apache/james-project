@@ -36,7 +36,7 @@ import org.apache.james.imap.message.request.GetACLRequest;
 public class GetACLCommandParser extends AbstractImapCommandParser {
 
     public GetACLCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.GETACL_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.GETACL_COMMAND, statusResponseFactory);
     }
 
     @Override

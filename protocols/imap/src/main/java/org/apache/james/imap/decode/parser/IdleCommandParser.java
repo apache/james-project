@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.IdleRequest;
 public class IdleCommandParser extends AbstractImapCommandParser {
 
     public IdleCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.IDLE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.IDLE_COMMAND, statusResponseFactory);
     }
 
     @Override

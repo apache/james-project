@@ -44,7 +44,7 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     private static final ImapRequestLineReader.NoopCharValidator NOOP_CHAR_VALIDATOR = new ImapRequestLineReader.NoopCharValidator();
 
     public StatusCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.STATUS_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.STATUS_COMMAND, statusResponseFactory);
     }
 
     @Override

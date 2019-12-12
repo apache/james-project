@@ -35,7 +35,7 @@ import org.apache.james.imap.message.request.DeleteRequest;
 public class DeleteCommandParser extends AbstractImapCommandParser {
 
     public DeleteCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.DELETE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.DELETE_COMMAND, statusResponseFactory);
     }
 
     @Override
