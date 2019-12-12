@@ -23,26 +23,34 @@ import static org.eclipse.jetty.http.HttpHeader.LOCATION;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
+import org.apache.james.task.TaskManager;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Test;
 
+import spark.Request;
 import spark.Response;
 
-public class TaskIdDtoTest {
-    private static final String UID_VALUE = "ce5316cb-c924-40eb-9ca0-c5828e276297";
+public class TaskGeneratorTest {
+    static final Task TASK = mock(Task.class);
+    static final String UUID_VALUE = "ce5316cb-c924-40eb-9ca0-c5828e276297";
 
     @Test
-    public void respondShouldReturnCreatedWithTaskIdHeader() {
+    public void handleShouldReturnCreatedWithTaskIdHeader() throws Exception {
+        Request request = mock(Request.class);
         Response response = mock(Response.class);
-        TaskId taskId = TaskId.fromString(UID_VALUE);
 
-        TaskIdDto.respond(response, taskId);
+        TaskGenerator taskGenerator = any -> TASK;
+        TaskManager taskManager = mock(TaskManager.class);
+        when(taskManager.submit(TASK)).thenReturn(TaskId.fromString(UUID_VALUE));
+
+        taskGenerator.asRoute(taskManager).handle(request, response);
 
         verify(response).status(HttpStatus.CREATED_201);
-        verify(response).header(LOCATION.asString(), "/tasks/" + UID_VALUE);
+        verify(response).header(LOCATION.asString(), "/tasks/" + UUID_VALUE);
         verifyNoMoreInteractions(response);
     }
-
 }

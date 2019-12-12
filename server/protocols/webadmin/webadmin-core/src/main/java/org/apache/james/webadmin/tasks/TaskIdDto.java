@@ -19,26 +19,12 @@
 
 package org.apache.james.webadmin.tasks;
 
-import static org.eclipse.jetty.http.HttpHeader.LOCATION;
-
 import java.util.UUID;
 
-import org.apache.james.task.TaskId;
-import org.apache.james.webadmin.routes.TasksRoutes;
-import org.eclipse.jetty.http.HttpStatus;
-
-import spark.Response;
-
 public class TaskIdDto {
-    static TaskIdDto respond(Response response, TaskId taskId) {
-        response.status(HttpStatus.CREATED_201);
-        response.header(LOCATION.asString(), TasksRoutes.BASE + "/" + taskId.asString());
-        return new TaskIdDto(taskId.getValue());
-    }
-
     private final UUID uuid;
 
-    private TaskIdDto(UUID uuid) {
+    TaskIdDto(UUID uuid) {
         this.uuid = uuid;
     }
 

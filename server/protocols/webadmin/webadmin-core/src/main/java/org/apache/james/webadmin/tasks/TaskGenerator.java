@@ -19,9 +19,13 @@
 
 package org.apache.james.webadmin.tasks;
 
+import static org.eclipse.jetty.http.HttpHeader.LOCATION;
+
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.webadmin.routes.TasksRoutes;
+import org.eclipse.jetty.http.HttpStatus;
 
 import spark.Request;
 import spark.Response;
@@ -38,10 +42,12 @@ public interface TaskGenerator {
         }
 
         @Override
-        public Object handle(Request request, Response response) throws Exception {
+        public TaskIdDto handle(Request request, Response response) throws Exception {
             Task task = taskGenerator.generate(request);
             TaskId taskId = taskManager.submit(task);
-            return TaskIdDto.respond(response, taskId);
+            response.status(HttpStatus.CREATED_201);
+            response.header(LOCATION.asString(), TasksRoutes.BASE + "/" + taskId.asString());
+            return new TaskIdDto(taskId.getValue());
         }
     }
 
