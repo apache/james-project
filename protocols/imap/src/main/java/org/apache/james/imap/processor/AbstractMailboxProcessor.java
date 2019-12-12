@@ -89,16 +89,15 @@ public abstract class AbstractMailboxProcessor<R extends ImapRequest> extends Ab
     protected final void doProcess(R acceptableMessage, Responder responder, ImapSession session) {
         TimeMetric timeMetric = metricFactory.timer(IMAP_PREFIX + acceptableMessage.getCommand().getName());
         try {
-            if (!acceptableMessage.getCommand().validForState(session.getState())) {
-                ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
-                responder.respond(response);
-
-            } else {
+            if (acceptableMessage.getCommand().validForState(session.getState())) {
                 getMailboxManager().startProcessingRequest(session.getMailboxSession());
 
                 processRequest(acceptableMessage, session, responder);
 
                 getMailboxManager().endProcessingRequest(session.getMailboxSession());
+            } else {
+                ImapResponseMessage response = factory.taggedNo(acceptableMessage.getTag(), acceptableMessage.getCommand(), HumanReadableText.INVALID_COMMAND);
+                responder.respond(response);
             }
         } catch (DeniedAccessOnSharedMailboxException e) {
             no(acceptableMessage, responder, HumanReadableText.DENIED_SHARED_MAILBOX);
