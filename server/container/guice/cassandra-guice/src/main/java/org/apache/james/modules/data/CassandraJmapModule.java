@@ -20,11 +20,13 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.core.healthcheck.HealthCheck;
 import org.apache.james.eventsourcing.eventstore.cassandra.dto.EventDTOModule;
 import org.apache.james.jmap.api.access.AccessTokenRepository;
 import org.apache.james.jmap.api.filtering.FilteringManagement;
 import org.apache.james.jmap.api.filtering.impl.EventSourcingFilteringManagement;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
+import org.apache.james.jmap.api.projections.MessageFastViewProjectionHealthCheck;
 import org.apache.james.jmap.api.vacation.NotificationRegistry;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 import org.apache.james.jmap.cassandra.access.CassandraAccessModule;
@@ -60,6 +62,10 @@ public class CassandraJmapModule extends AbstractModule {
 
         bind(CassandraMessageFastViewProjection.class).in(Scopes.SINGLETON);
         bind(MessageFastViewProjection.class).to(CassandraMessageFastViewProjection.class);
+        bind(MessageFastViewProjectionHealthCheck.class).in(Scopes.SINGLETON);
+        Multibinder.newSetBinder(binder(), HealthCheck.class)
+            .addBinding()
+            .to(MessageFastViewProjectionHealthCheck.class);
 
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraAccessModule.MODULE);
