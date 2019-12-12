@@ -22,7 +22,6 @@ package org.apache.james.webadmin.tasks;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
-import org.apache.james.webadmin.dto.TaskIdDto;
 
 import spark.Request;
 import spark.Response;

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.webadmin.tasks;
 
 import static org.eclipse.jetty.http.HttpHeader.LOCATION;
 
@@ -30,20 +30,15 @@ import org.eclipse.jetty.http.HttpStatus;
 import spark.Response;
 
 public class TaskIdDto {
-
-    public static TaskIdDto respond(Response response, TaskId taskId) {
+    static TaskIdDto respond(Response response, TaskId taskId) {
         response.status(HttpStatus.CREATED_201);
         response.header(LOCATION.asString(), TasksRoutes.BASE + "/" + taskId.asString());
-        return TaskIdDto.from(taskId);
-    }
-
-    public static TaskIdDto from(TaskId id) {
-        return new TaskIdDto(id.getValue());
+        return new TaskIdDto(taskId.getValue());
     }
 
     private final UUID uuid;
 
-    public TaskIdDto(UUID uuid) {
+    private TaskIdDto(UUID uuid) {
         this.uuid = uuid;
     }
 

@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.webadmin.dto;
+package org.apache.james.webadmin.tasks;
 
 import static org.eclipse.jetty.http.HttpHeader.LOCATION;
 import static org.mockito.Mockito.mock;
