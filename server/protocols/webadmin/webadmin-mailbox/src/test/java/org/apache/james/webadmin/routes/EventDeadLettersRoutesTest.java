@@ -533,7 +533,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("invalid-action is not a supported action"));
+                .body("details", is("Invalid value supplied for 'action': invalid-action. Supported values are [reDeliver]"));
         }
 
         @Test
@@ -548,7 +548,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'action' url parameter is mandatory"));
+                .body("details", is("'action' query parameter is compulsory. Supported values are [reDeliver]"));
         }
     }
 
@@ -721,7 +721,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("invalid-action is not a supported action"));
+                .body("details", is("Invalid value supplied for 'action': invalid-action. Supported values are [reDeliver]"));
         }
 
         @Test
@@ -736,7 +736,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'action' url parameter is mandatory"));
+                .body("details", is("'action' query parameter is compulsory. Supported values are [reDeliver]"));
         }
 
         @Test
@@ -900,7 +900,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("invalid-action is not a supported action"));
+                .body("details", is("Invalid value supplied for 'action': invalid-action. Supported values are [reDeliver]"));
         }
 
         @Test
@@ -915,7 +915,7 @@ class EventDeadLettersRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("'action' url parameter is mandatory"));
+                .body("details", is("'action' query parameter is compulsory. Supported values are [reDeliver]"));
         }
 
         @Test

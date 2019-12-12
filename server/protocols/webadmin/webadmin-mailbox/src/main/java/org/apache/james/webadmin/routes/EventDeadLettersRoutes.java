@@ -20,7 +20,6 @@
 package org.apache.james.webadmin.routes;
 
 import java.util.List;
-import java.util.Optional;
 
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
@@ -33,13 +32,12 @@ import org.apache.james.event.json.EventSerializer;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
 import org.apache.james.mailbox.events.Group;
-import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.dto.ActionEvents;
-import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.EventDeadLettersService;
+import org.apache.james.webadmin.tasks.TaskFactory;
+import org.apache.james.webadmin.tasks.TaskIdDto;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.james.webadmin.utils.Responses;
@@ -54,6 +52,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
 import spark.Request;
 import spark.Response;
+import spark.Route;
 import spark.Service;
 
 @Api(tags = "EventDeadLetter")
@@ -65,6 +64,7 @@ public class EventDeadLettersRoutes implements Routes {
     private static final String INSERTION_ID_PARAMETER = ":insertionId";
 
     private static final String INTERNAL_SERVER_ERROR = "Internal server error - Something went bad on the server side.";
+    private static final TaskRegistrationKey RE_DELIVER = TaskRegistrationKey.of("reDeliver");
 
     private final EventDeadLettersService eventDeadLettersService;
     private final EventSerializer eventSerializer;
@@ -87,13 +87,13 @@ public class EventDeadLettersRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(BASE_PATH, this::performActionOnAllEvents, jsonTransformer);
+        service.post(BASE_PATH, performActionOnAllEvents(), jsonTransformer);
         service.get(BASE_PATH + "/groups", this::listGroups, jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM, this::listFailedEvents, jsonTransformer);
-        service.post(BASE_PATH + "/groups/" + GROUP_PARAM, this::performActionOnGroupEvents, jsonTransformer);
+        service.post(BASE_PATH + "/groups/" + GROUP_PARAM, performActionOnGroupEvents(), jsonTransformer);
         service.get(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::getEventDetails);
         service.delete(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::deleteEvent);
-        service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, this::performActionOnSingleEvent, jsonTransformer);
+        service.post(BASE_PATH + "/groups/" + GROUP_PARAM + "/" + INSERTION_ID_PARAMETER, performActionOnSingleEvent(), jsonTransformer);
     }
 
     @POST
@@ -117,12 +117,10 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid action argument"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
-    public TaskIdDto performActionOnAllEvents(Request request, Response response) {
-        assertValidActionParameter(request);
-
-        Task task = eventDeadLettersService.redeliverAllEvents();
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
+    public Route performActionOnAllEvents() {
+        return TaskFactory.builder()
+            .register(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
+            .buildAsRoute(taskManager);
     }
 
     @GET
@@ -186,13 +184,10 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Invalid group name or action argument"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
-    public TaskIdDto performActionOnGroupEvents(Request request, Response response) {
-        Group group = parseGroup(request);
-        assertValidActionParameter(request);
-
-        Task task = eventDeadLettersService.redeliverGroupEvents(group);
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
+    public Route performActionOnGroupEvents() {
+        return TaskFactory.builder()
+            .register(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
+            .buildAsRoute(taskManager);
     }
 
     @GET
@@ -297,23 +292,11 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "No event with this insertionId"),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
-    public TaskIdDto performActionOnSingleEvent(Request request, Response response) {
-        Group group = parseGroup(request);
-        EventDeadLetters.InsertionId insertionId = parseInsertionId(request);
-        assertValidActionParameter(request);
-
-        Task task = eventDeadLettersService.redeliverSingleEvent(group, insertionId);
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
-    }
-
-    private void assertValidActionParameter(Request request) {
-        String action = request.queryParams("action");
-        Optional<ActionEvents> actionEvent = ActionEvents.find(action);
-
-        if (!actionEvent.isPresent()) {
-            throw new IllegalArgumentException(action + " is not a supported action");
-        }
+    public Route performActionOnSingleEvent() {
+        return TaskFactory.builder()
+            .register(RE_DELIVER,
+                request -> eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request)))
+            .buildAsRoute(taskManager);
     }
 
     private Group parseGroup(Request request) {
