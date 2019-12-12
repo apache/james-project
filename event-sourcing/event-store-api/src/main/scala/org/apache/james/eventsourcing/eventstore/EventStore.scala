@@ -35,7 +35,7 @@ trait EventStore {
    * This method should check that no input event has an id already stored and throw otherwise
    * It should also check that all events belong to the same aggregate
    */
-  def appendAll(events: List[Event]) : Unit
+  def appendAll(events: List[Event]): Unit
 
-  def getEventsOfAggregate(aggregateId: AggregateId) : History
+  def getEventsOfAggregate(aggregateId: AggregateId): History
 }
