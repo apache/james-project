@@ -28,11 +28,12 @@ import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.CassandraMailboxCounterDAO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
-import org.apache.james.task.TaskId;
+import org.apache.james.task.Task;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.dto.MailboxMergingRequest;
 import org.apache.james.webadmin.dto.TaskIdDto;
+import org.apache.james.webadmin.tasks.TaskGenerator;
 import org.apache.james.webadmin.utils.JsonExtractException;
 import org.apache.james.webadmin.utils.JsonExtractor;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -48,7 +49,6 @@ import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
 import spark.Request;
-import spark.Response;
 import spark.Service;
 
 @Api(tags = "Mailbox merging route for fixing Ghost mailbox bug described in MAILBOX-322")
@@ -84,7 +84,8 @@ public class CassandraMailboxMergingRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(BASE, this::mergeMailboxes, jsonTransformer);
+        TaskGenerator taskGenerator = this::mergeMailboxes;
+        service.post(BASE, taskGenerator.asRoute(taskManager), jsonTransformer);
     }
 
     @POST
@@ -106,15 +107,13 @@ public class CassandraMailboxMergingRoutes implements Routes {
             }),
             @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Error with supplied data (JSON parsing or invalid mailbox ids)")
         })
-    public Object mergeMailboxes(Request request, Response response) throws JsonExtractException {
+    public Task mergeMailboxes(Request request) throws JsonExtractException {
         LOGGER.debug("Cassandra upgrade launched");
         MailboxMergingRequest mailboxMergingRequest = jsonExtractor.parse(request.body());
         CassandraId originId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeOrigin());
         CassandraId destinationId = mailboxIdFactory.fromString(mailboxMergingRequest.getMergeDestination());
 
         long totalMessagesToMove = counterDAO.countMessagesInMailbox(originId).defaultIfEmpty(0L).block();
-        MailboxMergingTask task = new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
+        return new MailboxMergingTask(mailboxMergingTaskRunner, totalMessagesToMove, originId, destinationId);
     }
 }
