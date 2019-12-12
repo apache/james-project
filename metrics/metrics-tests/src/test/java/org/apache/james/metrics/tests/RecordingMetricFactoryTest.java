@@ -25,12 +25,15 @@ import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.james.metrics.api.Metric;
+import org.apache.james.metrics.api.MetricFactory;
+import org.apache.james.metrics.api.MetricFactoryContract;
 import org.apache.james.metrics.api.TimeMetric;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-class RecordingMetricFactoryTest {
+class RecordingMetricFactoryTest implements MetricFactoryContract {
 
     private static final String TIME_METRIC_NAME = "timerMetric";
     private static final String METRIC_NAME = "metric";
@@ -42,6 +45,16 @@ class RecordingMetricFactoryTest {
     @BeforeEach
     void setUp() {
         testee = new RecordingMetricFactory();
+    }
+
+    @Override
+    public MetricFactory testee() {
+        return testee;
+    }
+
+    @Disabled("Current RecordingMetricFactory doesn't support this")
+    @Override
+    public void generateWithSameNameShouldReturnMetricsWithCorrelatedCounter() {
     }
 
     @Test
