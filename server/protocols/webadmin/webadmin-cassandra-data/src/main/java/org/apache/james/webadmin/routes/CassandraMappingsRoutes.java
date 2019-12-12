@@ -24,14 +24,13 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.task.Task;
-import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.dto.ActionMappings;
-import org.apache.james.webadmin.dto.TaskIdDto;
 import org.apache.james.webadmin.service.CassandraMappingsService;
+import org.apache.james.webadmin.tasks.TaskFactory;
+import org.apache.james.webadmin.tasks.TaskIdDto;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.eclipse.jetty.http.HttpStatus;
 
@@ -42,8 +41,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.annotations.ResponseHeader;
-import spark.Request;
-import spark.Response;
+import spark.Route;
 import spark.Service;
 
 @Api(tags = "Cassandra Mappings Operations")
@@ -51,6 +49,7 @@ import spark.Service;
 @Produces(Constants.JSON_CONTENT_TYPE)
 public class CassandraMappingsRoutes implements Routes {
     public static final String ROOT_PATH = "cassandra/mappings";
+    private static final TaskRegistrationKey SOLVE_INCONSISTENCIES = TaskRegistrationKey.of("SolveInconsistencies");
 
     private final CassandraMappingsService cassandraMappingsService;
     private final TaskManager taskManager;
@@ -73,7 +72,7 @@ public class CassandraMappingsRoutes implements Routes {
 
     @Override
     public void define(Service service) {
-        service.post(ROOT_PATH, this::performActionOnMappings, jsonTransformer);
+        service.post(ROOT_PATH, performActionOnMappings(), jsonTransformer);
     }
 
     @POST
@@ -97,10 +96,9 @@ public class CassandraMappingsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = INVALID_ACTION_ARGUMENT_REQUEST),
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = ACTION_REQUEST_CAN_NOT_BE_DONE)
     })
-    public TaskIdDto performActionOnMappings(Request request, Response response) {
-        ActionMappings action = ActionMappings.parse(request.queryParams("action"));
-        Task task = cassandraMappingsService.createActionTask(action);
-        TaskId taskId = taskManager.submit(task);
-        return TaskIdDto.respond(response, taskId);
+    public Route performActionOnMappings() {
+        return TaskFactory.builder()
+            .register(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
+            .buildAsRoute(taskManager);
     }
 }
