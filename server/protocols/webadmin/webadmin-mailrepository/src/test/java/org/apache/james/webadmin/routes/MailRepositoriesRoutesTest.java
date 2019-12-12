@@ -1075,7 +1075,8 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("action query parameter is mandatory. The only supported value is `reprocess`"));
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("Invalid value supplied for 'action': invalid. Supported values are [reprocess]"));
     }
 
     @Test
@@ -1086,7 +1087,8 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("action query parameter is mandatory. The only supported value is `reprocess`"));
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("'action' query parameter is compulsory. Supported values are [reprocess]"));
     }
 
     @Test
@@ -1433,7 +1435,8 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("action query parameter is mandatory. The only supported value is `reprocess`"));
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("Invalid value supplied for 'action': invalid. Supported values are [reprocess]"));
     }
 
     @Test
@@ -1449,7 +1452,8 @@ public class MailRepositoriesRoutesTest {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-            .body("message", is("action query parameter is mandatory. The only supported value is `reprocess`"));
+            .body("message", is("Invalid arguments supplied in the user request"))
+            .body("details", is("'action' query parameter is compulsory. Supported values are [reprocess]"));
     }
 
     @Test
