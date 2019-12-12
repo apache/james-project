@@ -130,7 +130,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -141,7 +142,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
         }
 
@@ -286,7 +288,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -300,7 +303,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -474,7 +478,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -488,7 +493,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -662,7 +668,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -676,7 +683,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -821,7 +829,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -832,7 +841,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -961,7 +971,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("'task' query parameter is compulsory. Supported values are [reIndex]"));
             }
 
             @Test
@@ -1007,7 +1018,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("task query parameter is mandatory. The only supported value is `reIndex`"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -1022,7 +1034,8 @@ class ReindexingRoutesTest {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
-                    .body("message", is("TaskId bbdb69c9-082a-44b0-a85a-6e33e74287a5 does not exist"));
+                    .body("message", is("Invalid arguments supplied in the user request"))
+                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
             }
         }
 
