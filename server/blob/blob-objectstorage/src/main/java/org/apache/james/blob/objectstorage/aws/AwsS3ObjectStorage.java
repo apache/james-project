@@ -146,14 +146,14 @@ public class AwsS3ObjectStorage {
 
         @Override
         public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
-            return writeFileAndAct(blob, file -> putWithRetry(bucketName, configuration, blob, file, FIRST_TRY));
+            return writeFileAndAct(blob, file -> putWithRetry(bucketName, configuration, blob, file));
         }
 
         @Override
         public Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
             Function<File, Mono<Void>> putChangedBlob = file -> {
                 initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
-                return putWithRetry(bucketName, configuration, initialBlob, file, FIRST_TRY);
+                return putWithRetry(bucketName, configuration, initialBlob, file);
             };
             return writeFileAndAct(initialBlob, putChangedBlob)
                 .then(Mono.fromCallable(blobIdSupplier::get));
@@ -171,7 +171,7 @@ public class AwsS3ObjectStorage {
             );
         }
 
-        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file, int tried) {
+        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
             return Mono.<Void>fromRunnable(Throwing.runnable(() -> put(bucketName, configuration, blob, file)).sneakyThrow())
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
