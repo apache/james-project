@@ -19,40 +19,51 @@
 
 package org.apache.james.imap.api;
 
+import java.util.EnumSet;
+
 /**
  * Represents a processor for a particular Imap command. Implementations of this
  * interface should encpasulate all command specific processing.
  */
 public class ImapCommand {
+    enum Validity {
+        NonAuthenticated(EnumSet.of(ImapSessionState.NON_AUTHENTICATED)),
+        Authenticated(EnumSet.of(ImapSessionState.AUTHENTICATED, ImapSessionState.SELECTED)),
+        Selected(EnumSet.of(ImapSessionState.SELECTED)),
+        Any(EnumSet.of(ImapSessionState.AUTHENTICATED, ImapSessionState.NON_AUTHENTICATED, ImapSessionState.SELECTED));
+
+        private final EnumSet<ImapSessionState> validStates;
+
+        Validity(EnumSet<ImapSessionState> validStates) {
+            this.validStates = validStates;
+        }
+
+        boolean allowed(ImapSessionState sessionState) {
+            return validStates.contains(sessionState);
+        }
+    }
+
     public static ImapCommand nonAuthenticatedStateCommand(String name) {
-        return new ImapCommand(false, false, true, name);
+        return new ImapCommand(Validity.NonAuthenticated, name);
     }
 
     public static ImapCommand authenticatedStateCommand(String name) {
-        return new ImapCommand(true, true, false, name);
+        return new ImapCommand(Validity.Authenticated, name);
     }
 
     public static ImapCommand selectedStateCommand(String name) {
-        return new ImapCommand(false, true, false, name);
+        return new ImapCommand(Validity.Selected, name);
     }
 
     public static ImapCommand anyStateCommand(String name) {
-        return new ImapCommand(true, true, true, name);
+        return new ImapCommand(Validity.Any, name);
     }
 
-    private final boolean validInAuthenticated;
-
-    private final boolean validInSelected;
-
-    private final boolean validInNonAuthenticated;
-
+    private final Validity validity;
     private final String name;
 
-    private ImapCommand(boolean validInAuthenticated, boolean validInSelected, boolean validInNonAuthenticated, String name) {
-        super();
-        this.validInAuthenticated = validInAuthenticated;
-        this.validInSelected = validInSelected;
-        this.validInNonAuthenticated = validInNonAuthenticated;
+    private ImapCommand(Validity validity, String name) {
+        this.validity = validity;
         this.name = name;
     }
 
@@ -61,21 +72,7 @@ public class ImapCommand {
     }
 
     public boolean validForState(ImapSessionState state) {
-        final boolean result;
-        switch (state) {
-        case AUTHENTICATED:
-            result = validInAuthenticated;
-            break;
-        case NON_AUTHENTICATED:
-            result = validInNonAuthenticated;
-            break;
-        case SELECTED:
-            result = validInSelected;
-            break;
-        default:
-            result = false;
-        }
-        return result;
+        return validity.allowed(state);
     }
 
     public String toString() {
