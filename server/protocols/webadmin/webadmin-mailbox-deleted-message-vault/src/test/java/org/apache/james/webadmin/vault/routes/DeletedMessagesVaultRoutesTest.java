@@ -290,7 +290,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("parameter is missing"));
+                .body("details", is("'scope' query parameter is compulsory. Supported values are [expired]"));
         }
 
         @Test
@@ -304,7 +304,21 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("scope cannot be empty or blank"));
+                .body("details", is("'scope' query parameter cannot be empty or blank. Supported values are [expired]"));
+        }
+
+        @Test
+        void purgeAPIShouldReturnInvalidWhenPassingBlankScope() {
+            given()
+                .queryParam("scope", "  ")
+            .when()
+                .delete()
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"))
+                .body("details", is("'scope' query parameter cannot be empty or blank. Supported values are [expired]"));
         }
 
         @Test
@@ -318,7 +332,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", startsWith("'invalid action' is not a valid scope."));
+                .body("details", startsWith("Invalid value supplied for 'scope': invalid action. Supported values are [expired]"));
         }
 
         @Test
@@ -332,7 +346,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", startsWith("'EXPIRED' is not a valid scope."));
+                .body("details", is("Invalid value supplied for 'scope': EXPIRED. Supported values are [expired]"));
         }
 
         @ParameterizedTest
