@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,14 +15,11 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.memory
 
-package org.apache.james.eventsourcing.eventstore.memory;
+import org.apache.james.eventsourcing.eventstore.EventStoreContract
+import org.junit.jupiter.api.extension.ExtendWith
 
-import org.apache.james.eventsourcing.eventstore.EventStoreTest;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-@ExtendWith(InMemoryEventStoreExtension.class)
-public class InMemoryEventStoreTest implements EventStoreTest {
-
-}
+@ExtendWith(Array(classOf[InMemoryEventStoreExtension]))
+class InMemoryEventStoreTest extends EventStoreContract

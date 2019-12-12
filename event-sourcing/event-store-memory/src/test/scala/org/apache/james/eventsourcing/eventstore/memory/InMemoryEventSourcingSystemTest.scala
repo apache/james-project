@@ -1,4 +1,4 @@
-/****************************************************************
+ /***************************************************************
  * Licensed to the Apache Software Foundation (ASF) under one   *
  * or more contributor license agreements.  See the NOTICE file *
  * distributed with this work for additional information        *
@@ -16,24 +16,10 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
+package org.apache.james.eventsourcing.eventstore.memory
 
-package org.apache.james.eventsourcing.eventstore.memory;
+import org.apache.james.eventsourcing.EventSourcingSystemTest
+import org.junit.jupiter.api.extension.ExtendWith
 
-import org.apache.james.eventsourcing.eventstore.EventStore;
-import org.junit.jupiter.api.extension.ExtensionContext;
-import org.junit.jupiter.api.extension.ParameterContext;
-import org.junit.jupiter.api.extension.ParameterResolutionException;
-import org.junit.jupiter.api.extension.ParameterResolver;
-
-public class InMemoryEventStoreExtension implements ParameterResolver {
-
-    @Override
-    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return (parameterContext.getParameter().getType() == EventStore.class);
-    }
-
-    @Override
-    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-        return new InMemoryEventStore();
-    }
-}
+@ExtendWith(Array(classOf[InMemoryEventStoreExtension]))
+class InMemoryEventSourcingSystemTest extends EventSourcingSystemTest {}

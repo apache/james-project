@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,14 +15,16 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ * ***************************************************************/
+package org.apache.james.eventsourcing.eventstore.memory
 
-package org.apache.james.eventsourcing.eventstore.memory;
+import org.apache.james.eventsourcing.eventstore.EventStore
+import org.junit.jupiter.api.extension.{ExtensionContext, ParameterContext, ParameterResolver}
 
-import org.apache.james.eventsourcing.EventSourcingSystemTest;
-import org.junit.jupiter.api.extension.ExtendWith;
+class InMemoryEventStoreExtension extends ParameterResolver {
 
-@ExtendWith(InMemoryEventStoreExtension.class)
-public class InMemoryEventSourcingSystemTest implements EventSourcingSystemTest {
+  override def supportsParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext): Boolean =
+    parameterContext.getParameter.getType eq classOf[EventStore]
 
+  override def resolveParameter(parameterContext: ParameterContext, extensionContext: ExtensionContext) = new InMemoryEventStore
 }
