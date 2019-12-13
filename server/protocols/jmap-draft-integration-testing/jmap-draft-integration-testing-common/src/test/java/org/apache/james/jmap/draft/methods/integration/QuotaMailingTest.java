@@ -22,14 +22,14 @@ package org.apache.james.jmap.draft.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapCommonRequests.concatMessageIds;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
 
@@ -39,7 +39,7 @@ import java.util.List;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -116,7 +116,7 @@ public abstract class QuotaMailingTest {
         String idString = concatMessageIds(ids);
 
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [" + idString + "]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -145,7 +145,7 @@ public abstract class QuotaMailingTest {
         String idString = concatMessageIds(ids);
 
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [" + idString + "]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -181,7 +181,7 @@ public abstract class QuotaMailingTest {
             "]";
 
         with()
-            .header("Authorization", bartAccessToken.serialize())
+            .header("Authorization", bartAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()

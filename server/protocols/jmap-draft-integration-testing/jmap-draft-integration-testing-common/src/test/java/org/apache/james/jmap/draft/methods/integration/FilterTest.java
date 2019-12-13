@@ -22,18 +22,18 @@ package org.apache.james.jmap.draft.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.CEDRIC;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ALICE;
-import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.BOB;
-import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.CEDRIC;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_MINUTE;
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -44,8 +44,8 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.JmapCommonRequests;
-import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.model.MailboxId;
@@ -108,7 +108,7 @@ public abstract class FilterTest {
                 "]]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(body)
         .when()
             .post("/jmap")
@@ -127,7 +127,7 @@ public abstract class FilterTest {
                 "]]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(body)
         .when()
             .post("/jmap")
@@ -146,7 +146,7 @@ public abstract class FilterTest {
                 "]]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(body)
         .when()
             .post("/jmap")
@@ -164,7 +164,7 @@ public abstract class FilterTest {
         MailboxId mailbox2 = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -192,7 +192,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -220,7 +220,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"getFilter\", " +
                   "  {}, " +
@@ -245,7 +245,7 @@ public abstract class FilterTest {
         MailboxId mailbox = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -279,7 +279,7 @@ public abstract class FilterTest {
         MailboxId mailbox = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -330,7 +330,7 @@ public abstract class FilterTest {
         MailboxId mailbox2 = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -364,7 +364,7 @@ public abstract class FilterTest {
     @Test
     public void setFilterShouldRejectAccountId() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -384,7 +384,7 @@ public abstract class FilterTest {
     @Test
     public void setFilterShouldAcceptNullAccountId() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -403,7 +403,7 @@ public abstract class FilterTest {
     @Test
     public void setFilterShouldRejectIfInState() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -423,7 +423,7 @@ public abstract class FilterTest {
     @Test
     public void setFilterShouldAcceptNullIfInState() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -446,7 +446,7 @@ public abstract class FilterTest {
         MailboxId mailbox2 = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -488,7 +488,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"getFilter\", " +
                   "  {}, " +
@@ -520,7 +520,7 @@ public abstract class FilterTest {
         MailboxId mailbox = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -548,7 +548,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -562,7 +562,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"getFilter\", " +
                   "  {}, " +
@@ -581,7 +581,7 @@ public abstract class FilterTest {
         MailboxId mailbox = randomMailboxId();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"setFilter\", " +
                   "  {" +
@@ -665,7 +665,7 @@ public abstract class FilterTest {
             .statusCode(200);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                   "  \"getFilter\", " +
                   "  {}, " +
@@ -698,7 +698,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenFromRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -740,7 +740,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -751,7 +751,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenToRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -793,7 +793,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -806,7 +806,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenCcRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -849,7 +849,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -862,7 +862,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenRecipientRuleMatchesCc() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -905,7 +905,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -918,7 +918,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenRecipientRuleMatchesTo() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -961,7 +961,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -974,7 +974,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenSubjectRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1016,7 +1016,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1030,7 +1030,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenFromDoesNotMatchRule() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1072,7 +1072,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1085,7 +1085,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenToDoesNotMatchRule() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1127,7 +1127,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1140,7 +1140,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenCcDoesNotMatchRule() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1183,7 +1183,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1196,7 +1196,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenRecipientDoesNotMatchRule() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1239,7 +1239,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1252,7 +1252,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRule() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1294,7 +1294,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1308,7 +1308,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenSubjectRuleDoesNotMatchRuleBecauseOfCase() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1350,7 +1350,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1363,7 +1363,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenContainsComparatorMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1405,7 +1405,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1418,7 +1418,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenContainsComparatorDoesNotMatch() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1460,7 +1460,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1473,7 +1473,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesName() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1515,7 +1515,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1528,7 +1528,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesAddress() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1570,7 +1570,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1583,7 +1583,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesFullHeader() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1625,7 +1625,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1639,7 +1639,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenExactlyEqualsMatchesCaseInsensitivelyFullHeader() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1681,7 +1681,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1694,7 +1694,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenExactlyEqualsComparatorDoesNotMatch() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1736,7 +1736,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1749,7 +1749,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenNotContainsComparatorMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1791,7 +1791,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1804,7 +1804,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenNotContainsComparatorDoesNotMatch() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1846,7 +1846,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1859,7 +1859,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenContainsNotExactlyEqualsMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1901,7 +1901,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1914,7 +1914,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenNotExactlyEqualsMatchesAddress() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -1956,7 +1956,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -1969,7 +1969,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenNotExactlyEqualsMatchesFullHeader() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2011,7 +2011,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -2024,7 +2024,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInInboxWhenNotExactlyEqualsComparatorMatchesName() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2066,7 +2066,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -2079,7 +2079,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenFirstRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2135,7 +2135,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -2146,7 +2146,7 @@ public abstract class FilterTest {
     @Test
     public void messageShouldBeAppendedInSpecificMailboxWhenSecondRuleMatches() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2202,7 +2202,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -2213,7 +2213,7 @@ public abstract class FilterTest {
     @Test
     public void inboxShouldBeEmptyWhenFromRuleMatchesInSpecificMailbox() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2255,7 +2255,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -2267,7 +2267,7 @@ public abstract class FilterTest {
     @Test
     public void matchedMailboxShouldBeEmptyWhenFromRuleDoesntMatch() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "  \"setFilter\", " +
                 "  {" +
@@ -2309,7 +2309,7 @@ public abstract class FilterTest {
             "]]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
             .post("/jmap");
 

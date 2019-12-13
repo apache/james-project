@@ -33,7 +33,7 @@ import static org.apache.james.jmap.JmapCommonRequests.getAllMailboxesIds;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
-import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
 import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
 import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.deleteFromVault;

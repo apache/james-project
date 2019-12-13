@@ -19,8 +19,9 @@
 
 package org.apache.james.jmap.draft.methods.integration.cucumber;
 
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.mailbox.model.MailboxConstants.INBOX;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -42,7 +43,6 @@ import javax.mail.Flags;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.TestingConstants;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.methods.integration.cucumber.util.TableRow;
 import org.apache.james.mailbox.model.MailboxConstants;
@@ -395,7 +395,7 @@ public class GetMessagesMethodStepdefs {
                 ClassLoaderUtils.getSystemResourceAsString(fileName));
         smtpMessageSender.close();
 
-        TestingConstants.calmlyAwait.until(() -> !retrieveIds(user, mailboxId).isEmpty());
+        calmlyAwait.until(() -> !retrieveIds(user, mailboxId).isEmpty());
         List<String> ids = retrieveIds(user, mailboxId);
         messageIdStepdefs.addMessageId(messageName, mainStepdefs.messageIdFactory.fromString(ids.get(0)));
     }

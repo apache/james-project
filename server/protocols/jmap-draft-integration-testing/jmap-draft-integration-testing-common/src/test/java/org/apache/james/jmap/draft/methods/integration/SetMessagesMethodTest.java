@@ -23,23 +23,23 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.SECOND_ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.SECOND_NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 import static org.apache.james.jmap.JmapCommonRequests.getDraftId;
 import static org.apache.james.jmap.JmapCommonRequests.getInboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getMailboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.getSetMessagesUpdateOKResponseAssertions;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ALICE;
-import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.BOB;
-import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.SECOND_ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.SECOND_NAME;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -75,9 +75,9 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.HttpJmapAuthentication;
 import org.apache.james.jmap.MessageAppender;
-import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.MessageIdProbe;
@@ -108,6 +108,7 @@ import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
+import org.apache.james.util.Port;
 import org.apache.james.util.ZeroedInputStream;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
@@ -156,6 +157,7 @@ public abstract class SetMessagesMethodTest {
     private DataProbe dataProbe;
     private MessageIdProbe messageProbe;
     private ACLProbe aclProbe;
+    private Port jmapPort;
 
     @Before
     public void setup() throws Throwable {
@@ -191,7 +193,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullAccountId() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"accountId\": \"1\"}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -206,7 +208,7 @@ public abstract class SetMessagesMethodTest {
     @Test
     public void setMessagesShouldReturnAnErrorNotSupportedWhenRequestContainsNonNullIfInState() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"ifInState\": \"1\"}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -223,7 +225,7 @@ public abstract class SetMessagesMethodTest {
 
         String unknownMailboxMessageId = randomMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [\"" + unknownMailboxMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -245,7 +247,7 @@ public abstract class SetMessagesMethodTest {
 
         String messageId = randomMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -271,7 +273,7 @@ public abstract class SetMessagesMethodTest {
         await();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [\"" + message.getMessageId().serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -296,7 +298,7 @@ public abstract class SetMessagesMethodTest {
 
         // When
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [\"" + message.getMessageId().serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -306,7 +308,7 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + message.getMessageId().serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -333,7 +335,7 @@ public abstract class SetMessagesMethodTest {
 
         String missingMessageId = randomMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"destroy\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
                 message1.getMessageId().serialize(),
                 missingMessageId,
@@ -370,7 +372,7 @@ public abstract class SetMessagesMethodTest {
 
         // When
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"destroy\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
                 message1.getMessageId().serialize(),
                 randomMessageId().serialize(),
@@ -379,7 +381,7 @@ public abstract class SetMessagesMethodTest {
 
         // Then
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"getMessages\", {\"ids\": [\"%s\", \"%s\", \"%s\"]}, \"#0\"]]",
                 message1.getMessageId().serialize(),
                 message2.getMessageId().serialize(),
@@ -406,7 +408,7 @@ public abstract class SetMessagesMethodTest {
 
         // When
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -427,7 +429,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false, \"keywords\": {\"$Seen\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -451,7 +453,7 @@ public abstract class SetMessagesMethodTest {
         String serializedMessageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Seen\": true, \"$Flagged\": true} } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -460,7 +462,7 @@ public abstract class SetMessagesMethodTest {
             .spec(getSetMessagesUpdateOKResponseAssertions(serializedMessageId));
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -483,7 +485,7 @@ public abstract class SetMessagesMethodTest {
         String serializedMessageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Seen\": true, \"$Forwarded\": true} } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -492,7 +494,7 @@ public abstract class SetMessagesMethodTest {
             .spec(getSetMessagesUpdateOKResponseAssertions(serializedMessageId));
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -519,7 +521,7 @@ public abstract class SetMessagesMethodTest {
         String serializedMessageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Seen\": true} } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -528,7 +530,7 @@ public abstract class SetMessagesMethodTest {
             .spec(getSetMessagesUpdateOKResponseAssertions(serializedMessageId));
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -550,7 +552,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Answered\": true, \"$Deleted\" : true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -573,7 +575,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Answered\": true, \"$Recent\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -596,7 +598,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Answered\": true, \"$Forwarded\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -629,7 +631,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Answered\": true, \"$Forwarded\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -664,7 +666,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Answered\": true, \"$Flagged\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -673,7 +675,7 @@ public abstract class SetMessagesMethodTest {
             .spec(getSetMessagesUpdateOKResponseAssertions(messageId));
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -696,14 +698,14 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : false } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
             .post("/jmap");
         // Then
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -725,7 +727,7 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
@@ -747,14 +749,14 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
             .post("/jmap");
         // Then
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -776,7 +778,7 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
@@ -798,14 +800,14 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isFlagged\" : true } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
             .post("/jmap");
         // Then
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -826,7 +828,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = randomMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\" } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -854,7 +856,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = USERNAME.asString() + "|mailbox|1";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : \"123\", \"isFlagged\" : 456 } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -882,7 +884,7 @@ public abstract class SetMessagesMethodTest {
         String serializedMessageId = message.getMessageId().serialize();
         // When
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -903,14 +905,14 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isAnswered\" : true } } }, \"#0\"]]", serializedMessageId))
         // When
         .when()
             .post("/jmap");
         // Then
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -932,7 +934,7 @@ public abstract class SetMessagesMethodTest {
         String serializedMessageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isForwarded\" : true } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap")
@@ -951,13 +953,13 @@ public abstract class SetMessagesMethodTest {
 
         String serializedMessageId = message.getMessageId().serialize();
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isForwarded\" : true } } }, \"#0\"]]", serializedMessageId))
         .when()
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + serializedMessageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -974,7 +976,7 @@ public abstract class SetMessagesMethodTest {
         String nonExistingMessageId = randomMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"isUnread\" : true } } }, \"#0\"]]", nonExistingMessageId))
         .when()
             .post("/jmap")
@@ -1010,7 +1012,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1060,7 +1062,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1094,7 +1096,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
        .when()
             .post("/jmap")
@@ -1128,7 +1130,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1162,7 +1164,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
        .when()
             .post("/jmap")
@@ -1201,7 +1203,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
        .when()
             .post("/jmap")
@@ -1238,7 +1240,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1271,7 +1273,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1308,7 +1310,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1349,7 +1351,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1392,7 +1394,7 @@ public abstract class SetMessagesMethodTest {
                 .toString();
 
             given()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(requestBody)
             .when()
                 .post("/jmap")
@@ -1414,7 +1416,7 @@ public abstract class SetMessagesMethodTest {
             String inboxId = getMailboxId(accessToken, Role.INBOX);
             String receivedMessageId =
                 with()
-                    .header("Authorization", accessToken.serialize())
+                    .header("Authorization", accessToken.asString())
                     .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
                     .post("/jmap")
                 .then()
@@ -1422,7 +1424,7 @@ public abstract class SetMessagesMethodTest {
                     .path(ARGUMENTS + ".messageIds[0]");
 
             given()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -1461,7 +1463,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1497,7 +1499,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1507,7 +1509,7 @@ public abstract class SetMessagesMethodTest {
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -1539,7 +1541,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1573,7 +1575,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1612,7 +1614,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1646,7 +1648,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1680,7 +1682,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1690,7 +1692,7 @@ public abstract class SetMessagesMethodTest {
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -1722,7 +1724,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1760,7 +1762,7 @@ public abstract class SetMessagesMethodTest {
 
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(requestBody)
                 .post("/jmap")
                 .then()
@@ -1769,7 +1771,7 @@ public abstract class SetMessagesMethodTest {
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1800,7 +1802,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1833,7 +1835,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .when()
             .post("/jmap")
@@ -1865,7 +1867,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1897,7 +1899,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1931,7 +1933,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1971,7 +1973,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2018,7 +2020,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .when()
             .post("/jmap")
@@ -2049,7 +2051,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2089,7 +2091,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2128,7 +2130,7 @@ public abstract class SetMessagesMethodTest {
 
         String draftId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(createDraft)
                 .post("/jmap")
             .then()
@@ -2149,7 +2151,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(moveDraftToOutBox)
             .post("/jmap");
 
@@ -2180,7 +2182,7 @@ public abstract class SetMessagesMethodTest {
 
         String draftId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(createDraft)
                 .post("/jmap")
             .then()
@@ -2201,7 +2203,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(copyDraftToOutBox)
         .when()
             .post("/jmap")
@@ -2236,7 +2238,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(moveMessageToOutBox)
         .when()
             .post("/jmap")
@@ -2272,7 +2274,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2312,7 +2314,7 @@ public abstract class SetMessagesMethodTest {
         jmapServer.getProbe(JmapGuiceProbe.class).addMailboxListener(eventCollector);
 
         String messageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .post("/jmap")
@@ -2363,7 +2365,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2376,7 +2378,7 @@ public abstract class SetMessagesMethodTest {
     private boolean messageHasBeenMovedToSentBox(String sentMailboxId) {
         try {
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"fetchMessages\":true, \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -2412,7 +2414,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2447,7 +2449,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2484,7 +2486,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2519,7 +2521,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2534,7 +2536,7 @@ public abstract class SetMessagesMethodTest {
     private boolean hasNoMessageIn(AccessToken accessToken, String mailboxId) {
         try {
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + mailboxId + "\"]}}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -2570,7 +2572,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2607,7 +2609,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2647,7 +2649,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2677,7 +2679,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2709,7 +2711,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2758,7 +2760,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2805,7 +2807,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2852,7 +2854,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2861,7 +2863,7 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(recipientToken));
         with()
-            .header("Authorization", recipientToken.serialize())
+            .header("Authorization", recipientToken.asString())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -2907,7 +2909,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2916,7 +2918,7 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
         with()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"bcc\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -2964,7 +2966,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -2973,7 +2975,7 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"bcc\"] }, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -2988,7 +2990,7 @@ public abstract class SetMessagesMethodTest {
     private boolean isAnyMessageFoundInRecipientsMailboxes(AccessToken recipientToken) {
         try {
             with()
-                .header("Authorization", recipientToken.serialize())
+                .header("Authorization", recipientToken.asString())
                 .body("[[\"getMessageList\", {}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -3034,7 +3036,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -3077,7 +3079,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3120,7 +3122,7 @@ public abstract class SetMessagesMethodTest {
 
         String notCreatedMessage = ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"]";
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3136,7 +3138,7 @@ public abstract class SetMessagesMethodTest {
     private boolean isHtmlMessageReceived(AccessToken recipientToken) {
         try {
             with()
-                .header("Authorization", recipientToken.serialize())
+                .header("Authorization", recipientToken.asString())
                 .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\"]}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -3182,7 +3184,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -3195,7 +3197,7 @@ public abstract class SetMessagesMethodTest {
     private boolean isTextPlusHtmlMessageReceived(AccessToken recipientToken) {
         try {
             with()
-                .header("Authorization", recipientToken.serialize())
+                .header("Authorization", recipientToken.asString())
                 .body("[[\"getMessageList\", {\"fetchMessages\": true, \"fetchMessageProperties\": [\"htmlBody\", \"textBody\"]}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -3232,7 +3234,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3265,14 +3267,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3309,14 +3311,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3353,14 +3355,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3393,14 +3395,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3437,7 +3439,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3470,7 +3472,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3509,7 +3511,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3542,14 +3544,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3584,7 +3586,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3621,14 +3623,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         String firstMessage = ARGUMENTS + ".list[0]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageToMoveId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3668,7 +3670,7 @@ public abstract class SetMessagesMethodTest {
         String notCreatedPath = ARGUMENTS + ".notCreated[\"" + messageCreationId + "\"]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3729,7 +3731,7 @@ public abstract class SetMessagesMethodTest {
         String secondAttachment = createdPath + ".attachments[1]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3822,7 +3824,7 @@ public abstract class SetMessagesMethodTest {
         String thirdAttachment = createdPath + ".attachments[2]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -3905,7 +3907,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap").then();
@@ -3920,7 +3922,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
                 .post("/jmap")
             .then()
@@ -3928,7 +3930,7 @@ public abstract class SetMessagesMethodTest {
                 .path(ARGUMENTS + ".messageIds[0]");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -3945,7 +3947,7 @@ public abstract class SetMessagesMethodTest {
 
     private String uploadAttachment(Attachment attachment) throws IOException {
         return with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .contentType(attachment.getType())
             .body(attachment.getStream())
             .post("/upload")
@@ -3958,7 +3960,7 @@ public abstract class SetMessagesMethodTest {
 
     private String uploadTextAttachment(Attachment attachment) throws IOException {
         return with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .contentType(attachment.getType())
             .body(new String(IOUtils.toByteArray(attachment.getStream()), StandardCharsets.UTF_8))
             .post("/upload")
@@ -4011,7 +4013,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
@@ -4020,7 +4022,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -4030,7 +4032,7 @@ public abstract class SetMessagesMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
         String blobId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4087,7 +4089,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4097,7 +4099,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -4107,7 +4109,7 @@ public abstract class SetMessagesMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
         String blobId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4131,7 +4133,7 @@ public abstract class SetMessagesMethodTest {
         try {
             String inboxId = getMailboxId(recipientToken, Role.INBOX);
             with()
-                .header("Authorization", recipientToken.serialize())
+                .header("Authorization", recipientToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -4184,7 +4186,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4194,7 +4196,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -4204,7 +4206,7 @@ public abstract class SetMessagesMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
         String blobId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4262,7 +4264,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4272,7 +4274,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -4282,7 +4284,7 @@ public abstract class SetMessagesMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
         String blobId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4305,7 +4307,7 @@ public abstract class SetMessagesMethodTest {
 
     public void checkBlobContent(String blobId, byte[] rawBytes) {
         byte[] attachmentBytes = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .get("/download/" + blobId)
         .then()
             .extract()
@@ -4349,7 +4351,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4359,7 +4361,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
             .post("/jmap")
             .then()
@@ -4369,7 +4371,7 @@ public abstract class SetMessagesMethodTest {
         String firstMessage = ARGUMENTS + ".list[0]";
         String firstAttachment = firstMessage + ".attachments[0]";
         String blobId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4416,7 +4418,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
@@ -4453,7 +4455,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
@@ -4480,7 +4482,7 @@ public abstract class SetMessagesMethodTest {
     private boolean messageInMailboxHasHeaders(String mailboxId, ImmutableList<String> expectedHeaders) {
         try {
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", "
                     + "{"
                     + "\"fetchMessages\": true, "
@@ -4529,7 +4531,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .post("/jmap")
@@ -4543,7 +4545,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4578,7 +4580,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -4592,7 +4594,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4630,7 +4632,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4640,7 +4642,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4677,7 +4679,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -4687,7 +4689,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4725,7 +4727,7 @@ public abstract class SetMessagesMethodTest {
 
         String draftId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(createDraft)
                 .post("/jmap")
             .then()
@@ -4746,7 +4748,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(moveDraftToOutBox)
             .post("/jmap");
 
@@ -4755,7 +4757,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4793,7 +4795,7 @@ public abstract class SetMessagesMethodTest {
 
         String draftId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(createDraft)
                 .post("/jmap")
             .then()
@@ -4814,7 +4816,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(moveDraftToOutBox)
             .post("/jmap");
 
@@ -4823,7 +4825,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + firstMessage.jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4855,14 +4857,14 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         with()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String jmapMessageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4872,7 +4874,7 @@ public abstract class SetMessagesMethodTest {
             .<String>path(ARGUMENTS + ".messageIds[0]");
 
         String mimeMessageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4919,7 +4921,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
@@ -4929,7 +4931,7 @@ public abstract class SetMessagesMethodTest {
 
         String message = SECOND_ARGUMENTS + ".list[0]";
         with()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"headers\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -4964,7 +4966,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .post("/jmap")
@@ -4978,7 +4980,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5011,7 +5013,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
@@ -5048,7 +5050,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .post("/jmap")
@@ -5062,7 +5064,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5115,7 +5117,7 @@ public abstract class SetMessagesMethodTest {
         String singleAttachment = createdPath + ".attachments[0]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5164,7 +5166,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         String messageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         // When
         .post("/jmap")
@@ -5178,7 +5180,7 @@ public abstract class SetMessagesMethodTest {
         String message = ARGUMENTS + ".list[0]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5225,14 +5227,14 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .post("/jmap");
 
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessageList\", {\"filter\":{" +
                 "   \"body\": \"Test body\", " +
                 "   \"inMailboxes\":[\"" + inboxId  + "\"]}}, " +
@@ -5292,7 +5294,7 @@ public abstract class SetMessagesMethodTest {
         String secondAttachment = createdPath + ".attachments[1]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5325,7 +5327,7 @@ public abstract class SetMessagesMethodTest {
         String messageId = message.getMessageId().serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(String.format("[[\"setMessages\", {\"update\": {\"%s\" : { \"keywords\": {\"$Seen\": true, \"$Unknown\": true} } } }, \"#0\"]]", messageId))
         .when()
             .post("/jmap")
@@ -5356,7 +5358,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5389,7 +5391,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5424,7 +5426,7 @@ public abstract class SetMessagesMethodTest {
         String inboxId = getMailboxId(accessToken, Role.INBOX);
         String receivedMessageId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + inboxId + "\"]}}, \"#0\"]]")
                 .post("/jmap")
             .then()
@@ -5432,7 +5434,7 @@ public abstract class SetMessagesMethodTest {
                 .path(ARGUMENTS + ".messageIds[0]");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + receivedMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5478,7 +5480,7 @@ public abstract class SetMessagesMethodTest {
 
         // Given
         given()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body(requestBody)
         // When
         .when()
@@ -5487,7 +5489,7 @@ public abstract class SetMessagesMethodTest {
         // Then
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> messageHasBeenMovedToSentBox(sentMailboxId));
         with()
-            .header("Authorization", this.accessToken.serialize())
+            .header("Authorization", this.accessToken.asString())
             .body("[[\"getMessageList\", {\"fetchMessages\":true, \"fetchMessageProperties\": [\"keywords\"], \"filter\":{\"inMailboxes\":[\"" + sentMailboxId + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5524,7 +5526,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5534,7 +5536,7 @@ public abstract class SetMessagesMethodTest {
             .path(ARGUMENTS + ".created." + messageCreationId + ".id");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -5570,7 +5572,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5595,13 +5597,13 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(updateRequestBody)
         .when()
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -5640,7 +5642,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5665,13 +5667,13 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(updateRequestBody)
         .when()
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -5710,7 +5712,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5736,7 +5738,7 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(updateRequestBody)
         .when()
             .post("/jmap")
@@ -5772,7 +5774,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String messageId = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5798,13 +5800,13 @@ public abstract class SetMessagesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(updateRequestBody)
         .when()
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
             .post("/jmap")
         .then()
@@ -5838,7 +5840,7 @@ public abstract class SetMessagesMethodTest {
             "]";
 
         String creationMimeMessageId = given()
-            .header("Authorization", bobAccessToken.serialize())
+            .header("Authorization", bobAccessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -5850,7 +5852,7 @@ public abstract class SetMessagesMethodTest {
         calmlyAwait.atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInInbox(accessToken));
 
         String jmapMessageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessageList\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -5859,7 +5861,7 @@ public abstract class SetMessagesMethodTest {
             .path(ARGUMENTS + ".messageIds[0]");
 
         String receivedMimeMessageId = with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + jmapMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")

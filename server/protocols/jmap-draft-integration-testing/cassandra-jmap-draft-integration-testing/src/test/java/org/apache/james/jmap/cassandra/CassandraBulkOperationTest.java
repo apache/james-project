@@ -20,11 +20,11 @@
 package org.apache.james.jmap.cassandra;
 
 import static io.restassured.RestAssured.given;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -40,8 +40,9 @@ import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.core.Username;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.HttpJmapAuthentication;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -49,7 +50,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
@@ -93,7 +93,7 @@ public class CassandraBulkOperationTest {
 
         AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(USERNAME), PASSWORD);
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [" + mailIds + "]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -111,7 +111,7 @@ public class CassandraBulkOperationTest {
 
         AccessToken accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), Username.of(USERNAME), PASSWORD);
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"setMessages\", {\"destroy\": [" + mailIds + "]}, \"#0\"]]")
         .when()
             .post("/jmap")

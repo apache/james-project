@@ -39,7 +39,7 @@ import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.jmap.AccessToken;
-import org.apache.james.jmap.JmapURIBuilder;
+import org.apache.james.jmap.LocalHostURIBuilder;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
@@ -110,7 +110,7 @@ class ReindexingWithEventDeadLettersTest {
 
         webAdminApi = WebAdminUtils.spec(jamesServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 
-        aliceAccessToken = authenticateJamesUser(JmapURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
+        aliceAccessToken = authenticateJamesUser(LocalHostURIBuilder.baseUri(jmapPort), ALICE, ALICE_PASSWORD);
 
         dockerElasticSearch.getDockerES().pause();
         Thread.sleep(Duration.TEN_SECONDS.getValueInMS()); // Docker pause is asynchronous and we found no way to poll for it

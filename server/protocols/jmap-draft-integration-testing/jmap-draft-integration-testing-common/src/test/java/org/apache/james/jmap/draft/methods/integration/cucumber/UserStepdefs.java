@@ -33,7 +33,7 @@ import java.util.Set;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 
 import com.github.fge.lambdas.Throwing;
 import com.github.fge.lambdas.runnable.ThrowingRunnable;

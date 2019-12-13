@@ -19,8 +19,8 @@
 
 package org.apache.james.jmap.draft.methods.integration.cucumber;
 
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;

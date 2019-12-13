@@ -18,20 +18,15 @@
  ****************************************************************/
 package org.apache.james.jmap;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.util.Port;
 
 public class JmapURIBuilder {
 
     public static URIBuilder baseUri(GuiceJamesServer jamesServer) {
-        return new URIBuilder()
-            .setScheme("http")
-            .setHost("localhost")
-            .setPort(jamesServer.getProbe(JmapGuiceProbe.class)
-                .getJmapPort())
-            .setCharset(StandardCharsets.UTF_8);
+        return LocalHostURIBuilder.baseUri(
+            Port.of(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort()));
     }
 }

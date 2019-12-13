@@ -21,18 +21,18 @@ package org.apache.james.jmap.draft.methods.integration;
 
 import static io.restassured.RestAssured.given;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB;
+import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.CEDRIC;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.FIRST_MAILBOX;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.SECOND_MAILBOX;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ALICE;
-import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.BOB;
-import static org.apache.james.jmap.TestingConstants.BOB_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.CEDRIC;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.FIRST_MAILBOX;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.SECOND_MAILBOX;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
@@ -57,7 +57,7 @@ import java.util.Optional;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.jmap.draft.model.mailbox.MailboxNamespace;
@@ -136,7 +136,7 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldErrorNotSupportedWhenRequestContainsNonNullAccountId() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"accountId\": \"1\"}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -154,7 +154,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.deleteMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "quicklyRemoved");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + removedId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -167,7 +167,7 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldReturnErrorWhenInvalidMailboxId() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"invalid id\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -184,7 +184,7 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId2 = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "myMailbox").serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\", \"" + mailboxId2 + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -202,7 +202,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "myMailbox");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -218,7 +218,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": []}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -241,7 +241,7 @@ public abstract class GetMailboxesMethodTest {
                 .build();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": null}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -263,7 +263,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser2, new Rfc4314Rights(Right.Read, Right.Lookup));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -285,7 +285,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser1, new Rfc4314Rights(Right.Read, Right.Lookup));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -302,7 +302,7 @@ public abstract class GetMailboxesMethodTest {
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), mailboxName).serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -322,7 +322,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(MailboxPath.forUser(ALICE, mailboxName), targetUser1, new Rfc4314Rights(Right.Lookup, Right.Post));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -336,7 +336,7 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldErrorInvalidArgumentsWhenRequestIsInvalid() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": true}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -394,7 +394,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.appendMessage(ALICE.asString(), MailboxPath.forUser(ALICE, "name"), AppendCommand.from(message));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -411,7 +411,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.appendMessage(ALICE.asString(), MailboxPath.forUser(ALICE, "name"), AppendCommand.from(message));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -439,7 +439,7 @@ public abstract class GetMailboxesMethodTest {
         String myMailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "name").serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + myMailboxId + "\"], \"properties\" : [\"unreadMessages\", \"sortOrder\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -468,7 +468,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "name");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"properties\" : []}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -484,7 +484,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), "name");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"properties\" : [\"unknown\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -501,7 +501,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxId trashId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.TRASH);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + inboxId.serialize() + "\", \"" + trashId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -520,7 +520,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.OUTBOX);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -541,7 +541,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, CEDRIC.asString(), new Rfc4314Rights(Right.Lookup));
 
         Map<String, String> sharedWith = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + bobMailbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -565,7 +565,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, CEDRIC.asString(), new Rfc4314Rights(Right.Lookup));
 
         Map<String, String> sharedWith = given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + bobMailbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -597,7 +597,7 @@ public abstract class GetMailboxesMethodTest {
             .build();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -629,7 +629,7 @@ public abstract class GetMailboxesMethodTest {
             .build();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -650,7 +650,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + aliceInboxMailbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -672,7 +672,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -692,7 +692,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -709,7 +709,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -727,7 +727,7 @@ public abstract class GetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -752,7 +752,7 @@ public abstract class GetMailboxesMethodTest {
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup, Right.Read));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -773,7 +773,7 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -792,7 +792,7 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -809,7 +809,7 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -833,7 +833,7 @@ public abstract class GetMailboxesMethodTest {
         quotaProbe.setMaxMessageCount("#private&bob@domain.tld", SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(43))));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\",\"" + sharedMailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -848,7 +848,7 @@ public abstract class GetMailboxesMethodTest {
     @Test
     public void getMailboxesShouldReturnQuotaRootForAllMailboxes() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -863,7 +863,7 @@ public abstract class GetMailboxesMethodTest {
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -883,7 +883,7 @@ public abstract class GetMailboxesMethodTest {
         mailboxProbe.appendMessage(ALICE.asString(), MailboxPath.forUser(ALICE, DefaultMailboxes.INBOX), AppendCommand.from(message));
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")

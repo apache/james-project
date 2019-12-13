@@ -23,7 +23,7 @@ import java.nio.charset.StandardCharsets;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.util.Port;
 
-public class JmapURIBuilder {
+public class LocalHostURIBuilder {
 
     public static URIBuilder baseUri(Port jmapPort) {
         return new URIBuilder()

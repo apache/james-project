@@ -21,13 +21,13 @@ package org.apache.james.jmap.draft.methods.integration;
 
 import static io.restassured.RestAssured.given;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE_PASSWORD;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ALICE;
-import static org.apache.james.jmap.TestingConstants.ALICE_PASSWORD;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.IsNull.nullValue;
@@ -36,8 +36,8 @@ import java.io.IOException;
 import java.time.ZonedDateTime;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.FixedDateZonedDateTimeProvider;
-import org.apache.james.jmap.api.access.AccessToken;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.categories.BasicFeature;
@@ -96,7 +96,7 @@ public abstract class GetVacationResponseTest {
     @Test
     public void getVacationResponseShouldReturnDefaultValue() {
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "\"getVacationResponse\", " +
                 "{}, " +
@@ -132,7 +132,7 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "\"getVacationResponse\", " +
                 "{}, " +
@@ -165,7 +165,7 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "\"getVacationResponse\", " +
                 "{}, " +
@@ -198,7 +198,7 @@ public abstract class GetVacationResponseTest {
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                     "\"getVacationResponse\", " +
                     "{}, " +
@@ -227,7 +227,7 @@ public abstract class GetVacationResponseTest {
         given()
             .accept(ContentType.JSON)
             .contentType(ContentType.JSON)
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                     "\"getVacationResponse\", " +
                     "{}, " +
@@ -252,7 +252,7 @@ public abstract class GetVacationResponseTest {
                 .build());
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[" +
                 "\"getVacationResponse\", " +
                 "{\"accountId\":\"1\"}, " +

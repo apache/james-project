@@ -35,14 +35,14 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.awaitility.Duration;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -138,7 +138,7 @@ class ESReporterTest {
             public void run() {
                 try {
                     given()
-                        .header("Authorization", accessToken.serialize())
+                        .header("Authorization", accessToken.asString())
                         .body("[[\"getMailboxes\", {}, \"#0\"]]")
                     .with()
                         .post("/jmap");

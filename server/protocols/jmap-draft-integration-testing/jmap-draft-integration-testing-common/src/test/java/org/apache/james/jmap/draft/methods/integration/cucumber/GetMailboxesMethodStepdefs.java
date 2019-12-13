@@ -21,8 +21,8 @@ package org.apache.james.jmap.draft.methods.integration.cucumber;
 
 import static com.jayway.jsonpath.Criteria.where;
 import static com.jayway.jsonpath.Filter.filter;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.ArrayList;

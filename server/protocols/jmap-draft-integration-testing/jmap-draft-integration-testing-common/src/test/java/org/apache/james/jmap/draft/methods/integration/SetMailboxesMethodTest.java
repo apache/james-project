@@ -22,12 +22,12 @@ package org.apache.james.jmap.draft.methods.integration;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.FIRST_MAILBOX;
+import static org.apache.james.jmap.JMAPTestingConstants.NAME;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.FIRST_MAILBOX;
-import static org.apache.james.jmap.TestingConstants.NAME;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -48,9 +48,10 @@ import java.io.IOException;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.categories.BasicFeature;
 import org.apache.james.jmap.categories.CassandraAndElasticSearchCategory;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.model.MailboxACL;
@@ -63,7 +64,6 @@ import org.apache.james.modules.ACLProbeImpl;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -137,7 +137,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -170,7 +170,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -202,7 +202,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -232,7 +232,7 @@ public abstract class SetMailboxesMethodTest {
                 "  ]" +
                 "]";
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -264,7 +264,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -294,7 +294,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -328,7 +328,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
@@ -357,7 +357,7 @@ public abstract class SetMailboxesMethodTest {
                 "  ]" +
                 "]";
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -383,7 +383,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -409,7 +409,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
@@ -435,7 +435,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -467,7 +467,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -489,7 +489,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -521,7 +521,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -550,7 +550,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -579,7 +579,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -606,13 +606,13 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -626,7 +626,7 @@ public abstract class SetMailboxesMethodTest {
     public void setMailboxesShouldReturnCreatedMailboxWhenChildOfInboxMailbox() {
         String inboxId =
             with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMailboxes\", {}, \"#0\"]]")
             .when()
                 .post("/jmap")
@@ -651,7 +651,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -684,13 +684,13 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -718,7 +718,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -752,7 +752,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -789,7 +789,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -823,7 +823,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -858,7 +858,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -893,7 +893,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
             given()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body(requestBody)
             .when()
                 .post("/jmap")
@@ -922,7 +922,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -946,7 +946,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -954,7 +954,7 @@ public abstract class SetMailboxesMethodTest {
             .statusCode(200);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -978,7 +978,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1006,7 +1006,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1033,7 +1033,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1061,7 +1061,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1086,7 +1086,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1120,7 +1120,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1149,7 +1149,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1178,7 +1178,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1206,7 +1206,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1234,7 +1234,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1251,7 +1251,7 @@ public abstract class SetMailboxesMethodTest {
             .serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1280,7 +1280,7 @@ public abstract class SetMailboxesMethodTest {
             .serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1309,7 +1309,7 @@ public abstract class SetMailboxesMethodTest {
             .serialize();
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1351,12 +1351,12 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1375,7 +1375,7 @@ public abstract class SetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), myBox);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1391,7 +1391,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1407,7 +1407,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1425,7 +1425,7 @@ public abstract class SetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), myBox);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1441,7 +1441,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1457,7 +1457,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1476,7 +1476,7 @@ public abstract class SetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), myBox);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1492,7 +1492,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1508,7 +1508,7 @@ public abstract class SetMailboxesMethodTest {
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1526,7 +1526,7 @@ public abstract class SetMailboxesMethodTest {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, username.asString(), myBox);
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -1567,12 +1567,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1607,7 +1607,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1640,12 +1640,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1682,7 +1682,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1715,12 +1715,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1752,7 +1752,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1783,12 +1783,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1821,7 +1821,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1853,12 +1853,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -1888,7 +1888,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1919,7 +1919,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1956,7 +1956,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -1989,7 +1989,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2021,7 +2021,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2051,12 +2051,12 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         with()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
             .post("/jmap");
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + mailboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -2086,7 +2086,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2117,7 +2117,7 @@ public abstract class SetMailboxesMethodTest {
                     "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2151,7 +2151,7 @@ public abstract class SetMailboxesMethodTest {
                   "]";
 
       given()
-          .header("Authorization", accessToken.serialize())
+          .header("Authorization", accessToken.asString())
           .body(requestBody)
       .when()
           .post("/jmap")
@@ -2180,7 +2180,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2208,7 +2208,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")
@@ -2239,7 +2239,7 @@ public abstract class SetMailboxesMethodTest {
                 "]";
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body(requestBody)
         .when()
             .post("/jmap")

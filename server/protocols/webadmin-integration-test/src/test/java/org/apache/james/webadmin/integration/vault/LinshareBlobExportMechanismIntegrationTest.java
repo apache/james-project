@@ -30,7 +30,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
-import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
 import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;

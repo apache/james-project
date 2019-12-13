@@ -41,7 +41,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.client.fluent.Response;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.model.AttachmentAccessToken;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -179,7 +179,7 @@ public class DownloadStepdefs {
         URI target = baseUri(mainStepdefs.jmapServer).setPath("/download/" + ONE_ATTACHMENT_EML_ATTACHMENT_BLOB_ID).build();
         Request request = Request.Options(target);
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         response = request.execute().returnResponse();
     }
@@ -227,7 +227,7 @@ public class DownloadStepdefs {
         }
         Request request = Request.Get(uriBuilder.build());
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         return request;
     }
@@ -275,7 +275,7 @@ public class DownloadStepdefs {
 
     private void trustForBlobId(String blobId, String username) throws Exception {
         Response tokenGenerationResponse = Request.Post(baseUri(mainStepdefs.jmapServer).setPath("/download/" + blobId).build())
-            .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
+            .addHeader("Authorization", userStepdefs.authenticate(username).asString())
             .execute();
         String serializedAttachmentAccessToken = tokenGenerationResponse.returnContent().asString();
         attachmentAccessTokens.put(
@@ -290,7 +290,7 @@ public class DownloadStepdefs {
         userStepdefs.execWithUser(username, () -> {
             URIBuilder uriBuilder = baseUri(mainStepdefs.jmapServer).setPath("/download/badblobId");
             response = Request.Get(uriBuilder.build())
-                .addHeader("Authorization", userStepdefs.authenticate(username).serialize())
+                .addHeader("Authorization", userStepdefs.authenticate(username).asString())
                 .execute()
                 .returnResponse();
 
@@ -372,7 +372,7 @@ public class DownloadStepdefs {
         String blobId = blobIdByAttachmentId.get(attachmentId);
         AccessToken accessToken = userStepdefs.authenticate(username);
         response = Request.Post(baseUri(mainStepdefs.jmapServer).setPath("/download/" + blobId).build())
-                .addHeader("Authorization", accessToken.serialize())
+                .addHeader("Authorization", accessToken.asString())
                 .execute()
                 .returnResponse();
     }

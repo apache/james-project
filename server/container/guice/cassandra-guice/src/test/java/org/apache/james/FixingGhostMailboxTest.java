@@ -42,7 +42,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
@@ -168,7 +168,7 @@ public class FixingGhostMailboxTest {
 
         // trigger provisioning
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -199,7 +199,7 @@ public class FixingGhostMailboxTest {
         MailboxId newAliceInbox = mailboxProbe.getMailboxId(MailboxConstants.USER_NAMESPACE, ALICE, MailboxConstants.INBOX);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -218,7 +218,7 @@ public class FixingGhostMailboxTest {
         fixGhostMailboxes(newAliceInbox);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMessageList\", {\"filter\":{\"inMailboxes\":[\"" + newAliceInbox.serialize() + "\"]}}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -239,7 +239,7 @@ public class FixingGhostMailboxTest {
         fixGhostMailboxes(newAliceInbox);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + newAliceInbox.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -258,7 +258,7 @@ public class FixingGhostMailboxTest {
         fixGhostMailboxes(newAliceInbox);
 
         given()
-            .header("Authorization", accessToken.serialize())
+            .header("Authorization", accessToken.asString())
             .body("[[\"getMailboxes\", {\"ids\": [\"" + aliceGhostInboxId.serialize() + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")

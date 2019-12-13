@@ -20,7 +20,7 @@
 package org.apache.james.jmap.cassandra;
 
 import static io.restassured.RestAssured.given;
-import static org.apache.james.jmap.TestingConstants.ALICE;
+import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
 
 import java.io.IOException;
 import java.util.Date;
@@ -70,7 +70,7 @@ public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest 
 
         try {
             given()
-                .header("Authorization", aliceAccessToken.serialize())
+                .header("Authorization", aliceAccessToken.asString())
                 .body("[[\"getMessageList\", {\"filter\":{\"operator\":\"AND\",\"conditions\":[{\"isFlagged\":\"true\"},{\"isUnread\":\"true\"}]}}, \"#0\"]]")
             .when()
                 .post("/jmap")

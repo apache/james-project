@@ -46,7 +46,7 @@ public class HttpClient {
 
     public void post(String requestBody) throws Exception {
         response = Request.Post(baseUri(mainStepdefs.jmapServer).setPath("/jmap").build())
-            .addHeader("Authorization", userStepdefs.authenticate(userStepdefs.getConnectedUser()).serialize())
+            .addHeader("Authorization", userStepdefs.authenticate(userStepdefs.getConnectedUser()).asString())
             .addHeader("Accept", org.apache.http.entity.ContentType.APPLICATION_JSON.getMimeType())
             .bodyString(requestBody, org.apache.http.entity.ContentType.APPLICATION_JSON)
             .execute()

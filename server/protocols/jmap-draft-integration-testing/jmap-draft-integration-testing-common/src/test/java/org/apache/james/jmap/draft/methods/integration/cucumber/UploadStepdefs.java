@@ -40,7 +40,7 @@ import org.apache.http.client.fluent.Request;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.james.jmap.api.access.AccessToken;
+import org.apache.james.jmap.AccessToken;
 import org.apache.james.util.CountDownConsumeInputStream;
 import org.apache.james.util.ZeroedInputStream;
 
@@ -82,7 +82,7 @@ public class UploadStepdefs {
         Request request = Request.Post(uploadUri)
             .bodyStream(new BufferedInputStream(bodyStream, _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         async = Async.newInstance().execute(request, new FutureCallback<Content>() {
             
@@ -110,7 +110,7 @@ public class UploadStepdefs {
         Request request = Request.Post(uploadUri)
             .bodyStream(new BufferedInputStream(new ZeroedInputStream(_1M), _1M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
 
-        request.addHeader("Authorization", accessToken.serialize());
+        request.addHeader("Authorization", accessToken.asString());
         response = Executor.newInstance(newClient())
             .execute(request)
             .returnResponse();
@@ -137,7 +137,7 @@ public class UploadStepdefs {
         Request request = Request.Post(uploadUri)
                 .bodyByteArray("some text".getBytes(StandardCharsets.UTF_8));
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         response = request.execute().returnResponse();
     }
@@ -148,7 +148,7 @@ public class UploadStepdefs {
         Request request = Request.Post(uploadUri)
                 .bodyStream(new BufferedInputStream(new ZeroedInputStream(_10M), _10M), org.apache.http.entity.ContentType.DEFAULT_BINARY);
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         response = request.execute().returnResponse();
     }
@@ -219,7 +219,7 @@ public class UploadStepdefs {
         DocumentContext jsonPath = JsonPath.parse(response.getEntity().getContent());
         Request request = Request.Get(baseUri(mainStepdefs.jmapServer).setPath("/download/" + jsonPath.<String>read("blobId")).build());
         if (accessToken != null) {
-            request.addHeader("Authorization", accessToken.serialize());
+            request.addHeader("Authorization", accessToken.asString());
         }
         response = request.execute().returnResponse();
         httpAuthorizedStatus();
