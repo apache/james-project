@@ -274,15 +274,26 @@ public class CassandraMessageMapper implements MessageMapper {
     }
 
     private MailboxMessage addUidAndModseq(MailboxMessage message, CassandraId mailboxId) throws MailboxException {
-        final Mono<MessageUid> messageUidMono = uidProvider.nextUid(mailboxId).cache();
-        final Mono<ModSeq> nextModSeqMono = modSeqProvider.nextModSeq(mailboxId).cache();
-        Flux.merge(messageUidMono, nextModSeqMono).then();
+        Mono<MessageUid> messageUidMono = uidProvider
+            .nextUid(mailboxId)
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Can not find a UID to save " + message.getMessageId() + " in " + mailboxId)));
 
-        message.setUid(messageUidMono.blockOptional()
-            .orElseThrow(() -> new MailboxException("Can not find a UID to save " + message.getMessageId() + " in " + mailboxId)));
-        message.setModSeq(nextModSeqMono.blockOptional()
-            .orElseThrow(() -> new MailboxException("Can not find a MODSEQ to save " + message.getMessageId() + " in " + mailboxId)));
+        Mono<ModSeq> nextModSeqMono = modSeqProvider.nextModSeq(mailboxId)
+            .switchIfEmpty(Mono.error(() -> new MailboxException("Can not find a MODSEQ to save " + message.getMessageId() + " in " + mailboxId)));
 
+        try {
+            Mono.zip(messageUidMono, nextModSeqMono)
+                .doOnNext(tuple -> {
+                    message.setUid(tuple.getT1());
+                    message.setModSeq(tuple.getT2());
+                })
+                .block();
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof MailboxException) {
+                throw (MailboxException)e.getCause();
+            }
+            throw e;
+        }
         return message;
     }
 

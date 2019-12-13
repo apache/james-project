@@ -128,13 +128,12 @@ public class CassandraBlobStore implements BlobStore {
     }
 
     private Flux<ByteBuffer> readBlobParts(BucketName bucketName, BlobId blobId) {
-        Integer rowCount = selectRowCount(bucketName, blobId)
+        return selectRowCount(bucketName, blobId)
             .publishOn(Schedulers.elastic())
             .single()
             .onErrorResume(NoSuchElementException.class, e -> Mono.error(
                 new ObjectNotFoundException(String.format("Could not retrieve blob metadata for %s", blobId))))
-            .block();
-        return Flux.range(0, rowCount)
+            .flatMapMany(rowCount -> Flux.range(0, rowCount))
             .publishOn(Schedulers.elastic(), PREFETCH)
             .flatMapSequential(partIndex -> readPart(bucketName, blobId, partIndex)
                 .single()

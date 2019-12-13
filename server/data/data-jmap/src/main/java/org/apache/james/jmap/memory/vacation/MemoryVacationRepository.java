@@ -48,9 +48,9 @@ public class MemoryVacationRepository implements VacationRepository {
     public Mono<Void> modifyVacation(AccountId accountId, VacationPatch vacationPatch) {
         Preconditions.checkNotNull(accountId);
         Preconditions.checkNotNull(vacationPatch);
-        Vacation oldVacation = retrieveVacation(accountId).block();
-        vacationMap.put(accountId, vacationPatch.patch(oldVacation));
-        return Mono.empty();
+        return retrieveVacation(accountId)
+            .doOnNext(oldVacation -> vacationMap.put(accountId, vacationPatch.patch(oldVacation)))
+            .then();
     }
 
 

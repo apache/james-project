@@ -258,22 +258,24 @@ public class CassandraMessageIdMapper implements MessageIdMapper {
 
     private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(MailboxId mailboxId, MessageId messageId, Flags newState, MessageManager.FlagsUpdateMode updateMode) throws MailboxException {
         CassandraId cassandraId = (CassandraId) mailboxId;
-        ComposedMessageIdWithMetaData oldComposedId = imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
-            .next()
-            .blockOptional()
-            .orElseThrow(MailboxDeleteDuringUpdateException::new);
+        return imapUidDAO.retrieve((CassandraMessageId) messageId, Optional.of(cassandraId))
+            .single()
+            .switchIfEmpty(Mono.error(MailboxDeleteDuringUpdateException::new))
+            .flatMap(oldComposedId -> updateFlags(newState, updateMode, cassandraId, oldComposedId));
+    }
 
+    private Mono<Pair<Flags, ComposedMessageIdWithMetaData>> updateFlags(Flags newState, MessageManager.FlagsUpdateMode updateMode, CassandraId cassandraId, ComposedMessageIdWithMetaData oldComposedId) {
         Flags newFlags = new FlagsUpdateCalculator(newState, updateMode).buildNewFlags(oldComposedId.getFlags());
         if (identicalFlags(oldComposedId, newFlags)) {
             return Mono.just(Pair.of(oldComposedId.getFlags(), oldComposedId));
+        } else {
+            return Mono
+                .fromCallable(() -> new ComposedMessageIdWithMetaData(
+                    oldComposedId.getComposedMessageId(),
+                    newFlags,
+                    modSeqProvider.nextModSeq(cassandraId)))
+            .flatMap(newComposedId -> updateFlags(oldComposedId, newComposedId));
         }
-
-        ComposedMessageIdWithMetaData newComposedId = new ComposedMessageIdWithMetaData(
-            oldComposedId.getComposedMessageId(),
-            newFlags,
-            modSeqProvider.nextModSeq(cassandraId));
-
-        return updateFlags(oldComposedId, newComposedId);
     }
 
     private boolean identicalFlags(ComposedMessageIdWithMetaData oldComposedId, Flags newFlags) {
