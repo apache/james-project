@@ -20,6 +20,7 @@
 package org.apache.james.imap.message.response;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.ModSeq;
@@ -35,10 +36,8 @@ public class SearchResponse implements ImapResponseMessage {
      * Constructs a <code>SEARCH</code> response.
      * 
      * @param ids ids, not null
-     * @param highestModSeq
      */
     public SearchResponse(long[] ids, ModSeq highestModSeq) {
-        super();
         this.ids = ids;
         this.highestModSeq = highestModSeq;
     }
@@ -63,29 +62,19 @@ public class SearchResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
-        return ids.length;
+    public final boolean equals(Object o) {
+        if (o instanceof SearchResponse) {
+            SearchResponse that = (SearchResponse) o;
+
+            return Arrays.equals(this.ids, that.ids)
+                && Objects.equals(this.highestModSeq, that.highestModSeq);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final SearchResponse other = (SearchResponse) obj;
-        if (!Arrays.equals(ids, other.ids)) {
-            return false;
-        }
-        if (highestModSeq != other.highestModSeq) {
-            return false;
-        }
-        return true;
+    public final int hashCode() {
+        return Objects.hash(Arrays.hashCode(ids), highestModSeq);
     }
 
     /**
