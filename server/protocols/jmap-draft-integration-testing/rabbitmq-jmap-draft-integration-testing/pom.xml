@@ -53,11 +53,6 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>backup</artifactId>
-            <type>test-jar</type>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
             <artifactId>blob-objectstorage</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -121,12 +116,6 @@
             <artifactId>james-server-guice-jmap-draft</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>${james.groupId}</groupId>
-            <artifactId>james-server-mailbox-plugin-deleted-messages-vault-guice</artifactId>
-            <scope>test</scope>
-            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

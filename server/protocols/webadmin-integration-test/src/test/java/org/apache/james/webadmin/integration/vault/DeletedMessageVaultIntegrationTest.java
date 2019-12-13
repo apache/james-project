@@ -17,30 +17,29 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.methods.integration;
+package org.apache.james.webadmin.integration.vault;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.ParamConfig.UpdateStrategy.REPLACE;
-import static org.apache.james.jmap.DeletedMessagesVaultRequests.deleteFromVault;
-import static org.apache.james.jmap.DeletedMessagesVaultRequests.exportVaultContent;
-import static org.apache.james.jmap.DeletedMessagesVaultRequests.purgeVault;
-import static org.apache.james.jmap.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getAllMailboxesIds;
 import static org.apache.james.jmap.JmapCommonRequests.getLastMessageId;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
-import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.mailbox.backup.ZipAssert.EntryChecks.hasName;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
+import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.deleteFromVault;
+import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.exportVaultContent;
+import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.purgeVault;
+import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.restoreMessagesForUserWithQuery;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 
@@ -50,28 +49,29 @@ import java.time.Clock;
 import java.time.ZonedDateTime;
 import java.util.List;
 
+import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
+import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
-import org.apache.james.jmap.ExportRequest;
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.jmap.categories.BasicFeature;
+import org.apache.james.jmap.AccessToken;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.backup.ZipAssert;
-import org.apache.james.mailbox.backup.ZipAssert.EntryChecks;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.UpdatableTickingClock;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
@@ -79,7 +79,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Strings;
@@ -90,7 +89,8 @@ import io.restassured.config.ParamConfig;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
-public abstract class DeletedMessagesVaultTest {
+public class DeletedMessageVaultIntegrationTest {
+
     private static final ZonedDateTime NOW = ZonedDateTime.now();
     private static final ZonedDateTime TWO_MONTH_AFTER_ONE_YEAR_EXPIRATION = NOW.plusYears(1).plusMonths(2);
     private static final String FIRST_SUBJECT = "first subject";
@@ -103,6 +103,10 @@ public abstract class DeletedMessagesVaultTest {
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
     private static final String SUBJECT = "This mail will be restored from the vault!!";
     private static final String MAILBOX_NAME = "toBeDeleted";
+    private static final String MATCH_ALL_QUERY = "{" +
+        "\"combinator\": \"and\"," +
+        "\"criteria\": []" +
+        "}";
     private static final ExportRequest EXPORT_ALL_HOMER_MESSAGES_TO_BART = ExportRequest
         .userExportFrom(HOMER)
         .exportTo(BART)
@@ -111,13 +115,11 @@ public abstract class DeletedMessagesVaultTest {
         .userExportFrom(JACK)
         .exportTo(HOMER)
         .query(MATCH_ALL_QUERY);
-
-    private MailboxId otherMailboxId;
-
-    protected abstract GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException;
-
-    protected abstract void awaitSearchUpToDate();
-
+    
+    @Rule
+    public DockerCassandraRule cassandra = new DockerCassandraRule();
+    @Rule
+    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
     @Rule
     public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
     @Rule
@@ -129,6 +131,7 @@ public abstract class DeletedMessagesVaultTest {
     private GuiceJamesServer jmapServer;
     private RequestSpecification webAdminApi;
     private UpdatableTickingClock clock;
+    private MailboxId otherMailboxId;
     private FileSystem fileSystem;
 
     @Before
@@ -151,21 +154,35 @@ public abstract class DeletedMessagesVaultTest {
         dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
-        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(HOMER), PASSWORD);
-        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(BART), BOB_PASSWORD);
-        jackAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(JACK), PASSWORD);
+        int jmapPort = jmapServer.getProbe(JmapGuiceProbe.class)
+            .getJmapPort();
+        homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), PASSWORD);
+        bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BOB_PASSWORD);
+        jackAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(JACK), PASSWORD);
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort())
             .config(WebAdminUtils.defaultConfig()
                 .paramConfig(new ParamConfig(REPLACE, REPLACE, REPLACE)));
     }
+    
+    private GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
+        return rule.jmapServer(cassandra.getModule(),
+            new TestDeleteMessageVaultPreDeletionHookModule(),
+            binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION),
+            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
+            binder -> binder.bind(Clock.class).toInstance(clock));
+    }
 
+    private void awaitSearchUpToDate() {
+        rule.await();
+    }
+    
     @After
     public void tearDown() throws Exception {
         jmapServer.stop();
     }
 
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultEndpointShouldRestoreJmapDeletedEmail() {
         bartSendMessageToHomer();
@@ -179,7 +196,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -188,8 +205,7 @@ public abstract class DeletedMessagesVaultTest {
             .log().ifValidationFails()
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
-
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultEndpointShouldRestoreImapDeletedEmail() throws Exception {
         bartSendMessageToHomer();
@@ -208,7 +224,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -218,7 +234,7 @@ public abstract class DeletedMessagesVaultTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultEndpointShouldRestoreImapDeletedMailbox() throws Exception {
         bartSendMessageToHomer();
@@ -239,7 +255,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -289,7 +305,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String messageId = listMessageIdsForAccount(homerAccessToken).get(0);
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -452,7 +468,7 @@ public abstract class DeletedMessagesVaultTest {
 
         String newMessageId = listMessageIdsForAccount(homerAccessToken).get(0);
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[[\"getMessages\", {\"ids\": [\"" + newMessageId + "\"]}, \"#0\"]]")
         .when()
             .post("/jmap")
@@ -462,7 +478,7 @@ public abstract class DeletedMessagesVaultTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenJmapDeleteMessage() throws Exception {
         bartSendMessageToHomer();
@@ -476,11 +492,11 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> hasName(messageIdOfHomer + ".eml"));
         }
     }
 
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenImapDeleteMessage() throws Exception {
         bartSendMessageToHomer();
@@ -499,11 +515,11 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> hasName(messageIdOfHomer + ".eml"));
         }
     }
 
-    @Category(BasicFeature.class)
+    
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenImapDeletedMailbox() throws Exception {
         bartSendMessageToHomer();
@@ -524,7 +540,7 @@ public abstract class DeletedMessagesVaultTest {
 
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -645,7 +661,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfNotExpiredMessage + ".eml"));
+                .allSatisfies(entry -> hasName(messageIdOfNotExpiredMessage + ".eml"));
         }
     }
 
@@ -732,7 +748,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocation = exportAndGetFileLocationFromLastMail(EXPORT_ALL_HOMER_MESSAGES_TO_BART, bartAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocation))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(messageIdOfHomer + ".eml"));
+                .allSatisfies(entry -> hasName(messageIdOfHomer + ".eml"));
         }
     }
 
@@ -797,7 +813,7 @@ public abstract class DeletedMessagesVaultTest {
         String fileLocationOfBartMessages = exportAndGetFileLocationFromLastMail(EXPORT_ALL_JACK_MESSAGES_TO_HOMER, homerAccessToken);
         try (ZipAssert zipAssert = assertThatZip(new FileInputStream(fileLocationOfBartMessages))) {
             zipAssert.hasEntriesSize(1)
-                .allSatisfies(entry -> EntryChecks.hasName(jackInboxMessageId + ".eml"));
+                .allSatisfies(entry -> hasName(jackInboxMessageId + ".eml"));
         }
     }
 
@@ -813,7 +829,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private String exportedFileLocationFromMailHeader(String messageId, AccessToken accessToken) {
         return with()
-                .header("Authorization", accessToken.serialize())
+                .header("Authorization", accessToken.asString())
                 .body("[[\"getMessages\", {\"ids\": [\"" + messageId + "\"]}, \"#0\"]]")
                 .post("/jmap")
             .jsonPath()
@@ -823,7 +839,7 @@ public abstract class DeletedMessagesVaultTest {
 
     private void homerSharesHisMailboxWithBart() {
         with()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body("[" +
                 "  [ \"setMailboxes\"," +
                 "    {" +
@@ -866,7 +882,7 @@ public abstract class DeletedMessagesVaultTest {
             "]";
 
         with()
-            .header("Authorization", bartAccessToken.serialize())
+            .header("Authorization", bartAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -898,7 +914,7 @@ public abstract class DeletedMessagesVaultTest {
             "]";
 
         with()
-            .header("Authorization", bartAccessToken.serialize())
+            .header("Authorization", bartAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
@@ -941,7 +957,7 @@ public abstract class DeletedMessagesVaultTest {
             "]";
 
         given()
-            .header("Authorization", homerAccessToken.serialize())
+            .header("Authorization", homerAccessToken.asString())
             .body(updateRequestBody)
             .when()
             .post("/jmap");
