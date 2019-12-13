@@ -39,13 +39,16 @@ public class ExpungeCommandParser extends AbstractUidCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
-        IdRange[] uidSet = null;
-        if (useUids) {
-            uidSet = request.parseIdRange(session);
-        }
+        IdRange[] uidSet = parseIdRange(request, useUids, session);
         request.eol();
 
         return new ExpungeRequest(tag, uidSet);
     }
 
+    private IdRange[] parseIdRange(ImapRequestLineReader request, boolean useUids, ImapSession session) throws DecodingException {
+        if (useUids) {
+            return request.parseIdRange(session);
+        }
+        return null;
+    }
 }
