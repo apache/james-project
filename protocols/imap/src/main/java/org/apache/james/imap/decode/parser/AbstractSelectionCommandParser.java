@@ -29,14 +29,14 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.mailbox.MessageUid;
 
 public abstract class AbstractSelectionCommandParser extends AbstractImapCommandParser {
-    private static final byte[] CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString().getBytes();
-    private static final byte[] QRESYNC = ImapConstants.SUPPORTS_QRESYNC.asString().getBytes();
+    private static final String CONDSTORE = ImapConstants.SUPPORTS_CONDSTORE.asString();
+    private static final String QRESYNC = ImapConstants.SUPPORTS_QRESYNC.asString();
 
     public AbstractSelectionCommandParser(ImapCommand command, StatusResponseFactory statusResponseFactory) {
         super(command, statusResponseFactory);
@@ -67,28 +67,12 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
             switch (n) {
             case 'C':
                 // It starts with C so it should be CONDSTORE
-                int pos = 0;
-                while (pos < CONDSTORE.length) {
-                    if (CONDSTORE[pos++] != ImapRequestLineReader.cap(request.consume())) {
-                        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Unknown option");
-                    }
-                }
+                request.consumeWord(new StringValidator(CONDSTORE));
                 condstore = true;
                 break;
             case 'Q':
                 // It starts with Q so it should be QRESYNC
-                request.consumeWord(new CharacterValidator() {
-                    int pos = 0;
-
-                    @Override
-                    public boolean isValid(char chr) {
-                        if (pos >= QRESYNC.length) {
-                            return false;
-                        } else {
-                            return ImapRequestLineReader.cap(chr) == QRESYNC[pos++];
-                        }
-                    }
-                });
+                request.consumeWord(new StringValidator(QRESYNC));
                 
                 // Consume the SP
                 request.consumeChar(' ');
