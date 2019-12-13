@@ -19,6 +19,7 @@
 package org.apache.james.imap.message.response;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
@@ -28,13 +29,10 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 public class NamespaceResponse implements ImapResponseMessage {
 
     private final List<Namespace> personal;
-
     private final List<Namespace> users;
-
     private final List<Namespace> shared;
 
     public NamespaceResponse(List<Namespace> personal, List<Namespace> users, List<Namespace> shared) {
-        super();
         this.personal = personal;
         this.users = users;
         this.shared = shared;
@@ -72,11 +70,9 @@ public class NamespaceResponse implements ImapResponseMessage {
      */
     public static final class Namespace {
         private final String prefix;
-
         private final char delimiter;
 
         public Namespace(String prefix, char delimiter) {
-            super();
             this.prefix = prefix;
             this.delimiter = delimiter;
         }
@@ -100,37 +96,19 @@ public class NamespaceResponse implements ImapResponseMessage {
         }
 
         @Override
-        public int hashCode() {
-            final int PRIME = 31;
-            int result = 1;
-            result = PRIME * result + delimiter;
-            result = PRIME * result + ((prefix == null) ? 0 : prefix.hashCode());
-            return result;
+        public final boolean equals(Object o) {
+            if (o instanceof Namespace) {
+                Namespace namespace = (Namespace) o;
+
+                return Objects.equals(this.delimiter, namespace.delimiter)
+                    && Objects.equals(this.prefix, namespace.prefix);
+            }
+            return false;
         }
 
         @Override
-        public boolean equals(Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final Namespace other = (Namespace) obj;
-            if (delimiter != other.delimiter) {
-                return false;
-            }
-            if (prefix == null) {
-                if (other.prefix != null) {
-                    return false;
-                }
-            } else if (!prefix.equals(other.prefix)) {
-                return false;
-            }
-            return true;
+        public final int hashCode() {
+            return Objects.hash(prefix, delimiter);
         }
 
         @Override
@@ -140,49 +118,20 @@ public class NamespaceResponse implements ImapResponseMessage {
     }
 
     @Override
-    public int hashCode() {
-        final int PRIME = 31;
-        int result = 1;
-        result = PRIME * result + ((personal == null) ? 0 : personal.hashCode());
-        result = PRIME * result + ((shared == null) ? 0 : shared.hashCode());
-        result = PRIME * result + ((users == null) ? 0 : users.hashCode());
-        return result;
+    public final boolean equals(Object o) {
+        if (o instanceof NamespaceResponse) {
+            NamespaceResponse that = (NamespaceResponse) o;
+
+            return Objects.equals(this.personal, that.personal)
+                && Objects.equals(this.users, that.users)
+                && Objects.equals(this.shared, that.shared);
+        }
+        return false;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (obj == null) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final NamespaceResponse other = (NamespaceResponse) obj;
-        if (personal == null) {
-            if (other.personal != null) {
-                return false;
-            }
-        } else if (!personal.equals(other.personal)) {
-            return false;
-        }
-        if (shared == null) {
-            if (other.shared != null) {
-                return false;
-            }
-        } else if (!shared.equals(other.shared)) {
-            return false;
-        }
-        if (users == null) {
-            if (other.users != null) {
-                return false;
-            }
-        } else if (!users.equals(other.users)) {
-            return false;
-        }
-        return true;
+    public final int hashCode() {
+        return Objects.hash(personal, users, shared);
     }
 
     /**
@@ -191,6 +140,6 @@ public class NamespaceResponse implements ImapResponseMessage {
      * @return a <code>String</code> representation of this object.
      */
     public String toString() {
-        return "NamespaceResponse [" + "personal = " + this.personal + " " + "users = " + this.users + " " + "shared = " + this.shared + " " + " ]";
+        return "NamespaceResponse [personal = " + this.personal + " users = " + this.users + " shared = " + this.shared + "  ]";
     }
 }
