@@ -20,7 +20,6 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.EnumSet;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -48,11 +47,11 @@ public class StatusCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String mailboxName = request.mailbox();
         StatusDataItems statusDataItems = statusDataItems(request);
         request.eol();
-        return new StatusRequest(command, mailboxName, statusDataItems, tag);
+        return new StatusRequest(mailboxName, statusDataItems, tag);
     }
 
     private StatusDataItems statusDataItems(ImapRequestLineReader request) throws DecodingException {

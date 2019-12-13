@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,15 +32,13 @@ import org.apache.james.imap.message.request.NoopRequest;
  * Parses NOOP commands
  */
 public class NoopCommandParser extends AbstractImapCommandParser {
-
     public NoopCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.NOOP_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         request.eol();
-        return new NoopRequest(command, tag);
+        return new NoopRequest(tag);
     }
-
 }

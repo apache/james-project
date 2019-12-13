@@ -33,7 +33,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.SearchKey;
@@ -67,14 +67,12 @@ public class SearchCommandParserCharsetTest {
 
     SearchCommandParser parser;
     StatusResponseFactory mockStatusResponseFactory;
-    ImapCommand command;
     ImapMessage message;
 
     @Before
     public void setUp() throws Exception {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         parser = new SearchCommandParser(mockStatusResponseFactory);
-        command = ImapCommand.anyStateCommand("Command");
         message = mock(ImapMessage.class);
     }
 
@@ -83,11 +81,11 @@ public class SearchCommandParserCharsetTest {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
-        parser.decode(command, reader, TAG, false, new FakeImapSession());
+        parser.decode(reader, TAG, false, new FakeImapSession());
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(
             eq(TAG),
-            same(command),
+            same(ImapConstants.SEARCH_COMMAND),
             eq(HumanReadableText.BAD_CHARSET),
             eq(StatusResponse.ResponseCode.badCharset()));
 

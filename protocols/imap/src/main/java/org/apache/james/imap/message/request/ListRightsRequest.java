@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 /**
@@ -29,8 +29,8 @@ public class ListRightsRequest extends AbstractImapRequest {
     private final String identifier;
     private final String mailboxName;
 
-    public ListRightsRequest(Tag tag, ImapCommand command, String mailboxName, String identifier) {
-        super(tag, command);
+    public ListRightsRequest(Tag tag, String mailboxName, String identifier) {
+        super(tag, ImapConstants.LISTRIGHTS_COMMAND);
         this.mailboxName = mailboxName;
         this.identifier = identifier;
     }

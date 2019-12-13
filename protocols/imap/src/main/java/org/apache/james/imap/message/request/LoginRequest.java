@@ -19,7 +19,7 @@
 package org.apache.james.imap.message.request;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
@@ -31,8 +31,8 @@ public class LoginRequest extends AbstractImapRequest {
 
     private final String password;
 
-    public LoginRequest(ImapCommand command, Username userid, String password, Tag tag) {
-        super(tag, command);
+    public LoginRequest(Username userid, String password, Tag tag) {
+        super(tag, ImapConstants.LOGIN_COMMAND);
         this.userid = userid;
         this.password = password;
     }

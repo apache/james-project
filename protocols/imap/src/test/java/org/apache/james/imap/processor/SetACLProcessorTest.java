@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -98,7 +97,7 @@ public class SetACLProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        replaceAclRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), SET_RIGHTS);
+        replaceAclRequest = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), SET_RIGHTS);
 
         user1Key = EntryKey.deserialize(USER_1.asString());
         setRights = Rfc4314Rights.fromSerializedRfc4314Rights(SET_RIGHTS);
@@ -106,7 +105,7 @@ public class SetACLProcessorTest {
     
     @Test
     public void testUnsupportedRight() throws Exception {
-        SetACLRequest setACLRequest = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), UNSUPPORTED_RIGHT);
+        SetACLRequest setACLRequest = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), UNSUPPORTED_RIGHT);
 
         when(mailboxManager.hasRight(path, MailboxACL.Right.Lookup, mailboxSession))
             .thenReturn(false);
@@ -177,7 +176,7 @@ public class SetACLProcessorTest {
         when(mailboxManager.hasRight(path, MailboxACL.Right.Administer, mailboxSession))
             .thenReturn(true);
 
-        SetACLRequest r = new SetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString(), prefix + SET_RIGHTS);
+        SetACLRequest r = new SetACLRequest(TAG, MAILBOX_NAME, USER_1.asString(), prefix + SET_RIGHTS);
         subject.doProcess(r, responder, imapSession);
 
         verify(mailboxManager).applyRightsCommand(path,

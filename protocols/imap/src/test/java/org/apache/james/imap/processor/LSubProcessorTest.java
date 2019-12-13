@@ -30,7 +30,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -81,7 +81,6 @@ public class LSubProcessorTest {
     StatusResponseFactory serverResponseFactory;
     StatusResponse statusResponse;
     Collection<String> subscriptions;
-    ImapCommand command;
     private ImapProcessor.Responder responderImpl;
 
     @Before
@@ -89,7 +88,6 @@ public class LSubProcessorTest {
         subscriptions = new ArrayList<>();
         serverResponseFactory = mock(StatusResponseFactory.class);
         session = new FakeImapSession();
-        command = ImapCommand.anyStateCommand("Command");
         next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
         result = mock(MailboxMetaData.class);
@@ -111,10 +109,10 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         expectSubscriptions();
-        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+        when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest(command, "", PARENT
+        LsubRequest request = new LsubRequest("", PARENT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, responderImpl);
 
@@ -133,10 +131,10 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         expectSubscriptions();
-        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+        when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest(command, "", ROOT
+        LsubRequest request = new LsubRequest("", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, responderImpl);
 
@@ -155,10 +153,10 @@ public class LSubProcessorTest {
         subscriptions.add(CHILD_TWO);
 
         expectSubscriptions();
-        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+        when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest(command, "", ROOT
+        LsubRequest request = new LsubRequest("", ROOT
                 + HIERARCHY_DELIMITER + "%", TAG);
         processor.doProcessRequest(request, session, responderImpl);
 
@@ -172,10 +170,10 @@ public class LSubProcessorTest {
         subscriptions.add(MAILBOX_B);
         subscriptions.add(MAILBOX_C);
         expectSubscriptions();
-        when(serverResponseFactory.taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+        when(serverResponseFactory.taggedOk(eq(TAG), same(ImapConstants.LSUB_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
 
-        LsubRequest request = new LsubRequest(command, "", "*", TAG);
+        LsubRequest request = new LsubRequest("", "*", TAG);
         processor.doProcessRequest(request, session, responderImpl);
 
         verify(responder).respond(new LSubResponse(MAILBOX_A, false, HIERARCHY_DELIMITER));

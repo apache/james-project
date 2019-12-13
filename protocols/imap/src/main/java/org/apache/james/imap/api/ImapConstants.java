@@ -135,7 +135,6 @@ public interface ImapConstants {
 
     String NAME_ATTRIBUTE_HAS_NO_CHILDREN = "\\HasNoChildren";
 
-    String NAMESPACE_COMMAND_NAME = "NAMESPACE";
 
     char BACK_SLASH = '\\';
 
@@ -152,11 +151,13 @@ public interface ImapConstants {
     String STATUS_HIGHESTMODSEQ = "HIGHESTMODSEQ";
 
     ImapCommand CAPABILITY_COMMAND = ImapCommand.anyStateCommand("CAPABILITY");
+    ImapCommand COMPRESS_COMMAND = ImapCommand.anyStateCommand("COMPRESS");
     ImapCommand LOGOUT_COMMAND = ImapCommand.anyStateCommand("LOGOUT");
     ImapCommand NOOP_COMMAND = ImapCommand.anyStateCommand("NOOP");
 
     ImapCommand AUTHENTICATE_COMMAND = ImapCommand.nonAuthenticatedStateCommand("AUTHENTICATE");
     ImapCommand LOGIN_COMMAND = ImapCommand.nonAuthenticatedStateCommand("LOGIN");
+    ImapCommand STARTTLS_COMMAND = ImapCommand.nonAuthenticatedStateCommand("STARTTLS");
 
     ImapCommand APPEND_COMMAND = ImapCommand.authenticatedStateCommand("APPEND");
     ImapCommand CREATE_COMMAND = ImapCommand.authenticatedStateCommand("CREATE");
@@ -166,6 +167,7 @@ public interface ImapConstants {
     ImapCommand IDLE_COMMAND = ImapCommand.authenticatedStateCommand("IDLE");
     ImapCommand LIST_COMMAND = ImapCommand.authenticatedStateCommand("LIST");
     ImapCommand LSUB_COMMAND = ImapCommand.authenticatedStateCommand("LSUB");
+    ImapCommand NAMESPACE_COMMAND = ImapCommand.authenticatedStateCommand("NAMESPACE");
     ImapCommand RENAME_COMMAND = ImapCommand.authenticatedStateCommand("RENAME");
     ImapCommand SELECT_COMMAND = ImapCommand.authenticatedStateCommand("SELECT");
     ImapCommand STATUS_COMMAND = ImapCommand.authenticatedStateCommand("STATUS");
@@ -231,14 +233,9 @@ public interface ImapConstants {
     
     String FETCH_MODSEQ = "MODSEQ";
 
-    
-    String STARTTLS = "STARTTLS";
-
     String LINE_END = "\r\n";
     long MAX_NZ_NUMBER = 4294967295L;
     long MIN_NZ_NUMBER = 1L;
-
-    String COMPRESS_COMMAND_NAME = "COMPRESS";
 
     // Quota resources definition
 

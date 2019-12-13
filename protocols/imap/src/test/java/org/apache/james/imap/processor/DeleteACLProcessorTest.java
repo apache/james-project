@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -94,7 +93,6 @@ public class DeleteACLProcessorTest {
             .thenReturn(messageManager);
 
         deleteACLRequest = new DeleteACLRequest(TAG,
-            ImapCommand.anyStateCommand("Name"),
             MAILBOX_NAME,
             USER_1.asString());
 

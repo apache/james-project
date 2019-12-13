@@ -72,14 +72,14 @@ public class ListCommandParser extends AbstractUidCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         String referenceName = request.mailbox();
         String mailboxPattern = listMailbox(request);
         request.eol();
-        return createMessage(command, referenceName, mailboxPattern, tag);
+        return createMessage(referenceName, mailboxPattern, tag);
     }
 
-    protected ImapMessage createMessage(ImapCommand command, String referenceName, String mailboxPattern, Tag tag) {
-        return new ListRequest(command, referenceName, mailboxPattern, tag);
+    protected ImapMessage createMessage(String referenceName, String mailboxPattern, Tag tag) {
+        return new ListRequest(referenceName, mailboxPattern, tag);
     }
 }

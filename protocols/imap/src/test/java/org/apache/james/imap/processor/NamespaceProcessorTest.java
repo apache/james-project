@@ -75,7 +75,7 @@ public class NamespaceProcessorTest {
         imapSession = spy(new FakeImapSession());
         mailboxSession = mock(MailboxSession.class);
      
-        namespaceRequest = new NamespaceRequest(ImapCommand.anyStateCommand("Name"), TAG);
+        namespaceRequest = new NamespaceRequest(TAG);
         imapSession.setMailboxSession(mailboxSession);
     }
 

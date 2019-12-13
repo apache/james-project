@@ -18,12 +18,11 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class CapabilityRequest extends AbstractImapRequest {
-
-    public CapabilityRequest(ImapCommand command, Tag tag) {
-        super(tag, command);
+    public CapabilityRequest(Tag tag) {
+        super(tag, ImapConstants.CAPABILITY_COMMAND);
     }
 }

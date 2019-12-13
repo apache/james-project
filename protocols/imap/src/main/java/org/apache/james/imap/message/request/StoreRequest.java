@@ -20,7 +20,7 @@ package org.apache.james.imap.message.request;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.mailbox.MessageManager;
@@ -33,8 +33,8 @@ public class StoreRequest extends AbstractImapRequest {
     private final MessageManager.FlagsUpdateMode flagsUpdateMode;
     private final long unchangedSince;
 
-    public StoreRequest(ImapCommand command, IdRange[] idSet, boolean silent, Flags flags, boolean useUids, Tag tag, MessageManager.FlagsUpdateMode flagsUpdateMode, long unchangedSince) {
-        super(tag, command);
+    public StoreRequest(IdRange[] idSet, boolean silent, Flags flags, boolean useUids, Tag tag, MessageManager.FlagsUpdateMode flagsUpdateMode, long unchangedSince) {
+        super(tag, ImapConstants.STORE_COMMAND);
         this.idSet = idSet;
         this.silent = silent;
         this.flags = flags;

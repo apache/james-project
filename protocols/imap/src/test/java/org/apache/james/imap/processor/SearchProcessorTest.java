@@ -40,7 +40,6 @@ import javax.mail.Flags;
 import javax.mail.Flags.Flag;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.IdRange;
@@ -109,7 +108,6 @@ public class SearchProcessorTest {
     ImapProcessor next;
     ImapProcessor.Responder responder;
     FakeImapSession session;
-    ImapCommand command;
     StatusResponseFactory serverResponseFactory;
     StatusResponse statusResponse;
     MessageManager mailbox;
@@ -121,7 +119,6 @@ public class SearchProcessorTest {
     public void setUp() throws Exception {
         serverResponseFactory = mock(StatusResponseFactory.class);
         session = new FakeImapSession();
-        command = ImapCommand.anyStateCommand("Command");
         next = mock(ImapProcessor.class);
         responder = mock(ImapProcessor.Responder.class);
         statusResponse = mock(StatusResponse.class);
@@ -471,13 +468,13 @@ public class SearchProcessorTest {
         when(selectedMailbox.getApplicableFlags()).thenReturn(new Flags());
         when(selectedMailbox.hasNewApplicableFlags()).thenReturn(false);
 
-        SearchRequest message = new SearchRequest(command, new SearchOperation(key, new ArrayList<>()), false, TAG);
+        SearchRequest message = new SearchRequest(new SearchOperation(key, new ArrayList<>()), false, TAG);
         processor.processRequest(message, session, responder);
     }
 
     private void expectOk() {
         when(serverResponseFactory
-                .taggedOk(eq(TAG), same(command), eq(HumanReadableText.COMPLETED)))
+                .taggedOk(eq(TAG), same(ImapConstants.SEARCH_COMMAND), eq(HumanReadableText.COMPLETED)))
             .thenReturn(statusResponse);
     }
 

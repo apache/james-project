@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -41,12 +40,11 @@ public class GetQuotaParserTest {
     @Test
     public void testQuotaParsing() throws DecodingException {
         GetQuotaCommandParser parser = new GetQuotaCommandParser(mock(StatusResponseFactory.class));
-        ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "quotaRoot \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        GetQuotaRequest request = (GetQuotaRequest) parser.decode(command, lineReader, TAG, null);
-        GetQuotaRequest expected = new GetQuotaRequest(TAG, command, "quotaRoot");
+        GetQuotaRequest request = (GetQuotaRequest) parser.decode(lineReader, TAG, null);
+        GetQuotaRequest expected = new GetQuotaRequest(TAG, "quotaRoot");
         assertThat(request.getQuotaRoot()).isEqualTo(expected.getQuotaRoot());
     }
 }

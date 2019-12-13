@@ -27,7 +27,6 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -38,15 +37,13 @@ import org.junit.Test;
  * SETQUOTA command parser test...
  */
 public class SetQuotaCommandParserTest {
-
     @Test
     public void testQuotaParsing() throws DecodingException {
         SetQuotaCommandParser parser = new SetQuotaCommandParser(mock(StatusResponseFactory.class));
-        ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "quotaRoot (STORAGE 512) ( MESSAGE  1024  ) \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        SetQuotaRequest request = (SetQuotaRequest) parser.decode(command, lineReader, TAG, null);
+        SetQuotaRequest request = (SetQuotaRequest) parser.decode(lineReader, TAG, null);
         assertThat(request.getQuotaRoot()).isEqualTo("quotaRoot");
         List<SetQuotaRequest.ResourceLimit> list = request.getResourceLimits();
         assertThat(list.get(0).getResource()).isEqualTo("STORAGE");
@@ -55,5 +52,4 @@ public class SetQuotaCommandParserTest {
         assertThat(list.get(1).getLimit()).isEqualTo(1024);
         assertThat(list.size()).isEqualTo(2);
     }
-
 }

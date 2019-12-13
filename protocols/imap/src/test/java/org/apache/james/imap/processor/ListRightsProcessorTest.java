@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -96,7 +95,7 @@ public class ListRightsProcessorTest {
         when(mailboxManager.getMailbox(any(MailboxPath.class), any(MailboxSession.class)))
             .thenReturn(messageManager);
 
-        listRightsRequest = new ListRightsRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME, USER_1.asString());
+        listRightsRequest = new ListRightsRequest(TAG, MAILBOX_NAME, USER_1.asString());
 
         user1Key = EntryKey.deserialize(USER_1.asString());
         listRights = new Rfc4314Rights[] {Rfc4314Rights.fromSerializedRfc4314Rights("ae"), Rfc4314Rights.fromSerializedRfc4314Rights("i"), Rfc4314Rights.fromSerializedRfc4314Rights("k")};

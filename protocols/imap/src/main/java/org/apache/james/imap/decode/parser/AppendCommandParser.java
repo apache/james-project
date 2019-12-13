@@ -24,7 +24,6 @@ import java.util.Date;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -39,7 +38,6 @@ import org.apache.james.imap.message.request.AppendRequest;
  * Parses APPEND command
  */
 public class AppendCommandParser extends AbstractImapCommandParser {
-
     public AppendCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.APPEND_COMMAND, statusResponseFactory);
     }
@@ -72,7 +70,7 @@ public class AppendCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String mailboxName = request.mailbox();
         Flags flags = optionalAppendFlags(request);
         if (flags == null) {
@@ -84,6 +82,6 @@ public class AppendCommandParser extends AbstractImapCommandParser {
         }
         request.nextWordChar();
 
-        return new AppendRequest(command, mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), request.consumeLiteral(true), tag);
+        return new AppendRequest(mailboxName, flags, Date.from(datetime.atZone(ZoneId.systemDefault()).toInstant()), request.consumeLiteral(true), tag);
     }
 }

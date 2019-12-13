@@ -36,13 +36,13 @@ public abstract class AbstractMessageRangeCommandParser extends AbstractUidComma
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         IdRange[] idSet = request.parseIdRange(session);
         String mailboxName = request.mailbox();
         request.eol();
-        return createRequest(command, tag, useUids, idSet, mailboxName);
+        return createRequest(tag, useUids, idSet, mailboxName);
     }
 
-    protected abstract AbstractMessageRangeRequest createRequest(ImapCommand command, Tag tag, boolean useUids, IdRange[] idSet, String mailboxName);
+    protected abstract AbstractMessageRangeRequest createRequest(Tag tag, boolean useUids, IdRange[] idSet, String mailboxName);
 
 }

@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -84,7 +83,7 @@ public class GetACLProcessorTest {
         metaData = mock(MetaData.class);
         responder = mock(Responder.class);
 
-        getACLRequest = new GetACLRequest(TAG, ImapCommand.anyStateCommand("Name"), MAILBOX_NAME);
+        getACLRequest = new GetACLRequest(TAG, MAILBOX_NAME);
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);

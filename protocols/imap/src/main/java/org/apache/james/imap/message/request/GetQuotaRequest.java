@@ -19,7 +19,7 @@
 
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 /**
@@ -28,8 +28,8 @@ import org.apache.james.imap.api.Tag;
 public class GetQuotaRequest extends AbstractImapRequest {
     private final String quotaRoot;
 
-    public GetQuotaRequest(Tag tag, ImapCommand command, String quotaRoot) {
-        super(tag, command);
+    public GetQuotaRequest(Tag tag, String quotaRoot) {
+        super(tag, ImapConstants.GETQUOTA_COMMAND);
         this.quotaRoot = quotaRoot;
     }
 

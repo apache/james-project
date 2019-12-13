@@ -36,7 +36,7 @@ import com.google.common.collect.ImmutableList;
 
 public class CompressProcessor extends AbstractChainedProcessor<CompressRequest> implements CapabilityImplementingProcessor {
     private static final String ALGO = "DEFLATE";
-    private static final List<Capability> CAPA = ImmutableList.of(Capability.of(ImapConstants.COMPRESS_COMMAND_NAME + "=" + ALGO));
+    private static final List<Capability> CAPA = ImmutableList.of(Capability.of(ImapConstants.COMPRESS_COMMAND.getName() + "=" + ALGO));
     private final StatusResponseFactory factory;
     private static final String COMPRESSED = "COMPRESSED";
 

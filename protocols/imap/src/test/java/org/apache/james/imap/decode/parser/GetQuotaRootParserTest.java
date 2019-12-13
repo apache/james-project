@@ -26,7 +26,6 @@ import static org.mockito.Mockito.mock;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -37,29 +36,25 @@ import org.junit.Test;
  * Tests for GetQuotaRootCommandParser
  */
 public class GetQuotaRootParserTest {
-
     @Test
     public void testNonQuotedMailbox() throws DecodingException {
         GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
-        ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "INBOX\n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        GetQuotaRootRequest request = (GetQuotaRootRequest) parser.decode(command, lineReader, TAG, null);
-        GetQuotaRootRequest expected = new GetQuotaRootRequest(TAG, command, "INBOX");
+        GetQuotaRootRequest request = (GetQuotaRootRequest) parser.decode(lineReader, TAG, null);
+        GetQuotaRootRequest expected = new GetQuotaRootRequest(TAG, "INBOX");
         assertThat(request.getMailboxName()).isEqualTo(expected.getMailboxName());
     }
 
     @Test
     public void testQuotedMailbox() throws DecodingException {
         GetQuotaRootCommandParser parser = new GetQuotaRootCommandParser(mock(StatusResponseFactory.class));
-        ImapCommand command = ImapCommand.anyStateCommand("Command");
         String commandString = "\"INBOX\" \n";
         InputStream inputStream = new ByteArrayInputStream(commandString.getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        GetQuotaRootRequest request = (GetQuotaRootRequest) parser.decode(command, lineReader, TAG, null);
-        GetQuotaRootRequest expected = new GetQuotaRootRequest(TAG, command, "INBOX");
+        GetQuotaRootRequest request = (GetQuotaRootRequest) parser.decode(lineReader, TAG, null);
+        GetQuotaRootRequest expected = new GetQuotaRootRequest(TAG, "INBOX");
         assertThat(request.getMailboxName()).isEqualTo(expected.getMailboxName());
     }
-
 }

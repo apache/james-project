@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.UidRange;
 import org.apache.james.imap.api.message.request.SearchKey;
@@ -39,14 +38,11 @@ import org.junit.Before;
 import org.junit.Test;
 
 public class SearchCommandParserSearchKeySequenceSetTest {
-
     SearchCommandParser parser;
-    ImapCommand command;
 
     @Before
     public void setUp() throws Exception {
         parser = new SearchCommandParser(mock(StatusResponseFactory.class));
-        command = ImapCommand.anyStateCommand("Command");
     }
     
     @Test

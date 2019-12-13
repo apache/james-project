@@ -18,15 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class AuthenticateRequest extends AbstractImapRequest {
-
     private final String authType;
 
-    public AuthenticateRequest(ImapCommand command, String authType, Tag tag) {
-        super(tag, command);
+    public AuthenticateRequest(String authType, Tag tag) {
+        super(tag, ImapConstants.AUTHENTICATE_COMMAND);
         this.authType = authType;
     }
 

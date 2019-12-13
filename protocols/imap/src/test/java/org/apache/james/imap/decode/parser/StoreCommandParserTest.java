@@ -28,8 +28,6 @@ import java.nio.charset.StandardCharsets;
 
 import javax.mail.Flags;
 
-import org.apache.james.imap.api.ImapCommand;
-import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
@@ -42,15 +40,12 @@ import org.junit.Test;
 public class StoreCommandParserTest {
 
     StoreCommandParser parser;
-    ImapCommand command;
-    ImapMessage message;
 
     private ImapSession session;
 
     @Before
     public void setUp() throws Exception {
         parser = new StoreCommandParser(mock(StatusResponseFactory.class));
-        command = ImapCommand.anyStateCommand("Command");
         session = mock(ImapSession.class);
     }
 
@@ -82,6 +77,6 @@ public class StoreCommandParserTest {
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
-        parser.decode(command, reader, tag, useUids, session);
+        parser.decode(reader, tag, useUids, session);
     }
 }

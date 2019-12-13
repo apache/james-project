@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -902,9 +901,9 @@ public class SearchCommandParser extends AbstractUidCommandParser {
         return result;
     }
 
-    private ImapMessage unsupportedCharset(Tag tag, ImapCommand command) {
+    private ImapMessage unsupportedCharset(Tag tag) {
         final ResponseCode badCharset = StatusResponse.ResponseCode.badCharset();
-        return taggedNo(tag, command, HumanReadableText.BAD_CHARSET, badCharset);
+        return taggedNo(tag, ImapConstants.SEARCH_COMMAND, HumanReadableText.BAD_CHARSET, badCharset);
     }
 
     /**
@@ -968,7 +967,7 @@ public class SearchCommandParser extends AbstractUidCommandParser {
     }
     
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         try {
             SearchKey recent = null;
             List<SearchResultOption> options = null;
@@ -1018,10 +1017,10 @@ public class SearchCommandParser extends AbstractUidCommandParser {
                 options = new ArrayList<>();
             }
 
-            return new SearchRequest(command, new SearchOperation(finalKey, options), useUids, tag);
+            return new SearchRequest(new SearchOperation(finalKey, options), useUids, tag);
         } catch (IllegalCharsetNameException | UnsupportedCharsetException e) {
             LOGGER.debug("Unable to decode request", e);
-            return unsupportedCharset(tag, command);
+            return unsupportedCharset(tag);
         }
     }
 

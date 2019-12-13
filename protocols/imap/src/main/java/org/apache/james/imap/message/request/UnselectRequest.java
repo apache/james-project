@@ -18,13 +18,11 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class UnselectRequest extends AbstractImapRequest {
-
-    public UnselectRequest(Tag tag, ImapCommand command) {
-        super(tag, command);
+    public UnselectRequest(Tag tag) {
+        super(tag, ImapConstants.UNSELECT_COMMAND);
     }
-
 }

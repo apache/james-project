@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,16 +32,14 @@ import org.apache.james.imap.message.request.UnsubscribeRequest;
  * Parse UNSUBSCRIBE commands
  */
 public class UnsubscribeCommandParser extends AbstractImapCommandParser {
-
     public UnsubscribeCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.UNSUBSCRIBE_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         request.eol();
-        return new UnsubscribeRequest(command, mailboxName, tag);
+        return new UnsubscribeRequest(mailboxName, tag);
     }
-
 }

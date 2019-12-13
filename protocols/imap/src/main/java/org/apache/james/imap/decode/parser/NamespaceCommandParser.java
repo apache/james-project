@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,13 +32,12 @@ import org.apache.james.imap.message.request.NamespaceRequest;
  * Parse NAMESPACE commands
  */
 public class NamespaceCommandParser extends AbstractImapCommandParser {
-
     public NamespaceCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.authenticatedStateCommand(ImapConstants.NAMESPACE_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.NAMESPACE_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        return new NamespaceRequest(command, tag);
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+        return new NamespaceRequest(tag);
     }
 }

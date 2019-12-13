@@ -18,15 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 /**
  * Describes a NAMESPACE command.
  */
 public class NamespaceRequest extends AbstractImapRequest {
-
-    public NamespaceRequest(ImapCommand command, Tag tag) {
-        super(tag, command);
+    public NamespaceRequest(Tag tag) {
+        super(tag, ImapConstants.NAMESPACE_COMMAND);
     }
 }

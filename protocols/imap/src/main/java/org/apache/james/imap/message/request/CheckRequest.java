@@ -18,12 +18,11 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class CheckRequest extends AbstractImapRequest {
-
-    public CheckRequest(ImapCommand command, Tag tag) {
-        super(tag, command);
+    public CheckRequest(Tag tag) {
+        super(tag, ImapConstants.CHECK_COMMAND);
     }
 }

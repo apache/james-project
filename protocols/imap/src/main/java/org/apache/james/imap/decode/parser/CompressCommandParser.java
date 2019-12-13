@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -30,16 +29,14 @@ import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.CompressRequest;
 
 public class CompressCommandParser extends AbstractImapCommandParser {
-
     public CompressCommandParser(StatusResponseFactory statusResponseFactory) {
-        super(ImapCommand.anyStateCommand(ImapConstants.COMPRESS_COMMAND_NAME), statusResponseFactory);
+        super(ImapConstants.COMPRESS_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String algorithm = request.atom();
         request.eol();
-        return new CompressRequest(tag, command, algorithm);
+        return new CompressRequest(tag, algorithm);
     }
-
 }

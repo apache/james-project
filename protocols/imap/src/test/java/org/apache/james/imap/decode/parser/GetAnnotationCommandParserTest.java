@@ -28,7 +28,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
@@ -44,7 +44,6 @@ public class GetAnnotationCommandParserTest {
     private static final String INBOX = "anyInboxName";
     private static final MailboxAnnotationKey PRIVATE_KEY = new MailboxAnnotationKey("/private/comment");
     private static final MailboxAnnotationKey SHARED_KEY = new MailboxAnnotationKey("/shared/comment");
-    private static final ImapCommand command = ImapCommand.anyStateCommand("Command");
     private static final ImapSession session = new FakeImapSession();
     private static final OutputStream outputStream = null;
 
@@ -60,7 +59,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test
@@ -68,10 +67,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + "    \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).isEmpty();
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
@@ -83,7 +82,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " /private/comment extrastring \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test
@@ -91,10 +90,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " /private/comment \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).containsOnly(PRIVATE_KEY);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
@@ -106,7 +105,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + "/shared/comment private/comment \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test
@@ -114,10 +113,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).contains(PRIVATE_KEY, SHARED_KEY);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
@@ -129,7 +128,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (/another/key/group)\n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -137,7 +136,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) /another/key \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -145,7 +144,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " /shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -153,7 +152,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -161,7 +160,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -169,7 +168,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE invalid) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -177,7 +176,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -185,7 +184,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE 1024 (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -193,7 +192,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " MAXSIZE (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test
@@ -201,10 +200,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest) parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getKeys()).contains(PRIVATE_KEY, SHARED_KEY);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
@@ -216,7 +215,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZErr 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -224,7 +223,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 0) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -232,7 +231,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH -1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -240,7 +239,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTHerr 1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -248,7 +247,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -256,7 +255,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH invalid) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -264,7 +263,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -272,7 +271,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " DEPTH 1 (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test
@@ -280,10 +279,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 0) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, null);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, null);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
         assertThat(request.getMaxsize()).contains(1024);
@@ -295,10 +294,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 1) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.ONE);
         assertThat(request.getMaxsize()).contains(1024);
@@ -310,10 +309,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (DEPTH 1) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.ONE);
         assertThat(request.getMaxsize()).contains(1024);
@@ -325,10 +324,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.INFINITY);
         assertThat(request.getMaxsize()).contains(1024);
@@ -340,10 +339,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.INFINITY);
         assertThat(request.getMaxsize()).isEmpty();
@@ -355,10 +354,10 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (MAXSIZE 1024) (/shared/comment /private/comment) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(command, lineReader, TAG, session);
+        GetAnnotationRequest request = (GetAnnotationRequest)parser.decode(lineReader, TAG, session);
 
         assertThat(request.getTag()).isEqualTo(TAG);
-        assertThat(request.getCommand()).isEqualTo(command);
+        assertThat(request.getCommand()).isEqualTo(ImapConstants.GETANNOTATION_COMMAND);
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getDepth()).isEqualTo(Depth.ZERO);
         assertThat(request.getMaxsize()).contains(1024);
@@ -370,7 +369,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH 1) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -378,7 +377,7 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (DEPTH infinity) (MAXSIZE 1024) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 
     @Test(expected = DecodingException.class)
@@ -386,6 +385,6 @@ public class GetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/shared/comment /private/comment) (DEPTH infinity) \n").getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        parser.decode(command, lineReader, TAG, session);
+        parser.decode(lineReader, TAG, session);
     }
 }

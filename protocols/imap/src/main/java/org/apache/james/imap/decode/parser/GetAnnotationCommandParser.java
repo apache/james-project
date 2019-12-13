@@ -21,7 +21,6 @@ package org.apache.james.imap.decode.parser;
 
 import java.util.Optional;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -50,17 +49,17 @@ public class GetAnnotationCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader requestReader, Tag tag, ImapSession session)
+    protected ImapMessage decode(ImapRequestLineReader requestReader, Tag tag, ImapSession session)
         throws DecodingException {
         try {
-            return buildAnnotationRequest(command, requestReader, tag);
+            return buildAnnotationRequest(requestReader, tag);
         } catch (NullPointerException | IllegalArgumentException | IllegalStateException e) {
             throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, e.getMessage(), e);
         }
     }
 
-    private ImapMessage buildAnnotationRequest(ImapCommand command, ImapRequestLineReader requestReader, Tag tag) throws DecodingException {
-        GetAnnotationRequest.Builder builder = GetAnnotationRequest.builder().tag(tag).command(command);
+    private ImapMessage buildAnnotationRequest(ImapRequestLineReader requestReader, Tag tag) throws DecodingException {
+        GetAnnotationRequest.Builder builder = GetAnnotationRequest.builder().tag(tag);
         builder.mailboxName(requestReader.mailbox());
 
         consumeOptionsAndKeys(requestReader, builder);

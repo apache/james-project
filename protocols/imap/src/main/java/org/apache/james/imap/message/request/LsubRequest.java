@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class LsubRequest extends AbstractImapRequest {
@@ -26,8 +26,8 @@ public class LsubRequest extends AbstractImapRequest {
 
     private final String mailboxPattern;
 
-    public LsubRequest(ImapCommand command, String referenceName, String mailboxPattern, Tag tag) {
-        super(tag, command);
+    public LsubRequest(String referenceName, String mailboxPattern, Tag tag) {
+        super(tag, ImapConstants.LSUB_COMMAND);
         this.baseReferenceName = referenceName;
         this.mailboxPattern = mailboxPattern;
     }

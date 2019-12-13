@@ -22,7 +22,7 @@ package org.apache.james.imap.message.request;
 import java.util.Optional;
 import java.util.Set;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.mailbox.model.MailboxAnnotationKey;
 
@@ -32,7 +32,6 @@ import com.google.common.collect.ImmutableSet;
 public class GetAnnotationRequest extends AbstractImapRequest {
     public static class Builder {
         private Tag tag;
-        private ImapCommand command;
         private String mailboxName;
         private Set<MailboxAnnotationKey> keys;
         private Optional<Integer> maxsize;
@@ -46,11 +45,6 @@ public class GetAnnotationRequest extends AbstractImapRequest {
 
         public Builder tag(Tag tag) {
             this.tag = tag;
-            return this;
-        }
-
-        public Builder command(ImapCommand command) {
-            this.command = command;
             return this;
         }
 
@@ -104,7 +98,7 @@ public class GetAnnotationRequest extends AbstractImapRequest {
     private final Depth depth;
 
     private GetAnnotationRequest(Builder builder) {
-        super(builder.tag, builder.command);
+        super(builder.tag, ImapConstants.GETANNOTATION_COMMAND);
         this.mailboxName = builder.mailboxName;
         this.depth = builder.depth;
         this.maxsize = builder.maxsize;

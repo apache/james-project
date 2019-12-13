@@ -85,7 +85,7 @@ public class CopyProcessorTest {
 
     @Test
     public void processShouldWork() throws Exception {
-        CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
+        CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
@@ -118,7 +118,7 @@ public class CopyProcessorTest {
 
     @Test
     public void processShouldWorkWithMultipleRanges() throws Exception {
-        CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(5, 6), new IdRange(1, 3)}, ImapConstants.INBOX_NAME, true, TAG);
+        CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(5, 6), new IdRange(1, 3)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
@@ -150,7 +150,7 @@ public class CopyProcessorTest {
 
     @Test
     public void processShouldRespondNoOnUnExistingTargetMailbox() throws Exception {
-        CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
+        CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
@@ -174,7 +174,7 @@ public class CopyProcessorTest {
 
     @Test
     public void processShouldRespondNoOnMailboxException() throws Exception {
-        CopyRequest copyRequest = new CopyRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
+        CopyRequest copyRequest = new CopyRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         MailboxPath selected = new MailboxPath(INBOX, "selected");
         SelectedMailbox selectedMailbox = mock(SelectedMailbox.class);
@@ -198,7 +198,7 @@ public class CopyProcessorTest {
 
     @Test
     public void processShouldNotHandleMoveRequests() {
-        MoveRequest moveRequest = new MoveRequest(ImapCommand.anyStateCommand("Name"), new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
+        MoveRequest moveRequest = new MoveRequest(new IdRange[] {new IdRange(4, 6)}, ImapConstants.INBOX_NAME, true, TAG);
 
         testee.process(moveRequest, mockResponder, imapSession);
 

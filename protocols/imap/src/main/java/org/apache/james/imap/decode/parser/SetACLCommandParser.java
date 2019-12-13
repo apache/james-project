@@ -19,7 +19,6 @@
 
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -34,18 +33,16 @@ import org.apache.james.imap.message.request.SetACLRequest;
  * SETACL Parser
  */
 public class SetACLCommandParser extends AbstractImapCommandParser {
-
     public SetACLCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.SETACL_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String mailboxName = request.mailbox();
         final String identifier = request.astring();
         final String rights = request.astring();
         request.eol();
-        return new SetACLRequest(tag, command, mailboxName, identifier, rights);
+        return new SetACLRequest(tag, mailboxName, identifier, rights);
     }
-
 }

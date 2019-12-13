@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.IdRange;
 import org.apache.james.imap.api.message.request.ImapRequest;
@@ -27,8 +27,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  * {@link ImapRequest} which request the copy of messages
  */
 public class CopyRequest extends AbstractMessageRangeRequest {
-
-    public CopyRequest(ImapCommand command, IdRange[] idSet, String mailboxName, boolean useUids, Tag tag) {
-        super(command, idSet, mailboxName, useUids, tag);
+    public CopyRequest(IdRange[] idSet, String mailboxName, boolean useUids, Tag tag) {
+        super(ImapConstants.COPY_COMMAND, idSet, mailboxName, useUids, tag);
     }
 }

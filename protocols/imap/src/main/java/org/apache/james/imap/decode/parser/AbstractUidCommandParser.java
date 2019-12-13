@@ -35,14 +35,9 @@ abstract class AbstractUidCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
-        return decode(command, request, tag, false, session);
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+        return decode(request, tag, false, session);
     }
 
-    public ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
-        final ImapCommand command = getCommand();
-        return decode(command, request, tag, useUids, session);
-    }
-
-    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException;
+    protected abstract ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException;
 }

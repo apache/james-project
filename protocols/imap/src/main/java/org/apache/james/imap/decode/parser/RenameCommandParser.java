@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -33,17 +32,15 @@ import org.apache.james.imap.message.request.RenameRequest;
  * Parses RENAME command
  */
 public class RenameCommandParser extends AbstractImapCommandParser {
-
     public RenameCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.RENAME_COMMAND, statusResponseFactory);
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         final String existingName = request.mailbox();
         final String newName = request.mailbox();
         request.eol();
-        return new RenameRequest(command, existingName, newName, tag);
+        return new RenameRequest(existingName, newName, tag);
     }
-
 }

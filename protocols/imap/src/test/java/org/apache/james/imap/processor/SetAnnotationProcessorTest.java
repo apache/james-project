@@ -93,7 +93,7 @@ public class SetAnnotationProcessorTest {
         mockMailboxSession = MailboxSessionUtil.create(username);
         inbox = MailboxPath.inbox(username);
         mailboxAnnotations = ImmutableList.of(MailboxAnnotation.newInstance(new MailboxAnnotationKey("/private/key"), "anyValue"));
-        request = new SetAnnotationRequest(TAG, ImapCommand.anyStateCommand("Name"), ImapConstants.INBOX_NAME, mailboxAnnotations);
+        request = new SetAnnotationRequest(TAG, ImapConstants.INBOX_NAME, mailboxAnnotations);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);
 
         imapSession.authenticated();

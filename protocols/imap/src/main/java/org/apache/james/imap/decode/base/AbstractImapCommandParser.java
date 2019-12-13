@@ -69,7 +69,7 @@ public abstract class AbstractImapCommandParser implements ImapCommandParser {
     public final ImapMessage parse(ImapRequestLineReader request, Tag tag, ImapSession session) {
         if (command.validForState(session.getState())) {
             try {
-                return decode(command, request, tag, session);
+                return decode(request, tag, session);
             } catch (DecodingException e) {
                 LOGGER.debug("Cannot parse protocol ", e);
                 return statusResponseFactory.taggedBad(tag, command, e.getKey());
@@ -80,9 +80,7 @@ public abstract class AbstractImapCommandParser implements ImapCommandParser {
 
     /**
      * Parses a request into a command message for later processing.
-     * 
-     * @param command
-     *            <code>ImapCommand</code> to be parsed, not null
+     *
      * @param request
      *            <code>ImapRequestLineReader</code>, not null
      * @param tag
@@ -93,6 +91,6 @@ public abstract class AbstractImapCommandParser implements ImapCommandParser {
      * @throws DecodingException
      *             if the request cannot be parsed
      */
-    protected abstract ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException;
+    protected abstract ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException;
 
 }

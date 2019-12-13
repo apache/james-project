@@ -35,7 +35,6 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.api.process.ImapSession;
@@ -100,7 +99,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnValidRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(mailbox));
@@ -127,7 +126,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnExceptionThrown() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(mailbox));
@@ -149,7 +148,7 @@ public class GetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnNoRights() throws Exception {
-        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), QUOTA_ROOT.getValue());
+        GetQuotaRequest getQuotaRequest = new GetQuotaRequest(TAG, QUOTA_ROOT.getValue());
 
         when(mockedQuotaRootResolver.retrieveAssociatedMailboxes(QUOTA_ROOT, mailboxSession))
             .thenReturn(ImmutableList.of(mailbox));

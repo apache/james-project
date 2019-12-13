@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
@@ -26,9 +26,7 @@ import org.apache.james.imap.api.message.request.ImapRequest;
  * {@link ImapRequest} which requests the logout
  */
 public class LogoutRequest extends AbstractImapRequest {
-
-    public LogoutRequest(ImapCommand command, Tag tag) {
-        super(tag, command);
+    public LogoutRequest(Tag tag) {
+        super(tag, ImapConstants.LOGOUT_COMMAND);
     }
-
 }

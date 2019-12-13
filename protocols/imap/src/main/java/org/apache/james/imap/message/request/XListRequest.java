@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 
 /**
@@ -26,8 +25,8 @@ import org.apache.james.imap.api.Tag;
  */
 public class XListRequest extends ListRequest {
 
-    public XListRequest(ImapCommand command, String referenceName, String mailboxPattern, Tag tag) {
-        super(command, referenceName, mailboxPattern, tag);
+    public XListRequest(String referenceName, String mailboxPattern, Tag tag) {
+        super(referenceName, mailboxPattern, tag);
     }
 
 }

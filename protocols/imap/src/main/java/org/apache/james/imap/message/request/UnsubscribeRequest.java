@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class UnsubscribeRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public UnsubscribeRequest(ImapCommand command, String mailboxName, Tag tag) {
-        super(tag, command);
+    public UnsubscribeRequest(String mailboxName, Tag tag) {
+        super(tag, ImapConstants.UNSUBSCRIBE_COMMAND);
         this.mailboxName = mailboxName;
     }
 

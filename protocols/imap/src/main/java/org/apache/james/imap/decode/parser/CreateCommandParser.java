@@ -18,7 +18,6 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -44,7 +43,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         String mailboxName = request.mailbox();
 
         MailboxSession mailboxSession = session.getMailboxSession();
@@ -62,7 +61,7 @@ public class CreateCommandParser extends AbstractImapCommandParser {
         }
         request.eol();
         assertMailboxNameJustContainDelimiter(mailboxName, mailboxSession.getPathDelimiter());
-        return new CreateRequest(command, mailboxName, tag);
+        return new CreateRequest(mailboxName, tag);
     }
 
     private void assertMailboxNameJustContainDelimiter(String mailboxName, char delimiter) throws DecodingException {

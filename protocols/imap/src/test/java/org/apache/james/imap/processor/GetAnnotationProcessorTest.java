@@ -108,7 +108,6 @@ public class GetAnnotationProcessorTest {
         keys = ImmutableSet.of(PRIVATE_KEY);
         annotationRequestBuilder = GetAnnotationRequest.builder()
             .tag(TAG)
-            .command(ImapCommand.anyStateCommand("Name"))
             .mailboxName(ImapConstants.INBOX_NAME);
         humanTextCaptor = ArgumentCaptor.forClass(HumanReadableText.class);
         captorResponsecode = ArgumentCaptor.forClass(ResponseCode.class);

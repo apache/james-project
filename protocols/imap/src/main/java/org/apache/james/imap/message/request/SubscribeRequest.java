@@ -18,14 +18,14 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 
 public class SubscribeRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public SubscribeRequest(ImapCommand command, String mailboxName, Tag tag) {
-        super(tag, command);
+    public SubscribeRequest(String mailboxName, Tag tag) {
+        super(tag, ImapConstants.SUBSCRIBE_COMMAND);
         this.mailboxName = mailboxName;
     }
 

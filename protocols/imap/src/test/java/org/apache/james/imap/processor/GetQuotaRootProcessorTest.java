@@ -36,7 +36,6 @@ import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.message.response.StatusResponse;
 import org.apache.james.imap.api.process.ImapProcessor;
@@ -93,7 +92,7 @@ public class GetQuotaRootProcessorTest {
 
     @Test
     public void processorShouldWorkOnValidRights() throws Exception {
-        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, ImapCommand.anyStateCommand("Name"), "INBOX");
+        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
@@ -123,7 +122,7 @@ public class GetQuotaRootProcessorTest {
 
     @Test
     public void processorShouldWorkOnErrorThrown() throws Exception {
-        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, ImapCommand.anyStateCommand("Name"), "INBOX");
+        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
@@ -144,7 +143,7 @@ public class GetQuotaRootProcessorTest {
 
     @Test
     public void processorShouldWorkOnNonValidRights() throws Exception {
-        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, ImapCommand.anyStateCommand("Name"), "INBOX");
+        GetQuotaRootRequest getQuotaRootRequest = new GetQuotaRootRequest(TAG, "INBOX");
 
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);

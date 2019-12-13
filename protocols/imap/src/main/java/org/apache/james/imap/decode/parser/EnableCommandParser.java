@@ -21,7 +21,6 @@ package org.apache.james.imap.decode.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.Tag;
@@ -40,7 +39,7 @@ public class EnableCommandParser extends AbstractImapCommandParser {
     }
 
     @Override
-    protected ImapMessage decode(ImapCommand command, ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
+    protected ImapMessage decode(ImapRequestLineReader request, Tag tag, ImapSession session) throws DecodingException {
         List<Capability> caps = new ArrayList<>();
         caps.add(Capability.of(request.astring()));
         while (request.nextChar() == ' ') {
@@ -48,7 +47,7 @@ public class EnableCommandParser extends AbstractImapCommandParser {
             caps.add(Capability.of(request.astring()));
         }
         request.eol();
-        return new EnableRequest(tag, command, caps);
+        return new EnableRequest(tag, caps);
     }
 
 }

@@ -30,7 +30,6 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -43,7 +42,6 @@ import org.junit.Test;
 
 public class CreateCommandParserTest {
     private static final OutputStream outputStream = null;
-    private static final ImapCommand command = ImapCommand.anyStateCommand("Command");
 
     private FakeImapSession imapSession;
     private CreateCommandParser parser;
@@ -62,7 +60,7 @@ public class CreateCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream(" \n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, imapSession))
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, imapSession))
             .isInstanceOf(DecodingException.class);
     }
 
@@ -71,7 +69,7 @@ public class CreateCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream("..\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        assertThatThrownBy(() -> parser.decode(command, lineReader, TAG, imapSession))
+        assertThatThrownBy(() -> parser.decode(lineReader, TAG, imapSession))
             .isInstanceOf(DecodingException.class);
     }
 
@@ -80,7 +78,7 @@ public class CreateCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream(".AnyMailbox.\n".getBytes(StandardCharsets.US_ASCII));
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, outputStream);
 
-        CreateRequest imapMessage = (CreateRequest)parser.decode(command, lineReader, TAG, imapSession);
+        CreateRequest imapMessage = (CreateRequest)parser.decode(lineReader, TAG, imapSession);
         assertThat(imapMessage.getMailboxName()).isEqualTo(".AnyMailbox");
     }
 

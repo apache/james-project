@@ -26,7 +26,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import org.apache.james.core.Username;
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.imap.api.process.ImapProcessor;
 import org.apache.james.imap.encode.FakeImapSession;
@@ -59,7 +58,7 @@ public class SetQuotaProcessorTest {
 
     @Test
     public void processorShouldWorkOnNoRights() {
-        SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, ImapCommand.anyStateCommand("Name"), "quotaRoot");
+        SetQuotaRequest setQuotaRequest = new SetQuotaRequest(TAG, "quotaRoot");
 
         testee.doProcess(setQuotaRequest, mockedResponder, imapSession);
 

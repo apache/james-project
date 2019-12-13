@@ -27,7 +27,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.BodyFetchElement;
 import org.apache.james.imap.api.message.FetchData;
@@ -45,13 +44,11 @@ import org.junit.Test;
 public class FetchCommandParserPartialFetchTest  {
 
     FetchCommandParser parser;
-    ImapCommand command;
     ImapSession session;
 
     @Before
     public void setUp() throws Exception {
         parser = new FetchCommandParser(mock(StatusResponseFactory.class));
-        command = ImapCommand.anyStateCommand("Command");
         session = new FakeImapSession();
     }
 
@@ -81,7 +78,7 @@ public class FetchCommandParserPartialFetchTest  {
                 new ByteArrayInputStream("1 (BODY[]<20.0>)\r\n"
                         .getBytes(StandardCharsets.US_ASCII)), new ByteArrayOutputStream());
 
-        assertThatThrownBy(() -> parser.decode(command, reader, TAG, false, session))
+        assertThatThrownBy(() -> parser.decode(reader, TAG, false, session))
             .isInstanceOf(DecodingException.class);
     }
 
@@ -91,6 +88,6 @@ public class FetchCommandParserPartialFetchTest  {
                 new ByteArrayInputStream(input.getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
 
-        parser.decode(command, reader, tag, useUids, session);
+        parser.decode(reader, tag, useUids, session);
     }
 }

@@ -27,7 +27,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 
-import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestStreamLineReader;
@@ -45,14 +44,14 @@ public class SetAnnotationCommandParserTest {
     private static final MailboxAnnotation PRIVATE_ANNOTATION = MailboxAnnotation.newInstance(PRIVATE_KEY, "This is my comment");
     private static final MailboxAnnotation SHARED_ANNOTATION = MailboxAnnotation.newInstance(SHARED_KEY, "This one is for you!");
     private static final MailboxAnnotation NIL_ANNOTATION = MailboxAnnotation.nil(PRIVATE_KEY);
+
     private SetAnnotationCommandParser parser = new SetAnnotationCommandParser(mock(StatusResponseFactory.class));
-    private ImapCommand command = ImapCommand.anyStateCommand("Command");
 
     @Test
     public void decodeMessageShouldReturnRequestContainsOneAnnotation() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getMailboxAnnotations()).containsOnly(PRIVATE_ANNOTATION);
@@ -63,14 +62,14 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/pri*vate/comment \"This is my comment\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 
     @Test
     public void decodeMessageShouldReturnRequestContainsOneNilAnnotation() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment NIL) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getMailboxAnnotations()).containsOnly(NIL_ANNOTATION);
@@ -80,7 +79,7 @@ public class SetAnnotationCommandParserTest {
     public void decodeMessageShouldReturnRequestContainsOneAnnotationWithMultiLinesValue() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment {32}\nMy new comment across two lines.) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getMailboxAnnotations()).containsOnly(MailboxAnnotation.newInstance(PRIVATE_KEY, "My new comment across two lines."));
@@ -90,7 +89,7 @@ public class SetAnnotationCommandParserTest {
     public void decodeMessageShouldReturnRequestContainsMultiAnnotations() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\" /shared/comment \"This one is for you!\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getMailboxAnnotations()).containsExactly(PRIVATE_ANNOTATION, SHARED_ANNOTATION);
@@ -100,7 +99,7 @@ public class SetAnnotationCommandParserTest {
     public void decodeMessageShouldReturnRequestContainsMultiAnnotationsWithNil() throws DecodingException {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment NIL /shared/comment \"This one is for you!\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, new ByteArrayOutputStream());
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxName()).isEqualTo(INBOX);
         assertThat(request.getMailboxAnnotations()).containsExactly(NIL_ANNOTATION, SHARED_ANNOTATION);
@@ -111,7 +110,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream("INBOX /private/comment \"This is my comment\") \n".getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 
     @Test(expected = DecodingException.class)
@@ -119,7 +118,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"This is my comment\" \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 
     @Test(expected = DecodingException.class)
@@ -127,7 +126,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 
     @Test
@@ -135,7 +134,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"   \") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxAnnotations().get(0).getValue()).isPresent();
     }
@@ -145,7 +144,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment This is my comment) \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 
     @Test
@@ -153,7 +152,7 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " (/private/comment \"NIL\") \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(command, lineReader, TAG, null);
+        SetAnnotationRequest request = (SetAnnotationRequest) parser.decode(lineReader, TAG, null);
 
         assertThat(request.getMailboxAnnotations().get(0).getValue()).isPresent();
     }
@@ -163,6 +162,6 @@ public class SetAnnotationCommandParserTest {
         InputStream inputStream = new ByteArrayInputStream((INBOX + " () \n").getBytes());
         ImapRequestStreamLineReader lineReader = new ImapRequestStreamLineReader(inputStream, null);
 
-        parser.decode(command, lineReader, TAG, null);
+        parser.decode(lineReader, TAG, null);
     }
 }

@@ -34,7 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
 import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.request.SearchKey;
@@ -128,7 +128,6 @@ public class SearchCommandParserQuotedCharsetTest {
 
     SearchCommandParser parser;
     StatusResponseFactory mockStatusResponseFactory;
-    ImapCommand command;
     ImapMessage message;
 
     private ImapSession session;
@@ -137,7 +136,6 @@ public class SearchCommandParserQuotedCharsetTest {
     public void setUp() throws Exception {
         mockStatusResponseFactory = mock(StatusResponseFactory.class);
         parser = new SearchCommandParser(mockStatusResponseFactory);
-        command = ImapCommand.anyStateCommand("Command");
         message = mock(ImapMessage.class);
         session = new FakeImapSession();
     }
@@ -171,11 +169,11 @@ public class SearchCommandParserQuotedCharsetTest {
         ImapRequestLineReader reader = new ImapRequestStreamLineReader(
                 new ByteArrayInputStream("CHARSET BOGUS ".getBytes(StandardCharsets.US_ASCII)),
                 new ByteArrayOutputStream());
-        parser.decode(command, reader, TAG, false, session);
+        parser.decode(reader, TAG, false, session);
 
         verify(mockStatusResponseFactory, times(1)).taggedNo(
             eq(TAG),
-            same(command),
+            same(ImapConstants.SEARCH_COMMAND),
             eq(HumanReadableText.BAD_CHARSET),
             eq(StatusResponse.ResponseCode.badCharset()));
         verifyNoMoreInteractions(mockStatusResponseFactory);
@@ -188,7 +186,7 @@ public class SearchCommandParserQuotedCharsetTest {
                     new ByteArrayInputStream(add("CHARSET US-ASCII BCC "
                             .getBytes(StandardCharsets.US_ASCII), BYTES_NON_ASCII_SEARCH_TERM)),
                     new ByteArrayOutputStream());
-            parser.decode(command, reader, TAG, false, session);
+            parser.decode(reader, TAG, false, session);
             fail("A protocol exception should be thrown when charset is incompatible with input");
         } catch (DecodingException e) {
             // expected

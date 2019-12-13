@@ -18,7 +18,7 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.request.ImapRequest;
 
@@ -28,8 +28,8 @@ import org.apache.james.imap.api.message.request.ImapRequest;
 public class CreateRequest extends AbstractImapRequest {
     private final String mailboxName;
 
-    public CreateRequest(ImapCommand command, String mailboxName, Tag tag) {
-        super(tag, command);
+    public CreateRequest(String mailboxName, Tag tag) {
+        super(tag, ImapConstants.CREATE_COMMAND);
         this.mailboxName = mailboxName;
     }
 

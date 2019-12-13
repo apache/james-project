@@ -18,20 +18,18 @@
  ****************************************************************/
 package org.apache.james.imap.message.request;
 
-import org.apache.james.imap.api.ImapCommand;
+import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.message.FetchData;
 import org.apache.james.imap.api.message.IdRange;
 
 public class FetchRequest extends AbstractImapRequest {
     private final boolean useUids;
-
     private final IdRange[] idSet;
-
     private final FetchData fetch;
 
-    public FetchRequest(ImapCommand command, boolean useUids, IdRange[] idSet, FetchData fetch, Tag tag) {
-        super(tag, command);
+    public FetchRequest(boolean useUids, IdRange[] idSet, FetchData fetch, Tag tag) {
+        super(tag, ImapConstants.FETCH_COMMAND);
         this.useUids = useUids;
         this.idSet = idSet;
         this.fetch = fetch;
