@@ -19,43 +19,14 @@
 
 package org.apache.james.imap.message.response;
 
-import java.util.Objects;
+import org.junit.jupiter.api.Test;
 
-import javax.mail.Flags;
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-import org.apache.james.imap.api.message.response.ImapResponseMessage;
-
-/**
- * Carries a RFC3501 <code>Flags</code> response.
- */
-public class FlagsResponse implements ImapResponseMessage {
-    private final Flags flags;
-
-    public FlagsResponse(Flags flags) {
-        this.flags = flags;
-    }
-
-    public Flags getFlags() {
-        return flags;
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        if (o instanceof FlagsResponse) {
-            FlagsResponse that = (FlagsResponse) o;
-
-            return Objects.equals(this.flags, that.flags);
-        }
-        return false;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(flags);
-    }
-
-    @Override
-    public String toString() {
-        return "Flags: " + flags;
+class FlagsResponseTest {
+    @Test
+    void shouldMatchBeanContract() {
+        EqualsVerifier.forClass(FlagsResponse.class)
+            .verify();
     }
 }
