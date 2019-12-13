@@ -42,15 +42,15 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.FetchPartPathDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
 import org.apache.james.imap.message.request.FetchRequest;
 
 /**
  * Parse FETCH commands
  */
 public class FetchCommandParser extends AbstractUidCommandParser {
-    private static final byte[] CHANGEDSINCE = "CHANGEDSINCE".getBytes();
-    private static final byte[] VANISHED = "VANISHED".getBytes();
+    private static final String CHANGEDSINCE = "CHANGEDSINCE";
+    private static final String VANISHED = "VANISHED";
 
     public FetchCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.FETCH_COMMAND, statusResponseFactory);
@@ -89,34 +89,12 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                 switch (next) {
                 case 'C':
                     // Now check for the CHANGEDSINCE option which is part of CONDSTORE
-                    request.consumeWord(new CharacterValidator() {
-                        int pos = 0;
-                        @Override
-                        public boolean isValid(char chr) {
-                            if (pos > CHANGEDSINCE.length) {
-                                return false;
-                            } else {
-                                return CHANGEDSINCE[pos++] == ImapRequestLineReader.cap(chr);
-                            }
-                        }
-                    });
+                    request.consumeWord(new StringValidator(CHANGEDSINCE));
                     fetch.changedSince(request.number(true));
-                    
                     break;
-                
                 case 'V':
                     // Check for the VANISHED option which is part of QRESYNC
-                    request.consumeWord(new CharacterValidator() {
-                        int pos = 0;
-                        @Override
-                        public boolean isValid(char chr) {
-                            if (pos > VANISHED.length) {
-                                return false;
-                            } else {
-                                return VANISHED[pos++] == ImapRequestLineReader.cap(chr);
-                            }
-                        }
-                    });
+                    request.consumeWord(new StringValidator(VANISHED));
                     fetch.vanished(true);
                     break;
                 default:
@@ -203,15 +181,12 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private boolean isPeek(String name) throws DecodingException {
-        final boolean isPeek;
         if ("BODY".equalsIgnoreCase(name)) {
-            isPeek = false;
+            return false;
         } else if ("BODY.PEEK".equalsIgnoreCase(name)) {
-            isPeek = true;
-        } else {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attibute: " + name + "[]");
+            return true;
         }
-        return isPeek;
+        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attibute: " + name + "[]");
     }
 
     private BodyFetchElement createBodyElement(String parameter, Long firstOctet, Long numberOfOctets) throws DecodingException {
