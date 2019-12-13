@@ -42,7 +42,7 @@ public class ContinuationResponseEncoder implements ImapResponseEncoder<Continua
 
     @Override
     public void encode(ContinuationResponse response, ImapResponseComposer composer) throws IOException {
-        String message = response.getData() != null ? response.getData() : asString(response.getTextKey());
+        String message = asString(response.getTextKey());
         composer.continuationResponse(message);
     }
 

@@ -23,18 +23,10 @@ import org.apache.james.imap.api.display.HumanReadableText;
 import org.apache.james.imap.api.message.response.ImapResponseMessage;
 
 public class ContinuationResponse implements ImapResponseMessage {
-
-    private final String data;
-
     private final HumanReadableText textKey;
 
     public ContinuationResponse(HumanReadableText textKey) {
-        this.data = null;
         this.textKey = textKey;
-    }
-
-    public String getData() {
-        return data;
     }
 
     public HumanReadableText getTextKey() {
