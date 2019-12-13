@@ -81,7 +81,7 @@ class TaskFactoryTest {
 
         assertThatThrownBy(() -> taskFactory.generate(request))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid value supplied for 'custom': unknown. Supported values are [task1]");
+            .hasMessage("Invalid value supplied for query parameter 'custom': unknown. Supported values are [task1]");
     }
 
     @Test
@@ -104,7 +104,7 @@ class TaskFactoryTest {
 
         assertThatThrownBy(() -> taskFactory.generate(request))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid value supplied for 'action': unknown. Supported values are [task1, task2]");
+            .hasMessage("Invalid value supplied for query parameter 'action': unknown. Supported values are [task1, task2]");
     }
 
     @Test
@@ -113,7 +113,7 @@ class TaskFactoryTest {
 
         assertThatThrownBy(() -> singleTaskFactory.generate(request))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Invalid value supplied for 'action': unknown. Supported values are [task1]");
+            .hasMessage("Invalid value supplied for query parameter 'action': unknown. Supported values are [task1]");
     }
 
     @Test

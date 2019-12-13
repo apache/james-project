@@ -143,7 +143,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
         }
 
@@ -304,7 +304,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -494,7 +494,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -684,7 +684,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -842,7 +842,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -1019,7 +1019,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
 
             @Test
@@ -1035,7 +1035,7 @@ class ReindexingRoutesTest {
                     .body("statusCode", is(400))
                     .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                     .body("message", is("Invalid arguments supplied in the user request"))
-                    .body("details", is("Invalid value supplied for 'task': bad. Supported values are [reIndex]"));
+                    .body("details", is("Invalid value supplied for query parameter 'task': bad. Supported values are [reIndex]"));
             }
         }
 

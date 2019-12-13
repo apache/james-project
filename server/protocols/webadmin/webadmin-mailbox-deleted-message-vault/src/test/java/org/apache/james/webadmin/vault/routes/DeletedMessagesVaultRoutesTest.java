@@ -332,7 +332,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", startsWith("Invalid value supplied for 'scope': invalid action. Supported values are [expired]"));
+                .body("details", startsWith("Invalid value supplied for query parameter 'scope': invalid action. Supported values are [expired]"));
         }
 
         @Test
@@ -346,7 +346,7 @@ class DeletedMessagesVaultRoutesTest {
                 .body("statusCode", is(400))
                 .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
                 .body("message", is("Invalid arguments supplied in the user request"))
-                .body("details", is("Invalid value supplied for 'scope': EXPIRED. Supported values are [expired]"));
+                .body("details", is("Invalid value supplied for query parameter 'scope': EXPIRED. Supported values are [expired]"));
         }
 
         @ParameterizedTest

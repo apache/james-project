@@ -123,7 +123,7 @@ public class TaskFactory implements TaskGenerator {
         TaskRegistrationKey registrationKey = parseRegistrationKey(request);
         return Optional.ofNullable(taskGenerators.get(registrationKey))
             .map(Throwing.<TaskGenerator, Task>function(taskGenerator -> taskGenerator.generate(request)).sneakyThrow())
-            .orElseThrow(() -> new IllegalArgumentException("Invalid value supplied for '" + taskParameterName + "': " + registrationKey.asString()
+            .orElseThrow(() -> new IllegalArgumentException("Invalid value supplied for query parameter '" + taskParameterName + "': " + registrationKey.asString()
                 + ". " + supportedValueMessage()));
     }
 

@@ -1076,7 +1076,7 @@ public class MailRepositoriesRoutesTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("Invalid value supplied for 'action': invalid. Supported values are [reprocess]"));
+            .body("details", is("Invalid value supplied for query parameter 'action': invalid. Supported values are [reprocess]"));
     }
 
     @Test
@@ -1436,7 +1436,7 @@ public class MailRepositoriesRoutesTest {
             .body("statusCode", is(400))
             .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
             .body("message", is("Invalid arguments supplied in the user request"))
-            .body("details", is("Invalid value supplied for 'action': invalid. Supported values are [reprocess]"));
+            .body("details", is("Invalid value supplied for query parameter 'action': invalid. Supported values are [reprocess]"));
     }
 
     @Test
