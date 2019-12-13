@@ -37,7 +37,7 @@ public class NamespaceResponseEncoder implements ImapResponseEncoder<NamespaceRe
     @Override
     public void encode(NamespaceResponse response, ImapResponseComposer composer) throws IOException {
         composer.untagged();
-        composer.commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        composer.commandName(ImapConstants.NAMESPACE_COMMAND);
 
         final List<NamespaceResponse.Namespace> personal = response.getPersonal();
         encode(personal, composer);

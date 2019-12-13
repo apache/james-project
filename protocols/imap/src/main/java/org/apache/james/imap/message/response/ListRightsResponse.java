@@ -73,7 +73,7 @@ public final class ListRightsResponse implements ImapResponseMessage {
 
     @Override
     public String toString() {
-        StringBuilder result = new StringBuilder().append(ImapConstants.LISTRIGHTS_RESPONSE_NAME).append(' ').append(mailboxName).append(' ').append(identifier);
+        StringBuilder result = new StringBuilder().append(ImapConstants.LISTRIGHTS_COMMAND.getName()).append(' ').append(mailboxName).append(' ').append(identifier);
 
         for (MailboxACL.Rfc4314Rights optionalRightsGroup : rights) {
             result.append(' ').append(optionalRightsGroup.toString());

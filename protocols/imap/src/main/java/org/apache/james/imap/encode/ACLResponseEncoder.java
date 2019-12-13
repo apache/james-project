@@ -36,7 +36,7 @@ public class ACLResponseEncoder implements ImapResponseEncoder<ACLResponse> {
     public void encode(ACLResponse aclResponse, ImapResponseComposer composer) throws IOException {
         Map<EntryKey, Rfc4314Rights> entries = aclResponse.getAcl().getEntries();
         composer.untagged();
-        composer.commandName(ImapConstants.ACL_RESPONSE_NAME);
+        composer.message(ImapConstants.ACL_RESPONSE_NAME);
         
         String mailboxName = aclResponse.getMailboxName();
         composer.mailbox(mailboxName == null ? "" : mailboxName);

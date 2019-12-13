@@ -38,7 +38,7 @@ public class SearchResponseEncoder implements ImapResponseEncoder<SearchResponse
         final long[] ids = response.getIds();
         ModSeq highestModSeq = response.getHighestModSeq();
         composer.untagged();
-        composer.message(ImapConstants.SEARCH_RESPONSE_NAME);
+        composer.commandName(ImapConstants.SEARCH_COMMAND);
         if (ids != null) {
             for (long id : ids) {
                 composer.message(id);

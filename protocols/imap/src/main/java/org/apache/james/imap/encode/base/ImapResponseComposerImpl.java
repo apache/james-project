@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 
 import javax.mail.Flags;
 
+import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.ModifiedUtf7;
@@ -213,10 +214,8 @@ public class ImapResponseComposerImpl implements ImapConstants, ImapResponseComp
     }
 
     @Override
-    public ImapResponseComposer commandName(String commandName) throws IOException {
-        space();
-        writeASCII(commandName);
-        return this;
+    public ImapResponseComposer commandName(ImapCommand command) throws IOException {
+        return message(command.getName());
     }
 
     @Override

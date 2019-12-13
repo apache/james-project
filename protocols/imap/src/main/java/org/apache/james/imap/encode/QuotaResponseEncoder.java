@@ -41,7 +41,7 @@ public class QuotaResponseEncoder implements ImapResponseEncoder<QuotaResponse> 
         Quota<?, ?> quota = quotaResponse.getQuota();
 
         composer.untagged();
-        composer.commandName(ImapConstants.QUOTA_RESPONSE_NAME);
+        composer.message(ImapConstants.QUOTA_RESPONSE_NAME);
         composer.message(quotaRoot == null ? "" : quotaRoot);
         composer.openParen();
         composer.message(quotaResponse.getResourceName());

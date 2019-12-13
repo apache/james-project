@@ -199,17 +199,11 @@ public interface ImapConstants {
     ImapCommand STORE_COMMAND = ImapCommand.selectedStateCommand("STORE");
     ImapCommand UID_COMMAND = ImapCommand.selectedStateCommand("UID");
 
-    String SEARCH_RESPONSE_NAME = "SEARCH";
-
     String ACL_RESPONSE_NAME = "ACL";
 
     String QUOTA_RESPONSE_NAME = "QUOTA";
 
     String QUOTAROOT_RESPONSE_NAME = "QUOTAROOT";
-
-    String LISTRIGHTS_RESPONSE_NAME = "LISTRIGHTS";
-
-    String MYRIGHTS_RESPONSE_NAME = "MYRIGHTS";
 
     String ANNOTATION_RESPONSE_NAME = "METADATA";
 

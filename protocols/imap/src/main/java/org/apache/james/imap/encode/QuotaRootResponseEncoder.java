@@ -39,7 +39,7 @@ public class QuotaRootResponseEncoder implements ImapResponseEncoder<QuotaRootRe
         String mailbox = quotaRootResponse.getMailboxName();
 
         composer.untagged();
-        composer.commandName(ImapConstants.QUOTAROOT_RESPONSE_NAME);
+        composer.message(ImapConstants.QUOTAROOT_RESPONSE_NAME);
         composer.mailbox(mailbox == null ? "" : mailbox);
         composer.message(quotaRoot == null ? "" : quotaRoot);
         composer.end();

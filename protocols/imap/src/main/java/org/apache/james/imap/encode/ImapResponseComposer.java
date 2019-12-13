@@ -23,6 +23,7 @@ import java.io.IOException;
 
 import javax.mail.Flags;
 
+import org.apache.james.imap.api.ImapCommand;
 import org.apache.james.imap.api.Tag;
 import org.apache.james.imap.api.display.ModifiedUtf7;
 import org.apache.james.imap.api.message.IdRange;
@@ -74,7 +75,7 @@ public interface ImapResponseComposer {
     /**
      * @return composer
      */
-    ImapResponseComposer commandName(String name) throws IOException;
+    ImapResponseComposer commandName(ImapCommand command) throws IOException;
 
     /**
      * Write the message of type <code>String</code>

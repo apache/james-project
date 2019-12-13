@@ -40,7 +40,7 @@ public class AnnotationResponseEncoder implements ImapResponseEncoder<Annotation
     @Override
     public void encode(AnnotationResponse response, ImapResponseComposer composer) throws IOException {
         composer.untagged();
-        composer.commandName(ImapConstants.ANNOTATION_RESPONSE_NAME);
+        composer.message(ImapConstants.ANNOTATION_RESPONSE_NAME);
 
         composer.quote(Optional.ofNullable(response.getMailboxName()).orElse(""));
         composeAnnotations(composer, response.getMailboxAnnotations());

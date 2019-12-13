@@ -38,7 +38,7 @@ public class MyRightsResponseEncoder implements ImapResponseEncoder<MyRightsResp
     public void encode(MyRightsResponse aclResponse, ImapResponseComposer composer) throws IOException {
         Rfc4314Rights myRights = aclResponse.getMyRights();
         composer.untagged();
-        composer.commandName(ImapConstants.MYRIGHTS_RESPONSE_NAME);
+        composer.commandName(ImapConstants.MYRIGHTS_COMMAND);
         
         String mailboxName = aclResponse.getMailboxName();
         composer.mailbox(mailboxName == null ? "" : mailboxName);

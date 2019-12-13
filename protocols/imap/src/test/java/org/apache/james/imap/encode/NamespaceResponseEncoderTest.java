@@ -56,7 +56,7 @@ public class NamespaceResponseEncoderTest {
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
         inOrder.verify(mockComposer, times(1)).untagged();
-        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND);
         inOrder.verify(mockComposer, times(2)).nil();
         inOrder.verify(mockComposer, times(2)).openParen();
         inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
@@ -79,7 +79,7 @@ public class NamespaceResponseEncoderTest {
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
         inOrder.verify(mockComposer, times(1)).untagged();
-        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND);
         inOrder.verify(mockComposer, times(1)).nil();
         inOrder.verify(mockComposer, times(2)).openParen();
         inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
@@ -103,7 +103,7 @@ public class NamespaceResponseEncoderTest {
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
         inOrder.verify(mockComposer, times(1)).untagged();
-        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND);
         inOrder.verify(mockComposer, times(2)).openParen();
         inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
         inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
@@ -130,7 +130,7 @@ public class NamespaceResponseEncoderTest {
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
         inOrder.verify(mockComposer, times(1)).untagged();
-        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND);
         inOrder.verify(mockComposer, times(2)).openParen();
         inOrder.verify(mockComposer, times(1)).quote(aPrefix + aDeliminator);
         inOrder.verify(mockComposer, times(1)).quote(aDeliminator);
@@ -150,7 +150,7 @@ public class NamespaceResponseEncoderTest {
 
         InOrder inOrder = Mockito.inOrder(mockComposer);
         inOrder.verify(mockComposer, times(1)).untagged();
-        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND.getName());
+        inOrder.verify(mockComposer, times(1)).commandName(ImapConstants.NAMESPACE_COMMAND);
         inOrder.verify(mockComposer, times(3)).nil();
         inOrder.verify(mockComposer, times(1)).end();
     }

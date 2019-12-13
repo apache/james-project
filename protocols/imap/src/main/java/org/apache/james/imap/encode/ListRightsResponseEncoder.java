@@ -37,7 +37,7 @@ public class ListRightsResponseEncoder implements ImapResponseEncoder<ListRights
     @Override
     public void encode(ListRightsResponse listRightsResponse, ImapResponseComposer composer) throws IOException {
         composer.untagged();
-        composer.commandName(ImapConstants.LISTRIGHTS_RESPONSE_NAME);
+        composer.commandName(ImapConstants.LISTRIGHTS_COMMAND);
         
         String mailboxName = listRightsResponse.getMailboxName();
         composer.mailbox(mailboxName == null ? "" : mailboxName);
