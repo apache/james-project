@@ -29,7 +29,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.CharacterValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
 import org.apache.james.imap.message.request.StoreRequest;
 import org.apache.james.mailbox.MessageManager;
 
@@ -38,7 +38,7 @@ import org.apache.james.mailbox.MessageManager;
  */
 public class StoreCommandParser extends AbstractUidCommandParser {
 
-    private static final byte[] UNCHANGEDSINCE = "UNCHANGEDSINCE".getBytes();
+    private static final String UNCHANGEDSINCE = "UNCHANGEDSINCE";
     
     public StoreCommandParser(StatusResponseFactory statusResponseFactory) {
         super(ImapConstants.STORE_COMMAND, statusResponseFactory);
@@ -47,50 +47,29 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
         final IdRange[] idSet = request.parseIdRange(session);
-        boolean silent = false;
         long unchangedSince = -1;
         char next = request.nextWordChar();
         if (next == '(') {
             // Seems like we have a CONDSTORE parameter
             request.consume();
-            
-            request.consumeWord(new CharacterValidator() {
-                private int pos = 0;
-                @Override
-                public boolean isValid(char chr) {
-                    if (pos >= UNCHANGEDSINCE.length) {
-                        return false;
-                    } else {
-                        return ImapRequestLineReader.cap(chr) == UNCHANGEDSINCE[pos++];
-                    }
-                }
-            });
+
+            request.consumeWord(new StringValidator(UNCHANGEDSINCE));
             request.consumeChar(' ');
             unchangedSince = request.number(true);
             request.consumeChar(')');
             next = request.nextWordChar();
         }
 
-        final MessageManager.FlagsUpdateMode flagsUpdateMode;
-        if (next == '+') {
-            flagsUpdateMode = MessageManager.FlagsUpdateMode.ADD;
-            request.consume();
-        } else if (next == '-') {
-            flagsUpdateMode = MessageManager.FlagsUpdateMode.REMOVE;
-            request.consume();
-        } else {
-            flagsUpdateMode = MessageManager.FlagsUpdateMode.REPLACE;
-        }
-
+        MessageManager.FlagsUpdateMode flagsUpdateMode = parseFlagsUpdateMode(request, next);
         String directive = request.consumeWord(new ImapRequestLineReader.NoopCharValidator());
-        if ("FLAGS".equalsIgnoreCase(directive)) {
-            silent = false;
-        } else if ("FLAGS.SILENT".equalsIgnoreCase(directive)) {
-            silent = true;
-        } else {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid Store Directive: '" + directive + "'");
-        }
+        boolean silent = parseSilent(directive);
+        final Flags flags = parseFlags(request);
 
+        request.eol();
+        return new StoreRequest(idSet, silent, flags, useUids, tag, flagsUpdateMode, unchangedSince);
+    }
+
+    private Flags parseFlags(ImapRequestLineReader request) throws DecodingException {
         // Handle all kind of "store-att-flags"
         // See IMAP-281
         final Flags flags = new Flags();
@@ -108,8 +87,29 @@ public class StoreCommandParser extends AbstractUidCommandParser {
                 }
             }
         }
+        return flags;
+    }
 
-        request.eol();
-        return new StoreRequest(idSet, silent, flags, useUids, tag, flagsUpdateMode, unchangedSince);
+    private boolean parseSilent(String directive) throws DecodingException {
+        if ("FLAGS".equalsIgnoreCase(directive)) {
+            return false;
+        } else if ("FLAGS.SILENT".equalsIgnoreCase(directive)) {
+            return true;
+        } else {
+            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid Store Directive: '" + directive + "'");
+        }
+    }
+
+    private MessageManager.FlagsUpdateMode parseFlagsUpdateMode(ImapRequestLineReader request, char next) throws DecodingException {
+        if (next == '+') {
+            MessageManager.FlagsUpdateMode flagsUpdateMode = MessageManager.FlagsUpdateMode.ADD;
+            request.consume();
+            return flagsUpdateMode;
+        } else if (next == '-') {
+            MessageManager.FlagsUpdateMode flagsUpdateMode = MessageManager.FlagsUpdateMode.REMOVE;
+            request.consume();
+            return flagsUpdateMode;
+        }
+        return MessageManager.FlagsUpdateMode.REPLACE;
     }
 }
