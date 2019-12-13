@@ -76,7 +76,8 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>metrics-logger</artifactId>
+            <artifactId>metrics-tests</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
