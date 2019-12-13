@@ -47,7 +47,7 @@ import org.apache.james.imap.message.response.NamespaceResponse;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.model.MailboxConstants;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -71,7 +71,7 @@ public class NamespaceProcessorTest {
         sharedSpaces = new ArrayList<>();
         statusResponseStub = mock(StatusResponseFactory.class);
         mailboxManagerStub = mock(MailboxManager.class);
-        subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new NoopMetricFactory());
+        subject = new NamespaceProcessor(mock(ImapProcessor.class), mailboxManagerStub, statusResponseStub, new RecordingMetricFactory());
         imapSession = spy(new FakeImapSession());
         mailboxSession = mock(MailboxSession.class);
      

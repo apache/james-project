@@ -33,7 +33,7 @@ import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Test;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -56,7 +56,7 @@ public class SetMessagesUpdateProcessorTest {
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory(),
+            new RecordingMetricFactory(),
             referenceUpdater);
         SetMessagesRequest requestWithEmptyUpdate = SetMessagesRequest.builder().build();
 
@@ -91,7 +91,7 @@ public class SetMessagesUpdateProcessorTest {
             systemMailboxesProvider,
             mailboxIdFactory,
             messageSender,
-            new NoopMetricFactory(),
+            new RecordingMetricFactory(),
             referenceUpdater);
         MessageId requestMessageId = TestMessageId.of(1);
         SetMessagesRequest requestWithInvalidUpdate = SetMessagesRequest.builder()

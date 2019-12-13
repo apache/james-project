@@ -20,7 +20,7 @@
 package org.apache.james.mailbox.events;
 
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 
 public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, GroupContract.SingleEventBusGroupContract,
@@ -33,7 +33,7 @@ public class InVMEventBusTest implements KeyContract.SingleEventBusKeyContract, 
     void setUp() {
         deadLetters = new MemoryEventDeadLetters();
         eventBus = new InVMEventBus(
-            new InVmEventDelivery(new NoopMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
+            new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, deadLetters);
     }
 
     @Override

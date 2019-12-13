@@ -44,7 +44,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.SubscriptionManager;
 import org.apache.james.mailbox.model.MailboxMetaData;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -95,7 +95,7 @@ public class LSubProcessorTest {
         responderImpl = responder;
         manager =  mock(SubscriptionManager.class);
         mailboxSession = MailboxSessionUtil.create(USER);
-        processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new NoopMetricFactory());
+        processor = new LSubProcessor(next, mock(MailboxManager.class), manager, serverResponseFactory, new RecordingMetricFactory());
         session.setMailboxSession(mailboxSession);
     }
 

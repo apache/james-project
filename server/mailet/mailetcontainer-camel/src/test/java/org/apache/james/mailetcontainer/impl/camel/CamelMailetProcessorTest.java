@@ -29,7 +29,7 @@ import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateMailetProcessorTest;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMailContext;
 
 public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
@@ -38,7 +38,7 @@ public class CamelMailetProcessorTest extends AbstractStateMailetProcessorTest {
     protected AbstractStateMailetProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> configuration) throws Exception {
         CamelMailetProcessor processor = null;
         try {
-            processor = new CamelMailetProcessor(new NoopMetricFactory());
+            processor = new CamelMailetProcessor(new RecordingMetricFactory());
             processor.setCamelContext(new DefaultCamelContext());
             processor.setMailetContext(FakeMailContext.defaultContext());
             processor.setMailetLoader(new MockMailetLoader());

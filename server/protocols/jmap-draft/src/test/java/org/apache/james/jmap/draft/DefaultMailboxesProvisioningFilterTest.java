@@ -23,7 +23,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.DefaultMailboxesProvisioningFilter;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
@@ -31,7 +30,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
 import org.junit.Test;
@@ -53,7 +52,7 @@ public class DefaultMailboxesProvisioningFilterTest {
 
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
         subscriptionManager = new StoreSubscriptionManager(mailboxManager.getMapperFactory());
-        testee = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new NoopMetricFactory());
+        testee = new DefaultMailboxesProvisioningFilter(mailboxManager, subscriptionManager, new RecordingMetricFactory());
     }
 
     @Test

@@ -55,7 +55,7 @@ import org.apache.james.mailbox.store.FakeAuthenticator;
 import org.apache.james.mailbox.store.FakeAuthorizator;
 import org.apache.james.mailbox.store.SessionProviderImpl;
 import org.apache.james.mailbox.store.StoreMailboxManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
@@ -105,7 +105,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.builder()
             .preProvisionnedFakeAuthenticator()
             .fakeAuthorizator()
-            .eventBus(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()), RetryBackoffConfiguration.DEFAULT, eventDeadLetters))
+            .eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()), RetryBackoffConfiguration.DEFAULT, eventDeadLetters))
             .defaultAnnotationLimits()
             .defaultMessageParser()
             .scanningSearchIndex()
@@ -116,7 +116,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         mailboxManager = resources.getMailboxManager();
         messageIdManager = spy(resources.getMessageIdManager());
 
-        messageFastViewProjection = new MemoryMessageFastViewProjection(new NoopMetricFactory());
+        messageFastViewProjection = new MemoryMessageFastViewProjection(new RecordingMetricFactory());
 
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();

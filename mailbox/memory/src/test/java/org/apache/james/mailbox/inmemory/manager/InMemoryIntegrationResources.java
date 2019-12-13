@@ -67,7 +67,7 @@ import org.apache.james.mailbox.store.quota.StoreQuotaManager;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
@@ -101,7 +101,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
             RequireAnnotationLimits eventBus(EventBus eventBus);
 
             default RequireAnnotationLimits inVmEventBus() {
-                return eventBus(new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory())));
+                return eventBus(new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory())));
             }
         }
 
@@ -336,7 +336,7 @@ public class InMemoryIntegrationResources implements IntegrationResources<StoreM
                 .stream()
                 .map(biFunction -> biFunction.apply(preInstanciationStage))
                 .collect(Guavate.toImmutableSet());
-            return new PreDeletionHooks(preDeletionHooksSet, new NoopMetricFactory());
+            return new PreDeletionHooks(preDeletionHooksSet, new RecordingMetricFactory());
         }
     }
 

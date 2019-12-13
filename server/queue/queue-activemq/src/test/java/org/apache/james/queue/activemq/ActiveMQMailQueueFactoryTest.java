@@ -24,7 +24,7 @@ import javax.jms.ConnectionFactory;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
 import org.apache.james.metrics.api.NoopGaugeRegistry;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
 import org.apache.james.queue.api.ManageableMailQueue;
@@ -47,7 +47,7 @@ public class ActiveMQMailQueueFactoryTest {
         public void setUp(BrokerService brokerService) {
             ConnectionFactory connectionFactory = new ActiveMQConnectionFactory("vm://localhost?create=false");
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-            NoopMetricFactory metricFactory = new NoopMetricFactory();
+            RecordingMetricFactory metricFactory = new RecordingMetricFactory();
             NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
             mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
             mailQueueFactory.setUseJMX(false);
@@ -86,7 +86,7 @@ public class ActiveMQMailQueueFactoryTest {
             connectionFactory.setBlobTransferPolicy(policy);
 
             RawMailQueueItemDecoratorFactory mailQueueItemDecoratorFactory = new RawMailQueueItemDecoratorFactory();
-            NoopMetricFactory metricFactory = new NoopMetricFactory();
+            RecordingMetricFactory metricFactory = new RecordingMetricFactory();
             NoopGaugeRegistry gaugeRegistry = new NoopGaugeRegistry();
             mailQueueFactory = new ActiveMQMailQueueFactory(connectionFactory, mailQueueItemDecoratorFactory, metricFactory, gaugeRegistry);
             mailQueueFactory.setUseJMX(false);

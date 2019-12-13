@@ -54,7 +54,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.StoreBlobManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -135,7 +135,7 @@ class MessageFastViewFactoryTest {
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
             session);
 
-        fastViewProjection = new MemoryMessageFastViewProjection(new NoopMetricFactory());
+        fastViewProjection = new MemoryMessageFastViewProjection(new RecordingMetricFactory());
 
         Mono.from(fastViewProjection.store(previewComputedMessage1.getMessageId(), PROJECTION_1))
             .block();
@@ -146,7 +146,7 @@ class MessageFastViewFactoryTest {
 
         blobManager = resources.getBlobManager();
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor, messageIdManager,
-            new MemoryMessageFastViewProjection(new NoopMetricFactory()));
+            new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
         messageFastViewFactory = new MessageFastViewFactory(blobManager, messageIdManager, fastViewProjection, messageFullViewFactory);
     }
 

@@ -36,7 +36,7 @@ import org.apache.james.mailbox.events.RetryBackoffConfiguration;
 import org.apache.james.mailbox.events.delivery.EventDelivery.DeliveryOption;
 import org.apache.james.mailbox.events.delivery.EventDelivery.PermanentFailureHandler;
 import org.apache.james.mailbox.events.delivery.EventDelivery.Retryer.BackoffRetryer;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -49,7 +49,7 @@ class InVmEventDeliveryTest {
     @BeforeEach
     void setUp() {
         listener = newListener();
-        inVmEventDelivery = new InVmEventDelivery(new NoopMetricFactory());
+        inVmEventDelivery = new InVmEventDelivery(new RecordingMetricFactory());
     }
 
     MailboxListenerCountingSuccessfulExecution newListener() {

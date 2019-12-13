@@ -53,7 +53,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -90,7 +90,7 @@ public class GetQuotaProcessorTest {
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
         testee = new GetQuotaProcessor(mock(ImapProcessor.class), mockedMailboxManager,
-            statusResponseFactory, mockedQuotaManager, mockedQuotaRootResolver, new NoopMetricFactory());
+            statusResponseFactory, mockedQuotaManager, mockedQuotaRootResolver, new RecordingMetricFactory());
         mailbox = mock(Mailbox.class);
         when(mailbox.generateAssociatedPath()).thenReturn(MAILBOX_PATH);
         imapSession.authenticated();

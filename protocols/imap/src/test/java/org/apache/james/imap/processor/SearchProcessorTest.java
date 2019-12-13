@@ -66,7 +66,7 @@ import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.Criterion;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.TestId;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -128,7 +128,7 @@ public class SearchProcessorTest {
         selectedMailbox = mock(SelectedMailbox.class);
         when(selectedMailbox.getMailboxId()).thenReturn(mailboxId);
         
-        processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new NoopMetricFactory());
+        processor = new SearchProcessor(next,  mailboxManager, serverResponseFactory, new RecordingMetricFactory());
         expectOk();
     }
 

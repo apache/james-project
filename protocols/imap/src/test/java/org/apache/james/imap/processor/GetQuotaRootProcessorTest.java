@@ -54,7 +54,7 @@ import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -87,7 +87,7 @@ public class GetQuotaRootProcessorTest {
         mockedResponder = mock(ImapProcessor.Responder.class);
         mockedMailboxManager = mock(MailboxManager.class);
         testee = new GetQuotaRootProcessor(mock(ImapProcessor.class), mockedMailboxManager,
-            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new NoopMetricFactory());
+            statusResponseFactory, mockedQuotaRootResolver, mockedQuotaManager, new RecordingMetricFactory());
     }
 
     @Test

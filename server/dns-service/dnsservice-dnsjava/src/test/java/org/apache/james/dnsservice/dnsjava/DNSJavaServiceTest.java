@@ -31,7 +31,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.junit.After;
 import org.junit.Before;
@@ -226,7 +226,7 @@ public class DNSJavaServiceTest {
     private final class TestableDNSServer extends DNSJavaService {
 
         public TestableDNSServer() {
-            super(new NoopMetricFactory());
+            super(new RecordingMetricFactory());
         }
 
         public void setResolver(Resolver r) {

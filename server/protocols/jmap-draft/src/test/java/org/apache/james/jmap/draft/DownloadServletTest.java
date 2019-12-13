@@ -28,14 +28,13 @@ import static org.mockito.Mockito.when;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.james.core.Username;
-import org.apache.james.jmap.draft.DownloadServlet;
 import org.apache.james.jmap.draft.api.SimpleTokenFactory;
 import org.apache.james.jmap.draft.utils.DownloadPath;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Test;
 
 public class DownloadServletTest {
@@ -48,7 +47,7 @@ public class DownloadServletTest {
             .thenThrow(new MailboxException());
         SimpleTokenFactory nullSimpleTokenFactory = null;
 
-        DownloadServlet testee = new DownloadServlet(mockedBlobManager, nullSimpleTokenFactory, new NoopMetricFactory());
+        DownloadServlet testee = new DownloadServlet(mockedBlobManager, nullSimpleTokenFactory, new RecordingMetricFactory());
 
         HttpServletResponse resp = mock(HttpServletResponse.class);
         testee.download(mailboxSession, DownloadPath.from("/blobId"), resp);

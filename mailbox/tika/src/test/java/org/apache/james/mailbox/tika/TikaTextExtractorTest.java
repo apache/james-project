@@ -32,7 +32,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.tika.TikaTextExtractor.ContentAndMetadataDeserializer;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -50,7 +50,7 @@ class TikaTextExtractorTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        textExtractor = new TikaTextExtractor(new NoopMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
+        textExtractor = new TikaTextExtractor(new RecordingMetricFactory(), new TikaHttpClientImpl(TikaConfiguration.builder()
                 .host(tika.getIp())
                 .port(tika.getPort())
                 .timeoutInMillis(tika.getTimeoutInMillis())
@@ -159,7 +159,7 @@ class TikaTextExtractorTest {
     @Test
     void deserializerShouldNotThrowWhenMoreThanOneNode() throws Exception {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), 
+            new RecordingMetricFactory(),
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"This is an awesome LibreOffice document !\"}, " +
                                                             "{\"Chroma BlackIsZero\": \"true\"}]")
                                                         .getBytes(StandardCharsets.UTF_8))));
@@ -172,7 +172,7 @@ class TikaTextExtractorTest {
     void deserializerShouldTakeFirstNodeWhenSeveral() throws Exception {
         String expectedExtractedContent = "content A";
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), 
+            new RecordingMetricFactory(),
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream(("[{\"X-TIKA:content\": \"" + expectedExtractedContent + "\"}, " +
                                                             "{\"X-TIKA:content\": \"content B\"}]")
                                                         .getBytes(StandardCharsets.UTF_8))));
@@ -186,7 +186,7 @@ class TikaTextExtractorTest {
     @Test
     void deserializerShouldThrowWhenNodeIsNotAnObject() {
         TikaTextExtractor textExtractor = new TikaTextExtractor(
-            new NoopMetricFactory(), 
+            new RecordingMetricFactory(),
             (inputStream, contentType) -> Optional.of(new ByteArrayInputStream("[\"value1\"]"
                                                         .getBytes(StandardCharsets.UTF_8))));
 

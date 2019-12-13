@@ -38,7 +38,7 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.server.core.configuration.FileConfigurationProvider;
 import org.apache.james.utils.ExtendedClassLoader;
 import org.apache.james.utils.GuiceGenericLoader;
@@ -46,7 +46,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.inject.Guice;
 
 class MailboxListenersLoaderImplTest {
 
@@ -59,7 +58,7 @@ class MailboxListenersLoaderImplTest {
         when(fileSystem.getFile(anyString()))
             .thenThrow(new FileNotFoundException());
 
-        eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
 
         GuiceGenericLoader genericLoader = GuiceGenericLoader.forTesting(new ExtendedClassLoader(fileSystem));
         testee = new MailboxListenersLoaderImpl(new MailboxListenerFactory(genericLoader), eventBus, ImmutableSet.of());

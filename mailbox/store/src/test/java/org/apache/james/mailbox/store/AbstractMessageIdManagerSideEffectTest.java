@@ -65,7 +65,7 @@ import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.util.EventCollector;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.assertj.core.api.AbstractListAssert;
 import org.assertj.core.api.ObjectAssert;
 import org.assertj.core.api.SoftAssertions;
@@ -105,7 +105,7 @@ public abstract class AbstractMessageIdManagerSideEffectTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
         eventCollector = new EventCollector();
         quotaManager = mock(QuotaManager.class);
 

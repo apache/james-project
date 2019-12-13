@@ -38,7 +38,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -59,7 +59,7 @@ public class UserProvisioningFilterTest {
     @Before
     public void setup() throws Exception {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
-        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
+        sut = new UserProvisioningFilter(usersRepository, new RecordingMetricFactory());
         request = mock(HttpServletRequest.class);
         response = mock(HttpServletResponse.class);
         chain = mock(FilterChain.class);
@@ -103,7 +103,7 @@ public class UserProvisioningFilterTest {
     public void filterShouldNotTryToAddUserWhenReadOnlyUsersRepository() throws Exception {
         UsersRepository usersRepository = mock(UsersRepository.class);
         when(usersRepository.isReadOnly()).thenReturn(true);
-        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
+        sut = new UserProvisioningFilter(usersRepository, new RecordingMetricFactory());
 
         MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))
@@ -119,7 +119,7 @@ public class UserProvisioningFilterTest {
     public void filterShouldChainCallsWhenReadOnlyUsersRepository() throws Exception {
         UsersRepository usersRepository = mock(UsersRepository.class);
         when(usersRepository.isReadOnly()).thenReturn(true);
-        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
+        sut = new UserProvisioningFilter(usersRepository, new RecordingMetricFactory());
 
         MailboxSession mailboxSession = MailboxSessionUtil.create(USERNAME_WITH_DOMAIN);
         when(request.getAttribute(AuthenticationFilter.MAILBOX_SESSION))

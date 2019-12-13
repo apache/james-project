@@ -36,7 +36,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryId.Factory;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,7 +52,7 @@ public class SetMailboxesCreationProcessorTest {
     public void setup() {
         mailboxManager = mock(MailboxManager.class);
         mailboxIdFactory = new InMemoryId.Factory();
-        sut = new SetMailboxesCreationProcessor(mailboxManager, subscriptionManager, mailboxFactory, mailboxIdFactory, new NoopMetricFactory());
+        sut = new SetMailboxesCreationProcessor(mailboxManager, subscriptionManager, mailboxFactory, mailboxIdFactory, new RecordingMetricFactory());
     }
 
     @Test

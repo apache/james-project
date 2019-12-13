@@ -34,7 +34,7 @@ import org.apache.james.imap.message.response.UnpooledStatusResponseFactory;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +51,7 @@ public class SetQuotaProcessorTest {
         imapSession = new FakeImapSession();
         mockedResponder = mock(ImapProcessor.Responder.class);
         testee = new SetQuotaProcessor(mock(ImapProcessor.class), mock(MailboxManager.class),
-            statusResponseFactory, new NoopMetricFactory());
+            statusResponseFactory, new RecordingMetricFactory());
         imapSession.authenticated();
         imapSession.setMailboxSession(mailboxSession);
     }

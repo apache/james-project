@@ -39,7 +39,7 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.transport.mailets.ToRecipientFolder;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.mailet.Mail;
@@ -77,7 +77,7 @@ public class ToRecipientFolderTest {
         mailboxManager = mock(MailboxManager.class);
 
 
-        MetricFactory metricFactory = new NoopMetricFactory();
+        MetricFactory metricFactory = new RecordingMetricFactory();
         testee = new ToRecipientFolder(mailboxManager, usersRepository, metricFactory);
 
         session = mock(MailboxSession.class);

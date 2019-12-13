@@ -25,14 +25,14 @@ import org.apache.james.mailetcontainer.api.mock.MockMailetLoader;
 import org.apache.james.mailetcontainer.api.mock.MockMatcherLoader;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessor;
 import org.apache.james.mailetcontainer.lib.AbstractStateCompositeProcessorTest;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.mailet.base.test.FakeMailContext;
 
 public class CamelCompositeProcessorTest extends AbstractStateCompositeProcessorTest {
 
     @Override
     protected AbstractStateCompositeProcessor createProcessor(HierarchicalConfiguration<ImmutableNode> config) throws Exception {
-        CamelCompositeProcessor processor = new CamelCompositeProcessor(new NoopMetricFactory(),
+        CamelCompositeProcessor processor = new CamelCompositeProcessor(new RecordingMetricFactory(),
             FakeMailContext.defaultContext(),
             new MockMatcherLoader(),
             new MockMailetLoader());

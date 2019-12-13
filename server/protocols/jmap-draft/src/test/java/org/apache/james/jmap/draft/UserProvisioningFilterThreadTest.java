@@ -25,7 +25,7 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.user.memory.MemoryUsersRepository;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.Before;
@@ -42,7 +42,7 @@ public class UserProvisioningFilterThreadTest {
     public void before() {
         usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
         session = MailboxSessionUtil.create(Username.of("username"));
-        sut = new UserProvisioningFilter(usersRepository, new NoopMetricFactory());
+        sut = new UserProvisioningFilter(usersRepository, new RecordingMetricFactory());
     }
 
     @Test

@@ -27,7 +27,7 @@ import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.mailbox.store.AbstractMessageIdManagerStorageTest;
 import org.apache.james.mailbox.store.MessageIdManagerTestSystem;
 import org.apache.james.mailbox.store.quota.NoQuotaManager;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStorageTest {
@@ -36,7 +36,7 @@ class CassandraMessageIdManagerStorageTest extends AbstractMessageIdManagerStora
     
     @Override
     protected MessageIdManagerTestSystem createTestingData() {
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
         return CassandraMessageIdManagerTestSystem.createTestingData(cassandraCluster.getCassandraCluster(), new NoQuotaManager(), eventBus, PreDeletionHook.NO_PRE_DELETION_HOOK);
     }
 }

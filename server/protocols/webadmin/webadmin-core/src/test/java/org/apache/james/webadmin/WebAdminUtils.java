@@ -24,9 +24,8 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.util.Port;
 import org.apache.james.webadmin.authentication.NoAuthenticationFilter;
 
@@ -43,7 +42,7 @@ public class WebAdminUtils {
         return new WebAdminServer(WebAdminConfiguration.TEST_CONFIGURATION,
             ImmutableList.copyOf(routes),
             new NoAuthenticationFilter(),
-            new NoopMetricFactory());
+            new RecordingMetricFactory());
     }
 
     public static RequestSpecBuilder buildRequestSpecification(WebAdminServer webAdminServer) {

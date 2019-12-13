@@ -53,7 +53,7 @@ import org.apache.james.mailbox.model.TestId;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -130,7 +130,7 @@ public class MailboxEventAnalyserTest {
     @Before
     public void setUp() throws MailboxException {
         FakeImapSession imapSession = new FakeImapSession();
-        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new NoopMetricFactory()));
+        InVMEventBus eventBus = new InVMEventBus(new InVmEventDelivery(new RecordingMetricFactory()));
         imapSession.setMailboxSession(MAILBOX_SESSION);
         imapSession.authenticated();
 

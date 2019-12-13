@@ -100,7 +100,7 @@ import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MultimailboxesSearchQuery;
 import org.apache.james.mailbox.model.SearchQuery;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.user.memory.MemoryUsersRepository;
@@ -176,7 +176,7 @@ class DeletedMessagesVaultRoutesTest {
         blobIdFactory = new HashBlobId.Factory();
         blobStore = spy(new MemoryBlobStore(blobIdFactory));
         clock = new UpdatableTickingClock(OLD_DELETION_DATE.toInstant());
-        vault = spy(new BlobStoreDeletedMessageVault(new NoopMetricFactory(), new MemoryDeletedMessageMetadataVault(),
+        vault = spy(new BlobStoreDeletedMessageVault(new RecordingMetricFactory(), new MemoryDeletedMessageMetadataVault(),
             blobStore, new BucketNameGenerator(clock), clock,
             RetentionConfiguration.DEFAULT));
         InMemoryIntegrationResources inMemoryResource = InMemoryIntegrationResources.defaultResources();

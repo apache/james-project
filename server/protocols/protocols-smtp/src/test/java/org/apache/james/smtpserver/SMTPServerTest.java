@@ -62,7 +62,7 @@ import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.mailrepository.memory.TestingMailRepositoryLoader;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.utils.ProtocolServerUtils;
 import org.apache.james.protocols.lib.mock.MockProtocolHandlerLoader;
 import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
@@ -262,7 +262,7 @@ public class SMTPServerTest {
             .put(binder -> binder.bind(MailRepositoryStore.class).toInstance(mailRepositoryStore))
             .put(binder -> binder.bind(DNSService.class).toInstance(dnsServer))
             .put(binder -> binder.bind(UsersRepository.class).toInstance(usersRepository))
-            .put(binder -> binder.bind(MetricFactory.class).to(NoopMetricFactory.class))
+            .put(binder -> binder.bind(MetricFactory.class).to(RecordingMetricFactory.class))
             .build();
     }
 

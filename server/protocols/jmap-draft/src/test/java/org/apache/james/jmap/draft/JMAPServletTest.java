@@ -31,13 +31,12 @@ import java.util.stream.Stream;
 
 import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.JettyHttpServer;
-import org.apache.james.jmap.draft.JMAPServlet;
 import org.apache.james.jmap.draft.methods.ErrorResponse;
 import org.apache.james.jmap.draft.methods.Method;
 import org.apache.james.jmap.draft.methods.RequestHandler;
-import org.apache.james.jmap.draft.model.MethodCallId;
 import org.apache.james.jmap.draft.model.InvocationResponse;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.jmap.draft.model.MethodCallId;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -58,7 +57,7 @@ public class JMAPServletTest {
     @Before
     public void setup() throws Exception {
         requestHandler = mock(RequestHandler.class);
-        JMAPServlet jmapServlet = new JMAPServlet(requestHandler, new NoopMetricFactory());
+        JMAPServlet jmapServlet = new JMAPServlet(requestHandler, new RecordingMetricFactory());
 
         server = JettyHttpServer.create(
                 Configuration.builder()

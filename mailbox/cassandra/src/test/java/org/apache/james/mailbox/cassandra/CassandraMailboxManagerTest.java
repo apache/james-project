@@ -23,7 +23,7 @@ import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.cassandra.mail.MailboxAggregateModule;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMailboxManager> {
@@ -35,7 +35,7 @@ public class CassandraMailboxManagerTest extends MailboxManagerTest<CassandraMai
         return CassandraMailboxManagerProvider.provideMailboxManager(
             cassandra.getCassandraCluster().getConf(),
             cassandra.getCassandraCluster().getTypesProvider(),
-            new PreDeletionHooks(preDeletionHooks(), new NoopMetricFactory()));
+            new PreDeletionHooks(preDeletionHooks(), new RecordingMetricFactory()));
     }
 
     @Override
