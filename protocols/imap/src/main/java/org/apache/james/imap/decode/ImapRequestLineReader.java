@@ -28,6 +28,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -812,6 +813,24 @@ public abstract class ImapRequestLineReader {
          * @return <code>true</code> if chr is valid, <code>false</code> if not.
          */
         boolean isValid(char chr);
+    }
+
+    public static class StringValidator implements CharacterValidator {
+        private final byte[] expectedStringAsBytes;
+        private int position = 0;
+
+        public StringValidator(String expectedString) {
+            this.expectedStringAsBytes = expectedString.getBytes(StandardCharsets.US_ASCII);
+        }
+
+        @Override
+        public boolean isValid(char chr) {
+            if (position >= expectedStringAsBytes.length) {
+                return false;
+            } else {
+                return ImapRequestLineReader.cap(chr) == expectedStringAsBytes[position++];
+            }
+        }
     }
 
     public static class NoopCharValidator implements CharacterValidator {
