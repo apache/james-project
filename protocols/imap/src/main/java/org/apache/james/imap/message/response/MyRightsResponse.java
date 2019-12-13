@@ -33,7 +33,6 @@ public final class MyRightsResponse implements ImapResponseMessage {
     private final MailboxACL.Rfc4314Rights myRights;
 
     public MyRightsResponse(String mailboxName, MailboxACL.Rfc4314Rights myRights) {
-        super();
         this.mailboxName = mailboxName;
         this.myRights = myRights;
     }

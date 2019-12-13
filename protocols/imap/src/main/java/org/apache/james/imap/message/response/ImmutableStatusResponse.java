@@ -30,15 +30,10 @@ import com.google.common.base.MoreObjects;
  * Immutable status response. Suitable for unpooled usage.
  */
 public class ImmutableStatusResponse implements StatusResponse {
-
     private final ResponseCode responseCode;
-
     private final Type serverResponseType;
-
     private final Tag tag;
-
     private final HumanReadableText textKey;
-
     private final ImapCommand command;
 
     public ImmutableStatusResponse(Type serverResponseType, Tag tag, ImapCommand command, HumanReadableText textKey, ResponseCode responseCode) {

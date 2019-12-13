@@ -30,29 +30,18 @@ import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 
 public final class FetchResponse implements ImapResponseMessage {
-
     private final int messageNumber;
-
     private final Flags flags;
-
     private final MessageUid uid;
-
     private final Date internalDate;
-
     private final Long size;
-
     private final List<BodyElement> elements;
-
     private final Envelope envelope;
-
     private final Structure body;
-
     private final Structure bodystructure;
-
     private final ModSeq modSeq;
 
     public FetchResponse(int messageNumber, Flags flags, MessageUid uid, ModSeq modSeq, Date internalDate, Long size, Envelope envelope, Structure body, Structure bodystructure, List<BodyElement> elements) {
-        super();
         this.messageNumber = messageNumber;
         this.flags = flags;
         this.uid = uid;

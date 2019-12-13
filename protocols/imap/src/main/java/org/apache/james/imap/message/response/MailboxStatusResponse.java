@@ -27,19 +27,12 @@ import org.apache.james.mailbox.ModSeq;
  * Represents a <code>STATUS</code> response. See <code>RFC3501 7.2.4</code>.
  */
 public class MailboxStatusResponse implements ImapResponseMessage {
-
     private final Long messages;
-
     private final Long recent;
-
     private final MessageUid uidNext;
-
     private final Long uidValidity;
-
     private final Long unseen;
-
     private final String mailbox;
-
     private final ModSeq highestModSeq;
 
     public MailboxStatusResponse(Long messages, Long recent, MessageUid uidNext, ModSeq highestModSeq, Long uidValidity, Long unseen, String mailbox) {

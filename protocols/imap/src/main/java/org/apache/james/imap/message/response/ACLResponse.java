@@ -34,11 +34,9 @@ import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
  */
 public final class ACLResponse implements ImapResponseMessage {
     private final MailboxACL acl;
-
     private final String mailboxName;
 
     public ACLResponse(String mailboxName, MailboxACL acl) {
-        super();
         this.mailboxName = mailboxName;
         this.acl = acl;
     }

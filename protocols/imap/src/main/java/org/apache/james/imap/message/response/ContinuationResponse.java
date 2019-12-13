@@ -29,7 +29,6 @@ public class ContinuationResponse implements ImapResponseMessage {
     private final HumanReadableText textKey;
 
     public ContinuationResponse(HumanReadableText textKey) {
-        super();
         this.data = null;
         this.textKey = textKey;
     }

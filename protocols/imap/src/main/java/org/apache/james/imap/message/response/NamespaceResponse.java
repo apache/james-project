@@ -27,7 +27,6 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
  * Describes a NAMESPACE response.
  */
 public class NamespaceResponse implements ImapResponseMessage {
-
     private final List<Namespace> personal;
     private final List<Namespace> users;
     private final List<Namespace> shared;

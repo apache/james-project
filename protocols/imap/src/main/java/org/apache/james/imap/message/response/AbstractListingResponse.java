@@ -27,7 +27,6 @@ import org.apache.james.mailbox.model.MailboxMetaData;
 import com.google.common.base.MoreObjects;
 
 public abstract class AbstractListingResponse {
-
     private final MailboxMetaData.Children children;
     private final MailboxMetaData.Selectability selectability;
     private final String name;
@@ -37,7 +36,6 @@ public abstract class AbstractListingResponse {
     public AbstractListingResponse(MailboxMetaData.Children children,
                                    MailboxMetaData.Selectability selectability,
                                    String name, char hierarchyDelimiter, MailboxType type) {
-        super();
         this.children = children;
         this.selectability = selectability;
         this.name = name;

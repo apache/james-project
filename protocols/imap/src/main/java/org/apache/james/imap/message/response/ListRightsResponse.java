@@ -30,7 +30,6 @@ import org.apache.james.mailbox.model.MailboxACL;
  * LISTRIGHTS Response.
  */
 public final class ListRightsResponse implements ImapResponseMessage {
-
     private final String identifier;
     private final String mailboxName;
     private final MailboxACL.Rfc4314Rights[] rights;

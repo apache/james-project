@@ -25,7 +25,6 @@ public final class ExistsResponse implements ImapResponseMessage {
     private final long numberOfMessages;
 
     public ExistsResponse(long numberOfMessages) {
-        super();
         this.numberOfMessages = numberOfMessages;
     }
 

@@ -29,7 +29,6 @@ import org.apache.james.imap.api.message.response.ImapResponseMessage;
 import org.apache.james.mailbox.ModSeq;
 
 public class ESearchResponse implements ImapResponseMessage {
-
     private final long minUid;
     private final long maxUid;
     private final long count;
@@ -41,7 +40,6 @@ public class ESearchResponse implements ImapResponseMessage {
     private UidRange[] allUids;
 
     public ESearchResponse(long minUid, long maxUid, long count, IdRange[] all, UidRange[] allUids, ModSeq highestModSeq, Tag tag, boolean useUid, List<SearchResultOption> options) {
-        super();
         this.options = options;
         this.minUid = minUid;
         this.maxUid = maxUid;

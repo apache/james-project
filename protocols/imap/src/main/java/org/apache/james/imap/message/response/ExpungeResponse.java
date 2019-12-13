@@ -26,7 +26,6 @@ public final class ExpungeResponse implements ImapResponseMessage {
     private final int messageSequenceNumber;
 
     public ExpungeResponse(int messageSequenceNumber) {
-        super();
         this.messageSequenceNumber = messageSequenceNumber;
     }
 
