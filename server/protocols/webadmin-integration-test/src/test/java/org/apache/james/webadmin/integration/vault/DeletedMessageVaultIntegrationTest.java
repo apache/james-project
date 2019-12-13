@@ -67,6 +67,7 @@ import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModul
 import org.apache.james.probe.DataProbe;
 import org.apache.james.server.core.JamesServerResourceLoader;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
+import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.UpdatableTickingClock;
@@ -154,8 +155,8 @@ public class DeletedMessageVaultIntegrationTest {
         dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
-        int jmapPort = jmapServer.getProbe(JmapGuiceProbe.class)
-            .getJmapPort();
+        Port jmapPort = Port.of(jmapServer.getProbe(JmapGuiceProbe.class)
+            .getJmapPort());
         homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BOB_PASSWORD);
         jackAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(JACK), PASSWORD);

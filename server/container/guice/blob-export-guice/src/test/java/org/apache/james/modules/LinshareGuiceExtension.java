@@ -61,4 +61,8 @@ public class LinshareGuiceExtension implements GuiceModuleTestExtension {
             }
         );
     }
+
+    public LinshareExtension getLinshareJunitExtension() {
+        return linshareExtension;
+    }
 }

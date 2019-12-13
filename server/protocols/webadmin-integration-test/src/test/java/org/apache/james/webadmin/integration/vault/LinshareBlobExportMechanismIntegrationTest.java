@@ -17,24 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.jmap.draft.methods.integration;
+package org.apache.james.webadmin.integration.vault;
 
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
-import static org.apache.james.jmap.DeletedMessagesVaultRequests.exportVaultContent;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
+import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
+import static org.apache.james.jmap.JMAPTestingConstants.calmlyAwait;
+import static org.apache.james.jmap.JMAPTestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.jmap.JmapCommonRequests.deleteMessages;
 import static org.apache.james.jmap.JmapCommonRequests.getOutboxId;
 import static org.apache.james.jmap.JmapCommonRequests.listMessageIdsForAccount;
 import static org.apache.james.jmap.JmapURIBuilder.baseUri;
-import static org.apache.james.jmap.TestingConstants.ARGUMENTS;
-import static org.apache.james.jmap.TestingConstants.DOMAIN;
-import static org.apache.james.jmap.TestingConstants.LOCALHOST_IP;
-import static org.apache.james.jmap.TestingConstants.calmlyAwait;
-import static org.apache.james.jmap.TestingConstants.jmapRequestSpecBuilder;
 import static org.apache.james.linshare.LinshareFixture.MATCH_ALL_QUERY;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.mailbox.backup.ZipAssert.assertThatZip;
+import static org.apache.james.webadmin.integration.vault.DeletedMessagesVaultRequests.exportVaultContent;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasItem;
@@ -43,23 +43,37 @@ import static org.hamcrest.Matchers.hasSize;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.core.Username;
-import org.apache.james.jmap.ExportRequest;
-import org.apache.james.jmap.api.access.AccessToken;
-import org.apache.james.linshare.LinshareExtension;
+import org.apache.james.jmap.AccessToken;
+import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.backup.ZipAssert;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.probe.MailboxProbe;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
+import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
+import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
-import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.utils.WebAdminGuiceProbe;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
@@ -71,7 +85,8 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
-public abstract class LinshareBlobExportMechanismIntegrationTest {
+class LinshareBlobExportMechanismIntegrationTest {
+
     private static final String HOMER = "homer@" + DOMAIN;
     private static final String BART = "bart@" + DOMAIN;
     private static final String HOMER_PASSWORD = "homerPassword";
@@ -83,7 +98,27 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         .exportTo(USER_1.getUsername())
         .query(MATCH_ALL_QUERY);
 
-    private static LinshareExtension linshareExtension = new LinshareExtension();
+    private static final int LIMIT_TO_20_MESSAGES = 20;
+
+    private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new RabbitMQExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(linshareGuiceExtension)
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
+            .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))
+        .build();
+
+    @RegisterExtension
+    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     private AccessToken homerAccessToken;
     private AccessToken bartAccessToken;
@@ -91,9 +126,6 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
     private RequestSpecification webAdminApi;
     private RequestSpecification fakeSmtpRequestSpecification;
     private LinshareAPI user1LinshareAPI;
-
-    @RegisterExtension
-    IMAPMessageReader imapMessageReader = new IMAPMessageReader();
 
     @BeforeEach
     void setup(GuiceJamesServer jmapServer) throws Throwable {
@@ -115,11 +147,14 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, HOMER, DefaultMailboxes.INBOX);
 
-        homerAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(HOMER), HOMER_PASSWORD);
-        bartAccessToken = authenticateJamesUser(baseUri(jmapServer), Username.of(BART), BART_PASSWORD);
-        user1LinshareAPI = linshareExtension.getAPIFor(USER_1);
+        Port jmapPort = Port.of(jmapServer.getProbe(JmapGuiceProbe.class)
+            .getJmapPort());
+        homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), HOMER_PASSWORD);
+        bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BART_PASSWORD);
+        user1LinshareAPI = linshareGuiceExtension.getLinshareJunitExtension().getAPIFor(USER_1);
 
-        fakeSmtpRequestSpecification = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
+        fakeSmtpRequestSpecification = given(linshareGuiceExtension.getLinshareJunitExtension()
+            .getLinshare().fakeSmtpRequestSpecification());
     }
 
     @Test
@@ -226,7 +261,8 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         Document sharedDoc = user1LinshareAPI.receivedShares().get(0).getDocument();
-        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
+        byte[] sharedFile =  linshareGuiceExtension.getLinshareJunitExtension()
+            .downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
 
         try (ZipAssert zipAssert = assertThatZip(new ByteArrayInputStream(sharedFile))) {
             zipAssert.hasEntriesSize(1);
@@ -250,7 +286,8 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         exportVaultContent(webAdminApi, EXPORT_ALL_HOMER_MESSAGES_TO_USER_1);
 
         Document sharedDoc = user1LinshareAPI.receivedShares().get(0).getDocument();
-        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
+        byte[] sharedFile =  linshareGuiceExtension.getLinshareJunitExtension()
+            .downloadSharedFile(USER_1, sharedDoc.getId(), sharedDoc.getName());
 
         try (ZipAssert zipAssert = assertThatZip(new ByteArrayInputStream(sharedFile))) {
             zipAssert.hasEntriesSize(1);
@@ -279,7 +316,7 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             "]";
 
         with()
-            .header("Authorization", bartAccessToken.serialize())
+            .header("Authorization", bartAccessToken.asString())
             .body(requestBody)
             .post("/jmap")
         .then()
