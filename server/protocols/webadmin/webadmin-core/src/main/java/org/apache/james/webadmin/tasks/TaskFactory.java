@@ -104,6 +104,12 @@ public class TaskFactory implements TaskGenerator {
         return new Builder();
     }
 
+    public static TaskFactory of(TaskRegistrationKey key, TaskGenerator generator) {
+        return TaskFactory.builder()
+            .register(key, generator)
+            .build();
+    }
+
     private final String taskParameterName;
     private final Map<TaskRegistrationKey, TaskGenerator> taskGenerators;
 

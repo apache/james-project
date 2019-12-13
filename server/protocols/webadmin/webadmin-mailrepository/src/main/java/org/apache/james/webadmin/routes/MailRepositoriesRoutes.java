@@ -445,9 +445,8 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineReprocessAll() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails",
-            TaskFactory.builder()
-                .register(REPROCESS_ACTION, this::reprocessAll)
-                .buildAsRoute(taskManager),
+            TaskFactory.of(REPROCESS_ACTION, this::reprocessAll)
+                .asRoute(taskManager),
             jsonTransformer);
     }
 
@@ -496,9 +495,8 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineReprocessOne() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails/:key",
-            TaskFactory.builder()
-                .register(REPROCESS_ACTION, this::reprocessOne)
-                .buildAsRoute(taskManager),
+            TaskFactory.of(REPROCESS_ACTION, this::reprocessOne)
+                .asRoute(taskManager),
             jsonTransformer);
     }
 

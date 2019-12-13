@@ -97,8 +97,7 @@ public class CassandraMappingsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = ACTION_REQUEST_CAN_NOT_BE_DONE)
     })
     public Route performActionOnMappings() {
-        return TaskFactory.builder()
-            .register(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
-            .buildAsRoute(taskManager);
+        return TaskFactory.of(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
+            .asRoute(taskManager);
     }
 }

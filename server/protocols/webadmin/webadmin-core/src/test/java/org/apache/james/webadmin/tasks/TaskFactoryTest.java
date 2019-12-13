@@ -47,9 +47,7 @@ class TaskFactoryTest {
             .register(KEY_1, any -> TASK_1)
             .register(KEY_2, any -> TASK_2)
             .build();
-        singleTaskFactory = TaskFactory.builder()
-            .register(KEY_1, any -> TASK_1)
-            .build();
+        singleTaskFactory = TaskFactory.of(KEY_1, any -> TASK_1);
     }
 
     @Test

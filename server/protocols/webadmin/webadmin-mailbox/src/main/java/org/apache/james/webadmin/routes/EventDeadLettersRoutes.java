@@ -118,9 +118,8 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnAllEvents() {
-        return TaskFactory.builder()
-            .register(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
-            .buildAsRoute(taskManager);
+        return TaskFactory.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
+            .asRoute(taskManager);
     }
 
     @GET
@@ -185,9 +184,8 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnGroupEvents() {
-        return TaskFactory.builder()
-            .register(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
-            .buildAsRoute(taskManager);
+        return TaskFactory.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
+            .asRoute(taskManager);
     }
 
     @GET
@@ -293,10 +291,9 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnSingleEvent() {
-        return TaskFactory.builder()
-            .register(RE_DELIVER,
+        return TaskFactory.of(RE_DELIVER,
                 request -> eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request)))
-            .buildAsRoute(taskManager);
+            .asRoute(taskManager);
     }
 
     private Group parseGroup(Request request) {
