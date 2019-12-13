@@ -56,8 +56,8 @@ import org.apache.james.webadmin.service.MailRepositoryStoreService;
 import org.apache.james.webadmin.service.ReprocessingAllMailsTask;
 import org.apache.james.webadmin.service.ReprocessingOneMailTask;
 import org.apache.james.webadmin.service.ReprocessingService;
-import org.apache.james.webadmin.tasks.TaskFactory;
-import org.apache.james.webadmin.tasks.TaskGenerator;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -393,7 +393,7 @@ public class MailRepositoriesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - unknown action")
     })
     public void defineDeleteAll() {
-        TaskGenerator taskGenerator = request -> {
+        TaskFromRequest taskFromRequest = request -> {
             MailRepositoryPath path = decodedRepositoryPath(request);
             try {
                 return repositoryStoreService.createClearMailRepositoryTask(path);
@@ -406,7 +406,7 @@ public class MailRepositoriesRoutes implements Routes {
                     .haltError();
             }
         };
-        service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails", taskGenerator.asRoute(taskManager), jsonTransformer);
+        service.delete(MAIL_REPOSITORIES + "/:encodedPath/mails", taskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
     @PATCH
@@ -445,7 +445,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineReprocessAll() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails",
-            TaskFactory.of(REPROCESS_ACTION, this::reprocessAll)
+            TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessAll)
                 .asRoute(taskManager),
             jsonTransformer);
     }
@@ -495,7 +495,7 @@ public class MailRepositoriesRoutes implements Routes {
     })
     public void defineReprocessOne() {
         service.patch(MAIL_REPOSITORIES + "/:encodedPath/mails/:key",
-            TaskFactory.of(REPROCESS_ACTION, this::reprocessOne)
+            TaskFromRequestRegistry.of(REPROCESS_ACTION, this::reprocessOne)
                 .asRoute(taskManager),
             jsonTransformer);
     }

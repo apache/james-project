@@ -30,7 +30,7 @@ import org.apache.james.mailbox.indexer.MessageIdReIndexer;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.tasks.TaskFactory;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -103,7 +103,7 @@ public class MessageIdReindexingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
     private Route reIndexMessage() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .register(ReindexingRoutes.RE_INDEX, request -> reIndexer.reIndex(extractMessageId(request)))
             .buildAsRoute(taskManager);

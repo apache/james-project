@@ -45,7 +45,7 @@ import org.apache.james.webadmin.dto.MailQueueDTO;
 import org.apache.james.webadmin.dto.MailQueueItemDTO;
 import org.apache.james.webadmin.service.ClearMailQueueTask;
 import org.apache.james.webadmin.service.DeleteMailsFromMailQueueTask;
-import org.apache.james.webadmin.tasks.TaskGenerator;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonExtractException;
@@ -296,9 +296,9 @@ public class MailQueueRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     public void deleteMails(Service service) {
-        TaskGenerator taskGenerator = this::deleteMails;
+        TaskFromRequest taskFromRequest = this::deleteMails;
         service.delete(BASE_URL + SEPARATOR + MAIL_QUEUE_NAME + MAILS,
-                taskGenerator.asRoute(taskManager),
+                taskFromRequest.asRoute(taskManager),
                 jsonTransformer);
     }
 

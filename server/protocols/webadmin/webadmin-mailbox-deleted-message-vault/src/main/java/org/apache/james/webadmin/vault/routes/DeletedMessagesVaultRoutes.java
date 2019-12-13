@@ -44,8 +44,8 @@ import org.apache.james.vault.dto.query.QueryTranslator;
 import org.apache.james.vault.search.Query;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.tasks.TaskFactory;
-import org.apache.james.webadmin.tasks.TaskGenerator;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -120,8 +120,8 @@ public class DeletedMessagesVaultRoutes implements Routes {
         service.post(USER_PATH, userActions(), jsonTransformer);
         service.delete(ROOT_PATH, deleteWithScope(), jsonTransformer);
 
-        TaskGenerator deleteTaskGenerator = this::deleteMessage;
-        service.delete(DELETE_PATH, deleteTaskGenerator.asRoute(taskManager), jsonTransformer);
+        TaskFromRequest deleteTaskFromRequest = this::deleteMessage;
+        service.delete(DELETE_PATH, deleteTaskFromRequest.asRoute(taskManager), jsonTransformer);
     }
 
     @POST
@@ -159,7 +159,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private Route userActions() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .register(EXPORT_REGISTRATION_KEY, this::export)
             .register(RESTORE_REGISTRATION_KEY, this::restore)
             .buildAsRoute(taskManager);
@@ -194,7 +194,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side.")
     })
     private Route deleteWithScope() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .parameterName(SCOPE_QUERY_PARAM)
             .register(EXPIRED_REGISTRATION_KEY, request -> deletedMessageVault.deleteExpiredMessagesTask())
             .buildAsRoute(taskManager);

@@ -20,37 +20,40 @@
 package org.apache.james.webadmin.tasks;
 
 import static org.eclipse.jetty.http.HttpHeader.LOCATION;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskId;
 import org.apache.james.task.TaskManager;
+import org.apache.james.webadmin.routes.TasksRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.Test;
 
 import spark.Request;
 import spark.Response;
+import spark.Route;
 
-public class TaskGeneratorTest {
-    static final Task TASK = mock(Task.class);
-    static final String UUID_VALUE = "ce5316cb-c924-40eb-9ca0-c5828e276297";
+public interface TaskFromRequest {
+    class TaskRoute implements Route {
+        private final TaskFromRequest taskFromRequest;
+        private final TaskManager taskManager;
 
-    @Test
-    public void handleShouldReturnCreatedWithTaskIdHeader() throws Exception {
-        Request request = mock(Request.class);
-        Response response = mock(Response.class);
+        TaskRoute(TaskFromRequest taskFromRequest, TaskManager taskManager) {
+            this.taskFromRequest = taskFromRequest;
+            this.taskManager = taskManager;
+        }
 
-        TaskGenerator taskGenerator = any -> TASK;
-        TaskManager taskManager = mock(TaskManager.class);
-        when(taskManager.submit(TASK)).thenReturn(TaskId.fromString(UUID_VALUE));
+        @Override
+        public TaskIdDto handle(Request request, Response response) throws Exception {
+            Task task = taskFromRequest.fromRequest(request);
+            TaskId taskId = taskManager.submit(task);
+            response.status(HttpStatus.CREATED_201);
+            response.header(LOCATION.asString(), TasksRoutes.BASE + "/" + taskId.asString());
+            return new TaskIdDto(taskId.getValue());
+        }
+    }
 
-        taskGenerator.asRoute(taskManager).handle(request, response);
+    Task fromRequest(Request request) throws Exception;
 
-        verify(response).status(HttpStatus.CREATED_201);
-        verify(response).header(LOCATION.asString(), "/tasks/" + UUID_VALUE);
-        verifyNoMoreInteractions(response);
+    default Route asRoute(TaskManager taskManager) {
+        return new TaskRoute(this, taskManager);
     }
 }

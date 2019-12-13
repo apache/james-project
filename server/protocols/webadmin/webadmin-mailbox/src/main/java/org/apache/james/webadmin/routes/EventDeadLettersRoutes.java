@@ -35,7 +35,7 @@ import org.apache.james.mailbox.events.Group;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.EventDeadLettersService;
-import org.apache.james.webadmin.tasks.TaskFactory;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -118,7 +118,7 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnAllEvents() {
-        return TaskFactory.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverAllEvents())
             .asRoute(taskManager);
     }
 
@@ -184,7 +184,7 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnGroupEvents() {
-        return TaskFactory.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
+        return TaskFromRequestRegistry.of(RE_DELIVER, request -> eventDeadLettersService.redeliverGroupEvents(parseGroup(request)))
             .asRoute(taskManager);
     }
 
@@ -291,7 +291,7 @@ public class EventDeadLettersRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = INTERNAL_SERVER_ERROR)
     })
     public Route performActionOnSingleEvent() {
-        return TaskFactory.of(RE_DELIVER,
+        return TaskFromRequestRegistry.of(RE_DELIVER,
                 request -> eventDeadLettersService.redeliverSingleEvent(parseGroup(request), parseInsertionId(request)))
             .asRoute(taskManager);
     }

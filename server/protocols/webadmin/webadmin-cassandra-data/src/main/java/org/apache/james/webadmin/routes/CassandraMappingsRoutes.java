@@ -28,7 +28,7 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.CassandraMappingsService;
-import org.apache.james.webadmin.tasks.TaskFactory;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -97,7 +97,7 @@ public class CassandraMappingsRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = ACTION_REQUEST_CAN_NOT_BE_DONE)
     })
     public Route performActionOnMappings() {
-        return TaskFactory.of(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
+        return TaskFromRequestRegistry.of(SOLVE_INCONSISTENCIES, request -> cassandraMappingsService.solveMappingsSourcesInconsistencies())
             .asRoute(taskManager);
     }
 }

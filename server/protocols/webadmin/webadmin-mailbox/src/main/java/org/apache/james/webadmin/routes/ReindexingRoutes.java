@@ -37,8 +37,8 @@ import org.apache.james.task.TaskManager;
 import org.apache.james.task.TaskNotFoundException;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
-import org.apache.james.webadmin.tasks.TaskFactory;
-import org.apache.james.webadmin.tasks.TaskGenerator;
+import org.apache.james.webadmin.tasks.TaskFromRequest;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -135,7 +135,7 @@ public class ReindexingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
     private Route reIndexAll() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .register(RE_INDEX, wrap(this::reIndexAll))
             .buildAsRoute(taskManager);
@@ -234,7 +234,7 @@ public class ReindexingRoutes implements Routes {
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
     private Route reIndexMailbox() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .register(RE_INDEX, wrap(request -> reIndexer.reIndex(extractMailboxId(request))))
             .buildAsRoute(taskManager);
@@ -276,16 +276,16 @@ public class ReindexingRoutes implements Routes {
             value = "Compulsory. Needs to be a valid UID")
     })
     private Route reIndexMessage() {
-        return TaskFactory.builder()
+        return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .register(RE_INDEX, wrap(request -> reIndexer.reIndex(extractMailboxId(request), extractUid(request))))
             .buildAsRoute(taskManager);
     }
 
-    private TaskGenerator wrap(TaskGenerator toBeWrapped) {
+    private TaskFromRequest wrap(TaskFromRequest toBeWrapped) {
         return request -> {
             try {
-                return toBeWrapped.generate(request);
+                return toBeWrapped.fromRequest(request);
             } catch (MailboxNotFoundException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)

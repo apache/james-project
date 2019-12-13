@@ -38,12 +38,12 @@ import com.google.common.collect.ImmutableMap;
 import spark.Request;
 import spark.Route;
 
-public class TaskFactory implements TaskGenerator {
+public class TaskFromRequestRegistry implements TaskFromRequest {
     private static final String DEFAULT_PARAMETER = "action";
 
     public static class Builder {
         private Optional<String> taskParameterName;
-        private ImmutableMap.Builder<TaskRegistrationKey, TaskGenerator> tasks;
+        private ImmutableMap.Builder<TaskRegistrationKey, TaskFromRequest> tasks;
 
         public Builder() {
             taskParameterName = Optional.empty();
@@ -63,15 +63,15 @@ public class TaskFactory implements TaskGenerator {
             return this;
         }
 
-        public Builder register(TaskRegistrationKey key, TaskGenerator taskGenerator) {
-            this.tasks.put(key, taskGenerator);
+        public Builder register(TaskRegistrationKey key, TaskFromRequest taskFromRequest) {
+            this.tasks.put(key, taskFromRequest);
             return this;
         }
 
-        public TaskFactory build() {
-            ImmutableMap<TaskRegistrationKey, TaskGenerator> registrations = tasks.build();
+        public TaskFromRequestRegistry build() {
+            ImmutableMap<TaskRegistrationKey, TaskFromRequest> registrations = tasks.build();
             Preconditions.checkState(!registrations.isEmpty());
-            return new TaskFactory(
+            return new TaskFromRequestRegistry(
                 taskParameterName.orElse(DEFAULT_PARAMETER),
                 registrations);
         }
@@ -81,13 +81,13 @@ public class TaskFactory implements TaskGenerator {
         }
     }
 
-    public static class TaskRegistration implements TaskGenerator {
+    public static class TaskRegistration implements TaskFromRequest {
         private final TaskRegistrationKey taskRegistrationKey;
-        private final TaskGenerator taskGenerator;
+        private final TaskFromRequest taskFromRequest;
 
-        public TaskRegistration(TaskRegistrationKey taskRegistrationKey, TaskGenerator taskGenerator) {
+        public TaskRegistration(TaskRegistrationKey taskRegistrationKey, TaskFromRequest taskFromRequest) {
             this.taskRegistrationKey = taskRegistrationKey;
-            this.taskGenerator = taskGenerator;
+            this.taskFromRequest = taskFromRequest;
         }
 
         public TaskRegistrationKey registrationKey() {
@@ -95,8 +95,8 @@ public class TaskFactory implements TaskGenerator {
         }
 
         @Override
-        public Task generate(Request request) throws Exception {
-            return taskGenerator.generate(request);
+        public Task fromRequest(Request request) throws Exception {
+            return taskFromRequest.fromRequest(request);
         }
     }
 
@@ -104,25 +104,25 @@ public class TaskFactory implements TaskGenerator {
         return new Builder();
     }
 
-    public static TaskFactory of(TaskRegistrationKey key, TaskGenerator generator) {
-        return TaskFactory.builder()
+    public static TaskFromRequestRegistry of(TaskRegistrationKey key, TaskFromRequest generator) {
+        return TaskFromRequestRegistry.builder()
             .register(key, generator)
             .build();
     }
 
     private final String taskParameterName;
-    private final Map<TaskRegistrationKey, TaskGenerator> taskGenerators;
+    private final Map<TaskRegistrationKey, TaskFromRequest> taskGenerators;
 
-    private TaskFactory(String taskParameterName, Map<TaskRegistrationKey, TaskGenerator> taskGenerators) {
+    private TaskFromRequestRegistry(String taskParameterName, Map<TaskRegistrationKey, TaskFromRequest> taskGenerators) {
         this.taskParameterName = taskParameterName;
         this.taskGenerators = taskGenerators;
     }
 
     @Override
-    public Task generate(Request request) throws Exception {
+    public Task fromRequest(Request request) throws Exception {
         TaskRegistrationKey registrationKey = parseRegistrationKey(request);
         return Optional.ofNullable(taskGenerators.get(registrationKey))
-            .map(Throwing.<TaskGenerator, Task>function(taskGenerator -> taskGenerator.generate(request)).sneakyThrow())
+            .map(Throwing.<TaskFromRequest, Task>function(taskGenerator -> taskGenerator.fromRequest(request)).sneakyThrow())
             .orElseThrow(() -> new IllegalArgumentException("Invalid value supplied for query parameter '" + taskParameterName + "': " + registrationKey.asString()
                 + ". " + supportedValueMessage()));
     }
