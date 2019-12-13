@@ -19,13 +19,13 @@
 
 package org.apache.james.mailbox.store;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.extension.PreDeletionHook;
 import org.apache.james.metrics.api.MetricFactory;
-import org.apache.james.metrics.api.NoopMetricFactory;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -35,15 +35,19 @@ import reactor.core.scheduler.Schedulers;
 
 public class PreDeletionHooks {
     private static final int CONCURRENCY = 1;
-    public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of(), new NoopMetricFactory());
+    public static final PreDeletionHooks NO_PRE_DELETION_HOOK = new PreDeletionHooks(ImmutableSet.of(), Optional.empty());
 
     static final String PRE_DELETION_HOOK_METRIC_NAME = "preDeletionHook";
 
     private final Set<PreDeletionHook> hooks;
-    private final MetricFactory metricFactory;
+    private final Optional<MetricFactory> metricFactory;
 
     @Inject
     public PreDeletionHooks(Set<PreDeletionHook> hooks, MetricFactory metricFactory) {
+        this(hooks, Optional.of(metricFactory));
+    }
+
+    private PreDeletionHooks(Set<PreDeletionHook> hooks, Optional<MetricFactory> metricFactory) {
         this.hooks = hooks;
         this.metricFactory = metricFactory;
     }
@@ -51,8 +55,15 @@ public class PreDeletionHooks {
     public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
         return Flux.fromIterable(hooks)
             .publishOn(Schedulers.elastic())
-            .flatMap(hook -> metricFactory.runPublishingTimerMetric(PRE_DELETION_HOOK_METRIC_NAME,
-                Mono.from(hook.notifyDelete(deleteOperation))), CONCURRENCY)
+            .flatMap(hook -> metricFactory.map(factory -> publishMetric(deleteOperation, hook, factory))
+                    .orElse(Mono.empty()),
+                CONCURRENCY)
             .then();
+    }
+
+    private Mono<Void> publishMetric(PreDeletionHook.DeleteOperation deleteOperation, PreDeletionHook hook, MetricFactory factory) {
+        return factory.runPublishingTimerMetric(
+            PRE_DELETION_HOOK_METRIC_NAME,
+            Mono.from(hook.notifyDelete(deleteOperation)));
     }
 }
