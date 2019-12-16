@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache;
+package org.apache.james;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -26,13 +26,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.apache.dto.BaseType;
-import org.apache.dto.FirstDTO;
-import org.apache.dto.FirstDomainObject;
-import org.apache.dto.NestedType;
-import org.apache.dto.SecondDTO;
-import org.apache.dto.SecondDomainObject;
-import org.apache.dto.TestModules;
+import org.apache.james.dto.BaseType;
+import org.apache.james.dto.FirstDTO;
+import org.apache.james.dto.FirstDomainObject;
+import org.apache.james.dto.NestedType;
+import org.apache.james.dto.SecondDTO;
+import org.apache.james.dto.SecondDomainObject;
+import org.apache.james.dto.TestModules;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOConverter;
 import org.junit.jupiter.api.Test;

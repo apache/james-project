@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
 import org.apache.james.json.DTO;
 
@@ -25,19 +25,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FirstNestedDTO implements DTO {
-    private final int foo;
+public class SecondNestedDTO implements DTO {
+    private final String bar;
     private final String type;
 
     @JsonCreator
-    public FirstNestedDTO(@JsonProperty("foo") int foo,
-                          @JsonProperty("type") String type) {
-        this.foo = foo;
+    public SecondNestedDTO(@JsonProperty("bar") String bar,
+                           @JsonProperty("type") String type) {
+        this.bar = bar;
         this.type = type;
     }
 
-    public int getFoo() {
-        return foo;
+    public String getBar() {
+        return bar;
     }
 
     @Override
@@ -46,8 +46,7 @@ public class FirstNestedDTO implements DTO {
     }
 
     @JsonIgnore
-    public FirstNestedType toDomainObject() {
-        return new FirstNestedType(foo);
+    public SecondNestedType toDomainObject() {
+        return new SecondNestedType(bar);
     }
-
 }

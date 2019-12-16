@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOConverter;

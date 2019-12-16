@@ -17,10 +17,10 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
+import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOConverter;
@@ -29,20 +29,23 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class SecondDTO implements DTO {
+public class FirstDTO implements DTO {
     private final String type;
-    private final String id;
+    private final Optional<Long> id;
+    private final String time;
     private final String payload;
     private final Optional<DTO> child;
 
     @JsonCreator
-    public SecondDTO(
+    public FirstDTO(
             @JsonProperty("type") String type,
-            @JsonProperty("id") String id,
+            @JsonProperty("id") Optional<Long> id,
+            @JsonProperty("time") String time,
             @JsonProperty("payload") String payload,
             @JsonProperty("child") Optional<DTO> child) {
         this.type = type;
         this.id = id;
+        this.time = time;
         this.payload = payload;
         this.child = child;
     }
@@ -51,8 +54,12 @@ public class SecondDTO implements DTO {
         return type;
     }
 
-    public String getId() {
+    public Optional<Long> getId() {
         return id;
+    }
+
+    public String getTime() {
+        return time;
     }
 
     public String getPayload() {
@@ -64,7 +71,7 @@ public class SecondDTO implements DTO {
     }
 
     @JsonIgnore
-    public SecondDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
-        return new SecondDomainObject(UUID.fromString(id), payload, child.flatMap(converter::toDomainObject));
+    public FirstDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
+        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload, child.flatMap(converter::toDomainObject));
     }
 }

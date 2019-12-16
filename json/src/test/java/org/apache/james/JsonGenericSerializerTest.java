@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache;
+package org.apache.james;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,13 +28,13 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import org.apache.dto.BaseType;
-import org.apache.dto.FirstDomainObject;
-import org.apache.dto.FirstNestedType;
-import org.apache.dto.NestedType;
-import org.apache.dto.SecondDomainObject;
-import org.apache.dto.SecondNestedType;
-import org.apache.dto.TestModules;
+import org.apache.james.dto.BaseType;
+import org.apache.james.dto.FirstDomainObject;
+import org.apache.james.dto.FirstNestedType;
+import org.apache.james.dto.NestedType;
+import org.apache.james.dto.SecondDomainObject;
+import org.apache.james.dto.SecondNestedType;
+import org.apache.james.dto.TestModules;
 import org.apache.james.json.DTO;
 import org.apache.james.json.JsonGenericSerializer;
 import org.junit.jupiter.api.Test;

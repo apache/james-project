@@ -17,61 +17,37 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
-
-import java.time.ZonedDateTime;
-import java.util.Optional;
+package org.apache.james.dto;
 
 import org.apache.james.json.DTO;
-import org.apache.james.json.DTOConverter;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class FirstDTO implements DTO {
+public class FirstNestedDTO implements DTO {
+    private final int foo;
     private final String type;
-    private final Optional<Long> id;
-    private final String time;
-    private final String payload;
-    private final Optional<DTO> child;
 
     @JsonCreator
-    public FirstDTO(
-            @JsonProperty("type") String type,
-            @JsonProperty("id") Optional<Long> id,
-            @JsonProperty("time") String time,
-            @JsonProperty("payload") String payload,
-            @JsonProperty("child") Optional<DTO> child) {
+    public FirstNestedDTO(@JsonProperty("foo") int foo,
+                          @JsonProperty("type") String type) {
+        this.foo = foo;
         this.type = type;
-        this.id = id;
-        this.time = time;
-        this.payload = payload;
-        this.child = child;
     }
 
+    public int getFoo() {
+        return foo;
+    }
+
+    @Override
     public String getType() {
         return type;
     }
 
-    public Optional<Long> getId() {
-        return id;
-    }
-
-    public String getTime() {
-        return time;
-    }
-
-    public String getPayload() {
-        return payload;
-    }
-
-    public Optional<DTO> getChild() {
-        return child;
-    }
-
     @JsonIgnore
-    public FirstDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
-        return new FirstDomainObject(id, ZonedDateTime.parse(time), payload, child.flatMap(converter::toDomainObject));
+    public FirstNestedType toDomainObject() {
+        return new FirstNestedType(foo);
     }
+
 }

@@ -17,31 +17,47 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
 import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
 
-public class FirstNestedType implements NestedType{
-    final int foo;
+public class SecondDomainObject implements BaseType {
+    private final UUID id;
+    private final String payload;
+    private final Optional<NestedType> child;
 
-    public FirstNestedType(int foo) {
-        this.foo = foo;
+    public SecondDomainObject(UUID id, String payload, Optional<NestedType> child) {
+        this.id = id;
+        this.payload = payload;
+        this.child = child;
     }
 
-    public int getFoo() {
-        return foo;
+    public UUID getId() {
+        return id;
+    }
+
+    public String getPayload() {
+        return payload;
+    }
+
+    public Optional<NestedType> getChild() {
+        return child;
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        FirstNestedType that = (FirstNestedType) o;
-        return foo == that.foo;
+        SecondDomainObject that = (SecondDomainObject) o;
+        return Objects.equals(id, that.id) &&
+                Objects.equals(child, that.child) &&
+                Objects.equals(payload, that.payload);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(foo);
+        return Objects.hash(id, child, payload);
     }
 }

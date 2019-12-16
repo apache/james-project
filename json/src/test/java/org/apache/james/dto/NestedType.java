@@ -17,14 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
-import org.apache.james.json.DTO;
-import org.apache.james.json.DTOModule;
-
-public class TestNestedModule<T extends NestedType, U extends DTO> extends DTOModule<T, U> {
-
-    protected TestNestedModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
-        super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);
-    }
+public interface NestedType {
 }

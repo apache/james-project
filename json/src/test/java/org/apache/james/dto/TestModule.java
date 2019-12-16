@@ -17,31 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
-import java.util.Objects;
+import org.apache.james.json.DTO;
+import org.apache.james.json.DTOModule;
 
-public class SecondNestedType implements NestedType {
-    final String bar;
+public class TestModule<T extends BaseType, U extends DTO> extends DTOModule<T, U> {
 
-    public SecondNestedType(String bar) {
-        this.bar = bar;
-    }
-
-    public String getBar() {
-        return bar;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SecondNestedType that = (SecondNestedType) o;
-        return Objects.equals(bar, that.bar);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(bar);
+    protected TestModule(DTOConverter<T, U> converter, DomainObjectConverter<T, U> toDomainObjectConverter, Class<T> domainObjectType, Class<U> dtoType, String typeName) {
+        super(converter, toDomainObjectConverter, domainObjectType, dtoType, typeName);
     }
 }

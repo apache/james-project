@@ -17,7 +17,31 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
-public interface NestedType {
+import java.util.Objects;
+
+public class SecondNestedType implements NestedType {
+    final String bar;
+
+    public SecondNestedType(String bar) {
+        this.bar = bar;
+    }
+
+    public String getBar() {
+        return bar;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SecondNestedType that = (SecondNestedType) o;
+        return Objects.equals(bar, that.bar);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(bar);
+    }
 }

@@ -17,54 +17,54 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.dto;
+package org.apache.james.dto;
 
-import java.time.ZonedDateTime;
-import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
-public class FirstDomainObject implements BaseType {
-    private final Optional<Long> id;
-    private final ZonedDateTime time;
+import org.apache.james.json.DTO;
+import org.apache.james.json.DTOConverter;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class SecondDTO implements DTO {
+    private final String type;
+    private final String id;
     private final String payload;
-    private final Optional<NestedType> child;
+    private final Optional<DTO> child;
 
-    public FirstDomainObject(Optional<Long> id, ZonedDateTime time, String payload, Optional<NestedType> child) {
+    @JsonCreator
+    public SecondDTO(
+            @JsonProperty("type") String type,
+            @JsonProperty("id") String id,
+            @JsonProperty("payload") String payload,
+            @JsonProperty("child") Optional<DTO> child) {
+        this.type = type;
         this.id = id;
-        this.time = time;
         this.payload = payload;
         this.child = child;
     }
 
-    public Optional<Long> getId() {
-        return id;
+    public String getType() {
+        return type;
     }
 
-    public ZonedDateTime getTime() {
-        return time;
+    public String getId() {
+        return id;
     }
 
     public String getPayload() {
         return payload;
     }
 
-    public Optional<NestedType> getChild() {
+    public Optional<DTO> getChild() {
         return child;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        FirstDomainObject that = (FirstDomainObject) o;
-        return Objects.equals(id, that.id) &&
-                Objects.equals(time, that.time) &&
-                Objects.equals(child, that.child) &&
-                Objects.equals(payload, that.payload);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, time, child, payload);
+    @JsonIgnore
+    public SecondDomainObject toDomainObject(DTOConverter<NestedType, DTO> converter) {
+        return new SecondDomainObject(UUID.fromString(id), payload, child.flatMap(converter::toDomainObject));
     }
 }
