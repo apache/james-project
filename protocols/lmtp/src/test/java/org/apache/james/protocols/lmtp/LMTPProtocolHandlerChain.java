@@ -21,7 +21,7 @@ package org.apache.james.protocols.lmtp;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.james.metrics.api.NoopMetricFactory;
+import org.apache.james.metrics.tests.RecordingMetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
@@ -50,7 +50,7 @@ import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
 public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
 
     public LMTPProtocolHandlerChain() {
-        super(new NoopMetricFactory());
+        super(new RecordingMetricFactory());
     }
 
     @Override
@@ -58,21 +58,21 @@ public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
         List<ProtocolHandler> defaultHandlers = new ArrayList<>();
         defaultHandlers.add(new CommandDispatcher<SMTPSession>());
         defaultHandlers.add(new ExpnCmdHandler());
-        defaultHandlers.add(new LhloCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new LhloCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new HelpCmdHandler());
-        defaultHandlers.add(new MailCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new MailCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new NoopCmdHandler());
-        defaultHandlers.add(new QuitCmdHandler(new NoopMetricFactory()));
-        defaultHandlers.add(new RcptCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new QuitCmdHandler(new RecordingMetricFactory()));
+        defaultHandlers.add(new RcptCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new RsetCmdHandler());
         defaultHandlers.add(new VrfyCmdHandler());
-        defaultHandlers.add(new DataCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new DataCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new MailSizeEsmtpExtension());
         defaultHandlers.add(new WelcomeMessageHandler());
         defaultHandlers.add(new ReceivedDataLineFilter());
         defaultHandlers.add(new DataLineMessageHookHandler());
         defaultHandlers.add(new StartTlsCmdHandler());
-        defaultHandlers.add(new UnknownCmdHandler(new NoopMetricFactory()));
+        defaultHandlers.add(new UnknownCmdHandler(new RecordingMetricFactory()));
         defaultHandlers.add(new CommandHandlerResultLogger());
 
         return defaultHandlers;
