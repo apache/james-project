@@ -20,20 +20,22 @@
 package org.apache.james;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.SerializationFixture.DUPLICATE_TYPE_JSON;
+import static org.apache.james.SerializationFixture.FIRST;
+import static org.apache.james.SerializationFixture.FIRST_JSON;
+import static org.apache.james.SerializationFixture.FIRST_JSON_WITH_NESTED;
+import static org.apache.james.SerializationFixture.FIRST_WITH_NESTED;
+import static org.apache.james.SerializationFixture.MISSING_TYPE_JSON;
+import static org.apache.james.SerializationFixture.SECOND;
+import static org.apache.james.SerializationFixture.SECOND_JSON;
+import static org.apache.james.SerializationFixture.SECOND_WITH_NESTED;
+import static org.apache.james.SerializationFixture.SECOND_WITH_NESTED_JSON;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.ZonedDateTime;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.apache.james.dto.BaseType;
-import org.apache.james.dto.FirstDomainObject;
-import org.apache.james.dto.FirstNestedType;
-import org.apache.james.dto.NestedType;
-import org.apache.james.dto.SecondDomainObject;
-import org.apache.james.dto.SecondNestedType;
 import org.apache.james.dto.TestModules;
 import org.apache.james.json.DTO;
 import org.apache.james.json.JsonGenericSerializer;
@@ -43,18 +45,6 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JsonGenericSerializerTest {
-    private static final Optional<NestedType> NO_CHILD = Optional.empty();
-    private static final BaseType FIRST = new FirstDomainObject(Optional.of(1L), ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"), "first payload", NO_CHILD);
-    private static final BaseType SECOND = new SecondDomainObject(UUID.fromString("4a2c853f-7ffc-4ce3-9410-a47e85b3b741"), "second payload", NO_CHILD);
-    private static final BaseType SECOND_WITH_NESTED = new SecondDomainObject(UUID.fromString("4a2c853f-7ffc-4ce3-9410-a47e85b3b741"), "second payload", Optional.of(new FirstNestedType(12)));
-    private static final BaseType FIRST_WITH_NESTED = new FirstDomainObject(Optional.of(1L), ZonedDateTime.parse("2016-04-03T02:01+07:00[Asia/Vientiane]"), "payload", Optional.of(new SecondNestedType("bar")));
-
-    private static final String MISSING_TYPE_JSON = "{\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
-    private static final String DUPLICATE_TYPE_JSON = "{\"type\":\"first\", \"type\":\"second\", \"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
-    private static final String FIRST_JSON = "{\"type\":\"first\",\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"first payload\"}";
-    private static final String FIRST_JSON_WITH_NESTED = "{\"type\":\"first\",\"id\":1,\"time\":\"2016-04-03T02:01+07:00[Asia/Vientiane]\",\"payload\":\"payload\", \"child\": {\"bar\": \"bar\", \"type\": \"second-nested\"}}";
-    private static final String SECOND_JSON = "{\"type\":\"second\",\"id\":\"4a2c853f-7ffc-4ce3-9410-a47e85b3b741\",\"payload\":\"second payload\"}";
-    private static final String SECOND_WITH_NESTED_JSON = "{\"type\":\"second\",\"id\":\"4a2c853f-7ffc-4ce3-9410-a47e85b3b741\",\"payload\":\"second payload\", \"child\": {\"foo\": 12, \"type\": \"first-nested\"}}";
 
     @Test
     void shouldDeserializeKnownType() throws Exception {

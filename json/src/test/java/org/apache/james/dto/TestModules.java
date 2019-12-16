@@ -46,7 +46,7 @@ public interface TestModules {
 
     DTOConverter<NestedType, DTO> NESTED_CONVERTERS = DTOConverter.of(FIRST_NESTED, SECOND_NESTED);
 
-    TestModule<?, ?> FIRST_TYPE = DTOModule
+    TestModule<FirstDomainObject, FirstDTO> FIRST_TYPE = DTOModule
         .forDomainObject(FirstDomainObject.class)
         .convertToDTO(FirstDTO.class)
         .toDomainObjectConverter(dto -> dto.toDomainObject(NESTED_CONVERTERS))
