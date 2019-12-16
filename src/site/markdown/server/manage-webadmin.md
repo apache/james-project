@@ -358,6 +358,43 @@ Response codes:
 
 The kind of task scheduled depends on the action parameter. See below for details.
 
+### Recomputing JMAP fast message view projection
+
+This action is only available for backends supporting JMAP protocol.
+
+Message fast view projection stores message properties expected to be fast to fetch but are actually expensive to compute,
+in order for GetMessages operation to be fast to execute for these properties.
+
+These projection items are asynchronously computed via a dedicated listener.
+
+You can force the full projection recomputation by calling the following endpoint:
+
+```
+curl -XPOST /mailboxes?task=recomputeFastViewProjectionItems
+```
+
+Will schedule a task for recomputing the fast message view projection for all mailboxes.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+
+The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
+
+```
+{
+  "type":"RecomputeAllPreviewsTask",
+  "processedUserCount": 3,
+  "processedMessageCount": 3,
+  "failedUserCount": 2,
+  "failedMessageCount": 1
+}
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
 #### ReIndexing action
 
 Be also aware of the limits of this API:
