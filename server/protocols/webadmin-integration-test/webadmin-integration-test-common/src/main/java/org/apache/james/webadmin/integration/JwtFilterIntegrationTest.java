@@ -26,6 +26,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.jwt.JwtConfiguration;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.utils.DataProbeImpl;
@@ -36,6 +37,7 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 
@@ -78,6 +80,7 @@ public abstract class JwtFilterIntegrationTest {
 
     protected abstract GuiceJamesServer createJamesServer(JwtConfiguration jwtConfiguration) throws Exception;
 
+    @Category(BasicFeature.class)
     @Test
     public void jwtAuthenticationShouldWork() throws Exception {
         given()

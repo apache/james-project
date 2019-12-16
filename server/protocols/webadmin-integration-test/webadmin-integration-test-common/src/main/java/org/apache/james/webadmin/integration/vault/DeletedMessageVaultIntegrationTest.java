@@ -54,6 +54,7 @@ import org.apache.james.core.Username;
 import org.apache.james.filesystem.api.FileSystem;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.backup.ZipAssert;
@@ -76,6 +77,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.junit.rules.TemporaryFolder;
 
 import com.google.common.base.Strings;
@@ -167,7 +169,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         jmapServer.stop();
     }
 
-
+    @Category(BasicFeature.class)
     @Test
     public void vaultEndpointShouldRestoreJmapDeletedEmail() {
         bartSendMessageToHomer();
@@ -191,6 +193,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
+    @Category(BasicFeature.class)
     @Test
     public void vaultEndpointShouldRestoreImapDeletedEmail() throws Exception {
         bartSendMessageToHomer();
@@ -219,7 +222,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
-
+    @Category(BasicFeature.class)
     @Test
     public void vaultEndpointShouldRestoreImapDeletedMailbox() throws Exception {
         bartSendMessageToHomer();
@@ -463,7 +466,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
             .body(ARGUMENTS + ".list.subject", hasItem(SUBJECT));
     }
 
-
+    @Category(BasicFeature.class)
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenJmapDeleteMessage() throws Exception {
         bartSendMessageToHomer();
@@ -481,7 +484,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         }
     }
 
-
+    @Category(BasicFeature.class)
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenImapDeleteMessage() throws Exception {
         bartSendMessageToHomer();
@@ -504,7 +507,7 @@ public abstract class DeletedMessageVaultIntegrationTest {
         }
     }
 
-
+    @Category(BasicFeature.class)
     @Test
     public void vaultExportShouldExportZipContainsVaultMessagesToShareeWhenImapDeletedMailbox() throws Exception {
         bartSendMessageToHomer();
