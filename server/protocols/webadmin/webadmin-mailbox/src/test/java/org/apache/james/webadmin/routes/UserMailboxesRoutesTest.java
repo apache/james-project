@@ -39,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MailboxSessionUtil;
 import org.apache.james.mailbox.MessageManager;
@@ -55,6 +56,7 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.task.Hostname;
@@ -89,23 +91,23 @@ class UserMailboxesRoutesTest {
     private WebAdminServer webAdminServer;
     private UsersRepository usersRepository;
     private ListeningMessageSearchIndex searchIndex;
+    private MemoryTaskManager taskManager;
 
-    private void createServer(InMemoryMailboxManager mailboxManager) throws Exception {
+    private void createServer(MailboxManager mailboxManager, MailboxSessionMapperFactory mapperFactory) throws Exception {
         usersRepository = mock(UsersRepository.class);
         when(usersRepository.contains(USERNAME)).thenReturn(true);
 
 
-        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
-        InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         searchIndex = mock(ListeningMessageSearchIndex.class);
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
             mailboxManager,
             searchIndex,
-            mailboxManager.getMapperFactory());
+            mapperFactory);
         ReIndexer reIndexer = new ReIndexerImpl(
             reIndexerPerformer,
             mailboxManager,
-            mailboxManager.getMapperFactory());
+            mapperFactory);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
@@ -121,6 +123,7 @@ class UserMailboxesRoutesTest {
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
+        taskManager.stop();
     }
 
     @Nested
@@ -128,7 +131,8 @@ class UserMailboxesRoutesTest {
 
         @BeforeEach
         void setUp() throws Exception {
-            createServer(InMemoryIntegrationResources.defaultResources().getMailboxManager());
+            InMemoryMailboxManager mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
+            createServer(mailboxManager, mailboxManager.getMapperFactory());
         }
 
         @Test
@@ -769,14 +773,14 @@ class UserMailboxesRoutesTest {
 
     @Nested
     class ExceptionHandling {
-        private InMemoryMailboxManager mailboxManager;
+        private MailboxManager mailboxManager;
 
         @BeforeEach
         void setUp() throws Exception {
-            mailboxManager = mock(InMemoryMailboxManager.class);
+            mailboxManager = mock(MailboxManager.class);
             when(mailboxManager.createSystemSession(any())).thenReturn(MailboxSessionUtil.create(USERNAME));
 
-            createServer(mailboxManager);
+            createServer(mailboxManager, mock(MailboxSessionMapperFactory.class));
         }
 
         @Test
@@ -1034,7 +1038,7 @@ class UserMailboxesRoutesTest {
         @BeforeEach
         void setUp() throws Exception {
             mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-            createServer(mailboxManager);
+            createServer(mailboxManager, mailboxManager.getMapperFactory());
         }
 
         @Nested

@@ -32,8 +32,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
-import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.InMemoryMailboxManager;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
@@ -50,7 +48,6 @@ import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexerImpl;
 import org.apache.mailbox.tools.indexer.MessageIdReIndexingTask;
-import org.apache.mailbox.tools.indexer.ReIndexerImpl;
 import org.apache.mailbox.tools.indexer.ReIndexerPerformer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
@@ -68,20 +65,16 @@ class MessageRoutesTest {
     private WebAdminServer webAdminServer;
     private ListeningMessageSearchIndex searchIndex;
     private InMemoryMailboxManager mailboxManager;
+    private MemoryTaskManager taskManager;
 
     @BeforeEach
     void beforeEach() {
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
-        InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
             mailboxManager,
             searchIndex,
-            mailboxManager.getMapperFactory());
-        ReIndexer reIndexer = new ReIndexerImpl(
-            reIndexerPerformer,
-            mailboxManager,
             mailboxManager.getMapperFactory());
         JsonTransformer jsonTransformer = new JsonTransformer();
 
@@ -100,6 +93,7 @@ class MessageRoutesTest {
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
+        taskManager.stop();
     }
 
     @Nested

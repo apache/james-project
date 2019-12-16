@@ -74,11 +74,12 @@ class MailboxesRoutesTest {
     private WebAdminServer webAdminServer;
     private ListeningMessageSearchIndex searchIndex;
     private InMemoryMailboxManager mailboxManager;
+    private MemoryTaskManager taskManager;
 
     @BeforeEach
     void beforeEach() {
         mailboxManager = InMemoryIntegrationResources.defaultResources().getMailboxManager();
-        MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
+        taskManager = new MemoryTaskManager(new Hostname("foo"));
         InMemoryId.Factory mailboxIdFactory = new InMemoryId.Factory();
         searchIndex = mock(ListeningMessageSearchIndex.class);
         ReIndexerPerformer reIndexerPerformer = new ReIndexerPerformer(
@@ -108,6 +109,7 @@ class MailboxesRoutesTest {
     @AfterEach
     void tearDown() {
         webAdminServer.destroy();
+        taskManager.stop();
     }
 
     @Nested
