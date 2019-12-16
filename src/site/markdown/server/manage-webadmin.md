@@ -1108,12 +1108,9 @@ Response codes:
 curl -XPOST http://ip:port/cassandra/version/upgrade -d '3'
 ```
 
+Will schedule the run of the migrations you need to reach schema version 3.
 
-Will schedule the run of the migrations you need to reach schema version 3. The `taskId` will allow you to monitor and manage this process.
-
-```
-{"taskId":"3294a976-ce63-491e-bd52-1b6f465ed7a2"}
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -1138,19 +1135,9 @@ The scheduled task will have the following type `cassandra-migration` and the fo
 curl -XPOST http://ip:port/cassandra/version/upgrade/latest
 ```
 
-Will schedule the run of the migrations you need to reach the latest schema version. The `taskId` will allow you to monitor and manage this process.
+Will schedule the run of the migrations you need to reach the latest schema version.
 
-```
-{"taskId":"3294a976-ce63-491e-bd52-1b6f465ed7a2"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -1183,19 +1170,7 @@ Will scedule a task for :
  - Move it's messages into `id2` mailbox
  - Union the rights of both mailboxes
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2009,19 +1984,7 @@ Resource name `encodedPathOfTheRepository` should be the resource path of an exi
 curl -XDELETE http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails
 ```
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2069,20 +2032,7 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
 
-
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2132,20 +2082,7 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?a
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
 
-
-The response to that request will be the scheduled `taskId`:
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2251,6 +2188,7 @@ This request should have exactly one query parameter from the following list:
 
 The mails from the given mail queue matching the query parameter will be deleted.
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2279,6 +2217,7 @@ curl -XDELETE http://ip:port/mailQueues/mailQueueName/mails
 
 All mails from the given mail queue will be deleted.
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2308,6 +2247,8 @@ The payload should set the `delayed` field to false inorder to remove the delay.
 and it performs a flush.
 
 The mails delayed in the given mail queue will be flushed.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2585,19 +2526,7 @@ curl -XPOST http://ip:port/mailboxes?task=reIndex
 
 Will schedule a task for reIndexing all the mails stored on this James server.
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2632,19 +2561,7 @@ curl -XPOST http://ip:port/mailboxes?task=reIndex,user=bob%40domain.com
 
 Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2682,19 +2599,7 @@ Will schedule a task for reIndexing all the mails in one mailbox.
 
 Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2732,19 +2637,7 @@ curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69
 
 Will schedule a task for reIndexing all the mails that this task failed to reIndex.
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positioned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2774,19 +2667,7 @@ Will schedule a task for reIndexing a single email.
 
 Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2816,19 +2697,7 @@ Will schedule a task for reIndexing a single email in all the mailboxes containi
 
 Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
 
-The response to that request will be the scheduled `taskId` :
-
-```
-{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
-```
-
-Positionned headers:
-
- - Location header indicates the location of the resource associated with the scheduled task. Example:
-
-```
-Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
-```
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -2935,6 +2804,8 @@ curl -XPOST http://ip:port/events/deadLetter
 Will create a task that will attempt to redeliver all events stored in "Event Dead Letter".
 If successful, redelivered events will then be removed from "Dead Letter".
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
 Response codes:
 
  - 201: the taskId of the created task
@@ -2949,6 +2820,8 @@ curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.eve
 Will create a task that will attempt to redeliver all events of a particular group stored in "Event Dead Letter".
 If successful, redelivered events will then be removed from "Dead Letter".
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
 Response codes:
 
  - 201: the taskId of the created task
@@ -2962,6 +2835,8 @@ curl -XPOST http://ip:port/events/deadLetter/groups/org.apache.james.mailbox.eve
 
 Will create a task that will attempt to redeliver a single event of a particular group stored in "Event Dead Letter".
 If successful, redelivered event will then be removed from "Dead Letter".
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes:
 
@@ -3110,6 +2985,8 @@ Response code:
    - Json query object contains unsupported operator, fieldName
    - Json query object values violate parsing rules 
  - 404: User not found
+ 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 The scheduled task will have the following type `deleted-messages-restore` and the following `additionalInformation`:
 
@@ -3151,6 +3028,8 @@ Response code:
    - Json query object values violate parsing rules 
  - 404: User not found
 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
 The scheduled task will have the following type `deleted-messages-export` and the following `additionalInformation`:
 
 ```
@@ -3173,8 +3052,10 @@ You can overwrite 'retentionPeriod' configuration in 'deletedMessageVault' confi
 Purge all deleted messages older than the configured 'retentionPeriod'
 
 ```
-curl -XDEL http://ip:port/deletedMessages?scope=expired
+curl -XDELETE http://ip:port/deletedMessages?scope=expired
 ```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response code:
 
@@ -3190,8 +3071,10 @@ You may want to call this endpoint on a regular basis.
 Delete a Deleted Message with MessageId
 
 ```
-curl -XDEL http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
+curl -XDELETE http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
 ```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response code:
 
@@ -3201,14 +3084,14 @@ Response code:
    - messageId parameter is invalid
  - 404: User not found
  
- The scheduled task will have the following type `deleted-messages-delete` and the following `additionalInformation`:
+The scheduled task will have the following type `deleted-messages-delete` and the following `additionalInformation`:
  
- ```
+```
  {
    "user": "user@domain.ext",
    "deleteMessageId": "3294a976-ce63-491e-bd52-1b6f465ed7a2"
  }
- ```
+```
  
 while:
  - user: delete deleted messages from this user
@@ -3224,6 +3107,7 @@ Note that the `taskId` used in the following APIs is returned by other WebAdmin 
  - [Awaiting a task](#Awaiting_a_task)
  - [Cancelling a task](#Cancelling_a_task)
  - [Listing tasks](#Listing_tasks)
+ - [Endpoints returning a task](#Endpoints_returning_a_task)
 
 ### Getting a task details
 
@@ -3330,6 +3214,37 @@ Response codes:
 
  - 200: A list of corresponding tasks is returned
  - 400: Invalid status value
+ 
+### Endpoints returning a task
+
+Many endpoints do generate a task.
+
+Example:
+
+```
+curl -XPOST /endpoint?action=XXX
+```
+
+The response to these requests will be the scheduled `taskId` :
+
+```
+{"taskId":"5641376-02ed-47bd-bcc7-76ff6262d92a"}
+```
+
+Positionned headers:
+
+ - Location header indicates the location of the resource associated with the scheduled task. Example:
+
+```
+Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - Other response codes might be returned depending on the endpoint
+
+The additional information returned depends on the scheduled task type and is documented in the endpoint documentation.
 
 ## Cassandra extra operations
 
@@ -3357,6 +3272,8 @@ For example :
 ```
 curl -XPOST /cassandra/mappings?action=SolveInconsistencies
 ```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
 
 Response codes :
 
