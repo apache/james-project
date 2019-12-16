@@ -19,9 +19,16 @@
 
 package org.apache.james.jmap.api.projections;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 
+import javax.inject.Inject;
+
 import org.apache.james.jmap.api.model.Preview;
+import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.model.MessageAttachment;
+import org.apache.james.mailbox.model.MessageResult;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
@@ -64,6 +71,27 @@ public class MessageFastViewPrecomputedProperties {
 
     public static Builder.RequirePreview builder() {
         return preview -> hasAttachment -> new Builder.FinalStage(preview, hasAttachment);
+    }
+
+    public static class Factory {
+        private final Preview.Factory previewFactory;
+
+        @Inject
+        public Factory(Preview.Factory previewFactory) {
+            this.previewFactory = previewFactory;
+        }
+
+        public MessageFastViewPrecomputedProperties from(MessageResult messageResult) throws MailboxException, IOException {
+            return builder()
+                .preview(previewFactory.fromMessageResult(messageResult))
+                .hasAttachment(hasAttachment(messageResult.getLoadedAttachments()))
+                .build();
+        }
+
+        private boolean hasAttachment(List<MessageAttachment> attachments) {
+            return attachments.stream()
+                .anyMatch(attachment -> !attachment.isInlinedWithCid());
+        }
     }
 
     private final Preview preview;

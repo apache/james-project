@@ -129,7 +129,8 @@ class ComputeMessageFastViewProjectionListenerTest {
         SessionProviderImpl sessionProvider = new SessionProviderImpl(authenticator, FakeAuthorizator.defaultReject());
 
         listener = spy(new ComputeMessageFastViewProjectionListener(sessionProvider, messageIdManager,
-            messageFastViewProjection, messageFullViewFactory));
+            messageFastViewProjection,
+            new MessageFastViewPrecomputedProperties.Factory(new Preview.Factory(messageContentExtractor, htmlTextExtractor))));
 
         resources.getEventBus().register(listener);
 

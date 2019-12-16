@@ -24,11 +24,8 @@ import java.io.IOException;
 import javax.inject.Inject;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.jmap.api.model.Preview;
 import org.apache.james.jmap.api.projections.MessageFastViewPrecomputedProperties;
 import org.apache.james.jmap.api.projections.MessageFastViewProjection;
-import org.apache.james.jmap.draft.model.message.view.MessageFullView;
-import org.apache.james.jmap.draft.model.message.view.MessageFullViewFactory;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.SessionProvider;
@@ -38,7 +35,6 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
-import org.parboiled.common.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -57,16 +53,16 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
     private final MessageIdManager messageIdManager;
     private final MessageFastViewProjection messageFastViewProjection;
     private final SessionProvider sessionProvider;
-    private final MessageFullViewFactory messageFullViewFactory;
+    private final MessageFastViewPrecomputedProperties.Factory messageFastViewPrecomputedPropertiesFactory;
 
     @Inject
     public ComputeMessageFastViewProjectionListener(SessionProvider sessionProvider, MessageIdManager messageIdManager,
                                                     MessageFastViewProjection messageFastViewProjection,
-                                                    MessageFullViewFactory messageFullViewFactory) {
+                                                    MessageFastViewPrecomputedProperties.Factory messageFastViewPrecomputedPropertiesFactory) {
         this.sessionProvider = sessionProvider;
         this.messageIdManager = messageIdManager;
         this.messageFastViewProjection = messageFastViewProjection;
-        this.messageFullViewFactory = messageFullViewFactory;
+        this.messageFastViewPrecomputedPropertiesFactory = messageFastViewPrecomputedPropertiesFactory;
     }
 
     @Override
@@ -95,11 +91,6 @@ public class ComputeMessageFastViewProjectionListener implements MailboxListener
 
     @VisibleForTesting
     MessageFastViewPrecomputedProperties computeFastViewPrecomputedProperties(MessageResult messageResult) throws MailboxException, IOException {
-        MessageFullView message = messageFullViewFactory.fromMessageResults(ImmutableList.of(messageResult));
-
-        return MessageFastViewPrecomputedProperties.builder()
-            .preview(Preview.from(message.getPreview().getValue()))
-            .hasAttachment(message.isHasAttachment())
-            .build();
+        return messageFastViewPrecomputedPropertiesFactory.from(messageResult);
     }
 }
