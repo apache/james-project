@@ -47,12 +47,12 @@ class TaskAggregateTest {
     static final Instant timestamp = Instant.parse("2018-11-13T12:00:55Z");
 
     History buildHistory(Function<EventId, Event>... events) {
-        return History.of(
+        return History.of(CollectionConverters.asScala(
             Streams.zip(
                     Stream.iterate(EventId.first(), EventId::next),
                     Arrays.stream(events),
                     (id, event) -> event.apply(id))
-                .collect(Guavate.toImmutableList()));
+                .collect(Guavate.toImmutableList())).toList());
     }
 
     @Test
