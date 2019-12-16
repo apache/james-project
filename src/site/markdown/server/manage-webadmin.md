@@ -1174,7 +1174,7 @@ Will scedule a task for :
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Unable to parse the body.
 
 The scheduled task will have the following type `mailbox-merging` and the following `additionalInformation`:
@@ -1988,7 +1988,7 @@ curl -XDELETE http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
 The scheduled task will have the following type `clear-mail-repository` and the following `additionalInformation`:
@@ -2036,7 +2036,7 @@ Note that the `action` query parameter is compulsary and can only take value `re
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
 The scheduled task will have the following type `reprocessing-all` and the following `additionalInformation`:
@@ -2086,7 +2086,7 @@ Note that the `action` query parameter is compulsary and can only take value `re
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 404: Could not find that mail repository
 
 The scheduled task will have the following type `reprocessing-one` and the following `additionalInformation`:
@@ -2192,7 +2192,7 @@ The mails from the given mail queue matching the query parameter will be deleted
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Invalid request
  - 404: The mail queue does not exist
 
@@ -2221,7 +2221,7 @@ All mails from the given mail queue will be deleted.
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Invalid request
  - 404: The mail queue does not exist
 
@@ -2530,7 +2530,7 @@ Will schedule a task for reIndexing all the mails stored on this James server.
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
@@ -2565,7 +2565,7 @@ Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes 
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `user-reindexing` and the following `additionalInformation`:
@@ -2603,7 +2603,7 @@ Note that 'mailboxId' path parameter needs to be a (implementation dependent) va
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `mailbox-reindexing` and the following `additionalInformation`:
@@ -2641,7 +2641,7 @@ Will schedule a task for reIndexing all the mails that this task failed to reInd
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
@@ -2671,7 +2671,7 @@ Note that 'mailboxId' path parameter needs to be a (implementation dependent) va
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `message-reindexing` and the following `additionalInformation`:
@@ -2701,7 +2701,7 @@ Note that 'messageId' path parameter needs to be a (implementation dependent) va
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - 400: Error in the request. Details can be found in the reported error.
 
 The scheduled task will have the following type `messageId-reindexing` and the following `additionalInformation`:
@@ -3241,7 +3241,7 @@ Location: /tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
 
 Response codes:
 
- - 201: Success. Corresponding task id is returned.
+ - 201: Task generation succeeded. Corresponding task id is returned.
  - Other response codes might be returned depending on the endpoint
 
 The additional information returned depends on the scheduled task type and is documented in the endpoint documentation.
