@@ -18,32 +18,48 @@
     under the License.
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>org.apache.james</groupId>
-        <artifactId>james-server</artifactId>
+        <artifactId>webadmin-integration-test</artifactId>
         <version>3.5.0-SNAPSHOT</version>
-        <relativePath>../../pom.xml</relativePath>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <artifactId>webadmin-integration-test</artifactId>
-    <packaging>pom</packaging>
-    <name>Apache James :: Server :: Web Admin server integration tests</name>
+    <artifactId>memory-webadmin-integration-test</artifactId>
+    <packaging>jar</packaging>
 
-    <modules>
-        <module>distributed-webadmin-integration-test</module>
-        <module>memory-webadmin-integration-test</module>
-        <module>webadmin-integration-test-common</module>
-    </modules>
+    <name>Apache James :: Server :: Web Admin server integration tests :: Memory</name>
 
+    <dependencies>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-memory-guice</artifactId>
+            <scope>test</scope>
+            <type>test-jar</type>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-memory-guice</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${james.groupId}</groupId>
+            <artifactId>james-server-webadmin-integration-test-common</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <reuseForks>true</reuseForks>
+                    <forkCount>1C</forkCount>
+                </configuration>
             </plugin>
         </plugins>
     </build>
