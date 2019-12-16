@@ -23,7 +23,24 @@ Change list:
  - [ElasticSearch performance enhancements](#elasticsearch-performance-enhancements)
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
  - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
+ - [User mailboxes reIndexing endpoint change](#user-mailboxes-reindexing-endpoint-change)
  
+### User mailboxes reIndexing endpoint change
+ 
+Date 16/12/2019
+
+SHA-1 d68a64d96ba8312ecbd34761e82c9c2c32348290
+
+Concerned products: Guice products
+
+In an effort to have a resource oriented webadmin REST API we decided to relocate the endpoint for user mailbox reIndexing.
+
+`curl -XPOST /mailboxes?task=reIndex&user=bob@apache.org`
+
+Had been moved to:
+
+`curl -XPOST /users/bob@apache.org/mailboxes?task=reIndex`
+
 #### Health checks routes return code changes
 
 Date 10/12/2019
