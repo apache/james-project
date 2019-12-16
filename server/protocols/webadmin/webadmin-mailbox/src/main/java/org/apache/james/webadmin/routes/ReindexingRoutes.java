@@ -214,14 +214,6 @@ public class ReindexingRoutes implements Routes {
             value = "Compulsory. Only supported value is `reIndex`"),
         @ApiImplicitParam(
             required = true,
-            name = "user",
-            paramType = "path parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "benoit@apache.org",
-            value = "Compulsory. Needs to be a valid username"),
-        @ApiImplicitParam(
-            required = true,
             name = "mailboxId",
             paramType = "path parameter",
             dataType = "String",
