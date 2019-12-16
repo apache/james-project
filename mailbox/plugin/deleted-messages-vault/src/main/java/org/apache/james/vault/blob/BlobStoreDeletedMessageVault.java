@@ -154,7 +154,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
                 .thenReturn(storageInformation))
             .flatMap(storageInformation -> blobStore.delete(storageInformation.getBucketName(), storageInformation.getBlobId()))
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.elastic());
     }
 
     @Override

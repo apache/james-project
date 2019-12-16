@@ -51,6 +51,6 @@ public interface MessageFastViewProjection {
             .flatMap(messageId -> Mono.from(this.retrieve(messageId))
                 .map(preview -> Pair.of(messageId, preview)))
             .collectMap(Pair::getLeft, Pair::getRight)
-            .subscribeOn(Schedulers.boundedElastic());
+            .subscribeOn(Schedulers.elastic());
     }
 }

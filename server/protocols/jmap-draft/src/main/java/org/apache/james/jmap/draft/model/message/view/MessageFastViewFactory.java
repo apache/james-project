@@ -123,7 +123,7 @@ public class MessageFastViewFactory implements MessageViewFactory<MessageFastVie
         return Mono.from(fastViewProjection.retrieve(messageIds))
             .flatMapMany(fastProjections -> gatherMessageViews(messageIdSet, mailboxSession, fastProjections))
             .collectList()
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .block();
     }
 

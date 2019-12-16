@@ -236,7 +236,7 @@ public class CassandraMessageDAO {
 
     public Flux<MessageResult> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
         return Flux.fromStream(limit.applyOnStream(messageIds.stream().distinct()))
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .flatMap(id -> retrieveRow(id, fetchType)
                 .flatMap(resultSet -> message(resultSet, id, fetchType)), configuration.getMessageReadChunkSize());
     }

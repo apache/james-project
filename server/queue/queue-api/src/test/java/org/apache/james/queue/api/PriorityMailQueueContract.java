@@ -117,7 +117,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(1))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -137,7 +137,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(8))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -161,7 +161,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();
@@ -187,7 +187,7 @@ public interface PriorityMailQueueContract {
             .attribute(mailPriority(6))
             .build());
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem mailQueueItem1 = mailQueueItems.next();
         mailQueueItem1.done(true);
         MailQueue.MailQueueItem mailQueueItem2 = mailQueueItems.next();

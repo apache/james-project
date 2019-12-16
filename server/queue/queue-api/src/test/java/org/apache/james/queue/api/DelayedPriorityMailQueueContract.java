@@ -53,7 +53,7 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
 
         Thread.sleep(unit.toMillis(2 * delay));
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem item1 = mailQueueItems.next();
         item1.done(true);
         MailQueue.MailQueueItem item2 = mailQueueItems.next();
@@ -79,7 +79,7 @@ public interface DelayedPriorityMailQueueContract extends DelayedMailQueueContra
             delay,
             unit);
 
-        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).toIterable().iterator();
+        Iterator<MailQueue.MailQueueItem> mailQueueItems = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).toIterable().iterator();
         MailQueue.MailQueueItem item1 = mailQueueItems.next();
         item1.done(true);
         MailQueue.MailQueueItem item2 = mailQueueItems.next();

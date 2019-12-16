@@ -122,7 +122,7 @@ class GuiceLifecycleHeathCheckTest {
 
                 stopMono = Mono.fromRunnable(server::stop);
                 stopMono
-                    .publishOn(Schedulers.boundedElastic())
+                    .publishOn(Schedulers.elastic())
                     .subscribeWith(MonoProcessor.create());
 
                 when()

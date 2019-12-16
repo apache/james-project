@@ -47,7 +47,7 @@ public interface DelayedMailQueueContract {
             5L,
             TimeUnit.SECONDS);
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }
@@ -72,7 +72,7 @@ public interface DelayedMailQueueContract {
             365 * 10,
             TimeUnit.DAYS);
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }
@@ -84,7 +84,7 @@ public interface DelayedMailQueueContract {
             .build(),
             ChronoUnit.FOREVER.getDuration());
 
-        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.boundedElastic()).next();
+        Mono<MailQueue.MailQueueItem> next = Flux.from(getMailQueue().deQueue()).subscribeOn(Schedulers.elastic()).next();
         assertThatThrownBy(() -> next.block(Duration.ofSeconds(1)))
             .isInstanceOf(RuntimeException.class);
     }

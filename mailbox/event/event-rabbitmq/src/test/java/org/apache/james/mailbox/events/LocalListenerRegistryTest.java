@@ -247,7 +247,7 @@ class LocalListenerRegistryTest {
             LocalListenerRegistry.LocalRegistration registration5 = testee.addListener(KEY_1, listener5);
 
             Mono<List<MailboxListener>> listeners = testee.getLocalMailboxListeners(KEY_1)
-                .publishOn(Schedulers.boundedElastic())
+                .publishOn(Schedulers.elastic())
                 .delayElements(Duration.ofMillis(100))
                 .collectList();
 

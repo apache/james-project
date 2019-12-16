@@ -97,7 +97,7 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
     public Result run() {
         retentionOperation
             .doOnNext(deletedBuckets::add)
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .then()
             .block();
 

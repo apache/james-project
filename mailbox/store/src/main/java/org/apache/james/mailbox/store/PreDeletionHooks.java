@@ -50,7 +50,7 @@ public class PreDeletionHooks {
 
     public Mono<Void> runHooks(PreDeletionHook.DeleteOperation deleteOperation) {
         return Flux.fromIterable(hooks)
-            .publishOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.elastic())
             .flatMap(hook -> metricFactory.runPublishingTimerMetric(PRE_DELETION_HOOK_METRIC_NAME,
                 Mono.from(hook.notifyDelete(deleteOperation))), CONCURRENCY)
             .then();

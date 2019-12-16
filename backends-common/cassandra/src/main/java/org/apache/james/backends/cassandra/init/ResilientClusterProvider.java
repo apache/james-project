@@ -50,8 +50,8 @@ public class ResilientClusterProvider implements Provider<Cluster> {
         Duration forever = Duration.ofMillis(Long.MAX_VALUE);
         cluster = Mono.fromCallable(getClusterRetryCallable(configuration))
             .doOnError(e -> LOGGER.warn("Error establishing Cassandra connection. Next retry scheduled in {} ms", waitDelay, e))
-            .retryBackoff(configuration.getMaxRetry(), waitDelay, forever, Schedulers.boundedElastic())
-            .publishOn(Schedulers.boundedElastic())
+            .retryBackoff(configuration.getMaxRetry(), waitDelay, forever, Schedulers.elastic())
+            .publishOn(Schedulers.elastic())
             .block();
     }
 

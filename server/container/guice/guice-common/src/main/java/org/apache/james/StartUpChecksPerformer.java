@@ -84,7 +84,7 @@ public class StartUpChecksPerformer {
 
         public List<StartUpCheck.CheckResult> check() {
             return Flux.fromIterable(startUpChecks)
-                .publishOn(Schedulers.boundedElastic())
+                .publishOn(Schedulers.elastic())
                 .map(this::checkQuietly)
                 .collect(Guavate.toImmutableList())
                 .block();
