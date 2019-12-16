@@ -25,7 +25,6 @@ import org.apache.james.metrics.api.NoopMetricFactory;
 import org.apache.james.protocols.api.handler.CommandDispatcher;
 import org.apache.james.protocols.api.handler.CommandHandlerResultLogger;
 import org.apache.james.protocols.api.handler.ProtocolHandler;
-import org.apache.james.protocols.api.handler.WiringException;
 import org.apache.james.protocols.lmtp.core.DataLineMessageHookHandler;
 import org.apache.james.protocols.lmtp.core.LhloCmdHandler;
 import org.apache.james.protocols.lmtp.core.ReceivedDataLineFilter;
@@ -44,7 +43,6 @@ import org.apache.james.protocols.smtp.core.UnknownCmdHandler;
 import org.apache.james.protocols.smtp.core.VrfyCmdHandler;
 import org.apache.james.protocols.smtp.core.esmtp.MailSizeEsmtpExtension;
 import org.apache.james.protocols.smtp.core.esmtp.StartTlsCmdHandler;
-import org.apache.james.protocols.smtp.hook.Hook;
 
 /**
  * Special {@link SMTPProtocolHandlerChain} sub-class which should be used to build the chain for LMTP.
@@ -53,14 +51,6 @@ public class LMTPProtocolHandlerChain extends SMTPProtocolHandlerChain {
 
     public LMTPProtocolHandlerChain() {
         super(new NoopMetricFactory());
-    }
-
-    public LMTPProtocolHandlerChain(boolean addDefault) {
-        super(new NoopMetricFactory(), addDefault);
-    }
-
-    public LMTPProtocolHandlerChain(Hook... hooks) throws WiringException {
-        super(new NoopMetricFactory(), hooks);
     }
 
     @Override
