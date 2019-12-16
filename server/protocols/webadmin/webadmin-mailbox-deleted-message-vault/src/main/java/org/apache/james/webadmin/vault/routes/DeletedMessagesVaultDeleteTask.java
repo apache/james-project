@@ -21,6 +21,7 @@ package org.apache.james.webadmin.vault.routes;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.inject.Inject;
@@ -80,6 +81,23 @@ public class DeletedMessagesVaultDeleteTask implements Task {
         public Instant timestamp() {
             return timestamp;
         }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof AdditionalInformation) {
+                AdditionalInformation that = (AdditionalInformation) o;
+
+                return Objects.equals(this.username, that.username)
+                    && Objects.equals(this.deleteMessageId, that.deleteMessageId)
+                    && Objects.equals(this.timestamp, that.timestamp);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(username, deleteMessageId, timestamp);
+        }
     }
 
     private final DeletedMessageVault vault;
@@ -119,4 +137,19 @@ public class DeletedMessagesVaultDeleteTask implements Task {
         return Optional.of(new AdditionalInformation(username, messageId, Clock.systemUTC().instant()));
     }
 
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof DeletedMessagesVaultDeleteTask) {
+            DeletedMessagesVaultDeleteTask that = (DeletedMessagesVaultDeleteTask) o;
+
+            return Objects.equals(this.username, that.username)
+                && Objects.equals(this.messageId, that.messageId);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(username, messageId);
+    }
 }
