@@ -24,7 +24,6 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.james.core.Username;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
@@ -53,7 +52,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
-import spark.HaltException;
 import spark.Request;
 import spark.Route;
 import spark.Service;
@@ -61,11 +59,8 @@ import spark.Service;
 @Api(tags = "ReIndexing (mailboxes)")
 @Path("/mailboxes")
 @Produces("application/json")
-public class ReindexingRoutes implements Routes {
-
-
+public class MailboxesRoutes implements Routes {
     private static final String BASE_PATH = "/mailboxes";
-    private static final String USER_QUERY_PARAM = "user";
     private static final String RE_INDEX_FAILED_MESSAGES_QUERY_PARAM = "reIndexFailedMessagesOf";
     private static final String MAILBOX_PARAM = ":mailbox";
     private static final String UID_PARAM = ":uid";
@@ -81,7 +76,7 @@ public class ReindexingRoutes implements Routes {
     private final JsonTransformer jsonTransformer;
 
     @Inject
-    ReindexingRoutes(TaskManager taskManager, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    MailboxesRoutes(TaskManager taskManager, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
         this.taskManager = taskManager;
         this.previousReIndexingService = previousReIndexingService;
         this.mailboxIdFactory = mailboxIdFactory;
@@ -114,13 +109,6 @@ public class ReindexingRoutes implements Routes {
             example = "?task=reIndex",
             value = "Compulsory. Only supported value is `reIndex`"),
         @ApiImplicitParam(
-            name = "user",
-            paramType = "query parameter",
-            dataType = "String",
-            defaultValue = "none",
-            example = "?user=toto%40domain.tld",
-            value = "optional. If present, only mailboxes of that user will be reIndexed."),
-        @ApiImplicitParam(
             name = "reIndexFailedMessagesOf",
             paramType = "query parameter",
             dataType = "String",
@@ -142,14 +130,7 @@ public class ReindexingRoutes implements Routes {
     }
 
     private Task reIndexAll(Request request) throws MailboxException {
-        boolean userReIndexing = !Strings.isNullOrEmpty(request.queryParams(USER_QUERY_PARAM));
         boolean indexingCorrection = !Strings.isNullOrEmpty(request.queryParams(RE_INDEX_FAILED_MESSAGES_QUERY_PARAM));
-        if (userReIndexing && indexingCorrection) {
-            throw rejectInvalidQueryParameterCombination();
-        }
-        if (userReIndexing) {
-            return reIndexer.reIndex(extractUser(request));
-        }
         if (indexingCorrection) {
             IndexingDetailInformation indexingDetailInformation = retrieveIndexingExecutionDetails(request);
             return reIndexer.reIndex(indexingDetailInformation.failures());
@@ -190,14 +171,6 @@ public class ReindexingRoutes implements Routes {
                 .message("Invalid task id")
                 .haltError();
         }
-    }
-
-    private HaltException rejectInvalidQueryParameterCombination() {
-        return ErrorResponder.builder()
-            .statusCode(HttpStatus.BAD_REQUEST_400)
-            .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-            .message("Can not specify '" + USER_QUERY_PARAM + "' and '" + RE_INDEX_FAILED_MESSAGES_QUERY_PARAM + "' query parameters at the same time")
-            .haltError();
     }
 
     @POST
@@ -287,19 +260,6 @@ public class ReindexingRoutes implements Routes {
                     .haltError();
             }
         };
-    }
-
-    private Username extractUser(Request request) {
-        try {
-            return Username.of(request.queryParams(USER_QUERY_PARAM));
-        } catch (Exception e) {
-            throw ErrorResponder.builder()
-                .statusCode(HttpStatus.BAD_REQUEST_400)
-                .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("Error while parsing 'user'")
-                .cause(e)
-                .haltError();
-        }
     }
 
     private MailboxId extractMailboxId(Request request) {

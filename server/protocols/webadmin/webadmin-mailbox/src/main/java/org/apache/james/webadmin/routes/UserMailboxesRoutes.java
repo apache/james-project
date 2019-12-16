@@ -19,17 +19,26 @@
 
 package org.apache.james.webadmin.routes;
 
+import static org.apache.james.webadmin.routes.MailboxesRoutes.RE_INDEX;
+import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
+import org.apache.james.mailbox.indexer.ReIndexer;
+import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UserMailboxesService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
 import org.apache.james.webadmin.utils.JsonTransformer;
@@ -47,6 +56,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import spark.Request;
+import spark.Route;
 import spark.Service;
 
 @Api(tags = "User's Mailbox")
@@ -65,12 +75,18 @@ public class UserMailboxesRoutes implements Routes {
 
     private final UserMailboxesService userMailboxesService;
     private final JsonTransformer jsonTransformer;
+    private final TaskManager taskManager;
+    private final MailboxId.Factory mailboxIdFactory;
+    private final ReIndexer reIndexer;
     private Service service;
 
     @Inject
-    public UserMailboxesRoutes(UserMailboxesService userMailboxesService, JsonTransformer jsonTransformer) {
+    UserMailboxesRoutes(UserMailboxesService userMailboxesService, JsonTransformer jsonTransformer, TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer) {
         this.userMailboxesService = userMailboxesService;
         this.jsonTransformer = jsonTransformer;
+        this.taskManager = taskManager;
+        this.mailboxIdFactory = mailboxIdFactory;
+        this.reIndexer = reIndexer;
     }
 
     @Override
@@ -91,6 +107,8 @@ public class UserMailboxesRoutes implements Routes {
         defineDeleteUserMailbox();
 
         defineDeleteUserMailboxes();
+
+        service.post(USER_MAILBOXES_BASE, defineReIndexMailboxes(), jsonTransformer);
     }
 
     @GET
@@ -119,6 +137,31 @@ public class UserMailboxesRoutes implements Routes {
                     .haltError();
             }
         }, jsonTransformer);
+    }
+
+    @POST
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path"),
+        @ApiImplicitParam(
+            required = true,
+            name = "task",
+            paramType = "query parameter",
+            dataType = "String",
+            defaultValue = "none",
+            example = "?task=reIndex",
+            value = "Compulsory. Only supported value is `reIndex`")
+    })
+    @ApiOperation(value = "Perform an action on a user mailbox")
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.CREATED_201, message = "Task is created", response = TaskIdDto.class),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
+    })
+    public Route defineReIndexMailboxes() {
+        return TaskFromRequestRegistry.builder()
+            .parameterName(TASK_PARAMETER)
+            .register(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request)))
+            .buildAsRoute(taskManager);
     }
 
     @DELETE

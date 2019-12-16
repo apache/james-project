@@ -62,8 +62,8 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.MessageIdReIndexingModule;
-import org.apache.james.modules.server.ReIndexingModule;
+import org.apache.james.modules.server.MailboxesRoutesModule;
+import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.SieveRoutesModule;
 import org.apache.james.modules.server.SwaggerRoutesModule;
 import org.apache.james.modules.server.TaskManagerModule;
@@ -92,8 +92,8 @@ public class CassandraJamesServerMain {
         new WebAdminServerModule(),
         new DLPRoutesModule(),
         new SieveRoutesModule(),
-        new ReIndexingModule(),
-        new MessageIdReIndexingModule());
+        new MailboxesRoutesModule(),
+        new MessagesRoutesModule());
 
     public static final Module PROTOCOLS = Modules.combine(
         new CassandraJmapModule(),

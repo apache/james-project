@@ -31,6 +31,8 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [HealthCheck](#HealthCheck)
  - [Administrating domains](#Administrating_domains)
  - [Administrating users](#Administrating_users)
+ - [Administrating mailboxes](#Administrating_mailboxes)
+ - [Administrating messages](#Administrating_messages)
  - [Administrating user mailboxes](#Administrating_user_mailboxes)
  - [Administrating quotas by users](#Administrating_quotas_by_users)
  - [Administrating quotas by domains](#Administrating_quotas_by_domains)
@@ -48,7 +50,6 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
  - [Administrating Sieve quotas](#Administrating_Sieve_quotas)
- - [ReIndexing](#ReIndexing)
  - [Event Dead Letter](#Event_Dead_Letter)
  - [Deleted Messages Vault](#Deleted_Messages_Vault)
  - [Task management](#Task_management)
@@ -336,6 +337,183 @@ Response codes:
 
  - 200: The user name list was successfully retrieved
 
+## Administrating mailboxes
+
+### All mailboxes
+
+Several actions can be performed on the server mailboxes.
+
+Request pattern is:
+
+```
+curl -XPOST /mailboxes?action=XXX,...
+```
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The kind of task scheduled depends on the action parameter. See below for details.
+
+#### ReIndexing action
+
+Be also aware of the limits of this API:
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+The following actions can be performed:
+ - [ReIndexing all mails](#ReIndexing_all_mails)
+ - [Fixing previously failed ReIndexing](#Fixing_previously_failed_ReIndexing)
+
+##### ReIndexing all mails
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails stored on this James server.
+
+The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+##### Fixing previously failed ReIndexing
+
+Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
+
+```
+curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5
+```
+
+The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
+
+```
+{
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+### Single mailbox
+
+#### ReIndexing a mailbox mails
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in one mailbox.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `mailbox-reindexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
+
+#### ReIndexing a single mail
+
+```
+curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email.
+
+Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `message-reindexing` and the following `additionalInformation`:
+
+```
+{
+  "mailboxId":"{mailboxId}",
+  "uid":18
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+## Administrating Messages
+
+### ReIndexing a single mail by messageId
+
+```
+curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
+```
+
+Will schedule a task for reIndexing a single email in all the mailboxes containing it.
+
+Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `messageId-reindexing` and the following `additionalInformation`:
+
+```
+{
+  "messageId":"18"
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
 ## Administrating user mailboxes
 
  - [Creating a mailbox](#Creating_a_mailbox)
@@ -343,6 +521,7 @@ Response codes:
  - [Testing existence of a mailbox](#Testing_existence_of_a_mailbox)
  - [Listing user mailboxes](#Listing_user_mailboxes)
  - [Deleting_user_mailboxes](#Deleting_user_mailboxes)
+ - [ReIndexing a user mails](#ReIndexing_a_user_mails)
 
 ### Creating a mailbox
 
@@ -426,6 +605,42 @@ Response codes:
 
  - 204: The user do not have mailboxes anymore
  - 404: The user name does not exist
+
+### ReIndexing a user mails
+ 
+```
+curl -XPOST http://ip:port/users/usernameToBeUsed/mailboxes?task=reIndex
+```
+
+Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
+ 
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+ 
+Response codes:
+ 
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+
+The scheduled task will have the following type `user-reindexing` and the following `additionalInformation`:
+
+```
+{
+  "user":"bob@domain.com",
+  "successfullyReprocessedMailCount":18,
+  "failedReprocessedMailCount": 3,
+  "failures": {
+    "mbx1": [{"uid": 35}, {"uid": 45}],
+    "mbx2": [{"uid": 38}]
+  }
+}
+```
+
+Warning: During the re-indexing, the result of search operations might be altered.
+
+Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
+
+Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
+concurrent changes done during the reIndexing might be ignored.
 
 ## Administrating quotas by users
 
@@ -2499,220 +2714,6 @@ curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 
 Response codes:
  - 204: Operation succeeded
-
-
-## ReIndexing
-
- - [ReIndexing all mails](#ReIndexing_all_mails)
- - [ReIndexing a user mails](#ReIndexing_a_user_mails)
- - [ReIndexing a mailbox mails](#ReIndexing_a_mailbox_mails)
- - [ReIndexing a single mail](#ReIndexing_a_single_mail)
- - [ReIndexing a single mail by messageId](#ReIndexing_a_single_mail_by_messageId)
-
-Be also aware of the limits of these APIs:
-
-Warning: During the re-indexing, the result of search operations might be altered.
-
-Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
-
-Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
-concurrent changes done during the reIndexing might be ignored.
-
-### ReIndexing all mails
-
-```
-curl -XPOST http://ip:port/mailboxes?task=reIndex
-```
-
-Will schedule a task for reIndexing all the mails stored on this James server.
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `full-reindexing` and the following `additionalInformation`:
-
-```
-{
-  "successfullyReprocessedMailCount":18,
-  "failedReprocessedMailCount": 3,
-  "failures": {
-    "mbx1": [{"uid": 35}, {"uid": 45}],
-    "mbx2": [{"uid": 38}]
-  }
-}
-```
-
-Warning: During the re-indexing, the result of search operations might be altered.
-
-Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
-
-Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
-concurrent changes done during the reIndexing might be ignored.
-
-### ReIndexing a user mails
-
-```
-curl -XPOST http://ip:port/mailboxes?task=reIndex,user=bob%40domain.com
-```
-
-Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `user-reindexing` and the following `additionalInformation`:
-
-```
-{
-  "user":"bob@domain.com",
-  "successfullyReprocessedMailCount":18,
-  "failedReprocessedMailCount": 3,
-  "failures": {
-    "mbx1": [{"uid": 35}, {"uid": 45}],
-    "mbx2": [{"uid": 38}]
-  }
-}
-```
-
-Warning: During the re-indexing, the result of search operations might be altered.
-
-Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
-
-Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
-concurrent changes done during the reIndexing might be ignored.
-
-### ReIndexing a mailbox mails
-
-```
-curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
-```
-
-Will schedule a task for reIndexing all the mails in one mailbox.
-
-Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `mailbox-reindexing` and the following `additionalInformation`:
-
-```
-{
-  "mailboxId":"{mailboxId}",
-  "successfullyReprocessedMailCount":18,
-  "failedReprocessedMailCount": 3,
-  "failures": {
-    "mbx1": [{"uid": 35}, {"uid": 45}],
-    "mbx2": [{"uid": 38}]
-  }
-}
-```
-
-Warning: During the re-indexing, the result of search operations might be altered.
-
-Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
-
-Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
-concurrent changes done during the reIndexing might be ignored.
-
-### Fixing previously failed ReIndexing
-
-Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
-
-```
-curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5
-```
-
-Will schedule a task for reIndexing all the mails that this task failed to reIndex.
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
-
-```
-{
-  "successfullyReprocessedMailCount":18,
-  "failedReprocessedMailCount": 3,
-  "failures": {
-    "mbx1": [{"uid": 35}, {"uid": 45}],
-    "mbx2": [{"uid": 38}]
-  }
-}
-```
-
-### ReIndexing a single mail
-
-```
-curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
-```
-
-Will schedule a task for reIndexing a single email.
-
-Note that 'mailboxId' path parameter needs to be a (implementation dependent) valid mailboxId.
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `message-reindexing` and the following `additionalInformation`:
-
-```
-{
-  "mailboxId":"{mailboxId}",
-  "uid":18
-}
-```
-
-Warning: During the re-indexing, the result of search operations might be altered.
-
-Warning: Canceling this task should be considered unsafe as it will leave the currently reIndexed mailbox as partially indexed.
-
-### ReIndexing a single mail by messageId
-
-```
-curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
-```
-
-Will schedule a task for reIndexing a single email in all the mailboxes containing it.
-
-Note that 'messageId' path parameter needs to be a (implementation dependent) valid messageId.
-
-[More details about endpoints returning a task](#Endpoints_returning_a_task).
-
-Response codes:
-
- - 201: Task generation succeeded. Corresponding task id is returned.
- - 400: Error in the request. Details can be found in the reported error.
-
-The scheduled task will have the following type `messageId-reindexing` and the following `additionalInformation`:
-
-```
-{
-  "messageId":"18"
-}
-```
-
-Warning: During the re-indexing, the result of search operations might be altered.
 
 ## Event Dead Letter
 

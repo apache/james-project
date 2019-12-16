@@ -311,9 +311,8 @@ public class WebAdminServerTaskSerializationIntegrationTest {
     @Test
     public void userReindexingShouldComplete() {
         String taskId = with()
-                .queryParam("user", USERNAME)
                 .queryParam("task", "reIndex")
-            .post("/mailboxes")
+            .post("users/" + USERNAME + "/mailboxes")
                 .jsonPath()
                 .get("taskId");
 

@@ -20,15 +20,15 @@
 package org.apache.james.modules.server;
 
 import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.routes.MessageIdReindexingRoutes;
+import org.apache.james.webadmin.routes.MessagesRoutes;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 
-public class MessageIdReIndexingModule extends AbstractModule {
+public class MessagesRoutesModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(MessageIdReindexingRoutes.class);
+        routesMultibinder.addBinding().to(MessagesRoutes.class);
     }
 }
