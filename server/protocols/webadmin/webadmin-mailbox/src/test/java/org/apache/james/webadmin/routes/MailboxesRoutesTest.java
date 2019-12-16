@@ -51,6 +51,7 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
@@ -64,12 +65,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 
 class MailboxesRoutesTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
+    private static final ImmutableSet<TaskFromRequestRegistry.TaskRegistration> NO_ADDITIONAL_REGISTRATION = ImmutableSet.of();
 
     private WebAdminServer webAdminServer;
     private ListeningMessageSearchIndex searchIndex;
@@ -99,7 +102,8 @@ class MailboxesRoutesTest {
                     new PreviousReIndexingService(taskManager),
                     mailboxIdFactory,
                     reIndexer,
-                    jsonTransformer))
+                    jsonTransformer,
+                    NO_ADDITIONAL_REGISTRATION))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();

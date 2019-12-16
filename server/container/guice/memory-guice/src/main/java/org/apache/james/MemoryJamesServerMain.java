@@ -42,6 +42,7 @@ import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
 import org.apache.james.modules.server.JMXServerModule;
+import org.apache.james.modules.server.JmapTasksModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
@@ -68,12 +69,13 @@ public class MemoryJamesServerMain {
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new DeletedMessageVaultRoutesModule(),
+        new DLPRoutesModule(),
+        new JmapTasksModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
-        new SwaggerRoutesModule(),
-        new DLPRoutesModule(),
-        new SieveRoutesModule());
+        new SieveRoutesModule(),
+        new SwaggerRoutesModule());
 
 
     public static final JwtConfiguration NO_JWT_CONFIGURATION = new JwtConfiguration(Optional.empty());

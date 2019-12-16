@@ -19,11 +19,14 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import javax.inject.Inject;
+
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
 public class RecomputeAllFastViewProjectionItemsRequestToTask extends TaskFromRequestRegistry.TaskRegistration {
-    public RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
+    @Inject
+    RecomputeAllFastViewProjectionItemsRequestToTask(MessageFastViewProjectionCorrector corrector) {
         super(Constants.TASK_REGISTRATION_KEY,
-            request -> new RecomputeAllPreviewsTask(corrector));
+            request -> new RecomputeAllFastViewProjectionItemsTask(corrector));
     }
 }

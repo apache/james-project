@@ -26,9 +26,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class RecomputeAllPreviewsTaskSerializationTest {
+class RecomputeAllFastViewProjectionItemsTaskSerializationTest {
     MessageFastViewProjectionCorrector corrector;
 
     @BeforeEach
@@ -38,8 +36,8 @@ class RecomputeAllPreviewsTaskSerializationTest {
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeAllPreviewsTask.module(corrector))
-            .bean(new RecomputeAllPreviewsTask(corrector))
+        JsonSerializationVerifier.dtoModule(RecomputeAllFastViewProjectionItemsTask.module(corrector))
+            .bean(new RecomputeAllFastViewProjectionItemsTask(corrector))
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.task.json"))
             .verify();
     }

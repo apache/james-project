@@ -29,10 +29,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.annotations.VisibleForTesting;
 
 public class RecomputeAllPreviewsTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<RecomputeAllPreviewsTask.AdditionalInformation, RecomputeAllPreviewsTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(RecomputeAllPreviewsTask.AdditionalInformation.class)
+    public static final AdditionalInformationDTOModule<RecomputeAllFastViewProjectionItemsTask.AdditionalInformation, RecomputeAllPreviewsTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+        DTOModule.forDomainObject(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation.class)
             .convertToDTO(RecomputeAllPreviewsTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeAllPreviewsTask.AdditionalInformation(
+            .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
                 dto.getProcessedUserCount(),
                 dto.getProcessedMessageCount(),
                 dto.getFailedUserCount(),
@@ -45,7 +45,7 @@ public class RecomputeAllPreviewsTaskAdditionalInformationDTO implements Additio
                 details.getProcessedMessageCount(),
                 details.getFailedUserCount(),
                 details.getFailedMessageCount()))
-            .typeName(RecomputeAllPreviewsTask.TASK_TYPE.asString())
+            .typeName(RecomputeAllFastViewProjectionItemsTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String type;

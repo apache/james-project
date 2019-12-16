@@ -21,7 +21,6 @@ package org.apache.james.webadmin.data.jmap;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.james.json.DTOModule;
@@ -35,8 +34,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import reactor.core.scheduler.Schedulers;
 
-public class RecomputeAllPreviewsTask implements Task {
-    static final TaskType TASK_TYPE = TaskType.of("RecomputeAllPreviewsTask");
+public class RecomputeAllFastViewProjectionItemsTask implements Task {
+    static final TaskType TASK_TYPE = TaskType.of("RecomputeAllFastViewProjectionItemsTask");
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
         private static AdditionalInformation from(MessageFastViewProjectionCorrector.Progress progress) {
@@ -97,11 +96,11 @@ public class RecomputeAllPreviewsTask implements Task {
         }
     }
 
-    public static TaskDTOModule<RecomputeAllPreviewsTask, RecomputeAllPreviousTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
+    public static TaskDTOModule<RecomputeAllFastViewProjectionItemsTask, RecomputeAllPreviousTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
         return DTOModule
-            .forDomainObject(RecomputeAllPreviewsTask.class)
+            .forDomainObject(RecomputeAllFastViewProjectionItemsTask.class)
             .convertToDTO(RecomputeAllPreviousTaskDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeAllPreviewsTask(corrector))
+            .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask(corrector))
             .toDTOConverter((task, type) -> new RecomputeAllPreviousTaskDTO(type))
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
@@ -110,7 +109,7 @@ public class RecomputeAllPreviewsTask implements Task {
     private final MessageFastViewProjectionCorrector corrector;
     private final MessageFastViewProjectionCorrector.Progress progress;
 
-    RecomputeAllPreviewsTask(MessageFastViewProjectionCorrector corrector) {
+    RecomputeAllFastViewProjectionItemsTask(MessageFastViewProjectionCorrector corrector) {
         this.corrector = corrector;
         this.progress = new MessageFastViewProjectionCorrector.Progress();
     }

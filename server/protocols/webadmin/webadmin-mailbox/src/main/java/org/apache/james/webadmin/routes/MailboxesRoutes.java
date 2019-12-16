@@ -19,7 +19,10 @@
 
 package org.apache.james.webadmin.routes;
 
+import java.util.Set;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -38,6 +41,7 @@ import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
 import org.apache.james.webadmin.tasks.TaskFromRequest;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 import org.apache.james.webadmin.utils.ErrorResponder;
@@ -68,20 +72,25 @@ public class MailboxesRoutes implements Routes {
     private static final String MESSAGE_PATH = MAILBOX_PATH + "/mails/" + UID_PARAM;
     static final TaskRegistrationKey RE_INDEX = TaskRegistrationKey.of("reIndex");
     static final String TASK_PARAMETER = "task";
+    public static final String ALL_MAILBOXES_TASKS = "allMailboxesTasks";
 
     private final TaskManager taskManager;
     private final PreviousReIndexingService previousReIndexingService;
     private final MailboxId.Factory mailboxIdFactory;
     private final ReIndexer reIndexer;
     private final JsonTransformer jsonTransformer;
+    private final Set<TaskRegistration> allMailboxesTaskRegistration;
 
     @Inject
-    MailboxesRoutes(TaskManager taskManager, PreviousReIndexingService previousReIndexingService, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer) {
+    MailboxesRoutes(TaskManager taskManager, PreviousReIndexingService previousReIndexingService,
+                    MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer, JsonTransformer jsonTransformer,
+                    @Named(ALL_MAILBOXES_TASKS) Set<TaskRegistration> allMailboxesTaskRegistration) {
         this.taskManager = taskManager;
         this.previousReIndexingService = previousReIndexingService;
         this.mailboxIdFactory = mailboxIdFactory;
         this.reIndexer = reIndexer;
         this.jsonTransformer = jsonTransformer;
+        this.allMailboxesTaskRegistration = allMailboxesTaskRegistration;
     }
 
     @Override
@@ -125,6 +134,7 @@ public class MailboxesRoutes implements Routes {
     private Route reIndexAll() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
+            .registrations(allMailboxesTaskRegistration)
             .register(RE_INDEX, wrap(this::reIndexAll))
             .buildAsRoute(taskManager);
     }

@@ -17,22 +17,23 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.webadmin.data.jmap;
 
-import org.apache.james.webadmin.Routes;
-import org.apache.james.webadmin.routes.MailboxesRoutes;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
+import java.time.Instant;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.multibindings.Multibinder;
-import com.google.inject.name.Names;
+import org.apache.james.JsonSerializationVerifier;
+import org.apache.james.util.ClassLoaderUtils;
+import org.junit.jupiter.api.Test;
 
-public class MailboxesRoutesModule extends AbstractModule {
-    @Override
-    protected void configure() {
-        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(MailboxesRoutes.class);
+class RecomputeAllFastViewProjectionItemsTaskAdditionalInformationDTOTest {
+    private static final Instant INSTANT = Instant.parse("2007-12-03T10:15:30.00Z");
+    private static final RecomputeAllFastViewProjectionItemsTask.AdditionalInformation DOMAIN_OBJECT = new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(1, 2, 3, 4, INSTANT);
 
-        Multibinder.newSetBinder(binder(), TaskRegistration.class, Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS));
+    @Test
+    void shouldMatchJsonSerializationContract() throws Exception {
+        JsonSerializationVerifier.dtoModule(RecomputeAllPreviewsTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(DOMAIN_OBJECT)
+            .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.additionalInformation.json"))
+            .verify();
     }
 }
