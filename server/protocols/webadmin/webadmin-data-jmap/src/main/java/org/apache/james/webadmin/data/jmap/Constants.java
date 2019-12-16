@@ -19,28 +19,8 @@
 
 package org.apache.james.webadmin.data.jmap;
 
-import static org.mockito.Mockito.mock;
+import org.apache.james.webadmin.tasks.TaskRegistrationKey;
 
-import org.apache.james.JsonSerializationVerifier;
-import org.apache.james.util.ClassLoaderUtils;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import nl.jqno.equalsverifier.EqualsVerifier;
-
-class RecomputeAllPreviewsTaskSerializationTest {
-    MessageFastViewProjectionCorrector corrector;
-
-    @BeforeEach
-    void setUp() {
-        corrector = mock(MessageFastViewProjectionCorrector.class);
-    }
-
-    @Test
-    void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeAllPreviewsTask.module(corrector))
-            .bean(new RecomputeAllPreviewsTask(corrector))
-            .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.task.json"))
-            .verify();
-    }
+public interface Constants {
+    TaskRegistrationKey TASK_REGISTRATION_KEY = TaskRegistrationKey.of("recomputeFastViewProjectionItems");
 }

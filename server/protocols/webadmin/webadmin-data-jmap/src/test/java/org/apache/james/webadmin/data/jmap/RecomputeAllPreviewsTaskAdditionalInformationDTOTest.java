@@ -38,10 +38,4 @@ class RecomputeAllPreviewsTaskAdditionalInformationDTOTest {
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeAll.additionalInformation.json"))
             .verify();
     }
-
-    @Test
-    void shouldMatchBeanContract() {
-        EqualsVerifier.forClass(RecomputeAllPreviewsTask.AdditionalInformation.class)
-            .verify();
-    }
 }

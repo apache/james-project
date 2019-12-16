@@ -19,6 +19,7 @@
 
 package org.apache.james.webadmin.data.jmap;
 
+import java.io.IOException;
 import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Inject;
@@ -32,7 +33,10 @@ import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.FetchGroup;
+import org.apache.james.mailbox.model.MailboxMetaData;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
+import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -111,8 +115,8 @@ public class MessageFastViewProjectionCorrector {
     private Mono<Void> correctUsersProjectionItems(Progress progress, Username username) {
         try {
             MailboxSession session = mailboxManager.createSystemSession(username);
-            return Flux.fromIterable(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session))
-                .concatMap(mailboxMetadata -> Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session)))
+            return listUsersMailboxes(session)
+                .concatMap(mailboxMetadata -> retrieveMailbox(session, mailboxMetadata))
                 .concatMap(Throwing.function(messageManager -> correctMailboxProjectionItems(progress, messageManager, session)))
                 .doOnComplete(progress.processedUserCount::incrementAndGet)
                 .onErrorContinue((error, o) -> {
@@ -128,15 +132,47 @@ public class MessageFastViewProjectionCorrector {
     }
 
     private Mono<Void> correctMailboxProjectionItems(Progress progress, MessageManager messageManager, MailboxSession session) throws MailboxException {
-        return Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session))
-            .concatMap(Throwing.function(messageResult -> Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.BODY_CONTENT, session))))
-            .map(Throwing.function(messageResult -> Pair.of(messageResult.getMessageId(), projectionItemFactory.from(messageResult))))
-            .concatMap(pair -> Mono.from(messageFastViewProjection.store(pair.getKey(), pair.getValue()))
+        return listAllMailboxMessages(messageManager, session)
+            .concatMap(messageResult -> retrieveContent(messageManager, session, messageResult))
+            .map(this::computeProjectionEntry)
+            .concatMap(pair -> storeProjectionEntry(pair)
                 .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet()))
             .onErrorContinue((error, triggeringValue) -> {
                 LOGGER.error("JMAP preview re-computation aborted for {} - {}", session.getUser(), triggeringValue, error);
                 progress.failedMessageCount.incrementAndGet();
             })
             .then();
+    }
+
+    private Flux<MailboxMetaData> listUsersMailboxes(MailboxSession session) throws MailboxException {
+        return Flux.fromIterable(mailboxManager.search(MailboxQuery.privateMailboxesBuilder(session).build(), session));
+    }
+
+    private Mono<MessageManager> retrieveMailbox(MailboxSession session, MailboxMetaData mailboxMetadata) {
+        return Mono.fromCallable(() -> mailboxManager.getMailbox(mailboxMetadata.getId(), session));
+    }
+
+    private Flux<MessageResult> listAllMailboxMessages(MessageManager messageManager, MailboxSession session) throws MailboxException {
+        return Iterators.toFlux(messageManager.getMessages(MessageRange.all(), FetchGroup.MINIMAL, session));
+    }
+
+    private Flux<MessageResult> retrieveContent(MessageManager messageManager, MailboxSession session, MessageResult messageResult) {
+        try {
+            return Iterators.toFlux(messageManager.getMessages(MessageRange.one(messageResult.getUid()), FetchGroup.FULL_CONTENT, session));
+        } catch (MailboxException e) {
+            return Flux.error(e);
+        }
+    }
+
+    private Pair<MessageId, MessageFastViewPrecomputedProperties> computeProjectionEntry(MessageResult messageResult) {
+        try {
+            return Pair.of(messageResult.getMessageId(), projectionItemFactory.from(messageResult));
+        } catch (MailboxException | IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private Mono<Void> storeProjectionEntry(Pair<MessageId, MessageFastViewPrecomputedProperties> pair) {
+        return Mono.from(messageFastViewProjection.store(pair.getKey(), pair.getValue()));
     }
 }

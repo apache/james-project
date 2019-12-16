@@ -82,25 +82,6 @@ public class RecomputeAllPreviewsTask implements Task {
         public Instant timestamp() {
             return timestamp;
         }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof AdditionalInformation) {
-                AdditionalInformation that = (AdditionalInformation) o;
-
-                return Objects.equals(this.processedUserCount, that.processedUserCount)
-                    && Objects.equals(this.processedMessageCount, that.processedMessageCount)
-                    && Objects.equals(this.failedUserCount, that.failedUserCount)
-                    && Objects.equals(this.failedMessageCount, that.failedMessageCount)
-                    && Objects.equals(this.timestamp, that.timestamp);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(processedUserCount, processedMessageCount, failedUserCount, failedMessageCount, timestamp);
-        }
     }
 
     public static class RecomputeAllPreviousTaskDTO implements TaskDTO {
@@ -154,15 +135,5 @@ public class RecomputeAllPreviewsTask implements Task {
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
         return Optional.of(AdditionalInformation.from(progress));
-    }
-
-    @Override
-    public final boolean equals(Object o) {
-        return o instanceof RecomputeAllPreviewsTask;
-    }
-
-    @Override
-    public final int hashCode() {
-        return Objects.hash(RecomputeAllPreviewsTask.class);
     }
 }
