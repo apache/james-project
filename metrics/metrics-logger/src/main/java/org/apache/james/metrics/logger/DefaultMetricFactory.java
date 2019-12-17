@@ -30,7 +30,7 @@ public class DefaultMetricFactory implements MetricFactory {
 
     @Override
     public Metric generate(String name) {
-        return new DefaultMetric();
+        return new DefaultMetric(name);
     }
 
     @Override

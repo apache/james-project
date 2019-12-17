@@ -47,20 +47,24 @@ public interface MetricContract {
 
     @Test
     default void decrementShouldDecreaseCounter() {
+        testee().add(2);
+
         testee().decrement();
 
         assertThat(testee().getCount())
-            .isEqualTo(-1);
+            .isEqualTo(1);
     }
 
     @Test
     default void decrementShouldDecreaseCounterAfterMultipleCalls() {
+        testee().add(6);
+
         testee().decrement();
         testee().decrement();
         testee().decrement();
 
         assertThat(testee().getCount())
-            .isEqualTo(-3);
+            .isEqualTo(3);
     }
 
     @Test
@@ -73,10 +77,11 @@ public interface MetricContract {
 
     @Test
     default void addShouldDecreaseCounterWhenNegativeNumber() {
+        testee().add(10);
         testee().add(-9);
 
         assertThat(testee().getCount())
-            .isEqualTo(-9);
+            .isEqualTo(1);
     }
 
     @Test
@@ -90,10 +95,11 @@ public interface MetricContract {
 
     @Test
     default void removeShouldDecreaseCounter() {
-        testee().remove(10);
+        testee().add(10);
+        testee().remove(9);
 
         assertThat(testee().getCount())
-            .isEqualTo(-10);
+            .isEqualTo(1);
     }
 
     @Test
@@ -106,16 +112,23 @@ public interface MetricContract {
 
     @Test
     default void removeShouldKeepCounterBeTheSameWhenZero() {
-        testee().remove(888);
+        testee().add(888);
         testee().remove(0);
 
         assertThat(testee().getCount())
-            .isEqualTo(-888);
+            .isEqualTo(888);
     }
 
     @Test
     default void getCountShouldReturnZeroWhenNoUpdate() {
         assertThat(testee().getCount())
             .isEqualTo(0);
+    }
+
+    @Test
+    default void getCountShouldReturnValueWhenCounterIsPositive() {
+        testee().add(19);
+        assertThat(testee().getCount())
+            .isEqualTo(19);
     }
 }

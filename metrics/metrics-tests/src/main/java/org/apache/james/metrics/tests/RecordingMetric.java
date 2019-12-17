@@ -41,7 +41,7 @@ public class RecordingMetric implements Metric {
 
     @Override
     public void decrement() {
-        value.decrementAndGet();
+        value.updateAndGet(currentValue -> subtractFrom(currentValue, 1));
     }
 
     @Override
@@ -51,11 +51,20 @@ public class RecordingMetric implements Metric {
 
     @Override
     public void remove(int i) {
-        value.addAndGet(-1 * i);
+        value.updateAndGet(currentValue -> subtractFrom(currentValue, i));
     }
 
     @Override
     public long getCount() {
-        return value.get();
+        return value.longValue();
+    }
+
+    private int subtractFrom(int currentValue, int minus) {
+        int result = currentValue - minus;
+        if (result < 0) {
+            throw new UnsupportedOperationException("metric counter is supposed to be a non-negative number," +
+            " thus this operation cannot be applied");
+        }
+        return result;
     }
 }

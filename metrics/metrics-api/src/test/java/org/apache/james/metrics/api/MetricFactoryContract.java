@@ -47,12 +47,12 @@ public interface MetricFactoryContract {
         Metric metric1 = testee().generate(NAME_1);
         Metric metric2 = testee().generate(NAME_2);
 
-        metric1.increment();
-        metric2.decrement();
+        metric1.add(1);
+        metric2.add(2);
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(metric1.getCount()).isEqualTo(1);
-            softly.assertThat(metric2.getCount()).isEqualTo(-1);
+            softly.assertThat(metric2.getCount()).isEqualTo(2);
         });
     }
 }

@@ -45,7 +45,7 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
 
     @Override
     public Metric generate(String name) {
-        return new DropWizardMetric(metricRegistry.counter(name));
+        return new DropWizardMetric(metricRegistry.counter(name), name);
     }
 
     @Override

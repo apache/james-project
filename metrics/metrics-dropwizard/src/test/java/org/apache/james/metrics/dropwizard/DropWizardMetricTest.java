@@ -19,9 +19,12 @@
 
 package org.apache.james.metrics.dropwizard;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricContract;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import com.codahale.metrics.MetricRegistry;
 
@@ -34,11 +37,19 @@ class DropWizardMetricTest implements MetricContract {
     @BeforeEach
     void setUp() {
         MetricRegistry registry = new MetricRegistry();
-        testee = new DropWizardMetric(registry.counter(METRIC_NAME));
+        testee = new DropWizardMetric(registry.counter(METRIC_NAME), METRIC_NAME);
     }
 
     @Override
     public Metric testee() {
         return testee;
+    }
+    
+    @Test
+    void getCountShouldReturnZeroWhenCounterIsNegative() {
+        testee().remove(9);
+
+        assertThat(testee().getCount())
+            .isEqualTo(0);
     }
 }
