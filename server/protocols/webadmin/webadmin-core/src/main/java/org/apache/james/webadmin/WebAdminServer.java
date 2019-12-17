@@ -91,6 +91,9 @@ public class WebAdminServer implements Startable {
     }
 
     public WebAdminServer start() {
+        service.initExceptionHandler(e -> {
+            throw new RuntimeException(e);
+        });
         if (configuration.isEnabled()) {
             service.port(configuration.getPort().get().getValue());
             configureExceptionHanding();
