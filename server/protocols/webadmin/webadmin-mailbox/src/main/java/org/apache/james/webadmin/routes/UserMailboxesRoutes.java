@@ -22,7 +22,10 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.RE_INDEX;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
+import java.util.Set;
+
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,12 +35,12 @@ import javax.ws.rs.Produces;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.task.TaskManager;
 import org.apache.james.webadmin.Constants;
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.service.UserMailboxesService;
 import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry.TaskRegistration;
 import org.apache.james.webadmin.tasks.TaskIdDto;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.ErrorResponder.ErrorType;
@@ -65,6 +68,18 @@ import spark.Service;
 public class UserMailboxesRoutes implements Routes {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UserMailboxesRoutes.class);
+    public static final String USER_MAILBOXES_OPERATIONS_INJECTION_KEY = "userMailboxesOperations";
+
+    public static class UserReIndexingTaskRegistration extends TaskRegistration {
+        @Inject
+        public UserReIndexingTaskRegistration(ReIndexer reIndexer) {
+            super(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request)));
+        }
+    }
+
+    private static Username getUsernameParam(Request request) {
+        return Username.of(request.params(USER_NAME));
+    }
 
     public static final String MAILBOX_NAME = ":mailboxName";
     public static final String MAILBOXES = "mailboxes";
@@ -76,17 +91,18 @@ public class UserMailboxesRoutes implements Routes {
     private final UserMailboxesService userMailboxesService;
     private final JsonTransformer jsonTransformer;
     private final TaskManager taskManager;
-    private final MailboxId.Factory mailboxIdFactory;
-    private final ReIndexer reIndexer;
+    private final Set<TaskRegistration> usersMailboxesTaskRegistration;
     private Service service;
 
     @Inject
-    UserMailboxesRoutes(UserMailboxesService userMailboxesService, JsonTransformer jsonTransformer, TaskManager taskManager, MailboxId.Factory mailboxIdFactory, ReIndexer reIndexer) {
+    UserMailboxesRoutes(UserMailboxesService userMailboxesService,
+                        JsonTransformer jsonTransformer,
+                        TaskManager taskManager,
+                        @Named(USER_MAILBOXES_OPERATIONS_INJECTION_KEY) Set<TaskRegistration> usersMailboxesTaskRegistration) {
         this.userMailboxesService = userMailboxesService;
         this.jsonTransformer = jsonTransformer;
         this.taskManager = taskManager;
-        this.mailboxIdFactory = mailboxIdFactory;
-        this.reIndexer = reIndexer;
+        this.usersMailboxesTaskRegistration = usersMailboxesTaskRegistration;
     }
 
     @Override
@@ -160,7 +176,7 @@ public class UserMailboxesRoutes implements Routes {
     public Route defineReIndexMailboxes() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
-            .register(RE_INDEX, request -> reIndexer.reIndex(getUsernameParam(request)))
+            .registrations(usersMailboxesTaskRegistration)
             .buildAsRoute(taskManager);
     }
 
@@ -322,9 +338,5 @@ public class UserMailboxesRoutes implements Routes {
                     .haltError();
             }
         });
-    }
-
-    private Username getUsernameParam(Request request) {
-        return Username.of(request.params(USER_NAME));
     }
 }

@@ -19,7 +19,7 @@
 
 package org.apache.james.webadmin.tasks;
 
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -34,6 +34,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 
 import spark.Request;
 import spark.Route;
@@ -56,7 +57,11 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         }
 
         public Builder registrations(TaskRegistration... taskRegistrations) {
-            this.tasks.putAll(Arrays.stream(taskRegistrations)
+            return this.registrations(ImmutableSet.copyOf(taskRegistrations));
+        }
+
+        public Builder registrations(Collection<TaskRegistration> taskRegistrations) {
+            this.tasks.putAll(taskRegistrations.stream()
                 .collect(Guavate.toImmutableMap(
                     TaskRegistration::registrationKey,
                     Function.identity())));

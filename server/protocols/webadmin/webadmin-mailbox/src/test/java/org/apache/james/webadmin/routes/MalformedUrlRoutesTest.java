@@ -35,8 +35,6 @@ import java.nio.charset.StandardCharsets;
 
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.indexer.ReIndexer;
-import org.apache.james.mailbox.inmemory.InMemoryId;
 import org.apache.james.mailbox.inmemory.manager.InMemoryIntegrationResources;
 import org.apache.james.task.Hostname;
 import org.apache.james.task.MemoryTaskManager;
@@ -44,15 +42,19 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.UserMailboxesService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.collect.ImmutableSet;
+
 class MalformedUrlRoutesTest {
     private static final Username USERNAME = Username.of("username");
     private static final String MALFORMED_MAILBOX_NAME = "inbox%work";
+    private static final ImmutableSet<TaskFromRequestRegistry.TaskRegistration> NO_TASKS = ImmutableSet.of();
 
     private WebAdminServer webAdminServer;
     private UsersRepository usersRepository;
@@ -64,7 +66,7 @@ class MalformedUrlRoutesTest {
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         webAdminServer = WebAdminUtils.createWebAdminServer(
             new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
-                taskManager, new InMemoryId.Factory(), mock(ReIndexer.class)))
+                taskManager, NO_TASKS))
             .start();
     }
 

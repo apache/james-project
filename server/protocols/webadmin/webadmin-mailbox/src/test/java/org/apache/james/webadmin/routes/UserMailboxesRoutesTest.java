@@ -79,6 +79,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -111,7 +112,8 @@ class UserMailboxesRoutesTest {
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer(),
-                    taskManager, mailboxIdFactory, reIndexer),
+                    taskManager,
+                    ImmutableSet.of(new UserMailboxesRoutes.UserReIndexingTaskRegistration(reIndexer))),
                 new TasksRoutes(taskManager, new JsonTransformer()))
             .start();
 
