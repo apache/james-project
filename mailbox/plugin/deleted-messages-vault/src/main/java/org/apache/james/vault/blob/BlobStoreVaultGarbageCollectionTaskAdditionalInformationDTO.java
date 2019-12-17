@@ -73,7 +73,7 @@ public class BlobStoreVaultGarbageCollectionTaskAdditionalInformationDTO impleme
             deletedBuckets
                 .stream()
                 .map(BucketName::of)
-                .collect(Guavate.toImmutableList()),
+                .collect(Guavate.toImmutableSet()),
             timestamp);
     }
 

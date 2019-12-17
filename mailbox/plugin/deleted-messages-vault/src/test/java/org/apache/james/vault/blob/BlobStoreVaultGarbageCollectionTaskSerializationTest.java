@@ -37,7 +37,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 
 class BlobStoreVaultGarbageCollectionTaskSerializationTest {
@@ -46,7 +47,7 @@ class BlobStoreVaultGarbageCollectionTaskSerializationTest {
 
     private static final JsonTaskSerializer TASK_SERIALIZER = JsonTaskSerializer.of(BlobStoreVaultGarbageCollectionTaskDTO.module(TASK_FACTORY));
     private static final ZonedDateTime BEGINNING_OF_RETENTION_PERIOD = ZonedDateTime.parse("2019-09-03T15:26:13.356+02:00[Europe/Paris]");
-    private static final ImmutableList<BucketName> BUCKET_IDS = ImmutableList.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
+    private static final ImmutableSet<BucketName> BUCKET_IDS = ImmutableSet.of(BucketName.of("1"), BucketName.of("2"), BucketName.of("3"));
     private static final Flux<BucketName> RETENTION_OPERATION = Flux.fromIterable(BUCKET_IDS);
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
     private static final BlobStoreVaultGarbageCollectionTask.AdditionalInformation DETAILS = new BlobStoreVaultGarbageCollectionTask.AdditionalInformation(BEGINNING_OF_RETENTION_PERIOD, BUCKET_IDS, TIMESTAMP);

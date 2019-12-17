@@ -35,18 +35,19 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
 public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     public static class AdditionalInformation implements TaskExecutionDetails.AdditionalInformation {
-
         private final ZonedDateTime beginningOfRetentionPeriod;
-        private final Collection<BucketName> deletedBuckets;
+        private final ImmutableSet<BucketName> deletedBuckets;
         private final Instant timestamp;
 
-        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, Collection<BucketName> deletedBuckets, Instant timestamp) {
+        AdditionalInformation(ZonedDateTime beginningOfRetentionPeriod, ImmutableSet<BucketName> deletedBuckets, Instant timestamp) {
             this.beginningOfRetentionPeriod = beginningOfRetentionPeriod;
             this.deletedBuckets = deletedBuckets;
             this.timestamp = timestamp;
@@ -111,14 +112,6 @@ public class BlobStoreVaultGarbageCollectionTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, deletedBuckets, Clock.systemUTC().instant()));
-    }
-
-    ZonedDateTime getBeginningOfRetentionPeriod() {
-        return beginningOfRetentionPeriod;
-    }
-
-    Flux<BucketName> getRetentionOperation() {
-        return retentionOperation;
+        return Optional.of(new AdditionalInformation(beginningOfRetentionPeriod, ImmutableSet.copyOf(deletedBuckets), Clock.systemUTC().instant()));
     }
 }
