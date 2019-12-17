@@ -23,6 +23,7 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.HAS_ATTACHMENT;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.MESSAGE_ID;
 import static org.apache.james.jmap.cassandra.projections.table.CassandraMessageFastViewProjectionTable.PREVIEW;
@@ -38,7 +39,6 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
-import org.reactivestreams.Publisher;
 
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
@@ -58,6 +58,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     private final PreparedStatement storeStatement;
     private final PreparedStatement retrieveStatement;
     private final PreparedStatement deleteStatement;
+    private final PreparedStatement truncateStatement;
 
     @Inject
     CassandraMessageFastViewProjection(MetricFactory metricFactory, Session session) {
@@ -76,12 +77,14 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
             .from(TABLE_NAME)
             .where(eq(MESSAGE_ID, bindMarker(MESSAGE_ID))));
 
+        this.truncateStatement = session.prepare(truncate(TABLE_NAME));
+
         this.metricRetrieveHitCount = metricFactory.generate(METRIC_RETRIEVE_HIT_COUNT);
         this.metricRetrieveMissCount = metricFactory.generate(METRIC_RETRIEVE_MISS_COUNT);
     }
 
     @Override
-    public Publisher<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties precomputedProperties) {
+    public Mono<Void> store(MessageId messageId, MessageFastViewPrecomputedProperties precomputedProperties) {
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeVoid(storeStatement.bind()
@@ -91,7 +94,7 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     }
 
     @Override
-    public Publisher<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
+    public Mono<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
@@ -102,11 +105,16 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
     }
 
     @Override
-    public Publisher<Void> delete(MessageId messageId) {
+    public Mono<Void> delete(MessageId messageId) {
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeVoid(deleteStatement.bind()
             .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()));
+    }
+
+    @Override
+    public Mono<Void> clear() {
+        return cassandraAsyncExecutor.executeVoid(truncateStatement.bind());
     }
 
     private void checkMessage(MessageId messageId) {

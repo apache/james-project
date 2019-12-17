@@ -173,34 +173,34 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void storeShouldThrowWhenNullPreview() {
-        MessageId messageId1 = newMessageId();
-        assertThatThrownBy(() -> Mono.from(testee().store(messageId1, null)).block())
+        MessageId messageId = newMessageId();
+        assertThatThrownBy(() -> Mono.from(testee().store(messageId, null)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
     @Test
     default void storeShouldOverrideOldRecord() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(messageId1)).block())
+        assertThat(Mono.from(testee().retrieve(messageId)).block())
             .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_2);
     }
 
     @Test
     default void storeShouldBeIdempotent() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(messageId1)).block())
+        assertThat(Mono.from(testee().retrieve(messageId)).block())
             .isEqualTo(MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1);
     }
 
@@ -264,21 +264,21 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void deleteShouldNotThrowWhenMessageIdNotFound() {
-        MessageId messageId1 = newMessageId();
-        assertThatCode(() -> Mono.from(testee().delete(messageId1)).block())
+        MessageId messageId = newMessageId();
+        assertThatCode(() -> Mono.from(testee().delete(messageId)).block())
             .doesNotThrowAnyException();
     }
 
     @Test
     default void deleteShouldDeleteStoredRecord() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().delete(messageId1))
+        Mono.from(testee().delete(messageId))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(messageId1)).blockOptional())
+        assertThat(Mono.from(testee().retrieve(messageId)).blockOptional())
             .isEmpty();
     }
 
@@ -300,26 +300,26 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void deleteShouldBeIdempotent() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().delete(messageId1))
+        Mono.from(testee().delete(messageId))
             .block();
-        Mono.from(testee().delete(messageId1))
+        Mono.from(testee().delete(messageId))
             .block();
 
-        assertThat(Mono.from(testee().retrieve(messageId1)).blockOptional())
+        assertThat(Mono.from(testee().retrieve(messageId)).blockOptional())
             .isEmpty();
     }
 
     @Test
     default void retrieveShouldIncrementMetricHitCountWhenPreviewIsFound() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().retrieve(messageId1))
+        Mono.from(testee().retrieve(messageId))
             .block();
 
         assertThat(metricFactory().countFor(METRIC_RETRIEVE_HIT_COUNT))
@@ -328,11 +328,11 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void retrieveShouldNotIncrementMetricMissCountWhenPreviewIsFound() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().store(messageId1, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
             .block();
 
-        Mono.from(testee().retrieve(messageId1))
+        Mono.from(testee().retrieve(messageId))
             .block();
 
         assertThat(metricFactory().countFor(METRIC_RETRIEVE_MISS_COUNT))
@@ -341,8 +341,8 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void retrieveShouldIncrementMetricMissCountWhenPreviewIsNotFound() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().retrieve(messageId1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().retrieve(messageId))
             .block();
 
         assertThat(metricFactory().countFor(METRIC_RETRIEVE_MISS_COUNT))
@@ -351,11 +351,29 @@ public interface MessageFastViewProjectionContract {
 
     @Test
     default void retrieveShouldNotIncrementMetricHitCountWhenPreviewIsNotFound() {
-        MessageId messageId1 = newMessageId();
-        Mono.from(testee().retrieve(messageId1))
+        MessageId messageId = newMessageId();
+        Mono.from(testee().retrieve(messageId))
             .block();
 
         assertThat(metricFactory().countFor(METRIC_RETRIEVE_HIT_COUNT))
             .isEqualTo(0);
+    }
+
+    @Test
+    default void clearShouldNotThrowWhenNoData() {
+        assertThatCode(() -> Mono.from(testee().clear()).block())
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    default void clearShouldRemoveStoredData() {
+        MessageId messageId = newMessageId();
+        Mono.from(testee().store(messageId, MESSAGE_FAST_VIEW_PRECOMPUTED_PROPERTIES_1))
+            .block();
+
+        Mono.from(testee().clear()).block();
+
+        assertThat(Mono.from(testee().retrieve(messageId)).blockOptional())
+            .isEmpty();
     }
 }

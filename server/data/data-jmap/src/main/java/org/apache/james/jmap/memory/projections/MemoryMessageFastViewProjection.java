@@ -35,13 +35,13 @@ import reactor.core.publisher.Mono;
 
 public class MemoryMessageFastViewProjection implements MessageFastViewProjection {
 
-    private final ConcurrentHashMap<MessageId, MessageFastViewPrecomputedProperties> previews;
+    private final ConcurrentHashMap<MessageId, MessageFastViewPrecomputedProperties> projectionItems;
     private final Metric metricRetrieveHitCount;
     private final Metric metricRetrieveMissCount;
 
     @Inject
     public MemoryMessageFastViewProjection(MetricFactory metricFactory) {
-        this.previews = new ConcurrentHashMap<>();
+        this.projectionItems = new ConcurrentHashMap<>();
         this.metricRetrieveHitCount = metricFactory.generate(METRIC_RETRIEVE_HIT_COUNT);
         this.metricRetrieveMissCount = metricFactory.generate(METRIC_RETRIEVE_MISS_COUNT);
     }
@@ -51,14 +51,14 @@ public class MemoryMessageFastViewProjection implements MessageFastViewProjectio
         Preconditions.checkNotNull(messageId);
         Preconditions.checkNotNull(precomputedProperties);
 
-        return Mono.fromRunnable(() -> previews.put(messageId, precomputedProperties));
+        return Mono.fromRunnable(() -> projectionItems.put(messageId, precomputedProperties));
     }
 
     @Override
     public Mono<MessageFastViewPrecomputedProperties> retrieve(MessageId messageId) {
         Preconditions.checkNotNull(messageId);
 
-        return Mono.fromSupplier(() -> previews.get(messageId))
+        return Mono.fromSupplier(() -> projectionItems.get(messageId))
             .doOnNext(preview -> metricRetrieveHitCount.increment())
             .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment));
     }
@@ -67,6 +67,11 @@ public class MemoryMessageFastViewProjection implements MessageFastViewProjectio
     public Mono<Void> delete(MessageId messageId) {
         Preconditions.checkNotNull(messageId);
 
-        return Mono.fromRunnable(() -> previews.remove(messageId));
+        return Mono.fromRunnable(() -> projectionItems.remove(messageId));
+    }
+
+    @Override
+    public Mono<Void> clear() {
+        return Mono.fromRunnable(projectionItems::clear);
     }
 }

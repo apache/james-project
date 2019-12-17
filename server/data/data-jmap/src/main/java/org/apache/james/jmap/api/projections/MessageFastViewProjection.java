@@ -44,6 +44,8 @@ public interface MessageFastViewProjection {
 
     Publisher<Void> delete(MessageId messageId);
 
+    Publisher<Void> clear();
+
     default Publisher<Map<MessageId, MessageFastViewPrecomputedProperties>> retrieve(Collection<MessageId> messageIds) {
         Preconditions.checkNotNull(messageIds);
 

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
+import org.apache.james.jmap.api.projections.MessageFastViewProjection;
 import org.apache.james.jmap.api.vacation.AccountId;
 import org.apache.james.jmap.api.vacation.Vacation;
 import org.apache.james.jmap.api.vacation.VacationPatch;
@@ -39,6 +40,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
 
+import reactor.core.publisher.Mono;
+
 public class JmapGuiceProbe implements GuiceProbe {
 
     private final VacationRepository vacationRepository;
@@ -46,14 +49,16 @@ public class JmapGuiceProbe implements GuiceProbe {
     private final MessageIdManager messageIdManager;
     private final MailboxManager mailboxManager;
     private final EventBus eventBus;
+    private final MessageFastViewProjection messageFastViewProjection;
 
     @Inject
-    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus) {
+    private JmapGuiceProbe(VacationRepository vacationRepository, JMAPServer jmapServer, MessageIdManager messageIdManager, MailboxManager mailboxManager, EventBus eventBus, MessageFastViewProjection messageFastViewProjection) {
         this.vacationRepository = vacationRepository;
         this.jmapServer = jmapServer;
         this.messageIdManager = messageIdManager;
         this.mailboxManager = mailboxManager;
         this.eventBus = eventBus;
+        this.messageFastViewProjection = messageFastViewProjection;
     }
 
     public Port getJmapPort() {
@@ -75,5 +80,9 @@ public class JmapGuiceProbe implements GuiceProbe {
     public void setInMailboxes(MessageId messageId, Username username, MailboxId... mailboxIds) throws MailboxException {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
         messageIdManager.setInMailboxes(messageId, Arrays.asList(mailboxIds), mailboxSession);
+    }
+
+    public void clearMessageFastViewProjection() {
+        Mono.from(messageFastViewProjection.clear()).block();
     }
 }
