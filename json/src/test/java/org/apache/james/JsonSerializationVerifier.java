@@ -23,47 +23,58 @@ import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.json.DTO;
 import org.apache.james.json.DTOModule;
 import org.apache.james.json.JsonGenericSerializer;
 
-public class JsonSerializationVerifier<T, U extends DTO> {
-    @FunctionalInterface
-    public interface RequireBean<T, U extends DTO> {
-        RequireJson<T, U> bean(T bean);
-    }
+import com.github.fge.lambdas.Throwing;
+import com.google.common.collect.ImmutableList;
 
+public class JsonSerializationVerifier<T, U extends DTO> {
     @FunctionalInterface
     public interface RequireJson<T, U extends DTO> {
         JsonSerializationVerifier<T, U> json(String json);
     }
 
-    public static <T, U extends DTO> RequireBean<T, U> dtoModule(DTOModule<T, U> dtoModule) {
-        return bean -> json -> new JsonSerializationVerifier<>(dtoModule, json, bean);
+    public static <T, U extends DTO> JsonSerializationVerifier<T, U> dtoModule(DTOModule<T, U> dtoModule) {
+        return new JsonSerializationVerifier<>(dtoModule, ImmutableList.of());
     }
 
     private final DTOModule<T, U> dtoModule;
-    private final String json;
-    private final T bean;
+    private final List<Pair<String, T>> testValues;
 
-    private JsonSerializationVerifier(DTOModule<T, U> dtoModule, String json, T bean) {
+    private JsonSerializationVerifier(DTOModule<T, U> dtoModule, List<Pair<String, T>> testValues) {
         this.dtoModule = dtoModule;
-        this.json = json;
-        this.bean = bean;
+        this.testValues = testValues;
+    }
+
+    public RequireJson<T, U> bean(T bean) {
+        return json -> new JsonSerializationVerifier<>(
+            dtoModule,
+            ImmutableList.<Pair<String, T>>builder()
+                .addAll(testValues)
+                .add(Pair.of(json, bean))
+                .build());
     }
 
     public void verify() throws IOException {
+        testValues.forEach(Throwing.<Pair<String, T>>consumer(this::verify).sneakyThrow());
+    }
+
+    private void verify(Pair<String, T> testValue) throws IOException {
         JsonGenericSerializer<T, U> seriliazer = JsonGenericSerializer
             .forModules(dtoModule)
             .withoutNestedType();
 
-        assertThatJson(seriliazer.serialize(bean))
+        assertThatJson(seriliazer.serialize(testValue.getRight()))
             .describedAs("Serialization test")
-            .isEqualTo(json);
+            .isEqualTo(testValue.getLeft());
 
-        assertThat(seriliazer.deserialize(json))
-            .describedAs("Deserialization test")
-            .isEqualToComparingFieldByFieldRecursively(bean);
+        assertThat(seriliazer.deserialize(testValue.getLeft()))
+            .describedAs("Deserialization test [" + testValue.getRight() + "]")
+            .isEqualToComparingFieldByFieldRecursively(testValue.getRight());
     }
 }

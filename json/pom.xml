@@ -53,6 +53,10 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.github.fge</groupId>
+            <artifactId>throwing-lambdas</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.github.steveash.guavate</groupId>
             <artifactId>guavate</artifactId>
         </dependency>

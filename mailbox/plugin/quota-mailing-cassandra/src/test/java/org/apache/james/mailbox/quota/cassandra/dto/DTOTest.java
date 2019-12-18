@@ -20,19 +20,20 @@
 package org.apache.james.mailbox.quota.cassandra.dto;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.mailbox.quota.cassandra.dto.QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._75;
 import static org.apache.james.mailbox.quota.model.QuotaThresholdFixture._80;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.time.Instant;
 
+import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.eventsourcing.EventId;
-import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.quota.mailing.aggregates.UserQuotaThresholds;
 import org.apache.james.mailbox.quota.mailing.events.QuotaThresholdChangedEvent;
@@ -135,73 +136,12 @@ class DTOTest {
     }
 
     @Test
-    void shouldSerializeQuotaThresholdChangedEventDTO() throws Exception {
-        assertThatJson(objectMapper.writeValueAsString(
-            QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE.toDTO(EVENT)))
-            .isEqualTo(EVENT_JSON);
-    }
-
-    @Test
-    void shouldDeserializeQuotaThresholdChangedEventDTO() throws Exception {
-        assertThat(objectMapper.readValue(EVENT_JSON, QuotaThresholdChangedEventDTO.class)
-            .toEvent())
-            .isEqualTo(EVENT);
-    }
-
-    @Test
     void shouldSerializeQuotaThresholdChangedEvent() throws Exception {
-        assertThatJson(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .serialize(EVENT))
-            .isEqualTo(EVENT_JSON);
+        JsonSerializationVerifier.dtoModule(QUOTA_THRESHOLD_CHANGE)
+            .bean(EVENT).json(EVENT_JSON)
+            .bean(EVENT_2).json(EVENT_JSON_2)
+            .bean(EVENT_3).json(EVENT_JSON_3)
+            .bean(EVENT_4).json(EVENT_JSON_4)
+            .verify();
     }
-
-    @Test
-    void shouldDeserializeQuotaThresholdChangedEvent() throws Exception {
-        assertThat(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .deserialize(EVENT_JSON))
-            .isEqualTo(EVENT);
-    }
-
-    @Test
-    void shouldSerializeEvent2() throws Exception {
-        assertThatJson(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .serialize(EVENT_2))
-            .isEqualTo(EVENT_JSON_2);
-    }
-
-    @Test
-    void shouldDeserializeEvent2() throws Exception {
-        assertThat(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .deserialize(EVENT_JSON_2))
-            .isEqualTo(EVENT_2);
-    }
-
-    @Test
-    void shouldSerializeEvent3() throws Exception {
-        assertThatJson(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .serialize(EVENT_3))
-            .isEqualTo(EVENT_JSON_3);
-    }
-
-    @Test
-    void shouldDeserializeEvent3() throws Exception {
-        assertThat(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .deserialize(EVENT_JSON_3))
-            .isEqualTo(EVENT_3);
-    }
-
-    @Test
-    void shouldSerializeEvent4() throws Exception {
-        assertThatJson(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .serialize(EVENT_4))
-            .isEqualTo(EVENT_JSON_4);
-    }
-
-    @Test
-    void shouldDeserializeEvent4() throws Exception {
-        assertThat(JsonEventSerializer.forModules(QuotaEventDTOModules.QUOTA_THRESHOLD_CHANGE).withoutNestedType()
-            .deserialize(EVENT_JSON_4))
-            .isEqualTo(EVENT_4);
-    }
-
 }
