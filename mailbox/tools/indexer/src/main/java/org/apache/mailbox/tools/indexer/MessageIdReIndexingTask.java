@@ -28,12 +28,8 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.task.Task;
 import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class MessageIdReIndexingTask implements Task {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MessageIdReIndexingTask.class);
-
     public static final TaskType TYPE = TaskType.of("messageId-reindexing");
 
     public static class Factory {
@@ -74,12 +70,10 @@ public class MessageIdReIndexingTask implements Task {
 
     private ReIndexerPerformer reIndexerPerformer;
     private final MessageId messageId;
-    private final AdditionalInformation additionalInformation;
 
     MessageIdReIndexingTask(ReIndexerPerformer reIndexerPerformer, MessageId messageId) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.messageId = messageId;
-        this.additionalInformation = new AdditionalInformation(messageId, Clock.systemUTC().instant());
     }
 
     @Override
@@ -98,6 +92,6 @@ public class MessageIdReIndexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(messageId, Clock.systemUTC().instant()));
     }
 }

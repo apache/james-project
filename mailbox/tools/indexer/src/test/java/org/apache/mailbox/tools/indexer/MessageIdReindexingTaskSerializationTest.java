@@ -18,75 +18,51 @@
  ****************************************************************/
 package org.apache.mailbox.tools.indexer;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import java.io.IOException;
 import java.time.Instant;
 
+import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
-import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 class MessageIdReindexingTaskSerializationTest {
-
     private static final Instant TIMESTAMP = Instant.parse("2018-11-13T12:00:55Z");
+
+    private final String serializedMessageIdReIndexingTask = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\"}";
+    private final String serializedAdditionalInformation = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
 
     private ReIndexerPerformer reIndexerPerformer;
     private MessageId.Factory messageIdFactory;
-    private JsonTaskSerializer taskSerializer;
-    private final String serializedMessageIdReIndexingTask = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\"}";
-    private final String SERIALIZED_ADDITIONAL_INFORMATION = "{\"type\": \"messageId-reindexing\", \"messageId\": \"1\", \"timestamp\":\"2018-11-13T12:00:55Z\"}";
-
-    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer;
+    private MessageIdReIndexingTask.Factory factory;
 
     @BeforeEach
     void setUp() {
         messageIdFactory = new TestMessageId.Factory();
-        jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(
-            MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory));
         reIndexerPerformer = mock(ReIndexerPerformer.class);
-        MessageIdReIndexingTask.Factory factory = new MessageIdReIndexingTask.Factory(reIndexerPerformer, messageIdFactory);
-        taskSerializer = JsonTaskSerializer.of(MessageIdReindexingTaskDTO.module(factory));
+        factory = new MessageIdReIndexingTask.Factory(reIndexerPerformer, messageIdFactory);
     }
 
     @Test
-    void messageIdReindexingShouldBeSerializable() throws JsonProcessingException {
+    void messageIdReindexingShouldBeSerializable() throws Exception {
         MessageId messageId = messageIdFactory.fromString("1");
-        MessageIdReIndexingTask task = new MessageIdReIndexingTask(reIndexerPerformer, messageId);
-
-        assertThatJson(taskSerializer.serialize(task))
-            .isEqualTo(serializedMessageIdReIndexingTask);
+        JsonSerializationVerifier.dtoModule(MessageIdReindexingTaskDTO.module(factory))
+            .bean(new MessageIdReIndexingTask(reIndexerPerformer, messageId))
+            .json(serializedMessageIdReIndexingTask)
+            .verify();
     }
 
     @Test
-    void messageIdReindexingShouldBeDeserializable() throws IOException {
-        MessageId messageId = messageIdFactory.fromString("1");
-        MessageIdReIndexingTask task = new MessageIdReIndexingTask(reIndexerPerformer, messageId);
-
-        assertThat(taskSerializer.deserialize(serializedMessageIdReIndexingTask))
-            .isEqualToComparingOnlyGivenFields(task, "messageId");
-    }
-
-    @Test
-    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
+    void additionalInformationShouldBeSerializable() throws Exception {
         MessageId messageId = messageIdFactory.fromString("1");
         MessageIdReIndexingTask.AdditionalInformation details = new MessageIdReIndexingTask.AdditionalInformation(messageId, TIMESTAMP);
-        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_ADDITIONAL_INFORMATION);
-    }
 
-    @Test
-    void additonalInformationShouldBeDeserializable() throws IOException {
-        MessageId messageId = messageIdFactory.fromString("1");
-        MessageIdReIndexingTask.AdditionalInformation details = new MessageIdReIndexingTask.AdditionalInformation(messageId, TIMESTAMP);
-        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_ADDITIONAL_INFORMATION))
-            .isEqualToComparingFieldByField(details);
+        JsonSerializationVerifier.dtoModule(MessageIdReindexingTaskAdditionalInformationDTO.serializationModule(messageIdFactory))
+            .bean(details)
+            .json(serializedAdditionalInformation)
+            .verify();
     }
 }
 

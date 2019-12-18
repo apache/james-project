@@ -85,14 +85,12 @@ public class SingleMessageReindexingTask implements Task {
     private final ReIndexerPerformer reIndexerPerformer;
     private final MailboxId mailboxId;
     private final MessageUid uid;
-    private final AdditionalInformation additionalInformation;
 
     @Inject
     SingleMessageReindexingTask(ReIndexerPerformer reIndexerPerformer, MailboxId mailboxId, MessageUid uid) {
         this.reIndexerPerformer = reIndexerPerformer;
         this.mailboxId = mailboxId;
         this.uid = uid;
-        this.additionalInformation = new AdditionalInformation(mailboxId, uid, Clock.systemUTC().instant());
     }
 
     @Override
@@ -120,7 +118,7 @@ public class SingleMessageReindexingTask implements Task {
 
     @Override
     public Optional<TaskExecutionDetails.AdditionalInformation> details() {
-        return Optional.of(additionalInformation);
+        return Optional.of(new AdditionalInformation(mailboxId, uid, Clock.systemUTC().instant()));
     }
 
 }
