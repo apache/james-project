@@ -31,7 +31,6 @@ import org.apache.james.task.TaskManager;
 import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Joiner;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -74,15 +73,27 @@ public class TaskFromRequestRegistry implements TaskFromRequest {
         }
 
         public TaskFromRequestRegistry build() {
-            ImmutableMap<TaskRegistrationKey, TaskFromRequest> registrations = tasks.build();
-            Preconditions.checkState(!registrations.isEmpty());
-            return new TaskFromRequestRegistry(
-                taskParameterName.orElse(DEFAULT_PARAMETER),
-                registrations);
+            return buildAsOptional()
+                .orElseThrow(() -> new IllegalStateException("Expecting some registered tasks but got none"));
         }
 
         public Route buildAsRoute(TaskManager taskManager) {
             return build().asRoute(taskManager);
+        }
+
+        public Optional<Route> buildAsRouteOptional(TaskManager taskManager) {
+            return buildAsOptional()
+                .map(registry -> registry.asRoute(taskManager));
+        }
+
+        Optional<TaskFromRequestRegistry> buildAsOptional() {
+            ImmutableMap<TaskRegistrationKey, TaskFromRequest> registrations = tasks.build();
+            if (registrations.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.of(new TaskFromRequestRegistry(
+                taskParameterName.orElse(DEFAULT_PARAMETER),
+                registrations));
         }
     }
 

@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.RE_INDEX;
 import static org.apache.james.webadmin.routes.MailboxesRoutes.TASK_PARAMETER;
 
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -124,7 +125,8 @@ public class UserMailboxesRoutes implements Routes {
 
         defineDeleteUserMailboxes();
 
-        service.post(USER_MAILBOXES_BASE, defineReIndexMailboxes(), jsonTransformer);
+        reIndexMailboxesRoute()
+            .ifPresent(route -> service.post(USER_MAILBOXES_BASE, route, jsonTransformer));
     }
 
     @GET
@@ -173,11 +175,11 @@ public class UserMailboxesRoutes implements Routes {
         @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500, message = "Internal server error - Something went bad on the server side."),
         @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "Bad request - details in the returned error message")
     })
-    public Route defineReIndexMailboxes() {
+    public Optional<Route> reIndexMailboxesRoute() {
         return TaskFromRequestRegistry.builder()
             .parameterName(TASK_PARAMETER)
             .registrations(usersMailboxesTaskRegistration)
-            .buildAsRoute(taskManager);
+            .buildAsRouteOptional(taskManager);
     }
 
     @DELETE
