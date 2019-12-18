@@ -75,11 +75,7 @@ public class EventDeadLettersRedeliverAllTask implements Task {
         return Optional.of(createAdditionalInformation());
     }
 
-    public EventRetriever getEventRetriever() {
-        return eventRetriever;
-    }
-
-    EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
+    private EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForAll(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),

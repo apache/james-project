@@ -78,15 +78,11 @@ public class EventDeadLettersRedeliverGroupTask implements Task {
         return Optional.of(createAdditionalInformation());
     }
 
-    public EventRetriever getEventRetriever() {
-        return eventRetriever;
-    }
-
     public Group getGroup() {
         return group;
     }
 
-    EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
+    private EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationForGroup(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),

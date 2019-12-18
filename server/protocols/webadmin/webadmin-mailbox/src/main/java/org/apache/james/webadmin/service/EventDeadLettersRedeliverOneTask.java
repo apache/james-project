@@ -80,10 +80,6 @@ public class EventDeadLettersRedeliverOneTask implements Task {
         return Optional.of(createAdditionalInformation());
     }
 
-    public EventRetriever getEventRetriever() {
-        return eventRetriever;
-    }
-
     public Group getGroup() {
         return group;
     }
@@ -92,7 +88,7 @@ public class EventDeadLettersRedeliverOneTask implements Task {
         return insertionId;
     }
 
-    EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
+    private EventDeadLettersRedeliveryTaskAdditionalInformation createAdditionalInformation() {
         return new EventDeadLettersRedeliveryTaskAdditionalInformationDTO.EventDeadLettersRedeliveryTaskAdditionalInformationForOne(
             successfulRedeliveriesCount.get(),
             failedRedeliveriesCount.get(),
