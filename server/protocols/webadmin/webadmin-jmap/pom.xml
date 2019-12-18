@@ -26,9 +26,9 @@
         <relativePath>../../../pom.xml</relativePath>
     </parent>
 
-    <artifactId>james-server-webadmin-data-jmap</artifactId>
+    <artifactId>james-server-webadmin-jmap</artifactId>
 
-    <name>Apache James :: Server :: Web Admin :: data :: JMAP</name>
+    <name>Apache James :: Server :: Web Admin :: JMAP</name>
 
     <dependencies>
         <dependency>
