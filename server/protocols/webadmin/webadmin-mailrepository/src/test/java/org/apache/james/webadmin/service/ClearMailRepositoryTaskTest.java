@@ -19,24 +19,19 @@
 
 package org.apache.james.webadmin.service;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 
-import java.io.IOException;
 import java.time.Instant;
 
+import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryPath;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
-import org.apache.james.server.task.json.JsonTaskAdditionalInformationSerializer;
 import org.apache.james.server.task.json.JsonTaskSerializer;
 import org.junit.jupiter.api.Test;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.collect.ImmutableList;
-import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 
 class ClearMailRepositoryTaskTest {
 
@@ -50,22 +45,13 @@ class ClearMailRepositoryTaskTest {
     private static final ClearMailRepositoryTask TASK = new ClearMailRepositoryTask(MAIL_REPOSITORIES, MAIL_REPOSITORY_PATH);
     private static final long INITIAL_COUNT = 0L;
     private static final long REMAINING_COUNT = 10L;
-    private JsonTaskAdditionalInformationSerializer jsonAdditionalInformationSerializer = JsonTaskAdditionalInformationSerializer.of(
-        ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE);
 
     @Test
-    void taskShouldBeSerializable() throws JsonProcessingException {
-        JsonTaskSerializer testee = JsonTaskSerializer.of(ClearMailRepositoryTaskDTO.module(FACTORY));
-        JsonAssertions.assertThatJson(testee.serialize(TASK))
-            .isEqualTo(SERIALIZED);
-    }
-
-    @Test
-    void taskShouldBeDeserializable() throws IOException {
-        JsonTaskSerializer testee = JsonTaskSerializer.of(ClearMailRepositoryTaskDTO.module(FACTORY));
-
-        assertThat(testee.deserialize(SERIALIZED))
-            .isEqualToComparingFieldByFieldRecursively(TASK);
+    void taskShouldBeSerializable() throws Exception {
+        JsonSerializationVerifier.dtoModule(ClearMailRepositoryTaskDTO.module(FACTORY))
+            .bean(TASK)
+            .json(SERIALIZED)
+            .verify();
     }
 
     @Test
@@ -77,15 +63,10 @@ class ClearMailRepositoryTaskTest {
     }
 
     @Test
-    void additionalInformationShouldBeSerializable() throws JsonProcessingException {
-        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
-        assertThatJson(jsonAdditionalInformationSerializer.serialize(details)).isEqualTo(SERIALIZED_TASK_ADDITIONAL_INFORMATION);
-    }
-
-    @Test
-    void additionalInformationShouldBeDeserializable() throws IOException {
-        ClearMailRepositoryTask.AdditionalInformation details = new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP);
-        assertThat(jsonAdditionalInformationSerializer.deserialize(SERIALIZED_TASK_ADDITIONAL_INFORMATION))
-            .isEqualToComparingFieldByField(details);
+    void additionalInformationShouldBeSerializable() throws Exception {
+        JsonSerializationVerifier.dtoModule(ClearMailRepositoryTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+            .bean(new ClearMailRepositoryTask.AdditionalInformation(MAIL_REPOSITORY_PATH, INITIAL_COUNT, REMAINING_COUNT, TIMESTAMP))
+            .json(SERIALIZED_TASK_ADDITIONAL_INFORMATION)
+            .verify();
     }
 }
