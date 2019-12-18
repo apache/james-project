@@ -64,6 +64,6 @@ public class JsonSerializationVerifier<T, U extends DTO> {
 
         assertThat(seriliazer.deserialize(json))
             .describedAs("Deserialization test")
-            .isEqualTo(bean);
+            .isEqualToComparingFieldByFieldRecursively(bean);
     }
 }
