@@ -23,13 +23,7 @@ import java.util.Optional;
 import javax.inject.Singleton;
 
 import org.apache.commons.configuration2.BaseConfiguration;
-import org.apache.james.mailbox.MailboxManager;
-import org.apache.james.mailbox.SystemMailboxesProvider;
-import org.apache.james.mailbox.events.MailboxListener;
-import org.apache.james.mailbox.spamassassin.SpamAssassin;
 import org.apache.james.mailbox.spamassassin.SpamAssassinConfiguration;
-import org.apache.james.mailbox.spamassassin.SpamAssassinListener;
-import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailetcontainer.impl.MailetConfigImpl;
 import org.apache.james.spamassassin.SpamAssassinExtension;
 import org.apache.james.util.Host;
