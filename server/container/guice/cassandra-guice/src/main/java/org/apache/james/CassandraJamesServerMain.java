@@ -63,7 +63,6 @@ import org.apache.james.modules.server.JmapTasksModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.MailboxesRoutesModule;
 import org.apache.james.modules.server.MessagesRoutesModule;
 import org.apache.james.modules.server.ReIndexingModule;
 import org.apache.james.modules.server.SieveRoutesModule;
@@ -89,7 +88,6 @@ public class CassandraJamesServerMain {
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
         new JmapTasksModule(),
-        new MailboxesRoutesModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),

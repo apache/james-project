@@ -51,7 +51,6 @@ import org.apache.james.task.MemoryTaskManager;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.service.PreviousReIndexingService;
-import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 import org.apache.james.webadmin.utils.ErrorResponder;
 import org.apache.james.webadmin.utils.JsonTransformer;
 import org.apache.mailbox.tools.indexer.FullReindexingTask;
@@ -72,7 +71,6 @@ import io.restassured.RestAssured;
 class MailboxesRoutesTest {
     private static final Username USERNAME = Username.of("benwa@apache.org");
     private static final MailboxPath INBOX = MailboxPath.inbox(USERNAME);
-    private static final ImmutableSet<TaskFromRequestRegistry.TaskRegistration> NO_ADDITIONAL_REGISTRATION = ImmutableSet.of();
 
     private WebAdminServer webAdminServer;
     private ListeningMessageSearchIndex searchIndex;
@@ -97,13 +95,17 @@ class MailboxesRoutesTest {
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
                 new TasksRoutes(taskManager, jsonTransformer),
-                new MailboxesRoutes(
-                    taskManager,
-                    new PreviousReIndexingService(taskManager),
-                    mailboxIdFactory,
-                    reIndexer,
+                new MailboxesRoutes(taskManager,
                     jsonTransformer,
-                    NO_ADDITIONAL_REGISTRATION))
+                    ImmutableSet.of(
+                        new MailboxesRoutes.ReIndexAllMailboxesTaskRegistration(
+                            reIndexer, new PreviousReIndexingService(taskManager), mailboxIdFactory)),
+                    ImmutableSet.of(
+                        new MailboxesRoutes.ReIndexOneMailboxTaskRegistration(
+                            reIndexer, mailboxIdFactory)),
+                    ImmutableSet.of(
+                        new MailboxesRoutes.ReIndexOneMailTaskRegistration(
+                            reIndexer, mailboxIdFactory))))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer).build();

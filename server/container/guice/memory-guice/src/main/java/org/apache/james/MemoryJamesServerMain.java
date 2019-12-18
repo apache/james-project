@@ -70,7 +70,6 @@ public class MemoryJamesServerMain {
         new DataRoutesModules(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
-        new JmapTasksModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
@@ -97,6 +96,7 @@ public class MemoryJamesServerMain {
         new SpamAssassinListenerModule());
 
     public static final Module JMAP = Modules.combine(
+        new JmapTasksModule(),
         new MemoryDataJmapModule(),
         new JMAPDraftServerModule());
 

@@ -298,7 +298,8 @@ public abstract class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
             .body(containsString("\"tags\":[\"Address Aliases\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"));
+            .body(containsString("\"tags\":[\"Address Groups\"]"))
+            .body(containsString("{\"name\":\"Mailboxes\"}"));
     }
 
     @Test

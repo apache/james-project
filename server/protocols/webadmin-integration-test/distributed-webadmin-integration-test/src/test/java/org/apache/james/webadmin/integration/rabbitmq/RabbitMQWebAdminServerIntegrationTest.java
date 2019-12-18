@@ -165,7 +165,6 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
             .then()
             .statusCode(HttpStatus.OK_200)
             .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
-            .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
             .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 }

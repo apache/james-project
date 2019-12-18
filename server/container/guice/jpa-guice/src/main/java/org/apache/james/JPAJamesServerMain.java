@@ -41,7 +41,6 @@ import org.apache.james.modules.server.JMXServerModule;
 import org.apache.james.modules.server.MailQueueRoutesModule;
 import org.apache.james.modules.server.MailRepositoriesRoutesModule;
 import org.apache.james.modules.server.MailboxRoutesModule;
-import org.apache.james.modules.server.MailboxesRoutesModule;
 import org.apache.james.modules.server.NoJwtModule;
 import org.apache.james.modules.server.RawPostDequeueDecoratorModule;
 import org.apache.james.modules.server.ReIndexingModule;
@@ -61,7 +60,6 @@ public class JPAJamesServerMain {
         new WebAdminServerModule(),
         new DataRoutesModules(),
         new MailboxRoutesModule(),
-        new MailboxesRoutesModule(),
         new MailQueueRoutesModule(),
         new MailRepositoriesRoutesModule(),
         new ReIndexingModule(),
