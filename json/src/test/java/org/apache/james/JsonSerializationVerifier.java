@@ -34,26 +34,34 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class JsonSerializationVerifier<T, U extends DTO> {
+
     @FunctionalInterface
     public interface RequireJson<T, U extends DTO> {
         JsonSerializationVerifier<T, U> json(String json);
     }
 
     public static <T, U extends DTO> JsonSerializationVerifier<T, U> dtoModule(DTOModule<T, U> dtoModule) {
-        return new JsonSerializationVerifier<>(dtoModule, ImmutableList.of());
+        return new JsonSerializationVerifier<>(JsonGenericSerializer
+            .forModules(dtoModule)
+            .withoutNestedType(),
+            ImmutableList.of());
     }
 
-    private final DTOModule<T, U> dtoModule;
-    private final List<Pair<String, T>> testValues;
+    public static <T, U extends DTO> JsonSerializationVerifier<T, U> serializer(JsonGenericSerializer<T, U> serializer) {
+        return new JsonSerializationVerifier<>(serializer, ImmutableList.of());
+    }
 
-    private JsonSerializationVerifier(DTOModule<T, U> dtoModule, List<Pair<String, T>> testValues) {
-        this.dtoModule = dtoModule;
+    private final List<Pair<String, T>> testValues;
+    private final JsonGenericSerializer<T, U> serializer;
+
+    private JsonSerializationVerifier( JsonGenericSerializer<T, U> serializer, List<Pair<String, T>> testValues) {
         this.testValues = testValues;
+        this.serializer = serializer;
     }
 
     public RequireJson<T, U> bean(T bean) {
         return json -> new JsonSerializationVerifier<>(
-            dtoModule,
+            serializer,
             ImmutableList.<Pair<String, T>>builder()
                 .addAll(testValues)
                 .add(Pair.of(json, bean))
@@ -65,15 +73,11 @@ public class JsonSerializationVerifier<T, U extends DTO> {
     }
 
     private void verify(Pair<String, T> testValue) throws IOException {
-        JsonGenericSerializer<T, U> seriliazer = JsonGenericSerializer
-            .forModules(dtoModule)
-            .withoutNestedType();
-
-        assertThatJson(seriliazer.serialize(testValue.getRight()))
-            .describedAs("Serialization test")
+        assertThatJson(serializer.serialize(testValue.getRight()))
+            .describedAs("Serialization test [" + testValue.getRight() + "]")
             .isEqualTo(testValue.getLeft());
 
-        assertThat(seriliazer.deserialize(testValue.getLeft()))
+        assertThat(serializer.deserialize(testValue.getLeft()))
             .describedAs("Deserialization test [" + testValue.getRight() + "]")
             .isEqualToComparingFieldByFieldRecursively(testValue.getRight());
     }

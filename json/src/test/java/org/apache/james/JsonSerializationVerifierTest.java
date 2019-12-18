@@ -48,7 +48,8 @@ class JsonSerializationVerifierTest {
                 .json(FIRST_JSON_BAD)
                 .verify())
             .isInstanceOf(AssertionFailedError.class)
-            .hasMessageContaining("[Serialization test] JSON documents are different:\n" +
-                "Different value found in node \"id\"");
+            .hasMessageContaining("[Serialization test [org.apache.james.dto.FirstDomainObject@7650497c]]")
+            .hasMessageContaining("JSON documents are different:")
+            .hasMessageContaining("Different value found in node \"id\"");
     }
 }
