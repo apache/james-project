@@ -297,10 +297,7 @@ public abstract class WebAdminServerIntegrationTest {
             .body(containsString("\"tags\":[\"MailQueues\"]"))
             .body(containsString("\"tags\":[\"Address Forwards\"]"))
             .body(containsString("\"tags\":[\"Address Aliases\"]"))
-            .body(containsString("\"tags\":[\"Address Groups\"]"))
-            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
-            .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
-            .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
+            .body(containsString("\"tags\":[\"Address Groups\"]"));
     }
 
     @Test

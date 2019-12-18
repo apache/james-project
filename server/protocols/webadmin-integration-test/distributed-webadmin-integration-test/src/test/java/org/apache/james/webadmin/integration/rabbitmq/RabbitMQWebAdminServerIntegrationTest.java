@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.with;
 import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.hamcrest.CoreMatchers.hasItems;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
@@ -36,6 +37,7 @@ import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
+import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
@@ -153,5 +155,17 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
             .contentType(ContentType.JSON)
         .statusCode(HttpStatus.OK_200)
             .body("source", hasItems(ALIAS_1, ALIAS_2));
+    }
+
+
+    @Test
+    public void getSwaggerShouldContainDistributedEndpoints() {
+        when()
+            .get(SwaggerRoutes.SWAGGER_ENDPOINT)
+            .then()
+            .statusCode(HttpStatus.OK_200)
+            .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
+            .body(containsString("{\"name\":\"ReIndexing (mailboxes)\"}"))
+            .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
     }
 }
