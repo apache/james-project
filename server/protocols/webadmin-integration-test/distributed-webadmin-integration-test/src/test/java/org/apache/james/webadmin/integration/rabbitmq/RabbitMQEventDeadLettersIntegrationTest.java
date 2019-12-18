@@ -358,7 +358,6 @@ public class RabbitMQEventDeadLettersIntegrationTest {
             .statusCode(HttpStatus.NOT_FOUND_404);
     }
 
-    @Category(BasicFeature.class)
     @Test
     public void failedEventShouldBeCorrectlyProcessedByListenerAfterSuccessfulRedelivery() throws InterruptedException {
         retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
@@ -507,7 +506,6 @@ public class RabbitMQEventDeadLettersIntegrationTest {
             .body(".", hasSize(0));
     }
 
-    @Category(BasicFeature.class)
     @Test
     public void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulAllRedelivery() {
         retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);

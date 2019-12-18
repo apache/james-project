@@ -31,6 +31,7 @@ import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
 import org.apache.james.DockerCassandraRule;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
@@ -40,9 +41,11 @@ import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.http.ContentType;
 
+@Category(BasicFeature.class)
 public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
 
     private static final String VERSION = "/cassandra/version";

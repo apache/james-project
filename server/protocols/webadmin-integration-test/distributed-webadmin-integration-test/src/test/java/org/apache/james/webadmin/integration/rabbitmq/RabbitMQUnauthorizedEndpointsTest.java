@@ -21,6 +21,7 @@ package org.apache.james.webadmin.integration.rabbitmq;
 
 import static io.restassured.RestAssured.when;
 
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.webadmin.integration.UnauthorizedEndpointsTest;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
@@ -42,10 +43,12 @@ import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+@Category(BasicFeature.class)
 class RabbitMQUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
 
     @RegisterExtension

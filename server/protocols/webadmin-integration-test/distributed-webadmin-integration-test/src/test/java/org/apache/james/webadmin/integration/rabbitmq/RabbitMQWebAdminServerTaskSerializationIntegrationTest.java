@@ -44,6 +44,7 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
 import org.apache.james.core.builder.MimeMessageBuilder;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.Event;
 import org.apache.james.mailbox.events.EventDeadLetters;
@@ -81,10 +82,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
+@Category(BasicFeature.class)
 public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
     @Rule

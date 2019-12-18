@@ -65,6 +65,7 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
+@Category(BasicFeature.class)
 class RabbitMQReindexingWithEventDeadLettersTest {
 
     private static final String ELASTICSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup";
@@ -123,7 +124,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
 
     @Disabled("JAMES-3011 It's already fails for a long time, but CI didn't detect this when it's not marked as BasicFeature")
     @Test
-    protected void indexationShouldBeFailingWhenElasticSearchContainerIsPaused() throws Exception {
+    void indexationShouldBeFailingWhenElasticSearchContainerIsPaused() throws Exception {
         aliceSavesADraft();
 
         CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
@@ -132,9 +133,8 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         assertThat(listMessageIdsForAccount(aliceAccessToken)).isEmpty();
     }
 
-    @Category(BasicFeature.class)
     @Test
-    protected void redeliverShouldReIndexFailedMessages() throws Exception {
+    void redeliverShouldReIndexFailedMessages() throws Exception {
         aliceSavesADraft();
         CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
 
@@ -145,7 +145,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     }
 
     @Test
-    protected void redeliverShouldCleanEventDeadLetter() throws Exception {
+    void redeliverShouldCleanEventDeadLetter() throws Exception {
         aliceSavesADraft();
         CALMLY_AWAIT.until(() -> listElasticSearchFailedEvents().size() == 1);
 
