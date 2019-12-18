@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.webadmin.integration.rabbitmq;
 
 import static com.datastax.driver.core.querybuilder.QueryBuilder.delete;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
@@ -27,7 +27,7 @@ import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
-import static org.apache.james.jmap.JmapURIBuilder.baseUri;
+import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
@@ -41,9 +41,15 @@ import static org.hamcrest.Matchers.nullValue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
+import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
@@ -63,12 +69,14 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.util.Host;
+import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
+import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -81,7 +89,8 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-public class FixingGhostMailboxTest {
+@Category(BasicFeature.class)
+class FixingGhostMailboxTest {
     private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
@@ -124,11 +133,12 @@ public class FixingGhostMailboxTest {
         mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         aclProbe = server.getProbe(ACLProbeImpl.class);
 
+        Port jmapPort = server.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = new RequestSpecBuilder()
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapPort.getValue())
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
         webadminSpecification = WebAdminUtils.buildRequestSpecification(webAdminProbe.getWebAdminPort())
@@ -138,7 +148,7 @@ public class FixingGhostMailboxTest {
             .addDomain(DOMAIN)
             .addUser(ALICE, ALICE_SECRET)
             .addUser(BOB, BOB_SECRET);
-        accessToken = authenticateJamesUser(baseUri(server), Username.of(ALICE), ALICE_SECRET);
+        accessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(ALICE), ALICE_SECRET);
 
         Host cassandraHost = dockerCassandra.getCassandra().getHost();
         session = Cluster.builder()
