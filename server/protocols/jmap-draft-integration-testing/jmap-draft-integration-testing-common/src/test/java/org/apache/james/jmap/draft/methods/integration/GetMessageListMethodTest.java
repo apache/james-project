@@ -127,7 +127,7 @@ public abstract class GetMessageListMethodTest {
         aclProbe = jmapServer.getProbe(ACLProbeImpl.class);
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
                 .build();
 
         dataProbe.addDomain(DOMAIN);

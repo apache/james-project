@@ -90,7 +90,7 @@ public abstract class SendMDNMethodTest {
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
                 .build();
         RestAssured.defaultParser = Parser.JSON;
 

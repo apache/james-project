@@ -64,7 +64,7 @@ public abstract class ProvisioningTest {
         jmapServer = createJmapServer();
         jmapServer.start();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
 
         jmapServer.getProbe(DataProbeImpl.class)

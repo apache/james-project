@@ -27,6 +27,6 @@ public class JmapURIBuilder {
 
     public static URIBuilder baseUri(GuiceJamesServer jamesServer) {
         return LocalHostURIBuilder.baseUri(
-            Port.of(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort()));
+            Port.of(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue()));
     }
 }

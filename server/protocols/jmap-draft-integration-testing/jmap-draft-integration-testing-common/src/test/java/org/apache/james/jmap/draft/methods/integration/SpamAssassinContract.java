@@ -74,7 +74,7 @@ public interface SpamAssassinContract {
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
                 .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-                .setPort(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .setPort(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
                 .build();
         RestAssured.defaultParser = Parser.JSON;
 

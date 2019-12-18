@@ -79,7 +79,7 @@ public abstract class FilterTest {
         jmapServer.start();
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
 
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);

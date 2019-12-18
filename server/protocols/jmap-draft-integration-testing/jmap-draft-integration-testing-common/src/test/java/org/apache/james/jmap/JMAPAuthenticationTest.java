@@ -64,7 +64,7 @@ public abstract class JMAPAuthenticationTest {
         jmapServer = createJmapServer(zonedDateTimeProvider);
         jmapServer.start();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
                 .build();
         
         userCredentials = UserCredentials.builder()

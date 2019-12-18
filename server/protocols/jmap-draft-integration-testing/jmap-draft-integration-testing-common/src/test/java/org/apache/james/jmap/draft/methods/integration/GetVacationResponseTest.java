@@ -78,7 +78,7 @@ public abstract class GetVacationResponseTest {
 
         jmapGuiceProbe = jmapServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapGuiceProbe.getJmapPort())
+                .setPort(jmapGuiceProbe.getJmapPort().getValue())
                 .build();
 
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);

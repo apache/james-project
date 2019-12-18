@@ -62,7 +62,7 @@ class CassandraImapErrorTest {
     @BeforeEach
     void setup(GuiceJamesServer server) throws Exception {
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
 

@@ -51,7 +51,7 @@ public interface JmapJamesServerContract {
             .setContentType(ContentType.JSON)
             .setAccept(ContentType.JSON)
             .setConfig(newConfig().encoderConfig(encoderConfig().defaultContentCharset(StandardCharsets.UTF_8)))
-            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(server.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
     }
 

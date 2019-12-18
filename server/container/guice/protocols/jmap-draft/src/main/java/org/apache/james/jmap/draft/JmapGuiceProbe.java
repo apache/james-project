@@ -36,6 +36,7 @@ import org.apache.james.mailbox.events.MailboxListener;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.util.Port;
 import org.apache.james.utils.GuiceProbe;
 
 public class JmapGuiceProbe implements GuiceProbe {
@@ -55,7 +56,7 @@ public class JmapGuiceProbe implements GuiceProbe {
         this.eventBus = eventBus;
     }
 
-    public int getJmapPort() {
+    public Port getJmapPort() {
         return jmapServer.getPort();
     }
 

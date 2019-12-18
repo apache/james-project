@@ -108,7 +108,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
             .addDomain(DOMAIN)
             .addUser(ALICE.asString(), ALICE_PASSWORD);
 
-        Port jmapPort = Port.of(jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort());
+        Port jmapPort = jamesServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jmapPort.getValue())
             .build();

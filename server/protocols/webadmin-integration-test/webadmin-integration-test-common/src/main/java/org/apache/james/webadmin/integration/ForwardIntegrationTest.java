@@ -82,14 +82,13 @@ public abstract class ForwardIntegrationTest {
         dataProbe.addUser(ALICE.asString(), ALICE_PASSWORD);
         dataProbe.addUser(CEDRIC.asString(), CEDRIC_PASSWORD);
 
+        jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+                .setPort(jmapPort.getValue())
                 .build();
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 
-        jmapPort = new Port(jmapServer.getProbe(JmapGuiceProbe.class)
-            .getJmapPort());
     }
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;

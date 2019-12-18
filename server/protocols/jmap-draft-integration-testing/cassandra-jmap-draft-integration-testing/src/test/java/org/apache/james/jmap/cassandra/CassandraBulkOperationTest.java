@@ -138,7 +138,7 @@ public class CassandraBulkOperationTest {
                         .build()));
         jmapServer.start();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
             .build();
 
         jmapServer.getProbe(DataProbeImpl.class)

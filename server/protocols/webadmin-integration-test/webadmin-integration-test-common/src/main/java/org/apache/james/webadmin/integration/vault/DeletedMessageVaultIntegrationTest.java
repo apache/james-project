@@ -138,8 +138,9 @@ public abstract class DeletedMessageVaultIntegrationTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
 
+        Port jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapPort.getValue())
             .build();
         RestAssured.defaultParser = Parser.JSON;
 
@@ -149,8 +150,6 @@ public abstract class DeletedMessageVaultIntegrationTest {
         dataProbe.addUser(JACK, PASSWORD);
         mailboxProbe.createMailbox("#private", HOMER, DefaultMailboxes.INBOX);
         otherMailboxId = mailboxProbe.createMailbox("#private", HOMER, MAILBOX_NAME);
-        Port jmapPort = Port.of(jmapServer.getProbe(JmapGuiceProbe.class)
-            .getJmapPort());
         homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BOB_PASSWORD);
         jackAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(JACK), PASSWORD);

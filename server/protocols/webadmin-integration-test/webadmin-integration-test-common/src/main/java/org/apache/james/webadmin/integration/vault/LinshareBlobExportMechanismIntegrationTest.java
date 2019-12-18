@@ -106,8 +106,9 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
             .addUser(HOMER, HOMER_PASSWORD)
             .addUser(BART, BART_PASSWORD);
 
+        Port jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort())
+            .setPort(jmapPort.getValue())
             .build();
         RestAssured.defaultParser = Parser.JSON;
 
@@ -116,8 +117,6 @@ public abstract class LinshareBlobExportMechanismIntegrationTest {
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, HOMER, DefaultMailboxes.INBOX);
 
-        Port jmapPort = Port.of(jmapServer.getProbe(JmapGuiceProbe.class)
-            .getJmapPort());
         homerAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(HOMER), HOMER_PASSWORD);
         bartAccessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(BART), BART_PASSWORD);
         user1LinshareAPI = linshareGuiceExtension.getLinshareJunitExtension().getAPIFor(USER_1);

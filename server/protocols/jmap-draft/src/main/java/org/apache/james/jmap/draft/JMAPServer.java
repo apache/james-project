@@ -31,6 +31,7 @@ import org.apache.james.http.jetty.Configuration;
 import org.apache.james.http.jetty.Configuration.Builder;
 import org.apache.james.http.jetty.JettyHttpServer;
 import org.apache.james.lifecycle.api.Startable;
+import org.apache.james.util.Port;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zalando.logbook.DefaultHttpLogWriter;
@@ -111,7 +112,7 @@ public class JMAPServer implements Startable {
         server.ifPresent(Throwing.consumer(JettyHttpServer::stop).sneakyThrow());
     }
 
-    public int getPort() {
-        return server.map(JettyHttpServer::getPort).orElseThrow(() -> new RuntimeException("JMAP server was disabled. No port bound"));
+    public Port getPort() {
+        return Port.of(server.map(JettyHttpServer::getPort).orElseThrow(() -> new RuntimeException("JMAP server was disabled. No port bound")));
     }
 }

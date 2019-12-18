@@ -94,7 +94,7 @@ public abstract class VacationIntegrationTest {
 
         jmapGuiceProbe = guiceJamesServer.getProbe(JmapGuiceProbe.class);
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-            .setPort(jmapGuiceProbe.getJmapPort())
+            .setPort(jmapGuiceProbe.getJmapPort().getValue())
             .build();
 
         user1AccessToken = authenticateJamesUser(baseUri(guiceJamesServer), USER_1, PASSWORD);
