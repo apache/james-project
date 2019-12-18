@@ -20,12 +20,15 @@
 package org.apache.james.dlp.eventsourcing.cassandra;
 
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.dlp.eventsourcing.cassandra.DLPConfigurationModules.DLP_CONFIGURATION_CLEAR;
+import static org.apache.james.dlp.eventsourcing.cassandra.DLPConfigurationModules.DLP_CONFIGURATION_STORE;
 import static org.apache.james.util.ClassLoaderUtils.getSystemResourceAsString;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.util.List;
 
+import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.core.Domain;
 import org.apache.james.dlp.api.DLPConfigurationItem;
 import org.apache.james.dlp.eventsourcing.aggregates.DLPAggregateId;
@@ -41,8 +44,7 @@ import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.google.common.collect.ImmutableList;
 
-public class DTOTest {
-
+class DTOTest {
     private static final DLPConfigurationItem CONFIGURATION_ITEM_1 = DLPConfigurationItem.builder()
         .id(DLPConfigurationItem.Id.of("1"))
         .explanation("Find whatever contains james.org")
@@ -72,14 +74,6 @@ public class DTOTest {
 
     private static final DLPAggregateId DLP_AGGREGATE_ID = new DLPAggregateId(Domain.of("james.org"));
 
-    private static final DLPConfigurationItemsRemovedDTO ITEMS_REMOVED_EVENT_DTO_2 = DLPConfigurationItemsRemovedDTO.from(
-        new ConfigurationItemsRemoved(DLP_AGGREGATE_ID, EventId.first(), DLP_CONFIGURATION_ITEMS),
-        "dlp-configuration-clear");
-
-    private static final DLPConfigurationItemAddedDTO ITEMS_ADDED_EVENT_DTO_2 = DLPConfigurationItemAddedDTO.from(
-        new ConfigurationItemsAdded(DLP_AGGREGATE_ID, EventId.first(), DLP_CONFIGURATION_ITEMS),
-        "dlp-configuration-store");
-
     private static final String ITEMS_REMOVED_EVENT_JSON_1 = getSystemResourceAsString("json/dlp/eventsourcing/items_removed_event_1.json");
     private static final String ITEMS_REMOVED_EVENT_JSON_2 = getSystemResourceAsString("json/dlp/eventsourcing/items_removed_event_2.json");
     private static final String CONFIGURATION_ITEMS_JSON_1 = getSystemResourceAsString("json/dlp/eventsourcing/configuration_item_1.json");
@@ -99,43 +93,37 @@ public class DTOTest {
     }
 
     @Test
-    void shouldThrowsExceptionWhenDeserializeRemovedEventWithEmptyItems() throws Exception {
+    void shouldSerializeDLPConfigurationRemovedEvent() throws Exception {
+        JsonSerializationVerifier.dtoModule(DLP_CONFIGURATION_CLEAR)
+            .bean(new ConfigurationItemsRemoved(
+                DLP_AGGREGATE_ID,
+                EventId.first(),
+                DLP_CONFIGURATION_ITEMS))
+            .json(ITEMS_REMOVED_EVENT_JSON_2)
+            .verify();
+    }
+
+    @Test
+    void shouldThrowsExceptionWhenDeserializeRemovedEventWithEmptyItems() {
         assertThatThrownBy(
             () -> objectMapper.readValue(ITEMS_REMOVED_EVENT_JSON_1, DLPConfigurationItemsRemovedDTO.class));
     }
 
     @Test
-    void shouldSerializeDLPConfigurationRemovedEventDTO() throws Exception {
-        assertThatJson(
-            objectMapper.writeValueAsString(ITEMS_REMOVED_EVENT_DTO_2))
-            .isEqualTo(ITEMS_REMOVED_EVENT_JSON_2);
-    }
-
-    @Test
-    void shouldDeserializeDLPConfigurationRemovedEventDTO() throws Exception {
-        assertThat(
-            objectMapper.readValue(ITEMS_REMOVED_EVENT_JSON_2, DLPConfigurationItemsRemovedDTO.class))
-            .isEqualTo(ITEMS_REMOVED_EVENT_DTO_2);
-    }
-
-    @Test
-    void shouldThrowsExceptionWhenDeserializeAddedEventWithEmptyItems() throws Exception {
+    void shouldThrowsExceptionWhenDeserializeAddedEventWithEmptyItems() {
         assertThatThrownBy(
             () -> objectMapper.readValue(ITEMS_ADDED_EVENT_JSON_1, DLPConfigurationItemAddedDTO.class));
     }
 
     @Test
-    void shouldSerializeDLPConfigurationItemAddedEventDTO() throws Exception {
-        assertThatJson(
-            objectMapper.writeValueAsString(ITEMS_ADDED_EVENT_DTO_2))
-            .isEqualTo(ITEMS_ADDED_EVENT_JSON_2);
-    }
-
-    @Test
-    void shouldDeserializeDLPConfigurationItemAddedEventDTO() throws Exception {
-        assertThat(
-            objectMapper.readValue(ITEMS_ADDED_EVENT_JSON_2, DLPConfigurationItemAddedDTO.class))
-            .isEqualTo(ITEMS_ADDED_EVENT_DTO_2);
+    void shouldSerializeDLPConfigurationItemAddedEvent() throws Exception {
+        JsonSerializationVerifier.dtoModule(DLP_CONFIGURATION_STORE)
+            .bean(new ConfigurationItemsAdded(
+                DLP_AGGREGATE_ID,
+                EventId.first(),
+                DLP_CONFIGURATION_ITEMS))
+            .json(ITEMS_ADDED_EVENT_JSON_2)
+            .verify();
     }
 
     @Test
