@@ -89,12 +89,12 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                 switch (next) {
                 case 'C':
                     // Now check for the CHANGEDSINCE option which is part of CONDSTORE
-                    request.consumeWord(new StringValidator(CHANGEDSINCE));
+                    request.consumeWord(StringValidator.caseIncentive(CHANGEDSINCE));
                     fetch.changedSince(request.number(true));
                     break;
                 case 'V':
                     // Check for the VANISHED option which is part of QRESYNC
-                    request.consumeWord(new StringValidator(VANISHED));
+                    request.consumeWord(StringValidator.caseIncentive(VANISHED));
                     fetch.vanished(true);
                     break;
                 default:

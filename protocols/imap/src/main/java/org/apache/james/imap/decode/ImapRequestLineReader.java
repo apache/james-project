@@ -28,10 +28,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CoderResult;
 import java.nio.charset.CodingErrorAction;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiPredicate;
 
 import javax.mail.Flags;
 
@@ -815,20 +815,34 @@ public abstract class ImapRequestLineReader {
         boolean isValid(char chr);
     }
 
+    /**
+     * Verifies subsequent characters match a specified string
+     */
     public static class StringValidator implements CharacterValidator {
-        private final byte[] expectedStringAsBytes;
+        public static StringValidator caseIncentive(String expectedString) {
+            return new StringValidator(expectedString,
+                (c1, c2) -> isaBoolean(c1, c2));
+        }
+
+        public static boolean isaBoolean(Character c1, Character c2) {
+            return Character.toUpperCase(c1) == Character.toUpperCase(c2);
+        }
+
+        private final String expectedString;
+        private final BiPredicate<Character, Character> equalityTester;
         private int position = 0;
 
-        public StringValidator(String expectedString) {
-            this.expectedStringAsBytes = expectedString.getBytes(StandardCharsets.US_ASCII);
+        private StringValidator(String expectedString, BiPredicate<Character, Character> equalityTester) {
+            this.expectedString = expectedString;
+            this.equalityTester = equalityTester;
         }
 
         @Override
         public boolean isValid(char chr) {
-            if (position >= expectedStringAsBytes.length) {
+            if (position >= expectedString.length()) {
                 return false;
             } else {
-                return ImapRequestLineReader.cap(chr) == expectedStringAsBytes[position++];
+                return equalityTester.test(chr, expectedString.charAt(position++));
             }
         }
     }

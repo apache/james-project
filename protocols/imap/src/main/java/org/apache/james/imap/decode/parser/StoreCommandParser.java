@@ -53,7 +53,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
             // Seems like we have a CONDSTORE parameter
             request.consume();
 
-            request.consumeWord(new StringValidator(UNCHANGEDSINCE));
+            request.consumeWord(StringValidator.caseIncentive(UNCHANGEDSINCE));
             request.consumeChar(' ');
             unchangedSince = request.number(true);
             request.consumeChar(')');
