@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.util.stream.Stream;
 
+import org.apache.james.JsonSerializationVerifier;
 import org.apache.james.server.task.json.dto.MemoryReferenceTaskStore;
 import org.apache.james.server.task.json.dto.TaskDTOModule;
 import org.apache.james.task.CompletedTask;
@@ -34,12 +35,12 @@ import org.apache.james.task.FailedTask;
 import org.apache.james.task.MemoryReferenceTask;
 import org.apache.james.task.Task;
 import org.apache.james.task.ThrowingTask;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 class TaskSerializationTest {
 
@@ -50,32 +51,18 @@ class TaskSerializationTest {
 
     @ParameterizedTest
     @MethodSource
-    void taskShouldBeSerializable(Task task, TaskDTOModule<?, ?> module, String expectedJson) throws Exception {
-        String actual = JsonTaskSerializer.of(module).serialize(task);
-        assertThatJson(actual).isEqualTo(expectedJson);
+    void taskShouldBeSerializable(Task task, TaskDTOModule<Task, ? extends TaskDTOModule> module, String expectedJson) throws Exception {
+        JsonSerializationVerifier.dtoModule(module)
+            .bean(task)
+            .json(expectedJson)
+            .verify();
     }
 
-    private static Stream<Arguments> taskShouldBeSerializable() throws Exception {
-        return validTasks();
-    }
-
-    @ParameterizedTest
-    @MethodSource
-    void taskShouldBeDeserializable(Task task, TaskDTOModule<?, ?> module, String serializedJson) throws Exception {
-        assertThat(JsonTaskSerializer.of(module).deserialize(serializedJson))
-            .isInstanceOf(task.getClass());
-    }
-
-    private static Stream<Arguments> taskShouldBeDeserializable() throws Exception {
-        return validTasks();
-    }
-
-    private static Stream<Arguments> validTasks() throws Exception {
+    private static Stream<Arguments> taskShouldBeSerializable() {
         return Stream.of(
-                Arguments.of(new CompletedTask(), COMPLETED_TASK_MODULE, SERIALIZED_COMPLETED_TASK),
-                Arguments.of(new FailedTask(), FAILED_TASK_MODULE, SERIALIZED_FAILED_TASK),
-                Arguments.of(new ThrowingTask(), THROWING_TASK_MODULE, SERIALIZED_THROWING_TASK)
-        );
+            Arguments.of(new CompletedTask(), COMPLETED_TASK_MODULE, SERIALIZED_COMPLETED_TASK),
+            Arguments.of(new FailedTask(), FAILED_TASK_MODULE, SERIALIZED_FAILED_TASK),
+            Arguments.of(new ThrowingTask(), THROWING_TASK_MODULE, SERIALIZED_THROWING_TASK));
     }
 
     @Test
