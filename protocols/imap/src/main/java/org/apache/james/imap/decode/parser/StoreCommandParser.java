@@ -46,7 +46,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
 
     @Override
     protected ImapMessage decode(ImapRequestLineReader request, Tag tag, boolean useUids, ImapSession session) throws DecodingException {
-        final IdRange[] idSet = request.parseIdRange(session);
+        IdRange[] idSet = request.parseIdRange(session);
         long unchangedSince = -1;
         char next = request.nextWordChar();
         if (next == '(') {
@@ -63,7 +63,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
         MessageManager.FlagsUpdateMode flagsUpdateMode = parseFlagsUpdateMode(request, next);
         String directive = request.consumeWord(new ImapRequestLineReader.NoopCharValidator());
         boolean silent = parseSilent(directive);
-        final Flags flags = parseFlags(request);
+        Flags flags = parseFlags(request);
 
         request.eol();
         return new StoreRequest(idSet, silent, flags, useUids, tag, flagsUpdateMode, unchangedSince);
@@ -72,7 +72,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     private Flags parseFlags(ImapRequestLineReader request) throws DecodingException {
         // Handle all kind of "store-att-flags"
         // See IMAP-281
-        final Flags flags = new Flags();
+        Flags flags = new Flags();
         if (request.nextWordChar() == '(') {
             flags.add(request.flagList());
         } else {
