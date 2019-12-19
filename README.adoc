@@ -57,7 +57,7 @@ There is many other ways one can help us: packaging, communication, etc ...
  ** link:#how-to-run-deployment-tests[How to run deployment Tests]
  ** link:#how-to-check-the-merge-of-a-commit[How to check the merge of a commit]
  * link:#generating-a-package-for-james[Generating a package for James]
- ** link:#know-more-about-james-design[Know more about James design]
+ * link:#know-more-about-james-design[Know more about James design]
 
 == How to try James
 
