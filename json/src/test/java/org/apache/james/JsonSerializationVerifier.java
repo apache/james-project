@@ -24,6 +24,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.BiConsumer;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.json.DTO;
@@ -34,29 +36,42 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public class JsonSerializationVerifier<T, U extends DTO> {
-
     @FunctionalInterface
     public interface RequireJson<T, U extends DTO> {
         JsonSerializationVerifier<T, U> json(String json);
+    }
+
+    @FunctionalInterface
+    public interface EqualityTester<T> extends BiConsumer<T, T> {
+
     }
 
     public static <T, U extends DTO> JsonSerializationVerifier<T, U> dtoModule(DTOModule<T, U> dtoModule) {
         return new JsonSerializationVerifier<>(JsonGenericSerializer
             .forModules(dtoModule)
             .withoutNestedType(),
-            ImmutableList.of());
+            ImmutableList.of(),
+            Optional.empty());
     }
 
     public static <T, U extends DTO> JsonSerializationVerifier<T, U> serializer(JsonGenericSerializer<T, U> serializer) {
-        return new JsonSerializationVerifier<>(serializer, ImmutableList.of());
+        return new JsonSerializationVerifier<>(serializer, ImmutableList.of(), Optional.empty());
+    }
+
+    private static <T> EqualityTester<T> defaultEqualityTester() {
+        return (a, b) -> assertThat(a)
+            .describedAs("Deserialization test [" + b + "]")
+            .isEqualToComparingFieldByFieldRecursively(b);
     }
 
     private final List<Pair<String, T>> testValues;
     private final JsonGenericSerializer<T, U> serializer;
+    private final Optional<EqualityTester<T>> equalityTester;
 
-    private JsonSerializationVerifier( JsonGenericSerializer<T, U> serializer, List<Pair<String, T>> testValues) {
+    private JsonSerializationVerifier(JsonGenericSerializer<T, U> serializer, List<Pair<String, T>> testValues, Optional<EqualityTester<T>> equalityTester) {
         this.testValues = testValues;
         this.serializer = serializer;
+        this.equalityTester = equalityTester;
     }
 
     public RequireJson<T, U> bean(T bean) {
@@ -65,7 +80,15 @@ public class JsonSerializationVerifier<T, U extends DTO> {
             ImmutableList.<Pair<String, T>>builder()
                 .addAll(testValues)
                 .add(Pair.of(json, bean))
-                .build());
+                .build(),
+            equalityTester);
+    }
+
+    public JsonSerializationVerifier<T, U> equalityTester(EqualityTester<T> equalityTester) {
+        return new JsonSerializationVerifier<>(
+            serializer,
+            testValues,
+            Optional.of(equalityTester));
     }
 
     public JsonSerializationVerifier<T, U> testCase(T bean, String json) {
@@ -81,8 +104,7 @@ public class JsonSerializationVerifier<T, U extends DTO> {
             .describedAs("Serialization test [" + testValue.getRight() + "]")
             .isEqualTo(testValue.getLeft());
 
-        assertThat(serializer.deserialize(testValue.getLeft()))
-            .describedAs("Deserialization test [" + testValue.getRight() + "]")
-            .isEqualToComparingFieldByFieldRecursively(testValue.getRight());
+        equalityTester.orElse(defaultEqualityTester())
+            .accept(serializer.deserialize(testValue.getLeft()), testValue.getRight());
     }
 }
