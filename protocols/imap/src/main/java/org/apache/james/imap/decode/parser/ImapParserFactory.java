@@ -19,6 +19,7 @@
 
 package org.apache.james.imap.decode.parser;
 
+import java.time.Clock;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -65,7 +66,7 @@ public class ImapParserFactory implements ImapCommandParserFactory {
             new XListCommandParser(statusResponseFactory),
             new LsubCommandParser(statusResponseFactory),
             new StatusCommandParser(statusResponseFactory),
-            new AppendCommandParser(statusResponseFactory),
+            new AppendCommandParser(statusResponseFactory, Clock.systemDefaultZone()),
 
             // RFC2342 NAMESPACE
             new NamespaceCommandParser(statusResponseFactory),
