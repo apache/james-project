@@ -68,6 +68,10 @@ public class JsonSerializationVerifier<T, U extends DTO> {
                 .build());
     }
 
+    public JsonSerializationVerifier<T, U> testCase(T bean, String json) {
+        return bean(bean).json(json);
+    }
+
     public void verify() throws IOException {
         testValues.forEach(Throwing.<Pair<String, T>>consumer(this::verify).sneakyThrow());
     }

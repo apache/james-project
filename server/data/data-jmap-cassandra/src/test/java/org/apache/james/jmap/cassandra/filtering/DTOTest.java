@@ -57,9 +57,9 @@ class DTOTest {
     @Test
     void shouldSerializeRule() throws Exception {
         JsonSerializationVerifier.dtoModule(FILTERING_RULE_SET_DEFINED)
-            .bean(EMPTY_RULE).json(EVENT_EMPTY_JSON)
-            .bean(SIMPLE_RULE).json(EVENT_JSON)
-            .bean(COMPLEX_RULE).json(EVENT_COMPLEX_JSON)
+            .testCase(EMPTY_RULE, EVENT_EMPTY_JSON)
+            .testCase(SIMPLE_RULE, EVENT_JSON)
+            .testCase(COMPLEX_RULE, EVENT_COMPLEX_JSON)
             .verify();
     }
 }

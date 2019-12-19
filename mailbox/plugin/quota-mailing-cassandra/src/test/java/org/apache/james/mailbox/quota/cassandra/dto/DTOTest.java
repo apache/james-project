@@ -138,10 +138,10 @@ class DTOTest {
     @Test
     void shouldSerializeQuotaThresholdChangedEvent() throws Exception {
         JsonSerializationVerifier.dtoModule(QUOTA_THRESHOLD_CHANGE)
-            .bean(EVENT).json(EVENT_JSON)
-            .bean(EVENT_2).json(EVENT_JSON_2)
-            .bean(EVENT_3).json(EVENT_JSON_3)
-            .bean(EVENT_4).json(EVENT_JSON_4)
+            .testCase(EVENT, EVENT_JSON)
+            .testCase(EVENT_2, EVENT_JSON_2)
+            .testCase(EVENT_3, EVENT_JSON_3)
+            .testCase(EVENT_4, EVENT_JSON_4)
             .verify();
     }
 }
