@@ -19,22 +19,11 @@
 
 package org.apache.james.webadmin.integration.rabbitmq;
 
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
-import org.apache.james.GuiceJamesServer;
-import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationTest;
-import org.junit.Rule;
+import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationContract;
+import org.apache.james.webadmin.integration.rabbitmq.RabbitMQJmapExtension.JamesLifeCyclePolicy;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RabbitMQFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationTest {
-
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
-
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
-
-    @Override
-    public GuiceJamesServer createJamesServer() throws Exception {
-        return jamesTestRule.jmapServer(cassandra.getModule());
-    }
+class RabbitMQFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationContract {
+    @RegisterExtension
+    static RabbitMQJmapExtension rabbitMQJmapExtension = new RabbitMQJmapExtension(JamesLifeCyclePolicy.FOR_EACH_TEST);
 }

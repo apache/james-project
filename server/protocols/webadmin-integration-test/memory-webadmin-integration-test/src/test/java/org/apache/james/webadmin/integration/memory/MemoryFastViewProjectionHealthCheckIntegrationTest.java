@@ -20,19 +20,22 @@
 package org.apache.james.webadmin.integration.memory;
 
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
-import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationTest;
-import org.junit.Rule;
+import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationContract;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationTest {
+class MemoryFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationContract {
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-
-    @Override
-    public GuiceJamesServer createJamesServer() throws Exception {
-        return memoryJmap.jmapServer(
-            binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
-    }
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 }
