@@ -34,7 +34,7 @@ public class SmtpGuiceProbe implements GuiceProbe {
 
     public enum SmtpServerConnectedType {
         SMTP_GLOBAL_SERVER(SmtpGuiceProbe::getSmtpPort),
-        SMTP_START_TLS_SERVER(SmtpGuiceProbe::getSmtpsPort);
+        SMTP_START_TLS_SERVER(SmtpGuiceProbe::getSmtpStartTlsPort);
 
         private final Function<SmtpGuiceProbe, Port> portExtractor;
 
@@ -58,7 +58,7 @@ public class SmtpGuiceProbe implements GuiceProbe {
         return getPort(server -> true);
     }
 
-    public Port getSmtpsPort() {
+    public Port getSmtpStartTlsPort() {
         return getPort(AbstractConfigurableAsyncServer::getStartTLSSupported);
     }
 
