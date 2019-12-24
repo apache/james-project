@@ -117,7 +117,7 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
     @Override
     public Result run() {
         corrector.correctAllProjectionItems(progress)
-            .subscribeOn(Schedulers.boundedElastic())
+            .subscribeOn(Schedulers.elastic())
             .block();
 
         if (progress.failed()) {
