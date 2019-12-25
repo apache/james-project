@@ -20,6 +20,8 @@
 package org.apache.james.blob.objectstorage.aws;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.Properties;
@@ -53,10 +55,11 @@ import com.amazonaws.retry.PredefinedRetryPolicies;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
-import com.github.fge.lambdas.Throwing;
+import com.github.fge.lambdas.runnable.ThrowingRunnable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Module;
@@ -145,14 +148,14 @@ public class AwsS3ObjectStorage {
 
         @Override
         public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
-            return writeFileAndAct(blob, file -> putWithRetry(bucketName, configuration, blob, file));
+            return putWithRetry(bucketName, configuration, () -> uploadByBlob(bucketName, blob));
         }
 
         @Override
         public Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
             Function<File, Mono<Void>> putChangedBlob = file -> {
-                initialBlob.getMetadata().setName(blobIdSupplier.get().asString());
-                return putWithRetry(bucketName, configuration, initialBlob, file);
+                BlobId blobId = blobIdSupplier.get();
+                return putWithRetry(bucketName, configuration, () -> uploadByFile(bucketName, blobId, file));
             };
             return writeFileAndAct(initialBlob, putChangedBlob)
                 .then(Mono.fromCallable(blobIdSupplier::get));
@@ -170,8 +173,8 @@ public class AwsS3ObjectStorage {
             );
         }
 
-        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) {
-            return Mono.<Void>fromRunnable(Throwing.runnable(() -> put(bucketName, configuration, blob, file)).sneakyThrow())
+        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, ThrowingRunnable puttingAttempt) {
+            return Mono.<Void>fromRunnable(puttingAttempt)
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
                     .<Void>onlyIf(retryContext -> needToCreateBucket(retryContext.exception()))
@@ -181,11 +184,23 @@ public class AwsS3ObjectStorage {
                     .doOnRetry(retryContext -> createBucket(bucketName, configuration)));
         }
 
-        private void put(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, Blob blob, File file) throws InterruptedException {
-            PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
-                blob.getMetadata().getName(),
-                file);
+        private void uploadByFile(ObjectStorageBucketName bucketName, BlobId blobId, File file) throws InterruptedException {
+            PutObjectRequest request = new PutObjectRequest(bucketName.asString(), blobId.asString(), file);
+            upload(request);
+        }
 
+        private void uploadByBlob(ObjectStorageBucketName bucketName, Blob blob) throws InterruptedException, IOException {
+            try (InputStream payload = blob.getPayload().openStream()) {
+                PutObjectRequest request = new PutObjectRequest(bucketName.asString(),
+                    blob.getMetadata().getName(),
+                    payload,
+                    new ObjectMetadata());
+
+                upload(request);
+            }
+        }
+
+        private void upload(PutObjectRequest request) throws InterruptedException {
             getTransferManager(configuration)
                 .upload(request)
                 .waitForUploadResult();
