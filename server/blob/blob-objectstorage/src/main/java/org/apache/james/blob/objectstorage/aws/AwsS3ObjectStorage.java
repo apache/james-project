@@ -68,12 +68,11 @@ import reactor.retry.Retry;
 public class AwsS3ObjectStorage {
 
     private static final Iterable<Module> JCLOUDS_MODULES = ImmutableSet.of(new SLF4JLoggingModule());
-    public  static final int MAX_THREADS = 5;
+    private static final int MAX_THREADS = 5;
     private static final boolean DO_NOT_SHUTDOWN_THREAD_POOL = false;
     private static final int MAX_ERROR_RETRY = 5;
-    private static final int FIRST_TRY = 0;
     private static final int MAX_RETRY_ON_EXCEPTION = 3;
-    public static Size MULTIPART_UPLOAD_THRESHOLD;
+    private static Size MULTIPART_UPLOAD_THRESHOLD;
 
     static {
         try {
