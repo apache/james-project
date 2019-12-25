@@ -28,7 +28,6 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.PreDestroy;
@@ -148,32 +147,36 @@ public class AwsS3ObjectStorage {
 
         @Override
         public Mono<Void> putDirectly(ObjectStorageBucketName bucketName, Blob blob) {
-            return putWithRetry(bucketName, configuration, () -> uploadByBlob(bucketName, blob));
+            return putWithRetry(bucketName, () -> uploadByBlob(bucketName, blob));
         }
 
         @Override
         public Mono<BlobId> putAndComputeId(ObjectStorageBucketName bucketName, Blob initialBlob, Supplier<BlobId> blobIdSupplier) {
-            Function<File, Mono<Void>> putChangedBlob = file -> {
-                BlobId blobId = blobIdSupplier.get();
-                return putWithRetry(bucketName, configuration, () -> uploadByFile(bucketName, blobId, file));
-            };
-            return writeFileAndAct(initialBlob, putChangedBlob)
-                .then(Mono.fromCallable(blobIdSupplier::get));
-        }
-
-        private Mono<Void> writeFileAndAct(Blob blob, Function<File, Mono<Void>> putFile) {
             return Mono.using(
-                () -> {
-                    File file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
-                    FileUtils.copyToFile(blob.getPayload().openStream(), file);
-                    return file;
-                },
-                putFile::apply,
-                FileUtils::deleteQuietly
-            );
+                () -> copyToTempFile(initialBlob),
+                file -> putByFile(bucketName, blobIdSupplier, file),
+                this::deleteFileAsync);
         }
 
-        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration, ThrowingRunnable puttingAttempt) {
+        private Mono<BlobId> putByFile(ObjectStorageBucketName bucketName, Supplier<BlobId> blobIdSupplier, File file) {
+            return Mono.fromSupplier(blobIdSupplier)
+                .flatMap(blobId -> putWithRetry(bucketName, () -> uploadByFile(bucketName, blobId, file))
+                    .then(Mono.just(blobId)));
+        }
+
+        private File copyToTempFile(Blob blob) throws IOException {
+            File file = File.createTempFile(UUID.randomUUID().toString(), ".tmp");
+            FileUtils.copyToFile(blob.getPayload().openStream(), file);
+            return file;
+        }
+
+        private void deleteFileAsync(File file) {
+            Mono.fromRunnable(() -> FileUtils.deleteQuietly(file))
+                .subscribeOn(Schedulers.elastic())
+                .subscribe();
+        }
+
+        private Mono<Void> putWithRetry(ObjectStorageBucketName bucketName, ThrowingRunnable puttingAttempt) {
             return Mono.<Void>fromRunnable(puttingAttempt)
                 .publishOn(Schedulers.elastic())
                 .retryWhen(Retry
@@ -201,9 +204,11 @@ public class AwsS3ObjectStorage {
         }
 
         private void upload(PutObjectRequest request) throws InterruptedException {
-            getTransferManager(configuration)
+            TransferManager transferManager = getTransferManager();
+            transferManager
                 .upload(request)
                 .waitForUploadResult();
+            transferManager.shutdownNow();
         }
 
         private void createBucket(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration) {
@@ -221,7 +226,7 @@ public class AwsS3ObjectStorage {
             return false;
         }
 
-        private TransferManager getTransferManager(AwsS3AuthConfiguration configuration) {
+        private TransferManager getTransferManager() {
             ClientConfiguration clientConfiguration = getClientConfiguration();
             AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
 
