@@ -83,10 +83,10 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
         }
     }
 
-    public static class RecomputeAllPreviousTaskDTO implements TaskDTO {
+    public static class RecomputeAllPreviewsTaskDTO implements TaskDTO {
         private final String type;
 
-        public RecomputeAllPreviousTaskDTO(@JsonProperty("type") String type) {
+        public RecomputeAllPreviewsTaskDTO(@JsonProperty("type") String type) {
             this.type = type;
         }
 
@@ -96,12 +96,12 @@ public class RecomputeAllFastViewProjectionItemsTask implements Task {
         }
     }
 
-    public static TaskDTOModule<RecomputeAllFastViewProjectionItemsTask, RecomputeAllPreviousTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
+    public static TaskDTOModule<RecomputeAllFastViewProjectionItemsTask, RecomputeAllPreviewsTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
         return DTOModule
             .forDomainObject(RecomputeAllFastViewProjectionItemsTask.class)
-            .convertToDTO(RecomputeAllPreviousTaskDTO.class)
+            .convertToDTO(RecomputeAllPreviewsTaskDTO.class)
             .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask(corrector))
-            .toDTOConverter((task, type) -> new RecomputeAllPreviousTaskDTO(type))
+            .toDTOConverter((task, type) -> new RecomputeAllPreviewsTaskDTO(type))
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }

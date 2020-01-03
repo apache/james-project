@@ -211,7 +211,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void recomputeAllShouldCompleteWhenUserWithNoMailbox()throws Exception {
+    void recomputeAllShouldCompleteWhenUserWithNoMailbox() throws Exception {
         usersRepository.addUser(BOB, "pass");
 
         String taskId = with()
@@ -238,7 +238,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void recomputeAllShouldCompleteWhenUserWithNoMessage()throws Exception {
+    void recomputeAllShouldCompleteWhenUserWithNoMessage() throws Exception {
         usersRepository.addUser(BOB, "pass");
         mailboxManager.createMailbox(MailboxPath.inbox(BOB), mailboxManager.createSystemSession(BOB));
 
@@ -266,7 +266,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void recomputeAllShouldCompleteWhenOneMessage()throws Exception {
+    void recomputeAllShouldCompleteWhenOneMessage() throws Exception {
         usersRepository.addUser(BOB, "pass");
         MailboxSession session = mailboxManager.createSystemSession(BOB);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), session);
@@ -298,7 +298,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void recomputeAllShouldUpdateProjection()throws Exception {
+    void recomputeAllShouldUpdateProjection() throws Exception {
         usersRepository.addUser(BOB, "pass");
         MailboxSession session = mailboxManager.createSystemSession(BOB);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), session);
@@ -321,7 +321,7 @@ class RecomputeAllFastViewProjectionItemsRequestToTaskTest {
     }
 
     @Test
-    void recomputeAllShouldBeIdempotent()throws Exception {
+    void recomputeAllShouldBeIdempotent() throws Exception {
         usersRepository.addUser(BOB, "pass");
         MailboxSession session = mailboxManager.createSystemSession(BOB);
         Optional<MailboxId> mailboxId = mailboxManager.createMailbox(MailboxPath.inbox(BOB), session);
