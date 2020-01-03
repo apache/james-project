@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -98,7 +99,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 
@@ -133,7 +134,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 
@@ -168,7 +169,7 @@ class CassandraAttachmentFallbackTest {
             .bytes("{\"property\":`\"different\"}".getBytes(StandardCharsets.UTF_8))
             .build();
 
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes()).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST).block();
         attachmentDAOV2.storeAttachment(CassandraAttachmentDAOV2.from(attachment, blobId)).block();
         attachmentDAO.storeAttachment(otherAttachment).block();
 

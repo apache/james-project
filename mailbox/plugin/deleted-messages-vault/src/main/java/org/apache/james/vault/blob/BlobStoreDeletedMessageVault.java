@@ -19,6 +19,8 @@
 
 package org.apache.james.vault.blob;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+
 import java.io.InputStream;
 import java.time.Clock;
 import java.time.ZonedDateTime;
@@ -47,6 +49,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -95,7 +98,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
-        return blobStore.save(bucketName, mimeMessage)
+        return blobStore.save(bucketName, mimeMessage, LOW_COST)
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
                 .blobId(blobId))

@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.union;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LowCost;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LowCost;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,25 +57,24 @@ import reactor.core.publisher.Mono;
 class UnionBlobStoreTest implements BlobStoreContract {
 
     private static class FailingBlobStore implements BlobStore {
-
         @Override
-        public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+        public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
             return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
-        public Mono<BlobId> save(BucketName bucketName, String data) {
+        public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
+            return Mono.error(new RuntimeException("broken everywhere"));
+        }
+
+        @Override
+        public Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
             return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
         public BucketName getDefaultBucketName() {
             return BucketName.DEFAULT;
-        }
-
-        @Override
-        public Mono<BlobId> save(BucketName bucketName, InputStream data) {
-            return Mono.error(new RuntimeException("broken everywhere"));
         }
 
         @Override
@@ -106,12 +107,12 @@ class UnionBlobStoreTest implements BlobStoreContract {
     private static class ThrowingBlobStore implements BlobStore {
 
         @Override
-        public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+        public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
             throw new RuntimeException("broken everywhere");
         }
 
         @Override
-        public Mono<BlobId> save(BucketName bucketName, String data) {
+        public Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
             throw new RuntimeException("broken everywhere");
         }
 
@@ -121,7 +122,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
         }
 
         @Override
-        public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+        public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
             throw new RuntimeException("broken everywhere");
         }
 
@@ -190,7 +191,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
@@ -207,7 +208,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT)).block();
+            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LowCost).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
@@ -228,7 +229,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
@@ -245,7 +246,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT)).block();
+            BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LowCost).block();
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
@@ -267,7 +268,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -281,7 +282,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new ThrowingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             assertThat(unionBlobStore.readBytes(unionBlobStore.getDefaultBucketName(), blobId).block())
                 .isEqualTo(BLOB_CONTENT);
@@ -299,7 +300,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
                 .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -312,7 +313,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
                 .current(new FailingBlobStore())
                 .legacy(legacyBlobStore)
                 .build();
-            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+            BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
             assertThat(unionBlobStore.readBytes(unionBlobStore.getDefaultBucketName(), blobId).block())
                 .isEqualTo(BLOB_CONTENT);
@@ -326,9 +327,9 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
         Stream<Function<UnionBlobStore, Mono<?>>> blobStoreOperationsReturnFutures() {
             return Stream.of(
-                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT),
-                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), STRING_CONTENT),
-                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT)),
+                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost),
+                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), STRING_CONTENT, LowCost),
+                blobStore -> blobStore.save(blobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LowCost),
                 blobStore -> blobStore.readBytes(blobStore.getDefaultBucketName(), BLOB_ID_FACTORY.randomId()));
         }
 
@@ -390,7 +391,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readShouldReturnFromCurrentWhenAvailable() {
-        BlobId blobId = currentBlobStore.save(currentBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = currentBlobStore.save(currentBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -398,7 +399,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readShouldReturnFromLegacyWhenCurrentNotAvailable() {
-        BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThat(unionBlobStore.read(unionBlobStore.getDefaultBucketName(), blobId))
             .hasSameContentAs(new ByteArrayInputStream(BLOB_CONTENT));
@@ -406,7 +407,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readBytesShouldReturnFromCurrentWhenAvailable() {
-        BlobId blobId = currentBlobStore.save(currentBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = currentBlobStore.save(currentBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThat(unionBlobStore.readBytes(currentBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -414,7 +415,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void readBytesShouldReturnFromLegacyWhenCurrentNotAvailable() {
-        BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = legacyBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThat(unionBlobStore.readBytes(unionBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -422,7 +423,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveShouldWriteToCurrent() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThat(currentBlobStore.readBytes(currentBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -430,7 +431,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveShouldNotWriteToLegacy() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), BLOB_CONTENT, LowCost).block();
 
         assertThatThrownBy(() -> legacyBlobStore.readBytes(legacyBlobStore.getDefaultBucketName(), blobId).block())
             .isInstanceOf(ObjectStoreException.class);
@@ -438,7 +439,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveStringShouldWriteToCurrent() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), STRING_CONTENT).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), STRING_CONTENT, LowCost).block();
 
         assertThat(currentBlobStore.readBytes(currentBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -446,7 +447,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveStringShouldNotWriteToLegacy() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), STRING_CONTENT).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), STRING_CONTENT, LowCost).block();
 
         assertThatThrownBy(() -> legacyBlobStore.readBytes(legacyBlobStore.getDefaultBucketName(), blobId).block())
             .isInstanceOf(ObjectStoreException.class);
@@ -454,7 +455,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveInputStreamShouldWriteToCurrent() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT)).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LowCost).block();
 
         assertThat(currentBlobStore.readBytes(currentBlobStore.getDefaultBucketName(), blobId).block())
             .isEqualTo(BLOB_CONTENT);
@@ -462,7 +463,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void saveInputStreamShouldNotWriteToLegacy() {
-        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT)).block();
+        BlobId blobId = unionBlobStore.save(unionBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LowCost).block();
 
         assertThatThrownBy(() -> legacyBlobStore.readBytes(legacyBlobStore.getDefaultBucketName(), blobId).block())
             .isInstanceOf(ObjectStoreException.class);
@@ -512,8 +513,8 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteBucketShouldDeleteBothCurrentAndLegacyBuckets() {
-        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
-        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
@@ -525,7 +526,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteBucketShouldDeleteCurrentBucketEvenWhenLegacyDoesNotExist() {
-        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
@@ -535,7 +536,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteBucketShouldDeleteLegacyBucketEvenWhenCurrentDoesNotExist() {
-        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.deleteBucket(BucketName.DEFAULT).block();
 
@@ -564,8 +565,8 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteShouldDeleteBothCurrentAndLegacyBlob() {
-        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
-        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.delete(BucketName.DEFAULT, currentBlobId).block();
 
@@ -577,7 +578,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteShouldDeleteCurrentBlobEvenWhenLegacyDoesNotExist() {
-        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId currentBlobId = currentBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.delete(BucketName.DEFAULT, currentBlobId).block();
 
@@ -587,7 +588,7 @@ class UnionBlobStoreTest implements BlobStoreContract {
 
     @Test
     void deleteShouldDeleteLegacyBlobEvenWhenCurrentDoesNotExist() {
-        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT).block();
+        BlobId legacyBlobId = legacyBlobStore.save(BucketName.DEFAULT, BLOB_CONTENT, LowCost).block();
 
         unionBlobStore.delete(BucketName.DEFAULT, legacyBlobId).block();
 

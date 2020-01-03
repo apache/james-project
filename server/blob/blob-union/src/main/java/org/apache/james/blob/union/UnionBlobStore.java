@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import org.apache.james.blob.api.BlobId;
@@ -40,6 +39,11 @@ import com.google.common.base.Preconditions;
 import reactor.core.publisher.Mono;
 
 public class UnionBlobStore implements BlobStore {
+
+    @FunctionalInterface
+    public interface StorageOperation<T> {
+        Mono<BlobId> save(BucketName bucketName, T data, StoragePolicy storagePolicy);
+    }
 
     @FunctionalInterface
     public interface RequireCurrent {
@@ -83,26 +87,26 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         try {
-            return saveToCurrentFallbackIfFails(bucketName, data,
+            return saveToCurrentFallbackIfFails(bucketName, data, storagePolicy,
                 currentBlobStore::save,
                 legacyBlobStore::save);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving bytes data, fall back to legacy blob store", e);
-            return legacyBlobStore.save(bucketName, data);
+            return legacyBlobStore.save(bucketName, data, storagePolicy);
         }
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, String data) {
+    public Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
         try {
-            return saveToCurrentFallbackIfFails(bucketName, data,
+            return saveToCurrentFallbackIfFails(bucketName, data, storagePolicy,
                 currentBlobStore::save,
                 legacyBlobStore::save);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving String data, fall back to legacy blob store", e);
-            return legacyBlobStore.save(bucketName, data);
+            return legacyBlobStore.save(bucketName, data, storagePolicy);
         }
     }
 
@@ -118,14 +122,14 @@ public class UnionBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         try {
-            return saveToCurrentFallbackIfFails(bucketName, data,
+            return saveToCurrentFallbackIfFails(bucketName, data, storagePolicy,
                 currentBlobStore::save,
                 legacyBlobStore::save);
         } catch (Exception e) {
             LOGGER.error("exception directly happens while saving InputStream data, fall back to legacy blob store", e);
-            return legacyBlobStore.save(bucketName, data);
+            return legacyBlobStore.save(bucketName, data, storagePolicy);
         }
     }
 
@@ -190,12 +194,13 @@ public class UnionBlobStore implements BlobStore {
     private <T> Mono<BlobId> saveToCurrentFallbackIfFails(
         BucketName bucketName,
         T data,
-        BiFunction<BucketName, T, Mono<BlobId>> currentSavingOperation,
-        BiFunction<BucketName, T, Mono<BlobId>> fallbackSavingOperationSupplier) {
+        StoragePolicy storagePolicy,
+        StorageOperation<T> currentSavingOperation,
+        StorageOperation<T> fallbackSavingOperationSupplier) {
 
-        return Mono.defer(() -> currentSavingOperation.apply(bucketName, data))
+        return Mono.defer(() -> currentSavingOperation.save(bucketName, data, storagePolicy))
             .onErrorResume(this::logAndReturnEmpty)
-            .switchIfEmpty(Mono.defer(() -> fallbackSavingOperationSupplier.apply(bucketName, data)));
+            .switchIfEmpty(Mono.defer(() -> fallbackSavingOperationSupplier.save(bucketName, data, storagePolicy)));
     }
 
     private <T> Mono<T> logAndReturnEmpty(Throwable throwable) {

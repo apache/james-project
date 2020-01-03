@@ -57,7 +57,7 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(data);
 
@@ -72,12 +72,12 @@ public class MemoryBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(data);
         try {
             byte[] bytes = IOUtils.toByteArray(data);
-            return save(bucketName, bytes);
+            return save(bucketName, bytes, storagePolicy);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

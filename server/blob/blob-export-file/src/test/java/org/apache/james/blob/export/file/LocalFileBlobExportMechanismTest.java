@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.export.file;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -79,7 +80,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldSendAMail() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
         String explanation = "The content of a deleted message vault had been shared with you.";
         testee.blobId(blobId)
@@ -112,7 +113,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithTheCorrespondingContent(FileSystem fileSystem) {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -150,7 +151,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithoutExtensionWhenNotDeclaringExtension() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -174,7 +175,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithExtensionWhenDeclaringExtension() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -199,7 +200,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithPrefixWhenDeclaringPrefix() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT).block();
+        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
         String filePrefix = "deleted-message-of-bob@james.org";
 
         testee.blobId(blobId)

@@ -25,16 +25,22 @@ import reactor.core.publisher.Mono;
 
 public interface BlobStore {
 
-    Mono<BlobId> save(BucketName bucketName, byte[] data);
+    enum StoragePolicy {
+        SIZE_BASED,
+        LOW_COST,
+        HIGH_PERFORMANCE
+    }
 
-    Mono<BlobId> save(BucketName bucketName, InputStream data);
+    Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy);
+
+    Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy);
 
     Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
 
     InputStream read(BucketName bucketName, BlobId blobId);
 
-    default Mono<BlobId> save(BucketName bucketName, String data) {
-        return save(bucketName, data.getBytes(StandardCharsets.UTF_8));
+    default Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
+        return save(bucketName, data.getBytes(StandardCharsets.UTF_8), storagePolicy);
     }
 
     BucketName getDefaultBucketName();

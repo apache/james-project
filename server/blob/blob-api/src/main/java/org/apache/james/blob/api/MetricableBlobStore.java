@@ -50,15 +50,15 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         return metricFactory
-            .runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data));
+            .runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         return metricFactory
-            .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data));
+            .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override

@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.vault.routes;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -85,7 +87,7 @@ class ExportService {
         try (FileBackedOutputStream fileOutputStream = new FileBackedOutputStream(FileUtils.ONE_MB_BI.intValue())) {
             zipper.zip(contentLoader(username), messages.toStream(), fileOutputStream);
             ByteSource byteSource = fileOutputStream.asByteSource();
-            return blobStore.save(blobStore.getDefaultBucketName(), byteSource.openStream()).block();
+            return blobStore.save(blobStore.getDefaultBucketName(), byteSource.openStream(), LOW_COST).block();
         }
     }
 

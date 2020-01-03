@@ -97,7 +97,7 @@ public class ObjectStorageBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
         ObjectStorageBucketName resolvedBucketName = bucketNameResolver.resolve(bucketName);
 
@@ -116,19 +116,19 @@ public class ObjectStorageBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
 
-        return Mono.defer(() -> savingStrategySelection(bucketName, data));
+        return Mono.defer(() -> savingStrategySelection(bucketName, data, storagePolicy));
     }
 
-    private Mono<BlobId> savingStrategySelection(BucketName bucketName, InputStream data) {
+    private Mono<BlobId> savingStrategySelection(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         InputStream bufferedData = new BufferedInputStream(data, BUFFERED_SIZE + 1);
         try {
             if (isItABigStream(bufferedData)) {
                 return saveBigStream(bucketName, bufferedData);
             } else {
-                return save(bucketName, IOUtils.toByteArray(bufferedData));
+                return save(bucketName, IOUtils.toByteArray(bufferedData), storagePolicy);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);

@@ -76,7 +76,7 @@ public class CassandraBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data) {
+    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
 
         return saveAsMono(bucketName, data);
@@ -144,7 +144,7 @@ public class CassandraBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data) {
+    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
         return Mono.fromCallable(() -> IOUtils.toByteArray(data))
             .flatMap(bytes -> saveAsMono(bucketName, bytes));

@@ -71,14 +71,16 @@ public interface Store<T, I> {
 
         public static class BytesToSave implements ValueToSave {
             private final byte[] bytes;
+            private final BlobStore.StoragePolicy storagePolicy;
 
-            public BytesToSave(byte[] bytes) {
+            public BytesToSave(byte[] bytes, BlobStore.StoragePolicy storagePolicy) {
                 this.bytes = bytes;
+                this.storagePolicy = storagePolicy;
             }
 
             @Override
             public Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore) {
-                return blobStore.save(bucketName, bytes);
+                return blobStore.save(bucketName, bytes, storagePolicy);
             }
         }
 

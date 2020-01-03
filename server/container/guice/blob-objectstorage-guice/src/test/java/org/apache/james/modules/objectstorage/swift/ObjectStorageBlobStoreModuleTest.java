@@ -19,6 +19,7 @@
 
 package org.apache.james.modules.objectstorage.swift;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.util.Optional;
@@ -137,7 +138,7 @@ class ObjectStorageBlobStoreModuleTest {
 
         BlobStore blobStore = injector.getInstance(Key.get(BlobStore.class, Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION)));
 
-        assertThatCode(() -> blobStore.save(blobStore.getDefaultBucketName(), new byte[] {0x00})).doesNotThrowAnyException();
+        assertThatCode(() -> blobStore.save(blobStore.getDefaultBucketName(), new byte[] {0x00}, LOW_COST)).doesNotThrowAnyException();
     }
 
 }

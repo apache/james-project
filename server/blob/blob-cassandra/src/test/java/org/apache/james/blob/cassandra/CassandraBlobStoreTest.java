@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.cassandra;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.spy;
@@ -87,7 +88,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString).block();
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
 
         byte[] bytes = testee.readBytes(testee.getDefaultBucketName(), blobId).block();
 
@@ -98,7 +99,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void readBytesShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString).block();
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
 
         when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
 
@@ -111,7 +112,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString).block();
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
 
         when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
 
@@ -131,7 +132,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void blobStoreShouldSupport100MBBlob() throws IOException {
         ZeroedInputStream data = new ZeroedInputStream(100_000_000);
         HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), writeHash).block();
+        BlobId blobId = testee.save(testee.getDefaultBucketName(), writeHash, LOW_COST).block();
 
         InputStream bytes = testee.read(testee.getDefaultBucketName(), blobId);
         HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);

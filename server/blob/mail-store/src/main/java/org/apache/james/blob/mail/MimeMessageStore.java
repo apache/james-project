@@ -20,6 +20,8 @@
 package org.apache.james.blob.mail;
 
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.blob.mail.MimeMessagePartsId.BODY_BLOB_TYPE;
 import static org.apache.james.blob.mail.MimeMessagePartsId.HEADER_BLOB_TYPE;
 
@@ -76,8 +78,8 @@ public class MimeMessageStore {
                 byte[] headerBytes = getHeaderBytes(messageAsArray, bodyStartOctet);
                 byte[] bodyBytes = getBodyBytes(messageAsArray, bodyStartOctet);
                 return Stream.of(
-                    Pair.of(HEADER_BLOB_TYPE, new Store.Impl.BytesToSave(headerBytes)),
-                    Pair.of(BODY_BLOB_TYPE, new Store.Impl.BytesToSave(bodyBytes)));
+                    Pair.of(HEADER_BLOB_TYPE, new Store.Impl.BytesToSave(headerBytes, SIZE_BASED)),
+                    Pair.of(BODY_BLOB_TYPE, new Store.Impl.BytesToSave(bodyBytes, LOW_COST)));
             } catch (MessagingException | IOException e) {
                 throw new RuntimeException(e);
             }

@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.api;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -61,7 +62,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
         store.delete(defaultBucketName, blobId).block();
 
         assertThatThrownBy(() -> store.read(defaultBucketName, blobId))
@@ -73,7 +74,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
         store.delete(defaultBucketName, blobId).block();
 
         assertThatCode(() -> store.delete(defaultBucketName, blobId).block())
@@ -85,8 +86,8 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobIdToDelete = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
-        BlobId otherBlobId = store.save(defaultBucketName, ELEVEN_KILOBYTES).block();
+        BlobId blobIdToDelete = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
+        BlobId otherBlobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, LOW_COST).block();
 
         store.delete(defaultBucketName, blobIdToDelete).block();
 
@@ -100,7 +101,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, LOW_COST).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> store.delete(defaultBucketName, blobId).block()))
@@ -121,8 +122,8 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId customBlobId = store.save(CUSTOM, "custom_string").block();
-        BlobId defaultBlobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        BlobId customBlobId = store.save(CUSTOM, "custom_string", LOW_COST).block();
+        BlobId defaultBlobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
 
         store.delete(CUSTOM, customBlobId).block();
 
@@ -136,8 +137,8 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        store.save(CUSTOM, SHORT_BYTEARRAY).block();
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY).block();
+        store.save(CUSTOM, SHORT_BYTEARRAY, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
 
         store.delete(defaultBucketName, blobId).block();
 
@@ -151,7 +152,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, LOW_COST).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {
@@ -178,7 +179,7 @@ public interface DeleteBlobStoreContract {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, LOW_COST).block();
 
         ConcurrentTestRunner.builder()
             .operation(((threadNumber, step) -> {

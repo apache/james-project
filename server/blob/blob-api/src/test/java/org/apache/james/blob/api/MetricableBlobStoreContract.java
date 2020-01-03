@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.api;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.MetricableBlobStore.DELETE_BUCKET_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.DELETE_TIMER_NAME;
 import static org.apache.james.blob.api.MetricableBlobStore.READ_BYTES_TIMER_NAME;
@@ -61,8 +62,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveBytesShouldPublishSaveBytesTimerMetrics() {
         BlobStore store = testee();
 
-        store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
-        store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
+        store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
+        store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
             .hasSize(2);
@@ -72,8 +73,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveStringShouldPublishSaveBytesTimerMetrics() {
         BlobStore store = testee();
 
-        store.save(store.getDefaultBucketName(), STRING_CONTENT).block();
-        store.save(store.getDefaultBucketName(), STRING_CONTENT).block();
+        store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST).block();
+        store.save(store.getDefaultBucketName(), STRING_CONTENT, LOW_COST).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_BYTES_TIMER_NAME))
             .hasSize(2);
@@ -83,8 +84,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void saveInputStreamShouldPublishSaveInputStreamTimerMetrics() {
         BlobStore store = testee();
 
-        store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT)).block();
-        store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT)).block();
+        store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST).block();
+        store.save(store.getDefaultBucketName(), new ByteArrayInputStream(BYTES_CONTENT), LOW_COST).block();
 
         assertThat(metricsTestExtension.getMetricFactory().executionTimesFor(SAVE_INPUT_STREAM_TIMER_NAME))
             .hasSize(2);
@@ -94,7 +95,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void readBytesShouldPublishReadBytesTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId = store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
+        BlobId blobId = store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
         store.readBytes(store.getDefaultBucketName(), blobId).block();
         store.readBytes(store.getDefaultBucketName(), blobId).block();
 
@@ -106,7 +107,7 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void readShouldPublishReadTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId = store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
+        BlobId blobId = store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
         store.read(store.getDefaultBucketName(), blobId);
         store.read(store.getDefaultBucketName(), blobId);
 
@@ -119,8 +120,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
         BlobStore store = testee();
 
         BucketName bucketName = BucketName.of("custom");
-        store.save(BucketName.DEFAULT, BYTES_CONTENT).block();
-        store.save(bucketName, BYTES_CONTENT).block();
+        store.save(BucketName.DEFAULT, BYTES_CONTENT, LOW_COST).block();
+        store.save(bucketName, BYTES_CONTENT, LOW_COST).block();
 
         store.deleteBucket(bucketName).block();
 
@@ -132,8 +133,8 @@ public interface MetricableBlobStoreContract extends BlobStoreContract {
     default void deleteShouldPublishDeleteTimerMetrics() {
         BlobStore store = testee();
 
-        BlobId blobId1 = store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
-        BlobId blobId2 = store.save(store.getDefaultBucketName(), BYTES_CONTENT).block();
+        BlobId blobId1 = store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
+        BlobId blobId2 = store.save(store.getDefaultBucketName(), BYTES_CONTENT, LOW_COST).block();
 
         store.delete(BucketName.DEFAULT, blobId1).block();
         store.delete(BucketName.DEFAULT, blobId2).block();

@@ -19,6 +19,8 @@
 
 package org.apache.james.mailbox.cassandra.mail.migration;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+
 import javax.inject.Inject;
 
 import org.apache.james.backends.cassandra.migration.Migration;
@@ -55,7 +57,7 @@ public class AttachmentV2Migration implements Migration {
     }
 
     private Mono<Void> migrateAttachment(Attachment attachment) {
-        return blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes())
+        return blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST)
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(attachmentDAOV2::storeAttachment)
             .then(attachmentDAOV1.deleteAttachment(attachment.getAttachmentId()));

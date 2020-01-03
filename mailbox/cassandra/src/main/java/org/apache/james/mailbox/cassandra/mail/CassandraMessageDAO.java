@@ -23,6 +23,8 @@ import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.eq;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageIds.MESSAGE_ID;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.ATTACHMENTS;
 import static org.apache.james.mailbox.cassandra.table.CassandraMessageV2Table.BODY;
@@ -182,8 +184,8 @@ public class CassandraMessageDAO {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
 
-            Mono<BlobId> bodyFuture = blobStore.save(blobStore.getDefaultBucketName(), bodyContent);
-            Mono<BlobId> headerFuture = blobStore.save(blobStore.getDefaultBucketName(), headerContent);
+            Mono<BlobId> bodyFuture = blobStore.save(blobStore.getDefaultBucketName(), bodyContent, LOW_COST);
+            Mono<BlobId> headerFuture = blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED);
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
