@@ -112,7 +112,7 @@ public class MessageFastViewProjectionCorrector {
         }
     }
 
-    private Mono<Void> correctUsersProjectionItems(Progress progress, Username username) {
+    Mono<Void> correctUsersProjectionItems(Progress progress, Username username) {
         try {
             MailboxSession session = mailboxManager.createSystemSession(username);
             return listUsersMailboxes(session)

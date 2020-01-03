@@ -1,0 +1,7 @@
+{
+  "type":"RecomputeUserFastViewProjectionItemsTask",
+  "timestamp":"2007-12-03T10:15:30Z",
+  "username": "bob",
+  "processedMessageCount":2,
+  "failedMessageCount":3
+}
