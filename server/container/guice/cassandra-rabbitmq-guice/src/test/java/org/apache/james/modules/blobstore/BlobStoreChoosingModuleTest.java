@@ -27,7 +27,7 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.FakePropertiesProvider;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
-import org.apache.james.blob.union.UnionBlobStore;
+import org.apache.james.blob.union.HybridBlobStore;
 import org.apache.james.modules.blobstore.BlobStoreChoosingConfiguration.BlobStoreImplName;
 import org.apache.james.modules.mailbox.ConfigurationComponent;
 import org.junit.jupiter.api.Test;
@@ -105,16 +105,16 @@ class BlobStoreChoosingModuleTest {
     }
 
     @Test
-    void provideChoosingConfigurationShouldReturnUnionConfigurationWhenConfigurationImplIsUnion() throws Exception {
+    void provideChoosingConfigurationShouldReturnHybridConfigurationWhenConfigurationImplIsHybrid() throws Exception {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreImplName.UNION.getName());
+        configuration.addProperty("implementation", BlobStoreImplName.HYBRID.getName());
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
             .register(ConfigurationComponent.NAME, configuration)
             .build();
 
         assertThat(module.provideChoosingConfiguration(propertyProvider))
-            .isEqualTo(BlobStoreChoosingConfiguration.union());
+            .isEqualTo(BlobStoreChoosingConfiguration.hybrid());
     }
 
     @Test
@@ -149,11 +149,11 @@ class BlobStoreChoosingModuleTest {
     }
 
     @Test
-    void provideBlobStoreShouldReturnUnionBlobStoreWhenUnionConfigured() {
+    void provideBlobStoreShouldReturnHybridBlobStoreWhenHybridConfigured() {
         BlobStoreChoosingModule module = new BlobStoreChoosingModule();
 
-        assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.union(),
+        assertThat(module.provideBlobStore(BlobStoreChoosingConfiguration.hybrid(),
             CASSANDRA_BLOBSTORE_PROVIDER, OBJECT_STORAGE_BLOBSTORE_PROVIDER))
-            .isInstanceOf(UnionBlobStore.class);
+            .isInstanceOf(HybridBlobStore.class);
     }
 }
