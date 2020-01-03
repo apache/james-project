@@ -323,6 +323,26 @@ public abstract class WebAdminServerIntegrationTest {
         .when()
             .get(taskId + "/await")
         .then()
-            .body("status", is("completed"));
+            .body("status", is("completed"))
+            .body("type", is("RecomputeAllFastViewProjectionItemsTask"));
+    }
+
+    @Test
+    public void jmapUserTasksShouldBeExposed() throws Exception {
+        dataProbe.addUser(USERNAME, "anyPassword");
+
+        String taskId = with()
+            .queryParam("task", "recomputeFastViewProjectionItems")
+            .post("/users/" + USERNAME + "/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("RecomputeUserFastViewProjectionItemsTask"));
     }
 }
