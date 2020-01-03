@@ -189,7 +189,7 @@ public class HealthCheckRoutes implements PublicRoutes {
     
     private HaltException throw404(String componentName) {
         return ErrorResponder.builder()
-            .message(String.format("Component with name %s cannot be found", componentName))
+            .message("Component with name %s cannot be found", componentName)
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorResponder.ErrorType.NOT_FOUND)
             .haltError();

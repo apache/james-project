@@ -252,7 +252,7 @@ public class DomainsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NO_CONTENT_204)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message(domain.name() + " already exists")
+                .message("%s already exists", domain.name())
                 .cause(e)
                 .haltError();
         } catch (IllegalArgumentException e) {
@@ -260,7 +260,7 @@ public class DomainsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation " + domain.name())
+                .message("Invalid request for domain creation %s", domain.name())
                 .cause(e)
                 .haltError();
         }
@@ -274,7 +274,7 @@ public class DomainsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation " + urlDecodedDomainName)
+                .message("Invalid request for domain creation %s", urlDecodedDomainName)
                 .cause(e)
                 .haltError();
         }
@@ -287,7 +287,7 @@ public class DomainsRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for domain creation " + domainName + " unable to url decode some characters")
+                .message("Invalid request for domain creation %s unable to url decode some characters", domainName)
                 .cause(e)
                 .haltError();
         }
@@ -345,7 +345,7 @@ public class DomainsRoutes implements Routes {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorType.INVALID_ARGUMENT)
-            .message("The domain list does not contain: " + domain.name())
+            .message("The domain list does not contain: %s", domain.name())
             .haltError();
     }
 
@@ -353,7 +353,7 @@ public class DomainsRoutes implements Routes {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorType.INVALID_ARGUMENT)
-            .message("The following domain is not in the domain list and has no registered local aliases: " + domain.name())
+            .message("The following domain is not in the domain list and has no registered local aliases: %s", domain.name())
             .haltError();
     }
 
@@ -361,7 +361,7 @@ public class DomainsRoutes implements Routes {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .type(ErrorType.INVALID_ARGUMENT)
-            .message("Source domain and destination domain can not have same value(" + sameDomain.name() + ")")
+            .message("Source domain and destination domain can not have same value(%s)", sameDomain.name())
             .haltError();
     }
 }

@@ -240,7 +240,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
-                    .message("User '" + username.asString() + "' does not exist in the system")
+                    .message("User '%s' does not exist in the system", username.asString())
                     .haltError();
             }
         } catch (UsersRepositoryException e) {
@@ -311,7 +311,7 @@ public class DeletedMessagesVaultRoutes implements Routes {
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .message("Can not deserialize the supplied messageId: " + messageIdAsString)
+                .message("Can not deserialize the supplied messageId: %s", messageIdAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();

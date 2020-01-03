@@ -156,7 +156,7 @@ public class TasksRoutes implements Routes {
             return ExecutionDetailsDto.from(executionDetails);
         } catch (TaskNotFoundException e) {
             throw ErrorResponder.builder()
-                .message(String.format("%s can not be found", taskId.getValue()))
+                .message("%s can not be found", taskId.getValue())
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorResponder.ErrorType.NOT_FOUND)
                 .haltError();

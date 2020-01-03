@@ -303,7 +303,7 @@ public class EventDeadLettersRoutes implements Routes {
         } catch (Group.GroupDeserializationException e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .message("Can not deserialize the supplied group: " + groupAsString)
+                .message("Can not deserialize the supplied group: %s", groupAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();
@@ -317,7 +317,7 @@ public class EventDeadLettersRoutes implements Routes {
         } catch (Exception e) {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .message("Can not deserialize the supplied insertionId: " + insertionIdAsString)
+                .message("Can not deserialize the supplied insertionId: %s", insertionIdAsString)
                 .cause(e)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .haltError();

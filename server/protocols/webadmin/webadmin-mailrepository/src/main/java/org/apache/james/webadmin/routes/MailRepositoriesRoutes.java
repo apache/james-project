@@ -160,14 +160,14 @@ public class MailRepositoriesRoutes implements Routes {
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorType.INVALID_ARGUMENT)
                     .cause(e)
-                    .message(String.format("'%s' is an unsupported protocol", protocol))
+                    .message("'%s' is an unsupported protocol", protocol)
                     .haltError();
             } catch (MailRepositoryStore.MailRepositoryStoreException e) {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
                     .type(ErrorResponder.ErrorType.SERVER_ERROR)
                     .cause(e)
-                    .message(String.format("Error while creating a mail repository with path '%s' and protocol '%s'", path.asString(), protocol))
+                    .message("Error while creating a mail repository with path '%s' and protocol '%s'", path.asString(), protocol)
                     .haltError();
             }
         }, jsonTransformer);
@@ -295,7 +295,7 @@ public class MailRepositoriesRoutes implements Routes {
             .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
             .type(ErrorType.SERVER_ERROR)
             .cause(e)
-            .message("The field '" + e.getField().getName() + "' requested in additionalFields parameter can't be accessed")
+            .message("The field '%s' requested in additionalFields parameter can't be accessed", e.getField().getName())
             .haltError();
     }
 
@@ -304,7 +304,7 @@ public class MailRepositoriesRoutes implements Routes {
             .statusCode(HttpStatus.BAD_REQUEST_400)
             .type(ErrorType.INVALID_ARGUMENT)
             .cause(e)
-            .message("The field '" + e.getMessage() + "' can't be requested in additionalFields parameter")
+            .message("The field '%s' can't be requested in additionalFields parameter", e.getMessage())
             .haltError();
     }
 
@@ -312,7 +312,7 @@ public class MailRepositoriesRoutes implements Routes {
         return () -> ErrorResponder.builder()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorResponder.ErrorType.NOT_FOUND)
-            .message("Could not retrieve " + mailKey.asString())
+            .message("Could not retrieve %s", mailKey.asString())
             .haltError();
     }
 
@@ -320,7 +320,7 @@ public class MailRepositoriesRoutes implements Routes {
         return ErrorResponder.builder()
             .statusCode(HttpStatus.NOT_FOUND_404)
             .type(ErrorType.NOT_FOUND)
-            .message("The repository '" + encodedPath + "' (decoded value: '" + path.asString() + "') does not exist")
+            .message("The repository '%s' (decoded value: '%s') does not exist", encodedPath, path.asString())
             .haltError();
     }
 

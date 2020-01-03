@@ -121,7 +121,7 @@ public class MailboxesRoutes implements Routes {
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.BAD_REQUEST_400)
                     .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                    .message("TaskId " + taskId.asString() + " does not exist")
+                    .message("TaskId %s does not exist", taskId.asString())
                     .cause(e)
                     .haltError();
             }

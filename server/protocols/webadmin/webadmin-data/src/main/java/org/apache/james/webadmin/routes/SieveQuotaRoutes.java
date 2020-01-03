@@ -230,7 +230,7 @@ public class SieveQuotaRoutes implements Routes {
             throw ErrorResponder.builder()
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .statusCode(HttpStatus.BAD_REQUEST_400)
-                .message(String.format("unrecognized integer number '%s'", body))
+                .message("unrecognized integer number '%s'", body)
                 .haltError();
         }
     }
@@ -241,7 +241,7 @@ public class SieveQuotaRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("User " + username + " does not exist")
+                .message("User %s does not exist", username)
                 .haltError();
         }
         return username;

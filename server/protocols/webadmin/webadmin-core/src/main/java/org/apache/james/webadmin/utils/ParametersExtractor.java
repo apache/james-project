@@ -62,7 +62,7 @@ public class ParametersExtractor {
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
                 .cause(e)
-                .message("Can not parse " + parameterName)
+                .message("Can not parse %s", parameterName)
                 .haltError();
         }
     }
@@ -72,7 +72,7 @@ public class ParametersExtractor {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be negative")
+                .message("%s can not be negative", parameterName)
                 .haltError();
         }
         return value;
@@ -83,7 +83,7 @@ public class ParametersExtractor {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message(parameterName + " can not be equal to zero")
+                .message("%s can not be equal to zero", parameterName)
                 .haltError();
         }
         return value;

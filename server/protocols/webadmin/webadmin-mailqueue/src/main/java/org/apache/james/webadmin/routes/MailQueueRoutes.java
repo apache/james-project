@@ -166,7 +166,7 @@ public class MailQueueRoutes implements Routes {
         return mailQueueFactory.getQueue(mailQueueName).map(this::toDTO)
             .orElseThrow(
                 () -> ErrorResponder.builder()
-                    .message(String.format("%s can not be found", mailQueueName))
+                    .message("%s can not be found", mailQueueName)
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
@@ -179,7 +179,7 @@ public class MailQueueRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for getting the mail queue " + queue)
+                .message("Invalid request for getting the mail queue %s", queue)
                 .cause(e)
                 .haltError();
         }
@@ -226,7 +226,7 @@ public class MailQueueRoutes implements Routes {
                 .map(name -> listMails(name, isDelayed(request.queryParams(DELAYED_QUERY_PARAM)), ParametersExtractor.extractLimit(request)))
                 .orElseThrow(
                     () -> ErrorResponder.builder()
-                        .message(String.format("%s can not be found", mailQueueName))
+                        .message("%s can not be found", mailQueueName)
                         .statusCode(HttpStatus.NOT_FOUND_404)
                         .type(ErrorResponder.ErrorType.NOT_FOUND)
                         .haltError());
@@ -247,7 +247,7 @@ public class MailQueueRoutes implements Routes {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorType.INVALID_ARGUMENT)
-                .message("Invalid request for listing the mails from the mail queue " + queue)
+                .message("Invalid request for listing the mails from the mail queue %s", queue)
                 .cause(e)
                 .haltError();
         }
@@ -311,7 +311,7 @@ public class MailQueueRoutes implements Routes {
                     recipient(request.queryParams(RECIPIENT_QUERY_PARAM))))
             .orElseThrow(
                 () -> ErrorResponder.builder()
-                    .message(String.format("%s can not be found", mailQueueName))
+                    .message("%s can not be found", mailQueueName)
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorResponder.ErrorType.NOT_FOUND)
                     .haltError());
@@ -394,7 +394,7 @@ public class MailQueueRoutes implements Routes {
         String mailQueueName = request.params(MAIL_QUEUE_NAME);
         return mailQueueFactory.getQueue(mailQueueName)
             .orElseThrow(() -> ErrorResponder.builder()
-                .message(String.format("%s can not be found", mailQueueName))
+                .message("%s can not be found", mailQueueName)
                 .statusCode(HttpStatus.NOT_FOUND_404)
                 .type(ErrorType.NOT_FOUND)
                 .haltError());

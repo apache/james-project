@@ -149,7 +149,7 @@ public class WebAdminServer implements Startable {
         service.notFound((req, res) -> ErrorResponder.builder()
             .statusCode(NOT_FOUND_404)
             .type(NOT_FOUND)
-            .message(String.format("%s %s can not be found", req.requestMethod(), req.pathInfo()))
+            .message("%s %s can not be found", req.requestMethod(), req.pathInfo())
             .asString());
 
         service.internalServerError((req, res) -> ErrorResponder.builder()

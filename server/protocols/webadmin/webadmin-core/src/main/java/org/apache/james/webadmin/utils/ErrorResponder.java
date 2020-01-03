@@ -77,6 +77,11 @@ public class ErrorResponder {
         return this;
     }
 
+    public ErrorResponder message(String message, Object... args) {
+        this.message = String.format(message, args);
+        return this;
+    }
+
     public ErrorResponder message(String message) {
         this.message = message;
         return this;

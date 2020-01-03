@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
+
 import javax.mail.internet.AddressException;
 
 import org.apache.james.core.MailAddress;
@@ -43,7 +44,7 @@ class MailAddressParser {
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .type(ErrorResponder.ErrorType.INVALID_ARGUMENT)
-                .message("The " + addressType + " is not an email address")
+                .message("The %s is not an email address", addressType)
                 .cause(e)
                 .haltError();
         } catch (UnsupportedEncodingException e) {
