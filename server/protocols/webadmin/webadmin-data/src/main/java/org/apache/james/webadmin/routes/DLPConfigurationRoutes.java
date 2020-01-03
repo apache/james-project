@@ -239,8 +239,6 @@ public class DLPConfigurationRoutes implements Routes {
             validateDomainInList(domain);
 
             return domain;
-        } catch (IllegalArgumentException e) {
-            throw invalidDomain(String.format("Invalid request for domain: %s", domainName), e);
         } catch (DomainListException e) {
             throw serverError(String.format("Cannot recognize domain: %s in domain list", domainName), e);
         }
@@ -250,15 +248,6 @@ public class DLPConfigurationRoutes implements Routes {
         if (!domainList.containsDomain(domain)) {
             throw notFound(String.format("'%s' is not managed by this James server", domain.name()));
         }
-    }
-
-    private HaltException invalidDomain(String message, Exception e) {
-        return ErrorResponder.builder()
-            .statusCode(HttpStatus.BAD_REQUEST_400)
-            .type(ErrorType.INVALID_ARGUMENT)
-            .message(message)
-            .cause(e)
-            .haltError();
     }
 
     private HaltException serverError(String message, Exception e) {
