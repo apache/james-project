@@ -211,7 +211,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.read(defaultBucketName, blobIdFactory().from("unknown")))
+        assertThatThrownBy(() -> store.read(defaultBucketName, blobIdFactory().from("unknown")).read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
