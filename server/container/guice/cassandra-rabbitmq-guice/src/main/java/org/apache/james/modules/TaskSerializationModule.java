@@ -164,6 +164,13 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public EventDTOModule<?, ?> taskUpdatedSerialization(JsonTaskSerializer jsonTaskSerializer,
+                                                        DTOConverter<TaskExecutionDetails.AdditionalInformation, AdditionalInformationDTO> additionalInformationConverter,
+                                                        DTOConverter<Task, TaskDTO> taskConverter) {
+        return TasksSerializationModule.UPDATED.create(jsonTaskSerializer, additionalInformationConverter, taskConverter);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> blobStoreVaultGarbageCollectionTask(BlobStoreVaultGarbageCollectionTask.Factory factory) {
         return BlobStoreVaultGarbageCollectionTaskDTO.module(factory);
     }
