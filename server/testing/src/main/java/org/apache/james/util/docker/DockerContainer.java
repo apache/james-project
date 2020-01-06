@@ -39,6 +39,7 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
+import com.github.dockerjava.api.model.ContainerNetwork;
 import com.google.common.base.Strings;
 
 public class DockerContainer implements TestRule {
@@ -157,7 +158,14 @@ public class DockerContainer implements TestRule {
 
     @SuppressWarnings("deprecation")
     public String getContainerIp() {
-        return container.getContainerInfo().getNetworkSettings().getIpAddress();
+        return container.getContainerInfo()
+            .getNetworkSettings()
+            .getNetworks()
+            .values()
+            .stream()
+            .map(ContainerNetwork::getIpAddress)
+            .findFirst()
+            .orElseThrow(IllegalStateException::new);
     }
     
     public String getHostIp() {
