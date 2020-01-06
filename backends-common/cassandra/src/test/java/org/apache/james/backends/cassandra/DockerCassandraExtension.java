@@ -22,12 +22,13 @@ package org.apache.james.backends.cassandra;
 import org.apache.james.util.Host;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCallback, ParameterResolver {
+public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCallback, BeforeEachCallback, ParameterResolver {
 
     private final DockerCassandraRule cassandraContainer;
     private DockerCassandra dockerCassandra;
@@ -45,6 +46,11 @@ public class DockerCassandraExtension implements BeforeAllCallback, AfterAllCall
     @Override
     public void afterAll(ExtensionContext context) {
         cassandraContainer.stop();
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext context) throws Exception {
+      cassandraContainer.before();
     }
 
     @Override
