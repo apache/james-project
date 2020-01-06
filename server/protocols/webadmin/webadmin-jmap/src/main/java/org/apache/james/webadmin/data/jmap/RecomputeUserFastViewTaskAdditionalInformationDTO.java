@@ -21,52 +21,46 @@ package org.apache.james.webadmin.data.jmap;
 
 import java.time.Instant;
 
+import org.apache.james.core.Username;
 import org.apache.james.json.DTOModule;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTO;
 import org.apache.james.server.task.json.dto.AdditionalInformationDTOModule;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.google.common.annotations.VisibleForTesting;
 
-public class RecomputeAllPreviewsTaskAdditionalInformationDTO implements AdditionalInformationDTO {
-    public static final AdditionalInformationDTOModule<RecomputeAllFastViewProjectionItemsTask.AdditionalInformation, RecomputeAllPreviewsTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
-        DTOModule.forDomainObject(RecomputeAllFastViewProjectionItemsTask.AdditionalInformation.class)
-            .convertToDTO(RecomputeAllPreviewsTaskAdditionalInformationDTO.class)
-            .toDomainObjectConverter(dto -> new RecomputeAllFastViewProjectionItemsTask.AdditionalInformation(
-                dto.getProcessedUserCount(),
+public class RecomputeUserFastViewTaskAdditionalInformationDTO implements AdditionalInformationDTO {
+    public static final AdditionalInformationDTOModule<RecomputeUserFastViewProjectionItemsTask.AdditionalInformation, RecomputeUserFastViewTaskAdditionalInformationDTO> SERIALIZATION_MODULE =
+        DTOModule.forDomainObject(RecomputeUserFastViewProjectionItemsTask.AdditionalInformation.class)
+            .convertToDTO(RecomputeUserFastViewTaskAdditionalInformationDTO.class)
+            .toDomainObjectConverter(dto -> new RecomputeUserFastViewProjectionItemsTask.AdditionalInformation(
+                Username.of(dto.username),
                 dto.getProcessedMessageCount(),
-                dto.getFailedUserCount(),
                 dto.getFailedMessageCount(),
                 dto.timestamp))
-            .toDTOConverter((details, type) -> new RecomputeAllPreviewsTaskAdditionalInformationDTO(
+            .toDTOConverter((details, type) -> new RecomputeUserFastViewTaskAdditionalInformationDTO(
                 type,
                 details.timestamp(),
-                details.getProcessedUserCount(),
+                details.getUsername(),
                 details.getProcessedMessageCount(),
-                details.getFailedUserCount(),
                 details.getFailedMessageCount()))
-            .typeName(RecomputeAllFastViewProjectionItemsTask.TASK_TYPE.asString())
+            .typeName(RecomputeUserFastViewProjectionItemsTask.TASK_TYPE.asString())
             .withFactory(AdditionalInformationDTOModule::new);
 
     private final String type;
     private final Instant timestamp;
-    private final long processedUserCount;
+    private final String username;
     private final long processedMessageCount;
-    private final long failedUserCount;
     private final long failedMessageCount;
 
-    @VisibleForTesting
-    RecomputeAllPreviewsTaskAdditionalInformationDTO(@JsonProperty("type") String type,
-                                                     @JsonProperty("timestamp") Instant timestamp,
-                                                     @JsonProperty("processedUserCount") long processedUserCount,
-                                                     @JsonProperty("processedMessageCount") long processedMessageCount,
-                                                     @JsonProperty("failedUserCount") long failedUserCount,
-                                                     @JsonProperty("failedMessageCount") long failedMessageCount) {
+    private RecomputeUserFastViewTaskAdditionalInformationDTO(@JsonProperty("type") String type,
+                                                              @JsonProperty("timestamp") Instant timestamp,
+                                                              @JsonProperty("username") String username,
+                                                              @JsonProperty("processedMessageCount") long processedMessageCount,
+                                                              @JsonProperty("failedMessageCount") long failedMessageCount) {
         this.type = type;
         this.timestamp = timestamp;
-        this.processedUserCount = processedUserCount;
+        this.username = username;
         this.processedMessageCount = processedMessageCount;
-        this.failedUserCount = failedUserCount;
         this.failedMessageCount = failedMessageCount;
     }
 
@@ -80,19 +74,15 @@ public class RecomputeAllPreviewsTaskAdditionalInformationDTO implements Additio
         return timestamp;
     }
 
-    public long getProcessedUserCount() {
-        return processedUserCount;
-    }
-
     public long getProcessedMessageCount() {
         return processedMessageCount;
     }
 
-    public long getFailedUserCount() {
-        return failedUserCount;
-    }
-
     public long getFailedMessageCount() {
         return failedMessageCount;
+    }
+
+    public String getUsername() {
+        return username;
     }
 }

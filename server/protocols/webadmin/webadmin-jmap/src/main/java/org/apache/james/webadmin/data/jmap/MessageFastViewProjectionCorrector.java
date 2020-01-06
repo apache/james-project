@@ -120,12 +120,12 @@ public class MessageFastViewProjectionCorrector {
                 .concatMap(Throwing.function(messageManager -> correctMailboxProjectionItems(progress, messageManager, session)))
                 .doOnComplete(progress.processedUserCount::incrementAndGet)
                 .onErrorContinue((error, o) -> {
-                    LOGGER.error("JMAP preview re-computation aborted for {}", username, error);
+                    LOGGER.error("JMAP fastview re-computation aborted for {}", username, error);
                     progress.failedUserCount.incrementAndGet();
                 })
                 .then();
         } catch (MailboxException e) {
-            LOGGER.error("JMAP preview re-computation aborted for {} as we failed listing user mailboxes", username, e);
+            LOGGER.error("JMAP fastview re-computation aborted for {} as we failed listing user mailboxes", username, e);
             progress.failedUserCount.incrementAndGet();
             return Mono.empty();
         }
@@ -138,7 +138,7 @@ public class MessageFastViewProjectionCorrector {
             .concatMap(pair -> storeProjectionEntry(pair)
                 .doOnSuccess(any -> progress.processedMessageCount.incrementAndGet()))
             .onErrorContinue((error, triggeringValue) -> {
-                LOGGER.error("JMAP preview re-computation aborted for {} - {}", session.getUser(), triggeringValue, error);
+                LOGGER.error("JMAP fastview re-computation aborted for {} - {}", session.getUser(), triggeringValue, error);
                 progress.failedMessageCount.incrementAndGet();
             })
             .then();

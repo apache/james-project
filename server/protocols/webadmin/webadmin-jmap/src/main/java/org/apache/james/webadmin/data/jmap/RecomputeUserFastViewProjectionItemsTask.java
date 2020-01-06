@@ -76,11 +76,11 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
         }
     }
 
-    public static class RecomputeUserPreviewsTaskDTO implements TaskDTO {
+    public static class RecomputeUserFastViewTaskDTO implements TaskDTO {
         private final String type;
         private final String username;
 
-        public RecomputeUserPreviewsTaskDTO(
+        public RecomputeUserFastViewTaskDTO(
             @JsonProperty("type") String type,
             @JsonProperty("username") String username) {
             this.type = type;
@@ -97,12 +97,12 @@ public class RecomputeUserFastViewProjectionItemsTask implements Task {
         }
     }
 
-    public static TaskDTOModule<RecomputeUserFastViewProjectionItemsTask, RecomputeUserPreviewsTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
+    public static TaskDTOModule<RecomputeUserFastViewProjectionItemsTask, RecomputeUserFastViewTaskDTO> module(MessageFastViewProjectionCorrector corrector) {
         return DTOModule
             .forDomainObject(RecomputeUserFastViewProjectionItemsTask.class)
-            .convertToDTO(RecomputeUserPreviewsTaskDTO.class)
+            .convertToDTO(RecomputeUserFastViewTaskDTO.class)
             .toDomainObjectConverter(dto -> new RecomputeUserFastViewProjectionItemsTask(corrector, Username.of(dto.username)))
-            .toDTOConverter((task, type) -> new RecomputeUserPreviewsTaskDTO(type, task.username.asString()))
+            .toDTOConverter((task, type) -> new RecomputeUserFastViewTaskDTO(type, task.username.asString()))
             .typeName(TASK_TYPE.asString())
             .withFactory(TaskDTOModule::new);
     }

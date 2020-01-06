@@ -54,9 +54,9 @@ import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskAdditional
 import org.apache.james.vault.blob.BlobStoreVaultGarbageCollectionTaskDTO;
 import org.apache.james.webadmin.data.jmap.MessageFastViewProjectionCorrector;
 import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewProjectionItemsTask;
-import org.apache.james.webadmin.data.jmap.RecomputeAllPreviewsTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.data.jmap.RecomputeAllFastViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewProjectionItemsTask;
-import org.apache.james.webadmin.data.jmap.RecomputeUserPreviewsTaskAdditionalInformationDTO;
+import org.apache.james.webadmin.data.jmap.RecomputeUserFastViewTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.CassandraMappingsSolveInconsistenciesTask;
 import org.apache.james.webadmin.service.ClearMailQueueTaskAdditionalInformationDTO;
 import org.apache.james.webadmin.service.ClearMailQueueTaskDTO;
@@ -385,12 +385,12 @@ public class TaskSerializationModule extends AbstractModule {
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> recomputeAllJmapPreviewsAdditionalInformation() {
-        return RecomputeAllPreviewsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeAllFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> recomputeUserJmapPreviewsAdditionalInformation() {
-        return RecomputeUserPreviewsTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+        return RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
     }
 
     @Named(EVENT_NESTED_TYPES_INJECTION_NAME)

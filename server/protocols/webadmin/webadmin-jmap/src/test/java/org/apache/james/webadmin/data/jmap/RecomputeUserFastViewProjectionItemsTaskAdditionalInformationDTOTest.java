@@ -33,7 +33,7 @@ class RecomputeUserFastViewProjectionItemsTaskAdditionalInformationDTOTest {
 
     @Test
     void shouldMatchJsonSerializationContract() throws Exception {
-        JsonSerializationVerifier.dtoModule(RecomputeUserPreviewsTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
+        JsonSerializationVerifier.dtoModule(RecomputeUserFastViewTaskAdditionalInformationDTO.SERIALIZATION_MODULE)
             .bean(DOMAIN_OBJECT)
             .json(ClassLoaderUtils.getSystemResourceAsString("json/recomputeUser.additionalInformation.json"))
             .verify();
