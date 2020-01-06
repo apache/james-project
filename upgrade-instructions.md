@@ -24,7 +24,27 @@ Change list:
  - [JAMES-2703 Post 3.4.0 release removals](#james-2703-post-340-release-removals)
  - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
  - [User mailboxes reIndexing endpoint change](#user-mailboxes-reindexing-endpoint-change)
- 
+ - [Hybrid blobStore replaces Union blobStore](#hybrid-blobstore-replaces-union-blobstore)
+
+### Hybrid blobStore replaces Union blobStore
+
+Date 6/01/2020
+
+SHA-1 XXX
+
+Concerned products: Guice distributed James server
+
+Union blobStore, allowing to store older blobs within Cassandra while storing new blobs into object storage, had been removed.
+
+Hybrid blobStore had been replacing it, allowing to store blobs either in a low cost blobStore or in a high performance blobStore, allowing thus some performance 
+improvement for small, often read blobs while big or unfrequently read blobs keeps being stored cheaply.
+
+Users relying on the Union blobStore will need to adopt Hybrid blobStore. Please adjust "blob.properties" accordingly:
+
+```
+implementation=hybrid
+```
+
 ### User mailboxes reIndexing endpoint change
  
 Date 16/12/2019
