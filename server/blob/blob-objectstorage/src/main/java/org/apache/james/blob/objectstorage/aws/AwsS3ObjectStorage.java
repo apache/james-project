@@ -137,12 +137,12 @@ public class AwsS3ObjectStorage {
         private static final Duration FIRST_BACK_OFF = Duration.ofMillis(100);
         private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
-        private final AwsS3AuthConfiguration configuration;
-        private final ExecutorService executorService;
+        private final AmazonS3 s3Client;
+        private final TransferManager transferManager;
 
-        AwsS3BlobPutter(AwsS3AuthConfiguration configuration, ExecutorService executorService) {
-            this.configuration = configuration;
-            this.executorService = executorService;
+        AwsS3BlobPutter(AwsS3AuthConfiguration authConfiguration, ExecutorService executorService) {
+            this.s3Client = getS3Client(authConfiguration, getClientConfiguration());
+            this.transferManager = getTransferManager(s3Client, executorService);
         }
 
         @Override
@@ -184,7 +184,7 @@ public class AwsS3ObjectStorage {
                     .exponentialBackoff(FIRST_BACK_OFF, FOREVER)
                     .withBackoffScheduler(Schedulers.elastic())
                     .retryMax(MAX_RETRY_ON_EXCEPTION)
-                    .doOnRetry(retryContext -> createBucket(bucketName, configuration)));
+                    .doOnRetry(retryContext -> s3Client.createBucket(bucketName.asString())));
         }
 
         private void uploadByFile(ObjectStorageBucketName bucketName, BlobId blobId, File file) throws InterruptedException {
@@ -204,16 +204,9 @@ public class AwsS3ObjectStorage {
         }
 
         private void upload(PutObjectRequest request) throws InterruptedException {
-            TransferManager transferManager = getTransferManager();
             transferManager
                 .upload(request)
                 .waitForUploadResult();
-            transferManager.shutdownNow();
-        }
-
-        private void createBucket(ObjectStorageBucketName bucketName, AwsS3AuthConfiguration configuration) {
-            getS3Client(configuration, getClientConfiguration())
-                .createBucket(bucketName.asString());
         }
 
         private boolean needToCreateBucket(Throwable th) {
@@ -226,13 +219,10 @@ public class AwsS3ObjectStorage {
             return false;
         }
 
-        private TransferManager getTransferManager() {
-            ClientConfiguration clientConfiguration = getClientConfiguration();
-            AmazonS3 amazonS3 = getS3Client(configuration, clientConfiguration);
-
+        private static TransferManager getTransferManager(AmazonS3 s3Client, ExecutorService executorService) {
             return TransferManagerBuilder
                     .standard()
-                    .withS3Client(amazonS3)
+                    .withS3Client(s3Client)
                     .withMultipartUploadThreshold(MULTIPART_UPLOAD_THRESHOLD.getValue())
                     .withExecutorFactory(() -> executorService)
                     .withShutDownThreadPools(DO_NOT_SHUTDOWN_THREAD_POOL)
@@ -252,6 +242,12 @@ public class AwsS3ObjectStorage {
             ClientConfiguration clientConfiguration = new ClientConfiguration();
             clientConfiguration.setRetryPolicy(PredefinedRetryPolicies.getDefaultRetryPolicyWithCustomMaxRetries(MAX_ERROR_RETRY));
             return clientConfiguration;
+        }
+
+        @Override
+        public void close() throws IOException {
+            transferManager.shutdownNow();
+            s3Client.shutdown();
         }
     }
 }

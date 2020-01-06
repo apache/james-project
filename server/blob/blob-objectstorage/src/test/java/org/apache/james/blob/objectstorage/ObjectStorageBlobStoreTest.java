@@ -95,7 +95,7 @@ public class ObjectStorageBlobStoreTest implements MetricableBlobStoreContract {
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws IOException {
         objectStorageBlobStore.deleteAllBuckets().block();
         objectStorageBlobStore.close();
     }

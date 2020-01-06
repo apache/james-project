@@ -91,8 +91,9 @@ public class ObjectStorageBlobStore implements BlobStore {
     }
 
     @PreDestroy
-    public void close() {
+    public void close() throws IOException {
         blobStore.getContext().close();
+        blobPutter.close();
     }
 
     @Override

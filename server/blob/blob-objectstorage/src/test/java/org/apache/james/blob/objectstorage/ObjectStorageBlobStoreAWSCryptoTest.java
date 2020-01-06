@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.objectstorage;
 
+import java.io.IOException;
+
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
@@ -69,7 +71,7 @@ public class ObjectStorageBlobStoreAWSCryptoTest implements MetricableBlobStoreC
     }
 
     @AfterEach
-    void tearDown() {
+    void tearDown() throws IOException {
         objectStorageBlobStore.deleteAllBuckets().block();
         objectStorageBlobStore.close();
         awsS3ObjectStorage.tearDown();

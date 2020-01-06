@@ -19,6 +19,7 @@
 
 package org.apache.james.blob.objectstorage;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -111,5 +112,10 @@ public class StreamCompatibleBlobPutter implements BlobPutter {
         }
 
         return Optional.empty();
+    }
+
+    @Override
+    public void close() throws IOException {
+        // No resource to clean up
     }
 }
