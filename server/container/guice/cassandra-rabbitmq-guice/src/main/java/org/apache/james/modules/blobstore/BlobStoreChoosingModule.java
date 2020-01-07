@@ -75,17 +75,17 @@ public class BlobStoreChoosingModule extends AbstractModule {
     @Singleton
     BlobStore provideBlobStore(BlobStoreChoosingConfiguration choosingConfiguration,
                                Provider<CassandraBlobStore> cassandraBlobStoreProvider,
-                               Provider<ObjectStorageBlobStore> swiftBlobStoreProvider,
+                               Provider<ObjectStorageBlobStore> objectStorageBlobStoreProvider,
                                HybridBlobStore.Configuration hybridBlobStoreConfiguration) {
 
         switch (choosingConfiguration.getImplementation()) {
             case OBJECTSTORAGE:
-                return swiftBlobStoreProvider.get();
+                return objectStorageBlobStoreProvider.get();
             case CASSANDRA:
                 return cassandraBlobStoreProvider.get();
             case HYBRID:
                 return HybridBlobStore.builder()
-                    .lowCost(swiftBlobStoreProvider.get())
+                    .lowCost(objectStorageBlobStoreProvider.get())
                     .highPerformance(cassandraBlobStoreProvider.get())
                     .configuration(hybridBlobStoreConfiguration)
                     .build();
