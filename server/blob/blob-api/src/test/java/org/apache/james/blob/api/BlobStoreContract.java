@@ -19,19 +19,32 @@
 
 package org.apache.james.blob.api;
 
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.HIGH_PERFORMANCE;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.base.Strings;
 
 public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobStoreContract {
+
+    static Stream<Arguments> storagePolicies() {
+        return Stream.of(
+            Arguments.arguments(LOW_COST),
+            Arguments.arguments(SIZE_BASED),
+            Arguments.arguments(HIGH_PERFORMANCE));
+    }
 
     String SHORT_STRING = "toto";
     byte[] EMPTY_BYTEARRAY = {};
@@ -43,95 +56,104 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
 
     BlobId.Factory blobIdFactory();
 
-    @Test
-    default void saveShouldThrowWhenNullData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldThrowWhenNullData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (byte[]) null, LOW_COST).block())
+        assertThatThrownBy(() -> store.save(defaultBucketName, (byte[]) null, storagePolicy).block())
             .isInstanceOf(NullPointerException.class);
     }
 
-    @Test
-    default void saveShouldThrowWhenNullString() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldThrowWhenNullString(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (String) null, LOW_COST).block())
+        assertThatThrownBy(() -> store.save(defaultBucketName, (String) null, storagePolicy).block())
             .isInstanceOf(NullPointerException.class);
     }
 
-    @Test
-    default void saveShouldThrowWhenNullInputStream() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldThrowWhenNullInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (InputStream) null, LOW_COST).block())
+        assertThatThrownBy(() -> store.save(defaultBucketName, (InputStream) null, storagePolicy).block())
             .isInstanceOf(NullPointerException.class);
     }
 
-    @Test
-    default void saveShouldSaveEmptyData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldSaveEmptyData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, EMPTY_BYTEARRAY, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, EMPTY_BYTEARRAY, storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
 
-    @Test
-    default void saveShouldSaveEmptyString() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldSaveEmptyString(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new String(), LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, new String(), storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
 
-    @Test
-    default void saveShouldSaveEmptyInputStream() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldSaveEmptyInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(EMPTY_BYTEARRAY), LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(EMPTY_BYTEARRAY), storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
 
-    @Test
-    default void saveShouldReturnBlobId() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldReturnBlobId(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
-    @Test
-    default void saveShouldReturnBlobIdOfString() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldReturnBlobIdOfString(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_STRING, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_STRING, storagePolicy).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
 
-    @Test
-    default void saveShouldReturnBlobIdOfInputStream() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void saveShouldReturnBlobIdOfInputStream(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
@@ -145,36 +167,39 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 
-    @Test
-    default void readBytesShouldReturnSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readBytesShouldReturnSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
         assertThat(bytes).isEqualTo(SHORT_BYTEARRAY);
     }
 
-    @Test
-    default void readBytesShouldReturnLongSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readBytesShouldReturnLongSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
         assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
     }
 
-    @Test
-    default void readBytesShouldReturnBigSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readBytesShouldReturnBigSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy).block();
 
         byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
 
@@ -190,37 +215,40 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
-    @Test
-    default void readShouldReturnSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readShouldReturnSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(SHORT_BYTEARRAY));
     }
 
-    @Test
-    default void readShouldReturnLongSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readShouldReturnLongSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 
         assertThat(read).hasSameContentAs(new ByteArrayInputStream(ELEVEN_KILOBYTES));
     }
 
-    @Test
-    default void readShouldReturnBigSavedData() {
+    @ParameterizedTest
+    @MethodSource("storagePolicies")
+    default void readShouldReturnBigSavedData(BlobStore.StoragePolicy storagePolicy) {
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         // 12 MB of text
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, LOW_COST).block();
+        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 
