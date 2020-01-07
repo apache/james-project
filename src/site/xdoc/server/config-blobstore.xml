@@ -46,8 +46,15 @@
                 <dt><strong>implementation</strong></dt>
                 <dd>cassandra: use cassandra based BlobStore</dd>
                 <dd>objectstorage: use Swift/AWS S3 based BlobStore</dd>
-                <dd>union: Using both objectstorage as the current BlobStore and cassandra as the legacy BlobStore</dd>
+                <dd>hybrid: Using both objectstorage for unfrequently read or big blobs & cassandra for small, often read blobs</dd>
             </dl>
+
+            <subsection name="Hybrid BlobStore size threshold">
+                <dl>
+                    <dt><strong>hybrid.size.threshold</strong></dt>
+                    <dd>DEFAULT: 32768 bytes (32KB), must be positive. Size threshold for considering a blob as 'big', causing it to be saved in the low cost blobStore.</dd>
+                </dl>
+            </subsection>
 
             <subsection name="ObjectStorage BlobStore Codec Configuration">
                 <dl>
