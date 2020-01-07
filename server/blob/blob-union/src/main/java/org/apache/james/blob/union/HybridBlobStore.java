@@ -22,6 +22,8 @@ package org.apache.james.blob.union;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
@@ -43,43 +45,90 @@ public class HybridBlobStore implements BlobStore {
 
     @FunctionalInterface
     public interface RequirePerforming {
-        Builder highPerformance(BlobStore blobStore);
+        RequireConfiguration highPerformance(BlobStore blobStore);
+    }
+
+    @FunctionalInterface
+    public interface RequireConfiguration {
+        Builder configuration(Configuration configuration);
     }
 
     public static class Builder {
         private final BlobStore lowCostBlobStore;
         private final BlobStore highPerformanceBlobStore;
+        private final Configuration configuration;
 
-        Builder(BlobStore lowCostBlobStore, BlobStore highPerformanceBlobStore) {
+        Builder(BlobStore lowCostBlobStore, BlobStore highPerformanceBlobStore, Configuration configuration) {
             this.lowCostBlobStore = lowCostBlobStore;
             this.highPerformanceBlobStore = highPerformanceBlobStore;
+            this.configuration = configuration;
         }
 
         public HybridBlobStore build() {
             return new HybridBlobStore(
                 lowCostBlobStore,
-                highPerformanceBlobStore);
+                highPerformanceBlobStore,
+                configuration);
+        }
+    }
+
+    public static class Configuration {
+        public static final int DEFAULT_SIZE_THREASHOLD = 32 * 1024;
+        public static final Configuration DEFAULT = new Configuration(DEFAULT_SIZE_THREASHOLD);
+        private static final String PROPERTY_NAME = "hybrid.size.threshold";
+
+        public static Configuration from(org.apache.commons.configuration2.Configuration propertiesConfiguration) {
+            return new Configuration(Optional.ofNullable(propertiesConfiguration.getInteger(PROPERTY_NAME, null))
+                .orElse(DEFAULT_SIZE_THREASHOLD));
+        }
+
+        private final int sizeThreshold;
+
+        public Configuration(int sizeThreshold) {
+            Preconditions.checkArgument(sizeThreshold >= 0, "'" + PROPERTY_NAME + "' needs to be positive");
+
+            this.sizeThreshold = sizeThreshold;
+        }
+
+        public int getSizeThreshold() {
+            return sizeThreshold;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof Configuration) {
+                Configuration that = (Configuration) o;
+
+                return Objects.equals(this.sizeThreshold, that.sizeThreshold);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(sizeThreshold);
         }
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(HybridBlobStore.class);
-    private static final int SIZE_THRESHOLD = 32 * 1024;
 
     public static RequireLowCost builder() {
-        return lowCost -> highPerformance -> new Builder(lowCost, highPerformance);
+        return lowCost -> highPerformance -> configuration -> new Builder(lowCost, highPerformance, configuration);
     }
 
     private final BlobStore lowCostBlobStore;
     private final BlobStore highPerformanceBlobStore;
+    private final Configuration configuration;
 
-    private HybridBlobStore(BlobStore lowCostBlobStore, BlobStore highPerformanceBlobStore) {
+    private HybridBlobStore(BlobStore lowCostBlobStore, BlobStore highPerformanceBlobStore, Configuration configuration) {
         this.lowCostBlobStore = lowCostBlobStore;
         this.highPerformanceBlobStore = highPerformanceBlobStore;
+        this.configuration = configuration;
     }
 
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
-        return selectBlobStore(storagePolicy, Mono.just(data.length > SIZE_THRESHOLD))
+        return selectBlobStore(storagePolicy, Mono.just(data.length > configuration.getSizeThreshold()))
             .flatMap(blobStore -> blobStore.save(bucketName, data, storagePolicy));
     }
 
@@ -87,7 +136,7 @@ public class HybridBlobStore implements BlobStore {
     public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
 
-        BufferedInputStream bufferedInputStream = new BufferedInputStream(data, SIZE_THRESHOLD + 1);
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(data, configuration.getSizeThreshold() + 1);
         return selectBlobStore(storagePolicy, Mono.fromCallable(() -> isItABigStream(bufferedInputStream)))
             .flatMap(blobStore -> blobStore.save(bucketName, bufferedInputStream, storagePolicy));
     }
@@ -112,7 +161,7 @@ public class HybridBlobStore implements BlobStore {
 
     private boolean isItABigStream(InputStream bufferedData) throws IOException {
         bufferedData.mark(0);
-        bufferedData.skip(SIZE_THRESHOLD);
+        bufferedData.skip(configuration.getSizeThreshold());
         boolean isItABigStream = bufferedData.read() != -1;
         bufferedData.reset();
         return isItABigStream;

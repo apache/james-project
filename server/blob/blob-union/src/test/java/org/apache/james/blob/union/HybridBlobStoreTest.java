@@ -19,8 +19,8 @@
 
 package org.apache.james.blob.union;
 
-import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.HIGH_PERFORMANCE;
+import static org.apache.james.blob.api.BlobStore.StoragePolicy.LOW_COST;
 import static org.apache.james.blob.api.BlobStore.StoragePolicy.SIZE_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -45,6 +45,7 @@ import org.junit.jupiter.api.Test;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
 
+import nl.jqno.equalsverifier.EqualsVerifier;
 import reactor.core.publisher.Mono;
 
 class HybridBlobStoreTest implements BlobStoreContract {
@@ -161,6 +162,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)
+            .configuration(HybridBlobStore.Configuration.DEFAULT)
             .build();
     }
 
@@ -281,6 +283,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
 
             assertThatThrownBy(() -> hybridBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block())
@@ -293,6 +296,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
 
             assertThatThrownBy(() -> hybridBlobStore.save(hybridBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LOW_COST).block())
@@ -309,6 +313,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
 
             assertThatThrownBy(() -> hybridBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block())
@@ -321,6 +326,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
 
             assertThatThrownBy(() -> hybridBlobStore.save(hybridBlobStore.getDefaultBucketName(), new ByteArrayInputStream(BLOB_CONTENT), LOW_COST).block())
@@ -338,6 +344,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
             BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
@@ -352,6 +359,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
             BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
@@ -370,6 +378,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
             BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
@@ -383,6 +392,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
+                .configuration(HybridBlobStore.Configuration.DEFAULT)
                 .build();
             BlobId blobId = highPerformanceBlobStore.save(hybridBlobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
 
@@ -469,6 +479,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)
+            .configuration(HybridBlobStore.Configuration.DEFAULT)
             .build();
 
         assertThatThrownBy(() -> hybridBlobStore.getDefaultBucketName())
@@ -512,5 +523,14 @@ class HybridBlobStoreTest implements BlobStoreContract {
     void deleteShouldNotThrowWhenLowCostAndPerformingBlobsDoNotExist() {
         assertThatCode(() -> hybridBlobStore.delete(BucketName.DEFAULT, blobIdFactory().randomId()).block())
             .doesNotThrowAnyException();
+    }
+
+    @Nested
+    class ConfigurationTest {
+        @Test
+        void shouldMatchBeanContract() {
+            EqualsVerifier.forClass(HybridBlobStore.Configuration.class)
+                .verify();
+        }
     }
 }

@@ -75,7 +75,8 @@ public class BlobStoreChoosingModule extends AbstractModule {
     @Singleton
     BlobStore provideBlobStore(BlobStoreChoosingConfiguration choosingConfiguration,
                                Provider<CassandraBlobStore> cassandraBlobStoreProvider,
-                               Provider<ObjectStorageBlobStore> swiftBlobStoreProvider) {
+                               Provider<ObjectStorageBlobStore> swiftBlobStoreProvider,
+                               HybridBlobStore.Configuration hybridBlobStoreConfiguration) {
 
         switch (choosingConfiguration.getImplementation()) {
             case OBJECTSTORAGE:
@@ -86,6 +87,7 @@ public class BlobStoreChoosingModule extends AbstractModule {
                 return HybridBlobStore.builder()
                     .lowCost(swiftBlobStoreProvider.get())
                     .highPerformance(cassandraBlobStoreProvider.get())
+                    .configuration(hybridBlobStoreConfiguration)
                     .build();
             default:
                 throw new RuntimeException(String.format("can not get the right blobstore provider with configuration %s",
@@ -93,4 +95,15 @@ public class BlobStoreChoosingModule extends AbstractModule {
         }
     }
 
+    @Provides
+    @Singleton
+    @VisibleForTesting
+    HybridBlobStore.Configuration providesHybridBlobStoreConfiguration(PropertiesProvider propertiesProvider) {
+        try {
+            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
+            return HybridBlobStore.Configuration.from(configuration);
+        } catch (FileNotFoundException | ConfigurationException e) {
+            return HybridBlobStore.Configuration.DEFAULT;
+        }
+    }
 }
