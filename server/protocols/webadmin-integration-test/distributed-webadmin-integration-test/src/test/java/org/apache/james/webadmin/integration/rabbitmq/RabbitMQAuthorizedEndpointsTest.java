@@ -19,26 +19,37 @@
 
 package org.apache.james.webadmin.integration.rabbitmq;
 
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.AuthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
-import org.junit.Rule;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @Category(BasicFeature.class)
-public class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
+class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
 
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws Exception {
-        return jamesTestRule.jmapServer(cassandra.getModule(), new UnauthorizedModule());
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(new UnauthorizedModule())
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 }

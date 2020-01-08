@@ -28,35 +28,23 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.HealthCheckRoutes;
 import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 
 public abstract class AuthorizedEndpointsTest {
 
-    private GuiceJamesServer guiceJamesServer;
-
-    @Before
-    public void setUp() throws Exception {
-        guiceJamesServer = createJamesServer();
-        guiceJamesServer.start();
+    @BeforeEach
+    void setUp(GuiceJamesServer guiceJamesServer) {
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort())
             .build();
     }
 
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
-    }
-
-    protected abstract GuiceJamesServer createJamesServer() throws Exception;
-
     @Test
-    public void getHealthchecksShouldNotNeedAuthentication() {
+    void getHealthchecksShouldNotNeedAuthentication() {
         when()
             .get(HealthCheckRoutes.HEALTHCHECK)
         .then()
@@ -64,7 +52,7 @@ public abstract class AuthorizedEndpointsTest {
     }
 
     @Test
-    public void getSwaggerShouldNotNeedAuthentication() {
+    void getSwaggerShouldNotNeedAuthentication() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
         .then()
