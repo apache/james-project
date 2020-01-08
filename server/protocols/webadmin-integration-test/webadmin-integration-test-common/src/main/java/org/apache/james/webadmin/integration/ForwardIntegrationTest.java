@@ -53,29 +53,23 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 import io.restassured.specification.RequestSpecification;
 
 public abstract class ForwardIntegrationTest {
 
-    @Rule
-    public SMTPMessageSender messageSender = new SMTPMessageSender(DOMAIN);
-
-    private GuiceJamesServer jmapServer;
+    private SMTPMessageSender messageSender;
     private RequestSpecification webAdminApi;
     private Port jmapPort;
 
-    @Before
-    public void setUp() throws Exception {
-        jmapServer = createJmapServer();
-        jmapServer.start();
-
+    @BeforeEach
+    void setUp(GuiceJamesServer jmapServer) throws Exception {
+        messageSender = new SMTPMessageSender(DOMAIN);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(BOB.asString(), BOB_PASSWORD);
@@ -84,23 +78,21 @@ public abstract class ForwardIntegrationTest {
 
         jmapPort = jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort();
         RestAssured.requestSpecification = jmapRequestSpecBuilder
-                .setPort(jmapPort.getValue())
-                .build();
+            .setPort(jmapPort.getValue())
+            .build();
 
         webAdminApi = WebAdminUtils.spec(jmapServer.getProbe(WebAdminGuiceProbe.class).getWebAdminPort());
 
     }
 
-    protected abstract GuiceJamesServer createJmapServer() throws IOException;
-
-    @After
-    public void tearDown() {
-        jmapServer.stop();
+    @AfterEach
+    void tearDown() throws IOException {
+        messageSender.close();
     }
 
     @Category(BasicFeature.class)
     @Test
-    public void messageShouldBeForwardedWhenDefinedInRESTAPI() {
+    void messageShouldBeForwardedWhenDefinedInRESTAPI() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapPort), CEDRIC, CEDRIC_PASSWORD);
@@ -147,7 +139,7 @@ public abstract class ForwardIntegrationTest {
     }
 
     @Test
-    public void messageShouldBeForwardedWhenBaseRecipientWhenInDestination() {
+    void messageShouldBeForwardedWhenBaseRecipientWhenInDestination() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), ALICE.asString()));
 
@@ -207,7 +199,7 @@ public abstract class ForwardIntegrationTest {
     }
 
     @Test
-    public void recursiveForwardShouldWork() {
+    void recursiveForwardShouldWork() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), CEDRIC.asString()));
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", CEDRIC.asString(), BOB.asString()));
 
@@ -255,7 +247,7 @@ public abstract class ForwardIntegrationTest {
     }
 
     @Test
-    public void recursiveWithRecipientCopyForwardShouldWork() {
+    void recursiveWithRecipientCopyForwardShouldWork() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), ALICE.asString()));
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", BOB.asString(), CEDRIC.asString()));
@@ -304,7 +296,7 @@ public abstract class ForwardIntegrationTest {
     }
 
     @Test
-    public void baseRecipientShouldNotReceiveEmailOnDefaultForward() {
+    void baseRecipientShouldNotReceiveEmailOnDefaultForward() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));
 
         AccessToken cedricAccessToken = authenticateJamesUser(baseUri(jmapPort), CEDRIC, CEDRIC_PASSWORD);

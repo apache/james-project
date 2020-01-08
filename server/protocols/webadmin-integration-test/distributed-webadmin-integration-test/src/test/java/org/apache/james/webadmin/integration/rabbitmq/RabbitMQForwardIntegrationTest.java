@@ -19,26 +19,32 @@
 
 package org.apache.james.webadmin.integration.rabbitmq;
 
-import java.io.IOException;
-
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.ForwardIntegrationTest;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
+class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
 
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Override
-    public GuiceJamesServer createJmapServer() throws IOException {
-        return rule.jmapServer(cassandra.getModule(),
-            binder -> binder.bind(WebAdminConfiguration.class)
-                .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 }

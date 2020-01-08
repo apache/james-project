@@ -19,22 +19,24 @@
 
 package org.apache.james.webadmin.integration.memory;
 
-import java.io.IOException;
-
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.ForwardIntegrationTest;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryForwardIntegrationTest extends ForwardIntegrationTest {
+class MemoryForwardIntegrationTest extends ForwardIntegrationTest {
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Override
-    public GuiceJamesServer createJmapServer() throws IOException {
-        return memoryJmap.jmapServer(binder -> binder.bind(WebAdminConfiguration.class)
-            .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
-    }
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 }
