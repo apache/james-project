@@ -28,11 +28,18 @@ import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.junit.categories.BasicFeature;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
+import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
 import org.apache.james.webadmin.routes.AliasRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
@@ -41,32 +48,36 @@ import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.restassured.http.ContentType;
 
 @Category(BasicFeature.class)
-public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
+class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
+
+    private static final int LIMIT_TO_10_MESSAGES = 10;
+
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+        .build();
 
     private static final String VERSION = "/cassandra/version";
     private static final String VERSION_LATEST = VERSION + "/latest";
     private static final String UPGRADE_VERSION = VERSION + "/upgrade";
     private static final String UPGRADE_TO_LATEST_VERSION = UPGRADE_VERSION + "/latest";
 
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
-
-    @Override
-    protected GuiceJamesServer createJamesServer() throws Exception {
-        return jamesTestRule.jmapServer(cassandra.getModule());
-    }
-
     @Test
-    public void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() {
+    void getCurrentVersionShouldReturnNullForCurrentVersionAsBeginning() {
         when()
             .get(VERSION)
         .then()
@@ -76,7 +87,7 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
     }
 
     @Test
-    public void getLatestVersionShouldReturnTheConfiguredLatestVersion() {
+    void getLatestVersionShouldReturnTheConfiguredLatestVersion() {
         when()
             .get(VERSION_LATEST)
         .then()
@@ -86,7 +97,7 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
     }
 
     @Test
-    public void postShouldDoMigrationAndUpdateCurrentVersion() {
+    void postShouldDoMigrationAndUpdateCurrentVersion() {
         String taskId = with()
             .body(String.valueOf(CassandraSchemaVersionManager.MAX_VERSION.getValue()))
         .post(UPGRADE_VERSION)
@@ -111,7 +122,7 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
     }
 
     @Test
-    public void postShouldDoMigrationAndUpdateToTheLatestVersion() {
+    void postShouldDoMigrationAndUpdateToTheLatestVersion() {
         String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
             .jsonPath()
             .get("taskId");
@@ -130,7 +141,7 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
     }
 
     @Test
-    public void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
+    void cassandraMappingsEndpointShouldKeepDataConsistencyWhenDataValid() {
         with()
             .put(AliasRoutes.ROOT_PATH + SEPARATOR + USERNAME + "/sources/" + ALIAS_1);
         with()
@@ -159,7 +170,7 @@ public class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegra
 
 
     @Test
-    public void getSwaggerShouldContainDistributedEndpoints() {
+    void getSwaggerShouldContainDistributedEndpoints() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
             .then()
