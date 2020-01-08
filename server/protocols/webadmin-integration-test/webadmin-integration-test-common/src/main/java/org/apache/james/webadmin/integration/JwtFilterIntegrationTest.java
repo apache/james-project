@@ -34,14 +34,18 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
 
 public abstract class JwtFilterIntegrationTest {
+
+    protected static JwtConfiguration jwtConfiguration() {
+        return new JwtConfiguration(
+            Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
+    }
 
     private static final String DOMAIN = "domain";
     private static final String SPECIFIC_DOMAIN = DomainsRoutes.DOMAINS + SEPARATOR + DOMAIN;
@@ -56,33 +60,20 @@ public abstract class JwtFilterIntegrationTest {
         "xtedOK2JnQZn7t9sUzSrcyjWverm7gZkPptkIVoS8TsEeMMME5vFXe_nqkEG69q3kuBUm_33tbR5oNS0ZGZKlG9r41lHBjyf9J1xN4UYV8n866d" +
         "a7RPPCzshIWUtO0q9T2umWTnp-6OnOdBCkndrZmRR6pPxsD5YL0_77Wq8KT_5__fGA";
 
-    private GuiceJamesServer guiceJamesServer;
     private DataProbeImpl dataProbe;
-    private WebAdminGuiceProbe webAdminGuiceProbe;
 
-    @Before
-    public void setUp() throws Exception {
-        JwtConfiguration jwtConfiguration = new JwtConfiguration(
-            Optional.of(ClassLoaderUtils.getSystemResourceAsString("jwt_publickey")));
-
-        guiceJamesServer = createJamesServer(jwtConfiguration);
-        guiceJamesServer.start();
+    @BeforeEach
+    void setUp(GuiceJamesServer guiceJamesServer) {
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
-        webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
+        WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminGuiceProbe.getWebAdminPort()).build();
     }
 
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
-    }
-
-    protected abstract GuiceJamesServer createJamesServer(JwtConfiguration jwtConfiguration) throws Exception;
 
     @Category(BasicFeature.class)
     @Test
-    public void jwtAuthenticationShouldWork() throws Exception {
+    void jwtAuthenticationShouldWork() throws Exception {
         given()
             .header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_TRUE)
         .when()
@@ -95,7 +86,7 @@ public abstract class JwtFilterIntegrationTest {
     }
 
     @Test
-    public void jwtShouldRejectNonAdminRequests() throws Exception {
+    void jwtShouldRejectNonAdminRequests() throws Exception {
         given()
             .header("Authorization", "Bearer " + VALID_TOKEN_ADMIN_FALSE)
         .when()
@@ -108,7 +99,7 @@ public abstract class JwtFilterIntegrationTest {
     }
 
     @Test
-    public void jwtShouldRejectInvalidRequests() throws Exception {
+    void jwtShouldRejectInvalidRequests() throws Exception {
         given()
             .header("Authorization", "Bearer invalid")
         .when()
