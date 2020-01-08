@@ -16,36 +16,24 @@
  * specific language governing permissions and limitations      *
  * under the License.                                           *
  ****************************************************************/
-package org.apache.james.blob.api;
 
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+package org.apache.james.blob.memory;
 
-import reactor.core.publisher.Mono;
+import org.apache.james.blob.api.DumbBlobStore;
+import org.apache.james.blob.api.DumbBlobStoreContract;
+import org.junit.jupiter.api.BeforeEach;
 
-public interface BlobStore {
+class MemoryDumbBlobStoreTest implements DumbBlobStoreContract {
 
-    enum StoragePolicy {
-        SIZE_BASED,
-        LOW_COST,
-        HIGH_PERFORMANCE
+    private MemoryDumbBlobStore blobStore;
+
+    @BeforeEach
+    void setUp() {
+        blobStore = new MemoryDumbBlobStore();
     }
 
-    Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy);
-
-    Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy);
-
-    default Mono<BlobId> save(BucketName bucketName, String data, StoragePolicy storagePolicy) {
-        return save(bucketName, data.getBytes(StandardCharsets.UTF_8), storagePolicy);
+    @Override
+    public DumbBlobStore testee() {
+        return blobStore;
     }
-
-    Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
-
-    InputStream read(BucketName bucketName, BlobId blobId);
-
-    BucketName getDefaultBucketName();
-
-    Mono<Void> deleteBucket(BucketName bucketName);
-
-    Mono<Void> delete(BucketName bucketName, BlobId blobId);
 }
