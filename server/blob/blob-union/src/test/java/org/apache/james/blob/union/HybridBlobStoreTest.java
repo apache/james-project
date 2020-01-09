@@ -37,6 +37,7 @@ import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreException;
 import org.apache.james.blob.memory.MemoryBlobStore;
+import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -157,8 +158,8 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @BeforeEach
     void setup() {
-        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
-        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
+        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)
@@ -279,7 +280,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
     class LowCostSaveThrowsExceptionDirectly {
         @Test
         void saveShouldFailWhenException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -292,7 +293,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveInputStreamShouldFailWhenException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -309,7 +310,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveShouldFailWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -322,7 +323,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void saveInputStreamShouldFallBackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -340,7 +341,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readShouldReturnFallbackToPerformingWhenLowCostGotException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -354,7 +355,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readBytesShouldReturnFallbackToPerformingWhenLowCostGotException() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
 
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new ThrowingBlobStore())
@@ -374,7 +375,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readShouldReturnFallbackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -388,7 +389,7 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
         @Test
         void readBytesShouldReturnFallbackToPerformingWhenLowCostCompletedExceptionally() {
-            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+            MemoryBlobStore highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
             HybridBlobStore hybridBlobStore = HybridBlobStore.builder()
                 .lowCost(new FailingBlobStore())
                 .highPerformance(highPerformanceBlobStore)
@@ -474,8 +475,8 @@ class HybridBlobStoreTest implements BlobStoreContract {
 
     @Test
     void getDefaultBucketNameShouldThrowWhenBlobStoreDontShareTheSameDefaultBucketName() {
-        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("lowCost"));
-        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("highPerformance"));
+        lowCostBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("lowCost"), new MemoryDumbBlobStore());
+        highPerformanceBlobStore = new MemoryBlobStore(BLOB_ID_FACTORY, BucketName.of("highPerformance"), new MemoryDumbBlobStore());
         hybridBlobStore = HybridBlobStore.builder()
             .lowCost(lowCostBlobStore)
             .highPerformance(highPerformanceBlobStore)

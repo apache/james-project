@@ -31,6 +31,7 @@ import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.Store;
 import org.apache.james.blob.memory.MemoryBlobStore;
+import org.apache.james.blob.memory.MemoryDumbBlobStore;
 import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.util.MimeMessageUtil;
 import org.assertj.core.api.SoftAssertions;
@@ -45,7 +46,7 @@ class MimeMessageStoreTest {
 
     @BeforeEach
     void setUp() {
-        blobStore = new MemoryBlobStore(BLOB_ID_FACTORY);
+        blobStore = new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore());
         testee = MimeMessageStore.factory(blobStore).mimeMessageStore();
     }
 

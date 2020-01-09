@@ -21,6 +21,7 @@ package org.apache.james.blob.memory;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -33,7 +34,7 @@ public class MemoryBlobStoreTest implements MetricableBlobStoreContract {
 
     @BeforeEach
     void setUp() {
-        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new MemoryBlobStore(BLOB_ID_FACTORY));
+        blobStore = new MetricableBlobStore(metricsTestExtension.getMetricFactory(), new MemoryBlobStore(BLOB_ID_FACTORY, new MemoryDumbBlobStore()));
     }
 
     @Override
