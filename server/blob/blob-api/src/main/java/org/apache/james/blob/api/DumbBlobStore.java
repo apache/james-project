@@ -51,6 +51,7 @@ public interface DumbBlobStore {
      * Save the blob with the provided blob id, and overwrite the previous blob with the same id if it already exists
      * The bucket is created if it not already exists.
      * This operation should be atomic and isolated
+     * Two blobs having the same blobId must have the same content
      * @return an empty Mono when the save succeed,
      *  otherwise an IOObjectStoreException in its error channel
      */

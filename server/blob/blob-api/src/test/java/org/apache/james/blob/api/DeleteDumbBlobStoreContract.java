@@ -187,7 +187,7 @@ public interface DeleteDumbBlobStoreContract  {
                     if (!string.equals(TWELVE_MEGABYTES_STRING)) {
                         throw new RuntimeException("Should not read partial blob when an other thread is deleting it. Size : " + string.length());
                     }
-                } catch (ObjectStoreException exception) {
+                } catch (ObjectNotFoundException exception) {
                     // normal behavior here
                 }
 
