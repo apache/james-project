@@ -36,13 +36,10 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Function;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
 
 import reactor.core.publisher.Mono;
 
@@ -204,21 +201,14 @@ public interface DeleteDumbBlobStoreContract  {
     @Test
     default void mixingSaveReadAndDeleteShouldReturnConsistentState() throws ExecutionException, InterruptedException {
         ConcurrentTestRunner.builder()
-            .reactorOperation((thread, iteration) -> getConcurrentMixedOperation())
+            .randomlyDistributedReactorOperations(
+                (thread, iteration) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES),
+                (thread, iteration) -> testee().delete(TEST_BUCKET_NAME, TEST_BLOB_ID),
+                (thread, iteration) -> checkConcurrentMixedOperation()
+            )
             .threadCount(10)
             .operationCount(100)
             .runSuccessfullyWithin(Duration.ofMinutes(2));
-    }
-
-    default Publisher<Void> getConcurrentMixedOperation() {
-        switch (ThreadLocalRandom.current().nextInt(3)) {
-            case 0:
-                return testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES);
-            case 1:
-                return testee().delete(TEST_BUCKET_NAME, TEST_BLOB_ID);
-            default:
-                return checkConcurrentMixedOperation();
-        }
     }
 
     default Mono<Void> checkConcurrentMixedOperation() {
