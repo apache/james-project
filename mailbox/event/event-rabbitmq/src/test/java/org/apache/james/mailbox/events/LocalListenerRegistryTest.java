@@ -146,15 +146,10 @@ class LocalListenerRegistryTest {
             MailboxListener listener3 = event -> { };
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> {
-                    if (threadNumber % 3 == 0) {
-                        testee.addListener(KEY_1, listener1);
-                    } else if (threadNumber % 3 == 1) {
-                        testee.addListener(KEY_1, listener2);
-                    } else if (threadNumber % 3 == 2) {
-                        testee.addListener(KEY_1, listener3);
-                    }
-                })
+                .randomlyDistributedOperations(
+                    (threadNumber, operationNumber) -> testee.addListener(KEY_1, listener1),
+                    (threadNumber, operationNumber) -> testee.addListener(KEY_1, listener2),
+                    (threadNumber, operationNumber) -> testee.addListener(KEY_1, listener3))
                 .threadCount(6)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
@@ -188,24 +183,24 @@ class LocalListenerRegistryTest {
             AtomicInteger firstListenerCount = new AtomicInteger(0);
 
             ConcurrentTestRunner.builder()
-                .operation((threadNumber, operationNumber) -> {
-                    if (threadNumber % 3 == 0) {
+                .randomlyDistributedOperations((threadNumber, operationNumber) -> {
                         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener1);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
-                    } else if (threadNumber % 3 == 1) {
+                    },
+                    (threadNumber, operationNumber) -> {
                         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener2);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
-                    } else if (threadNumber % 3 == 2) {
+                    },
+                    (threadNumber, operationNumber) -> {
                         LocalListenerRegistry.LocalRegistration registration = testee.addListener(KEY_1, listener3);
                         if (registration.isFirstListener()) {
                             firstListenerCount.incrementAndGet();
                         }
-                    }
-                })
+                    })
                 .threadCount(6)
                 .operationCount(10)
                 .runSuccessfullyWithin(ONE_SECOND);
