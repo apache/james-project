@@ -25,6 +25,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -39,7 +40,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-
 import reactor.core.publisher.Mono;
 
 public class ConcurrentTestRunner implements Closeable {
@@ -52,6 +52,31 @@ public class ConcurrentTestRunner implements Closeable {
 
         default RequireThreadCount reactorOperation(ReactorOperation reactorOperation) {
             return operation(reactorOperation.blocking());
+        }
+
+        default RequireThreadCount randomlyDistributedOperations(ConcurrentOperation firstOperation, ConcurrentOperation... operations) {
+            Random random = createReproductibleRandom();
+            ConcurrentOperation aggregateOperation = (threadNumber, step) -> selectRandomOperation(random, firstOperation, operations).execute(threadNumber, step);
+            return operation(aggregateOperation);
+        }
+
+        default RequireThreadCount randomlyDistributedReactorOperations(ReactorOperation firstReactorOperation, ReactorOperation... reactorOperations) {
+            Random random = createReproductibleRandom();
+            ReactorOperation aggregateOperation = (threadNumber, step) -> selectRandomOperation(random, firstReactorOperation, reactorOperations).execute(threadNumber, step);
+            return reactorOperation(aggregateOperation);
+        }
+
+        default Random createReproductibleRandom() {
+            return new Random(2134);
+        }
+
+        default <OperationT> OperationT selectRandomOperation(Random random, OperationT firstReactorOperation, OperationT... reactorOperations) {
+            int whichAction = random.nextInt(reactorOperations.length + 1);
+            if (whichAction == 0) {
+                return firstReactorOperation;
+            } else {
+                return reactorOperations[whichAction - 1];
+            }
         }
     }
 

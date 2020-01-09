@@ -26,11 +26,18 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.Closeable;
 import java.io.IOException;
 import java.time.Duration;
+import java.util.IntSummaryStatistics;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.Test;
+
+import reactor.core.publisher.Mono;
 
 class ConcurrentTestRunnerTest {
     private static final ConcurrentTestRunner.ConcurrentOperation NOOP = (threadNumber, step) -> { };
@@ -231,4 +238,85 @@ class ConcurrentTestRunnerTest {
 
         assertThat(queue).containsOnly("0:0", "0:1", "1:0", "1:1");
     }
+
+    @Test
+    void runRandomlyDistributedOperationsShouldRunAllOperations() throws ExecutionException, InterruptedException {
+        AtomicBoolean firstOperationRun = new AtomicBoolean(false);
+        AtomicBoolean secondOperationRun = new AtomicBoolean(false);
+        AtomicBoolean thirdOperationRun = new AtomicBoolean(false);
+        ConcurrentTestRunner.builder()
+            .randomlyDistributedOperations(
+                (threadNumber, step) -> firstOperationRun.set(true),
+                (threadNumber, step) -> secondOperationRun.set(true),
+                (threadNumber, step) -> thirdOperationRun.set(true))
+            .threadCount(10)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(Stream.of(firstOperationRun, secondOperationRun, thirdOperationRun).map(AtomicBoolean::get)).containsOnly(true);
+    }
+
+    @Test
+    void runRandomlyDistributedOperationsShouldRunAllOperationsEvenly() throws ExecutionException, InterruptedException {
+        AtomicInteger firstOperationRuns = new AtomicInteger(0);
+        AtomicInteger secondOperationRuns = new AtomicInteger(0);
+        AtomicInteger thirdOperationRuns = new AtomicInteger(0);
+        int threadCount = 10;
+        int operationCount = 1000;
+        ConcurrentTestRunner.builder()
+            .randomlyDistributedOperations(
+                (threadNumber, step) -> firstOperationRuns.incrementAndGet(),
+                (threadNumber, step) -> secondOperationRuns.incrementAndGet(),
+                (threadNumber, step) -> thirdOperationRuns.incrementAndGet())
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        IntSummaryStatistics statistics = IntStream.of(firstOperationRuns.get(), secondOperationRuns.get(), thirdOperationRuns.get()).summaryStatistics();
+        int min = statistics.getMin();
+        int max = statistics.getMax();
+
+        assertThat(max - min).isLessThan((threadCount * operationCount) * 5 / 100);
+    }
+
+    @Test
+    void runRandomlyDistributedReactorOperationsShouldRunAllOperations() throws ExecutionException, InterruptedException {
+        AtomicBoolean firstOperationRun = new AtomicBoolean(false);
+        AtomicBoolean secondOperationRun = new AtomicBoolean(false);
+        AtomicBoolean thirdOperationRun = new AtomicBoolean(false);
+        ConcurrentTestRunner.builder()
+            .randomlyDistributedReactorOperations(
+                (threadNumber, step) -> Mono.fromRunnable(() -> firstOperationRun.set(true)),
+                (threadNumber, step) -> Mono.fromRunnable(() -> secondOperationRun.set(true)),
+                (threadNumber, step) -> Mono.fromRunnable(() -> thirdOperationRun.set(true)))
+            .threadCount(10)
+            .operationCount(10)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        assertThat(Stream.of(firstOperationRun, secondOperationRun, thirdOperationRun).map(AtomicBoolean::get)).containsOnly(true);
+    }
+
+    @Test
+    void runRandomlyDistributedReactorOperationsShouldRunAllOperationsEvenly() throws ExecutionException, InterruptedException {
+        AtomicInteger firstOperationRuns = new AtomicInteger(0);
+        AtomicInteger secondOperationRuns = new AtomicInteger(0);
+        AtomicInteger thirdOperationRuns = new AtomicInteger(0);
+        int threadCount = 10;
+        int operationCount = 1000;
+        ConcurrentTestRunner.builder()
+            .randomlyDistributedReactorOperations(
+                (threadNumber, step) -> Mono.fromRunnable(firstOperationRuns::incrementAndGet),
+                (threadNumber, step) -> Mono.fromRunnable(secondOperationRuns::incrementAndGet),
+                (threadNumber, step) -> Mono.fromRunnable(thirdOperationRuns::incrementAndGet))
+            .threadCount(threadCount)
+            .operationCount(operationCount)
+            .runSuccessfullyWithin(Duration.ofMinutes(1));
+
+        IntSummaryStatistics statistics = IntStream.of(firstOperationRuns.get(), secondOperationRuns.get(), thirdOperationRuns.get()).summaryStatistics();
+        int min = statistics.getMin();
+        int max = statistics.getMax();
+
+        assertThat(max - min).isLessThan((threadCount * operationCount) * 5 / 100);
+    }
+
 }
