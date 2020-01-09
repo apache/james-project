@@ -30,6 +30,7 @@ import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.IOObjectStoreException;
 import org.apache.james.blob.api.ObjectNotFoundException;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.io.ByteSource;
@@ -92,11 +93,20 @@ public class MemoryDumbBlobStore implements DumbBlobStore {
 
     @Override
     public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        return null;
+        Preconditions.checkNotNull(bucketName);
+        return Mono.fromRunnable(() -> {
+            synchronized (blobs) {
+                blobs.remove(bucketName, blobId);
+            }
+        });
     }
 
     @Override
     public Mono<Void> deleteBucket(BucketName bucketName) {
-        return null;
+        return Mono.fromRunnable(() -> {
+            synchronized (blobs) {
+                blobs.row(bucketName).clear();
+            }
+        });
     }
 }

@@ -79,14 +79,20 @@ public interface DumbBlobStore {
 
     /**
      * Remove a Blob based on its BucketName and its BlobId.
+     * This operation should be atomic
      *
      * @return a successful Mono if the Blob is deleted or did not exist
+     * (either the blob doesn't exist in the bucket or the bucket itself doesn't exist)
      *  otherwise an IOObjectStoreException in its error channel
      */
     Mono<Void> delete(BucketName bucketName, BlobId blobId);
 
     /**
      * Remove a bucket based on its BucketName
+     *
+     * Deleting a bucket is not guaranteed to be atomic nor isolated.
+     * Saving or reading blobs concurrently of bucket deletion can lead
+     * to an inconsistent state.
      *
      * @return a successful Mono if the bucket is deleted or did not exist
      *  otherwise an IOObjectStoreException in its error channel
