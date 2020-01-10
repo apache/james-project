@@ -43,12 +43,12 @@ import org.apache.james.webadmin.routes.UserQuotaRoutes;
 import org.apache.james.webadmin.routes.UserRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
 
     @RegisterExtension

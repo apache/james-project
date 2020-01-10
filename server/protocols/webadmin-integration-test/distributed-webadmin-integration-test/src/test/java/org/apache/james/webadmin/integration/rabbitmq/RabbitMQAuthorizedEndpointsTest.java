@@ -32,10 +32,10 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.integration.AuthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
 import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
 
     @RegisterExtension

@@ -24,4 +24,6 @@ package org.apache.james.junit.categories;
  * Marks tests that should be run on every product
  */
 public interface BasicFeature {
+
+    String TAG = "BasicFeature";
 }

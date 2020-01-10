@@ -66,9 +66,9 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -79,7 +79,7 @@ import com.google.inject.multibindings.Multibinder;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQEventDeadLettersIntegrationTest {
     public static class RetryEventsListenerGroup extends Group {
 

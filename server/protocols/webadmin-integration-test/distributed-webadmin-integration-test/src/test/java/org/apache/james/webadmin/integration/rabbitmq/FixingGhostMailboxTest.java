@@ -76,8 +76,8 @@ import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -89,7 +89,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class FixingGhostMailboxTest {
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";

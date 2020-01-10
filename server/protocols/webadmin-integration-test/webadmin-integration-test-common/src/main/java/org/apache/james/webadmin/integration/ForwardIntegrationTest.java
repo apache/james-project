@@ -53,9 +53,9 @@ import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.awaitility.Duration;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
@@ -90,7 +90,7 @@ public abstract class ForwardIntegrationTest {
         messageSender.close();
     }
 
-    @Category(BasicFeature.class)
+    @Tag(BasicFeature.TAG)
     @Test
     void messageShouldBeForwardedWhenDefinedInRESTAPI() {
         webAdminApi.put(String.format("/address/forwards/%s/targets/%s", ALICE.asString(), BOB.asString()));

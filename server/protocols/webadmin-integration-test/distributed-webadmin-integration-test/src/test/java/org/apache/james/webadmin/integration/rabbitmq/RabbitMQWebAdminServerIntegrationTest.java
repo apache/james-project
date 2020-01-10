@@ -48,13 +48,13 @@ import org.apache.james.webadmin.swagger.routes.SwaggerRoutes;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.restassured.http.ContentType;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTest {
 
     @RegisterExtension

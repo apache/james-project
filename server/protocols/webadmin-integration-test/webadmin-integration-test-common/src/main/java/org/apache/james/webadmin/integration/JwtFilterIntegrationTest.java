@@ -34,8 +34,8 @@ import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
 import org.apache.james.webadmin.routes.DomainsRoutes;
 import org.eclipse.jetty.http.HttpStatus;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import io.restassured.RestAssured;
@@ -71,7 +71,7 @@ public abstract class JwtFilterIntegrationTest {
     }
 
 
-    @Category(BasicFeature.class)
+    @Tag(BasicFeature.TAG)
     @Test
     void jwtAuthenticationShouldWork() throws Exception {
         given()

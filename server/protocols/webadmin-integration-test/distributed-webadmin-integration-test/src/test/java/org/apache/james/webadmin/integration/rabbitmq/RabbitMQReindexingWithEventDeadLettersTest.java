@@ -55,9 +55,9 @@ import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -65,7 +65,7 @@ import io.restassured.RestAssured;
 import io.restassured.parsing.Parser;
 import io.restassured.specification.RequestSpecification;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQReindexingWithEventDeadLettersTest {
 
     private static final String ELASTICSEARCH_LISTENER_GROUP = "org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup";

@@ -85,15 +85,15 @@ import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
-import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
-@Category(BasicFeature.class)
+@Tag(BasicFeature.TAG)
 class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
     @RegisterExtension
