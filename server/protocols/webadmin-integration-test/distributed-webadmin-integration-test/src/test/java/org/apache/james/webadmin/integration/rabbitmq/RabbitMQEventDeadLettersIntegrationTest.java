@@ -71,6 +71,8 @@ import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 import com.google.inject.Module;
@@ -153,20 +155,24 @@ class RabbitMQEventDeadLettersIntegrationTest {
                 .toInstance(retryEventsListener);
         }
 
-        RetryEventsListener retryEventsListener() {
+        @Override
+        public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+            return parameterContext.getParameter().getType() == RetryEventsListener.class;
+        }
+
+        @Override
+        public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
             return retryEventsListener;
         }
     }
-
-    private static final RetryEventsListenerExtension EVENT_EXTENSION = new RetryEventsListenerExtension();
-
+    
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new AwsS3BlobStoreExtension())
         .extension(new RabbitMQExtension())
-        .extension(EVENT_EXTENSION)
+        .extension(new RetryEventsListenerExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
@@ -231,11 +237,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void failedEventShouldBeStoredInDeadLetterUnderItsGroupId() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void failedEventShouldBeStoredInDeadLetterUnderItsGroupId(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
@@ -246,11 +252,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void successfulEventShouldNotBeStoredInDeadLetter() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES - 1);
+    void successfulEventShouldNotBeStoredInDeadLetter(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES - 1);
         generateInitialEvent();
 
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> !EVENT_EXTENSION.retryEventsListener().successfulEvents.isEmpty());
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> !retryEventsListener.successfulEvents.isEmpty());
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
@@ -261,11 +267,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void groupIdOfFailedEventShouldBeStoredInDeadLetter() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void groupIdOfFailedEventShouldBeStoredInDeadLetter(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups")
@@ -276,11 +282,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void failedEventShouldBeStoredInDeadLetter() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void failedEventShouldBeStoredInDeadLetter(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         MailboxId mailboxId = generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -297,12 +303,12 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void multipleFailedEventShouldBeStoredInDeadLetter() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void multipleFailedEventShouldBeStoredInDeadLetter(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         when()
             .get(EventDeadLettersRoutes.BASE_PATH + "/groups/" + GROUP_ID)
@@ -313,11 +319,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void failedEventShouldNotBeInDeadLetterAfterBeingDeleted() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void failedEventShouldNotBeInDeadLetterAfterBeingDeleted(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -331,11 +337,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void taskShouldBeCompletedAfterSuccessfulRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void taskShouldBeCompletedAfterSuccessfulRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -358,11 +364,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void failedEventShouldNotBeInDeadLettersAfterSuccessfulRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void failedEventShouldNotBeInDeadLettersAfterSuccessfulRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -383,11 +389,11 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void failedEventShouldBeCorrectlyProcessedByListenerAfterSuccessfulRedelivery() throws InterruptedException {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void failedEventShouldBeCorrectlyProcessedByListenerAfterSuccessfulRedelivery(RetryEventsListener retryEventsListener) throws InterruptedException {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 
@@ -401,20 +407,20 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        awaitAtMostTenSeconds.until(() -> EVENT_EXTENSION.retryEventsListener().getSuccessfulEvents().size() == 1);
+        awaitAtMostTenSeconds.until(() -> retryEventsListener.getSuccessfulEvents().size() == 1);
     }
 
-    private void waitForCalls(int count) {
-        calmlyAwait.atMost(ONE_MINUTE).until(() -> EVENT_EXTENSION.retryEventsListener().totalCalls.intValue() >= count);
+    private void waitForCalls(RetryEventsListener retryEventsListener, int count) {
+        calmlyAwait.atMost(ONE_MINUTE).until(() -> retryEventsListener.totalCalls.intValue() >= count);
     }
 
     @Test
-    void taskShouldBeCompletedAfterSuccessfulGroupRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void taskShouldBeCompletedAfterSuccessfulGroupRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -434,12 +440,12 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulGroupRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulGroupRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -460,12 +466,12 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulGroupRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulGroupRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -477,16 +483,16 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        awaitAtMostTenSeconds.until(() -> EVENT_EXTENSION.retryEventsListener().getSuccessfulEvents().size() == 2);
+        awaitAtMostTenSeconds.until(() -> retryEventsListener.getSuccessfulEvents().size() == 2);
     }
 
     @Test
-    void taskShouldBeCompletedAfterSuccessfulAllRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void taskShouldBeCompletedAfterSuccessfulAllRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -505,12 +511,12 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulAllRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void multipleFailedEventsShouldNotBeInDeadLettersAfterSuccessfulAllRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -531,12 +537,12 @@ class RabbitMQEventDeadLettersIntegrationTest {
     }
 
     @Test
-    void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulAllRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES + 1);
+    void multipleFailedEventsShouldBeCorrectlyProcessedByListenerAfterSuccessfulAllRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES + 1);
         generateInitialEvent();
         generateSecondEvent();
 
-        waitForCalls((MAX_RETRIES + 1) * 2);
+        waitForCalls(retryEventsListener, (MAX_RETRIES + 1) * 2);
 
         String taskId = with()
             .queryParam("action", EVENTS_ACTION)
@@ -548,16 +554,16 @@ class RabbitMQEventDeadLettersIntegrationTest {
             .basePath(TasksRoutes.BASE)
             .get(taskId + "/await");
 
-        awaitAtMostTenSeconds.until(() -> EVENT_EXTENSION.retryEventsListener().getSuccessfulEvents().size() == 2);
+        awaitAtMostTenSeconds.until(() -> retryEventsListener.getSuccessfulEvents().size() == 2);
     }
 
     @Disabled("retry rest API delivers only once, see JAMES-2907. We need same retry cound for this test to work")
     @Test
-    void failedEventShouldStillBeInDeadLettersAfterFailedRedelivery() {
-        EVENT_EXTENSION.retryEventsListener().callsPerEventBeforeSuccess(MAX_RETRIES * 2 + 1);
+    void failedEventShouldStillBeInDeadLettersAfterFailedRedelivery(RetryEventsListener retryEventsListener) {
+        retryEventsListener.callsPerEventBeforeSuccess(MAX_RETRIES * 2 + 1);
         generateInitialEvent();
 
-        waitForCalls(MAX_RETRIES + 1);
+        waitForCalls(retryEventsListener, MAX_RETRIES + 1);
 
         String failedInsertionId = retrieveFirstFailedInsertionId();
 

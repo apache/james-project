@@ -19,36 +19,40 @@
 
 package org.apache.james.webadmin.integration.rabbitmq.vault;
 
-import java.io.IOException;
-import java.time.Clock;
-
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.apache.james.webadmin.integration.vault.DeletedMessageVaultIntegrationTest;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
+class RabbitMQDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
 
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule rule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
+    private static final DockerElasticSearchExtension ES_EXTENSION = new DockerElasticSearchExtension();
 
-    @Override
-    public GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
-        return rule.jmapServer(cassandra.getModule(),
-            new TestDeleteMessageVaultPreDeletionHookModule(),
-            new WebadminIntergrationTestModule(),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
-            binder -> binder.bind(Clock.class).toInstance(clock));
-    }
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(ES_EXTENSION)
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .extension(new ClockExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
+            .overrideWith(new WebadminIntergrationTestModule()))
+        .build();
 
     @Override
     protected void awaitSearchUpToDate() {
-        rule.await();
+        ES_EXTENSION.await();
     }
 }

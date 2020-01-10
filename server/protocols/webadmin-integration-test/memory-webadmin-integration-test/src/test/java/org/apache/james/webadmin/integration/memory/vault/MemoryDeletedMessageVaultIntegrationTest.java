@@ -19,30 +19,27 @@
 
 package org.apache.james.webadmin.integration.memory.vault;
 
-import java.io.IOException;
-import java.time.Clock;
-
 import org.apache.james.GuiceJamesServer;
-import org.apache.james.MemoryJmapTestRule;
-import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.MemoryJamesServerMain;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
 import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.apache.james.webadmin.integration.vault.DeletedMessageVaultIntegrationTest;
-import org.junit.Rule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class MemoryDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
+class MemoryDeletedMessageVaultIntegrationTest extends DeletedMessageVaultIntegrationTest {
 
-    @Rule
-    public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
-
-    @Override
-    protected GuiceJamesServer createJmapServer(FileSystem fileSystem, Clock clock) throws IOException {
-        return memoryJmap.jmapServer(
-            new TestDeleteMessageVaultPreDeletionHookModule(),
-            new WebadminIntergrationTestModule(),
-            binder -> binder.bind(FileSystem.class).toInstance(fileSystem),
-            binder -> binder.bind(Clock.class).toInstance(clock));
-    }
+    @RegisterExtension
+    static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
+        .extension(new ClockExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
+            .overrideWith(new WebadminIntergrationTestModule()))
+        .build();
 
     @Override
     protected void awaitSearchUpToDate() {
