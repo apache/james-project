@@ -50,8 +50,8 @@ import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
@@ -86,8 +86,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
         .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
         .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE)
-        .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
-            .toInstance(WebAdminConfiguration.TEST_CONFIGURATION));
+        .overrideWith(new WebadminIntergrationTestModule());
 
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()

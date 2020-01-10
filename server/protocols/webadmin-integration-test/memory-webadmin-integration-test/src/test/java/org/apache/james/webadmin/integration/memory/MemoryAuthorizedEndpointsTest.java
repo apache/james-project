@@ -24,9 +24,9 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.AuthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
@@ -38,7 +38,7 @@ class MemoryAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
+            .overrideWith(new WebadminIntergrationTestModule())
             .overrideWith(new UnauthorizedModule()))
         .build();
 }

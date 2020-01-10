@@ -38,8 +38,8 @@ import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.util.FunctionalUtils;
 import org.apache.james.util.Runnables;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
 import org.junit.jupiter.api.extension.BeforeAllCallback;
@@ -164,7 +164,7 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
                 .overrideWith(elasticSearchRule.getModule())
                 .overrideWith(dockerAwsS3TestRule.getModule())
                 .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-                .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION))
+                .overrideWith(new WebadminIntergrationTestModule())
                 .overrideWith(new UnauthorizedModule())
                 .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()));
     }

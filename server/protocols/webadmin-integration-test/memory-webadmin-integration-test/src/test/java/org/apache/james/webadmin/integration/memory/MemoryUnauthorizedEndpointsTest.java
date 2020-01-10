@@ -25,9 +25,9 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.UnauthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
@@ -41,6 +41,6 @@ class MemoryUnauthorizedEndpointsTest extends UnauthorizedEndpointsTest {
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
             .overrideWith(new UnauthorizedModule())
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+            .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 }

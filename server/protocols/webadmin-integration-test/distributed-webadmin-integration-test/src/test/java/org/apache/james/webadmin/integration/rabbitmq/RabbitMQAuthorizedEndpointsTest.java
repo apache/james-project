@@ -29,9 +29,9 @@ import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
-import org.apache.james.webadmin.WebAdminConfiguration;
 import org.apache.james.webadmin.integration.AuthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -50,6 +50,6 @@ class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
             .overrideWith(new UnauthorizedModule())
-            .overrideWith(binder -> binder.bind(WebAdminConfiguration.class).toInstance(WebAdminConfiguration.TEST_CONFIGURATION)))
+            .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 }
