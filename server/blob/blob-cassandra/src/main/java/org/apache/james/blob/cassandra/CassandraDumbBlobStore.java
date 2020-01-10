@@ -52,19 +52,16 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     private final CassandraBucketDAO bucketDAO;
     private final DataChunker dataChunker;
     private final CassandraConfiguration configuration;
-    private final HashBlobId.Factory blobIdFactory;
     private final BucketName defaultBucket;
 
     @Inject
     CassandraDumbBlobStore(CassandraDefaultBucketDAO defaultBucketDAO,
                            CassandraBucketDAO bucketDAO,
                            CassandraConfiguration cassandraConfiguration,
-                           HashBlobId.Factory blobIdFactory,
                            BucketName defaultBucket) {
         this.defaultBucketDAO = defaultBucketDAO;
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
-        this.blobIdFactory = blobIdFactory;
         this.defaultBucket = defaultBucket;
         this.dataChunker = new DataChunker();
     }

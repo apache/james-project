@@ -86,7 +86,7 @@ class AttachmentMessageIdCreationTest {
     void setUp(CassandraCluster cassandra) {
         CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
 
-        blobStore = new CassandraBlobStore(cassandra.getConf());
+        blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
         cassandraMessageDAO = new CassandraMessageDAO(cassandra.getConf(), cassandra.getTypesProvider(),
             blobStore, new HashBlobId.Factory(), messageIdFactory);
 

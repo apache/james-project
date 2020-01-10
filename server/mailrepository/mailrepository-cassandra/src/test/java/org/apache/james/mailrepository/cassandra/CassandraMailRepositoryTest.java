@@ -57,7 +57,7 @@ class CassandraMailRepositoryTest implements MailRepositoryContract {
         CassandraMailRepositoryMailDaoAPI mailDAO = new MergingCassandraMailRepositoryMailDao(v1, v2);
         CassandraMailRepositoryKeysDAO keysDAO = new CassandraMailRepositoryKeysDAO(cassandra.getConf(), CassandraUtils.WITH_DEFAULT_CONFIGURATION);
         CassandraMailRepositoryCountDAO countDAO = new CassandraMailRepositoryCountDAO(cassandra.getConf());
-        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
+        CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
 
         cassandraMailRepository = new CassandraMailRepository(URL,
             keysDAO, countDAO, mailDAO, MimeMessageStore.factory(blobStore).mimeMessageStore());

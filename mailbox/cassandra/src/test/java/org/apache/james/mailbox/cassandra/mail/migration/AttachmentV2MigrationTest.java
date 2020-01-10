@@ -72,7 +72,7 @@ class AttachmentV2MigrationTest {
         attachmentDAO = new CassandraAttachmentDAO(cassandra.getConf(),
             CassandraConfiguration.DEFAULT_CONFIGURATION);
         attachmentDAOV2 = new CassandraAttachmentDAOV2(BLOB_ID_FACTORY, cassandra.getConf());
-        blobsStore = new CassandraBlobStore(cassandra.getConf());
+        blobsStore = CassandraBlobStore.forTesting(cassandra.getConf());
         migration = new AttachmentV2Migration(attachmentDAO, attachmentDAOV2, blobsStore);
 
         attachment1 = Attachment.builder()

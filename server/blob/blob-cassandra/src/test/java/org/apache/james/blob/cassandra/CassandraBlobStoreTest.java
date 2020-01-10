@@ -35,6 +35,7 @@ import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.HashBlobId;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.api.MetricableBlobStoreContract;
@@ -47,7 +48,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.common.base.Strings;
 import com.google.common.hash.Hashing;
 import com.google.common.hash.HashingInputStream;
-
 import reactor.core.publisher.Mono;
 
 public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
@@ -65,14 +65,15 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
         HashBlobId.Factory blobIdFactory = new HashBlobId.Factory();
         CassandraBucketDAO bucketDAO = new CassandraBucketDAO(blobIdFactory, cassandra.getConf());
         defaultBucketDAO = spy(new CassandraDefaultBucketDAO(cassandra.getConf()));
+        CassandraConfiguration cassandraConfiguration = CassandraConfiguration.builder()
+            .blobPartSize(CHUNK_SIZE)
+            .build();
         testee = new MetricableBlobStore(
             metricsTestExtension.getMetricFactory(),
-            new CassandraBlobStore(defaultBucketDAO,
-                bucketDAO,
-                CassandraConfiguration.builder()
-                    .blobPartSize(CHUNK_SIZE)
-                    .build(),
-                blobIdFactory));
+            new CassandraBlobStore(
+                blobIdFactory,
+                BucketName.DEFAULT,
+                new CassandraDumbBlobStore(defaultBucketDAO, bucketDAO, cassandraConfiguration, BucketName.DEFAULT)));
     }
 
     @Override

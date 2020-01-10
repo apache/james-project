@@ -291,7 +291,7 @@ class RabbitMQMailQueueTest {
     }
 
     private void setUp(CassandraCluster cassandra, MailQueueMetricExtension.MailQueueMetricTestSystem metricTestSystem, RabbitMQMailQueueConfiguration configuration) throws Exception {
-        CassandraBlobStore blobStore = new CassandraBlobStore(cassandra.getConf());
+        CassandraBlobStore blobStore = CassandraBlobStore.forTesting(cassandra.getConf());
         MimeMessageStore.Factory mimeMessageStoreFactory = MimeMessageStore.factory(blobStore);
         clock = new UpdatableTickingClock(IN_SLICE_1);
 
