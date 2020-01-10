@@ -40,7 +40,6 @@ import com.google.inject.Module;
 
 public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     public static final int TWO_SECONDS = 2000;
     private final TemporaryFolder temporaryFolder;
 
@@ -74,7 +73,7 @@ public class CassandraRabbitMQAwsS3JmapTestRule implements TestRule {
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(binder -> binder.bind(BlobStoreChoosingConfiguration.class)
                 .toInstance(BlobStoreChoosingConfiguration.objectStorage()))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))

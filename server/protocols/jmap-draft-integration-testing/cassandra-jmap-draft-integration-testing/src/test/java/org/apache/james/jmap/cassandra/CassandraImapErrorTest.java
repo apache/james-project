@@ -46,7 +46,6 @@ import io.restassured.RestAssured;
 class CassandraImapErrorTest {
     private static final String username = "username@" + DOMAIN;
     private static final String PASSWORD = "password";
-    private static final long LIMIT_TO_10_MESSAGES = 10;
     private final CassandraExtension cassandraExtension = new CassandraExtension();
 
     @RegisterExtension
@@ -56,7 +55,7 @@ class CassandraImapErrorTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
         .build();
 
     @BeforeEach

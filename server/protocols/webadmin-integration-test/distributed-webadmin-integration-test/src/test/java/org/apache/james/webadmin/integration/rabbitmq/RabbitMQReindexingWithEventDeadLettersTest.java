@@ -79,12 +79,10 @@ class RabbitMQReindexingWithEventDeadLettersTest {
     private static final DockerElasticSearchExtension dockerElasticSearch =
         new DockerElasticSearchExtension().withRequestTimeout(java.time.Duration.ofSeconds(1));
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private static final JamesServerBuilder.ServerProvider CONFIGURATION_BUILDER = configuration -> GuiceJamesServer
         .forConfiguration(configuration)
         .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-        .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+        .overrideWith(TestJMAPServerModule.limitToTenMessages())
         .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE)
         .overrideWith(new WebadminIntergrationTestModule());
 

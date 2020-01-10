@@ -96,8 +96,6 @@ import io.restassured.http.ContentType;
 @Category(BasicFeature.class)
 class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
@@ -106,7 +104,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 

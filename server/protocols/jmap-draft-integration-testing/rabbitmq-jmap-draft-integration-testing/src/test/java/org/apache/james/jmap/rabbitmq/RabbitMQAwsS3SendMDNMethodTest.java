@@ -37,8 +37,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
 
-    private static final long LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     JamesServerExtension testExtension = new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
@@ -48,7 +46,7 @@ public class RabbitMQAwsS3SendMDNMethodTest extends SendMDNMethodTest {
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages()))
             .build();
 
     @Override

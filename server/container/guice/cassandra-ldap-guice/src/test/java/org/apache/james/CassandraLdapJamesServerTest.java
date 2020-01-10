@@ -39,7 +39,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraLdapJamesServerTest implements JamesServerContract {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static Duration slowPacedPollInterval = ONE_HUNDRED_MILLISECONDS;
     private static ConditionFactory calmlyAwait = Awaitility.with()
         .pollInterval(slowPacedPollInterval)
@@ -60,7 +59,7 @@ class CassandraLdapJamesServerTest implements JamesServerContract {
         .extension(new LdapTestExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraLdapJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 

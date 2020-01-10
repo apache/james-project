@@ -54,7 +54,6 @@ import cucumber.runtime.java.guice.ScenarioScoped;
 @ScenarioScoped
 public class RabbitMQAwsS3Stepdefs {
 
-    private static final int JMAP_GET_MESSAGE_LIST_MAXIMUM_LIMIT = 10;
     private final MainStepdefs mainStepdefs;
     private final ImapStepdefs imapStepdefs;
     private final TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -85,7 +84,7 @@ public class RabbitMQAwsS3Stepdefs {
 
         mainStepdefs.jmapServer = GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-                .overrideWith(new TestJMAPServerModule(JMAP_GET_MESSAGE_LIST_MAXIMUM_LIMIT))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
                 .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
                 .overrideWith(swiftServer.getModule())

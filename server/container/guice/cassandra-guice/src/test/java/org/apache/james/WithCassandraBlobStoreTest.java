@@ -26,8 +26,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShouldBeWellReceived, JamesServerContract {
 
-    static int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
@@ -36,7 +34,7 @@ class WithCassandraBlobStoreTest implements JmapJamesServerContract, MailsShould
         .server(configuration -> GuiceJamesServer
             .forConfiguration(configuration)
             .combineWith(CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE))
         .build();
 

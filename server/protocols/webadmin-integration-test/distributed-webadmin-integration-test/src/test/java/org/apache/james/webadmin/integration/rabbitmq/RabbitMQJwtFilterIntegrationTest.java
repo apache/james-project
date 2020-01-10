@@ -37,8 +37,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
@@ -47,7 +45,7 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration()))
             .overrideWith(new WebadminIntergrationTestModule()))

@@ -33,13 +33,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntergrationTestModule())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration())))

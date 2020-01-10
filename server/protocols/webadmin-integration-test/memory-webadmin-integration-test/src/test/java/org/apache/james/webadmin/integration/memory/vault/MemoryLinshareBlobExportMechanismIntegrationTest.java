@@ -32,8 +32,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
 
     @RegisterExtension
@@ -41,7 +39,7 @@ class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExpor
         .extension(linshareGuiceExtension)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
             .overrideWith(new WebadminIntergrationTestModule()))
         .build();

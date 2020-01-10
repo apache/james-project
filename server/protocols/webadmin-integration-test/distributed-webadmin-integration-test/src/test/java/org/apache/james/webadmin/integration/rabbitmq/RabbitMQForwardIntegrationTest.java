@@ -34,8 +34,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
@@ -44,7 +42,7 @@ class RabbitMQForwardIntegrationTest extends ForwardIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 }

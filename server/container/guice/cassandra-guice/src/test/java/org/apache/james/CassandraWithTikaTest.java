@@ -25,8 +25,6 @@ import org.apache.james.modules.TestJMAPServerModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraWithTikaTest implements JamesServerContract {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @RegisterExtension
     static JamesServerExtension testExtension =
         new JamesServerBuilder()
@@ -35,7 +33,7 @@ class CassandraWithTikaTest implements JamesServerContract {
             .extension(new DockerElasticSearchExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();
 }

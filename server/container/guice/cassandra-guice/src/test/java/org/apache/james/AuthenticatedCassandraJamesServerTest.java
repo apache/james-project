@@ -34,8 +34,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import com.google.inject.CreationException;
 
 class AuthenticatedCassandraJamesServerTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     @Nested
     class AuthenticationTest implements JamesServerContract {
         @RegisterExtension
@@ -45,7 +43,7 @@ class AuthenticatedCassandraJamesServerTest {
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();
     }
@@ -62,7 +60,7 @@ class AuthenticatedCassandraJamesServerTest {
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .overrideServerModule(binder -> binder.bind(ClusterConfiguration.class)
                 .toInstance(ClusterConfiguration.builder()
@@ -94,7 +92,7 @@ class AuthenticatedCassandraJamesServerTest {
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(DOMAIN_LIST_CONFIGURATION_MODULE))
             .build();
 

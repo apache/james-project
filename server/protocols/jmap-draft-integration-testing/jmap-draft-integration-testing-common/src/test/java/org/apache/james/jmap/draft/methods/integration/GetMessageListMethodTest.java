@@ -102,7 +102,6 @@ import com.github.fge.lambdas.Throwing;
 import io.restassured.RestAssured;
 
 public abstract class GetMessageListMethodTest {
-    public static final int LIMIT_TO_3_MESSAGES = 3;
     private static final String FORWARDED = "$Forwarded";
     private static final ZoneId ZONE_ID = ZoneId.of("Europe/Paris");
     public static final MailboxPath ALICE_MAILBOX = MailboxPath.forUser(ALICE, "mailbox");

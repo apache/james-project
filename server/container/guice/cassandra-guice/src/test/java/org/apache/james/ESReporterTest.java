@@ -61,8 +61,6 @@ import io.restassured.http.ContentType;
 
 class ESReporterTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(ESReporterTest.class);
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     static final DockerElasticSearchExtension elasticSearchExtension = new DockerElasticSearchExtension();
 
     @RegisterExtension
@@ -72,7 +70,7 @@ class ESReporterTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new TestDockerESMetricReporterModule(elasticSearchExtension.getDockerES().getHttpHost())))
         .build();
 

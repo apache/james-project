@@ -17,13 +17,11 @@ import com.google.inject.multibindings.Multibinder;
 class GuiceJamesServerTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(GuiceJamesServerTest.class);
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private static JamesServerBuilder extensionBuilder() {
         return new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages()))
             .disableAutoStart();
     }
 

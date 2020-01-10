@@ -40,15 +40,13 @@ import org.testcontainers.DockerClientFactory;
 
 class CassandraNodeConfTest {
     private static final int CASSANDRA_PORT = 9042;
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private static JamesServerBuilder extensionBuilder() {
         return new JamesServerBuilder()
             .extension(new DockerElasticSearchExtension())
             .extension(new CassandraExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages()))
             .disableAutoStart();
     }
 

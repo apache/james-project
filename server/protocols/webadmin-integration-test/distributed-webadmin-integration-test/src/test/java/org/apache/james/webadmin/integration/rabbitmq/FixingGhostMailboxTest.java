@@ -91,7 +91,6 @@ import io.restassured.specification.RequestSpecification;
 
 @Category(BasicFeature.class)
 class FixingGhostMailboxTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String NAME = "[0][0]";
     private static final String ARGUMENTS = "[0][1]";
     private static final String FIRST_MAILBOX = ARGUMENTS + ".list[0]";
@@ -112,7 +111,7 @@ class FixingGhostMailboxTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 

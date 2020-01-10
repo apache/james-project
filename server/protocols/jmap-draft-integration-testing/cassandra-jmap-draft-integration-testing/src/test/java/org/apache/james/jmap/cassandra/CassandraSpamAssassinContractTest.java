@@ -19,6 +19,7 @@
 package org.apache.james.jmap.cassandra;
 
 import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
 
 import org.apache.james.CassandraExtension;
 import org.apache.james.DockerElasticSearchExtension;
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraSpamAssassinContractTest implements SpamAssassinContract {
 
-    private static final int LIMIT_TO_20_MESSAGES = 20;
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
 
     @RegisterExtension
@@ -45,6 +45,6 @@ class CassandraSpamAssassinContractTest implements SpamAssassinContract {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES)))
         .build();
 }

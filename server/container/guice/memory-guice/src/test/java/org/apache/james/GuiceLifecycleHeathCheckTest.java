@@ -46,13 +46,11 @@ import reactor.core.publisher.MonoProcessor;
 import reactor.core.scheduler.Schedulers;
 
 class GuiceLifecycleHeathCheckTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private static JamesServerBuilder extensionBuilder() {
         return new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(binder -> binder.bind(WebAdminConfiguration.class)
                     .toInstance(WebAdminConfiguration.TEST_CONFIGURATION)));
     }

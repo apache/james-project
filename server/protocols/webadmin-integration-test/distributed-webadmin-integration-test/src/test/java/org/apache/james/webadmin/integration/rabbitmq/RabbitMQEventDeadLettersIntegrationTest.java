@@ -158,7 +158,6 @@ class RabbitMQEventDeadLettersIntegrationTest {
         }
     }
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final RetryEventsListenerExtension EVENT_EXTENSION = new RetryEventsListenerExtension();
 
     @RegisterExtension
@@ -170,7 +169,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .extension(EVENT_EXTENSION)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntergrationTestModule()))
         .build();
 

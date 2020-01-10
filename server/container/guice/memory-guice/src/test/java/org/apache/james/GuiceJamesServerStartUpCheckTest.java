@@ -101,8 +101,6 @@ class GuiceJamesServerStartUpCheckTest {
         }
     }
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     interface StartUpCheckSuccessContract {
 
         @Test
@@ -117,7 +115,7 @@ class GuiceJamesServerStartUpCheckTest {
         return new JamesServerBuilder()
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages()))
             .disableAutoStart();
     }
 

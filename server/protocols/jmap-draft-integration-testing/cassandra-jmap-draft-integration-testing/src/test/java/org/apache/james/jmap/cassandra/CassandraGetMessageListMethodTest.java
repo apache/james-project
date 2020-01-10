@@ -21,6 +21,7 @@ package org.apache.james.jmap.cassandra;
 
 import static io.restassured.RestAssured.given;
 import static org.apache.james.jmap.JMAPTestingConstants.ALICE;
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_3_MESSAGES;
 
 import java.io.IOException;
 import java.util.Date;
@@ -48,7 +49,7 @@ public class CassandraGetMessageListMethodTest extends GetMessageListMethodTest 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
         return rule.jmapServer(cassandra.getModule(),
-            new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+            TestJMAPServerModule.maximumMessages(LIMIT_TO_3_MESSAGES));
     }
 
     @Override

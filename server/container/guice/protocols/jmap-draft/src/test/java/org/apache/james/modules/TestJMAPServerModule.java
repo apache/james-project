@@ -34,6 +34,18 @@ import com.google.inject.name.Names;
 
 public class TestJMAPServerModule extends AbstractModule {
 
+    public static final long LIMIT_TO_10_MESSAGES = 10;
+    public static final long LIMIT_TO_3_MESSAGES = 3;
+    public static final int LIMIT_TO_20_MESSAGES = 20;
+
+    public static TestJMAPServerModule limitToTenMessages() {
+        return new TestJMAPServerModule(LIMIT_TO_10_MESSAGES);
+    }
+
+    public static TestJMAPServerModule maximumMessages(long maximumLimit) {
+        return new TestJMAPServerModule(maximumLimit);
+    }
+
     private static final String PUBLIC_PEM_KEY =
         "-----BEGIN PUBLIC KEY-----\n" +
         "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8RfttZlaFNar/3GcU9RG\n" +
@@ -88,7 +100,7 @@ public class TestJMAPServerModule extends AbstractModule {
 
     private final long maximumLimit;
 
-    public TestJMAPServerModule(long maximumLimit) {
+    private TestJMAPServerModule(long maximumLimit) {
         this.maximumLimit = maximumLimit;
     }
 

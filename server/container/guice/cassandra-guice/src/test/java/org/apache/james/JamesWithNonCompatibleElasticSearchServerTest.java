@@ -37,8 +37,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JamesWithNonCompatibleElasticSearchServerTest {
 
-    private static final int LIMIT_MAX_MESSAGES = 10;
-
     static DockerElasticSearch dockerES2 = new DockerElasticSearch.NoAuth(Images.ELASTICSEARCH_2);
 
     @RegisterExtension
@@ -48,7 +46,7 @@ class JamesWithNonCompatibleElasticSearchServerTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_MAX_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
         .disableAutoStart()
         .build();
 

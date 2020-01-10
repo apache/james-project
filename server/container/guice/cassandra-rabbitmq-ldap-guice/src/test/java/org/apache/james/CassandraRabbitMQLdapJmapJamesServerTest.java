@@ -40,8 +40,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class CassandraRabbitMQLdapJmapJamesServerTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     interface UserFromLdapShouldLogin {
 
         @Test
@@ -95,7 +93,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
             .extension(new LdapTestExtension())
             .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQLdapJamesServerMain.MODULES)
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+                .overrideWith(TestJMAPServerModule.limitToTenMessages())
                 .overrideWith(JmapJamesServerContract.DOMAIN_LIST_CONFIGURATION_MODULE));
     }
 }

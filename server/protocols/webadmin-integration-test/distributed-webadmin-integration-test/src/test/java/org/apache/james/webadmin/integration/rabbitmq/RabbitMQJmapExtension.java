@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.webadmin.integration.rabbitmq;
 
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
+
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -128,8 +130,6 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
         }
     }
 
-    private static final int LIMIT_TO_20_MESSAGES = 20;
-
     private final TemporaryFolder temporaryFolder;
     private final DockerAwsS3TestRule dockerAwsS3TestRule;
     private final DockerCassandraRule cassandra;
@@ -158,7 +158,7 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
         return GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
+                .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES))
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearchRule.getDockerEs().getHttpHost()))
                 .overrideWith(cassandra.getModule())
                 .overrideWith(elasticSearchRule.getModule())

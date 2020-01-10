@@ -47,8 +47,6 @@ class CassandraMailRepositoryIntegrationTest {
         .with()
         .pollDelay(ONE_MILLISECOND)
         .await();
-    private static final int LIMIT_TO_10_MESSAGES = 10;
-
     private SMTPMessageSender smtpMessageSender = new SMTPMessageSender("other.com");
 
     @RegisterExtension
@@ -58,7 +56,7 @@ class CassandraMailRepositoryIntegrationTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
         .build();
 
     @Test

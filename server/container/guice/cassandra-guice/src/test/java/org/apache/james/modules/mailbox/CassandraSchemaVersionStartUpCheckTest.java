@@ -52,7 +52,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.core.publisher.Mono;
 
 class CassandraSchemaVersionStartUpCheckTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final String LOCAL_HOST = "127.0.0.1";
     private static final String EXPECTED_SERVER_CONNECTED_MESSAGE = "* OK JAMES IMAP4rev1 Server";
     private static final SchemaVersion MIN_VERSION = new SchemaVersion(2);
@@ -67,7 +66,7 @@ class CassandraSchemaVersionStartUpCheckTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(binder -> binder.bind(CassandraSchemaVersionDAO.class)
                 .toInstance(versionDAO))
             .overrideWith(binder -> binder.bind(CassandraSchemaVersionManager.class)

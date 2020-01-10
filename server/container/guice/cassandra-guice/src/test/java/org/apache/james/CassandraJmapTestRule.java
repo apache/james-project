@@ -38,7 +38,6 @@ import com.google.inject.Module;
 
 public class CassandraJmapTestRule implements TestRule {
 
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private final TemporaryFolder temporaryFolder;
 
     public static CassandraJmapTestRule defaultTestRule() {
@@ -68,7 +67,7 @@ public class CassandraJmapTestRule implements TestRule {
         return GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new TestDockerESMetricReporterModule(dockerElasticSearchRule.getDockerEs().getHttpHost()))
             .overrideWith(guiceModuleTestRule.getModule())
             .overrideWith((binder -> binder.bind(CleanupTasksPerformer.class).asEagerSingleton()))

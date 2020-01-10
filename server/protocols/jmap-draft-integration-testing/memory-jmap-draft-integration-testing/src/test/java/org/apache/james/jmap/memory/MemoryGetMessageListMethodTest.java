@@ -19,6 +19,8 @@
 
 package org.apache.james.jmap.memory;
 
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_3_MESSAGES;
+
 import java.io.IOException;
 
 import org.apache.james.GuiceJamesServer;
@@ -36,7 +38,7 @@ public class MemoryGetMessageListMethodTest extends GetMessageListMethodTest {
 
     @Override
     protected GuiceJamesServer createJmapServer() throws IOException {
-        return memoryJmap.jmapServer(new TestJMAPServerModule(LIMIT_TO_3_MESSAGES));
+        return memoryJmap.jmapServer(TestJMAPServerModule.maximumMessages(LIMIT_TO_3_MESSAGES));
     }
     
     @Override

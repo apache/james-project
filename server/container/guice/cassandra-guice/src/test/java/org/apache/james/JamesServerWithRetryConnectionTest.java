@@ -43,7 +43,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JamesServerWithRetryConnectionTest {
-    private static final int LIMIT_TO_10_MESSAGES = 10;
     private static final long WAITING_TIME = TimeUnit.MILLISECONDS.convert(10, TimeUnit.SECONDS);
 
     private static final DockerElasticSearchExtension dockerElasticSearch = new DockerElasticSearchExtension();
@@ -56,7 +55,7 @@ class JamesServerWithRetryConnectionTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.limitToTenMessages()))
         .disableAutoStart()
         .build();
 

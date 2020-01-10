@@ -19,6 +19,8 @@
 
 package org.apache.james.webadmin.integration.rabbitmq.vault;
 
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
+
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
@@ -39,8 +41,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
 
-    private static final int LIMIT_TO_20_MESSAGES = 20;
-
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
@@ -51,7 +51,7 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES))
+            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
             .overrideWith(new WebadminIntergrationTestModule())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))

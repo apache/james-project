@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.jmap.rabbitmq;
 
+import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
+
 import org.apache.james.CassandraExtension;
 import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
@@ -35,8 +37,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQAwsS3SpamAssassinContractTest implements SpamAssassinContract {
 
-    private static final int LIMIT_TO_20_MESSAGES = 20;
-
     private static final SpamAssassinModuleExtension spamAssassinExtension = new SpamAssassinModuleExtension();
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
@@ -48,7 +48,7 @@ class RabbitMQAwsS3SpamAssassinContractTest implements SpamAssassinContract {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-            .overrideWith(new TestJMAPServerModule(LIMIT_TO_20_MESSAGES)))
+            .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES)))
         .build();
 }
 
