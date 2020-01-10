@@ -59,7 +59,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.EventDeadLettersRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.awaitility.Awaitility;
@@ -176,7 +176,7 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
-            .overrideWith(new WebadminIntergrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 
     //This value is duplicated from default configuration to ensure we keep the same behavior over time

@@ -35,7 +35,7 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIntegrationTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -53,7 +53,7 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES))
             .overrideWith(new TestRabbitMQModule(DockerRabbitMQSingleton.SINGLETON))
-            .overrideWith(new WebadminIntergrationTestModule())
+            .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule()))
         .build();
 }

@@ -25,7 +25,7 @@ import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationContract;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationContract {
@@ -34,6 +34,6 @@ class MemoryFastViewProjectionHealthCheckIntegrationTest extends FastViewProject
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
-            .overrideWith(new WebadminIntergrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

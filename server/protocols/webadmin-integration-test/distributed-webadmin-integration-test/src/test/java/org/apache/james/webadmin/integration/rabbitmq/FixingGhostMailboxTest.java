@@ -73,7 +73,7 @@ import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.junit.jupiter.api.BeforeEach;
@@ -112,7 +112,7 @@ class FixingGhostMailboxTest {
             .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
-            .overrideWith(new WebadminIntergrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 
     private AccessToken accessToken;

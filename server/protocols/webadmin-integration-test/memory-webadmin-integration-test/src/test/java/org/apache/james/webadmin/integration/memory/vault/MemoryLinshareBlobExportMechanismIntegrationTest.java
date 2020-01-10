@@ -26,7 +26,7 @@ import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.vault.TestDeleteMessageVaultPreDeletionHookModule;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIntegrationTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -41,6 +41,6 @@ class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExpor
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new TestDeleteMessageVaultPreDeletionHookModule())
-            .overrideWith(new WebadminIntergrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

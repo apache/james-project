@@ -31,7 +31,7 @@ import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.integration.AuthorizedEndpointsTest;
 import org.apache.james.webadmin.integration.UnauthorizedModule;
-import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,6 +48,6 @@ class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new UnauthorizedModule())
-            .overrideWith(new WebadminIntergrationTestModule()))
+            .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 }

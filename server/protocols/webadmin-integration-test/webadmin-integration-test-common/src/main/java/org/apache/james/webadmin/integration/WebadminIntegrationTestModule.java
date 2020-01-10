@@ -23,7 +23,7 @@ import org.apache.james.webadmin.WebAdminConfiguration;
 
 import com.google.inject.AbstractModule;
 
-public class WebadminIntergrationTestModule extends AbstractModule {
+public class WebadminIntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
         binder().bind(WebAdminConfiguration.class)
