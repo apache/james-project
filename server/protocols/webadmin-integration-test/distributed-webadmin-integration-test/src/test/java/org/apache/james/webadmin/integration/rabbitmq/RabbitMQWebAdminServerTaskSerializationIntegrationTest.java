@@ -37,9 +37,12 @@ import java.util.stream.Stream;
 
 import javax.mail.Flags;
 
-import org.apache.james.CassandraRabbitMQAwsS3JmapTestRule;
-import org.apache.james.DockerCassandraRule;
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManager;
 import org.apache.james.backends.cassandra.versions.SchemaVersion;
 import org.apache.james.core.Username;
@@ -61,14 +64,18 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryStore;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.modules.MailboxProbeImpl;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.MailRepositoryProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
 import org.apache.james.webadmin.WebAdminUtils;
+import org.apache.james.webadmin.integration.WebadminIntergrationTestModule;
 import org.apache.james.webadmin.routes.CassandraMailboxMergingRoutes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
 import org.apache.james.webadmin.routes.MailQueueRoutes;
@@ -78,35 +85,39 @@ import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.apache.mailet.base.test.FakeMail;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 
 @Category(BasicFeature.class)
-public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
+class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
-    @Rule
-    public DockerCassandraRule cassandra = new DockerCassandraRule();
+    private static final int LIMIT_TO_10_MESSAGES = 10;
 
-    @Rule
-    public CassandraRabbitMQAwsS3JmapTestRule jamesTestRule = CassandraRabbitMQAwsS3JmapTestRule.defaultTestRule();
+    @RegisterExtension
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(new TestJMAPServerModule(LIMIT_TO_10_MESSAGES))
+            .overrideWith(new WebadminIntergrationTestModule()))
+        .build();
 
     private static final String DOMAIN = "domain";
     private static final String USERNAME = "username@" + DOMAIN;
 
-    private GuiceJamesServer guiceJamesServer;
     private DataProbe dataProbe;
     private MailboxProbe mailboxProbe;
 
-    @Before
-    public void setUp() throws Exception {
-        guiceJamesServer = jamesTestRule.jmapServer(cassandra.getModule());
-        guiceJamesServer.start();
+    @BeforeEach
+    void setUp(GuiceJamesServer guiceJamesServer) throws Exception {
         dataProbe = guiceJamesServer.getProbe(DataProbeImpl.class);
         dataProbe.addDomain(DOMAIN);
         WebAdminGuiceProbe webAdminGuiceProbe = guiceJamesServer.getProbe(WebAdminGuiceProbe.class);
@@ -118,13 +129,8 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
     }
 
-    @After
-    public void tearDown() {
-        guiceJamesServer.stop();
-    }
-
     @Test
-    public void fullReindexingShouldCompleteWhenNoMail() {
+    void fullReindexingShouldCompleteWhenNoMail() {
         String taskId = with()
             .post("/mailboxes?task=reIndex")
             .jsonPath()
@@ -144,7 +150,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void deleteMailsFromMailQueueShouldCompleteWhenSenderIsValid() {
+    void deleteMailsFromMailQueueShouldCompleteWhenSenderIsValid() {
         String firstMailQueue = with()
                 .basePath(MailQueueRoutes.BASE_URL)
             .get()
@@ -181,7 +187,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void reprocessingAllMailsShouldComplete() {
+    void reprocessingAllMailsShouldComplete() {
         String escapedRepositoryPath = with()
                 .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .get()
@@ -219,7 +225,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void reprocessingOneMailShouldCreateATask() throws Exception {
+    void reprocessingOneMailShouldCreateATask(GuiceJamesServer guiceJamesServer) throws Exception {
         MailRepositoryStore mailRepositoryStore = guiceJamesServer.getProbe(MailRepositoryProbeImpl.class).getMailRepositoryStore();
         Stream<MailRepositoryUrl> urls = mailRepositoryStore.getUrls();
         MailRepositoryUrl mailRepositoryUrl = urls.findAny().get();
@@ -256,7 +262,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void singleMessageReindexingShouldCompleteWhenMail() throws Exception {
+    void singleMessageReindexingShouldCompleteWhenMail() throws Exception {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
                 USERNAME,
@@ -285,7 +291,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void messageIdReIndexingShouldCompleteWhenMail() throws Exception {
+    void messageIdReIndexingShouldCompleteWhenMail() throws Exception {
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
             USERNAME,
@@ -312,7 +318,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void userReindexingShouldComplete() {
+    void userReindexingShouldComplete() {
         String taskId = with()
                 .queryParam("task", "reIndex")
             .post("users/" + USERNAME + "/mailboxes")
@@ -334,7 +340,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void deletedMessageVaultRestoreShouldComplete() throws Exception {
+    void deletedMessageVaultRestoreShouldComplete() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         String query =
             "{" +
@@ -366,7 +372,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void deletedMessageVaultExportShouldComplete() throws Exception {
+    void deletedMessageVaultExportShouldComplete() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         String query = "{" +
             "\"combinator\": \"and\"," +
@@ -400,7 +406,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void errorRecoveryIndexationShouldCompleteWhenNoMail() {
+    void errorRecoveryIndexationShouldCompleteWhenNoMail() {
         String taskId = with()
             .post("/mailboxes?task=reIndex")
             .jsonPath()
@@ -434,7 +440,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void eventDeadLettersRedeliverShouldComplete() {
+    void eventDeadLettersRedeliverShouldComplete() {
         String taskId = with()
             .queryParam("action", "reDeliver")
         .post("/events/deadLetter")
@@ -458,7 +464,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void eventDeadLettersRedeliverShouldCreateATask() {
+    void eventDeadLettersRedeliverShouldCreateATask(GuiceJamesServer guiceJamesServer) {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
         Group group = new GenericGroup("a");
@@ -500,7 +506,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void postRedeliverSingleEventShouldCreateATask() {
+    void postRedeliverSingleEventShouldCreateATask(GuiceJamesServer guiceJamesServer) {
         String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
         String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
         Group group = new GenericGroup("a");
@@ -543,7 +549,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void clearMailQueueShouldCompleteWhenNoQueryParameters() {
+    void clearMailQueueShouldCompleteWhenNoQueryParameters() {
         String firstMailQueue = with()
                 .basePath(MailQueueRoutes.BASE_URL)
             .get()
@@ -575,7 +581,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void blobStoreVaultGarbageCollectionShouldComplete() {
+    void blobStoreVaultGarbageCollectionShouldComplete() {
         String taskId =
             with()
                 .basePath(DeletedMessagesVaultRoutes.ROOT_PATH)
@@ -597,7 +603,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void clearMailRepositoryShouldComplete() {
+    void clearMailRepositoryShouldComplete() {
         String escapedRepositoryPath = with()
                 .basePath(MailRepositoriesRoutes.MAIL_REPOSITORIES)
             .get()
@@ -629,7 +635,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void mailboxMergingShouldComplete() {
+    void mailboxMergingShouldComplete() {
         MailboxId origin = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         MailboxId destination = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX + "2");
 
@@ -658,7 +664,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void singleMailboxReindexingShouldComplete() {
+    void singleMailboxReindexingShouldComplete() {
         MailboxId mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
 
         String taskId = when()
@@ -681,7 +687,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void deletedMessagesVaultDeleteShouldCompleteEvenNoDeletedMessageExisted() throws Exception {
+    void deletedMessagesVaultDeleteShouldCompleteEvenNoDeletedMessageExisted() throws Exception {
         dataProbe.addUser(USERNAME, "password");
         mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, USERNAME, MailboxConstants.INBOX);
         ComposedMessageId composedMessageId = mailboxProbe.appendMessage(
@@ -712,7 +718,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void cassandraMigrationShouldComplete() {
+    void cassandraMigrationShouldComplete() {
         SchemaVersion toVersion = CassandraSchemaVersionManager.MAX_VERSION;
         String taskId = with()
                 .body(String.valueOf(toVersion.getValue()))
@@ -732,7 +738,7 @@ public class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
     }
 
     @Test
-    public void cassandraMappingsSolveInconsistenciesShouldComplete() {
+    void cassandraMappingsSolveInconsistenciesShouldComplete() {
         String taskId = with()
                 .basePath(CassandraMappingsRoutes.ROOT_PATH)
                 .queryParam("action", "SolveInconsistencies")
