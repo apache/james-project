@@ -25,7 +25,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
@@ -43,10 +42,10 @@ import org.apache.james.util.ReactorUtils;
 import com.datastax.driver.core.Session;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
-
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
 
 public class CassandraBlobStore implements BlobStore {
 
@@ -78,22 +77,22 @@ public class CassandraBlobStore implements BlobStore {
     @Override
     public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
         Preconditions.checkNotNull(data);
-
         return saveAsMono(bucketName, data);
     }
 
     private Mono<BlobId> saveAsMono(BucketName bucketName, byte[] data) {
         BlobId blobId = blobIdFactory.forPayload(data);
-        return saveBlobParts(bucketName, data, blobId)
-            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk)
-                .then(Mono.just(blobId)));
+        return Mono.fromCallable(() -> dataChunker.chunk(data, configuration.getBlobPartSize()))
+            .flatMap(chunks -> saveBlobParts(bucketName, blobId, chunks))
+            .flatMap(numberOfChunk -> saveBlobPartReference(bucketName, blobId, numberOfChunk))
+            .thenReturn(blobId);
     }
 
-    private Mono<Integer> saveBlobParts(BucketName bucketName, byte[] data, BlobId blobId) {
-        Stream<Pair<Integer, ByteBuffer>> chunks = dataChunker.chunk(data, configuration.getBlobPartSize());
-        return Flux.fromStream(chunks)
+    private Mono<Integer> saveBlobParts(BucketName bucketName, BlobId blobId, Flux<ByteBuffer> chunksAsFlux) {
+        return chunksAsFlux
             .publishOn(Schedulers.elastic(), PREFETCH)
-            .flatMap(pair -> writePart(bucketName, blobId, pair.getKey(), pair.getValue())
+            .index()
+            .flatMap(pair -> writePart(bucketName, blobId, pair.getT1().intValue(), pair.getT2())
                 .then(Mono.just(getChunkNum(pair))))
             .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
             .<Integer>handle((t, sink) -> t.ifPresent(sink::next))
@@ -106,8 +105,8 @@ public class CassandraBlobStore implements BlobStore {
         return number + 1;
     }
 
-    private Integer getChunkNum(Pair<Integer, ByteBuffer> pair) {
-        return pair.getKey();
+    private Integer getChunkNum(Tuple2<Long, ByteBuffer> pair) {
+        return pair.getT1().intValue();
     }
 
     @Override
