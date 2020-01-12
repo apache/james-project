@@ -29,6 +29,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.api.DomainListException;
@@ -69,7 +70,7 @@ public class JPADomainList extends AbstractDomainList {
 
     @PostConstruct
     public void init() {
-        createEntityManager().close();
+        EntityManagerUtils.safelyClose(createEntityManager());
     }
 
     @SuppressWarnings("unchecked")
@@ -88,7 +89,7 @@ public class JPADomainList extends AbstractDomainList {
             LOGGER.error("Failed to list domains", e);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -101,7 +102,7 @@ public class JPADomainList extends AbstractDomainList {
             LOGGER.error("Failed to find domain", e);
             throw new DomainListException("Unable to retrieve domains", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -123,7 +124,7 @@ public class JPADomainList extends AbstractDomainList {
             rollback(transaction);
             throw new DomainListException("Unable to add domain " + domain.name(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -144,7 +145,7 @@ public class JPADomainList extends AbstractDomainList {
             rollback(transaction);
             throw new DomainListException("Unable to remove domain " + domain.name(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 

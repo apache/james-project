@@ -23,6 +23,7 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.store.transaction.TransactionalMapper;
 
@@ -87,12 +88,8 @@ public abstract class JPATransactionalMapper extends TransactionalMapper {
      */
     @Override
     public void endRequest() {
-        if (entityManager != null) {
-            if (entityManager.isOpen()) {
-                entityManager.close();
-            }
-            entityManager = null;
-        }
+        EntityManagerUtils.safelyClose(entityManager);
+        entityManager = null;
     }
 
     

@@ -35,6 +35,7 @@ import javax.persistence.PersistenceUnit;
 import org.apache.commons.configuration2.HierarchicalConfiguration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.tree.ImmutableNode;
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -75,7 +76,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
 
     @PostConstruct
     public void init() {
-        createEntityManager().close();
+        EntityManagerUtils.safelyClose(createEntityManager());
     }
 
     /**
@@ -100,7 +101,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Unable to search user", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -129,7 +130,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             }
             throw new UsersRepositoryException("Failed to update user " + user.getUserName().asString(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -159,7 +160,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             }
             throw new UsersRepositoryException("Failed to remove user " + name.asString(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -182,7 +183,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to find user" + name.asString(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -222,7 +223,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to count users", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -247,7 +248,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             LOGGER.debug("Failed to find user", e);
             throw new UsersRepositoryException("Failed to list users", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -286,7 +287,7 @@ public class JPAUsersRepository extends AbstractUsersRepository {
             }
             throw new UsersRepositoryException("Failed to add user" + username.asString(), e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 

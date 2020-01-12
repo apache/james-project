@@ -25,6 +25,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -56,9 +57,7 @@ public class JPAUidProvider implements UidProvider {
         } catch (PersistenceException e) {
             throw new MailboxException("Unable to get last uid for mailbox " + mailbox, e);
         } finally {
-            if (manager != null) {
-                manager.close();
-            }
+            EntityManagerUtils.safelyClose(manager);
         }
     }
 
@@ -88,9 +87,7 @@ public class JPAUidProvider implements UidProvider {
             }
             throw new MailboxException("Unable to save next uid for mailbox " + mailboxId.serialize(), e);
         } finally {
-            if (manager != null) {
-                manager.close();
-            }
+            EntityManagerUtils.safelyClose(manager);
         }
     }
 
