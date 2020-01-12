@@ -29,6 +29,7 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 import javax.persistence.PersistenceUnit;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.rrt.jpa.model.JPARecipientRewrite;
@@ -102,7 +103,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             LOGGER.debug("Failed to get user domain mappings", e);
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -121,7 +122,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             LOGGER.debug("Failed to get all mappings", e);
             throw new RecipientRewriteTableException("Error while retrieve mappings", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -163,7 +164,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
             throw new RecipientRewriteTableException("Unable to update mapping", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
         return false;
     }
@@ -191,7 +192,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             throw new RecipientRewriteTableException("Unable to remove mapping", e);
 
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -213,7 +214,7 @@ public class JPARecipientRewriteTable extends AbstractRecipientRewriteTable {
             }
             throw new RecipientRewriteTableException("Unable to add mapping", e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 

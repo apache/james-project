@@ -72,7 +72,7 @@ public class TransactionRunner {
             }
             return errorHandler.apply(e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 
@@ -91,7 +91,7 @@ public class TransactionRunner {
             }
             errorHandler.apply(e);
         } finally {
-            entityManager.close();
+            EntityManagerUtils.safelyClose(entityManager);
         }
     }
 }

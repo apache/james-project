@@ -75,6 +75,6 @@ public class JpaTestCluster {
             entityManager.createNativeQuery("DELETE FROM " + tableName).executeUpdate();
         }
         entityManager.getTransaction().commit();
-        entityManager.close();
+        EntityManagerUtils.safelyClose(entityManager);
     }
 }

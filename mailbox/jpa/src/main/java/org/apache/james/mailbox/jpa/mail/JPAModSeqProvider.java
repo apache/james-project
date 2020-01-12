@@ -23,6 +23,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceException;
 
+import org.apache.james.backends.jpa.EntityManagerUtils;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.jpa.JPAId;
@@ -77,9 +78,7 @@ public class JPAModSeqProvider implements ModSeqProvider {
             }
             throw new MailboxException("Unable to save highest mod-sequence for mailbox " + mailboxId.serialize(), e);
         } finally {
-            if (manager != null) {
-                manager.close();
-            }
+            EntityManagerUtils.safelyClose(manager);
         }
     }
 
@@ -94,9 +93,7 @@ public class JPAModSeqProvider implements ModSeqProvider {
         } catch (PersistenceException e) {
             throw new MailboxException("Unable to get highest mod-sequence for mailbox " + mailboxId.serialize(), e);
         } finally {
-            if (manager != null) {
-                manager.close();
-            }
+            EntityManagerUtils.safelyClose(manager);
         }
     }
 }
