@@ -56,6 +56,11 @@ class FullUserMaildirMailboxManagerTest extends MailboxManagerTest<StoreMailboxM
         @Test
         protected void user1ShouldBeAbleToDeleteInboxById() {
         }
+
+        @Disabled("JAMES-2993 mailboxId support for Maildir is partial")
+        @Test
+        protected void getMailboxByIdShouldReturnMailboxWhenBelongingToUser() {
+        }
     }
 
     @Nested
