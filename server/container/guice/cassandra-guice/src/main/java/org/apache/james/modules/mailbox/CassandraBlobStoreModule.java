@@ -21,10 +21,12 @@ package org.apache.james.modules.mailbox;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
 import org.apache.james.blob.cassandra.CassandraBlobModule;
 import org.apache.james.blob.cassandra.CassandraBlobStore;
 import org.apache.james.blob.cassandra.CassandraDefaultBucketDAO;
+import org.apache.james.blob.cassandra.CassandraDumbBlobStore;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
@@ -36,6 +38,11 @@ public class CassandraBlobStoreModule extends AbstractModule {
     protected void configure() {
         bind(CassandraDefaultBucketDAO.class).in(Scopes.SINGLETON);
         bind(CassandraBlobStore.class).in(Scopes.SINGLETON);
+        bind(CassandraDumbBlobStore.class).in(Scopes.SINGLETON);
+
+        bind(BucketName.class)
+            .annotatedWith(Names.named(CassandraDumbBlobStore.DEFAULT_BUCKET))
+            .toInstance(BucketName.DEFAULT);
 
         bind(BlobStore.class)
             .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))

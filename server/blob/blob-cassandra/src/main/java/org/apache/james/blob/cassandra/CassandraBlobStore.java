@@ -22,6 +22,7 @@ package org.apache.james.blob.cassandra;
 import java.io.InputStream;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
@@ -50,7 +51,10 @@ public class CassandraBlobStore implements BlobStore {
     private final CassandraDumbBlobStore dumbBlobStore;
 
     @Inject
-    CassandraBlobStore(HashBlobId.Factory blobIdFactory, BucketName defaultBucketName, CassandraDumbBlobStore dumbBlobStore) {
+    CassandraBlobStore(HashBlobId.Factory blobIdFactory,
+                       @Named(CassandraDumbBlobStore.DEFAULT_BUCKET) BucketName defaultBucketName,
+                       CassandraDumbBlobStore dumbBlobStore) {
+
         this.blobIdFactory = blobIdFactory;
         this.defaultBucketName = defaultBucketName;
         this.dumbBlobStore = dumbBlobStore;
