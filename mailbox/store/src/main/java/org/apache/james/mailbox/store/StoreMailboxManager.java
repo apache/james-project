@@ -273,11 +273,16 @@ public class StoreMailboxManager implements MailboxManager {
             LOGGER.info("Mailbox '{}' not found.", mailboxPath);
             throw new MailboxNotFoundException(mailboxPath);
 
-        } else {
-            LOGGER.debug("Loaded mailbox {}", mailboxPath);
-
-            return createMessageManager(mailboxRow, session);
         }
+
+        if (!assertUserHasAccessTo(mailboxRow, session)) {
+            LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxPath, session.getUser(), mailboxRow.getUser());
+            throw new MailboxNotFoundException(mailboxPath);
+        }
+
+        LOGGER.debug("Loaded mailbox {}", mailboxPath);
+
+        return createMessageManager(mailboxRow, session);
     }
 
     @Override
@@ -291,7 +296,7 @@ public class StoreMailboxManager implements MailboxManager {
             throw new MailboxNotFoundException(mailboxId);
         }
 
-        if (! assertUserHasAccessTo(mailboxRow, session)) {
+        if (!assertUserHasAccessTo(mailboxRow, session)) {
             LOGGER.info("Mailbox '{}' does not belong to user '{}' but to '{}'", mailboxId.serialize(), session.getUser(), mailboxRow.getUser());
             throw new MailboxNotFoundException(mailboxId);
         }
