@@ -18,8 +18,6 @@
  ****************************************************************/
 package org.apache.james.webadmin.integration.rabbitmq;
 
-import static org.apache.james.modules.TestJMAPServerModule.LIMIT_TO_20_MESSAGES;
-
 import java.io.IOException;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -34,7 +32,6 @@ import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.TestDockerESMetricReporterModule;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.server.core.configuration.Configuration;
@@ -158,7 +155,6 @@ public class RabbitMQJmapExtension implements BeforeAllCallback, AfterAllCallbac
         return GuiceJamesServer.forConfiguration(configuration)
                 .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
                 .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
-                .overrideWith(TestJMAPServerModule.maximumMessages(LIMIT_TO_20_MESSAGES))
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearchRule.getDockerEs().getHttpHost()))
                 .overrideWith(cassandra.getModule())
                 .overrideWith(elasticSearchRule.getModule())

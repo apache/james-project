@@ -68,7 +68,6 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.EventDeadLettersProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.task.TaskManager;
 import org.apache.james.utils.DataProbeImpl;
@@ -104,7 +103,6 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 

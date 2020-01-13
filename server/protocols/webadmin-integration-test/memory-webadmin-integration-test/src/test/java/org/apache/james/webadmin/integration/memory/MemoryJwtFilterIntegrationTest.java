@@ -24,7 +24,6 @@ import org.apache.james.JamesServerBuilder;
 import org.apache.james.JamesServerExtension;
 import org.apache.james.MemoryJamesServerMain;
 import org.apache.james.jwt.JwtConfiguration;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.authentication.AuthenticationFilter;
 import org.apache.james.webadmin.authentication.JwtFilter;
 import org.apache.james.webadmin.integration.JwtFilterIntegrationTest;
@@ -37,7 +36,6 @@ class MemoryJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntegrationTestModule())
             .overrideWith(binder -> binder.bind(AuthenticationFilter.class).to(JwtFilter.class))
             .overrideWith(binder -> binder.bind(JwtConfiguration.class).toInstance(jwtConfiguration())))

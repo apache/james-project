@@ -54,7 +54,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -175,7 +174,6 @@ class RabbitMQEventDeadLettersIntegrationTest {
         .extension(new RetryEventsListenerExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 

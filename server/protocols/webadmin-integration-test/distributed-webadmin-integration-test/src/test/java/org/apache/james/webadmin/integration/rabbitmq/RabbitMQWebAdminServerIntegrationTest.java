@@ -38,7 +38,6 @@ import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionManage
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.integration.WebAdminServerIntegrationTest;
 import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.apache.james.webadmin.routes.AliasRoutes;
@@ -65,7 +64,6 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
         .extension(new RabbitMQExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
-            .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
 

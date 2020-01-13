@@ -19,11 +19,30 @@
 
 package org.apache.james.webadmin.integration.rabbitmq;
 
+import org.apache.james.CassandraExtension;
+import org.apache.james.CassandraRabbitMQJamesServerMain;
+import org.apache.james.DockerElasticSearchExtension;
+import org.apache.james.GuiceJamesServer;
+import org.apache.james.JamesServerBuilder;
+import org.apache.james.JamesServerExtension;
+import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.RabbitMQExtension;
+import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.webadmin.integration.FastViewProjectionHealthCheckIntegrationContract;
-import org.apache.james.webadmin.integration.rabbitmq.RabbitMQJmapExtension.JamesLifeCyclePolicy;
+import org.apache.james.webadmin.integration.WebadminIntegrationTestModule;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQFastViewProjectionHealthCheckIntegrationTest extends FastViewProjectionHealthCheckIntegrationContract {
+
     @RegisterExtension
-    static RabbitMQJmapExtension rabbitMQJmapExtension = new RabbitMQJmapExtension(JamesLifeCyclePolicy.FOR_EACH_TEST);
+    static JamesServerExtension testExtension = new JamesServerBuilder()
+        .extension(new DockerElasticSearchExtension())
+        .extension(new CassandraExtension())
+        .extension(new AwsS3BlobStoreExtension())
+        .extension(new RabbitMQExtension())
+        .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
+            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .overrideWith(TestJMAPServerModule.limitToTenMessages())
+            .overrideWith(new WebadminIntegrationTestModule()))
+        .build();
 }
