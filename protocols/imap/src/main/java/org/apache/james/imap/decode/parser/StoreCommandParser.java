@@ -18,6 +18,8 @@
  ****************************************************************/
 package org.apache.james.imap.decode.parser;
 
+import java.util.Locale;
+
 import javax.mail.Flags;
 
 import org.apache.james.imap.api.ImapConstants;
@@ -91,25 +93,26 @@ public class StoreCommandParser extends AbstractUidCommandParser {
     }
 
     private boolean parseSilent(String directive) throws DecodingException {
-        if ("FLAGS".equalsIgnoreCase(directive)) {
-            return false;
-        } else if ("FLAGS.SILENT".equalsIgnoreCase(directive)) {
-            return true;
-        } else {
-            throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid Store Directive: '" + directive + "'");
+        switch (directive.toUpperCase(Locale.US)) {
+            case "FLAGS":
+                return false;
+            case "FLAGS.SILENT":
+                return true;
+            default:
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid Store Directive: '" + directive + "'");
         }
     }
 
     private MessageManager.FlagsUpdateMode parseFlagsUpdateMode(ImapRequestLineReader request, char next) throws DecodingException {
-        if (next == '+') {
-            MessageManager.FlagsUpdateMode flagsUpdateMode = MessageManager.FlagsUpdateMode.ADD;
-            request.consume();
-            return flagsUpdateMode;
-        } else if (next == '-') {
-            MessageManager.FlagsUpdateMode flagsUpdateMode = MessageManager.FlagsUpdateMode.REMOVE;
-            request.consume();
-            return flagsUpdateMode;
+        switch (next) {
+            case '+':
+                request.consume();
+                return MessageManager.FlagsUpdateMode.ADD;
+            case '-':
+                request.consume();
+                return MessageManager.FlagsUpdateMode.REMOVE;
+            default:
+                return MessageManager.FlagsUpdateMode.REPLACE;
         }
-        return MessageManager.FlagsUpdateMode.REPLACE;
     }
 }
