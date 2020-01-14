@@ -128,8 +128,8 @@ public class FetchCommandParser extends AbstractUidCommandParser {
 
             reader.consumeChar(']');
 
-            final Long firstOctet;
-            final Long numberOfOctets;
+            Long firstOctet;
+            Long numberOfOctets;
             if (reader.nextChar() == '<') {
                 reader.consumeChar('<');
                 firstOctet = reader.number();
@@ -145,8 +145,8 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                 numberOfOctets = null;
             }
 
-            final BodyFetchElement bodyFetchElement = createBodyElement(parameter, firstOctet, numberOfOctets);
-            final boolean isPeek = isPeek(name);
+            BodyFetchElement bodyFetchElement = createBodyElement(parameter, firstOctet, numberOfOctets);
+            boolean isPeek = isPeek(name);
             fetch.add(bodyFetchElement, isPeek);
         }
     }
@@ -199,13 +199,13 @@ public class FetchCommandParser extends AbstractUidCommandParser {
     }
 
     private BodyFetchElement createBodyElement(String parameter, Long firstOctet, Long numberOfOctets) throws DecodingException {
-        final String responseName = "BODY[" + parameter + "]";
+        String responseName = "BODY[" + parameter + "]";
         FetchPartPathDecoder decoder = new FetchPartPathDecoder();
         decoder.decode(parameter);
-        final SectionType sectionType = decoder.getSpecifier();
+        SectionType sectionType = decoder.getSpecifier();
 
-        final List<String> names = decoder.getNames();
-        final int[] path = decoder.getPath();
+        List<String> names = decoder.getNames();
+        int[] path = decoder.getPath();
         return new BodyFetchElement(responseName, sectionType, path, names, firstOctet, numberOfOctets);
     }
 
