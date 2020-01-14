@@ -28,6 +28,7 @@ import static org.apache.james.imap.api.message.FetchData.Item.SIZE;
 import static org.apache.james.imap.api.message.FetchData.Item.UID;
 
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.james.imap.api.ImapConstants;
 import org.apache.james.imap.api.ImapMessage;
@@ -119,37 +120,7 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         char next = reader.nextChar();
         // Simple elements with no '[]' parameters.
         if (next != '[') {
-            if ("FAST".equalsIgnoreCase(name)) {
-                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE);
-            } else if ("FULL".equalsIgnoreCase(name)) {
-                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE, BODY);
-            } else if ("ALL".equalsIgnoreCase(name)) {
-                fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE);
-            } else if ("FLAGS".equalsIgnoreCase(name)) {
-                fetch.fetch(FLAGS);
-            } else if ("RFC822.SIZE".equalsIgnoreCase(name)) {
-                fetch.fetch(SIZE);
-            } else if ("ENVELOPE".equalsIgnoreCase(name)) {
-                fetch.fetch(ENVELOPE);
-            } else if ("INTERNALDATE".equalsIgnoreCase(name)) {
-                fetch.fetch(INTERNAL_DATE);
-            } else if ("BODY".equalsIgnoreCase(name)) {
-                fetch.fetch(BODY);
-            } else if ("BODYSTRUCTURE".equalsIgnoreCase(name)) {
-                fetch.fetch(BODY_STRUCTURE);
-            } else if ("UID".equalsIgnoreCase(name)) {
-                fetch.fetch(UID);
-            } else if ("RFC822".equalsIgnoreCase(name)) {
-                fetch.add(BodyFetchElement.createRFC822(), false);
-            } else if ("RFC822.HEADER".equalsIgnoreCase(name)) {
-                fetch.add(BodyFetchElement.createRFC822Header(), true);
-            } else if ("RFC822.TEXT".equalsIgnoreCase(name)) {
-                fetch.add(BodyFetchElement.createRFC822Text(), false);
-            } else if ("MODSEQ".equalsIgnoreCase(name)) {
-                fetch.fetch(MODSEQ);
-            } else {
-                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attribute: " + name);
-            }
+            addNextName(fetch, name);
         } else {
             reader.consumeChar('[');
 
@@ -180,13 +151,51 @@ public class FetchCommandParser extends AbstractUidCommandParser {
         }
     }
 
-    private boolean isPeek(String name) throws DecodingException {
-        if ("BODY".equalsIgnoreCase(name)) {
-            return false;
-        } else if ("BODY.PEEK".equalsIgnoreCase(name)) {
-            return true;
+    private FetchData.Builder addNextName(FetchData.Builder fetch, String name) throws DecodingException {
+        String capitalizedName = name.toUpperCase(Locale.US);
+        switch (capitalizedName) {
+            case "FAST":
+                return fetch.fetch(FLAGS, INTERNAL_DATE, SIZE);
+            case "FULL":
+                return fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE, BODY);
+            case "ALL":
+                return fetch.fetch(FLAGS, INTERNAL_DATE, SIZE, ENVELOPE);
+            case "FLAGS":
+                return fetch.fetch(FLAGS);
+            case "RFC822.SIZE":
+                return fetch.fetch(SIZE);
+            case "ENVELOPE":
+                return fetch.fetch(ENVELOPE);
+            case "INTERNALDATE":
+                return fetch.fetch(INTERNAL_DATE);
+            case "BODY":
+                return fetch.fetch(BODY);
+            case "BODYSTRUCTURE":
+                return fetch.fetch(BODY_STRUCTURE);
+            case "UID":
+                return fetch.fetch(UID);
+            case "RFC822":
+                return fetch.add(BodyFetchElement.createRFC822(), false);
+            case "RFC822.HEADER":
+                return fetch.add(BodyFetchElement.createRFC822Header(), true);
+            case "RFC822.TEXT":
+                return fetch.add(BodyFetchElement.createRFC822Text(), false);
+            case "MODSEQ":
+                return fetch.fetch(MODSEQ);
+            default:
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attribute: " + name);
         }
-        throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attibute: " + name + "[]");
+    }
+
+    private boolean isPeek(String name) throws DecodingException {
+        switch (name.toUpperCase(Locale.US)) {
+            case "BODY":
+                return false;
+            case "BODY.PEEK":
+                return true;
+            default:
+                throw new DecodingException(HumanReadableText.ILLEGAL_ARGUMENTS, "Invalid fetch attibute: " + name + "[]");
+        }
     }
 
     private BodyFetchElement createBodyElement(String parameter, Long firstOctet, Long numberOfOctets) throws DecodingException {
