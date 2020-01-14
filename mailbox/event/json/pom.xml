@@ -68,11 +68,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-params</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.julienrf</groupId>
             <artifactId>play-json-derived-codecs_${scala.base}</artifactId>
             <version>6.0.0</version>
