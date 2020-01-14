@@ -512,6 +512,7 @@ public class StoreMailboxManager implements MailboxManager {
         if (mailboxExists(newMailboxPath, session)) {
             throw new MailboxExistsException(newMailboxPath.toString());
         }
+        assertIsOwner(session, newMailboxPath);
         newMailboxPath.assertAcceptable(session.getPathDelimiter());
     }
 
