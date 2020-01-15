@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
@@ -323,8 +324,8 @@ public interface ReadSaveDumbBlobStoreContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
             )
             .threadCount(10)
-            .operationCount(100)
-            .runSuccessfullyWithin(Duration.ofMinutes(2));
+            .operationCount(20)
+            .runSuccessfullyWithin(Duration.ofMinutes(10));
     }
 
     @ParameterizedTest(name = "[{index}] {0}")
@@ -337,7 +338,7 @@ public interface ReadSaveDumbBlobStoreContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
             )
             .threadCount(10)
-            .operationCount(100)
+            .operationCount(20)
             .runSuccessfullyWithin(Duration.ofMinutes(2));
     }
 
@@ -351,14 +352,14 @@ public interface ReadSaveDumbBlobStoreContract {
                 (threadNumber, step) -> checkConcurrentSaveOperation(bytes)
             )
             .threadCount(10)
-            .operationCount(100)
+            .operationCount(20)
             .runSuccessfullyWithin(Duration.ofMinutes(2));
     }
 
     default Mono<Void> checkConcurrentSaveOperation(byte[] expected) {
-        return Mono
-            .fromCallable(() ->
-                testee().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID).block())
+        return testee().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)
+            //assertj is very cpu-intensive, let's compute the assertion only when arrays are different
+            .filter(bytes -> !Arrays.equals(bytes, expected))
             .doOnNext(bytes -> assertThat(bytes).isEqualTo(expected))
             .then();
     }
