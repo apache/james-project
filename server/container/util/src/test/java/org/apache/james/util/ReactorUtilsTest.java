@@ -20,18 +20,21 @@ package org.apache.james.util;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import com.google.common.primitives.Bytes;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 class ReactorUtilsTest {
@@ -81,6 +84,37 @@ class ReactorUtilsTest {
 
     @Nested
     class ToInputStream {
+
+        @Test
+        void givenAFluxOf3BytesShouldReadSuccessfullyTheWholeSource() throws IOException, InterruptedException {
+            byte[] bytes = "foo bar ...".getBytes(StandardCharsets.US_ASCII);
+
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap);
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+
+            assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(bytes));
+        }
+
+        @Test
+        void givenALongFluxBytesShouldReadSuccessfullyTheWholeSource() throws IOException, InterruptedException {
+            byte[] bytes = RandomStringUtils.randomAlphabetic(41111).getBytes(StandardCharsets.US_ASCII);
+
+            Flux<ByteBuffer> source = Flux.fromIterable(Bytes.asList(bytes))
+                .window(3)
+                .flatMapSequential(Flux::collectList)
+                .map(Bytes::toArray)
+                .map(ByteBuffer::wrap);
+
+            InputStream inputStream = ReactorUtils.toInputStream(source);
+
+            assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(bytes));
+        }
+
         @Test
         void givenAFluxOnOneByteShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
@@ -92,10 +126,10 @@ class ReactorUtilsTest {
                 .map(ByteBuffer::wrap);
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = new byte[5];
-            inputStream.read(readBytes, 0, readBytes.length);
+            byte[] readBytes = IOUtils.readFully(inputStream, 5);
 
             assertThat(readBytes).contains(0, 1, 2, 3, 4);
+            //make sure reactor is done with prefetch
             Thread.sleep(200);
             assertThat(generateElements.get()).isEqualTo(6);
         }
@@ -103,17 +137,20 @@ class ReactorUtilsTest {
         @Test
         void givenAFluxOf3BytesShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
-            Flux<ByteBuffer> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8})
+            Flux<ByteBuffer> source = Flux.just(
+                new byte[] {0, 1, 2},
+                new byte[] {3, 4, 5},
+                new byte[] {6, 7, 8})
                     .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = new byte[5];
-            inputStream.read(readBytes, 0, readBytes.length);
+            byte[] readBytes = IOUtils.readFully(inputStream, 5);
 
             assertThat(readBytes).contains(0, 1, 2, 3, 4);
+            //make sure reactor is done with prefetch
             Thread.sleep(200);
             assertThat(generateElements.get()).isEqualTo(3);
         }
@@ -121,19 +158,22 @@ class ReactorUtilsTest {
         @Test
         void givenAFluxOf3BytesWithAnEmptyByteArrayShouldConsumeOnlyTheReadBytesAndThePrefetch() throws IOException, InterruptedException {
             AtomicInteger generateElements = new AtomicInteger(0);
-            Flux<ByteBuffer> source = Flux.just(new byte[] {0, 1, 2}, new byte[] {}, new byte[] {3, 4, 5}, new byte[] {6, 7, 8}, new byte[] {9, 10, 11})
+            Flux<ByteBuffer> source = Flux.just(
+                new byte[] {0, 1, 2},
+                new byte[] {},
+                new byte[] {3, 4, 5},
+                new byte[] {6, 7, 8},
+                new byte[] {9, 10, 11})
                     .subscribeOn(Schedulers.elastic())
                     .map(ByteBuffer::wrap)
                     .limitRate(2)
                     .doOnRequest(request -> generateElements.getAndAdd((int) request));
 
             InputStream inputStream = ReactorUtils.toInputStream(source);
-            byte[] readBytes = new byte[5];
-            inputStream.read(readBytes, 0, readBytes.length);
+            IOUtils.readFully(inputStream, 5);
 
-            assertThat(readBytes).contains(0, 1, 2, 3, 4);
-            Thread.sleep(200);
-            assertThat(generateElements.get()).isEqualTo(4);
+            byte[] readBytesBis = IOUtils.readFully(inputStream, 2);
+            assertThat(readBytesBis).contains(5,6);
         }
 
         @Test
@@ -150,6 +190,7 @@ class ReactorUtilsTest {
             inputStream.read(readBytes, 0, readBytes.length);
 
             assertThat(readBytes).contains(0, 0, 0, 0, 0);
+            //make sure reactor is done with prefetch
             Thread.sleep(200);
             assertThat(generateElements.get()).isEqualTo(1);
         }
