@@ -32,6 +32,7 @@ import org.apache.james.blob.mail.MimeMessageStore;
 import org.apache.james.mailrepository.api.MailKey;
 import org.apache.james.mailrepository.api.MailRepository;
 import org.apache.james.mailrepository.api.MailRepositoryUrl;
+import org.apache.james.mailrepository.cassandra.CassandraMailRepositoryMailDaoAPI.MailDTO;
 import org.apache.mailet.Mail;
 
 import reactor.core.publisher.Flux;
@@ -92,13 +93,13 @@ public class CassandraMailRepository implements MailRepository {
     @Override
     public Mail retrieve(MailKey key) {
         return mailDAO.read(url, key)
-            .flatMap(Mono::justOrEmpty)
+            .<MailDTO>handle((t, sink) -> t.ifPresent(sink::next))
             .flatMap(this::toMail)
             .blockOptional()
             .orElse(null);
     }
 
-    private Mono<Mail> toMail(CassandraMailRepositoryMailDAO.MailDTO mailDTO) {
+    private Mono<Mail> toMail(MailDTO mailDTO) {
         MimeMessagePartsId parts = MimeMessagePartsId.builder()
             .headerBlobId(mailDTO.getHeaderBlobId())
             .bodyBlobId(mailDTO.getBodyBlobId())

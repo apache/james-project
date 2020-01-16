@@ -111,7 +111,7 @@ public class CassandraUidProvider implements UidProvider {
     }
 
     @Override
-    public Optional<MessageUid> lastUid(Mailbox mailbox) throws MailboxException {
+    public Optional<MessageUid> lastUid(Mailbox mailbox) {
         return findHighestUid((CassandraId) mailbox.getMailboxId())
                 .blockOptional();
     }
@@ -131,21 +131,21 @@ public class CassandraUidProvider implements UidProvider {
                         .setUUID(MAILBOX_ID, mailboxId.asUuid())
                         .setLong(CONDITION, uid.asLong())
                         .setLong(NEXT_UID, nextUid.asLong()))
-                .flatMap(success -> successToUid(nextUid, success)));
+                .handle((success, sink) -> successToUid(nextUid, success).ifPresent(sink::next)));
     }
 
     private Mono<MessageUid> tryInsert(CassandraId mailboxId) {
         return Mono.defer(() -> executor.executeReturnApplied(
             insertStatement.bind()
                 .setUUID(MAILBOX_ID, mailboxId.asUuid()))
-            .flatMap(success -> successToUid(MessageUid.MIN_VALUE, success)));
+            .handle((success, sink) -> successToUid(MessageUid.MIN_VALUE, success).ifPresent(sink::next)));
     }
 
-    private Mono<MessageUid> successToUid(MessageUid uid, Boolean success) {
+    private Optional<MessageUid> successToUid(MessageUid uid, Boolean success) {
         if (success) {
-            return Mono.just(uid);
+            return Optional.of(uid);
         }
-        return Mono.empty();
+        return Optional.empty();
     }
 
 }

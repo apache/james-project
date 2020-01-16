@@ -59,7 +59,7 @@ public class CassandraAsyncExecutor {
 
     public Mono<Row> executeSingleRow(Statement statement) {
         return executeSingleRowOptional(statement)
-                .flatMap(Mono::justOrEmpty);
+                .handle((t, sink) -> t.ifPresent(sink::next));
     }
 
     public Flux<Row> executeRows(Statement statement) {

@@ -96,7 +96,7 @@ public class CassandraBlobStore implements BlobStore {
             .flatMap(pair -> writePart(bucketName, blobId, pair.getKey(), pair.getValue())
                 .then(Mono.just(getChunkNum(pair))))
             .collect(Collectors.maxBy(Comparator.comparingInt(x -> x)))
-            .flatMap(Mono::justOrEmpty)
+            .<Integer>handle((t, sink) -> t.ifPresent(sink::next))
             .map(this::numToCount)
             .defaultIfEmpty(0);
     }
