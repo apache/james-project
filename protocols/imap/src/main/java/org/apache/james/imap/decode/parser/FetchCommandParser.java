@@ -43,7 +43,7 @@ import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.FetchPartPathDecoder;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import org.apache.james.imap.message.request.FetchRequest;
 
 /**
@@ -90,12 +90,12 @@ public class FetchCommandParser extends AbstractUidCommandParser {
                 switch (next) {
                 case 'C':
                     // Now check for the CHANGEDSINCE option which is part of CONDSTORE
-                    request.consumeWord(StringValidator.caseIncentive(CHANGEDSINCE));
+                    request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CHANGEDSINCE));
                     fetch.changedSince(request.number(true));
                     break;
                 case 'V':
                     // Check for the VANISHED option which is part of QRESYNC
-                    request.consumeWord(StringValidator.caseIncentive(VANISHED));
+                    request.consumeWord(StringMatcherCharacterValidator.ignoreCase(VANISHED));
                     fetch.vanished(true);
                     break;
                 default:

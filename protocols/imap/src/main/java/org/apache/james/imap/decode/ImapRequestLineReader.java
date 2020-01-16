@@ -31,7 +31,6 @@ import java.nio.charset.CodingErrorAction;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiPredicate;
 
 import javax.mail.Flags;
 
@@ -818,31 +817,33 @@ public abstract class ImapRequestLineReader {
     /**
      * Verifies subsequent characters match a specified string
      */
-    public static class StringValidator implements CharacterValidator {
-        public static StringValidator caseIncentive(String expectedString) {
-            return new StringValidator(expectedString,
-                (c1, c2) -> isaBoolean(c1, c2));
+    public static class StringMatcherCharacterValidator implements CharacterValidator {
+        public static StringMatcherCharacterValidator ignoreCase(String expectedString) {
+            return new StringMatcherCharacterValidator(expectedString);
         }
 
-        public static boolean isaBoolean(Character c1, Character c2) {
+        static boolean asciiEqualsIgnoringCase(Character c1, Character c2) {
             return Character.toUpperCase(c1) == Character.toUpperCase(c2);
         }
 
         private final String expectedString;
-        private final BiPredicate<Character, Character> equalityTester;
         private int position = 0;
 
-        private StringValidator(String expectedString, BiPredicate<Character, Character> equalityTester) {
+        private StringMatcherCharacterValidator(String expectedString) {
             this.expectedString = expectedString;
-            this.equalityTester = equalityTester;
         }
 
+        /**
+         * Verifies whether the next character is valid or not.
+         *
+         * This call will mutate StringValidator internal state, making it progress to following character validation.
+         */
         @Override
         public boolean isValid(char chr) {
             if (position >= expectedString.length()) {
                 return false;
             } else {
-                return equalityTester.test(chr, expectedString.charAt(position++));
+                return asciiEqualsIgnoringCase(chr, expectedString.charAt(position++));
             }
         }
     }

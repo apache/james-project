@@ -31,7 +31,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import org.apache.james.imap.message.request.StoreRequest;
 import org.apache.james.mailbox.MessageManager;
 
@@ -55,7 +55,7 @@ public class StoreCommandParser extends AbstractUidCommandParser {
             // Seems like we have a CONDSTORE parameter
             request.consume();
 
-            request.consumeWord(StringValidator.caseIncentive(UNCHANGEDSINCE));
+            request.consumeWord(StringMatcherCharacterValidator.ignoreCase(UNCHANGEDSINCE));
             request.consumeChar(' ');
             unchangedSince = request.number(true);
             request.consumeChar(')');

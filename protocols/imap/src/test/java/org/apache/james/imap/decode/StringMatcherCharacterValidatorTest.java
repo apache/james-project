@@ -19,36 +19,36 @@
 
 package org.apache.james.imap.decode;
 
-import static org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
+import static org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
 
-class StringValidatorTest {
+class StringMatcherCharacterValidatorTest {
     @Test
     void isValidShouldReturnFalseWhenDifferent() {
-        StringValidator stringValidator = StringValidator.caseIncentive("expected");
+        StringMatcherCharacterValidator stringMatcherCharacterValidator = StringMatcherCharacterValidator.ignoreCase("expected");
         assertThat(
             "different".chars().mapToObj(i -> (char) i)
-                .allMatch(stringValidator::isValid))
+                .allMatch(stringMatcherCharacterValidator::isValid))
             .isFalse();
     }
 
     @Test
     void isValidShouldReturnTrueWhenSame() {
-        StringValidator stringValidator = StringValidator.caseIncentive("expected");
+        StringMatcherCharacterValidator stringMatcherCharacterValidator = StringMatcherCharacterValidator.ignoreCase("expected");
         assertThat(
             "expected".chars().mapToObj(i -> (char) i)
-                .allMatch(stringValidator::isValid))
+                .allMatch(stringMatcherCharacterValidator::isValid))
             .isTrue();
     }
 
     @Test
     void isValidShouldShouldReturnTrueOnCaseDifference() {
-        StringValidator stringValidator = StringValidator.caseIncentive("expected");
+        StringMatcherCharacterValidator stringMatcherCharacterValidator = StringMatcherCharacterValidator.ignoreCase("expected");
         assertThat(
             "eXpeCTed".chars().mapToObj(i -> (char) i)
-                .allMatch(stringValidator::isValid))
+                .allMatch(stringMatcherCharacterValidator::isValid))
             .isTrue();
     }
 }

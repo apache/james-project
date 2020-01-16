@@ -29,7 +29,7 @@ import org.apache.james.imap.api.message.response.StatusResponseFactory;
 import org.apache.james.imap.api.process.ImapSession;
 import org.apache.james.imap.decode.DecodingException;
 import org.apache.james.imap.decode.ImapRequestLineReader;
-import org.apache.james.imap.decode.ImapRequestLineReader.StringValidator;
+import org.apache.james.imap.decode.ImapRequestLineReader.StringMatcherCharacterValidator;
 import org.apache.james.imap.decode.base.AbstractImapCommandParser;
 import org.apache.james.imap.message.request.AbstractMailboxSelectionRequest;
 import org.apache.james.mailbox.MessageUid;
@@ -67,12 +67,12 @@ public abstract class AbstractSelectionCommandParser extends AbstractImapCommand
             switch (n) {
             case 'C':
                 // It starts with C so it should be CONDSTORE
-                request.consumeWord(StringValidator.caseIncentive(CONDSTORE));
+                request.consumeWord(StringMatcherCharacterValidator.ignoreCase(CONDSTORE));
                 condstore = true;
                 break;
             case 'Q':
                 // It starts with Q so it should be QRESYNC
-                request.consumeWord(StringValidator.caseIncentive(QRESYNC));
+                request.consumeWord(StringMatcherCharacterValidator.ignoreCase(QRESYNC));
                 
                 // Consume the SP
                 request.consumeChar(' ');
