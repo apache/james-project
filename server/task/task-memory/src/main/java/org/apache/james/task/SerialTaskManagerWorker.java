@@ -89,7 +89,7 @@ public class SerialTaskManagerWorker implements TaskManagerWorker {
         return Mono.fromCallable(() -> taskWithId.getTask().details())
             .delayElement(pollingInterval, Schedulers.elastic())
             .repeat()
-            .flatMap(Mono::justOrEmpty)
+            .<TaskExecutionDetails.AdditionalInformation>handle((maybeDetails, sink) -> maybeDetails.ifPresent(sink::next))
             .doOnNext(information -> listener.updated(taskWithId.getId(), information));
     }
 

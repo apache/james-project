@@ -109,7 +109,7 @@ public class MetadataDAO {
                 .setString(BUCKET_NAME, bucketName.asString())
                 .setString(OWNER, username.asString()))
             .map(row -> row.getString(PAYLOAD))
-            .flatMap(metadataSerializer::deserialize);
+            .handle((json, sink) -> metadataSerializer.deserialize(json).ifPresent(sink::next));
     }
 
     Flux<MessageId> retrieveMessageIds(BucketName bucketName, Username username) {

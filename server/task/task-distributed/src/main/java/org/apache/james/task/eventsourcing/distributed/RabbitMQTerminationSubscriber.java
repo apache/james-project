@@ -94,7 +94,7 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
         listenQueueHandle = listenerReceiver
             .consumeAutoAck(queueName)
             .subscribeOn(Schedulers.elastic())
-            .concatMap(this::toEvent)
+            .<Event>handle((delivery, sink) -> toEvent(delivery).ifPresent(sink::next))
             .subscribe(listener::onNext);
     }
 
@@ -116,14 +116,14 @@ public class RabbitMQTerminationSubscriber implements TerminationSubscriber, Sta
             .share();
     }
 
-    private Mono<Event> toEvent(Delivery delivery) {
+    private Optional<Event> toEvent(Delivery delivery) {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         try {
             Event event = serializer.deserialize(message);
-            return Mono.just(event);
+            return Optional.of(event);
         } catch (Exception e) {
             LOGGER.error("Unable to deserialize '{}'", message, e);
-            return Mono.empty();
+            return Optional.empty();
         }
     }
 

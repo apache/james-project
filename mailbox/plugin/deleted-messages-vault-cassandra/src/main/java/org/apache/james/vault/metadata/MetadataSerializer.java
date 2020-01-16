@@ -19,6 +19,8 @@
 
 package org.apache.james.vault.metadata;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.vault.dto.DeletedMessageWithStorageInformationConverter;
@@ -30,8 +32,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-
-import reactor.core.publisher.Mono;
 
 class MetadataSerializer {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataSerializer.class);
@@ -47,13 +47,27 @@ class MetadataSerializer {
             .setSerializationInclusion(JsonInclude.Include.NON_ABSENT);
     }
 
-    Mono<DeletedMessageWithStorageInformation> deserialize(String payload) {
-        return Mono.just(payload)
-            .flatMap(string -> Mono.fromCallable(() -> objectMapper.readValue(string, DeletedMessageWithStorageInformationDTO.class))
-                .onErrorResume(e -> Mono.fromRunnable(() -> LOGGER.error("Error deserializing JSON metadata", e))))
-            .flatMap(dto -> Mono.fromCallable(() -> dtoConverter.toDomainObject(dto))
-                .onErrorResume(e -> Mono.fromRunnable(() -> LOGGER.error("Error deserializing DTO", e))));
+    Optional<DeletedMessageWithStorageInformation> deserialize(String payload) {
+        return deserializeDto(payload)
+            .flatMap(this::toDomainObject);
+    }
 
+    private Optional<DeletedMessageWithStorageInformationDTO> deserializeDto(String payload) {
+        try {
+            return Optional.of(objectMapper.readValue(payload, DeletedMessageWithStorageInformationDTO.class));
+        } catch (Exception e) {
+            LOGGER.error("Error deserializing JSON metadata", e);
+            return Optional.empty();
+        }
+    }
+
+    private Optional<DeletedMessageWithStorageInformation> toDomainObject(DeletedMessageWithStorageInformationDTO dto) {
+        try {
+            return Optional.of(dtoConverter.toDomainObject(dto));
+        } catch (Exception e) {
+            LOGGER.error("Error deserializing DTO", e);
+            return Optional.empty();
+        }
     }
 
     String serialize(DeletedMessageWithStorageInformation message) {
