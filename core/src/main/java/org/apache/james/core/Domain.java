@@ -42,7 +42,7 @@ public class Domain implements Serializable {
         Preconditions.checkArgument(!domain.isEmpty() && !domain.contains("@") && !domain.contains("/"),
             "Domain can not be empty nor contain `@` nor `/`");
         Preconditions.checkArgument(domain.length() <= MAXIMUM_DOMAIN_LENGTH,
-            "Domain name length should not exceed " + MAXIMUM_DOMAIN_LENGTH + " characters");
+            "Domain name length should not exceed %s characters", MAXIMUM_DOMAIN_LENGTH);
         return new Domain(domain);
     }
 

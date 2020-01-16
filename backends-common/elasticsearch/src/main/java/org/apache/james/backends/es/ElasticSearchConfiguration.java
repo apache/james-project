@@ -154,12 +154,13 @@ public class ElasticSearchConfiguration {
             private final char[] password;
 
             private SSLTrustStore(String filePath, String password) {
-                Preconditions.checkNotNull(filePath,
-                    ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " is specified");
+                Preconditions.checkNotNull(filePath, "%s cannot be null when %s is specified",
+                    ELASTICSEARCH_HTTPS_TRUST_STORE_PATH, ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD);
                 Preconditions.checkNotNull(password,
-                    ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD + " cannot be null when " + ELASTICSEARCH_HTTPS_TRUST_STORE_PATH + " is specified");
+                     "%s cannot be null when %s is specified",
+                    ELASTICSEARCH_HTTPS_TRUST_STORE_PASSWORD, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
                 Preconditions.checkArgument(Files.exists(Paths.get(filePath)),
-                     String.format("the file '%s' from property '%s' doesn't exist", filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH));
+                    "the file '%s' from property '%s' doesn't exist", filePath, ELASTICSEARCH_HTTPS_TRUST_STORE_PATH);
 
                 this.file = new File(filePath);
                 this.password = password.toCharArray();
@@ -258,7 +259,7 @@ public class ElasticSearchConfiguration {
             Preconditions.checkNotNull(strategy);
             Preconditions.checkNotNull(trustStore);
             Preconditions.checkNotNull(hostNameVerifier);
-            Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(), OVERRIDE.name() + " strategy requires trustStore to be present");
+            Preconditions.checkArgument(strategy != OVERRIDE || trustStore.isPresent(),  "%s strategy requires trustStore to be present", OVERRIDE.name());
 
             this.strategy = strategy;
             this.trustStore = trustStore;

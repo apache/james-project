@@ -124,7 +124,7 @@ public class UserStepdefs {
     public AccessToken authenticate(String username) {
         return tokenByUser.computeIfAbsent(username, (user) -> {
             String password = passwordByUser.get(user);
-            Preconditions.checkState(password != null, "unknown user " + user);
+            Preconditions.checkState(password != null, "unknown user %s", user);
 
             return authenticateJamesUser(baseUri(mainStepdefs.jmapServer), Username.of(user), password);
         });

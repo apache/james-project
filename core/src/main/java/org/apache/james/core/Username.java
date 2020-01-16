@@ -38,7 +38,7 @@ public class Username {
     public static Username of(String username) {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(username), "username should not be null or empty");
         Preconditions.checkArgument(username.length() <= MAXIMUM_MAIL_ADDRESS_LENGTH,
-            String.format("username length should not be longer than %d characters", MAXIMUM_MAIL_ADDRESS_LENGTH));
+            "username length should not be longer than %s characters", MAXIMUM_MAIL_ADDRESS_LENGTH);
 
         List<String> parts = ImmutableList.copyOf(Splitter.on('@').split(username));
         switch (parts.size()) {

@@ -135,13 +135,14 @@ public class CassandraMailQueueViewConfiguration {
         Preconditions.checkArgument(
             configurationUpdate.getSliceWindow().compareTo(getSliceWindow()) <= 0
                 && currentSliceWindowInSecond % updateSliceWindowInSecond == 0,
-            "update 'sliceWindow'(" + configurationUpdate.getSliceWindow() + ") have to be less than and divide the previous sliceWindow: "
-                + getSliceWindow());
+            "update 'sliceWindow'(%s) have to be less than and divide the previous sliceWindow: %s",
+            configurationUpdate.getSliceWindow(), getSliceWindow());
     }
 
     private void validateConfigurationChangeForBuckets(CassandraMailQueueViewConfiguration configurationUpdate) {
         Preconditions.checkArgument(configurationUpdate.getBucketCount() >= getBucketCount(),
-            "can not set 'bucketCount'(" + configurationUpdate.getBucketCount() + ") to be less than the current one: " + getBucketCount());
+            "can not set 'bucketCount'(%s) to be less than the current one: %s",
+            configurationUpdate.getBucketCount(), getBucketCount());
     }
 
     @Override

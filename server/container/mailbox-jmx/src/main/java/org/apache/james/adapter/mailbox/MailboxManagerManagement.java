@@ -215,7 +215,7 @@ public class MailboxManagerManagement extends StandardMBean implements MailboxMa
     }
 
     private void checkString(String argument, String role) {
-        Preconditions.checkNotNull(argument, "Provided " + role + " should not be null.");
-        Preconditions.checkArgument(!argument.equals(""), "Provided " + role + " should not be empty.");
+        Preconditions.checkNotNull(argument, "Provided %s should not be null.", role);
+        Preconditions.checkArgument(!argument.equals(""), "Provided %s should not be empty.", role);
     }
 }

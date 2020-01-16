@@ -32,9 +32,8 @@ public final class Region {
     private final String region;
 
     private Region(String value) {
-        Preconditions.checkArgument(
-            !Strings.isNullOrEmpty(value),
-            this.getClass().getSimpleName() + " cannot be null or empty");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(value),
+            "%s cannot be null or empty", this.getClass().getSimpleName());
         this.region = value;
     }
 

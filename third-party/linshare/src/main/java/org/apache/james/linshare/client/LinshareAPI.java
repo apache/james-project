@@ -86,7 +86,7 @@ public interface LinshareAPI {
 
     default Document uploadDocument(File file) {
         Preconditions.checkNotNull(file);
-        Preconditions.checkArgument(file.exists(), "File to upload does not exist: " + file.getAbsolutePath());
+        Preconditions.checkArgument(file.exists(), "File to upload does not exist: %s", file.getAbsolutePath());
 
         return uploadDocument(file, file.length());
     }

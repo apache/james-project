@@ -43,7 +43,8 @@ public class MailRepositoryUrl {
 
     public static MailRepositoryUrl from(String url) {
         Preconditions.checkNotNull(url);
-        Preconditions.checkArgument(url.contains(PROTOCOL_SEPARATOR), "The expected format is: <protocol> \"" + PROTOCOL_SEPARATOR + "\" <path>");
+        Preconditions.checkArgument(url.contains(PROTOCOL_SEPARATOR),
+            "The expected format is: <protocol> \"%s\" <path>", PROTOCOL_SEPARATOR);
 
         List<String> urlParts = Splitter.on(PROTOCOL_SEPARATOR).splitToList(url);
 

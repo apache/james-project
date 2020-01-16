@@ -43,9 +43,8 @@ public final class Project {
     private final Optional<DomainId> domainId;
 
     private Project(ProjectName name, Optional<DomainName> domainName, Optional<DomainId> domainId) {
-        Preconditions.checkArgument(
-            name != null,
-            this.getClass().getSimpleName() + "name cannot be null or empty");
+        Preconditions.checkArgument(name != null,
+            "%s cannot be null or empty", this.getClass().getSimpleName());
         this.domainName = domainName;
         this.name = name;
         this.domainId = domainId;

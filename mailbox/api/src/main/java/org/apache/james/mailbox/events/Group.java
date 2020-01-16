@@ -48,7 +48,7 @@ public class Group {
     }
 
     private static Group instantiateGroup(Class<?> aClass) throws InstantiationException, IllegalAccessException {
-        Preconditions.checkArgument(Group.class.isAssignableFrom(aClass), "The supplied class is not a group: " + aClass.getName());
+        Preconditions.checkArgument(Group.class.isAssignableFrom(aClass), "The supplied class is not a group: %s", aClass.getName());
         return (Group) aClass.newInstance();
     }
 

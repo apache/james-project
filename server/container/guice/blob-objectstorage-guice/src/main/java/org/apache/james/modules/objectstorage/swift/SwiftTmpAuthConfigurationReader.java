@@ -52,13 +52,13 @@ public class SwiftTmpAuthConfigurationReader implements SwiftConfiguration {
         String tenantNameStr = configuration.getString(OBJECTSTORAGE_SWIFT_TEMPAUTH_TENANTNAME, null);
 
         Preconditions.checkArgument(endpointStr != null,
-            OBJECTSTORAGE_SWIFT_ENDPOINT + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_ENDPOINT);
         Preconditions.checkArgument(crendentialsStr != null,
-            OBJECTSTORAGE_SWIFT_CREDENTIALS + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_CREDENTIALS);
         Preconditions.checkArgument(userNameStr != null,
-            OBJECTSTORAGE_SWIFT_TEMPAUTH_USERNAME + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_TEMPAUTH_USERNAME);
         Preconditions.checkArgument(tenantNameStr != null,
-            OBJECTSTORAGE_SWIFT_TEMPAUTH_TENANTNAME + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_TEMPAUTH_TENANTNAME);
 
         URI endpoint = URI.create(endpointStr);
         Credentials credentials = Credentials.of(crendentialsStr);

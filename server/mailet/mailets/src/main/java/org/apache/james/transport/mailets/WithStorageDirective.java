@@ -69,7 +69,7 @@ public class WithStorageDirective extends GenericMailet {
 
     private String validateMailetConfiguration(String initParameterName) {
         String initParameterValue = getInitParameter(initParameterName);
-        Preconditions.checkState(!Strings.isNullOrEmpty(initParameterValue), "You need to specify " + initParameterName);
+        Preconditions.checkState(!Strings.isNullOrEmpty(initParameterValue), "You need to specify %s", initParameterName);
         return initParameterValue;
     }
 

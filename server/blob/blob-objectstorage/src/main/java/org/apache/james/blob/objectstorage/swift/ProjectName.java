@@ -34,7 +34,7 @@ public final class ProjectName {
     private ProjectName(String value) {
         Preconditions.checkArgument(
             !Strings.isNullOrEmpty(value),
-            this.getClass().getSimpleName() + " cannot be null or empty");
+            "%s cannot be null or empty", this.getClass().getSimpleName());
         this.value = value;
     }
 

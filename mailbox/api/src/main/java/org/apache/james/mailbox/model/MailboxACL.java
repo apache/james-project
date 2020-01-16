@@ -414,8 +414,8 @@ public class MailboxACL {
         }
 
         public EntryKey(String name, NameType nameType, boolean negative) {
-            Preconditions.checkNotNull(name, "Provide a name for this " + getClass().getName());
-            Preconditions.checkNotNull(nameType, "Provide a nameType for this " + getClass().getName());
+            Preconditions.checkNotNull(name, "Provide a name for this %s", getClass().getName());
+            Preconditions.checkNotNull(nameType, "Provide a nameType for this %s", getClass().getName());
 
             this.name = name;
             this.nameType = nameType;

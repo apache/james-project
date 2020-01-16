@@ -96,7 +96,7 @@ public class CassandraRecipientRewriteTable extends AbstractRecipientRewriteTabl
     @Override
     public Stream<MappingSource> listSources(Mapping mapping) throws RecipientRewriteTableException {
         Preconditions.checkArgument(listSourcesSupportedType.contains(mapping.getType()),
-            String.format("Not supported mapping of type %s", mapping.getType()));
+            "Not supported mapping of type %s", mapping.getType());
 
         SchemaVersion schemaVersion = cassandraSchemaVersionDAO.getCurrentSchemaVersion()
             .block()

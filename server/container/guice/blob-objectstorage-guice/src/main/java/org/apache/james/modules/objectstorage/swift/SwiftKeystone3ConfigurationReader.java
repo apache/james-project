@@ -66,9 +66,9 @@ public class SwiftKeystone3ConfigurationReader implements SwiftConfiguration {
         String crendentialsStr = configuration.getString(OBJECTSTORAGE_SWIFT_CREDENTIALS, null);
 
         Preconditions.checkArgument(endpointStr != null,
-            OBJECTSTORAGE_SWIFT_ENDPOINT + " is a mandatory configuration value");
+             "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_ENDPOINT);
         Preconditions.checkArgument(crendentialsStr != null,
-            OBJECTSTORAGE_SWIFT_CREDENTIALS + " is a mandatory configuration value");
+             "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_CREDENTIALS);
 
         URI endpoint = URI.create(endpointStr);
         Credentials credentials = Credentials.of(crendentialsStr);
@@ -100,9 +100,9 @@ public class SwiftKeystone3ConfigurationReader implements SwiftConfiguration {
         String domainNameStr = configuration.getString(OBJECTSTORAGE_SWIFT_KEYSTONE_3_USER_DOMAIN, null);
 
         Preconditions.checkArgument(userNameStr != null,
-            OBJECTSTORAGE_SWIFT_KEYSTONE_3_USER_NAME + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_KEYSTONE_3_USER_NAME);
         Preconditions.checkArgument(domainNameStr != null,
-            OBJECTSTORAGE_SWIFT_KEYSTONE_3_USER_DOMAIN + " is a mandatory configuration value");
+            "%s is a mandatory configuration value", OBJECTSTORAGE_SWIFT_KEYSTONE_3_USER_DOMAIN);
 
         UserName userName =
             UserName.of(userNameStr);

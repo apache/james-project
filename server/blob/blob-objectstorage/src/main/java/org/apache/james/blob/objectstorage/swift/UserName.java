@@ -32,9 +32,8 @@ public final class UserName {
     private final String value;
 
     private UserName(String value) {
-        Preconditions.checkArgument(
-            !Strings.isNullOrEmpty(value),
-            this.getClass().getSimpleName() + " cannot be null or empty");
+        Preconditions.checkArgument(!Strings.isNullOrEmpty(value),
+            "%s cannot be null or empty", this.getClass().getSimpleName());
         this.value = value;
     }
 

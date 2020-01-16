@@ -218,7 +218,7 @@ public class QueryTranslator {
     }
 
     Query translate(QueryDTO queryDTO) throws QueryTranslatorException {
-        Preconditions.checkArgument(combinatorIsValid(queryDTO.getCombinator()), "combinator '" + queryDTO.getCombinator() + "' is not yet handled");
+        Preconditions.checkArgument(combinatorIsValid(queryDTO.getCombinator()), "combinator '%s' is not yet handled", queryDTO.getCombinator());
         Preconditions.checkArgument(queryDTO.getCriteria().stream().allMatch(this::isCriterion), "nested query structure is not yet handled");
 
         return Query.and(queryDTO.getCriteria().stream()
