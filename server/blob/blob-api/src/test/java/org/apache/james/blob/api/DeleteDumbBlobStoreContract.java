@@ -70,7 +70,7 @@ public interface DeleteDumbBlobStoreContract  {
         store.save(TEST_BUCKET_NAME, TEST_BLOB_ID,  SHORT_BYTEARRAY).block();
         store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID).block();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID))
+        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, TEST_BLOB_ID).read())
             .isInstanceOf(ObjectStoreException.class);
     }
 

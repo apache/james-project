@@ -172,7 +172,7 @@ public interface ReadSaveDumbBlobStoreContract {
     default void readStreamShouldThrowWhenNotExisting() {
         DumbBlobStore store = testee();
 
-        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, new TestBlobId("unknown")))
+        assertThatThrownBy(() -> store.read(TEST_BUCKET_NAME, new TestBlobId("unknown")).read())
             .isInstanceOf(ObjectNotFoundException.class);
     }
 
