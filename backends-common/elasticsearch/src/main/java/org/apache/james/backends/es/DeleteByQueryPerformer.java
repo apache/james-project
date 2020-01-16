@@ -25,6 +25,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.unit.TimeValue;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -83,6 +84,6 @@ public class DeleteByQueryPerformer {
                     .routing(routingKey.asString()));
         }
 
-        return Mono.fromCallable(() -> client.bulk(request));
+        return Mono.fromCallable(() -> client.bulk(request, RequestOptions.DEFAULT));
     }
 }
