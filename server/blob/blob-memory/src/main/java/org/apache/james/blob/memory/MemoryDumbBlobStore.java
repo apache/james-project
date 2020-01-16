@@ -27,8 +27,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.DumbBlobStore;
-import org.apache.james.blob.api.IOObjectStoreException;
 import org.apache.james.blob.api.ObjectNotFoundException;
+import org.apache.james.blob.api.ObjectStoreIOException;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashBasedTable;
@@ -46,7 +46,7 @@ public class MemoryDumbBlobStore implements DumbBlobStore {
     }
 
     @Override
-    public InputStream read(BucketName bucketName, BlobId blobId) throws IOObjectStoreException, ObjectNotFoundException {
+    public InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException {
         return readBytes(bucketName, blobId)
             .map(ByteArrayInputStream::new)
             .block();
@@ -73,7 +73,7 @@ public class MemoryDumbBlobStore implements DumbBlobStore {
                 try {
                     return IOUtils.toByteArray(inputStream);
                 } catch (IOException e) {
-                    throw new IOObjectStoreException("IOException occured", e);
+                    throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
             .flatMap(bytes -> save(bucketName, blobId, bytes));
@@ -85,7 +85,7 @@ public class MemoryDumbBlobStore implements DumbBlobStore {
                 try {
                     return content.read();
                 } catch (IOException e) {
-                    throw new IOObjectStoreException("IOException occured", e);
+                    throw new ObjectStoreIOException("IOException occured", e);
                 }
             })
             .flatMap(bytes -> save(bucketName, blobId, bytes));

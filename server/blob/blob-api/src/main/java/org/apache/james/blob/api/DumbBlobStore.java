@@ -32,9 +32,9 @@ public interface DumbBlobStore {
      * Reads a Blob based on its BucketName and its BlobId.
      *
      * @throws ObjectNotFoundException when the blobId or the bucket is not found
-     * @throws IOObjectStoreException when an unexpected IO error occurs
+     * @throws ObjectStoreIOException when an unexpected IO error occurs
      */
-    InputStream read(BucketName bucketName, BlobId blobId) throws IOObjectStoreException, ObjectNotFoundException;
+    InputStream read(BucketName bucketName, BlobId blobId) throws ObjectStoreIOException, ObjectNotFoundException;
 
 
     /**

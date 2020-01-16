@@ -19,13 +19,13 @@
 
 package org.apache.james.blob.api;
 
-public class IOObjectStoreException extends ObjectStoreException {
+public class ObjectStoreIOException extends ObjectStoreException {
 
-    public IOObjectStoreException(String message) {
+    public ObjectStoreIOException(String message) {
         super(message);
     }
 
-    public IOObjectStoreException(String message, Throwable cause) {
+    public ObjectStoreIOException(String message, Throwable cause) {
         super(message, cause);
     }
 }

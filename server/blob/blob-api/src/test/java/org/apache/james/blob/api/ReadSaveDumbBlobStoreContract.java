@@ -297,7 +297,7 @@ public interface ReadSaveDumbBlobStoreContract {
                 }
             })
             .block())
-        .isInstanceOf(IOObjectStoreException.class);
+        .isInstanceOf(ObjectStoreIOException.class);
     }
 
     @Test
@@ -306,7 +306,7 @@ public interface ReadSaveDumbBlobStoreContract {
 
         assertThatThrownBy(() -> store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, getThrowingInputStream())
             .block())
-            .isInstanceOf(IOObjectStoreException.class);
+            .isInstanceOf(ObjectStoreIOException.class);
     }
 
     static Stream<Arguments> blobs() {
