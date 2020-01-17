@@ -20,70 +20,15 @@
 
 package org.apache.james.mailbox.model;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-
-import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.Test;
 
 class AttachmentTest {
-
-    private static Charset CHARSET = StandardCharsets.UTF_8;
-/*
-    @Test
-    void streamShouldBeConsumedOneTime() throws Exception {
-        String input = "mystream";
-        Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes(CHARSET))
-                .type("content")
-                .build();
-
-        InputStream stream = attachment.getStream();
-        assertThat(stream).isNotNull();
-        assertThat(IOUtils.toString(stream, CHARSET)).isEqualTo(input);
-    }
-
-    @Test
-    void getByteShouldReturnByteArrayRepresentingTheAttachment() {
-        String input = "mystream";
-        Attachment attachment = Attachment.builder()
-            .bytes(input.getBytes(CHARSET))
-            .type("content")
-            .build();
-
-        byte[] bytes = attachment.getBytes();
-        assertThat(new String(bytes, CHARSET)).isEqualTo(input);
-    }
-
-    @Test
-    void streamShouldBeConsumedMoreThanOneTime() throws Exception {
-        String input = "mystream";
-        Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes(CHARSET))
-                .type("content")
-                .build();
-
-        attachment.getStream();
-        InputStream stream = attachment.getStream();
-        assertThat(stream).isNotNull();
-        assertThat(IOUtils.toString(stream, CHARSET)).isEqualTo(input);
-    }
-
     @Test
     void builderShouldThrowWhenAttachmentIdIsNull() {
         assertThatThrownBy(() -> Attachment.builder()
                 .attachmentId(null))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void builderShouldThrowWhenBytesIsNull() {
-        assertThatThrownBy(() -> Attachment.builder()
-                .bytes(null))
             .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -109,9 +54,10 @@ class AttachmentTest {
     }
 
     @Test
-    void buildShouldThrowWhenBytesIsNotProvided() {
+    void buildShouldThrowWhenSizeIsNotProvided() {
         assertThatThrownBy(() -> Attachment.builder()
                 .attachmentId(AttachmentId.random())
+                .type("TYPE")
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
@@ -120,20 +66,16 @@ class AttachmentTest {
     void buildShouldThrowWhenTypeIsNotProvided() {
         assertThatThrownBy(() -> Attachment.builder()
                 .attachmentId(AttachmentId.random())
-                .bytes("mystream".getBytes(CHARSET))
+                .size(36)
                 .build())
             .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
-    void buildShouldSetTheSize() {
-        String input = "mystream";
-        Attachment attachment = Attachment.builder()
-                .bytes(input.getBytes(CHARSET))
-                .type("content")
-                .build();
-
-        assertThat(attachment.getSize()).isEqualTo(input.getBytes(CHARSET).length);
+    void sizeShouldThrowOnNegativeValue() {
+        assertThatThrownBy(() -> Attachment.builder()
+                .attachmentId(AttachmentId.random())
+                .size(-3))
+            .isInstanceOf(IllegalArgumentException.class);
     }
-*/
 }
