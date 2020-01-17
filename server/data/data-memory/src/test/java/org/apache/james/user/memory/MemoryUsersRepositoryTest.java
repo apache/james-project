@@ -29,14 +29,13 @@ import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
+class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
-    @Override
-    @Before
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         super.setUp();
     }
     
@@ -46,7 +45,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting() {
+    void assertValidShouldThrowWhenDomainPartAndNoVirtualHosting() {
         MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user@domain.tld")))
@@ -54,7 +53,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void assertValidShouldThrowWhenNoDomainPartAndVirtualHosting() {
+    void assertValidShouldThrowWhenNoDomainPartAndVirtualHosting() {
         MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
 
         assertThatThrownBy(() -> memoryUsersRepository.assertValid(Username.of("user")))
@@ -62,7 +61,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void assertValidShouldNotThrowWhenDomainPartAndVirtualHosting() throws Exception {
+    void assertValidShouldNotThrowWhenDomainPartAndVirtualHosting() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord("localhost", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
@@ -77,7 +76,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void assertValidShouldNotThrowWhenDomainPartAndDomainNotFound() throws Exception {
+    void assertValidShouldNotThrowWhenDomainPartAndDomainNotFound() throws Exception {
         MemoryDomainList domainList = new MemoryDomainList(new InMemoryDNSService()
             .registerMxRecord("localhost", "127.0.0.1")
             .registerMxRecord("127.0.0.1", "127.0.0.1"));
@@ -91,7 +90,7 @@ public class MemoryUsersRepositoryTest extends AbstractUsersRepositoryTest {
     }
 
     @Test
-    public void assertValidShouldNotThrowWhenNoDomainPartAndNoVirtualHosting() {
+    void assertValidShouldNotThrowWhenNoDomainPartAndNoVirtualHosting() {
         MemoryUsersRepository memoryUsersRepository = MemoryUsersRepository.withoutVirtualHosting(domainList);
 
         assertThatCode(() -> memoryUsersRepository.assertValid(Username.of("user")))

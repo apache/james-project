@@ -23,22 +23,20 @@ import org.apache.james.backends.jpa.JpaTestCluster;
 import org.apache.james.user.jpa.model.JPAUser;
 import org.apache.james.user.lib.AbstractUsersRepository;
 import org.apache.james.user.lib.AbstractUsersRepositoryTest;
-import org.junit.After;
-import org.junit.Before;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
-public class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
+class JpaUsersRepositoryTest extends AbstractUsersRepositoryTest {
 
-    private static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUser.class);
+    static final JpaTestCluster JPA_TEST_CLUSTER = JpaTestCluster.create(JPAUser.class);
 
-    @Before
-    @Override
-    public void setUp() throws Exception {
+    @BeforeEach
+    void setup() throws Exception {
         super.setUp();
     }
 
-    @Override
-    @After
-    public void tearDown() throws Exception {
+    @AfterEach
+    void teardown() throws Exception {
         super.tearDown();
         JPA_TEST_CLUSTER.clear("JAMES_USER");
     }
