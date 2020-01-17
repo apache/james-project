@@ -87,18 +87,18 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
 
     @Override
     public Mono<Attachment> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
-            return Mono.fromCallable(() -> {
-                byte[] bytes = toByteArray(inputStream);
-                Attachment attachment = Attachment.builder()
-                    .bytes(bytes)
-                    .type(contentType)
-                    .attachmentId(AttachmentId.random())
-                    .build();
-                attachmentsById.put(attachment.getAttachmentId(), attachment);
-                attachmentsRawContentById.put(attachment.getAttachmentId(), bytes);
-                ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
-                return attachment;
-            });
+        return Mono.fromCallable(() -> {
+            byte[] bytes = toByteArray(inputStream);
+            Attachment attachment = Attachment.builder()
+                .type(contentType)
+                .attachmentId(AttachmentId.random())
+                .size(bytes.length)
+                .build();
+            attachmentsById.put(attachment.getAttachmentId(), attachment);
+            attachmentsRawContentById.put(attachment.getAttachmentId(), bytes);
+            ownersByAttachmentId.put(attachment.getAttachmentId(), owner);
+            return attachment;
+        });
     }
 
     private byte[] toByteArray(InputStream inputStream) {
@@ -136,11 +136,11 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
             attachmentsById.put(attachmentId, Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(parsedAttachment.getContentType())
-                .bytes(bytes)
+                .size(bytes.length)
                 .build());
             attachmentsRawContentById.put(attachmentId, bytes);
             messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
-            return parsedAttachment.asMessageAttachment(attachmentId);
+            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
         } catch (IOException e) {
             throw new MailboxException(String.format("Failed to persist attachment %s of message %s", attachmentId, ownerMessageId.serialize()), e);
         }

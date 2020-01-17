@@ -99,6 +99,7 @@ import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 import org.apache.james.util.IteratorWrapper;
 import org.apache.james.util.io.BodyOffsetInputStream;
+import org.apache.james.util.io.InputStreamConsummer;
 import org.apache.james.util.streams.Iterators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -342,7 +343,8 @@ public class StoreMessageManager implements MessageManager {
                 if (internalDate == null) {
                     internalDate = new Date();
                 }
-                consumeStream(bufferedOut, tmpMsgIn);
+                InputStreamConsummer.consume(tmpMsgIn);
+                bufferedOut.flush();
                 int bodyStartOctet = getBodyStartOctet(bIn);
                 return createAndDispatchMessage(internalDate, mailboxSession, file, propertyBuilder, flags, bodyStartOctet);
             }
@@ -424,16 +426,6 @@ public class StoreMessageManager implements MessageManager {
             }
             propertyBuilder.setTextualLineCount(lines);
         }
-    }
-
-    private void consumeStream(BufferedOutputStream bufferedOut, BufferedInputStream tmpMsgIn) throws IOException {
-        byte[] discard = new byte[4096];
-        while (tmpMsgIn.read(discard) != -1) {
-            // consume the rest of the stream so everything get copied to
-            // the file now
-            // via the TeeInputStream
-        }
-        bufferedOut.flush();
     }
 
     private int getBodyStartOctet(BodyOffsetInputStream bIn) {

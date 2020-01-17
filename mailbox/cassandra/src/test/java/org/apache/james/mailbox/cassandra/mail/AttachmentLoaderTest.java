@@ -53,7 +53,7 @@ class AttachmentLoaderTest {
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
-            .bytes("attachment".getBytes())
+            .size(11)
             .type("type")
             .build();
 
@@ -79,7 +79,7 @@ class AttachmentLoaderTest {
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
-            .bytes("attachment".getBytes())
+            .size(11)
             .type("type")
             .build();
 
@@ -108,12 +108,12 @@ class AttachmentLoaderTest {
 
         Attachment attachment1 = Attachment.builder()
             .attachmentId(attachmentId1)
-            .bytes("attachment1".getBytes())
+            .size(12)
             .type("type")
             .build();
         Attachment attachment2 = Attachment.builder()
             .attachmentId(attachmentId2)
-            .bytes("attachment2".getBytes())
+            .size(13)
             .type("type")
             .build();
 
@@ -143,7 +143,7 @@ class AttachmentLoaderTest {
 
         Attachment attachment = Attachment.builder()
             .attachmentId(attachmentId)
-            .bytes("attachment".getBytes())
+            .size(11)
             .type("type")
             .build();
 

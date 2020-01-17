@@ -35,7 +35,6 @@ import static org.apache.mailet.base.MailAddressFixture.SENDER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -73,8 +72,8 @@ class DeletedMessageConverterTest {
     private static final Collection<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
     private static final Collection<MessageAttachment> ATTACHMENTS = ImmutableList.of(MessageAttachment.builder()
         .attachment(Attachment.builder()
-            .bytes("content".getBytes(StandardCharsets.UTF_8))
             .type("type")
+            .size(48)
             .build())
         .build());
 

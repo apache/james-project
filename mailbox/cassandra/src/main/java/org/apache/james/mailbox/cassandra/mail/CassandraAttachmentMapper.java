@@ -83,11 +83,6 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .orElseThrow(() -> new AttachmentNotFoundException(attachmentId.getId()));
     }
 
-    private Mono<Attachment> retrievePayload(DAOAttachment daoAttachment) {
-        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), daoAttachment.getBlobId()))
-            .map(daoAttachment::toAttachment);
-    }
-
     @Override
     public List<Attachment> getAttachments(Collection<AttachmentId> attachmentIds) {
         Preconditions.checkArgument(attachmentIds != null);
@@ -112,7 +107,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private Mono<Attachment> getAttachmentInternal(AttachmentId id) {
         return attachmentDAOV2.getAttachment(id)
-            .flatMap(this::retrievePayload);
+            .map(DAOAttachment::toAttachment);
     }
 
     @Override
@@ -127,6 +122,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
             .map(any -> Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
+                .size(sizeInputStream.getSize())
                 .build());
     }
 
@@ -156,7 +152,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
             .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), content.getSize()))
             .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
-            .then(Mono.just(parsedAttachment.asMessageAttachment(attachmentId)));
+            .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, content.getSize()))));
     }
 
     private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {

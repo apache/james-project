@@ -78,11 +78,11 @@ public class CassandraAttachmentDAOV2 {
             return size;
         }
 
-        public Attachment toAttachment(byte[] data) {
+        public Attachment toAttachment() {
             return Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(type)
-                .bytes(data)
+                .size(size)
                 .build();
         }
 

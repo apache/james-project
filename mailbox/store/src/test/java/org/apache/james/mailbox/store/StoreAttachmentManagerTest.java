@@ -24,8 +24,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.nio.charset.StandardCharsets;
-
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.exception.AttachmentNotFoundException;
@@ -47,8 +45,8 @@ class StoreAttachmentManagerTest {
     static final AttachmentId ATTACHMENT_ID = AttachmentId.from("1");
     static final Attachment ATTACHMENT = Attachment.builder()
         .attachmentId(ATTACHMENT_ID)
+        .size(48)
         .type("type")
-        .bytes("Any".getBytes(StandardCharsets.UTF_8))
         .build();
 
     StoreAttachmentManager testee;
@@ -56,7 +54,7 @@ class StoreAttachmentManagerTest {
     MessageIdManager messageIdManager;
 
     @BeforeEach
-    void setup() throws Exception {
+    void setup() {
         attachmentMapper = mock(AttachmentMapper.class);
         AttachmentMapperFactory attachmentMapperFactory = mock(AttachmentMapperFactory.class);
         when(attachmentMapperFactory.getAttachmentMapper(any(MailboxSession.class)))

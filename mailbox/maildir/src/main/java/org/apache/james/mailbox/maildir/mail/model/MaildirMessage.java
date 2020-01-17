@@ -33,6 +33,7 @@ import org.apache.james.mailbox.maildir.MaildirMessageName;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.Message;
 import org.apache.james.mailbox.store.mail.model.Property;
@@ -47,6 +48,7 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.io.ByteStreams;
 
@@ -275,7 +277,9 @@ public class MaildirMessage implements Message {
         try {
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
-                .map(attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                    .sneakyThrow())
                 .collect(Guavate.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);

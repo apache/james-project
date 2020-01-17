@@ -23,7 +23,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
 
-import org.apache.commons.io.IOUtils;
+import org.apache.james.util.io.InputStreamConsummer;
+import org.apache.james.util.io.SizeInputStream;
 
 public class ParsedAttachment {
     interface Builder {
@@ -111,20 +112,31 @@ public class ParsedAttachment {
         return isInline;
     }
 
-    public MessageAttachment asMessageAttachment(AttachmentId attachmentId) {
-        try {
-            return MessageAttachment.builder()
-                .attachment(Attachment.builder()
-                        .attachmentId(attachmentId)
-                        .type(contentType)
-                        .bytes(IOUtils.toByteArray(content))
-                        .build())
-                    .name(name)
-                    .cid(cid)
-                    .isInline(isInline)
-                    .build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public MessageAttachment asMessageAttachment(AttachmentId attachmentId, long size) {
+        return MessageAttachment.builder()
+            .attachment(Attachment.builder()
+                .attachmentId(attachmentId)
+                .type(contentType)
+                .size(size)
+                .build())
+            .name(name)
+            .cid(cid)
+            .isInline(isInline)
+            .build();
+    }
+
+    public MessageAttachment asMessageAttachment(AttachmentId attachmentId) throws IOException {
+        SizeInputStream sizeInputStream = new SizeInputStream(content);
+        InputStreamConsummer.consume(sizeInputStream);
+        return MessageAttachment.builder()
+            .attachment(Attachment.builder()
+                .attachmentId(attachmentId)
+                .type(contentType)
+                .size(sizeInputStream.getSize())
+                .build())
+            .name(name)
+            .cid(cid)
+            .isInline(isInline)
+            .build();
     }
 }

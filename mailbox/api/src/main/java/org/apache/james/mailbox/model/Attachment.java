@@ -19,15 +19,12 @@
 
 package org.apache.james.mailbox.model;
 
-import java.util.Arrays;
-
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class Attachment {
-
     public static Builder builder() {
         return new Builder();
     }
@@ -35,18 +32,12 @@ public class Attachment {
     public static class Builder {
 
         private AttachmentId attachmentId;
-        private byte[] bytes;
+        private Long size;
         private String type;
 
         public Builder attachmentId(AttachmentId attachmentId) {
             Preconditions.checkArgument(attachmentId != null);
             this.attachmentId = attachmentId;
-            return this;
-        }
-
-        public Builder bytes(byte[] bytes) {
-            Preconditions.checkArgument(bytes != null);
-            this.bytes = bytes;
             return this;
         }
 
@@ -56,12 +47,18 @@ public class Attachment {
             return this;
         }
 
+        public Builder size(long size) {
+            Preconditions.checkArgument(size >= 0, "'size' must be positive");
+            this.size = size;
+            return this;
+        }
+
         public Attachment build() {
-            Preconditions.checkState(bytes != null, "'bytes' is mandatory");
             Preconditions.checkState(type != null, "'type' is mandatory");
+            Preconditions.checkState(size != null, "'size' is mandatory");
             AttachmentId builtAttachmentId = attachmentId();
             Preconditions.checkState(builtAttachmentId != null, "'attachmentId' is mandatory");
-            return new Attachment(bytes, builtAttachmentId, type, size());
+            return new Attachment(builtAttachmentId, type, size);
         }
 
         private AttachmentId attachmentId() {
@@ -70,19 +67,13 @@ public class Attachment {
             }
             return AttachmentId.random();
         }
-
-        private long size() {
-            return bytes.length;
-        }
     }
 
-    private final byte[] bytes;
     private final AttachmentId attachmentId;
     private final String type;
     private final long size;
 
-    private Attachment(byte[] bytes, AttachmentId attachmentId, String type, long size) {
-        this.bytes = bytes;
+    private Attachment(AttachmentId attachmentId, String type, long size) {
         this.attachmentId = attachmentId;
         this.type = type;
         this.size = size;
@@ -100,22 +91,12 @@ public class Attachment {
         return size;
     }
 
-    /**
-     * Be careful the returned array is not a copy of the attachment byte array.
-     * Mutating it will mutate the attachment!
-     * @return the attachment content
-     */
-    public byte[] getBytes() {
-        return bytes;
-    }
-
 
     @Override
     public boolean equals(Object obj) {
         if (obj instanceof Attachment) {
             Attachment other = (Attachment) obj;
             return Objects.equal(attachmentId, other.attachmentId)
-                && Arrays.equals(bytes, other.bytes)
                 && Objects.equal(type, other.type)
                 && Objects.equal(size, other.size);
         }
@@ -124,7 +105,7 @@ public class Attachment {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(attachmentId, bytes, type, size);
+        return Objects.hashCode(attachmentId, type, size);
     }
 
     @Override
@@ -132,7 +113,6 @@ public class Attachment {
         return MoreObjects
                 .toStringHelper(this)
                 .add("attachmentId", attachmentId)
-                .add("bytes", bytes)
                 .add("type", type)
                 .add("size", size)
                 .toString();

@@ -53,6 +53,7 @@ import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
 import org.apache.james.mailbox.store.mail.model.DelegatingMailboxMessage;
 import org.apache.james.mailbox.store.mail.model.FlagsFactory;
@@ -64,6 +65,7 @@ import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
 
+import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 
@@ -507,7 +509,9 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
         try {
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
-                .map(attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                    .sneakyThrow())
                 .collect(Guavate.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);

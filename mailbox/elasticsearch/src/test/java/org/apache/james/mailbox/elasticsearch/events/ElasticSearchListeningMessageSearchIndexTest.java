@@ -114,8 +114,8 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
     static final MessageAttachment MESSAGE_ATTACHMENT = MessageAttachment.builder()
         .attachment(Attachment.builder()
-            .bytes("".getBytes(StandardCharsets.UTF_8))
             .type("type")
+            .size(523)
             .build())
         .name("name")
         .isInline(false)
