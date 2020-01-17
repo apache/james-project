@@ -348,7 +348,7 @@ class MailboxesExportRequestToTaskTest {
 
         ComposedMessageId id = testSystem.mailboxManager.getMailbox(bobInboxboxId, testSystem.bobSession).appendMessage(
             MessageManager.AppendCommand.builder().build(MESSAGE_CONTENT),
-            testSystem.bobSession);
+            testSystem.bobSession).getIds();
 
         String taskId = with()
             .queryParam("action", "export")
@@ -375,7 +375,7 @@ class MailboxesExportRequestToTaskTest {
 
         ComposedMessageId id = testSystem.mailboxManager.getMailbox(bobInboxboxId, testSystem.bobSession).appendMessage(
             MessageManager.AppendCommand.builder().build(MESSAGE_CONTENT),
-            testSystem.bobSession);
+            testSystem.bobSession).getIds();
 
         testSystem.usersRepository.addUser(CEDRIC, PASSWORD);
         MailboxSession cedricSession = testSystem.mailboxManager.createSystemSession(CEDRIC);

@@ -74,7 +74,7 @@ class MessageHeaderViewFactoryTest {
         message1 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            session);
+            session).getIds();
 
         testee = new MessageHeaderViewFactory(resources.getBlobManager(), messageIdManager);
     }

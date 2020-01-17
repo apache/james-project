@@ -1159,7 +1159,7 @@ class UserMailboxesRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 doThrow(new RuntimeException())
                     .when(searchIndex)
@@ -1197,7 +1197,7 @@ class UserMailboxesRoutesTest {
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 String taskId = given()
                     .queryParam("task", "reIndex")

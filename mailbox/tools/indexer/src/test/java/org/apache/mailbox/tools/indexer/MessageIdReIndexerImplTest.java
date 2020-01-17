@@ -67,7 +67,7 @@ public class MessageIdReIndexerImplTest {
         ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
             .appendMessage(
                 MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                systemSession);
+                systemSession).getIds();
 
         reIndexer.reIndex(createdMessage.getMessageId()).run();
 

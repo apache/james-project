@@ -824,7 +824,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
         @Test
         void deleteMessageShouldFireExpungedEvent() throws Exception {
-            ComposedMessageId messageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session);
+            ComposedMessageId messageId = inboxManager.appendMessage(MessageManager.AppendCommand.builder().build(message), session).getIds();
             inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD, MessageRange.all(), session);
 
             retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
@@ -913,7 +913,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
 
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
-            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getIds();
 
             retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
             mailboxManager.copyMessages(MessageRange.all(), inbox, newPath, session);
@@ -946,7 +946,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
 
             Optional<MailboxId> targetMailboxId = mailboxManager.createMailbox(newPath, session);
-            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getIds();
 
             retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(targetMailboxId.get()));
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
@@ -964,7 +964,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             assumeTrue(mailboxManager.getSupportedMessageCapabilities().contains(MailboxManager.MessageCapabilities.UniqueID));
 
             mailboxManager.createMailbox(newPath, session);
-            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+            ComposedMessageId messageId = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getIds();
 
             retrieveEventBus(mailboxManager).register(listener, new MailboxIdRegistrationKey(inboxId));
             mailboxManager.moveMessages(MessageRange.all(), inbox, newPath, session);
@@ -1194,7 +1194,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MessageManager cacahueteMessageManager = mailboxManager.getMailbox(cacahueteMailboxId, session);
             MessageId cacahueteMessageId = cacahueteMessageManager
                 .appendMessage(AppendCommand.from(message), session)
-                .getMessageId();
+                .getIds().getMessageId();
 
             MailboxPath pirouetteFilder = MailboxPath.forUser(USER_1, "PIROUETTE");
             MailboxId pirouetteMailboxId = mailboxManager.createMailbox(pirouetteFilder, session).get();
@@ -1202,7 +1202,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             MessageId pirouetteMessageId = pirouetteMessageManager
                 .appendMessage(AppendCommand.from(message), session)
-                .getMessageId();
+                .getIds().getMessageId();
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
                 .from(new SearchQuery())
@@ -1226,7 +1226,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             MessageId messageId = delegatedMessageManager
                 .appendMessage(AppendCommand.from(message), sessionFromDelegater)
-                .getMessageId();
+                .getIds().getMessageId();
 
             mailboxManager.setRights(delegatedMailboxPath,
                 MailboxACL.EMPTY.apply(MailboxACL.command()
@@ -1376,7 +1376,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             MessageId messageId = searchedMessageManager
                 .appendMessage(AppendCommand.from(message), session)
-                .getMessageId();
+                .getIds().getMessageId();
 
             MultimailboxesSearchQuery multiMailboxesQuery = MultimailboxesSearchQuery
                 .from(new SearchQuery())
@@ -1842,9 +1842,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             MessageId messageId1 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
             MessageId messageId2 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
 
             mailboxManager.moveMessages(MessageRange.all(), inbox, otherMailbox, session);
@@ -1883,9 +1885,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MessageManager inboxMessageManager = mailboxManager.getMailbox(inbox, session);
 
             ComposedMessageId composedMessageId1 = inboxMessageManager
-                .appendMessage(AppendCommand.from(message), session);
+                .appendMessage(AppendCommand.from(message), session)
+                .getIds();
             MessageId messageId2 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
 
             mailboxManager.moveMessages(MessageRange.one(composedMessageId1.getUid()), inbox, otherMailbox, session);
@@ -1975,9 +1979,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
             MessageId messageId1 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
             MessageId messageId2 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
 
             mailboxManager.copyMessages(MessageRange.all(), inbox, otherMailbox, session);
@@ -2015,9 +2021,11 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             MessageManager inboxMessageManager = mailboxManager.getMailbox(inbox, session);
 
             ComposedMessageId composedMessageId1 = inboxMessageManager
-                .appendMessage(AppendCommand.from(message), session);
+                .appendMessage(AppendCommand.from(message), session)
+                .getIds();
             MessageId messageId2 = inboxMessageManager
                 .appendMessage(AppendCommand.from(message), session)
+                .getIds()
                 .getMessageId();
 
             MessageId messageId1 = composedMessageId1.getMessageId();
@@ -2205,7 +2213,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void expungeShouldCallAllPreDeletionHooks() throws Exception {
                 ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 inboxManager.expunge(MessageRange.one(composeId.getUid()), session);
 
                 ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
@@ -2226,7 +2234,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void deleteMailboxShouldCallAllPreDeletionHooks() throws Exception {
                 ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 mailboxManager.deleteMailbox(inbox, session);
 
                 ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
@@ -2247,7 +2255,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void deleteMailboxByIdShouldCallAllPreDeletionHooks() throws Exception {
                 ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 mailboxManager.deleteMailbox(inboxId, session);
 
                 ArgumentCaptor<PreDeletionHook.DeleteOperation> preDeleteCaptor1 = ArgumentCaptor.forClass(PreDeletionHook.DeleteOperation.class);
@@ -2268,10 +2276,10 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionCall() throws Exception {
                 ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 ComposedMessageId composeId2 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
 
                 inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
                 inboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
@@ -2294,7 +2302,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void expungeShouldCallAllPreDeletionHooksOnlyOnMessagesMarkedAsDeleted() throws Exception {
                 ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 inboxManager.appendMessage(AppendCommand.builder()
                     .build(message), session);
 
@@ -2329,10 +2337,10 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
             void expungeShouldCallAllPreDeletionHooksOnEachMessageDeletionOnDifferentMailboxes() throws Exception {
                 ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 ComposedMessageId composeId2 = anotherMailboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
 
                 inboxManager.expunge(MessageRange.one(composeId1.getUid()), session);
                 anotherMailboxManager.expunge(MessageRange.one(composeId2.getUid()), session);
@@ -2362,7 +2370,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
 
                 ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder()
                     .withFlags(new Flags(Flags.Flag.DELETED))
-                    .build(message), session);
+                    .build(message), session).getIds();
                 assertThatThrownBy(() -> inboxManager.expunge(MessageRange.one(composeId1.getUid()), session))
                     .isInstanceOf(RuntimeException.class);
 
@@ -2389,7 +2397,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
                         return Mono.empty();
                     });
 
-                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session);
+                ComposedMessageId composeId1 = inboxManager.appendMessage(AppendCommand.builder().build(message), session).getIds();
                 inboxManager.setFlags(new Flags(Flags.Flag.DELETED), MessageManager.FlagsUpdateMode.ADD,
                     MessageRange.one(composeId1.getUid()), session);
                 inboxManager.expunge(MessageRange.all(), session);
@@ -2420,7 +2428,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         void getMessagesShouldIncludeHasAttachmentInformation() throws Exception {
             ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.DELETED))
-                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session);
+                .build(ClassLoaderUtils.getSystemResourceAsSharedStream("eml/twoAttachmentsApi.eml")), session).getIds();
 
             MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroup.MINIMAL, session);
 
@@ -2434,7 +2442,7 @@ public abstract class MailboxManagerTest<T extends MailboxManager> {
         void getMessagesShouldNotIncludeAttachmentInformationWhenNone() throws Exception {
             ComposedMessageId composeId = inboxManager.appendMessage(AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.DELETED))
-                .build(message), session);
+                .build(message), session).getIds();
 
             MessageResultIterator messages = inboxManager.getMessages(MessageRange.one(composeId.getUid()), FetchGroup.MINIMAL, session);
 

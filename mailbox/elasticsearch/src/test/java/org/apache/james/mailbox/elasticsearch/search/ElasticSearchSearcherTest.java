@@ -167,6 +167,7 @@ class ElasticSearchSearcherTest {
             Message.Builder.of()
                 .setTo(recipient)
                 .setBody("Hello", StandardCharsets.UTF_8)),
-            session);
+            session)
+            .getIds();
     }
 }

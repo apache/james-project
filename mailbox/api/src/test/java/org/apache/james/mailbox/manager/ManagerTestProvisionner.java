@@ -99,7 +99,9 @@ public class ManagerTestProvisionner {
 
     public MessageUid appendMessage(MessageManager messageManager, MailboxSession session, Flags flags) throws MailboxException, UnsupportedEncodingException {
         return messageManager.appendMessage(new ByteArrayInputStream(MockMail.MAIL_TEXT_PLAIN.getBytes(StandardCharsets.UTF_8)),
-            Calendar.getInstance().getTime(), session, true, flags).getUid();
+            Calendar.getInstance().getTime(), session, true, flags)
+            .getIds()
+            .getUid();
     }
 
 }

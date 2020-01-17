@@ -44,6 +44,7 @@ import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -301,7 +302,7 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public ComposedMessageId appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException {
+    public AppendResult appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException {
         return appendMessage(
             appendCommand.getMsgIn(),
             appendCommand.getInternalDate(),
@@ -311,7 +312,7 @@ public class StoreMessageManager implements MessageManager {
     }
 
     @Override
-    public ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
+    public AppendResult appendMessage(InputStream msgIn, Date internalDate, final MailboxSession mailboxSession, boolean isRecent, Flags flagsToBeSet) throws MailboxException {
         File file = null;
 
         if (!isWriteable(mailboxSession)) {
@@ -443,13 +444,13 @@ public class StoreMessageManager implements MessageManager {
         return bodyStartOctet;
     }
 
-    private ComposedMessageId createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, File file, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
+    private AppendResult createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, File file, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
         try (SharedFileInputStream contentIn = new SharedFileInputStream(file)) {
             final int size = (int) file.length();
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                MessageMetaData data = appendMessageToStore(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
+                Pair<MessageMetaData, List<MessageAttachment>> data = appendMessageToStore(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 
@@ -457,12 +458,14 @@ public class StoreMessageManager implements MessageManager {
                     .randomEventId()
                     .mailboxSession(mailboxSession)
                     .mailbox(mailbox)
-                    .addMetaData(data)
+                    .addMetaData(data.getLeft())
                     .build(),
                     new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                     .subscribeOn(Schedulers.elastic())
                     .block();
-                return new ComposedMessageId(mailbox.getMailboxId(), data.getMessageId(), data.getUid());
+                MessageMetaData messageMetaData = data.getLeft();
+                ComposedMessageId ids = new ComposedMessageId(mailbox.getMailboxId(), messageMetaData.getMessageId(), messageMetaData.getUid());
+                return new AppendResult(ids, data.getRight());
             }, MailboxPathLocker.LockType.Write);
         }
     }
@@ -668,14 +671,15 @@ public class StoreMessageManager implements MessageManager {
         }, MailboxPathLocker.LockType.Write);
     }
 
-    private MessageMetaData appendMessageToStore(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
+    private Pair<MessageMetaData, List<MessageAttachment>> appendMessageToStore(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
         MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
         MessageId messageId = messageIdFactory.generate();
 
         return mapperFactory.getMessageMapper(session).execute(() -> {
             List<MessageAttachment> attachments = storeAttachments(messageId, content, session);
             MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
-            return messageMapper.add(getMailboxEntity(), message);
+            MessageMetaData metadata = messageMapper.add(getMailboxEntity(), message);
+            return Pair.of(metadata, attachments);
         });
     }
 

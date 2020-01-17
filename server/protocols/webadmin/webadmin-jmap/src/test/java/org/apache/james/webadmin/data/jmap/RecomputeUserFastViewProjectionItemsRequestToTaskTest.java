@@ -372,7 +372,7 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
     void recomputeUserShouldUpdateProjection() throws Exception {
         ComposedMessageId messageId = mailboxManager.getMailbox(bobInboxboxId, bobSession).appendMessage(
             MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-            bobSession);
+            bobSession).getIds();
 
         String taskId = with()
             .queryParam("action", "recomputeFastViewProjectionItems")
@@ -392,7 +392,7 @@ class RecomputeUserFastViewProjectionItemsRequestToTaskTest {
     void recomputeUserShouldBeIdempotent() throws Exception {
         ComposedMessageId messageId = mailboxManager.getMailbox(bobInboxboxId, bobSession).appendMessage(
             MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-            bobSession);
+            bobSession).getIds();
 
         String taskId1 = with()
             .queryParam("action", "recomputeFastViewProjectionItems")

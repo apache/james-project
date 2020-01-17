@@ -207,7 +207,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 doThrow(new RuntimeException())
                     .when(searchIndex)
@@ -244,7 +244,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 String taskId = with()
                     .post("/mailboxes?task=reIndex")
@@ -395,7 +395,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 doThrow(new RuntimeException())
                     .when(searchIndex)
@@ -433,7 +433,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 String taskId = when()
                     .post("/mailboxes/" + mailboxId.serialize() + "?task=reIndex")
@@ -566,7 +566,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 String taskId = when()
                     .post("/mailboxes/" + mailboxId.serialize() + "/mails/"
@@ -599,7 +599,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 String taskId = when()
                     .post("/mailboxes/" + mailboxId.serialize() + "/mails/"
@@ -781,7 +781,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId composedMessageId = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 doThrow(new RuntimeException())
                     .when(searchIndex)
@@ -829,7 +829,7 @@ class MailboxesRoutesTest {
                 ComposedMessageId createdMessage = mailboxManager.getMailbox(INBOX, systemSession)
                     .appendMessage(
                         MessageManager.AppendCommand.builder().build("header: value\r\n\r\nbody"),
-                        systemSession);
+                        systemSession).getIds();
 
                 doThrow(new RuntimeException()).when(searchIndex).add(any(MailboxSession.class), any(Mailbox.class), any(MailboxMessage.class));
 

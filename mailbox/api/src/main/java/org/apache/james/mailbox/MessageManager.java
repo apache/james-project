@@ -28,6 +28,7 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -44,6 +45,7 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxCounters;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.MessageResultIterator;
@@ -138,6 +140,40 @@ public interface MessageManager {
      */
     Map<MessageUid, Flags> setFlags(Flags flags, FlagsUpdateMode flagsUpdateMode, MessageRange set, MailboxSession mailboxSession) throws MailboxException;
 
+    class AppendResult {
+        private final ComposedMessageId ids;
+        private final List<MessageAttachment> messageAttachments;
+
+        public AppendResult(ComposedMessageId ids, List<MessageAttachment> messageAttachments) {
+            this.ids = ids;
+            this.messageAttachments = messageAttachments;
+        }
+
+        public ComposedMessageId getIds() {
+            return ids;
+        }
+
+        public List<MessageAttachment> getMessageAttachments() {
+            return messageAttachments;
+        }
+
+        @Override
+        public final boolean equals(Object o) {
+            if (o instanceof AppendResult) {
+                AppendResult that = (AppendResult) o;
+
+                return Objects.equals(this.ids, that.ids)
+                    && Objects.equals(this.messageAttachments, that.messageAttachments);
+            }
+            return false;
+        }
+
+        @Override
+        public final int hashCode() {
+            return Objects.hash(ids, messageAttachments);
+        }
+    }
+
     /**
      * Appends a message to this mailbox. This method must return a higher UID
      * as the last call in every case which also needs to be unique for the
@@ -157,7 +193,7 @@ public interface MessageManager {
      * @throws MailboxException
      *             when message cannot be appended
      */
-    ComposedMessageId appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
+    AppendResult appendMessage(InputStream msgIn, Date internalDate, MailboxSession mailboxSession, boolean isRecent, Flags flags) throws MailboxException;
 
     class AppendCommand {
 
@@ -265,7 +301,7 @@ public interface MessageManager {
         }
     }
 
-    ComposedMessageId appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException;
+    AppendResult appendMessage(AppendCommand appendCommand, MailboxSession session) throws MailboxException;
 
     /**
      * Gets messages in the given range. The messages may get fetched under

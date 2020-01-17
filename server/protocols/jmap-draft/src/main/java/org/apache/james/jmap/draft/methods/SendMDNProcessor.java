@@ -22,7 +22,6 @@ package org.apache.james.jmap.draft.methods;
 import static org.apache.james.jmap.draft.methods.Method.JMAP_PREFIX;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -43,13 +42,9 @@ import org.apache.james.mailbox.Role;
 import org.apache.james.mailbox.SystemMailboxesProvider;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.OverQuotaException;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.FetchGroup;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mdn.MDN;
-import org.apache.james.mdn.MDNReport;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Message;
@@ -59,8 +54,6 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.google.common.collect.ImmutableList;
 
 public class SendMDNProcessor implements SetMessagesProcessor {
 
@@ -145,14 +138,12 @@ public class SendMDNProcessor implements SetMessagesProcessor {
 
         JmapMDN mdn = MDNCreationEntry.getValue();
         Message originalMessage = retrieveOriginalMessage(mdn, mailboxSession);
-        MDNReport mdnReport = mdn.generateReport(originalMessage, mailboxSession);
-        List<MessageAttachment> reportAsAttachment = ImmutableList.of(convertReportToAttachment(mdnReport));
 
         Message mdnAnswer = mdn.generateMDNMessage(originalMessage, mailboxSession);
 
         Flags seen = new Flags(Flags.Flag.SEEN);
         MetaDataWithContent metaDataWithContent = messageAppender.appendMessageInMailbox(mdnAnswer,
-            getOutbox(mailboxSession), reportAsAttachment, seen, mailboxSession);
+            getOutbox(mailboxSession), seen, mailboxSession);
 
         messageSender.sendMessage(metaDataWithContent,
             Envelope.fromMime4JMessage(mdnAnswer), mailboxSession);
@@ -172,19 +163,6 @@ public class SendMDNProcessor implements SetMessagesProcessor {
         messageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
         return messageBuilder.parseMessage(messages.get(0).getHeaders().getInputStream());
     }
-
-    private MessageAttachment convertReportToAttachment(MDNReport mdnReport) {
-        Attachment attachment = Attachment.builder()
-            .bytes(mdnReport.formattedValue().getBytes(StandardCharsets.UTF_8))
-            .type(MDN.DISPOSITION_CONTENT_TYPE)
-            .build();
-
-        return MessageAttachment.builder()
-            .attachment(attachment)
-            .isInline(true)
-            .build();
-    }
-
 
     private MessageManager getOutbox(MailboxSession mailboxSession) throws MailboxException {
         return systemMailboxesProvider.getMailboxByRole(Role.OUTBOX, mailboxSession.getUser())

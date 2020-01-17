@@ -162,7 +162,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(previewMessage()),
-            mailboxSession);
+            mailboxSession).getIds();
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
             .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW);
@@ -173,7 +173,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(emptyMessage()),
-            mailboxSession);
+            mailboxSession).getIds();
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
             .isEqualTo(PRECOMPUTED_PROPERTIES_EMPTY);
@@ -184,7 +184,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("fullMessage.eml")),
-            mailboxSession);
+            mailboxSession).getIds();
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
             .isEqualTo(PRECOMPUTED_PROPERTIES_PREVIEW_HAS_ATTACHMENT);
@@ -195,7 +195,7 @@ class ComputeMessageFastViewProjectionListenerTest {
         ComposedMessageId composedId = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(ClassLoaderUtils.getSystemResourceAsSharedStream("emptyBodyMessageWithOneAttachment.eml")),
-            mailboxSession);
+            mailboxSession).getIds();
 
         assertThat(Mono.from(messageFastViewProjection.retrieve(composedId.getMessageId())).block())
             .isEqualTo(PRECOMPUTED_PROPERTIES_HAS_ATTACHMENT);
@@ -206,12 +206,12 @@ class ComputeMessageFastViewProjectionListenerTest {
         ComposedMessageId composedId1 = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(previewMessage()),
-            mailboxSession);
+            mailboxSession).getIds();
 
         ComposedMessageId composedId2 = inboxMessageManager.appendMessage(
             MessageManager.AppendCommand.builder()
                 .build(emptyMessage()),
-            mailboxSession);
+            mailboxSession).getIds();
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(Mono.from(messageFastViewProjection.retrieve(composedId1.getMessageId())).block())

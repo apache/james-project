@@ -115,7 +115,8 @@ class ExportServiceTest {
         return testSystem.mailboxManager.getMailbox(bobInboxPath, testSystem.bobSession)
             .appendMessage(MessageManager.AppendCommand.builder()
                     .build(message),
-                testSystem.bobSession);
+                testSystem.bobSession)
+            .getIds();
     }
 
     @Test

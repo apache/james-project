@@ -102,7 +102,8 @@ class DeletedMessageVaultHookTest {
     private ComposedMessageId appendMessage(MessageManager messageManager) throws Exception {
         return messageManager.appendMessage(MessageManager.AppendCommand.builder()
                 .withInternalDate(INTERNAL_DATE)
-                .build(mailContent), aliceSession);
+                .build(mailContent), aliceSession)
+            .getIds();
     }
 
     @BeforeEach

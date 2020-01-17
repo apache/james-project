@@ -180,9 +180,9 @@ public class GetMessagesMethodTest {
     @SuppressWarnings("unchecked")
     public void processShouldFetchMessages() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
-        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent2), session);
-        ComposedMessageId message3 = inbox.appendMessage(AppendCommand.from(messageContent3), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session).getIds();
+        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent2), session).getIds();
+        ComposedMessageId message3 = inbox.appendMessage(AppendCommand.from(messageContent3), session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -215,7 +215,7 @@ public class GetMessagesMethodTest {
                 org.apache.james.mime4j.dom.Message.Builder.of()
                     .setSubject("message 1 subject")
                     .setBody("my <b>HTML</b> message", "html", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -237,7 +237,7 @@ public class GetMessagesMethodTest {
     @Test
     public void processShouldReturnOnlyMandatoryPropertiesOnEmptyPropertyList() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(this.messageContent1), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(this.messageContent1), session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -255,7 +255,7 @@ public class GetMessagesMethodTest {
     public void processShouldReturnAllPropertiesWhenNoPropertyGiven() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -271,7 +271,7 @@ public class GetMessagesMethodTest {
     public void processShouldAddMandatoryPropertiesWhenNotInPropertyList() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -290,7 +290,7 @@ public class GetMessagesMethodTest {
     public void processShouldReturnTextBodyWhenBodyInPropertyListAndEmptyHtmlBody() throws Exception {
         MessageManager inbox = mailboxManager.getMailbox(inboxPath, session);
 
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent1), session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -316,7 +316,7 @@ public class GetMessagesMethodTest {
                 org.apache.james.mime4j.dom.Message.Builder.of()
                     .setSubject("message 1 subject")
                     .setBody("my <b>HTML</b> message", "html", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -344,7 +344,7 @@ public class GetMessagesMethodTest {
             AppendCommand.from(org.apache.james.mime4j.dom.Message.Builder.of()
                 .setSubject("message 1 subject")
                 .setBody("", "html", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -378,7 +378,7 @@ public class GetMessagesMethodTest {
                     .addBodyPart(BodyPartBuilder.create()
                         .setBody("<a>The </a> <strong>HTML</strong> message", "html", StandardCharsets.UTF_8))
                     .build())),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message.getMessageId()))
@@ -409,7 +409,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -437,7 +437,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))
@@ -469,7 +469,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -506,7 +506,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -541,7 +541,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -576,7 +576,7 @@ public class GetMessagesMethodTest {
                     .setField(new RawField("HEADer2", "Header2Content"))
                     .setSubject("message 1 subject")
                     .setBody("my message", StandardCharsets.UTF_8)),
-            session);
+            session).getIds();
 
         MailboxId customMailboxId = mailboxManager.getMailbox(customMailboxPath, session).getId();
         messageIdManager.setInMailboxes(message1.getMessageId(),
@@ -611,8 +611,8 @@ public class GetMessagesMethodTest {
             .setBody("my message", StandardCharsets.UTF_8)
             .build();
 
-        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent), session);
-        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session);
+        ComposedMessageId message1 = inbox.appendMessage(AppendCommand.from(messageContent), session).getIds();
+        ComposedMessageId message2 = inbox.appendMessage(AppendCommand.from(messageContent), session).getIds();
 
         doCallRealMethod()
             .doThrow(new RuntimeException())
@@ -643,17 +643,17 @@ public class GetMessagesMethodTest {
             AppendCommand.builder()
                 .withFlags(flags)
                 .build(messageContent1),
-            session);
+            session).getIds();
         ComposedMessageId message2 = inbox.appendMessage(
             AppendCommand.builder()
                 .withFlags(flags)
                 .build(messageContent2),
-            session);
+            session).getIds();
         ComposedMessageId message3 = inbox.appendMessage(
             AppendCommand.builder()
                 .withFlags(flags)
                 .build(messageContent3),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -702,17 +702,17 @@ public class GetMessagesMethodTest {
             AppendCommand.builder()
                 .withFlags(flags1)
                 .build(messageContent1),
-            session);
+            session).getIds();
         ComposedMessageId message2 = inbox.appendMessage(
             AppendCommand.builder()
                 .withFlags(flags2)
                 .build(messageContent2),
-            session);
+            session).getIds();
         ComposedMessageId message3 = inbox.appendMessage(
             AppendCommand.builder()
                 .withFlags(flags3)
                 .build(messageContent3),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId(),
@@ -756,7 +756,7 @@ public class GetMessagesMethodTest {
             AppendCommand.builder()
                 .withFlags(flags)
                 .build(messageContent1),
-            session);
+            session).getIds();
 
         GetMessagesRequest request = GetMessagesRequest.builder()
             .ids(ImmutableList.of(message1.getMessageId()))

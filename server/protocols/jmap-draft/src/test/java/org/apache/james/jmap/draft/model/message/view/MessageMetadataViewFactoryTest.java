@@ -66,7 +66,7 @@ class MessageMetadataViewFactoryTest {
         message1 = bobInbox.appendMessage(MessageManager.AppendCommand.builder()
                 .withFlags(new Flags(Flags.Flag.SEEN))
                 .build("header: value\r\n\r\nbody"),
-            session);
+            session).getIds();
 
         testee = new MessageMetadataViewFactory(resources.getBlobManager(), messageIdManager);
     }

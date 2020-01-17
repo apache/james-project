@@ -136,7 +136,7 @@ class MessageFastViewProjectionItemFactoryTest {
 
     MessageResult toMessageResult(String messageAsString) throws Exception {
         ComposedMessageId composedMessageId = mailbox.appendMessage(MessageManager.AppendCommand.builder()
-            .build(messageAsString), session);
+            .build(messageAsString), session).getIds();
 
         return mailbox.getMessages(MessageRange.one(composedMessageId.getUid()), FetchGroup.FULL_CONTENT, session)
             .next();

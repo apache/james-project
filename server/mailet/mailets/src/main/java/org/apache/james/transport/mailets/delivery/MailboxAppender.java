@@ -26,6 +26,7 @@ import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.model.ComposedMessageId;
@@ -49,7 +50,8 @@ public class MailboxAppender {
 
     public ComposedMessageId append(MimeMessage mail, Username user, String folder) throws MessagingException {
         MailboxSession session = createMailboxSession(user);
-        return append(mail, user, useSlashAsSeparator(folder, session), session);
+        return append(mail, user, useSlashAsSeparator(folder, session), session)
+            .getIds();
     }
 
     private String useSlashAsSeparator(String urlPath, MailboxSession session) throws MessagingException {
@@ -63,7 +65,7 @@ public class MailboxAppender {
         return destination;
     }
 
-    private ComposedMessageId append(MimeMessage mail, Username user, String folder, MailboxSession session) throws MessagingException {
+    private AppendResult append(MimeMessage mail, Username user, String folder, MailboxSession session) throws MessagingException {
         mailboxManager.startProcessingRequest(session);
         try {
             MailboxPath mailboxPath = MailboxPath.forUser(user, folder);
@@ -75,7 +77,7 @@ public class MailboxAppender {
         }
     }
 
-    private ComposedMessageId appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
+    private AppendResult appendMessageToMailbox(MimeMessage mail, MailboxSession session, MailboxPath path) throws MailboxException, MessagingException {
         createMailboxIfNotExist(session, path);
         final MessageManager mailbox = mailboxManager.getMailbox(path, session);
         if (mailbox == null) {

@@ -176,8 +176,7 @@ public class JmapMDN {
             .findFirst();
     }
 
-
-    public MDNReport generateReport(Message originalMessage, MailboxSession mailboxSession) throws InvalidOriginMessageForMDNException {
+    private MDNReport generateReport(Message originalMessage, MailboxSession mailboxSession) throws InvalidOriginMessageForMDNException {
         if (originalMessage.getMessageId() == null) {
             throw InvalidOriginMessageForMDNException.missingHeader("Message-ID");
         }

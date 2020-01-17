@@ -36,6 +36,8 @@ import org.apache.james.core.builder.MimeMessageBuilder;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageManager;
+import org.apache.james.mailbox.MessageManager.AppendCommand;
+import org.apache.james.mailbox.MessageManager.AppendResult;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
@@ -86,6 +88,7 @@ public class LocalDeliveryTest {
         Username username = Username.of("receiver@domain.com");
         MailboxPath inbox = MailboxPath.inbox(username);
         MessageManager messageManager = mock(MessageManager.class);
+        when(messageManager.appendMessage(any(AppendCommand.class), any(MailboxSession.class))).thenReturn(mock(AppendResult.class));
 
         when(usersRepository.supportVirtualHosting()).thenReturn(true);
         when(usersRepository.getUsername(new MailAddress(username.asString()))).thenReturn(username);
@@ -98,7 +101,7 @@ public class LocalDeliveryTest {
         testee.service(mail);
 
         // Then
-        verify(messageManager).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
+        verify(messageManager).appendMessage(any(AppendCommand.class), any(MailboxSession.class));
     }
 
     @Test
@@ -107,6 +110,7 @@ public class LocalDeliveryTest {
         Username username = Username.of("receiver");
         MailboxPath inbox = MailboxPath.inbox(username);
         MessageManager messageManager = mock(MessageManager.class);
+        when(messageManager.appendMessage(any(AppendCommand.class), any(MailboxSession.class))).thenReturn(mock(AppendResult.class));
         when(usersRepository.supportVirtualHosting()).thenReturn(false);
         when(usersRepository.getUsername(new MailAddress("receiver@localhost"))).thenReturn(username);
         when(usersRepository.getUsername(new MailAddress(RECEIVER_DOMAIN_COM))).thenReturn(username);
@@ -119,7 +123,7 @@ public class LocalDeliveryTest {
         testee.service(mail);
 
         // Then
-        verify(messageManager).appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class));
+        verify(messageManager).appendMessage(any(AppendCommand.class), any(MailboxSession.class));
     }
 
     private Mail createMail() throws MessagingException, IOException {
