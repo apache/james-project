@@ -45,7 +45,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.apache.james.blob.api.BlobStore;
 import org.apache.james.blob.api.BlobType;
 import org.apache.james.blob.api.Store;
-import org.apache.james.util.BodyOffsetInputStream;
+import org.apache.james.util.io.BodyOffsetInputStream;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;

@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 
+import org.apache.james.util.io.InputStreamUtils;
 import org.junit.jupiter.api.Test;
 
 import com.google.common.primitives.Bytes;

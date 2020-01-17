@@ -24,7 +24,7 @@ import java.io.IOException;
 
 import javax.mail.MessagingException;
 
-import org.apache.james.util.ZeroedInputStream;
+import org.apache.james.util.io.ZeroedInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

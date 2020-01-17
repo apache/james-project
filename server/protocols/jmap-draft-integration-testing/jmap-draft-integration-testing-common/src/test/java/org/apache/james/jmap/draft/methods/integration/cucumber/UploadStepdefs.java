@@ -41,8 +41,8 @@ import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.james.jmap.AccessToken;
-import org.apache.james.util.CountDownConsumeInputStream;
-import org.apache.james.util.ZeroedInputStream;
+import org.apache.james.util.io.CountDownConsumeInputStream;
+import org.apache.james.util.io.ZeroedInputStream;
 
 import com.google.common.base.CharMatcher;
 import com.jayway.jsonpath.DocumentContext;

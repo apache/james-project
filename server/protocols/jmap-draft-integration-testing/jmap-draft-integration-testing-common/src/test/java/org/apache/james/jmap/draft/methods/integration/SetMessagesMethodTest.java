@@ -114,7 +114,7 @@ import org.apache.james.probe.DataProbe;
 import org.apache.james.util.ClassLoaderUtils;
 import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
-import org.apache.james.util.ZeroedInputStream;
+import org.apache.james.util.io.ZeroedInputStream;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
@@ -132,6 +132,7 @@ import org.junit.experimental.categories.Category;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;

@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 
+import org.apache.james.util.io.BodyOffsetInputStream;
 import org.junit.jupiter.api.Test;
 
 class BodyOffsetInputStreamTest {

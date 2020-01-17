@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the            *
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
- *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
- *                                                              *
+ * *
+ * http://www.apache.org/licenses/LICENSE-2.0                 *
+ * *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY       *
@@ -17,18 +17,30 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.util;
+package org.apache.james.util.io;
 
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.SequenceInputStream;
-import java.util.Collections;
+import java.util.concurrent.CountDownLatch;
 
-import com.google.common.collect.Lists;
+public class CountDownConsumeInputStream extends InputStream {
+    private static final int RETURNED_VALUE = 0;
 
-public class InputStreamUtils {
-    public static InputStream concat(InputStream inputStream, InputStream... additionalInputStreams) {
-        return new SequenceInputStream(
-            Collections.enumeration(
-                Lists.asList(inputStream, additionalInputStreams)));
+    private final CountDownLatch startSignal;
+
+    public CountDownConsumeInputStream(CountDownLatch startSignal) {
+        this.startSignal = startSignal;
+    }
+
+    public CountDownLatch getStartSignal() {
+        return startSignal;
+    }
+
+    @Override
+    public int read() throws IOException {
+        if (startSignal.getCount() > 0) {
+            return RETURNED_VALUE;
+        }
+        return -1;
     }
 }

@@ -51,7 +51,7 @@ import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mime4j.codec.DecoderUtil;
-import org.apache.james.util.InputStreamUtils;
+import org.apache.james.util.io.InputStreamUtils;
 
 import com.google.common.base.CharMatcher;
 import com.google.common.base.MoreObjects;
