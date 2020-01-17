@@ -82,11 +82,6 @@ public class StoreAttachmentManager implements AttachmentManager {
             .storeAttachmentForOwner(contentType, attachmentContent, mailboxSession.getUser());
     }
 
-    @Override
-    public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId, MailboxSession mailboxSession) throws MailboxException {
-        attachmentMapperFactory.getAttachmentMapper(mailboxSession).storeAttachmentsForMessage(attachments, ownerMessageId);
-    }
-
     private boolean userHasAccessToAttachment(AttachmentId attachmentId, MailboxSession mailboxSession) {
         try {
             return isExplicitlyAOwner(attachmentId, mailboxSession)
