@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
@@ -31,10 +32,14 @@ import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.lifecycle.api.LifecycleUtil;
 import org.apache.james.user.api.AlreadyExistInUsersRepositoryException;
+import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 
 public abstract class AbstractUsersRepositoryTest {
@@ -508,5 +513,30 @@ public abstract class AbstractUsersRepositoryTest {
         String username = "user";
         assertThat(usersRepository.getMailAddressFor(Username.of(username)))
             .isEqualTo(new MailAddress(username, domainList.getDefaultDomain()));
+    }
+
+    @ParameterizedTest
+    @MethodSource("illegalCharacters")
+    void assertValidShouldThrowWhenUsernameLocalPartWithIllegalCharacter(String illegalCharacter) {
+        assertThatThrownBy(() -> usersRepository.assertValid(Username.of("a" + illegalCharacter + "a")))
+            .isInstanceOf(InvalidUsernameException.class);
+    }
+
+    private static Stream<Arguments> illegalCharacters() {
+        return Stream.of(
+            "\"",
+            "(",
+            ")",
+            ",",
+            ":",
+            ";",
+            "<",
+            ">",
+            "@",
+            "[",
+            "\\",
+            "]",
+            " ")
+            .map(Arguments::of);
     }
 }

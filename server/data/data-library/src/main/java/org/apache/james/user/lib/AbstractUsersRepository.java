@@ -38,8 +38,10 @@ import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.CharMatcher;
 
 public abstract class AbstractUsersRepository implements UsersRepository, Configurable {
+    private static String ILLEGAL_USERNAME_CHARACTERS = "\"(),:; <>@[\\]";
 
     private final DomainList domainList;
     private boolean virtualHosting;
@@ -92,6 +94,11 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
             if (username.hasDomainPart()) {
                 throw new InvalidUsernameException("Given Username contains a @domainpart but virtualhosting support is disabled");
             }
+        }
+
+        if (!assertLocalPartValid(username)) {
+            throw new InvalidUsernameException(String.format("Given Username '%s' should not contain any of those characters: %s",
+                username.asString(), ILLEGAL_USERNAME_CHARACTERS));
         }
     }
 
@@ -147,5 +154,10 @@ public abstract class AbstractUsersRepository implements UsersRepository, Config
         } catch (Exception e) {
             throw new UsersRepositoryException("Failed to compute mail address associated with the user", e);
         }
+    }
+
+    private boolean assertLocalPartValid(Username username) {
+        return CharMatcher.anyOf(ILLEGAL_USERNAME_CHARACTERS)
+            .matchesNoneOf(username.getLocalPart());
     }
 }
