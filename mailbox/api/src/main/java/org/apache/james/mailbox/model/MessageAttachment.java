@@ -55,6 +55,11 @@ public class MessageAttachment {
             return this;
         }
 
+        public Builder name(Optional<String> name) {
+            this.name = name;
+            return this;
+        }
+
         public Builder cid(Optional<Cid> cid) {
             Preconditions.checkNotNull(cid);
             this.cid = cid;

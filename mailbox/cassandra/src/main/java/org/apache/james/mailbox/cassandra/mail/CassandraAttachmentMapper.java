@@ -36,7 +36,9 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.ReactorUtils;
 import org.apache.james.util.io.SizeInputStream;
@@ -130,10 +132,10 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
-        Flux.fromIterable(attachments)
+    public List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+        return Flux.fromIterable(parsedAttachments)
             .flatMap(attachment -> storeAttachmentAsync(attachment, ownerMessageId))
-            .then()
+            .collectList()
             .block();
     }
 
@@ -149,10 +151,13 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
         return ownerDAO.retrieveOwners(attachmentId).collect(Guavate.toImmutableList()).block();
     }
 
-    public Mono<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {
-        return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST))
-            .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-            .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId));
+    private Mono<MessageAttachment> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
+        AttachmentId attachmentId = AttachmentId.random();
+        SizeInputStream content = new SizeInputStream(parsedAttachment.getContent());
+        return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
+            .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), content.getSize()))
+            .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
+            .then(Mono.just(parsedAttachment.asMessageAttachment(attachmentId)));
     }
 
     private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {

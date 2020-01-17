@@ -30,6 +30,7 @@ import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.james.mailbox.maildir.MaildirMessageName;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.model.DefaultMessageId;
@@ -46,6 +47,7 @@ import org.apache.james.mime4j.stream.MimeConfig;
 import org.apache.james.mime4j.stream.MimeTokenStream;
 import org.apache.james.mime4j.stream.RecursionMode;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.io.ByteStreams;
 
 public class MaildirMessage implements Message {
@@ -271,8 +273,11 @@ public class MaildirMessage implements Message {
     @Override
     public List<MessageAttachment> getAttachments() {
         try {
-            return new MessageParser().retrieveAttachments(getFullContent());
-        } catch (MimeException | IOException e) {
+            return new MessageParser().retrieveAttachments(getFullContent())
+                .stream()
+                .map(attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                .collect(Guavate.toImmutableList());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

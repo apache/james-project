@@ -72,6 +72,7 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResultIterator;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -445,15 +446,10 @@ public class StoreMessageManager implements MessageManager {
     private ComposedMessageId createAndDispatchMessage(Date internalDate, MailboxSession mailboxSession, File file, PropertyBuilder propertyBuilder, Flags flags, int bodyStartOctet) throws IOException, MailboxException {
         try (SharedFileInputStream contentIn = new SharedFileInputStream(file)) {
             final int size = (int) file.length();
-
-            final List<MessageAttachment> attachments = extractAttachments(contentIn);
-
-            final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
-
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                MessageMetaData data = appendMessageToStore(message, attachments, mailboxSession);
+                MessageMetaData data = appendMessageToStore(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 
@@ -461,7 +457,7 @@ public class StoreMessageManager implements MessageManager {
                     .randomEventId()
                     .mailboxSession(mailboxSession)
                     .mailbox(mailbox)
-                    .addMetaData(message.metaData())
+                    .addMetaData(data)
                     .build(),
                     new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                     .subscribeOn(Schedulers.elastic())
@@ -500,9 +496,9 @@ public class StoreMessageManager implements MessageManager {
         return propertyBuilder;
     }
 
-    private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {
+    protected List<ParsedAttachment> extractAttachments(SharedInputStream contentIn) {
         try {
-            return messageParser.retrieveAttachments(contentIn);
+            return messageParser.retrieveAttachments(contentIn.newStream(0, -1));
         } catch (Exception e) {
             LOG.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
             return ImmutableList.of();
@@ -672,17 +668,19 @@ public class StoreMessageManager implements MessageManager {
         }, MailboxPathLocker.LockType.Write);
     }
 
-    protected MessageMetaData appendMessageToStore(final MailboxMessage message, final List<MessageAttachment> messageAttachments, MailboxSession session) throws MailboxException {
-        final MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+    private MessageMetaData appendMessageToStore(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
+        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
+        MessageId messageId = messageIdFactory.generate();
 
         return mapperFactory.getMessageMapper(session).execute(() -> {
-            storeAttachment(message, messageAttachments, session);
+            List<MessageAttachment> attachments = storeAttachments(messageId, content, session);
+            MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
             return messageMapper.add(getMailboxEntity(), message);
         });
     }
 
-    protected void storeAttachment(final MailboxMessage message, final List<MessageAttachment> messageAttachments, final MailboxSession session) throws MailboxException {
-
+    protected List<MessageAttachment> storeAttachments(MessageId messageId, SharedInputStream content, MailboxSession session) throws MailboxException {
+        return ImmutableList.of();
     }
 
     @Override

@@ -29,7 +29,9 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.transaction.Mapper;
 import org.reactivestreams.Publisher;
 
@@ -43,7 +45,7 @@ public interface AttachmentMapper extends Mapper {
 
     Publisher<Attachment> storeAttachmentForOwner(String contentType, InputStream attachmentContent, Username owner);
 
-    void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException;
+    List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> attachments, MessageId ownerMessageId) throws MailboxException;
 
     Collection<MessageId> getRelatedMessageIds(AttachmentId attachmentId) throws MailboxException;
 

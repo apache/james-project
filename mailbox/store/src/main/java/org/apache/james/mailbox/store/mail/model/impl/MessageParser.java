@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,15 +28,14 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.Cid;
-import org.apache.james.mailbox.model.MessageAttachment;
-import org.apache.james.mime4j.MimeException;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
+import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
@@ -76,7 +76,7 @@ public class MessageParser {
             .unwrap();
     }
 
-    public List<MessageAttachment> retrieveAttachments(InputStream fullContent) throws MimeException, IOException {
+    public List<ParsedAttachment> retrieveAttachments(InputStream fullContent) throws IOException {
         DefaultMessageBuilder defaultMessageBuilder = new DefaultMessageBuilder();
         defaultMessageBuilder.setMimeEntityConfig(MimeConfig.PERMISSIVE);
         defaultMessageBuilder.setDecodeMonitor(DecodeMonitor.SILENT);
@@ -99,13 +99,13 @@ public class MessageParser {
         }
     }
 
-    private Stream<MessageAttachment> listAttachments(Multipart multipart, Context context) {
+    private Stream<ParsedAttachment> listAttachments(Multipart multipart, Context context) {
         return multipart.getBodyParts()
             .stream()
             .flatMap(entity -> listAttachments(entity, context));
     }
 
-    private Stream<MessageAttachment> listAttachments(Entity entity, Context context) {
+    private Stream<ParsedAttachment> listAttachments(Entity entity, Context context) {
         if (isMultipart(entity)) {
             return listAttachments((Multipart) entity.getBody(), Context.fromEntity(entity));
         }
@@ -121,7 +121,7 @@ public class MessageParser {
         return Stream.empty();
     }
 
-    private MessageAttachment retrieveAttachment(Entity entity) throws IOException {
+    private ParsedAttachment retrieveAttachment(Entity entity) throws IOException {
         Optional<ContentTypeField> contentTypeField = getContentTypeField(entity);
         Optional<ContentDispositionField> contentDispositionField = getContentDispositionField(entity);
         Optional<String> contentType = contentType(contentTypeField);
@@ -129,15 +129,12 @@ public class MessageParser {
         Optional<Cid> cid = cid(readHeader(entity, CONTENT_ID, ContentIdField.class));
         boolean isInline = isInline(readHeader(entity, CONTENT_DISPOSITION, ContentDispositionField.class)) && cid.isPresent();
 
-        return MessageAttachment.builder()
-                .attachment(Attachment.builder()
-                    .bytes(getBytes(entity.getBody()))
-                    .type(contentType.orElse(DEFAULT_CONTENT_TYPE))
-                    .build())
-                .name(name.orElse(null))
-                .cid(cid.orElse(null))
-                .isInline(isInline)
-                .build();
+        return ParsedAttachment.builder()
+                .contentType(contentType.orElse(DEFAULT_CONTENT_TYPE))
+                .content(getContent(entity.getBody()))
+                .name(name)
+                .cid(cid)
+                .inline(isInline);
     }
 
     private <T extends ParsedField> Optional<T> readHeader(Entity entity, String headerName, Class<T> clazz) {
@@ -221,11 +218,15 @@ public class MessageParser {
         return readHeader(part, CONTENT_ID, ContentIdField.class).isPresent();
     }
 
-    private byte[] getBytes(Body body) throws IOException {
+    private InputStream getContent(Body body) throws IOException {
+        if (body instanceof SingleBody) {
+            SingleBody singleBody = (SingleBody) body;
+            return singleBody.getInputStream();
+        }
         DefaultMessageWriter messageWriter = new DefaultMessageWriter();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
-        return out.toByteArray();
+        return new ByteArrayInputStream(out.toByteArray());
     }
 
     private enum Context {

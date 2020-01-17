@@ -48,6 +48,7 @@ import org.apache.james.mailbox.jpa.JPAId;
 import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
 import org.apache.james.mailbox.jpa.mail.model.JPAProperty;
 import org.apache.james.mailbox.jpa.mail.model.JPAUserFlag;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.ComposedMessageIdWithMetaData;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -59,7 +60,6 @@ import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mime4j.MimeException;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumn;
 import org.apache.openjpa.persistence.jdbc.ElementJoinColumns;
 import org.apache.openjpa.persistence.jdbc.Index;
@@ -505,8 +505,11 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public List<MessageAttachment> getAttachments() {
         try {
-            return new MessageParser().retrieveAttachments(getFullContent());
-        } catch (MimeException | IOException e) {
+            return new MessageParser().retrieveAttachments(getFullContent())
+                .stream()
+                .map(attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                .collect(Guavate.toImmutableList());
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

@@ -33,9 +33,13 @@ import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
@@ -116,11 +120,29 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public void storeAttachmentsForMessage(Collection<Attachment> attachments, MessageId ownerMessageId) throws MailboxException {
-        for (Attachment attachment: attachments) {
-            attachmentsById.put(attachment.getAttachmentId(), attachment);
-            attachmentsRawContentById.put(attachment.getAttachmentId(), attachment.getBytes());
-            messageIdsByAttachmentId.put(attachment.getAttachmentId(), ownerMessageId);
+    public List<MessageAttachment> storeAttachmentsForMessage(Collection<ParsedAttachment> parsedAttachments, MessageId ownerMessageId) throws MailboxException {
+        return parsedAttachments.stream()
+            .map(Throwing.<ParsedAttachment, MessageAttachment>function(
+                typedContent -> storeAttachmentForMessage(ownerMessageId, typedContent))
+                .sneakyThrow())
+            .collect(Guavate.toImmutableList());
+    }
+
+    private MessageAttachment storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
+        AttachmentId attachmentId = AttachmentId.random();
+        try {
+            byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent());
+
+            attachmentsById.put(attachmentId, Attachment.builder()
+                .attachmentId(attachmentId)
+                .type(parsedAttachment.getContentType())
+                .bytes(bytes)
+                .build());
+            attachmentsRawContentById.put(attachmentId, bytes);
+            messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
+            return parsedAttachment.asMessageAttachment(attachmentId);
+        } catch (IOException e) {
+            throw new MailboxException(String.format("Failed to persist attachment %s of message %s", attachmentId, ownerMessageId.serialize()), e);
         }
     }
 
