@@ -51,6 +51,7 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.UnsupportedSearchException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxId;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.SearchQuery;
@@ -70,7 +71,6 @@ import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
@@ -732,8 +732,7 @@ public class LuceneMessageSearchIndex extends ListeningMessageSearchIndex {
     }
 
     private static boolean hasAttachment(MailboxMessage membership) {
-       return membership.getProperties().stream()
-            .anyMatch(PropertyBuilder.isHasAttachmentProperty());
+       return MessageAttachment.hasNonInlinedAttachment(membership.getAttachments());
     }
 
     private String toSentDateField(DateResolution res) {

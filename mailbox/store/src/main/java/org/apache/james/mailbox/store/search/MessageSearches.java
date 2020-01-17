@@ -55,7 +55,6 @@ import org.apache.james.mailbox.model.SearchQuery.DateResolution;
 import org.apache.james.mailbox.model.SearchQuery.UidRange;
 import org.apache.james.mailbox.store.ResultUtils;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.comparator.CombinedComparator;
 import org.apache.james.mime4j.MimeException;
 import org.apache.james.mime4j.MimeIOException;
@@ -548,9 +547,7 @@ public class MessageSearches implements Iterable<SimpleMessageSearchIndex.Search
 
 
     private boolean matches(SearchQuery.AttachmentCriterion criterion, MailboxMessage message) throws UnsupportedSearchException {
-        boolean mailHasAttachments = message.getProperties()
-            .stream()
-            .anyMatch(PropertyBuilder.isHasAttachmentProperty());
+        boolean mailHasAttachments = MessageAttachment.hasNonInlinedAttachment(message.getAttachments());
         return mailHasAttachments == criterion.getOperator().isSet();
     }
 

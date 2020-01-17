@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.model;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.google.common.base.MoreObjects;
@@ -75,6 +76,11 @@ public class MessageAttachment {
             Preconditions.checkState(attachment != null, "'attachment' is mandatory");
             return new MessageAttachment(attachment, name, cid, isInline.orElse(false));
         }
+    }
+
+    public static boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
+        return attachments.stream()
+            .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
     }
 
     private final Attachment attachment;

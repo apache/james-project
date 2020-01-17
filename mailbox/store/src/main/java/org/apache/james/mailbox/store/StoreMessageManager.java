@@ -447,7 +447,6 @@ public class StoreMessageManager implements MessageManager {
             final int size = (int) file.length();
 
             final List<MessageAttachment> attachments = extractAttachments(contentIn);
-            propertyBuilder.setHasAttachment(hasNonInlinedAttachment(attachments));
 
             final MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, attachments);
 
@@ -499,11 +498,6 @@ public class StoreMessageManager implements MessageManager {
             propertyBuilder.setBoundary(boundary);
         }
         return propertyBuilder;
-    }
-
-    private boolean hasNonInlinedAttachment(List<MessageAttachment> attachments) {
-        return attachments.stream()
-            .anyMatch(messageAttachment -> !messageAttachment.isInlinedWithCid());
     }
 
     private List<MessageAttachment> extractAttachments(SharedFileInputStream contentIn) {

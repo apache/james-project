@@ -19,32 +19,24 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
+import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_MD5_NAME;
+import static org.apache.james.mailbox.store.mail.model.StandardNames.MIME_CONTENT_MD5_SPACE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 import org.junit.jupiter.api.Test;
 
 class PropertyBuilderTest {
-
     @Test
     void emptyPropertyBuilderShouldCreateEmptyProperties() {
         assertThat(new PropertyBuilder().toProperties()).isEmpty();
     }
 
     @Test
-    void setHasAttachmentShouldAddFalseWhenCalledWithFalse() {
+    void setContentMD5ShouldAddMd5Property() {
         PropertyBuilder propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setHasAttachment(false);
+        propertyBuilder.setContentMD5("123");
         assertThat(propertyBuilder.toProperties())
-            .containsOnly(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "false"));
+            .containsOnly(new Property(MIME_CONTENT_MD5_SPACE, MIME_CONTENT_MD5_NAME, "123"));
     }
-
-    @Test
-    void setHasAttachmentShouldAddTrueWhenCalledWithTrue() {
-        PropertyBuilder propertyBuilder = new PropertyBuilder();
-        propertyBuilder.setHasAttachment(true);
-        assertThat(propertyBuilder.toProperties())
-            .containsOnly(new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true"));
-    }
-
 }

@@ -46,7 +46,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.function.Predicate;
 
 import org.apache.james.mailbox.store.mail.model.Property;
 
@@ -56,16 +55,7 @@ import com.github.steveash.guavate.Guavate;
  * Builds properties
  */
 public class PropertyBuilder {
-
     private static final int INITIAL_CAPACITY = 32;
-    public static final String JAMES_INTERNALS = "JAMES_INTERNALS";
-    public static final String HAS_ATTACHMENT = "HAS_ATTACHMENT";
-
-    public static Predicate<Property> isHasAttachmentProperty() {
-        return property -> property.getNamespace().equals(PropertyBuilder.JAMES_INTERNALS)
-            && property.getLocalName().equals(PropertyBuilder.HAS_ATTACHMENT)
-            && property.getValue().equals("true");
-    }
 
     private Long textualLineCount;
     private final List<Property> properties;
@@ -205,10 +195,6 @@ public class PropertyBuilder {
      */
     public void setMediaType(String value) {
         setProperty(MIME_MIME_TYPE_SPACE, MIME_MEDIA_TYPE_NAME, value);
-    }
-
-    public void setHasAttachment(boolean value) {
-        setProperty(JAMES_INTERNALS, HAS_ATTACHMENT, Boolean.toString(value));
     }
 
     /**

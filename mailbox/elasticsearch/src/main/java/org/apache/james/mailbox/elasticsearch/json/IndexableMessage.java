@@ -32,9 +32,8 @@ import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.elasticsearch.IndexAttachments;
 import org.apache.james.mailbox.elasticsearch.query.DateResolutionFormater;
 import org.apache.james.mailbox.extractor.TextExtractor;
+import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.Property;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.SearchUtil;
 import org.apache.james.mime4j.MimeException;
 
@@ -98,12 +97,6 @@ public class IndexableMessage {
             return this;
         }
 
-        private boolean computeHasAttachment(MailboxMessage message) {
-            return message.getProperties()
-                    .stream()
-                    .anyMatch(property -> property.equals(HAS_ATTACHMENT_PROPERTY));
-        }
-
         private IndexableMessage instantiateIndexedMessage() throws IOException, MimeException {
             String messageId = SearchUtil.getSerializedMessageIdIfSupportedByUnderlyingStorageOrNull(message);
             MimePart parsingResult = new MimePartParser(message, textExtractor).parse();
@@ -111,7 +104,7 @@ public class IndexableMessage {
             Optional<String> bodyText = parsingResult.locateFirstTextBody();
             Optional<String> bodyHtml = parsingResult.locateFirstHtmlBody();
 
-            boolean hasAttachment = computeHasAttachment(message);
+            boolean hasAttachment = MessageAttachment.hasNonInlinedAttachment(message.getAttachments());
             List<MimePart> attachments = setFlattenedAttachments(parsingResult, indexAttachments);
 
             HeaderCollection headerCollection = parsingResult.getHeaderCollection();
@@ -191,8 +184,6 @@ public class IndexableMessage {
             }
         }
     }
-
-    public static final Property HAS_ATTACHMENT_PROPERTY = new Property(PropertyBuilder.JAMES_INTERNALS, PropertyBuilder.HAS_ATTACHMENT, "true");
 
     public static Builder builder() {
         return new Builder();
