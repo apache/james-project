@@ -45,6 +45,7 @@ class MessageAttachmentTest {
     @Test
     void buildShouldWorkWhenMandatoryAttributesAreGiven() {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
@@ -60,6 +61,7 @@ class MessageAttachmentTest {
     @Test
     void buildShouldAcceptIsInlineAndNoCid() {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
@@ -75,6 +77,7 @@ class MessageAttachmentTest {
     @Test
     void buildShouldSetAttributesWhenAllAreGiven() {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
@@ -93,6 +96,7 @@ class MessageAttachmentTest {
     @Test
     void isInlinedWithCidShouldReturnTrueWhenIsInlineAndHasCid() throws Exception {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
@@ -110,6 +114,7 @@ class MessageAttachmentTest {
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsNotInline() throws Exception {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();
@@ -127,6 +132,7 @@ class MessageAttachmentTest {
     @Test
     void isInlinedWithCidShouldReturnFalseWhenIsInlineButNoCid() throws Exception {
         Attachment attachment = Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .size(36)
             .type("type")
             .build();

@@ -56,6 +56,7 @@ import org.apache.james.mailbox.inmemory.InMemoryMailboxSessionMapperFactory;
 import org.apache.james.mailbox.inmemory.InMemoryMessageId;
 import org.apache.james.mailbox.manager.ManagerTestProvisionner;
 import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
@@ -114,6 +115,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
 
     static final MessageAttachment MESSAGE_ATTACHMENT = MessageAttachment.builder()
         .attachment(Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .type("type")
             .size(523)
             .build())

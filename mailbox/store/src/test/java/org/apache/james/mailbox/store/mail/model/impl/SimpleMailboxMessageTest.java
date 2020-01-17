@@ -36,6 +36,7 @@ import org.apache.james.mailbox.FlagsBuilder;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.ModSeq;
 import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestId;
@@ -177,6 +178,7 @@ class SimpleMailboxMessageTest {
         MessageUid uid = MessageUid.of(45);
         MessageAttachment messageAttachment = MessageAttachment.builder()
             .attachment(Attachment.builder()
+                .attachmentId(AttachmentId.from("1"))
                 .type("type")
                 .size(485)
                 .build())

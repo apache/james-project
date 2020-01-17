@@ -42,6 +42,7 @@ import java.util.List;
 import org.apache.james.core.MaybeSender;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.model.Attachment;
+import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.store.MessageBuilder;
@@ -72,6 +73,7 @@ class DeletedMessageConverterTest {
     private static final Collection<MessageAttachment> NO_ATTACHMENT = ImmutableList.of();
     private static final Collection<MessageAttachment> ATTACHMENTS = ImmutableList.of(MessageAttachment.builder()
         .attachment(Attachment.builder()
+            .attachmentId(AttachmentId.from("1"))
             .type("type")
             .size(48)
             .build())

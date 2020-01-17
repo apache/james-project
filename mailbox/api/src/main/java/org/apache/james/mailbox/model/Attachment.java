@@ -25,12 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 public class Attachment {
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public static class Builder {
-
         private AttachmentId attachmentId;
         private Long size;
         private String type;
@@ -56,17 +51,14 @@ public class Attachment {
         public Attachment build() {
             Preconditions.checkState(type != null, "'type' is mandatory");
             Preconditions.checkState(size != null, "'size' is mandatory");
-            AttachmentId builtAttachmentId = attachmentId();
-            Preconditions.checkState(builtAttachmentId != null, "'attachmentId' is mandatory");
-            return new Attachment(builtAttachmentId, type, size);
-        }
+            Preconditions.checkState(attachmentId != null, "'attachmentId' is mandatory");
 
-        private AttachmentId attachmentId() {
-            if (attachmentId != null) {
-                return attachmentId;
-            }
-            return AttachmentId.random();
+            return new Attachment(attachmentId, type, size);
         }
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     private final AttachmentId attachmentId;
