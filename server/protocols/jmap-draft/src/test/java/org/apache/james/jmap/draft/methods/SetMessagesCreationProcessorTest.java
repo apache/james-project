@@ -52,6 +52,7 @@ import org.apache.james.jmap.draft.send.MailMetadata;
 import org.apache.james.jmap.draft.send.MailSpool;
 import org.apache.james.jmap.draft.utils.JsoupHtmlTextExtractor;
 import org.apache.james.jmap.memory.projections.MemoryMessageFastViewProjection;
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.BlobManager;
 import org.apache.james.mailbox.MailboxManager;
@@ -72,14 +73,14 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTableConfiguration;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
-import org.apache.james.rrt.api.AliasReverseResolver;
 import org.apache.james.rrt.lib.AliasReverseResolverImpl;
+import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.Mapping;
 import org.apache.james.rrt.lib.MappingSource;
-import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
@@ -95,8 +96,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SetMessagesCreationProcessorTest {
-
-    /*
     private static final Username USER = Username.of("user@example.com");
     private static final Username OTHER_USER = Username.of("other@example.com");
     private static final String OUTBOX = "outbox";
@@ -172,7 +171,7 @@ public class SetMessagesCreationProcessorTest {
         
         fakeSystemMailboxesProvider = new TestSystemMailboxesProvider(() -> optionalOutbox, () -> optionalDrafts);
         session = MailboxSessionUtil.create(USER);
-        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter();
+        MIMEMessageConverter mimeMessageConverter = new MIMEMessageConverter(mock(AttachmentContentLoader.class));
         messageAppender = new MessageAppender(mockedMailboxManager, mockMessageIdManager, mockedAttachmentManager, mimeMessageConverter);
         messageSender = new MessageSender(mockedMailSpool);
         referenceUpdater = new ReferenceUpdater(mockMessageIdManager, mockedMailboxManager);
@@ -197,7 +196,8 @@ public class SetMessagesCreationProcessorTest {
         when(outbox.getMailboxPath()).thenReturn(MailboxPath.forUser(USER, OUTBOX));
         
         when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
-            .thenReturn(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)));
+            .thenReturn(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)),
+                ImmutableList.of()));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);
@@ -508,5 +508,4 @@ public class SetMessagesCreationProcessorTest {
             return Stream.empty();
         }
     }
-*/
 }
