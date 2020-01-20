@@ -45,6 +45,7 @@ import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.james.mailbox.AttachmentStorer;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -73,7 +74,6 @@ import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
 import org.apache.james.mailbox.model.MessageResultIterator;
-import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mailbox.model.UpdatedFlags;
@@ -83,7 +83,6 @@ import org.apache.james.mailbox.store.event.EventFactory;
 import org.apache.james.mailbox.store.mail.MessageMapper;
 import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
@@ -100,8 +99,6 @@ import org.apache.james.util.IteratorWrapper;
 import org.apache.james.util.io.BodyOffsetInputStream;
 import org.apache.james.util.io.InputStreamConsummer;
 import org.apache.james.util.streams.Iterators;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ImmutableList;
@@ -148,8 +145,6 @@ public class StoreMessageManager implements MessageManager {
         MINIMAL_PERMANET_FLAGS.add(Flags.Flag.SEEN);
     }
 
-    private static final Logger LOG = LoggerFactory.getLogger(StoreMessageManager.class);
-
     private final EnumSet<MailboxManager.MessageCapabilities> messageCapabilities;
     private final EventBus eventBus;
     private final Mailbox mailbox;
@@ -159,17 +154,17 @@ public class StoreMessageManager implements MessageManager {
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
     private final MailboxPathLocker locker;
-    private final MessageParser messageParser;
     private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
     private final PreDeletionHooks preDeletionHooks;
     private final MessageFactory messageFactory;
+    private final AttachmentStorer attachmentStorer;
 
     public StoreMessageManager(EnumSet<MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
                                MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
-                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, Factory messageIdFactory, BatchSizes batchSizes,
-                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks, MessageFactory messageFactory) {
+                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Factory messageIdFactory, BatchSizes batchSizes,
+                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks, MessageFactory messageFactory, AttachmentStorer attachmentStorer) {
         this.messageCapabilities = messageCapabilities;
         this.eventBus = eventBus;
         this.mailbox = mailbox;
@@ -178,12 +173,12 @@ public class StoreMessageManager implements MessageManager {
         this.locker = locker;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
-        this.messageParser = messageParser;
         this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
         this.storeRightManager = storeRightManager;
         this.preDeletionHooks = preDeletionHooks;
         this.messageFactory = messageFactory;
+        this.attachmentStorer = attachmentStorer;
     }
 
     /**
@@ -492,15 +487,6 @@ public class StoreMessageManager implements MessageManager {
         return propertyBuilder;
     }
 
-    protected List<ParsedAttachment> extractAttachments(SharedInputStream contentIn) {
-        try {
-            return messageParser.retrieveAttachments(contentIn.newStream(0, -1));
-        } catch (Exception e) {
-            LOG.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
-            return ImmutableList.of();
-        }
-    }
-
     @Override
     public boolean isWriteable(MailboxSession session) throws MailboxException {
         return storeRightManager.isReadWrite(session, mailbox, getSharedPermanentFlags(session));
@@ -662,15 +648,11 @@ public class StoreMessageManager implements MessageManager {
         MessageId messageId = messageIdFactory.generate();
 
         return mapperFactory.getMessageMapper(session).execute(() -> {
-            List<MessageAttachment> attachments = storeAttachments(messageId, content, session);
+            List<MessageAttachment> attachments = attachmentStorer.storeAttachments(messageId, content, session);
             MailboxMessage message = messageFactory.createMessage(messageId, getMailboxEntity(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
             MessageMetaData metadata = messageMapper.add(getMailboxEntity(), message);
             return Pair.of(metadata, attachments);
         });
-    }
-
-    protected List<MessageAttachment> storeAttachments(MessageId messageId, SharedInputStream content, MailboxSession session) throws MailboxException {
-        return ImmutableList.of();
     }
 
     @Override

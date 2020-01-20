@@ -19,24 +19,19 @@
 
 package org.apache.james.mailbox.cassandra;
 
-import java.util.List;
-
 import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MessageFactory;
 import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.StoreAttachmentStorer;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -44,11 +39,8 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
  * Cassandra implementation of {@link StoreMessageManager}
- * 
  */
 public class CassandraMessageManager extends StoreMessageManager {
-
-    private CassandraMailboxSessionMapperFactory mapperFactory;
 
     CassandraMessageManager(CassandraMailboxSessionMapperFactory mapperFactory, MessageSearchIndex index,
                             EventBus eventBus, MailboxPathLocker locker, Mailbox mailbox, QuotaManager quotaManager,
@@ -57,10 +49,8 @@ public class CassandraMessageManager extends StoreMessageManager {
                             StoreRightManager storeRightManager,
                             PreDeletionHooks preDeletionHooks) {
         super(CassandraMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager,
-            preDeletionHooks, new MessageFactory.StoreMessageFactory());
-
-        this.mapperFactory = mapperFactory;
+            quotaManager, quotaRootResolver, messageIdFactory, batchSizes, storeRightManager,
+            preDeletionHooks, new MessageFactory.StoreMessageFactory(), new StoreAttachmentStorer(mapperFactory, messageParser));
     }
 
     /**
@@ -72,12 +62,4 @@ public class CassandraMessageManager extends StoreMessageManager {
         flags.add(Flags.Flag.USER);
         return flags;
     }
-
-    @Override
-    protected List<MessageAttachment> storeAttachments(MessageId messageId, SharedInputStream content, MailboxSession session) throws MailboxException {
-        List<ParsedAttachment> attachments = extractAttachments(content);
-        return mapperFactory.getAttachmentMapper(session)
-            .storeAttachmentsForMessage(attachments, messageId);
-    }
-
 }

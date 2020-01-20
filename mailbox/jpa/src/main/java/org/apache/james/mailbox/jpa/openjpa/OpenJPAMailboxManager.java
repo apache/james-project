@@ -75,7 +75,6 @@ public class OpenJPAMailboxManager extends StoreMailboxManager {
             mailboxRow,
             getQuotaComponents().getQuotaManager(),
             getQuotaComponents().getQuotaRootResolver(),
-            getMessageParser(),
             getMessageIdFactory(),
             configuration.getBatchSizes(),
             getStoreRightManager());

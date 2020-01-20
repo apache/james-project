@@ -21,6 +21,7 @@ package org.apache.james.mailbox.jpa.openjpa;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.AttachmentStorer;
 import org.apache.james.mailbox.MailboxPathLocker;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
@@ -34,7 +35,6 @@ import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
@@ -45,12 +45,12 @@ public class OpenJPAMessageManager extends StoreMessageManager {
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory,
                                  MessageSearchIndex index, EventBus eventBus,
                                  MailboxPathLocker locker, Mailbox mailbox,
-                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
+                                 QuotaManager quotaManager, QuotaRootResolver quotaRootResolver,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                  StoreRightManager storeRightManager) {
         super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
-            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
-            new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None));
+            quotaManager, quotaRootResolver, messageIdFactory, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
+            new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None), new AttachmentStorer.NoopAttachmentStorer());
     }
 
     /**
