@@ -35,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.IOUtils;
@@ -200,10 +201,12 @@ public interface DeleteDumbBlobStoreContract  {
 
     @Test
     default void mixingSaveReadAndDeleteShouldReturnConsistentState() throws ExecutionException, InterruptedException {
+        DumbBlobStore store = testee();
+        store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES).block();
         ConcurrentTestRunner.builder()
             .randomlyDistributedReactorOperations(
-                (thread, iteration) -> testee().save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES),
-                (thread, iteration) -> testee().delete(TEST_BUCKET_NAME, TEST_BLOB_ID),
+                (thread, iteration) -> store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, TWELVE_MEGABYTES),
+                (thread, iteration) -> store.delete(TEST_BUCKET_NAME, TEST_BLOB_ID),
                 (thread, iteration) -> checkConcurrentMixedOperation()
             )
             .threadCount(10)
@@ -212,12 +215,13 @@ public interface DeleteDumbBlobStoreContract  {
     }
 
     default Mono<Void> checkConcurrentMixedOperation() {
-        return Mono
-            .fromCallable(() ->
-                testee().read(TEST_BUCKET_NAME, TEST_BLOB_ID))
-            .doOnNext(inputStream -> assertThat(inputStream).hasSameContentAs(new ByteArrayInputStream(TWELVE_MEGABYTES)))
-            .doOnError(throwable -> assertThat(throwable).isInstanceOf(ObjectNotFoundException.class))
-            .onErrorResume(throwable -> Mono.empty())
-            .then();
+        return
+            testee().readBytes(TEST_BUCKET_NAME, TEST_BLOB_ID)
+                //assertj is very cpu-intensive, let's compute the assertion only when arrays are different
+                .filter(bytes -> !Arrays.equals(bytes, TWELVE_MEGABYTES))
+                .doOnNext(bytes -> assertThat(bytes).isEqualTo(TWELVE_MEGABYTES))
+                .onErrorResume(ObjectNotFoundException.class, throwable -> Mono.empty())
+                .then();
     }
+
 }
