@@ -25,6 +25,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.with;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.CassandraJamesServerMain.ALL_BUT_JMX_CASSANDRA_MODULE;
 import static org.apache.james.jmap.HttpJmapAuthentication.authenticateJamesUser;
 import static org.apache.james.jmap.LocalHostURIBuilder.baseUri;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,7 +42,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 import org.apache.james.CassandraExtension;
-import org.apache.james.CassandraRabbitMQJamesServerMain;
 import org.apache.james.DockerElasticSearchExtension;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.JamesServerBuilder;
@@ -54,17 +54,17 @@ import org.apache.james.mailbox.MessageManager.AppendCommand;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTask;
 import org.apache.james.mailbox.cassandra.table.CassandraMailboxPathV2Table;
 import org.apache.james.mailbox.exception.MailboxException;
+import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.probe.ACLProbe;
+import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.modules.ACLProbeImpl;
-import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.MailboxProbeImpl;
-import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.server.CassandraProbe;
 import org.apache.james.task.TaskManager;
@@ -102,14 +102,15 @@ class FixingGhostMailboxTest {
     private static final String ALICE_SECRET = "aliceSecret";
     private static final String BOB_SECRET = "bobSecret";
 
+    public static final CassandraExtension dockerCassandra = new CassandraExtension();
+
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
-        .extension(new CassandraExtension())
-        .extension(new AwsS3BlobStoreExtension())
-        .extension(new RabbitMQExtension())
+        .extension(dockerCassandra)
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
-            .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
+            .combineWith(ALL_BUT_JMX_CASSANDRA_MODULE)
+            .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))
             .overrideWith(TestJMAPServerModule.limitToTenMessages())
             .overrideWith(new WebadminIntegrationTestModule()))
         .build();
@@ -125,7 +126,7 @@ class FixingGhostMailboxTest {
     private RequestSpecification webadminSpecification;
 
     @BeforeEach
-    void setup(GuiceJamesServer server, Host cassandraHost) throws Throwable {
+    void setup(GuiceJamesServer server) throws Throwable {
         WebAdminGuiceProbe webAdminProbe = server.getProbe(WebAdminGuiceProbe.class);
         mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         aclProbe = server.getProbe(ACLProbeImpl.class);
@@ -147,6 +148,7 @@ class FixingGhostMailboxTest {
             .addUser(BOB, BOB_SECRET);
         accessToken = authenticateJamesUser(baseUri(jmapPort), Username.of(ALICE), ALICE_SECRET);
 
+        Host cassandraHost = dockerCassandra.getCassandra().getHost();
         session = Cluster.builder()
             .withoutJMXReporting()
             .addContactPoint(cassandraHost.getHostName())
