@@ -165,7 +165,7 @@ public interface BucketDumbBlobStoreContract {
         store.save(TEST_BUCKET_NAME, TEST_BLOB_ID, SHORT_BYTEARRAY).block();
 
         ConcurrentTestRunner.builder()
-            .operation(((threadNumber, step) -> store.deleteBucket(TEST_BUCKET_NAME).block()))
+            .reactorOperation(((threadNumber, step) -> store.deleteBucket(TEST_BUCKET_NAME)))
             .threadCount(10)
             .operationCount(10)
             .runSuccessfullyWithin(Duration.ofMinutes(1));
