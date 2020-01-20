@@ -34,7 +34,7 @@ import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.DumbBlobStore;
 import org.apache.james.blob.api.ObjectNotFoundException;
 import org.apache.james.blob.api.ObjectStoreIOException;
-import org.apache.james.blob.cassandra.utils.DataChunker;
+import org.apache.james.util.DataChunker;
 import org.apache.james.util.ReactorUtils;
 
 import com.github.fge.lambdas.Throwing;
@@ -50,7 +50,6 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
 
     private final CassandraDefaultBucketDAO defaultBucketDAO;
     private final CassandraBucketDAO bucketDAO;
-    private final DataChunker dataChunker;
     private final CassandraConfiguration configuration;
     private final BucketName defaultBucket;
 
@@ -64,7 +63,6 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         this.bucketDAO = bucketDAO;
         this.configuration = cassandraConfiguration;
         this.defaultBucket = defaultBucket;
-        this.dataChunker = new DataChunker();
     }
 
     @Override
@@ -83,7 +81,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
     public Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data) {
         Preconditions.checkNotNull(data);
 
-        return Mono.fromCallable(() -> dataChunker.chunk(data, configuration.getBlobPartSize()))
+        return Mono.fromCallable(() -> DataChunker.chunk(data, configuration.getBlobPartSize()))
             .flatMap(chunks -> save(bucketName, blobId, chunks));
     }
 
@@ -92,7 +90,7 @@ public class CassandraDumbBlobStore implements DumbBlobStore {
         Preconditions.checkNotNull(bucketName);
         Preconditions.checkNotNull(inputStream);
 
-        return Mono.fromCallable(() -> dataChunker.chunkStream(inputStream, configuration.getBlobPartSize()))
+        return Mono.fromCallable(() -> DataChunker.chunkStream(inputStream, configuration.getBlobPartSize()))
             .flatMap(chunks -> save(bucketName, blobId, chunks))
             .onErrorMap(e -> new ObjectStoreIOException("Exception occurred while saving input stream", e));
     }

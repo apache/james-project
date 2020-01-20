@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.blob.cassandra.utils;
+package org.apache.james.util;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -33,7 +33,7 @@ public class DataChunker {
 
     private static final String CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE = "ChunkSize must be strictly positive";
 
-    public Flux<ByteBuffer> chunk(byte[] data, int chunkSize) {
+    public static Flux<ByteBuffer> chunk(byte[] data, int chunkSize) {
         Preconditions.checkNotNull(data);
         Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
 
@@ -46,14 +46,14 @@ public class DataChunker {
             lastChunk(data, chunkSize * fullChunkCount, fullChunkCount));
     }
 
-    private Mono<ByteBuffer> lastChunk(byte[] data, int offset, int index) {
+    private static Mono<ByteBuffer> lastChunk(byte[] data, int offset, int index) {
         if (offset == data.length && index > 0) {
             return Mono.empty();
         }
         return Mono.just(ByteBuffer.wrap(data, offset, data.length - offset));
     }
 
-    public Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
+    public static Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
         Preconditions.checkNotNull(data);
         Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
         BufferedInputStream bufferedInputStream = new BufferedInputStream(data);
