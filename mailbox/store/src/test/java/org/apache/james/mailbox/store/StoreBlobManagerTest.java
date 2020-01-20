@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store;
 
+import static org.apache.james.mailbox.store.StoreBlobManager.MESSAGE_RFC822_CONTENT_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -45,9 +46,12 @@ import org.apache.james.mailbox.model.Content;
 import org.apache.james.mailbox.model.FetchGroup;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.mailbox.model.TestMessageId;
+import org.apache.james.mailbox.store.streaming.ByteContent;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 class StoreBlobManagerTest {
@@ -72,25 +76,28 @@ class StoreBlobManagerTest {
 
         blobManager = new StoreBlobManager(attachmentManager, messageIdManager, new TestMessageId.Factory());
     }
-/*
+
     @Test
     void retrieveShouldReturnBlobWhenAttachment() throws Exception {
         when(attachmentManager.getAttachment(ATTACHMENT_ID, session))
             .thenReturn(Attachment.builder()
                 .attachmentId(ATTACHMENT_ID)
-                .bytes(BYTES)
+                .size(BYTES.length)
                 .type(CONTENT_TYPE)
                 .build());
+        when(attachmentManager.loadAttachmentContent(ATTACHMENT_ID, session))
+            .thenReturn(new ByteArrayInputStream(BYTES));
 
-        assertThat(blobManager.retrieve(BLOB_ID_ATTACHMENT, session))
-            .isEqualTo(Blob.builder()
-                .id(BlobId.fromString("ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"))
-                .contentType(CONTENT_TYPE)
-                .payload(BYTES)
-                .build());
+        Blob blob = blobManager.retrieve(BLOB_ID_ATTACHMENT, session);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(
+            softly -> {
+                assertThat(blob.getBlobId()).isEqualTo(BlobId.fromString(ATTACHMENT_ID.getId()));
+                assertThat(blob.getContentType()).isEqualTo(CONTENT_TYPE);
+                assertThat(blob.getSize()).isEqualTo(BYTES.length);
+                assertThat(blob.getStream()).hasSameContentAs(new ByteArrayInputStream(BYTES));
+            }));
     }
-
- */
 
     @Test
     void retrieveShouldThrowWhenNotFound() throws Exception {
@@ -102,27 +109,29 @@ class StoreBlobManagerTest {
         assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_ATTACHMENT, session))
             .isInstanceOf(BlobNotFoundException.class);
     }
-/*
+
     @Test
     void retrieveShouldReturnBlobWhenMessage() throws Exception {
         when(attachmentManager.getAttachment(any(), any()))
             .thenThrow(new AttachmentNotFoundException(ID));
 
         MessageResult messageResult = mock(MessageResult.class);
-        Content content = mock(Content.class);
-        when(content.getInputStream()).thenReturn(new ByteArrayInputStream(BYTES));
+        Content content = new ByteContent(BYTES);
         when(messageResult.getFullContent()).thenReturn(content);
         when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
-        assertThat(blobManager.retrieve(BLOB_ID_MESSAGE, session))
-            .isEqualTo(Blob.builder()
-                .id(BLOB_ID_MESSAGE)
-                .contentType(StoreBlobManager.MESSAGE_RFC822_CONTENT_TYPE)
-                .payload(BYTES)
-                .build());
+        Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
+
+        SoftAssertions.assertSoftly(Throwing.consumer(
+            softly -> {
+                assertThat(blob.getBlobId()).isEqualTo(BLOB_ID_MESSAGE);
+                assertThat(blob.getContentType()).isEqualTo(MESSAGE_RFC822_CONTENT_TYPE);
+                assertThat(blob.getSize()).isEqualTo(BYTES.length);
+                assertThat(blob.getStream()).hasSameContentAs(new ByteArrayInputStream(BYTES));
+            }));
     }
-*/
+
     @Test
     void retrieveShouldThrowOnMailboxExceptionWhenRetrievingAttachment() throws Exception {
         when(attachmentManager.getAttachment(any(), any()))
@@ -205,8 +214,9 @@ class StoreBlobManagerTest {
         when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
-        assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
-            .isInstanceOf(RuntimeException.class);
+        Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
+        assertThatThrownBy(blob::getStream)
+            .isInstanceOf(IOException.class);
     }
 
     @Test
@@ -221,7 +231,8 @@ class StoreBlobManagerTest {
         when(messageIdManager.getMessage(MESSAGE_ID, FetchGroup.FULL_CONTENT, session))
             .thenReturn(ImmutableList.of(messageResult));
 
-        assertThatThrownBy(() -> blobManager.retrieve(BLOB_ID_MESSAGE, session))
+        Blob blob = blobManager.retrieve(BLOB_ID_MESSAGE, session);
+        assertThatThrownBy(blob::getStream)
             .isInstanceOf(RuntimeException.class);
     }
 
