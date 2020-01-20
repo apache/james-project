@@ -51,7 +51,6 @@ import com.github.fge.lambdas.Throwing;
 import com.google.common.collect.ImmutableList;
 
 public abstract class AbstractMailboxManagerAttachmentTest {
-/*
     private static final Username USERNAME = Username.of("user@domain.tld");
 
     private MailboxManager mailboxManager;
@@ -130,7 +129,7 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         assertThat(messages.hasNext()).isTrue();
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(1);
-        assertThat(attachmentMapper.getAttachment(attachments.get(0).getAttachmentId()).getStream())
+        assertThat(attachmentMapper.loadAttachmentContent(attachments.get(0).getAttachmentId()))
             .hasSameContentAs(ClassLoader.getSystemResourceAsStream("eml/gimp.png"));
     }
 
@@ -161,7 +160,9 @@ public abstract class AbstractMailboxManagerAttachmentTest {
             .stream()
             .map(MessageAttachment::getAttachmentId)
             .map(Throwing.function(attachmentMapper::getAttachment))
-            .map(Attachment::getBytes)
+            .map(Attachment::getAttachmentId)
+            .map(Throwing.function(attachmentMapper::loadAttachmentContent))
+            .map(Throwing.function(IOUtils::toByteArray))
             .collect(ImmutableList.toImmutableList());
 
         ImmutableList<byte[]> files = Stream.of("eml/4037_014.jpg", "eml/4037_015.jpg")
@@ -199,7 +200,5 @@ public abstract class AbstractMailboxManagerAttachmentTest {
         List<MessageAttachment> attachments = messages.next().getAttachments();
         assertThat(attachments).hasSize(0);
     }
-
- */
 }
 
