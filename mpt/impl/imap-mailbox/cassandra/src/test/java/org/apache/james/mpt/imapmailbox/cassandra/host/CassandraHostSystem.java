@@ -47,7 +47,9 @@ import org.apache.james.mailbox.store.JVMMailboxPathLocker;
 import org.apache.james.mailbox.store.MailboxManagerConfiguration;
 import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.SessionProviderImpl;
+import org.apache.james.mailbox.store.StoreAttachmentManager;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
+import org.apache.james.mailbox.store.StoreMessageIdManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.StoreSubscriptionManager;
 import org.apache.james.mailbox.store.extractor.DefaultTextExtractor;
@@ -109,11 +111,15 @@ public class CassandraHostSystem extends JamesImapHostSystem {
         ListeningCurrentQuotaUpdater quotaUpdater = new ListeningCurrentQuotaUpdater(currentQuotaManager, quotaRootResolver, eventBus, quotaManager);
         QuotaComponents quotaComponents = new QuotaComponents(perUserMaxQuotaManager, quotaManager, quotaRootResolver);
 
-        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), null);
+        StoreMessageIdManager messageIdManager = new StoreMessageIdManager(storeRightManager, mapperFactory, eventBus, messageIdFactory, quotaManager, quotaRootResolver, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+        StoreAttachmentManager attachmentManager = new StoreAttachmentManager(mapperFactory, messageIdManager);
+
+        MessageSearchIndex index = new SimpleMessageSearchIndex(mapperFactory, mapperFactory, new DefaultTextExtractor(), attachmentManager);
 
         mailboxManager = new CassandraMailboxManager(mapperFactory, sessionProvider,
             new JVMMailboxPathLocker(), new MessageParser(), messageIdFactory,
-            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
+            eventBus, annotationManager, storeRightManager, quotaComponents, index, MailboxManagerConfiguration.DEFAULT,
+            PreDeletionHooks.NO_PRE_DELETION_HOOK);
 
         eventBus.register(quotaUpdater);
 

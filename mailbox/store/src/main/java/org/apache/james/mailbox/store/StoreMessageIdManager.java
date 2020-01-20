@@ -30,13 +30,13 @@ import java.util.function.Predicate;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageIdManager;
 import org.apache.james.mailbox.MessageManager;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.MetadataWithMailboxId;
 import org.apache.james.mailbox.ModSeq;
+import org.apache.james.mailbox.RightManager;
 import org.apache.james.mailbox.events.EventBus;
 import org.apache.james.mailbox.events.MailboxIdRegistrationKey;
 import org.apache.james.mailbox.exception.MailboxException;
@@ -91,7 +91,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StoreMessageIdManager.class);
 
-    private final MailboxManager mailboxManager;
+    private final RightManager rightManager;
     private final MailboxSessionMapperFactory mailboxSessionMapperFactory;
     private final EventBus eventBus;
     private final MessageId.Factory messageIdFactory;
@@ -100,10 +100,10 @@ public class StoreMessageIdManager implements MessageIdManager {
     private final PreDeletionHooks preDeletionHooks;
 
     @Inject
-    public StoreMessageIdManager(MailboxManager mailboxManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
+    public StoreMessageIdManager(RightManager rightManager, MailboxSessionMapperFactory mailboxSessionMapperFactory,
                                  EventBus eventBus, MessageId.Factory messageIdFactory,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, PreDeletionHooks preDeletionHooks) {
-        this.mailboxManager = mailboxManager;
+        this.rightManager = rightManager;
         this.mailboxSessionMapperFactory = mailboxSessionMapperFactory;
         this.eventBus = eventBus;
         this.messageIdFactory = messageIdFactory;
@@ -372,7 +372,7 @@ public class StoreMessageIdManager implements MessageIdManager {
         MailboxMapper mailboxMapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
 
         for (MailboxId mailboxId : mailboxIds) {
-            boolean shouldPreserveFlags = mailboxManager.myRights(mailboxId, mailboxSession).contains(Right.Write);
+            boolean shouldPreserveFlags = rightManager.myRights(mailboxId, mailboxSession).contains(Right.Write);
             SimpleMailboxMessage copy =
                 SimpleMailboxMessage.from(mailboxMessage)
                     .mailboxId(mailboxId)
@@ -422,7 +422,7 @@ public class StoreMessageIdManager implements MessageIdManager {
 
 
     private Predicate<MailboxId> hasRightsOnMailbox(MailboxSession session, Right... rights) {
-        return Throwing.predicate((MailboxId mailboxId) -> mailboxManager.myRights(mailboxId, session).contains(rights))
+        return Throwing.predicate((MailboxId mailboxId) -> rightManager.myRights(mailboxId, session).contains(rights))
             .fallbackTo(any -> false);
     }
 
