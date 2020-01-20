@@ -42,6 +42,7 @@
         <module>blob-gc</module>
         <module>blob-memory</module>
         <module>blob-objectstorage</module>
+        <module>blob-s3</module>
 
         <module>mail-store</module>
     </modules>
