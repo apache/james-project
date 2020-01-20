@@ -249,7 +249,7 @@ public class StoreMailboxManager implements MailboxManager {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
                 getLocker(), mailbox, quotaManager,
             getQuotaComponents().getQuotaRootResolver(), getMessageParser(), getMessageIdFactory(), configuration.getBatchSizes(),
-            getStoreRightManager(), preDeletionHooks);
+            getStoreRightManager(), preDeletionHooks, new MessageFactory.StoreMessageFactory());
     }
 
     @Override

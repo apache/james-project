@@ -85,7 +85,6 @@ import org.apache.james.mailbox.store.mail.MessageMapper.FetchType;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
-import org.apache.james.mailbox.store.mail.model.impl.SimpleMailboxMessage;
 import org.apache.james.mailbox.store.quota.QuotaChecker;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 import org.apache.james.mailbox.store.streaming.CountingInputStream;
@@ -164,12 +163,13 @@ public class StoreMessageManager implements MessageManager {
     private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
     private final PreDeletionHooks preDeletionHooks;
+    private final MessageFactory messageFactory;
 
-    public StoreMessageManager(EnumSet<MailboxManager.MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
+    public StoreMessageManager(EnumSet<MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
                                MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
-                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, MessageId.Factory messageIdFactory, BatchSizes batchSizes,
-                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks) {
+                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser, Factory messageIdFactory, BatchSizes batchSizes,
+                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks, MessageFactory messageFactory) {
         this.messageCapabilities = messageCapabilities;
         this.eventBus = eventBus;
         this.mailbox = mailbox;
@@ -183,6 +183,7 @@ public class StoreMessageManager implements MessageManager {
         this.batchSizes = batchSizes;
         this.storeRightManager = storeRightManager;
         this.preDeletionHooks = preDeletionHooks;
+        this.messageFactory = messageFactory;
     }
 
     /**
@@ -500,13 +501,6 @@ public class StoreMessageManager implements MessageManager {
         }
     }
 
-    /**
-     * Create a new {@link MailboxMessage} for the given data
-     */
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
-        return new SimpleMailboxMessage(messageIdFactory.generate(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, getMailboxEntity().getMailboxId(), attachments);
-    }
-
     @Override
     public boolean isWriteable(MailboxSession session) throws MailboxException {
         return storeRightManager.isReadWrite(session, mailbox, getSharedPermanentFlags(session));
@@ -669,7 +663,7 @@ public class StoreMessageManager implements MessageManager {
 
         return mapperFactory.getMessageMapper(session).execute(() -> {
             List<MessageAttachment> attachments = storeAttachments(messageId, content, session);
-            MailboxMessage message = createMessage(internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
+            MailboxMessage message = messageFactory.createMessage(messageId, getMailboxEntity(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
             MessageMetaData metadata = messageMapper.add(getMailboxEntity(), message);
             return Pair.of(metadata, attachments);
         });

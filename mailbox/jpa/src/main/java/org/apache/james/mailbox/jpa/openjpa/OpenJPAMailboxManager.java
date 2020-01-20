@@ -19,18 +19,21 @@
 
 package org.apache.james.mailbox.jpa.openjpa;
 
+import java.util.EnumSet;
+
 import javax.inject.Inject;
 
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.SessionProvider;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.jpa.JPAMailboxManager;
 import org.apache.james.mailbox.jpa.JPAMailboxSessionMapperFactory;
-import org.apache.james.mailbox.jpa.openjpa.OpenJPAMessageManager.AdvancedFeature;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.JVMMailboxPathLocker;
+import org.apache.james.mailbox.store.MailboxManagerConfiguration;
+import org.apache.james.mailbox.store.PreDeletionHooks;
 import org.apache.james.mailbox.store.StoreMailboxAnnotationManager;
+import org.apache.james.mailbox.store.StoreMailboxManager;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -41,7 +44,11 @@ import org.apache.james.mailbox.store.search.MessageSearchIndex;
  * OpenJPA implementation of MailboxManager
  *
  */
-public class OpenJPAMailboxManager extends JPAMailboxManager {
+public class OpenJPAMailboxManager extends StoreMailboxManager {
+    public static final EnumSet<MailboxCapabilities> MAILBOX_CAPABILITIES = EnumSet.of(MailboxCapabilities.UserFlag,
+        MailboxCapabilities.Namespace,
+        MailboxCapabilities.Move,
+        MailboxCapabilities.Annotation);
 
     @Inject
     public OpenJPAMailboxManager(JPAMailboxSessionMapperFactory mapperFactory,
@@ -53,13 +60,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
                                  StoreRightManager storeRightManager,
                                  QuotaComponents quotaComponents,
                                  MessageSearchIndex index) {
-        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(), messageParser,
-            messageIdFactory, eventBus, annotationManager, storeRightManager,
-            quotaComponents, index);
-    }
-
-    protected AdvancedFeature getAdvancedFeature() {
-        return AdvancedFeature.None;
+        super(mapperFactory, sessionProvider, new JVMMailboxPathLocker(),
+            messageParser, messageIdFactory, annotationManager,
+            eventBus, storeRightManager, quotaComponents,
+            index, MailboxManagerConfiguration.DEFAULT, PreDeletionHooks.NO_PRE_DELETION_HOOK);
     }
 
     @Override
@@ -69,7 +73,6 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             getEventBus(),
             getLocker(),
             mailboxRow,
-            getAdvancedFeature(),
             getQuotaComponents().getQuotaManager(),
             getQuotaComponents().getQuotaRootResolver(),
             getMessageParser(),
@@ -77,4 +80,10 @@ public class OpenJPAMailboxManager extends JPAMailboxManager {
             configuration.getBatchSizes(),
             getStoreRightManager());
     }
+
+    @Override
+    public EnumSet<MailboxCapabilities> getSupportedMailboxCapabilities() {
+        return MAILBOX_CAPABILITIES;
+    }
+
 }

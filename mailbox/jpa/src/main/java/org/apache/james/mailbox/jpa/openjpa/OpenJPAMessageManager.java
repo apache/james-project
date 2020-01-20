@@ -19,70 +19,47 @@
 
 package org.apache.james.mailbox.jpa.openjpa;
 
-import java.util.Date;
-import java.util.List;
-
 import javax.mail.Flags;
-import javax.mail.internet.SharedInputStream;
 
 import org.apache.james.mailbox.MailboxPathLocker;
+import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.events.EventBus;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.jpa.JPAMessageManager;
-import org.apache.james.mailbox.jpa.mail.model.JPAMailbox;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAEncryptedMailboxMessage;
-import org.apache.james.mailbox.jpa.mail.model.openjpa.JPAStreamingMailboxMessage;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
+import org.apache.james.mailbox.store.PreDeletionHooks;
+import org.apache.james.mailbox.store.StoreMailboxManager;
+import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
-import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
-import org.apache.james.mailbox.store.mail.model.impl.PropertyBuilder;
 import org.apache.james.mailbox.store.search.MessageSearchIndex;
 
 /**
  * OpenJPA implementation of Mailbox
  */
-public class OpenJPAMessageManager extends JPAMessageManager {
-
-    private final AdvancedFeature feature;
-
-    public enum AdvancedFeature {
-        None,
-        Streaming,
-        Encryption
-    }
+public class OpenJPAMessageManager extends StoreMessageManager {
 
     public OpenJPAMessageManager(MailboxSessionMapperFactory mapperFactory,
                                  MessageSearchIndex index, EventBus eventBus,
-                                 MailboxPathLocker locker, Mailbox mailbox, AdvancedFeature f,
+                                 MailboxPathLocker locker, Mailbox mailbox,
                                  QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, MessageParser messageParser,
                                  MessageId.Factory messageIdFactory, BatchSizes batchSizes,
                                  StoreRightManager storeRightManager) {
-
-        super(mapperFactory,  index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
-            messageParser, messageIdFactory, batchSizes, storeRightManager);
-        this.feature = f;
+        super(StoreMailboxManager.DEFAULT_NO_MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox,
+            quotaManager, quotaRootResolver, messageParser, messageIdFactory, batchSizes, storeRightManager, PreDeletionHooks.NO_PRE_DELETION_HOOK,
+            new OpenJPAMessageFactory(OpenJPAMessageFactory.AdvancedFeature.None));
     }
 
+    /**
+     * Support user flags
+     */
     @Override
-    protected MailboxMessage createMessage(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, List<MessageAttachment> attachments) throws MailboxException {
-        switch (feature) {
-        case Streaming:
-            return new JPAStreamingMailboxMessage(JPAMailbox.from(getMailboxEntity()), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
-        case Encryption:
-            return new JPAEncryptedMailboxMessage(JPAMailbox.from(getMailboxEntity()), internalDate, size, flags, content, bodyStartOctet, propertyBuilder);
-        default:
-            return super.createMessage(internalDate, size, bodyStartOctet, content, flags,  propertyBuilder, attachments);
-        }
-       
+    protected Flags getPermanentFlags(MailboxSession session) {
+        Flags flags =  super.getPermanentFlags(session);
+        flags.add(Flags.Flag.USER);
+        return flags;
     }
-
-    
-
 }
