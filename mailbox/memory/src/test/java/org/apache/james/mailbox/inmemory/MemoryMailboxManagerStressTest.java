@@ -26,7 +26,7 @@ import org.junit.jupiter.api.BeforeEach;
 
 class MemoryMailboxManagerStressTest implements MailboxManagerStressContract<InMemoryMailboxManager> {
 
-    private InMemoryMailboxManager mailboxManager;
+    InMemoryMailboxManager mailboxManager;
 
     @Override
     public InMemoryMailboxManager getManager() {

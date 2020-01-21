@@ -22,7 +22,7 @@ package org.apache.james.mailbox.inmemory;
 import org.apache.james.mailbox.MailboxManagerTest;
 import org.apache.james.mailbox.events.EventBus;
 
-public class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager> {
+class MemoryMailboxManagerTest extends MailboxManagerTest<InMemoryMailboxManager> {
 
     @Override
     protected InMemoryMailboxManager provideMailboxManager() {

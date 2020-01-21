@@ -28,7 +28,7 @@ import org.apache.james.mailbox.store.mail.model.AnnotationMapperTest;
 
 class MemoryAnnotationMapperTest extends AnnotationMapperTest {
 
-    private final AtomicInteger counter = new AtomicInteger();
+    final AtomicInteger counter = new AtomicInteger();
 
     @Override
     protected AnnotationMapper createAnnotationMapper() {

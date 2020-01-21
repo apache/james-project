@@ -28,7 +28,7 @@ import org.apache.james.mailbox.store.mail.model.MailboxMapperTest;
 
 class MemoryMailboxMapperTest extends MailboxMapperTest {
 
-    private final AtomicInteger counter = new AtomicInteger();
+    final AtomicInteger counter = new AtomicInteger();
 
     @Override
     protected MailboxMapper createMailboxMapper() {

@@ -35,8 +35,8 @@ import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
 import org.junit.jupiter.api.BeforeEach;
 
 class InMemoryMailboxManagerAttachmentTest extends AbstractMailboxManagerAttachmentTest {
-    private InMemoryMailboxManager mailboxManager;
-    private InMemoryMailboxManager parseFailingMailboxManager;
+    InMemoryMailboxManager mailboxManager;
+    InMemoryMailboxManager parseFailingMailboxManager;
 
 
     @BeforeEach

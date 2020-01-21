@@ -32,9 +32,9 @@ import org.junit.jupiter.api.BeforeEach;
  */
 class InMemoryQuotaMailboxMessageManagerTest implements QuotaMessageManagerContract<StoreMailboxManager> {
 
-    private ManagerTestProvisionner provisionner;
+    ManagerTestProvisionner provisionner;
 
-    private  IntegrationResources<StoreMailboxManager> resources;
+    IntegrationResources<StoreMailboxManager> resources;
 
     @BeforeEach
     void setUp() throws Exception {

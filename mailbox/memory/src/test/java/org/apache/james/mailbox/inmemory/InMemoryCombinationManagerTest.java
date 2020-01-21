@@ -25,7 +25,7 @@ import org.apache.james.mailbox.store.CombinationManagerTestSystem;
 class InMemoryCombinationManagerTest extends AbstractCombinationManagerTest {
     
     @Override
-    public CombinationManagerTestSystem createTestingData() {
+    protected CombinationManagerTestSystem createTestingData() {
         InMemoryIntegrationResources resources = InMemoryIntegrationResources.defaultResources();
 
         return new InMemoryCombinationManagerTestSystem(
