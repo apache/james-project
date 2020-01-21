@@ -20,33 +20,35 @@
 package org.apache.james.mailbox.inmemory;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserialisationException;
 import org.apache.james.mailbox.store.mail.model.MailboxIdDeserializer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-public class InMemoryMailboxIdDeserializerTest {
+class InMemoryMailboxIdDeserializerTest {
 
-    private static final String SERIALIZED_ID = "1234567890123";
-    private static final String MALFORMED_SERIALIZED_ID = "aEZ";
-    private static final InMemoryId IN_MEMORY_ID = InMemoryId.of(Long.parseLong(SERIALIZED_ID));
+    static final String SERIALIZED_ID = "1234567890123";
+    static final String MALFORMED_SERIALIZED_ID = "aEZ";
+    static final InMemoryId IN_MEMORY_ID = InMemoryId.of(Long.parseLong(SERIALIZED_ID));
 
-    private MailboxIdDeserializer mailboxIdDeserializer;
+    MailboxIdDeserializer mailboxIdDeserializer;
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         mailboxIdDeserializer = new InMemoryMailboxIdDeserializer();
     }
 
     @Test
-    public void deserializeShouldWork() throws MailboxIdDeserialisationException {
+    void deserializeShouldWork() throws MailboxIdDeserialisationException {
         assertThat(mailboxIdDeserializer.deserialize(SERIALIZED_ID)).isEqualTo(IN_MEMORY_ID);
     }
 
-    @Test(expected = MailboxIdDeserialisationException.class)
-    public void deserializeShouldThrowOnMalformedData() throws MailboxIdDeserialisationException {
-        mailboxIdDeserializer.deserialize(MALFORMED_SERIALIZED_ID);
+    @Test
+    void deserializeShouldThrowOnMalformedData() {
+        assertThatThrownBy(() -> mailboxIdDeserializer.deserialize(MALFORMED_SERIALIZED_ID))
+            .isInstanceOf(MailboxIdDeserialisationException.class);
     }
 
 }
