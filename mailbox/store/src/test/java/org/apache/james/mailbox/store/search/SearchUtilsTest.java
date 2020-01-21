@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,20 +31,19 @@ import java.util.TimeZone;
 
 import javax.mail.Flags;
 
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.SearchQuery;
 import org.apache.james.mailbox.model.SearchQuery.AddressType;
 import org.apache.james.mailbox.model.SearchQuery.DateResolution;
+import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.MessageSearches;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SearchUtilsTest {
-/*
     static final String RHUBARD = "Rhubard";
 
     static final String CUSTARD = "Custard";
@@ -87,7 +86,9 @@ class SearchUtilsTest {
         SearchQuery query = null; 
         TextExtractor textExtractor = null;
         MailboxSession session = null;
-        messageSearches = new MessageSearches(messages, query, textExtractor, (attachment, ignore) -> attachment.getStream(), session);
+
+        AttachmentContentLoader attachmentContentLoader = null;
+        messageSearches = new MessageSearches(messages, query, textExtractor, attachmentContentLoader, session);
     }
     
     @Test
@@ -809,7 +810,4 @@ class SearchUtilsTest {
         assertThat(messageSearches.isMatch(SearchQuery.address(AddressType.To, "user-from@domain.org"), row, recent)).isTrue();
         assertThat(messageSearches.isMatch(SearchQuery.address(AddressType.From, "user-from@domain.org"), row, recent)).isFalse();
     }
-
-
- */
 }

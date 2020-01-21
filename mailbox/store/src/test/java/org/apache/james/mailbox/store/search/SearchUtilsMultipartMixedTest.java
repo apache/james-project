@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,18 +27,17 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.MessageSearches;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SearchUtilsMultipartMixedTest {
-/*
     static final String SAMPLE_INNER_MAIL_BODY_ONE = "far a modern quill doth come too";
 
     static final String SAMPLE_PART_ONE = "The better angel is a man right fair,\r\n";
@@ -132,7 +131,9 @@ class SearchUtilsMultipartMixedTest {
         SearchQuery query = null; 
         TextExtractor textExtractor = null;
         MailboxSession session = null;
-        messageSearches = new MessageSearches(messages, query, textExtractor, (attachment, ignore) -> attachment.getStream(), session);
+
+        AttachmentContentLoader attachmentContentLoader = null;
+        messageSearches = new MessageSearches(messages, query, textExtractor, attachmentContentLoader, session);
     }
     
 
@@ -229,6 +230,4 @@ class SearchUtilsMultipartMixedTest {
         assertThat(messageSearches.isMatch(SearchQuery
                 .mailContains(SAMPLE_PART_TWO_FIELD), row, recent)).isTrue();
     }
-
- */
 }

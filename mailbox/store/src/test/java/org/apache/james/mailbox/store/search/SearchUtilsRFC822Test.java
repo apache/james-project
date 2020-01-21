@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.mailbox.store;
+package org.apache.james.mailbox.store.search;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -27,18 +27,17 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Locale;
 
+import org.apache.james.mailbox.AttachmentContentLoader;
 import org.apache.james.mailbox.MailboxSession;
 import org.apache.james.mailbox.MessageUid;
 import org.apache.james.mailbox.extractor.TextExtractor;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.SearchQuery;
+import org.apache.james.mailbox.store.MessageBuilder;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
-import org.apache.james.mailbox.store.search.MessageSearches;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class SearchUtilsRFC822Test {
-/*
     static final String FROM_ADDRESS = "Harry <harry@example.org";
 
     static final String SUBJECT_PART = "Mixed";
@@ -72,7 +71,8 @@ class SearchUtilsRFC822Test {
         SearchQuery query = null; 
         TextExtractor textExtractor = null;
         MailboxSession session = null;
-        messageSearches = new MessageSearches(messages, query, textExtractor, (attachment, ignore) -> attachment.getStream(), session);
+        AttachmentContentLoader attachmentContentLoader = null;
+        messageSearches = new MessageSearches(messages, query, textExtractor, attachmentContentLoader, session);
     }
 
 
@@ -127,6 +127,4 @@ class SearchUtilsRFC822Test {
         assertThat(messageSearches.isMatch(SearchQuery.mailContains(SUBJECT_PART),
                 row, recent)).isTrue();
     }
-
- */
 }
