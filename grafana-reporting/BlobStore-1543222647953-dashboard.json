@@ -1,4 +1,14 @@
 {
+  "__inputs": [
+    {
+      "name": "DS_JAMES_ES",
+      "label": "james es",
+      "description": "",
+      "type": "datasource",
+      "pluginId": "elasticsearch",
+      "pluginName": "Elasticsearch"
+    }
+  ],
   "annotations": {
     "list": [
       {
@@ -23,7 +33,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 10,
@@ -149,7 +159,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 10,
@@ -275,7 +285,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 11,
@@ -401,7 +411,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 11,
@@ -527,7 +537,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -654,7 +664,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "elasticsearch",
+      "datasource": "${DS_JAMES_ES}",
       "fill": 1,
       "gridPos": {
         "h": 8,
