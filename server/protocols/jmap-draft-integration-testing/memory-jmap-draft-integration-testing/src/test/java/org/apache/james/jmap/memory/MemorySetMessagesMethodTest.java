@@ -30,7 +30,6 @@ import org.apache.james.mailbox.model.MessageId;
 import org.junit.Rule;
 
 public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
-/*
     @Rule
     public MemoryJmapTestRule memoryJmap = new MemoryJmapTestRule();
 
@@ -47,5 +46,4 @@ public class MemorySetMessagesMethodTest extends SetMessagesMethodTest {
     protected MessageId randomMessageId() {
         return new InMemoryMessageId.Factory().fromString(String.valueOf(ThreadLocalRandom.current().nextInt(100000) + 100));
     }
-*/
 }
