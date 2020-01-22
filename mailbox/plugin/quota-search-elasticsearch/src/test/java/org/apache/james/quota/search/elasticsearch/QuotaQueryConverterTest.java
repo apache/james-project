@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class QuotaQueryConverterTest {
-    private QuotaQueryConverter testee;
+    QuotaQueryConverter testee;
 
     @BeforeEach
     void setup() {

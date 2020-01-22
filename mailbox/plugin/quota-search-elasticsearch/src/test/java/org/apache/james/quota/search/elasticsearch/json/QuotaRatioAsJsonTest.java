@@ -35,11 +35,11 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class QuotaRatioAsJsonTest {
 
-    private static final Quota<QuotaSizeLimit, QuotaSizeUsage> QUOTA_SIZE = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
+    static final Quota<QuotaSizeLimit, QuotaSizeUsage> QUOTA_SIZE = Quota.<QuotaSizeLimit, QuotaSizeUsage>builder()
             .used(QuotaSizeUsage.size(15))
             .computedLimit(QuotaSizeLimit.size(60))
             .build();
-    private static final Quota<QuotaCountLimit, QuotaCountUsage> QUOTA_COUNT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
+    static final Quota<QuotaCountLimit, QuotaCountUsage> QUOTA_COUNT = Quota.<QuotaCountLimit, QuotaCountUsage>builder()
             .used(QuotaCountUsage.count(1))
             .computedLimit(QuotaCountLimit.count(2))
             .build();

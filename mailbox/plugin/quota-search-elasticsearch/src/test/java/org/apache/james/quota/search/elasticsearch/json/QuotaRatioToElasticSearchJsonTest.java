@@ -36,7 +36,7 @@ import org.apache.james.util.ClassLoaderUtils;
 import org.junit.jupiter.api.Test;
 
 class QuotaRatioToElasticSearchJsonTest {
-    private static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
+    static Event.EventId EVENT_ID = Event.EventId.of("6e0dd59d-660e-4d9b-b22f-0354479f47b4");
 
     @Test
     void quotaRatioShouldBeWellConvertedToJson() throws IOException {
