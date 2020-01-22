@@ -23,26 +23,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.Optional;
 
 import org.apache.james.util.Host;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public class SpamAssassinConfigurationTest {
+class SpamAssassinConfigurationTest {
 
     @Test
-    public void spamAssassinConfigurationShouldRespectBeanContract() {
+    void spamAssassinConfigurationShouldRespectBeanContract() {
         EqualsVerifier.forClass(SpamAssassinConfiguration.class)
             .verify();
     }
 
     @Test
-    public void isEnableShouldReturnFalseWhenEmpty() {
+    void isEnableShouldReturnFalseWhenEmpty() {
         SpamAssassinConfiguration configuration = new SpamAssassinConfiguration(Optional.empty());
         assertThat(configuration.isEnable()).isFalse();
     }
 
     @Test
-    public void isEnableShouldReturnTrueWhenConfigured() {
+    void isEnableShouldReturnTrueWhenConfigured() {
         int port = 1;
         SpamAssassinConfiguration configuration = new SpamAssassinConfiguration(Optional.of(Host.from("hostname", port)));
         assertThat(configuration.isEnable()).isTrue();
