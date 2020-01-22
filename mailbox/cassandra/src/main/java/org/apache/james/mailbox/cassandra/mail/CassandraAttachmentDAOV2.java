@@ -55,7 +55,7 @@ public class CassandraAttachmentDAOV2 {
         private final String type;
         private final long size;
 
-        private DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
+        DAOAttachment(AttachmentId attachmentId, BlobId blobId, String type, long size) {
             this.attachmentId = attachmentId;
             this.blobId = blobId;
             this.type = type;

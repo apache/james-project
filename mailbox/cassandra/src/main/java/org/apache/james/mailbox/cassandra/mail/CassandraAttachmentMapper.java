@@ -39,6 +39,7 @@ import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.ReactorUtils;
+import org.apache.james.util.io.SizeInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -114,11 +115,18 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     @Override
-    public Mono<Void> storeAttachmentForOwner(Attachment attachment, Username owner) {
-        return ownerDAO.addOwner(attachment.getAttachmentId(), owner)
-            .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST)))
-            .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
-            .flatMap(attachmentDAOV2::storeAttachment);
+    public Mono<Attachment> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
+        SizeInputStream sizeInputStream = new SizeInputStream(inputStream);
+        AttachmentId attachmentId = AttachmentId.random();
+
+        return ownerDAO.addOwner(attachmentId, owner)
+            .flatMap(any -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), sizeInputStream, LOW_COST)))
+            .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, sizeInputStream.getSize()))
+            .flatMap(attachmentDAOV2::storeAttachment)
+            .map(any -> Attachment.builder()
+                .attachmentId(attachmentId)
+                .type(contentType)
+                .build());
     }
 
     @Override

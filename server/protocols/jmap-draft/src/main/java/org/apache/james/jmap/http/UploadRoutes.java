@@ -29,7 +29,6 @@ import static org.apache.james.jmap.http.LoggingHelper.jmapContext;
 import static org.apache.james.util.ReactorUtils.logOnError;
 
 import java.io.EOFException;
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.stream.Stream;
 
@@ -44,7 +43,6 @@ import org.apache.james.jmap.draft.model.UploadResponse;
 import org.apache.james.jmap.exceptions.UnauthorizedException;
 import org.apache.james.mailbox.AttachmentManager;
 import org.apache.james.mailbox.MailboxSession;
-import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.util.ReactorUtils;
 import org.slf4j.Logger;
@@ -53,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
-import com.google.common.io.ByteStreams;
 
 import io.netty.handler.codec.http.HttpMethod;
 import reactor.core.publisher.Mono;
@@ -115,7 +112,7 @@ public class UploadRoutes implements JMAPRoutes {
     }
 
     private Mono<Void> post(HttpServerRequest request, HttpServerResponse response, String contentType, MailboxSession session) {
-        InputStream content = ReactorUtils.toInputStream(request.receive().asByteBuffer());
+        InputStream content = ReactorUtils.toInputStream(request.receive().asByteBuffer().subscribeOn(Schedulers.elastic()));
         return Mono.from(metricFactory.runPublishingTimerMetric("JMAP-upload-post",
             handle(contentType, content, session, response)));
     }
@@ -135,31 +132,14 @@ public class UploadRoutes implements JMAPRoutes {
     }
 
     private Mono<UploadResponse> uploadContent(String contentType, InputStream inputStream, MailboxSession session) {
-        return toBytesArray(inputStream)
-            .map(bytes -> Attachment.builder()
-                .bytes(bytes)
-                .type(contentType)
+        return Mono.from(attachmentManager.storeAttachment(contentType, inputStream, session))
+            .map(attachment -> UploadResponse.builder()
+                .blobId(attachment.getAttachmentId().getId())
+                .type(attachment.getType())
+                .size(attachment.getSize())
                 .build())
-            .flatMap(attachment -> Mono.from(attachmentManager.storeAttachment(attachment, session))
-                .thenReturn(UploadResponse.builder()
-                    .blobId(attachment.getAttachmentId().getId())
-                    .type(attachment.getType())
-                    .size(attachment.getSize())
-                    .build()));
-    }
-
-    private Mono<byte[]> toBytesArray(InputStream inputStream) {
-        return Mono.fromCallable(() -> {
-            try {
-                return ByteStreams.toByteArray(inputStream);
-            } catch (IOException e) {
-                if (e instanceof EOFException) {
-                    throw new CancelledUploadException();
-                } else {
-                    throw new InternalErrorException("Error while uploading content", e);
-                }
-            }
-        });
+            .onErrorMap(e -> e.getCause() instanceof EOFException, any -> new CancelledUploadException())
+            .onErrorMap(e -> !(e instanceof CancelledUploadException), e -> new InternalErrorException("Error while uploading content", e));
     }
 
     private Mono<Void> handleCanceledUpload(HttpServerResponse response, CancelledUploadException e) {

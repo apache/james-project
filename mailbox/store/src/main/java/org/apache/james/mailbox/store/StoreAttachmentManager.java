@@ -77,9 +77,9 @@ public class StoreAttachmentManager implements AttachmentManager {
     }
 
     @Override
-    public Publisher<Void> storeAttachment(Attachment attachment, MailboxSession mailboxSession) {
+    public Publisher<Attachment> storeAttachment(String contentType, InputStream attachmentContent, MailboxSession mailboxSession) {
         return attachmentMapperFactory.getAttachmentMapper(mailboxSession)
-            .storeAttachmentForOwner(attachment, mailboxSession.getUser());
+            .storeAttachmentForOwner(contentType, attachmentContent, mailboxSession.getUser());
     }
 
     @Override

@@ -40,6 +40,7 @@ import com.google.common.collect.ImmutableList;
 import reactor.core.publisher.Mono;
 
 public abstract class AttachmentMapperTest {
+    /*
     private static final AttachmentId UNKNOWN_ATTACHMENT_ID = AttachmentId.from("unknown");
     private static final Username OWNER = Username.of("owner");
     private static final Username ADDITIONAL_OWNER = Username.of("additionalOwner");
@@ -323,4 +324,6 @@ public abstract class AttachmentMapperTest {
 
         assertThat(actualOwners).isEmpty();
     }
+
+     */
 }

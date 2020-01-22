@@ -61,7 +61,7 @@ public class RabbitMQAwsS3SetMessagesMethodTest extends SetMessagesMethodTest {
     public void setMessagesWithABigBodyShouldReturnCreatedMessageWhenSendingMessage() {
 
     }
-    
+
  */
 }
 
