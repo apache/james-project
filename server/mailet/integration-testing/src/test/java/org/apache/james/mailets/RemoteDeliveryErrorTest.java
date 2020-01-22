@@ -28,6 +28,7 @@ import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsPar
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ConditionStep.inputContaining;
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.doesNotAcceptAnyMail;
 import static org.apache.james.mock.smtp.server.ConfigurationClient.BehaviorsParamsBuilder.ResponseStep.serviceNotAvailable;
+import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.net.InetAddress;
@@ -108,10 +109,10 @@ public class RemoteDeliveryErrorTest {
     @Rule
     public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
     @ClassRule
-    public static DockerContainer mockSmtp = DockerContainer.fromName("linagora/mock-smtp-server")
+    public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
         .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 1: " + outputFrame.getUtf8String()));
     @ClassRule
-    public static DockerContainer mockSmtp2 = DockerContainer.fromName("linagora/mock-smtp-server")
+    public static DockerContainer mockSmtp2 = DockerContainer.fromName(MOCK_SMTP_SERVER)
         .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP 2: " + outputFrame.getUtf8String()));
 
     private TemporaryJamesServer jamesServer;
