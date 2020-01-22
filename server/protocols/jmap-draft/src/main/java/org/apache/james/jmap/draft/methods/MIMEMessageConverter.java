@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.List;
@@ -29,9 +30,14 @@ import java.util.TimeZone;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.inject.Inject;
+
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
 import org.apache.james.jmap.draft.model.message.view.MessageViewFactory;
+import org.apache.james.mailbox.AttachmentContentLoader;
+import org.apache.james.mailbox.MailboxSession;
+import org.apache.james.mailbox.exception.AttachmentNotFoundException;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mime4j.codec.DecodeMonitor;
 import org.apache.james.mime4j.codec.EncoderUtil;
@@ -99,13 +105,16 @@ public class MIMEMessageConverter {
             .collect(Guavate.toImmutableList());
 
     private final BasicBodyFactory bodyFactory;
+    private final AttachmentContentLoader attachmentContentLoader;
 
-    public MIMEMessageConverter() {
+    @Inject
+    public MIMEMessageConverter(AttachmentContentLoader attachmentContentLoader) {
+        this.attachmentContentLoader = attachmentContentLoader;
         this.bodyFactory = new BasicBodyFactory();
     }
 
-    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
-        return asBytes(convertToMime(creationMessageEntry, messageAttachments));
+    public byte[] convert(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
+        return asBytes(convertToMime(creationMessageEntry, messageAttachments, session));
     }
 
     public byte[] asBytes(Message message) {
@@ -116,14 +125,14 @@ public class MIMEMessageConverter {
         }
     }
 
-    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments) {
+    @VisibleForTesting Message convertToMime(ValueWithId.CreationMessageEntry creationMessageEntry, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
         if (creationMessageEntry == null || creationMessageEntry.getValue() == null) {
             throw new IllegalArgumentException("creationMessageEntry is either null or has null message");
         }
 
         Message.Builder messageBuilder = Message.Builder.of();
         if (isMultipart(creationMessageEntry.getValue(), messageAttachments)) {
-            messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments));
+            messageBuilder.setBody(createMultipart(creationMessageEntry.getValue(), messageAttachments, session));
         } else {
             messageBuilder.setBody(createTextBody(creationMessageEntry.getValue()))
                 .setContentTransferEncoding(QUOTED_PRINTABLE);
@@ -202,10 +211,10 @@ public class MIMEMessageConverter {
         return bodyFactory.textBody(body, StandardCharsets.UTF_8);
     }
 
-    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) {
+    private Multipart createMultipart(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) {
         try {
             if (hasAttachment(messageAttachments)) {
-                return createMultipartWithAttachments(newMessage, messageAttachments);
+                return createMultipartWithAttachments(newMessage, messageAttachments, session);
             } else {
                 return createMultipartAlternativeBody(newMessage);
             }
@@ -215,7 +224,7 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments) throws IOException {
+    private Multipart createMultipartWithAttachments(CreationMessage newMessage, ImmutableList<MessageAttachment> messageAttachments, MailboxSession session) throws IOException {
         MultipartBuilder mixedMultipartBuilder = MultipartBuilder.create(MIXED_SUB_TYPE);
         List<MessageAttachment> inlineAttachments = messageAttachments.stream()
             .filter(MessageAttachment::isInline)
@@ -225,29 +234,29 @@ public class MIMEMessageConverter {
             .collect(Guavate.toImmutableList());
 
         if (inlineAttachments.size() > 0) {
-            mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments));
+            mixedMultipartBuilder.addBodyPart(relatedInnerMessage(newMessage, inlineAttachments, session));
         } else {
             addBody(newMessage, mixedMultipartBuilder);
         }
 
-        addAttachments(besideAttachments, mixedMultipartBuilder);
+        addAttachments(besideAttachments, mixedMultipartBuilder, session);
 
         return mixedMultipartBuilder.build();
     }
 
-    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachment> inlines) throws IOException {
+    private Message relatedInnerMessage(CreationMessage newMessage, List<MessageAttachment> inlines, MailboxSession session) throws IOException {
         MultipartBuilder relatedMultipart = MultipartBuilder.create(RELATED_SUB_TYPE);
         addBody(newMessage, relatedMultipart);
 
         return Message.Builder.of()
-            .setBody(addAttachments(inlines, relatedMultipart)
+            .setBody(addAttachments(inlines, relatedMultipart, session)
                 .build())
             .build();
     }
 
     private MultipartBuilder addAttachments(List<MessageAttachment> messageAttachments,
-                                            MultipartBuilder multipartBuilder) {
-        messageAttachments.forEach(addAttachment(multipartBuilder));
+                                            MultipartBuilder multipartBuilder, MailboxSession session) {
+        messageAttachments.forEach(addAttachment(multipartBuilder, session));
 
         return multipartBuilder;
     }
@@ -289,26 +298,28 @@ public class MIMEMessageConverter {
         }
     }
 
-    private Consumer<MessageAttachment> addAttachment(MultipartBuilder builder) {
+    private Consumer<MessageAttachment> addAttachment(MultipartBuilder builder, MailboxSession session) {
         return att -> { 
             try {
-                builder.addBodyPart(attachmentBodyPart(att));
-            } catch (IOException e) {
+                builder.addBodyPart(attachmentBodyPart(att, session));
+            } catch (IOException | AttachmentNotFoundException e) {
                 LOGGER.error("Error while creating attachment", e);
                 throw new RuntimeException(e);
             }
         };
     }
 
-    private BodyPart attachmentBodyPart(MessageAttachment att) throws IOException {
-        BodyPartBuilder builder = BodyPartBuilder.create()
-            .use(bodyFactory)
-            .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(att.getAttachment().getStream())))
-            .setField(contentTypeField(att))
-            .setField(contentDispositionField(att.isInline()))
-            .setContentTransferEncoding(BASE64);
-        contentId(builder, att);
-        return builder.build();
+    private BodyPart attachmentBodyPart(MessageAttachment att, MailboxSession session) throws IOException, AttachmentNotFoundException {
+        try (InputStream attachmentStream = attachmentContentLoader.load(att.getAttachment(), session)) {
+            BodyPartBuilder builder = BodyPartBuilder.create()
+                .use(bodyFactory)
+                .setBody(new BasicBodyFactory().binaryBody(ByteStreams.toByteArray(attachmentStream)))
+                .setField(contentTypeField(att))
+                .setField(contentDispositionField(att.isInline()))
+                .setContentTransferEncoding(BASE64);
+            contentId(builder, att);
+            return builder.build();
+        }
     }
 
     private void contentId(BodyPartBuilder builder, MessageAttachment att) {

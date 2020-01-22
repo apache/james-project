@@ -95,7 +95,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class SetMessagesCreationProcessorTest {
-    
+
+    /*
     private static final Username USER = Username.of("user@example.com");
     private static final Username OTHER_USER = Username.of("other@example.com");
     private static final String OUTBOX = "outbox";
@@ -507,5 +508,5 @@ public class SetMessagesCreationProcessorTest {
             return Stream.empty();
         }
     }
-
+*/
 }

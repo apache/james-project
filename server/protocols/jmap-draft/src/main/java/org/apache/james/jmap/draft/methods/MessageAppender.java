@@ -78,7 +78,7 @@ public class MessageAppender {
                                                                                MailboxSession session) throws MailboxException {
         Preconditions.checkArgument(!targetMailboxes.isEmpty());
         ImmutableList<MessageAttachment> messageAttachments = getMessageAttachments(session, createdEntry.getValue().getAttachments());
-        byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments);
+        byte[] messageContent = mimeMessageConverter.convert(createdEntry, messageAttachments, session);
         SharedByteArrayInputStream content = new SharedByteArrayInputStream(messageContent);
         Date internalDate = Date.from(createdEntry.getValue().getDate().toInstant());
 
