@@ -19,8 +19,6 @@
 
 package org.apache.james.jdkim.mailets;
 
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,9 +26,6 @@ import javax.inject.Inject;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.jdkim.DKIMVerifier;
-import org.apache.james.jdkim.api.BodyHasher;
-import org.apache.james.jdkim.api.Headers;
 import org.apache.james.jdkim.api.PublicKeyRecordRetriever;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
@@ -77,7 +72,7 @@ public class DKIMVerify extends GenericMailet {
     public void service(Mail mail) throws MessagingException {
         try {
             MimeMessage message = mail.getMessage();
-            List<SignatureRecord> res = verify(verifier, message, forceCRLF);
+            List<SignatureRecord> res = verifier.verify(message, forceCRLF);
             if (res == null || res.isEmpty()) {
                 // neutral
                 mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("neutral (no signatures)")));
@@ -100,36 +95,5 @@ public class DKIMVerify extends GenericMailet {
                 .orElse("");
             mail.setAttribute(new Attribute(DKIM_AUTH_RESULT, AttributeValue.of("fail (" + relatedRecordIdentity + e.getMessage() + ")")));
         }
-    }
-
-    @VisibleForTesting
-    static List<SignatureRecord> verify(DKIMVerifier verifier, MimeMessage message, boolean forceCRLF)
-        throws MessagingException, FailException {
-        Headers headers = new MimeMessageHeaders(message);
-        BodyHasher bh = verifier.newBodyHasher(headers);
-        try {
-            if (bh != null) {
-                OutputStream os = new HeaderSkippingOutputStream(bh
-                    .getOutputStream());
-                if (forceCRLF) {
-                    os = new CRLFOutputStream(os);
-                }
-                message.writeTo(os);
-            }
-
-        } catch (IOException e) {
-            throw new MessagingException("Exception calculating bodyhash: "
-                    + e.getMessage(), e);
-        } finally {
-            try {
-                if (bh != null) {
-                    bh.getOutputStream().close();
-                }
-            } catch (IOException e) {
-                throw new MessagingException("Exception calculating bodyhash: "
-                        + e.getMessage(), e);
-            }
-        }
-        return verifier.verify(bh);
     }
 }

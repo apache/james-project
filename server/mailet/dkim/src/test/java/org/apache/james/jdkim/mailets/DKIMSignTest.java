@@ -35,10 +35,10 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMessage.RecipientType;
 
-import org.apache.james.jdkim.DKIMVerifier;
 import org.apache.james.jdkim.api.SignatureRecord;
 import org.apache.james.jdkim.exceptions.FailException;
 import org.apache.james.jdkim.exceptions.PermFailException;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.mailet.Mail;
 import org.apache.mailet.Mailet;
 import org.apache.mailet.base.test.FakeMail;
@@ -47,7 +47,7 @@ import org.apache.mailet.base.test.FakeMailetConfig;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class DKIMSignTest {
+class DKIMSignTest {
 
     private static final String PKCS1_PEM_FILE = "test-dkim-pkcs1.pem";
     private static final String PKCS8_PEM_FILE = "test-dkim-pkcs8.pem";
@@ -97,7 +97,9 @@ public class DKIMSignTest {
     private List<SignatureRecord> verify(ByteArrayOutputStream rawMessage,
                                          MockPublicKeyRecordRetriever mockPublicKeyRecordRetriever)
             throws MessagingException, FailException {
-        List<SignatureRecord> signs = DKIMVerify.verify(new DKIMVerifier(mockPublicKeyRecordRetriever), new MimeMessage(Session.getDefaultInstance(new Properties()), new ByteArrayInputStream(rawMessage.toByteArray())), true);
+        List<SignatureRecord> signs = new DKIMVerifier(mockPublicKeyRecordRetriever)
+            .verifyUsingCRLF(MimeMessageUtil.mimeMessageFromStream(
+                new ByteArrayInputStream(rawMessage.toByteArray())));
         assertThat(signs).hasSize(1);
 
         return signs;
