@@ -48,6 +48,7 @@ import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.io.Resources;
@@ -60,7 +61,9 @@ interface MailsShouldBeWellReceived {
     String JAMES_SERVER_HOST = "127.0.0.1";
     String DOMAIN = "apache.org";
     String JAMES_USER = "james-user@" + DOMAIN;
+    String OTHER_USER = "other-user@" + DOMAIN;
     String PASSWORD = "secret";
+    String PASSWORD_OTHER = "other-secret";
     ConditionFactory CALMLY_AWAIT = Awaitility
         .with().pollInterval(Duration.ONE_HUNDRED_MILLISECONDS)
         .and().pollDelay(Duration.ONE_HUNDRED_MILLISECONDS)
@@ -125,13 +128,8 @@ interface MailsShouldBeWellReceived {
         String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
 
         try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
-            Mono.fromRunnable(
-                Throwing.runnable(() -> {
-                    sender.connect(JAMES_SERVER_HOST, smtpPort);
-                    sendUniqueMessage(sender, message);
-                }))
-                .subscribeOn(Schedulers.elastic())
-                .block();
+            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            sendUniqueMessage(sender, message);
         }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
@@ -140,6 +138,40 @@ interface MailsShouldBeWellReceived {
             reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
                 .login(JAMES_USER, PASSWORD)
                 .select(TestIMAPClient.INBOX)
+                .awaitMessageCount(CALMLY_AWAIT, 1);
+        }
+
+    }
+
+    @Test
+    default void mailsShouldBeWellReceivedByBothRecipient(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DOMAIN)
+            .addUser(JAMES_USER, PASSWORD)
+            .addUser(OTHER_USER, PASSWORD_OTHER);
+
+        MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+        mailboxProbe.createMailbox("#private", OTHER_USER, DefaultMailboxes.INBOX);
+
+        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        String message = Resources.toString(Resources.getResource("eml/htmlMail.eml"), StandardCharsets.UTF_8);
+
+        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            sendUniqueMessageToTwoUsers(sender, message);
+        }
+
+        CALMLY_AWAIT.untilAsserted(() -> assertThat(server.getProbe(SpoolerProbe.class).processingFinished()).isTrue());
+
+        try (IMAPMessageReader reader = new IMAPMessageReader()) {
+            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(JAMES_USER, PASSWORD)
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessageCount(CALMLY_AWAIT, 1);
+            reader.connect(JAMES_SERVER_HOST, server.getProbe(ImapGuiceProbe.class).getImapPort())
+                .login(OTHER_USER, PASSWORD_OTHER)
+                .select(IMAPMessageReader.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
         }
 
@@ -183,5 +215,10 @@ interface MailsShouldBeWellReceived {
     default void sendUniqueMessage(SMTPMessageSender sender, String message) throws IOException {
         String uniqueMessage = message.replace("banana", "UUID " + UUID.randomUUID().toString());
         sender.sendMessageWithHeaders("bob@apache.org", JAMES_USER, uniqueMessage);
+    }
+
+    default void sendUniqueMessageToTwoUsers(SMTPMessageSender sender, String message) throws IOException {
+        String uniqueMessage = message.replace("banana", "UUID " + UUID.randomUUID().toString());
+        sender.sendMessageWithHeaders("bob@apache.org", ImmutableList.of(JAMES_USER, OTHER_USER), uniqueMessage);
     }
 }
