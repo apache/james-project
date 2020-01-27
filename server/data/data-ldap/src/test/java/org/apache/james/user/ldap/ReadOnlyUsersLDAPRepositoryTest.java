@@ -133,8 +133,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        @Disabled("JAMES-2270 : pause issue after the fix in JAMES-2666")
-        public void testShouldStillWorksAfterRestartingLDAP() throws Exception {
+        public void testShouldStillWorkAfterRestartingLDAP() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             ldapRepository.test(JAMES_USER_MAIL, PASSWORD);
 
@@ -203,10 +202,12 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@userBase]", "ou=People,dc=james,dc=org");
         configuration.addProperty("[@userIdAttribute]", "uid");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-        configuration.addProperty("[@maxRetries]", "4");
+        configuration.addProperty("[@maxRetries]", "1");
         configuration.addProperty("[@retryStartInterval]", "0");
-        configuration.addProperty("[@retryMaxInterval]", "8");
-        configuration.addProperty("[@retryIntervalScale]", "1000");
+        configuration.addProperty("[@retryMaxInterval]", "2");
+        configuration.addProperty("[@retryIntervalScale]", "100");
+        configuration.addProperty("[@connectionTimeout]", "100");
+        configuration.addProperty("[@readTimeout]", "100");
         return configuration;
     }
 
@@ -218,11 +219,13 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         configuration.addProperty("[@userBase]", "ou=People,dc=james,dc=org");
         configuration.addProperty("[@userIdAttribute]", "mail");
         configuration.addProperty("[@userObjectClass]", "inetOrgPerson");
-        configuration.addProperty("[@maxRetries]", "4");
+        configuration.addProperty("[@maxRetries]", "1");
         configuration.addProperty("[@retryStartInterval]", "0");
-        configuration.addProperty("[@retryMaxInterval]", "8");
-        configuration.addProperty("[@retryIntervalScale]", "1000");
+        configuration.addProperty("[@retryMaxInterval]", "2");
+        configuration.addProperty("[@retryIntervalScale]", "100");
         configuration.addProperty("supportsVirtualHosting", true);
+        configuration.addProperty("[@connectionTimeout]", "100");
+        configuration.addProperty("[@readTimeout]", "100");
         return configuration;
     }
 }
