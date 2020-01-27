@@ -34,20 +34,19 @@ import org.apache.commons.configuration2.tree.ImmutableNode;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ReadOnlyUsersLDAPRepositoryTest {
+class ReadOnlyUsersLDAPRepositoryTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
-    private static final Username JAMES_USER_MAIL = Username.of(JAMES_USER.getLocalPart()+ "@" + DOMAIN);
-    private static final Username UNKNOWN = Username.of("unknown");
-    private static final String BAD_PASSWORD = "badpassword";
+    static final Logger LOGGER = LoggerFactory.getLogger(ReadOnlyUsersLDAPRepositoryTest.class);
+    static final Username JAMES_USER_MAIL = Username.of(JAMES_USER.getLocalPart()+ "@" + DOMAIN);
+    static final Username UNKNOWN = Username.of("unknown");
+    static final String BAD_PASSWORD = "badpassword";
 
-    private DomainList domainList;
+    DomainList domainList;
 
     @BeforeEach
     void setUp() {
@@ -58,7 +57,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     class SupportVirtualHosting {
 
         @Test
-        public void supportVirtualHostingShouldReturnFalseByDefault() throws Exception {
+        void supportVirtualHostingShouldReturnFalseByDefault() throws Exception {
             ReadOnlyUsersLDAPRepository usersLDAPRepository = new ReadOnlyUsersLDAPRepository(domainList);
             usersLDAPRepository.configure(ldapRepositoryConfiguration());
 
@@ -66,7 +65,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        public void supportVirtualHostingShouldReturnTrueWhenReportedInConfig() throws Exception {
+        void supportVirtualHostingShouldReturnTrueWhenReportedInConfig() throws Exception {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "true");
 
@@ -77,7 +76,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        public void supportVirtualHostingShouldReturnFalseWhenReportedInConfig() throws Exception {
+        void supportVirtualHostingShouldReturnFalseWhenReportedInConfig() throws Exception {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "false");
 
@@ -88,7 +87,7 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        public void configureShouldThrowOnNonBooleanValueForSupportsVirtualHosting() throws Exception {
+        void configureShouldThrowOnNonBooleanValueForSupportsVirtualHosting() {
             HierarchicalConfiguration<ImmutableNode> configuration = ldapRepositoryConfiguration();
             configuration.addProperty(ReadOnlyUsersLDAPRepository.SUPPORTS_VIRTUAL_HOSTING, "bad");
 
@@ -103,37 +102,37 @@ public class ReadOnlyUsersLDAPRepositoryTest {
     class TestUser {
 
         @Test
-        public void knownUserShouldBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
+        void knownUserShouldBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration());
             assertThat(ldapRepository.test(JAMES_USER, PASSWORD)).isTrue();
         }
 
         @Test
-        public void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrect() throws Exception {
+        void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrect() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration());
             assertThat(ldapRepository.test(JAMES_USER, BAD_PASSWORD)).isFalse();
         }
 
         @Test
-        public void unknownUserShouldNotBeAbleToLogIn() throws Exception {
+        void unknownUserShouldNotBeAbleToLogIn() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration());
             assertThat(ldapRepository.test(UNKNOWN, BAD_PASSWORD)).isFalse();
         }
 
         @Test
-        public void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
+        void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrect() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration());
             assertThat(ldapRepository.test(UNKNOWN, PASSWORD)).isFalse();
         }
 
         @Test
-        public void knownUserShouldBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
+        void knownUserShouldBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             assertThat(ldapRepository.test(JAMES_USER_MAIL, PASSWORD)).isTrue();
         }
 
         @Test
-        public void testShouldStillWorkAfterRestartingLDAP() throws Exception {
+        void testShouldStillWorkAfterRestartingLDAP() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             ldapRepository.test(JAMES_USER_MAIL, PASSWORD);
 
@@ -149,25 +148,25 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        public void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrectWithVirtualHosting() throws Exception {
+        void knownUserShouldNotBeAbleToLogInWhenPasswordIsNotCorrectWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             assertThat(ldapRepository.test(JAMES_USER, BAD_PASSWORD)).isFalse();
         }
 
         @Test
-        public void unknownUserShouldNotBeAbleToLogInWithVirtualHosting() throws Exception {
+        void unknownUserShouldNotBeAbleToLogInWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             assertThat(ldapRepository.test(UNKNOWN, BAD_PASSWORD)).isFalse();
         }
 
         @Test
-        public void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
+        void unknownUserShouldNotBeAbleToLogInWhenPasswordIsCorrectWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             assertThat(ldapRepository.test(UNKNOWN, PASSWORD)).isFalse();
         }
 
         @Test
-        public void specialCharacterInUserInputShouldBeSanitized() throws Exception {
+        void specialCharacterInUserInputShouldBeSanitized() throws Exception {
             Username patternMatchingMultipleUsers = Username.of("j*");
 
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
@@ -175,13 +174,13 @@ public class ReadOnlyUsersLDAPRepositoryTest {
         }
 
         @Test
-        public void containsWithGetUserShouldBeTrue() throws Exception {
+        void containsWithGetUserShouldBeTrue() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfiguration());
             assertThat(ldapRepository.contains(ldapRepository.getUser(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
 
         @Test
-        public void containsWithGetUserShouldBeTrueWithVirtualHosting() throws Exception {
+        void containsWithGetUserShouldBeTrueWithVirtualHosting() throws Exception {
             ReadOnlyUsersLDAPRepository ldapRepository = startUsersRepository(ldapRepositoryConfigurationWithVirtualHosting());
             assertThat(ldapRepository.contains(ldapRepository.getUser(JAMES_USER_MAIL.asMailAddress()))).isTrue();
         }
