@@ -24,16 +24,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
-import java.util.List;
 
-import org.apache.james.eventsourcing.Event;
 import org.apache.james.eventsourcing.eventstore.EventStore;
 import org.apache.james.eventsourcing.eventstore.cassandra.CassandraEventStoreExtension;
 import org.apache.james.eventsourcing.eventstore.cassandra.JsonEventSerializer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-
-import scala.jdk.javaapi.CollectionConverters;
 
 class EventsourcingConfigurationManagementTest {
 
@@ -243,9 +239,8 @@ class EventsourcingConfigurationManagementTest {
         testee.registerConfiguration(FIRST_CONFIGURATION);
         testee.registerConfiguration(FIRST_CONFIGURATION);
 
-        scala.collection.immutable.List<Event> eventsStored = eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID)
-            .getEvents();
-        assertThat(CollectionConverters.asJava(eventsStored))
+        assertThat(eventStore.getEventsOfAggregate(CONFIGURATION_AGGREGATE_ID)
+            .getEventsJava())
             .hasSize(1);
     }
 }

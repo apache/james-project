@@ -21,6 +21,7 @@ package org.apache.james.eventsourcing.eventstore
 import org.apache.james.eventsourcing.{Event, EventId}
 
 import scala.annotation.varargs
+import scala.jdk.CollectionConverters._
 
 object History {
   def empty: History = new History(Nil)
@@ -48,6 +49,8 @@ final case class History private(events: List[Event]) {
     .maxOption
 
   def getEvents:List[Event] = events
+
+  def getEventsJava:java.util.List[Event] = events.asJava
 
   def getNextEventId: EventId = getVersion
     .map(eventId => eventId.next)

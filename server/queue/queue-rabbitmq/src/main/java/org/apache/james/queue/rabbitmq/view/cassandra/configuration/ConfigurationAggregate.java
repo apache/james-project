@@ -28,7 +28,6 @@ import org.apache.james.eventsourcing.eventstore.History;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import scala.jdk.javaapi.CollectionConverters;
 
 class ConfigurationAggregate {
 
@@ -66,7 +65,7 @@ class ConfigurationAggregate {
         this.history = history;
         this.state = State.initial();
 
-        CollectionConverters.asJava(history.getEvents()).forEach(this::apply);
+        history.getEventsJava().forEach(this::apply);
     }
 
     List<? extends Event> registerConfiguration(CassandraMailQueueViewConfiguration configuration) {

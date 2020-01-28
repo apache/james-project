@@ -48,7 +48,6 @@ import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
-import scala.jdk.javaapi.CollectionConverters;
 
 public class UserQuotaThresholds {
 
@@ -127,7 +126,7 @@ public class UserQuotaThresholds {
     private UserQuotaThresholds(Id aggregateId, History history) {
         this.aggregateId = aggregateId;
         this.history = history;
-        this.events = CollectionConverters.asJava(history.getEvents())
+        this.events = history.getEventsJava()
             .stream()
             .map(QuotaThresholdChangedEvent.class::cast)
             .collect(Collectors.toList());

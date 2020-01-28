@@ -41,8 +41,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
-import scala.jdk.javaapi.CollectionConverters;
-
 @ExtendWith(CountDownLatchExtension.class)
 class EventSourcingTaskManagerTest implements TaskManagerContract {
     ConditionFactory CALMLY_AWAIT = Awaitility
@@ -81,7 +79,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
     void createdTaskShouldKeepOriginHostname() {
         TaskId taskId = taskManager.submit(new MemoryReferenceTask(() -> Task.Result.COMPLETED));
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
-        assertThat(CollectionConverters.asJava(eventStore.getEventsOfAggregate(aggregateId).getEvents()))
+        assertThat(eventStore.getEventsOfAggregate(aggregateId).getEventsJava())
                 .filteredOn(event -> event instanceof Created)
                 .extracting("hostname")
                 .containsOnly(HOSTNAME);
@@ -93,7 +91,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
 
         CALMLY_AWAIT.untilAsserted(() ->
-            assertThat(CollectionConverters.asJava(eventStore.getEventsOfAggregate(aggregateId).getEvents()))
+            assertThat(eventStore.getEventsOfAggregate(aggregateId).getEventsJava())
                 .filteredOn(event -> event instanceof Started)
                 .extracting("hostname")
                 .containsOnly(HOSTNAME));
@@ -109,7 +107,7 @@ class EventSourcingTaskManagerTest implements TaskManagerContract {
 
         TaskAggregateId aggregateId = new TaskAggregateId(taskId);
         CALMLY_AWAIT.untilAsserted(() ->
-            assertThat(CollectionConverters.asJava(eventStore.getEventsOfAggregate(aggregateId).getEvents()))
+            assertThat(eventStore.getEventsOfAggregate(aggregateId).getEventsJava())
                 .filteredOn(event -> event instanceof CancelRequested)
                 .extracting("hostname")
                 .containsOnly(HOSTNAME));
