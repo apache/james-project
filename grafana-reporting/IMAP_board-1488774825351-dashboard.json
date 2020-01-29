@@ -1836,7 +1836,7 @@
           "thresholds": [],
           "timeFrom": null,
           "timeShift": null,
-          "title": "IMAP_LIST",
+          "title": "IMAP-LIST",
           "tooltip": {
             "shared": true,
             "sort": 0,
@@ -1953,7 +1953,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:\"IMAP_CREATE\"",
+              "query": "name:\"IMAP-CREATE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
