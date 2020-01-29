@@ -114,7 +114,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-request",
+              "query": "name:\"JMAP-request\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -224,7 +224,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-getMailboxes",
+              "query": "name:\"JMAP-getMailboxes\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -334,7 +334,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-getMessageList",
+              "query": "name:\"JMAP-getMessageList\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -444,7 +444,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-getMessages",
+              "query": "name:\"JMAP-getMessages\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -566,7 +566,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-setMessages",
+              "query": "name:\"JMAP-setMessages\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -676,7 +676,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-setMailboxes",
+              "query": "name:\"JMAP-setMailboxes\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -786,7 +786,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-getVacationResponse",
+              "query": "name:\"JMAP-getVacationResponse\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -896,7 +896,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-setVacationResponse",
+              "query": "name:\"JMAP-setVacationResponse\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1018,7 +1018,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-upload-post",
+              "query": "name:\"JMAP-upload-post\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1128,7 +1128,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-download-post",
+              "query": "name:\"JMAP-download-post\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1238,7 +1238,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-download-get",
+              "query": "name:\"JMAP-download-get\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1348,7 +1348,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:JMAP-authentication-post",
+              "query": "name:\"JMAP-authentication-post\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

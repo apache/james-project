@@ -97,7 +97,7 @@
               "type": "avg"
             }
           ],
-          "query": "name:preDeletionHook",
+          "query": "name:\"preDeletionHook\"",
           "refId": "A",
           "timeField": "@timestamp"
         }

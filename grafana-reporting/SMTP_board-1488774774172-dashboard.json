@@ -97,7 +97,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:smtpConnections",
+              "query": "name:\"smtpConnections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -210,7 +210,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTP-ehlo",
+              "query": "name:\"SMTP-ehlo\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -335,7 +335,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTP-quit",
+              "query": "name:\"SMTP-quit\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -448,7 +448,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTP-DATA",
+              "query": "name:\"SMTP-DATA\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -573,7 +573,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTP-rcpt",
+              "query": "name:\"SMTP-rcpt\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -686,7 +686,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTP-mail",
+              "query": "name:\"SMTP-mail\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

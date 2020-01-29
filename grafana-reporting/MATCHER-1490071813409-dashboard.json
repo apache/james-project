@@ -117,7 +117,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:All",
+              "query": "name:\"All\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -230,7 +230,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:spoolProcessing",
+              "query": "name:\"spoolProcessing\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -343,7 +343,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:SMTPAuthSuccessful",
+              "query": "name:\"SMTPAuthSuccessful\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -468,7 +468,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:RecipientIsLocal",
+              "query": "name:\"RecipientIsLocal\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -581,7 +581,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:HasMailAttribute",
+              "query": "name:\"HasMailAttribute\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

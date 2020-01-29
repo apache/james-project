@@ -997,7 +997,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:spoolProcessing",
+              "query": "name:\"spoolProcessing\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

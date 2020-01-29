@@ -110,7 +110,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:tikaTextExtraction",
+              "query": "name:\"tikaTextExtraction\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -223,7 +223,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:tikaTextExtraction",
+              "query": "name:\"tikaTextExtraction\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -333,7 +333,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.hit.rate",
+              "query": "name:\"textExtractor.cache.hit.rate\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -431,7 +431,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.size",
+              "query": "name:\"textExtractor.cache.size\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -529,7 +529,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.weight",
+              "query": "name:\"textExtractor.cache.weight\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -636,7 +636,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:textExtractor.cache.hit.count",
+              "query": "name:\"textExtractor.cache.hit.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             },
@@ -674,7 +674,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:textExtractor.cache.miss.count",
+              "query": "name:\"textExtractor.cache.miss.count\"",
               "refId": "B",
               "timeField": "@timestamp"
             }
@@ -785,7 +785,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.eviction.count",
+              "query": "name:\"textExtractor.cache.eviction.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -884,7 +884,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.load.count",
+              "query": "name:\"textExtractor.cache.load.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -983,7 +983,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:textExtractor.cache.load.exception.rate",
+              "query": "name:\"textExtractor.cache.load.exception.rate\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

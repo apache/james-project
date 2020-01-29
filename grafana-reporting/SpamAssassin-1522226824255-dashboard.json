@@ -97,7 +97,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:spamAssassin-check",
+              "query": "name:\"spamAssassin-check\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -210,7 +210,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:spamAssassin-check",
+              "query": "name:\"spamAssassin-check\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -315,7 +315,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:spamAssassin-spam-report",
+              "query": "name:\"spamAssassin-spam-report\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -428,7 +428,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:spamAssassin-spam-report",
+              "query": "name:\"spamAssassin-spam-report\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -533,7 +533,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:spamAssassin-ham-report",
+              "query": "name:\"spamAssassin-ham-report\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -646,7 +646,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:spamAssassin-ham-report",
+              "query": "name:\"spamAssassin-ham-report\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

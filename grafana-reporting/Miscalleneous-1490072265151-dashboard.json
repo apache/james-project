@@ -98,7 +98,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:imapConnections",
+              "query": "name:\"imapConnections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -191,7 +191,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:smtpConnections",
+              "query": "name:\"smtpConnections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -284,7 +284,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:lmtpConnections",
+              "query": "name:\"lmtpConnections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -389,7 +389,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:imapCommands",
+              "query": "name:\"imapCommands\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -482,7 +482,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:smtpCommands",
+              "query": "name:\"smtpCommands\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -575,7 +575,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:lmtpCommands",
+              "query": "name:\"lmtpCommands\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -668,7 +668,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:JMAP-request",
+              "query": "name:\"JMAP-request\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -773,7 +773,7 @@
                   "type": "cardinality"
                 }
               ],
-              "query": "name:outgoingMails",
+              "query": "name:\"outgoingMails\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -959,7 +959,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:localDeliveredMails",
+              "query": "name:\"localDeliveredMails\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1157,7 +1157,7 @@
                   "type": "cardinality"
                 }
               ],
-              "query": "name:mailet-relay-denied",
+              "query": "name:\"mailet-relay-denied\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1250,7 +1250,7 @@
                   "type": "cardinality"
                 }
               ],
-              "query": "name:mailet-local-address-error",
+              "query": "name:\"mailet-local-address-error\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1343,7 +1343,7 @@
                   "type": "cardinality"
                 }
               ],
-              "query": "name:mailet-bounce",
+              "query": "name:\"mailet-bounce\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1436,7 +1436,7 @@
                   "type": "cardinality"
                 }
               ],
-              "query": "name:mailet-error",
+              "query": "name:\"mailet-error\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1561,7 +1561,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:webAdmin",
+              "query": "name:\"webAdmin\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

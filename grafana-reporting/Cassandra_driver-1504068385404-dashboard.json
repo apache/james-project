@@ -110,7 +110,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:requests",
+              "query": "name:\"requests\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -223,7 +223,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:requests",
+              "query": "name:\"requests\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -341,7 +341,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:executor-queue-depth",
+              "query": "name:\"executor-queue-depth\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -447,7 +447,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:task-scheduler-task-count",
+              "query": "name:\"task-scheduler-task-count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -553,7 +553,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:blocking-executor-queue-depth",
+              "query": "name:\"blocking-executor-queue-depth\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -659,7 +659,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:open-connections",
+              "query": "name:\"open-connections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

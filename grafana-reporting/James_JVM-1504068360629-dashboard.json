@@ -110,7 +110,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:jvm.file.descriptor",
+              "query": "name:\"jvm.file.descriptor\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -216,7 +216,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:jvm.threads.count",
+              "query": "name:\"jvm.threads.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -322,7 +322,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:jvm.threads.deadlock.count",
+              "query": "name:\"jvm.threads.deadlock.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -432,7 +432,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.total.max",
+              "query": "name:\"jvm.memory.total.max\"",
               "refId": "A",
               "timeField": "@timestamp"
             },
@@ -459,7 +459,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.total.used",
+              "query": "name:\"jvm.memory.total.used\"",
               "refId": "B",
               "timeField": "@timestamp"
             }
@@ -557,7 +557,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.heap.max",
+              "query": "name:\"jvm.memory.heap.max\"",
               "refId": "A",
               "timeField": "@timestamp"
             },
@@ -585,7 +585,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.heap.used",
+              "query": "name:\"jvm.memory.heap.used\"",
               "refId": "B",
               "timeField": "@timestamp"
             }
@@ -683,7 +683,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.non-heap.max",
+              "query": "name:\"jvm.memory.non-heap.max\"",
               "refId": "A",
               "timeField": "@timestamp"
             },
@@ -711,7 +711,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.memory.non-heap.used",
+              "query": "name:\"jvm.memory.non-heap.used\"",
               "refId": "B",
               "timeField": "@timestamp"
             }
@@ -809,7 +809,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.class.loading.loaded",
+              "query": "name:\"jvm.class.loading.loaded\"",
               "refId": "A",
               "timeField": "@timestamp"
             },
@@ -837,7 +837,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:jvm.class.loading.unloaded",
+              "query": "name:\"jvm.class.loading.unloaded\"",
               "refId": "B",
               "timeField": "@timestamp"
             }
@@ -955,7 +955,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:jvm.gc.count",
+              "query": "name:\"jvm.gc.count\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1061,7 +1061,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:jvm.gc.time",
+              "query": "name:\"jvm.gc.time\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

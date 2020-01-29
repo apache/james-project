@@ -117,7 +117,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:findMXRecords",
+              "query": "name:\"findMXRecords\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -230,7 +230,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:getByName",
+              "query": "name:\"getByName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -343,7 +343,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:getAllByName",
+              "query": "name:\"getAllByName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -468,7 +468,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:getHostName",
+              "query": "name:\"getHostName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -581,7 +581,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:findTXTRecords",
+              "query": "name:\"findTXTRecords\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -706,7 +706,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:getHostName",
+              "query": "name:\"getHostName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -819,7 +819,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:findMXRecords",
+              "query": "name:\"findMXRecords\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -932,7 +932,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:findTXTRecords",
+              "query": "name:\"findTXTRecords\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1049,7 +1049,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:getByName",
+              "query": "name:\"getByName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1154,7 +1154,7 @@
                   "type": "derivative"
                 }
               ],
-              "query": "name:getAllByName",
+              "query": "name:\"getAllByName\"",
               "refId": "A",
               "timeField": "@timestamp"
             }

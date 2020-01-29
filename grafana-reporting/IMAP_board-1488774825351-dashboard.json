@@ -97,7 +97,7 @@
                   "type": "max"
                 }
               ],
-              "query": "name:imapConnections",
+              "query": "name:\"imapConnections\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -210,7 +210,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-LOGIN",
+              "query": "name:\"IMAP-LOGIN\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -323,7 +323,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-CAPABILITY",
+              "query": "name:\"IMAP-CAPABILITY\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -436,7 +436,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-AUTHENTICATE",
+              "query": "name:\"IMAP-AUTHENTICATE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -561,7 +561,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-SELECT",
+              "query": "name:\"IMAP-SELECT\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -674,7 +674,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-GETQUOTAROOT",
+              "query": "name:\"IMAP-GETQUOTAROOT\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -787,7 +787,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-FETCH",
+              "query": "name:\"IMAP-FETCH\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -900,7 +900,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-APPEND",
+              "query": "name:\"IMAP-APPEND\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1025,7 +1025,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-IDLE",
+              "query": "name:\"IMAP-IDLE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1138,7 +1138,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-NOOP",
+              "query": "name:\"IMAP-NOOP\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1251,7 +1251,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-STORE",
+              "query": "name:\"IMAP-STORE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1364,7 +1364,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-LSUB",
+              "query": "name:\"IMAP-LSUB\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1489,7 +1489,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-NAMESPACE",
+              "query": "name:\"IMAP-NAMESPACE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1602,7 +1602,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-CLOSE",
+              "query": "name:\"IMAP-CLOSE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1715,7 +1715,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-LOGOUT",
+              "query": "name:\"IMAP-LOGOUT\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1828,7 +1828,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-LIST",
+              "query": "name:\"IMAP-LIST\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -1953,7 +1953,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP_CREATE",
+              "query": "name:\"IMAP_CREATE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -2066,7 +2066,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-COPY",
+              "query": "name:\"IMAP-COPY\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
@@ -2179,7 +2179,7 @@
                   "type": "avg"
                 }
               ],
-              "query": "name:IMAP-MOVE",
+              "query": "name:\"IMAP-MOVE\"",
               "refId": "A",
               "timeField": "@timestamp"
             }
