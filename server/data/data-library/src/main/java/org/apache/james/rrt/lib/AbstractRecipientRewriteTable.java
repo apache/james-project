@@ -18,6 +18,7 @@
  ****************************************************************/
 package org.apache.james.rrt.lib;
 
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -101,11 +102,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
     }
 
     @Override
-    public Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
-        return getMappings(Username.fromLocalPartWithDomain(user, domain), mappingLimit);
+    public Mappings getResolvedMappings(String user, Domain domain, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
+
+        return getMappings(Username.fromLocalPartWithDomain(user, domain), mappingLimit, mappingTypes);
     }
 
-    private Mappings getMappings(Username username, int mappingLimit) throws ErrorMappingException, RecipientRewriteTableException {
+    private Mappings getMappings(Username username, int mappingLimit, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
 
         // We have to much mappings throw ErrorMappingException to avoid
         // infinity loop
@@ -113,23 +115,25 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             throw new TooManyMappingException("554 Too many mappings to process");
         }
 
-        Mappings targetMappings = mapAddress(username.getLocalPart(), username.getDomainPart().get());
-
+        Domain domain = username.getDomainPart().get();
+        String localPart = username.getLocalPart();
+        Stream<Mapping> targetMappings = mapAddress(localPart, domain).asStream()
+                .filter(mapping -> mappingTypes.contains(mapping.getType()));
 
         try {
             return MappingsImpl.fromMappings(
-                targetMappings.asStream()
-                    .flatMap(Throwing.function((Mapping target) -> convertAndRecurseMapping(username, target, mappingLimit)).sneakyThrow()));
+                targetMappings
+                    .flatMap(Throwing.function((Mapping target) -> convertAndRecurseMapping(username, target, mappingLimit, mappingTypes)).sneakyThrow()));
         } catch (SkipMappingProcessingException e) {
             return MappingsImpl.empty();
         }
     }
 
-    private Stream<Mapping> convertAndRecurseMapping(Username originalUsername, Mapping associatedMapping, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException, SkipMappingProcessingException, AddressException {
+    private Stream<Mapping> convertAndRecurseMapping(Username originalUsername, Mapping associatedMapping, int remainingLoops, EnumSet<Type> mappingTypes) throws ErrorMappingException, SkipMappingProcessingException, AddressException {
 
         Function<Username, Stream<Mapping>> convertAndRecurseMapping =
             Throwing
-                .function((Username rewrittenUser) -> convertAndRecurseMapping(associatedMapping, originalUsername, rewrittenUser, remainingLoops))
+                .function((Username rewrittenUser) -> convertAndRecurseMapping(associatedMapping, originalUsername, rewrittenUser, remainingLoops, mappingTypes))
                 .sneakyThrow();
 
         return associatedMapping.rewriteUser(originalUsername)
@@ -138,7 +142,7 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
             .orElse(Stream.empty());
     }
 
-    private Stream<Mapping> convertAndRecurseMapping(Mapping mapping, Username originalUsername, Username rewrittenUsername, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException {
+    private Stream<Mapping> convertAndRecurseMapping(Mapping mapping, Username originalUsername, Username rewrittenUsername, int remainingLoops, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
         LOGGER.debug("Valid virtual user mapping {} to {}", originalUsername.asString(), rewrittenUsername.asString());
 
         Stream<Mapping> nonRecursiveResult = Stream.of(toMapping(rewrittenUsername, mapping.getType()));
@@ -150,12 +154,12 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
         if (originalUsername.equals(rewrittenUsername)) {
             return mapping.handleIdentity(nonRecursiveResult);
         } else {
-            return recurseMapping(nonRecursiveResult, rewrittenUsername, remainingLoops);
+            return recurseMapping(nonRecursiveResult, rewrittenUsername, remainingLoops, mappingTypes);
         }
     }
 
-    private Stream<Mapping> recurseMapping(Stream<Mapping> nonRecursiveResult, Username targetUsername, int remainingLoops) throws ErrorMappingException, RecipientRewriteTableException {
-        Mappings childMappings = getMappings(targetUsername, remainingLoops - 1);
+    private Stream<Mapping> recurseMapping(Stream<Mapping> nonRecursiveResult, Username targetUsername, int remainingLoops, EnumSet<Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException {
+        Mappings childMappings = getMappings(targetUsername, remainingLoops - 1, mappingTypes);
 
         if (childMappings.isEmpty()) {
             return nonRecursiveResult;

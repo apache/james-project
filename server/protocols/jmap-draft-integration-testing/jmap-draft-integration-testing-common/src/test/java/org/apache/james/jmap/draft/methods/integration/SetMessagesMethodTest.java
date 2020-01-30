@@ -29,6 +29,7 @@ import static org.apache.james.jmap.JMAPTestingConstants.ARGUMENTS;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB;
 import static org.apache.james.jmap.JMAPTestingConstants.BOB_PASSWORD;
 import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN;
+import static org.apache.james.jmap.JMAPTestingConstants.DOMAIN_ALIAS;
 import static org.apache.james.jmap.JMAPTestingConstants.LOCALHOST_IP;
 import static org.apache.james.jmap.JMAPTestingConstants.NAME;
 import static org.apache.james.jmap.JMAPTestingConstants.SECOND_ARGUMENTS;
@@ -126,7 +127,6 @@ import org.junit.experimental.categories.Category;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
-
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.LogDetail;
@@ -137,6 +137,9 @@ public abstract class SetMessagesMethodTest {
     private static final String FORWARDED = "$Forwarded";
     private static final int _1MB = 1024 * 1024;
     private static final Username USERNAME = Username.of("username@" + DOMAIN);
+    private static final String ALIAS_OF_USERNAME_MAIL = "alias@" + DOMAIN;
+    private static final String GROUP_MAIL = "group@" + DOMAIN;
+    private static final Username ALIAS_OF_USERNAME = Username.of(ALIAS_OF_USERNAME_MAIL);
     private static final String PASSWORD = "password";
     private static final MailboxPath USER_MAILBOX = MailboxPath.forUser(USERNAME, "mailbox");
     private static final String NOT_UPDATED = ARGUMENTS + ".notUpdated";
@@ -179,6 +182,7 @@ public abstract class SetMessagesMethodTest {
         dataProbe.addDomain(DOMAIN);
         dataProbe.addUser(USERNAME.asString(), PASSWORD);
         dataProbe.addUser(BOB.asString(), BOB_PASSWORD);
+
         mailboxProbe.createMailbox("#private", USERNAME.asString(), DefaultMailboxes.INBOX);
         accessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), USERNAME, PASSWORD);
         bobAccessToken = HttpJmapAuthentication.authenticateJamesUser(baseUri(jmapServer), BOB, BOB_PASSWORD);
@@ -2497,6 +2501,128 @@ public abstract class SetMessagesMethodTest {
             .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId))
             .body(ARGUMENTS + ".notCreated." + messageCreationId + ".type", equalTo("invalidProperties"))
             .body(ARGUMENTS + ".notCreated." + messageCreationId + ".description", equalTo("Invalid 'from' field. Must be " + USERNAME.asString()));
+    }
+
+    @Test
+    public void setMessagesShouldSucceedWhenSendingMessageFromAnAliasOfTheConnectedUser() throws Exception {
+        dataProbe.addUserAliasMapping(Username.of(ALIAS_OF_USERNAME_MAIL).getLocalPart(), ALIAS_OF_USERNAME.getDomainPart().get().asString(), USERNAME.asString());
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + ALIAS_OF_USERNAME_MAIL + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].headers.From", equalTo(ALIAS_OF_USERNAME_MAIL))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.name", equalTo(ALIAS_OF_USERNAME_MAIL))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.email", equalTo(ALIAS_OF_USERNAME_MAIL));
+
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+
+    }
+
+    @Test
+    public void setMessagesShouldSucceedWhenSendingMessageFromADomainAliasOfTheConnectedUser() throws Exception {
+        dataProbe.addDomain(DOMAIN_ALIAS);
+        dataProbe.addDomainAliasMapping(DOMAIN_ALIAS, DOMAIN);
+
+        String messageCreationId = "creationId1337";
+        String alias = USERNAME.getLocalPart() + "@" + DOMAIN_ALIAS;
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId + "\" : {" +
+            "        \"from\": { \"email\": \"" + alias + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(NAME, equalTo("messagesSet"))
+            .body(ARGUMENTS + ".created", aMapWithSize(1))
+            .body(ARGUMENTS + ".created", hasKey(messageCreationId))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].headers.From", equalTo(alias))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.name", equalTo(alias))
+            .body(ARGUMENTS + ".created[\"" + messageCreationId + "\"].from.email", equalTo(alias));
+
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+    }
+
+    @Test
+    public void setMessagesShouldFailWhenSendingMessageFromAGroupAliasOfTheConnectedUser() throws Exception {
+        dataProbe.addGroupAliasMapping(GROUP_MAIL, USERNAME.asString());
+
+        String messageCreationId = "creationId1337";
+        String requestBody = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + messageCreationId  + "\" : {" +
+            "        \"from\": { \"email\": \"" + GROUP_MAIL + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"someone@example.com\"}]," +
+            "        \"subject\": \"Thank you for joining example.com!\"," +
+            "        \"textBody\": \"Hello someone, and thank you for joining example.com!\"," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        given()
+            .header("Authorization", accessToken.asString())
+            .body(requestBody)
+        .when()
+            .post("/jmap")
+        .then()
+            .log().ifValidationFails()
+            .statusCode(200)
+            .body(ARGUMENTS + ".created", anEmptyMap())
+            .body(ARGUMENTS + ".notCreated", aMapWithSize(1))
+            .body(ARGUMENTS + ".notCreated", hasKey(messageCreationId));
+
+        String outboxId = getMailboxId(accessToken, Role.OUTBOX);
+        assertThat(hasNoMessageIn(bobAccessToken, outboxId)).isTrue();
     }
 
     @Test

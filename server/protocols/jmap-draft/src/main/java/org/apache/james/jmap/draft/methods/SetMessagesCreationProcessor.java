@@ -62,6 +62,7 @@ import org.apache.james.mailbox.exception.OverQuotaException;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.Envelope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,7 +87,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private final MessageAppender messageAppender;
     private final MessageSender messageSender;
     private final ReferenceUpdater referenceUpdater;
-    
+    private final CanSendFrom canSendFrom;
+
     @VisibleForTesting
     @Inject
     SetMessagesCreationProcessor(MessageFullViewFactory messageFullViewFactory,
@@ -97,7 +99,8 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                                  MailboxId.Factory mailboxIdFactory,
                                  MessageAppender messageAppender,
                                  MessageSender messageSender,
-                                 ReferenceUpdater referenceUpdater) {
+                                 ReferenceUpdater referenceUpdater,
+                                 CanSendFrom canSendFrom) {
         this.messageFullViewFactory = messageFullViewFactory;
         this.systemMailboxesProvider = systemMailboxesProvider;
         this.attachmentChecker = attachmentChecker;
@@ -107,6 +110,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         this.messageAppender = messageAppender;
         this.messageSender = messageSender;
         this.referenceUpdater = referenceUpdater;
+        this.canSendFrom = canSendFrom;
     }
 
     @Override
@@ -128,7 +132,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
             assertIsUserOwnerOfMailboxes(mailboxIds, mailboxSession);
             performCreate(create, responseBuilder, mailboxSession);
         } catch (MailboxSendingNotAllowedException e) {
-            responseBuilder.notCreated(create.getCreationId(), 
+            responseBuilder.notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.from)
@@ -145,16 +149,16 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     .build());
 
         } catch (AttachmentsNotFoundException e) {
-            responseBuilder.notCreated(create.getCreationId(), 
+            responseBuilder.notCreated(create.getCreationId(),
                     SetMessagesError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.attachments)
                         .attachmentsNotFound(e.getAttachmentIds())
                         .description("Attachment not found")
                         .build());
-            
+
         } catch (InvalidMailboxForCreationException e) {
-            responseBuilder.notCreated(create.getCreationId(), 
+            responseBuilder.notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.INVALID_PROPERTIES)
                         .properties(MessageProperty.mailboxIds)
@@ -174,7 +178,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
                     buildSetErrorFromValidationResult(create.getValue().validate()));
 
         } catch (MailboxNotFoundException e) {
-            responseBuilder.notCreated(create.getCreationId(), 
+            responseBuilder.notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.ERROR)
                         .description(e.getMessage())
@@ -198,7 +202,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
 
         } catch (MailboxException | MessagingException | IOException e) {
             LOG.error("Unexpected error while creating message", e);
-            responseBuilder.notCreated(create.getCreationId(), 
+            responseBuilder.notCreated(create.getCreationId(),
                     SetError.builder()
                         .type(SetError.Type.ERROR)
                         .description("unexpected error")
@@ -281,7 +285,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     }
 
     private MessageWithId handleOutboxMessages(CreationMessageEntry entry, MailboxSession session) throws MailboxException, MessagingException, IOException {
-        assertUserIsSender(session, entry.getValue().getFrom());
+        assertUserCanSendFrom(session.getUser(), entry.getValue().getFrom());
         MetaDataWithContent newMessage = messageAppender.appendMessageInMailboxes(entry, toMailboxIds(entry), session);
         MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
         Envelope envelope = EnvelopeUtils.fromMessage(jmapMessage);
@@ -290,11 +294,12 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
 
-    private void assertUserIsSender(MailboxSession session, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
+    @VisibleForTesting
+    void assertUserCanSendFrom(Username connectedUser, Optional<DraftEmailer> from) throws MailboxSendingNotAllowedException {
         if (!from.flatMap(DraftEmailer::getEmail)
-                .filter(email -> session.getUser().equals(Username.of(email)))
+                .filter(email -> canSendFrom.userCanSendFrom(connectedUser, Username.of(email)))
                 .isPresent()) {
-            String allowedSender = session.getUser().asString();
+            String allowedSender = connectedUser.asString();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }
@@ -304,7 +309,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
         MessageFullView jmapMessage = messageFullViewFactory.fromMetaDataWithContent(newMessage);
         return new ValueWithId.MessageWithId(entry.getCreationId(), jmapMessage);
     }
-    
+
     private boolean isAppendToMailboxWithRole(Role role, CreationMessage entry, MailboxSession mailboxSession) throws MailboxException {
         return getMailboxWithRole(mailboxSession, role)
                 .map(entry::isOnlyIn)
@@ -320,7 +325,7 @@ public class SetMessagesCreationProcessor implements SetMessagesProcessor {
     private Optional<MessageManager> getMailboxWithRole(MailboxSession mailboxSession, Role role) throws MailboxException {
         return systemMailboxesProvider.getMailboxByRole(role, mailboxSession.getUser()).findFirst();
     }
-    
+
     private SetError buildSetErrorFromValidationResult(List<ValidationResult> validationErrors) {
         return SetError.builder()
                 .type(SetError.Type.INVALID_PROPERTIES)

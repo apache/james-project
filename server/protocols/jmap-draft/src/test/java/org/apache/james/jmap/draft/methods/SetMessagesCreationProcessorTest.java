@@ -20,6 +20,7 @@
 package org.apache.james.jmap.draft.methods;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -28,11 +29,18 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.net.UnknownHostException;
 import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
+import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.domainlist.api.DomainListException;
+import org.apache.james.domainlist.lib.DomainListConfiguration;
+import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.jmap.draft.exceptions.MailboxNotOwnedException;
 import org.apache.james.jmap.draft.model.CreationMessage;
 import org.apache.james.jmap.draft.model.CreationMessage.DraftEmailer;
@@ -64,6 +72,12 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.TestMessageId;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
+import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.Mapping;
+import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.CanSendFromImpl;
+import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
 import org.apache.james.util.html.HtmlTextExtractor;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -80,6 +94,7 @@ import com.google.common.collect.ImmutableMap;
 public class SetMessagesCreationProcessorTest {
     
     private static final Username USER = Username.of("user@example.com");
+    private static final Username OTHER_USER = Username.of("other@example.com");
     private static final String OUTBOX = "outbox";
     private static final InMemoryId OUTBOX_ID = InMemoryId.of(12345);
     private static final String DRAFTS = "drafts";
@@ -108,6 +123,8 @@ public class SetMessagesCreationProcessorTest {
     private AttachmentManager mockedAttachmentManager;
     private MailboxManager mockedMailboxManager;
     private Factory mockedMailboxIdFactory;
+    private MemoryRecipientRewriteTable recipientRewriteTable;
+    private CanSendFrom canSendFrom;
     private SetMessagesCreationProcessor sut;
     private MessageManager outbox;
     private MessageManager drafts;
@@ -121,12 +138,23 @@ public class SetMessagesCreationProcessorTest {
     private ReferenceUpdater referenceUpdater;
 
     @Before
-    public void setUp() throws MailboxException {
+    public void setUp() throws MailboxException, DomainListException, UnknownHostException, ConfigurationException {
         MessageContentExtractor messageContentExtractor = new MessageContentExtractor();
         HtmlTextExtractor htmlTextExtractor = new JsoupHtmlTextExtractor();
         BlobManager blobManager = mock(BlobManager.class);
         when(blobManager.toBlobId(any(MessageId.class))).thenReturn(org.apache.james.mailbox.model.BlobId.fromString("fake"));
         MessageIdManager messageIdManager = mock(MessageIdManager.class);
+        recipientRewriteTable = new MemoryRecipientRewriteTable();
+
+        DNSService dnsService = mock(DNSService.class);
+        MemoryDomainList domainList = new MemoryDomainList(dnsService);
+        domainList.configure(DomainListConfiguration.builder()
+            .autoDetect(false)
+            .autoDetectIp(false));
+        domainList.addDomain(Domain.of("example.com"));
+        domainList.addDomain(Domain.of("other.org"));
+        recipientRewriteTable.setDomainList(domainList);
+        canSendFrom = new CanSendFromImpl(recipientRewriteTable);
         messageFullViewFactory = new MessageFullViewFactory(blobManager, messageContentExtractor, htmlTextExtractor,
             messageIdManager,
             new MemoryMessageFastViewProjection(new RecordingMetricFactory()));
@@ -150,7 +178,8 @@ public class SetMessagesCreationProcessorTest {
             mockedMailboxIdFactory,
             messageAppender,
             messageSender,
-            referenceUpdater);
+            referenceUpdater,
+            canSendFrom);
         
         outbox = mock(MessageManager.class);
         when(mockedMailboxIdFactory.fromString(OUTBOX_ID.serialize()))
@@ -234,7 +263,7 @@ public class SetMessagesCreationProcessorTest {
     @Test
     public void processShouldReturnNonEmptyCreatedWhenRequestHasNonEmptyCreate() throws MailboxException {
         // Given
-        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater);
+        sut = new SetMessagesCreationProcessor(messageFullViewFactory, fakeSystemMailboxesProvider, new AttachmentChecker(mockedAttachmentManager), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory, messageAppender, messageSender, referenceUpdater, canSendFrom);
 
         // When
         SetMessagesResponse result = sut.process(createMessageInOutbox, session);
@@ -253,7 +282,8 @@ public class SetMessagesCreationProcessorTest {
             new AttachmentChecker(mockedAttachmentManager), new RecordingMetricFactory(), mockedMailboxManager, mockedMailboxIdFactory,
             messageAppender,
             messageSender,
-            referenceUpdater);
+            referenceUpdater,
+            canSendFrom);
         // When
         SetMessagesResponse actual = sut.process(createMessageInOutbox, session);
         
@@ -370,7 +400,87 @@ public class SetMessagesCreationProcessorTest {
 
         sut.assertIsUserOwnerOfMailboxes(ImmutableList.of(mailboxId), session);
     }
-    
+
+    @Test
+    public void assertUserCanSendFromShouldThrowWhenSenderIsNotTheConnectedUser() {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("other")
+            .email("other@example.com")
+            .build();
+
+        assertThatThrownBy(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .isInstanceOf(MailboxSendingNotAllowedException.class);
+    }
+
+    @Test
+    public void assertUserCanSendFromShouldNotThrowWhenSenderIsTheConnectedUser() {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("user")
+            .email(USER.asString())
+            .build();
+
+        assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void assertUserCanSendFromShouldThrowWhenSenderIsAnAliasOfAnotherUser() throws Exception {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("alias")
+            .email("alias@example.com")
+            .build();
+
+        recipientRewriteTable.addAliasMapping(MappingSource.fromUser("alias", "example.com"), OTHER_USER.asString());
+
+        assertThatThrownBy(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .isInstanceOf(MailboxSendingNotAllowedException.class);
+    }
+
+    @Test
+    public void assertUserCanSendFromShouldNotThrowWhenSenderIsAnAliasOfTheConnectedUser() throws RecipientRewriteTableException {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("alias")
+            .email("alias@example.com")
+            .build();
+
+        recipientRewriteTable.addAliasMapping(MappingSource.fromUser("alias", "example.com"), USER.asString());
+
+        assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void assertUserCanSendFromShouldNotThrowWhenSenderIsAnAliasOfTheConnectedUserFromADomainAlias() throws RecipientRewriteTableException {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("user")
+            .email("user@other.org")
+            .build();
+
+           recipientRewriteTable.addMapping(MappingSource.fromDomain(Domain.of("other.org")), Mapping.domain(Domain.of("example.com")));
+
+        assertThatCode(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    public void assertUserCanSendFromShouldThrowWhenSenderIsAnAliasOfTheConnectedUserFromAGroupAlias() throws RecipientRewriteTableException {
+        DraftEmailer sender = DraftEmailer
+            .builder()
+            .name("group")
+            .email("group@example.com")
+            .build();
+
+        recipientRewriteTable.addGroupMapping(MappingSource.fromUser("group", "example.com"), USER.asString());
+
+        assertThatThrownBy(() -> sut.assertUserCanSendFrom(USER, Optional.of(sender)))
+            .isInstanceOf(MailboxSendingNotAllowedException.class);
+    }
+
     public static class TestSystemMailboxesProvider implements SystemMailboxesProvider {
 
         private final Supplier<Optional<MessageManager>> outboxSupplier;

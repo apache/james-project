@@ -94,7 +94,15 @@ public interface RecipientRewriteTable {
      * @throws ErrorMappingException
      *             get thrown if an error mapping was found
      */
-    Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException;
+    default Mappings getResolvedMappings(String user, Domain domain) throws ErrorMappingException, RecipientRewriteTableException {
+            return getResolvedMappings(user, domain, EnumSet.allOf(Mapping.Type.class));
+    }
+
+    /**
+     * Return the Mappings for the given source, only the mapping with the given mapping types are considered during the resolution.
+     * Return empty object if no matched mapping was found
+     */
+    Mappings getResolvedMappings(String user, Domain domain, EnumSet<Mapping.Type> mappingTypes) throws ErrorMappingException, RecipientRewriteTableException;
 
     /**
      * Return the explicit mapping stored for the given user and domain. Return empty object

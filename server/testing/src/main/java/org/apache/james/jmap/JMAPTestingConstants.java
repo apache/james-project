@@ -56,6 +56,7 @@ public interface JMAPTestingConstants {
     String SECOND_ARGUMENTS = "[1][1]";
 
     String DOMAIN = "domain.tld";
+    String DOMAIN_ALIAS = "domain-alias.tld";
     Username BOB = Username.of("bob@" + DOMAIN);
     String BOB_PASSWORD = "123456";
     Username ALICE = Username.of("alice@" + DOMAIN);
