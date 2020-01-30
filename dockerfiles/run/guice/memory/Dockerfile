@@ -36,7 +36,7 @@ VOLUME /root/conf
 VOLUME /root/glowroot/plugins
 VOLUME /root/glowroot/data
 
-ENV PATH "$PATH:/root/glowroot/lib" \
+ENV PATH="$PATH:/root/glowroot/lib" \
     JVM_OPTIONS="" \
     GLOWROOT_ACTIVATED="false"
 
