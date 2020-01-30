@@ -19,9 +19,25 @@
 
 package org.apache.james;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 import java.util.UUID;
+
+import javax.mail.Authenticator;
+import javax.mail.Flags;
+import javax.mail.Folder;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Store;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+import javax.mail.search.FlagTerm;
 
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
@@ -40,6 +56,7 @@ import org.junit.jupiter.api.Test;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.io.Resources;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -55,6 +72,75 @@ interface MailsShouldBeWellReceived {
         .await();
 
     ConditionFactory CALMLY_AWAIT_FIVE_MINUTE = CALMLY_AWAIT.timeout(Duration.FIVE_MINUTES);
+    String SENDER = "bob@apache.org";
+    String UNICODE_BODY = "unicode character 'Ð'";
+
+
+    static Message readFirstMessageJavax(int imapPort) throws MessagingException {
+        Session imapSession = Session.getDefaultInstance(new Properties());
+        Store store = imapSession.getStore("imap");
+        store.connect("localhost", imapPort, JAMES_USER, PASSWORD);
+        Folder inbox = store.getFolder(IMAPMessageReader.INBOX);
+        inbox.open(Folder.READ_ONLY);
+
+        CALMLY_AWAIT.untilAsserted(() ->
+            assertThat(searchForUnSeen(inbox))
+                .hasSize(1));
+
+        return searchForUnSeen(inbox)[0];
+    }
+
+    static Message[] searchForUnSeen(Folder inbox) throws MessagingException {
+        return inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+    }
+
+    static void sendMessageJavax(GuiceJamesServer server) throws MessagingException {
+        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+
+        Properties props = new Properties();
+        props.put("mail.smtp.host", "localhost");
+        props.put("mail.smtp.port", smtpPort.getValue() + "");
+        props.put("mail.smtp.auth", "true");
+        props.put("mail.smtp.allow8bitmime", "true"); //force to use 8bit(UTF-8), otherwise, it automatically converts into 7bit
+
+        Authenticator auth = new Authenticator() {
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(SENDER, PASSWORD);
+            }
+        };
+
+        Session session = Session.getInstance(props, auth);
+        Message message = new MimeMessage(session);
+        message.setFrom(new InternetAddress(SENDER));
+        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(JAMES_USER));
+        message.setText(UNICODE_BODY);
+
+        Transport.send(message);
+    }
+
+    @Test
+    default void mailsContentWithUnicodeCharactersShouldBeKeptUnChanged(GuiceJamesServer server) throws Exception {
+        server.getProbe(DataProbeImpl.class).fluent()
+            .addDomain(DOMAIN)
+            .addUser(JAMES_USER, PASSWORD);
+
+        MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
+        mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
+
+        sendMessageJavax(server);
+
+        CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
+
+        try (IMAPMessageReader reader = new IMAPMessageReader()) {
+            int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
+            reader.connect(JAMES_SERVER_HOST, imapPort)
+                .login(JAMES_USER, PASSWORD)
+                .select(IMAPMessageReader.INBOX);
+
+            assertThat(readFirstMessageJavax(imapPort).getInputStream())
+                .hasContent(UNICODE_BODY);
+        }
+    }
 
     @Test
     default void mailsShouldBeWellReceived(GuiceJamesServer server) throws Exception {
