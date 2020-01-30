@@ -23,10 +23,10 @@ import java.io.IOException;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.internet.MimePart;
 
 import org.apache.mailet.Mail;
+import org.apache.mailet.MailetConfig;
+import org.apache.mailet.base.Converter7Bit;
 import org.apache.mailet.base.GenericMailet;
 
 /**
@@ -35,43 +35,20 @@ import org.apache.mailet.base.GenericMailet;
  */
 public class ConvertTo7Bit extends GenericMailet {
 
+    private Converter7Bit converter7Bit;
+
+    @Override
+    public void init(MailetConfig newConfig) throws MessagingException {
+        super.init(newConfig);
+        this.converter7Bit = new Converter7Bit(getMailetContext());
+    }
+
     public void service(Mail mail) throws MessagingException {
         MimeMessage message = mail.getMessage();
         try {
-            convertTo7Bit(message);
-            message.saveChanges();
+            converter7Bit.convertTo7Bit(message);
         } catch (IOException e) {
             throw new MessagingException("IOException converting message to 7bit: " + e.getMessage(), e);
         }
     }
-
-    /**
-     * Converts a message to 7 bit.
-     */
-    private void convertTo7Bit(MimePart part) throws MessagingException, IOException {
-        if (part.isMimeType("multipart/*")) {
-            MimeMultipart parts = (MimeMultipart) part.getContent();
-            int count = parts.getCount();
-            for (int i = 0; i < count; i++) {
-                convertTo7Bit((MimePart) parts.getBodyPart(i));
-            }
-        } else if ("8bit".equals(part.getEncoding())) {
-            // The content may already be in encoded the form (likely with mail
-            // created from a stream). In that case, just changing the encoding
-            // to quoted-printable will mangle the result when this is
-            // transmitted.
-            // We must first convert the content into its native format, set it
-            // back, and only THEN set the transfer encoding to force the
-            // content to be encoded appropriately.
-
-            // if the part doesn't contain text it will be base64 encoded.
-            String contentTransferEncoding = part.isMimeType("text/*") ? "quoted-printable" : "base64";
-            part.setContent(part.getContent(), part.getContentType());
-            part.setHeader("Content-Transfer-Encoding", contentTransferEncoding);
-            part.addHeader("X-MIME-Autoconverted", "from 8bit to "
-                    + contentTransferEncoding + " by "
-                    + getMailetContext().getServerInfo());
-        }
-    }
-
 }

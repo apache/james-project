@@ -17,13 +17,14 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.transport.mailets.remote.delivery;
+package org.apache.mailet.base;
 
 import java.io.IOException;
 import java.util.List;
 
 import javax.mail.BodyPart;
 import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimePart;
 
@@ -38,11 +39,16 @@ public class Converter7Bit {
         this.mailetContext = mailetContext;
     }
 
-    public MimePart convertTo7Bit(MimePart part) throws MessagingException, IOException {
+    public void convertTo7Bit(MimeMessage mimeMessage) throws MessagingException, IOException {
+        convertPart(mimeMessage);
+        mimeMessage.saveChanges();
+    }
+
+    private void convertPart(MimePart part) throws MessagingException, IOException {
         if (part.isMimeType("multipart/*")) {
             List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts((MimeMultipart) part.getContent());
             for (BodyPart bodyPart : bodyParts) {
-                convertTo7Bit((MimePart) bodyPart);
+                convertPart((MimePart) bodyPart);
             }
         } else if ("8bit".equals(part.getEncoding())) {
             // The content may already be in encoded the form (likely with mail
@@ -59,9 +65,9 @@ public class Converter7Bit {
             String contentTransferEncoding = part.isMimeType("text/*") ? "quoted-printable" : "base64";
             part.setContent(part.getContent(), part.getContentType());
             part.setHeader("Content-Transfer-Encoding", contentTransferEncoding);
-            part.addHeader("X-MIME-Autoconverted", "from 8bit to " + contentTransferEncoding + " by " + mailetContext.getServerInfo());
+            part.addHeader("X-MIME-Autoconverted", "from 8bit to "
+                + contentTransferEncoding + " by " + mailetContext.getServerInfo());
         }
-        return part;
     }
 
 }

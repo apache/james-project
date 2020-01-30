@@ -31,6 +31,7 @@ import javax.mail.internet.MimeMessage;
 import org.apache.mailet.HostAddress;
 import org.apache.mailet.Mail;
 import org.apache.mailet.MailetContext;
+import org.apache.mailet.base.Converter7Bit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
