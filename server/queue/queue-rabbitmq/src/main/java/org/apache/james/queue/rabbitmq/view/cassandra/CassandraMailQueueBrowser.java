@@ -111,7 +111,7 @@ public class CassandraMailQueueBrowser {
         return browseStartDao.findBrowseStart(queueName)
             .flatMapMany(this::allSlicesStartingAt)
             .flatMapSequential(slice -> browseSlice(queueName, slice))
-            .subscribeOn(Schedulers.parallel());
+            .subscribeOn(Schedulers.elastic());
     }
 
     private Mono<Mail> toMailFuture(EnqueuedItemWithSlicingContext enqueuedItemWithSlicingContext) {
