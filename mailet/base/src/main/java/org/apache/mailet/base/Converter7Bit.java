@@ -20,9 +20,7 @@
 package org.apache.mailet.base;
 
 import java.io.IOException;
-import java.util.List;
 
-import javax.mail.BodyPart;
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
@@ -30,6 +28,8 @@ import javax.mail.internet.MimePart;
 
 import org.apache.james.javax.MultipartUtil;
 import org.apache.mailet.MailetContext;
+
+import com.github.fge.lambdas.Throwing;
 
 public class Converter7Bit {
 
@@ -45,12 +45,7 @@ public class Converter7Bit {
     }
 
     private void convertPart(MimePart part) throws MessagingException, IOException {
-        if (part.isMimeType("multipart/*")) {
-            List<BodyPart> bodyParts = MultipartUtil.retrieveBodyParts((MimeMultipart) part.getContent());
-            for (BodyPart bodyPart : bodyParts) {
-                convertPart((MimePart) bodyPart);
-            }
-        } else if ("8bit".equals(part.getEncoding())) {
+        if ("8bit".equals(part.getEncoding())) {
             // The content may already be in encoded the form (likely with mail
             // created from a
             // stream). In that case, just changing the encoding to
@@ -67,7 +62,9 @@ public class Converter7Bit {
             part.setHeader("Content-Transfer-Encoding", contentTransferEncoding);
             part.addHeader("X-MIME-Autoconverted", "from 8bit to "
                 + contentTransferEncoding + " by " + mailetContext.getServerInfo());
+        } else if (part.isMimeType("multipart/*")) {
+            MultipartUtil.retrieveBodyParts((MimeMultipart) part.getContent())
+                .forEach(Throwing.consumer(bodyPart -> convertPart((MimePart) bodyPart)));
         }
     }
-
 }
