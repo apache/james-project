@@ -766,7 +766,6 @@ public class RemoteDeliveryConfigurationTest {
         assertThat(properties)
             .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "false"),
                 MapEntry.entry("mail.smtp.sendpartial", "false"),
-                MapEntry.entry("mail.smtp.allow8bitmime", "true"),
                 MapEntry.entry("mail.smtp.ehlo", "true"),
                 MapEntry.entry("mail.smtp.connectiontimeout", "60000"),
                 MapEntry.entry("mail.smtp.localhost", helo),
@@ -793,7 +792,6 @@ public class RemoteDeliveryConfigurationTest {
         assertThat(properties)
             .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "true"),
                 MapEntry.entry("mail.smtp.sendpartial", "true"),
-                MapEntry.entry("mail.smtp.allow8bitmime", "true"),
                 MapEntry.entry("mail.smtp.ehlo", "true"),
                 MapEntry.entry("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout)),
                 MapEntry.entry("mail.smtp.localhost", helo),
@@ -823,7 +821,6 @@ public class RemoteDeliveryConfigurationTest {
         assertThat(properties)
             .containsOnly(MapEntry.entry("mail.smtp.ssl.enable", "true"),
                 MapEntry.entry("mail.smtp.sendpartial", "true"),
-                MapEntry.entry("mail.smtp.allow8bitmime", "true"),
                 MapEntry.entry("mail.smtp.ehlo", "true"),
                 MapEntry.entry("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout)),
                 MapEntry.entry("mail.smtp.localhost", helo),

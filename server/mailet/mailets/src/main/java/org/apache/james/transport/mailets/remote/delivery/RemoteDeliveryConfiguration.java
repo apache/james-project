@@ -213,9 +213,6 @@ public class RemoteDeliveryConfiguration {
         // Reactivated: javamail 1.3.2 should no more have problems with "250 OK" messages
         // (WAS "false": Prevents problems encountered with 250 OK Messages)
         props.put("mail.smtp.ehlo", "true");
-        // By setting this property to true the transport is allowed to send 8 bit data to the server (if it supports
-        // the 8bitmime extension).
-        props.setProperty("mail.smtp.allow8bitmime", "true");
         props.put("mail.smtp.timeout", String.valueOf(smtpTimeout));
         props.put("mail.smtp.connectiontimeout", String.valueOf(connectionTimeout));
         props.put("mail.smtp.sendpartial", String.valueOf(sendPartial));

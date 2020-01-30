@@ -144,7 +144,8 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
+                    .addProperty("mail.smtp.allow8bitmime", "true")))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 
@@ -210,8 +211,7 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "false")))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 
@@ -244,8 +244,7 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "false")))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 
@@ -280,7 +279,8 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
+                    .addProperty("mail.smtp.allow8bitmime", "true")))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 
@@ -346,8 +346,7 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "false")))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 
@@ -380,8 +379,7 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .withBase(SMTP_ONLY_MODULE)
             .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
             .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "false")))
+                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
                 .putProcessor(CommonProcessors.bounces()))
             .build(temporaryFolder.newFolder());
 

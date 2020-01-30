@@ -54,7 +54,11 @@ of tasks being currently executed.
   - MailboxQuotaFixed matcher. Please use IsOverQuota instead.
 - UsersFileRepository, which was marked as deprecated for years
   - We accordingly removed deprecated methods within UsersRepositoryManagementMBean exposed over JMX (unsetAlias, getAlias, unsetForwardAddress, getForwardAddress). RecipientRewriteTables should be used instead.
-
+- JAMES-3016 RemoteDelivery now doesn't enable `allow8bitmime` property by default. 
+This parameter could cause body content alteration leading to DKIM invalid DKIM signatures to be positioned. 
+Thanks to Sergey B. for the report. 
+More details about the property is at [java mail doc](https://javaee.github.io/javamail/docs/api/com/sun/mail/smtp/package-summary.html) 
+ 
 ### Third party softwares
  - The distributed James server product (relying on Guice, Cassandra, ElasticSearch, RabbitMQ and optionally Swift) now needs at least RabbitMQ 3.8.
  - Tika prior 1.22 is subject to multiple CVEs. We recommend the upgrade.
