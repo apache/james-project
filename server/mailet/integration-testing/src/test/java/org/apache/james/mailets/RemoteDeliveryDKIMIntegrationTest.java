@@ -24,14 +24,15 @@ import static org.apache.james.mailets.configuration.Constants.DEFAULT_DOMAIN;
 import static org.apache.james.mailets.configuration.Constants.LOCALHOST_IP;
 import static org.apache.james.mailets.configuration.Constants.PASSWORD;
 import static org.apache.james.mailets.configuration.Constants.awaitAtMostOneMinute;
-import static org.apache.james.util.docker.Images.MOCK_SMTP_SERVER;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.File;
 import java.util.Optional;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
 
+import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.dnsservice.api.InMemoryDNSService;
@@ -43,31 +44,28 @@ import org.apache.james.jdkim.mailets.MockPublicKeyRecordRetriever;
 import org.apache.james.mailets.configuration.CommonProcessors;
 import org.apache.james.mailets.configuration.MailetConfiguration;
 import org.apache.james.mailets.configuration.ProcessorConfiguration;
-import org.apache.james.mock.smtp.server.ConfigurationClient;
 import org.apache.james.mock.smtp.server.model.Mail;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension;
+import org.apache.james.mock.smtp.server.testing.MockSmtpServerExtension.DockerMockSmtp;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
 import org.apache.james.probe.DataProbe;
 import org.apache.james.transport.matchers.All;
-import org.apache.james.util.Host;
 import org.apache.james.util.MimeMessageUtil;
-import org.apache.james.util.docker.DockerContainer;
 import org.apache.james.utils.DataProbeImpl;
-import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
+import org.apache.james.utils.SMTPMessageSenderExtension;
 import org.apache.mailet.base.test.FakeMail;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
-public class RemoteDeliveryDKIMIntegrationTest {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RemoteDeliveryDKIMIntegrationTest.class);
+class RemoteDeliveryDKIMIntegrationTest {
 
     private static final String JAMES_ANOTHER_DOMAIN = "james.com";
     private static final String FROM = "from@" + DEFAULT_DOMAIN;
@@ -104,303 +102,154 @@ public class RemoteDeliveryDKIMIntegrationTest {
         "v=DKIM1; k=rsa; p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDYDaYKXzwVYwqWbLhmuJ66aTAN8wmDR+rfHE8HfnkSOax0oIoTM5zquZrTLo30870YMfYzxwfB6j/Nz3QdwrUD/t0YMYJiUKyWJnCKfZXHJBJ+yfRHr7oW+UW3cVo9CG2bBfIxsInwYe175g9UjyntJpWueqdEIo1c2bhv9Mp66QIDAQAB;",
         "selector", "example.com");
 
-    @ClassRule
-    public static DockerContainer mockSmtp = DockerContainer.fromName(MOCK_SMTP_SERVER)
-        .withLogConsumer(outputFrame -> LOGGER.debug("MockSMTP: " + outputFrame.getUtf8String()));
-    @Rule
-    public TemporaryFolder temporaryFolder = new TemporaryFolder();
-    @Rule
-    public IMAPMessageReader imapMessageReader = new IMAPMessageReader();
-    @Rule
-    public SMTPMessageSender messageSender = new SMTPMessageSender(DEFAULT_DOMAIN);
+    @RegisterExtension
+    static MockSmtpServerExtension mockSmtpServerExtension = new MockSmtpServerExtension();
+    @TempDir
+    static File tempDir;
+
+    @RegisterExtension
+    SMTPMessageSenderExtension smtpSenderExtension = new SMTPMessageSenderExtension(Domain.of(DEFAULT_DOMAIN));
 
     private TemporaryJamesServer jamesServer;
-    private ConfigurationClient mockSMTPConfiguration;
     private DataProbe dataProbe;
     private DKIMVerifier dkimVerifier;
 
-    @Before
-    public void setUp() {
-        mockSMTPConfiguration = configurationClient(mockSmtp);
+    @BeforeEach
+    void setUp() {
         dkimVerifier = new DKIMVerifier(MOCK_PUBLIC_KEY_RECORD_RETRIEVER);
     }
 
-    @After
-    public void tearDown() {
-        mockSMTPConfiguration.cleanServer();
+    @AfterEach
+    void tearDown() {
         if (jamesServer != null) {
             jamesServer.shutdown();
         }
     }
 
-    @Ignore("assertion failed:" +
-        "org.apache.james.jdkim.exceptions.PermFailException: Computed bodyhash is different from the expected one")
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen7BitMessageAndAllowing8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+    @Nested
+    class WhenEnable8BitMime {
+        @Disabled("JAMES-3016 assertion failed:" +
+            "org.apache.james.jdkim.exceptions.PermFailException: Computed bodyhash is different from the expected one")
+        @Test
+        void remoteDeliveryShouldNotBreakDKIMSignWhen7BitTextMessage(SMTPMessageSender messageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
 
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "true")))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
+            InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+                .registerMxRecord(JAMES_ANOTHER_DOMAIN, dockerMockSmtp.getIPAddress());
 
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
+            jamesServer = TemporaryJamesServer.builder()
+                .withBase(SMTP_ONLY_MODULE)
+                .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                    .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
+                        .addProperty("mail.smtp.allow8bitmime", "true")))
+                    .putProcessor(CommonProcessors.bounces()))
+                .build(tempDir);
 
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-7bit-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-text-only-7bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
+            dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            dataProbe.addDomain(DEFAULT_DOMAIN);
+            dataProbe.addUser(FROM, PASSWORD);
 
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
+            FakeMail mail = FakeMail.builder()
+                .name("a-mail-with-7bit-encoding")
+                .sender(new MailAddress(FROM))
+                .recipient(new MailAddress(RECIPIENT))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                    ClassLoader.getSystemResourceAsStream("eml/message-text-only-7bit.eml")))
+                .build();
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage(mail);
 
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
+            MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail(dockerMockSmtp));
+
+            assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
+                .isNotEmpty();
+        }
+
+        @CsvSource({
+            "a-mail-with-7bit-base64-encoding, eml/message-multipart-7bit.eml",
+            "a-mail-with-8bit-encoding, eml/message-text-only-8bit.eml",
+            "a-mail-with-8bit-base64-encoding, eml/message-multipart-8bit.eml"
+        })
+        @ParameterizedTest
+        void remoteDeliveryShouldNotBreakDKIMSign(String mailName, String emlPath,
+                                                  SMTPMessageSender messageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
+
+            InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+                .registerMxRecord(JAMES_ANOTHER_DOMAIN, dockerMockSmtp.getIPAddress());
+
+            jamesServer = TemporaryJamesServer.builder()
+                .withBase(SMTP_ONLY_MODULE)
+                .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                    .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
+                        .addProperty("mail.smtp.allow8bitmime", "true")))
+                    .putProcessor(CommonProcessors.bounces()))
+                .build(tempDir);
+
+            dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            dataProbe.addDomain(DEFAULT_DOMAIN);
+            dataProbe.addUser(FROM, PASSWORD);
+
+            FakeMail mail = FakeMail.builder()
+                .name(mailName)
+                .sender(new MailAddress(FROM))
+                .recipient(new MailAddress(RECIPIENT))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                    ClassLoader.getSystemResourceAsStream(emlPath)))
+                .build();
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage(mail);
+
+            MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail(dockerMockSmtp));
+
+            assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
+                .isNotEmpty();
+        }
     }
 
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen7BitAndBase64MessageAndAllowing8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+    @Nested
+    class WhenDisable8BitMime {
 
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
+        @CsvSource({
+            "a-mail-with-7bit-encoding, eml/message-text-only-7bit.eml",
+            "a-mail-with-7bit-base64-encoding, eml/message-multipart-7bit.eml",
+            "a-mail-with-8bit-encoding, eml/message-text-only-8bit.eml",
+            "a-mail-with-8bit-base64-encoding, eml/message-multipart-8bit.eml"
+        })
+        @ParameterizedTest
+        void remoteDeliveryShouldNotBreakDKIMSign(String mailName, String emlPath,
+                                                  SMTPMessageSender messageSender, DockerMockSmtp dockerMockSmtp) throws Exception {
+            InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
+                .registerMxRecord(JAMES_ANOTHER_DOMAIN, dockerMockSmtp.getIPAddress());
 
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
+            jamesServer = TemporaryJamesServer.builder()
+                .withBase(SMTP_ONLY_MODULE)
+                .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
+                .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
+                    .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
+                    .putProcessor(CommonProcessors.bounces()))
+                .build(tempDir);
 
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-7bit-base64-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-multipart-7bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
+            dataProbe = jamesServer.getProbe(DataProbeImpl.class);
+            dataProbe.addDomain(DEFAULT_DOMAIN);
+            dataProbe.addUser(FROM, PASSWORD);
 
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
+            FakeMail mail = FakeMail.builder()
+                .name(mailName)
+                .sender(new MailAddress(FROM))
+                .recipient(new MailAddress(RECIPIENT))
+                .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
+                    ClassLoader.getSystemResourceAsStream(emlPath)))
+                .build();
+            messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
+                .sendMessage(mail);
 
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
+            MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail(dockerMockSmtp));
 
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen7BitMessageAndDisable8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
+            assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
+                .isNotEmpty();
+        }
 
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-7bit-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-text-only-7bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
-
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen7BitAndBase64MessageAndDisable8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-7bit-base64-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-multipart-7bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
-
-    @Ignore("assertion failed:" +
-        "org.apache.james.jdkim.exceptions.PermFailException: Computed bodyhash is different from the expected one")
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen8BitMessageAndAllowing8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()
-                    .addProperty("mail.smtp.allow8bitmime", "true")))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-8bit-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-text-only-7bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
-
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen8BitAndBase64MessageAndAllowing8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-8bit-base64-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-multipart-8bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
-
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen8BitMessageAndDisable8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-8bit-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-text-only-8bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
-    }
-
-    @Test
-    public void remoteDeliveryShouldNotBreakDKIMSignWhen8BitAndBase64MessageAndDisable8BitMime() throws Exception {
-        InMemoryDNSService inMemoryDNSService = new InMemoryDNSService()
-            .registerMxRecord(JAMES_ANOTHER_DOMAIN, mockSmtp.getContainerIp());
-
-        jamesServer = TemporaryJamesServer.builder()
-            .withBase(SMTP_ONLY_MODULE)
-            .withOverrides(binder -> binder.bind(DNSService.class).toInstance(inMemoryDNSService))
-            .withMailetContainer(TemporaryJamesServer.SIMPLE_MAILET_CONTAINER_CONFIGURATION
-                .putProcessor(directResolutionTransport(MailetConfiguration.remoteDeliveryBuilder()))
-                .putProcessor(CommonProcessors.bounces()))
-            .build(temporaryFolder.newFolder());
-
-        dataProbe = jamesServer.getProbe(DataProbeImpl.class);
-        dataProbe.addDomain(DEFAULT_DOMAIN);
-        dataProbe.addUser(FROM, PASSWORD);
-
-        FakeMail mail = FakeMail.builder()
-            .name("a-mail-with-8bit-base64-encoding")
-            .sender(new MailAddress(FROM))
-            .recipient(new MailAddress(RECIPIENT))
-            .mimeMessage(MimeMessageUtil.mimeMessageFromStream(
-                ClassLoader.getSystemResourceAsStream(("eml/message-multipart-8bit.eml"))))
-            .build();
-        messageSender.connect(LOCALHOST_IP, jamesServer.getProbe(SmtpGuiceProbe.class).getSmtpPort())
-            .sendMessage(mail);
-
-        MimeMessage sendMessage = toMimeMessage(getFirstRecivedMail());
-
-        assertThat(dkimVerifier.verifyUsingCRLF(sendMessage))
-            .isNotEmpty();
     }
 
     private MimeMessage toMimeMessage(Mail mail) {
@@ -411,9 +260,9 @@ public class RemoteDeliveryDKIMIntegrationTest {
         }
     }
 
-    private Mail getFirstRecivedMail() {
+    private Mail getFirstRecivedMail(DockerMockSmtp dockerMockSmtp) {
         return awaitAtMostOneMinute
-            .until(() -> mockSMTPConfiguration.listMails()
+            .until(() -> dockerMockSmtp.getConfigurationClient().listMails()
                 .stream()
                 .findFirst(), Optional::isPresent)
             .get();
@@ -426,11 +275,5 @@ public class RemoteDeliveryDKIMIntegrationTest {
             .addMailet(DKIMSIGN_MAILET)
             .addMailet(remoteDeliveryConfiguration
                 .matcher(All.class));
-    }
-
-    private ConfigurationClient configurationClient(DockerContainer mockSmtp) {
-        return ConfigurationClient.from(
-            Host.from(mockSmtp.getHostIp(),
-                mockSmtp.getMappedPort(8000)));
     }
 }
