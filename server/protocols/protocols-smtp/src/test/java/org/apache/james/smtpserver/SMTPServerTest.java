@@ -50,6 +50,7 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
+import org.apache.james.dnsservice.api.InMemoryDNSService;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.domainlist.memory.MemoryDomainList;
 import org.apache.james.filesystem.api.FileSystem;
@@ -69,7 +70,10 @@ import org.apache.james.protocols.netty.AbstractChannelPipelineFactory;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.CanSendFromImpl;
+import org.apache.james.rrt.lib.MappingSource;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -90,6 +94,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.inject.TypeLiteral;
 
 public class SMTPServerTest {
+
+    public static final String LOCAL_DOMAIN = "example.local";
+    public static final String USER_LOCALHOST = "test_user_smtp@localhost";
+    public static final String USER_LOCAL_DOMAIN = "test_user_smtp@example.local";
 
     final class AlterableDNSServer implements DNSService {
 
@@ -121,7 +129,7 @@ public class SMTPServerTest {
             }
 
             if ("1.0.0.127.bl.spamcop.net.".equals(host)) {
-                return InetAddress.getByName("localhost");
+                return InetAddress.getByName(Domain.LOCALHOST.asString());
             }
 
             if ("james.apache.org".equals(host)) {
@@ -174,12 +182,14 @@ public class SMTPServerTest {
 
     private static final long HALF_SECOND = 500;
     private static final int MAX_ITERATIONS = 10;
-    private static final DomainList NO_DOMAIN_LIST = null;
+
+
     private static final Logger LOGGER = LoggerFactory.getLogger(SMTPServerTest.class);
 
     protected SMTPTestConfiguration smtpConfiguration;
     protected HashedWheelTimer hashedWheelTimer;
-    protected final MemoryUsersRepository usersRepository = MemoryUsersRepository.withoutVirtualHosting(NO_DOMAIN_LIST);
+    protected MemoryDomainList domainList;
+    protected MemoryUsersRepository usersRepository;
     protected AlterableDNSServer dnsServer;
     protected MemoryMailRepositoryStore mailRepositoryStore;
     protected FileSystemImpl fileSystem;
@@ -187,11 +197,27 @@ public class SMTPServerTest {
     protected MockProtocolHandlerLoader chain;
     protected MemoryMailQueueFactory queueFactory;
     protected MemoryMailQueueFactory.MemoryMailQueue queue;
+    protected MemoryRecipientRewriteTable rewriteTable;
+    protected CanSendFrom canSendFrom;
 
     private SMTPServer smtpServer;
 
     @Before
     public void setUp() throws Exception {
+
+        domainList = new MemoryDomainList(new InMemoryDNSService()
+            .registerMxRecord(Domain.LOCALHOST.asString(), "127.0.0.1")
+            .registerMxRecord(LOCAL_DOMAIN, "127.0.0.1")
+            .registerMxRecord("examplebis.local", "127.0.0.1")
+            .registerMxRecord("127.0.0.1", "127.0.0.1"));
+        domainList.setAutoDetect(false);
+        domainList.setAutoDetectIP(false);
+
+        domainList.addDomain(Domain.LOCALHOST);
+        domainList.addDomain(Domain.of(LOCAL_DOMAIN));
+        domainList.addDomain(Domain.of("examplebis.local"));
+        usersRepository = MemoryUsersRepository.withVirtualHosting(domainList);
+
         createMailRepositoryStore();
 
         setUpFakeLoader();
@@ -248,16 +274,17 @@ public class SMTPServerTest {
 
     protected void setUpFakeLoader() throws Exception {
         dnsServer = new AlterableDNSServer();
-        MemoryRecipientRewriteTable rewriteTable = new MemoryRecipientRewriteTable();
+
+        rewriteTable = new MemoryRecipientRewriteTable();
+        canSendFrom = new CanSendFromImpl(rewriteTable);
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
-        MemoryDomainList domainList = new MemoryDomainList(mock(DNSService.class));
-        domainList.addDomain(Domain.LOCALHOST);
 
         chain = MockProtocolHandlerLoader.builder()
             .put(binder -> binder.bind(DomainList.class).toInstance(domainList))
             .put(binder -> binder.bind(new TypeLiteral<MailQueueFactory<?>>() {}).toInstance(queueFactory))
             .put(binder -> binder.bind(RecipientRewriteTable.class).toInstance(rewriteTable))
+            .put(binder -> binder.bind(CanSendFrom.class).toInstance(canSendFrom))
             .put(binder -> binder.bind(FileSystem.class).toInstance(fileSystem))
             .put(binder -> binder.bind(MailRepositoryStore.class).toInstance(mailRepositoryStore))
             .put(binder -> binder.bind(DNSService.class).toInstance(dnsServer))
@@ -1266,9 +1293,9 @@ public class SMTPServerTest {
         // assertTrue("anouncing auth required",
         // capabilitieslist.contains("AUTH=LOGIN PLAIN"));
 
-        String userName = "test_user_smtp";
+        String userName = USER_LOCALHOST;
         String noexistUserName = "noexist_test_user_smtp";
-        String sender = "test_user_smtp@localhost";
+        String sender = USER_LOCALHOST;
         smtpProtocol.sendCommand("AUTH FOO", null);
         assertThat(smtpProtocol.getReplyCode())
             .as("expected error: unrecognized authentication type")
@@ -1323,6 +1350,177 @@ public class SMTPServerTest {
     }
 
     @Test
+    public void testAuthSendMail() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String[] capabilityRes = smtpProtocol.getReplyStrings();
+
+        List<String> capabilitieslist = new ArrayList<>();
+        for (int i = 1; i < capabilityRes.length; i++) {
+            capabilitieslist.add(capabilityRes[i].substring(4));
+        }
+
+        String userName = USER_LOCALHOST;
+        String sender = USER_LOCALHOST;
+
+        usersRepository.addUser(Username.of(userName), "pwd");
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(sender);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+
+        smtpProtocol.quit();
+
+        // mail was propagated by SMTPServer
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
+    }
+
+    @Test
+    public void testAuthSendMailFromAlias() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String[] capabilityRes = smtpProtocol.getReplyStrings();
+
+        List<String> capabilitieslist = new ArrayList<>();
+        for (int i = 1; i < capabilityRes.length; i++) {
+            capabilitieslist.add(capabilityRes[i].substring(4));
+        }
+
+        String userName = USER_LOCAL_DOMAIN;
+        String sender = "alias_test_user_smtp@example.local";
+
+        usersRepository.addUser(Username.of(userName), "pwd");
+        rewriteTable.addAliasMapping(MappingSource.fromUser(Username.of(sender)), userName);
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(sender);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+
+        smtpProtocol.quit();
+
+        // mail was propagated by SMTPServer
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
+    }
+
+    @Test
+    public void testAuthSendMailFromDomainAlias() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String[] capabilityRes = smtpProtocol.getReplyStrings();
+
+        List<String> capabilitieslist = new ArrayList<>();
+        for (int i = 1; i < capabilityRes.length; i++) {
+            capabilitieslist.add(capabilityRes[i].substring(4));
+        }
+
+        String userName = USER_LOCAL_DOMAIN;
+        String sender = "test_user_smtp@examplebis.local";
+
+        usersRepository.addUser(Username.of(userName), "pwd");
+        rewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of("examplebis.local")), Domain.of(LOCAL_DOMAIN));
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(sender);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+
+        smtpProtocol.quit();
+
+        // mail was propagated by SMTPServer
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNotNull();
+    }
+
+    @Test
+    public void testAuthSendMailFromGroupAlias() throws Exception {
+        smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
+        smtpConfiguration.setAuthorizingAnnounce();
+        init(smtpConfiguration);
+
+        SMTPClient smtpProtocol = new SMTPClient();
+        InetSocketAddress bindedAddress = new ProtocolServerUtils(smtpServer).retrieveBindedAddress();
+        smtpProtocol.connect(bindedAddress.getAddress().getHostAddress(), bindedAddress.getPort());
+
+        smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
+        String[] capabilityRes = smtpProtocol.getReplyStrings();
+
+        List<String> capabilitieslist = new ArrayList<>();
+        for (int i = 1; i < capabilityRes.length; i++) {
+            capabilitieslist.add(capabilityRes[i].substring(4));
+        }
+
+        String userName = USER_LOCAL_DOMAIN;
+        String sender = "group@example.local";
+
+        usersRepository.addUser(Username.of(userName), "pwd");
+        rewriteTable.addGroupMapping(MappingSource.fromUser(Username.of(sender)), userName);
+
+        smtpProtocol.sendCommand("AUTH PLAIN");
+        smtpProtocol.sendCommand(Base64.getEncoder().encodeToString(("\0" + userName + "\0pwd\0").getBytes(UTF_8)));
+        assertThat(smtpProtocol.getReplyCode())
+            .as("authenticated")
+            .isEqualTo(235);
+
+        smtpProtocol.setSender(sender);
+        smtpProtocol.addRecipient("mail@sample.com");
+        smtpProtocol.sendShortMessageData("Subject: test\r\n\r\nTest body testAuth\r\n");
+
+        assertThat(smtpProtocol.getReplyCode())
+            .as("expected error")
+            .isEqualTo(503);
+
+        smtpProtocol.quit();
+
+        // mail was not propagated by SMTPServer
+        assertThat(queue.getLastMail())
+            .as("mail received by mail server")
+            .isNull();
+    }
+
+    @Test
     public void testAuthWithEmptySender() throws Exception {
         smtpConfiguration.setAuthorizedAddresses("128.0.0.1/8");
         smtpConfiguration.setAuthorizingAnnounce();
@@ -1334,7 +1532,7 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("ehlo " + InetAddress.getLocalHost());
 
-        String userName = "test_user_smtp";
+        String userName = USER_LOCALHOST;
         usersRepository.addUser(Username.of(userName), "pwd");
 
         smtpProtocol.setSender("");
@@ -1551,8 +1749,8 @@ public class SMTPServerTest {
         // is this required or just for compatibility? assertTrue("anouncing
         // auth required", capabilitieslist.contains("AUTH=LOGIN PLAIN"));
 
-        String userName = "test_user_smtp";
-        String sender = "test_user_smtp@localhost";
+        String userName = USER_LOCALHOST;
+        String sender = USER_LOCALHOST;
 
         smtpProtocol.setSender(sender);
 
@@ -1593,7 +1791,7 @@ public class SMTPServerTest {
 
         smtpProtocol.sendCommand("ehlo", InetAddress.getLocalHost().toString());
 
-        String sender = "test_user_smtp@localhost";
+        String sender = USER_LOCALHOST;
 
         smtpProtocol.setSender(sender);
 

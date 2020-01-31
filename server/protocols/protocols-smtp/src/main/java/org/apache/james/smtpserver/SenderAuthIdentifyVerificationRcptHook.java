@@ -29,6 +29,7 @@ import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.protocols.smtp.SMTPSession;
 import org.apache.james.protocols.smtp.core.AbstractSenderAuthIdentifyVerificationRcptHook;
 import org.apache.james.protocols.smtp.hook.HookResult;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 
@@ -38,11 +39,13 @@ import org.apache.james.user.api.UsersRepositoryException;
 public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthIdentifyVerificationRcptHook {
     private final DomainList domains;
     private final UsersRepository users;
+    private final CanSendFrom canSendFrom;
 
     @Inject
-    public SenderAuthIdentifyVerificationRcptHook(DomainList domains, UsersRepository users) {
+    public SenderAuthIdentifyVerificationRcptHook(DomainList domains, UsersRepository users, CanSendFrom canSendFrom) {
         this.domains = domains;
         this.users = users;
+        this.canSendFrom = canSendFrom;
     }
 
     @Override
@@ -74,7 +77,7 @@ public class SenderAuthIdentifyVerificationRcptHook extends AbstractSenderAuthId
     }
 
     @Override
-    protected boolean isSenderAllowed(Username user, Username sender) {
-        return user.equals(sender);
+    protected boolean isSenderAllowed(Username connectedUser, Username sender) {
+        return canSendFrom.userCanSendFrom(connectedUser, sender);
     }
 }

@@ -19,11 +19,13 @@
 package org.apache.james.modules.data;
 
 import org.apache.james.backends.cassandra.components.CassandraModule;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraMappingsSourcesDAO;
 import org.apache.james.rrt.cassandra.CassandraRRTModule;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTable;
 import org.apache.james.rrt.cassandra.CassandraRecipientRewriteTableDAO;
+import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.utils.InitializationOperation;
 import org.apache.james.utils.InitilizationOperationBuilder;
@@ -40,6 +42,8 @@ public class CassandraRecipientRewriteTableModule extends AbstractModule {
         bind(CassandraRecipientRewriteTableDAO.class).in(Scopes.SINGLETON);
         bind(CassandraMappingsSourcesDAO.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(CassandraRecipientRewriteTable.class);
+        bind(CanSendFromImpl.class).in(Scopes.SINGLETON);
+        bind(CanSendFrom.class).to(CanSendFromImpl.class);
         Multibinder<CassandraModule> cassandraDataDefinitions = Multibinder.newSetBinder(binder(), CassandraModule.class);
         cassandraDataDefinitions.addBinding().toInstance(CassandraRRTModule.MODULE);
     }

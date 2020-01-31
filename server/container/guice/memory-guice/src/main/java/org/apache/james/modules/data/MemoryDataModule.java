@@ -32,7 +32,9 @@ import org.apache.james.mailrepository.memory.MailRepositoryStoreConfiguration;
 import org.apache.james.mailrepository.memory.MemoryMailRepository;
 import org.apache.james.mailrepository.memory.MemoryMailRepositoryUrlStore;
 import org.apache.james.modules.server.MailStoreRepositoryModule;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.ConfigurationProvider;
 import org.apache.james.user.api.UsersRepository;
@@ -65,6 +67,9 @@ public class MemoryDataModule extends AbstractModule {
 
         bind(MemoryRecipientRewriteTable.class).in(Scopes.SINGLETON);
         bind(RecipientRewriteTable.class).to(MemoryRecipientRewriteTable.class);
+
+        bind(CanSendFromImpl.class).in(Scopes.SINGLETON);
+        bind(CanSendFrom.class).to(CanSendFromImpl.class);
 
         bind(MemoryMailRepositoryUrlStore.class).in(Scopes.SINGLETON);
         bind(MailRepositoryUrlStore.class).to(MemoryMailRepositoryUrlStore.class);
