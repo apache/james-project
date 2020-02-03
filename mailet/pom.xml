@@ -94,6 +94,7 @@
                                 <exclude>**/*.ics</exclude>
                                 <exclude>**/*.mime</exclude>
                                 <exclude>**/*.eml</exclude>
+                                <exclude>**/*.txt</exclude>
                                 <exclude>src/site/**</exclude>
                             </excludes>
                         </configuration>
