@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
 import org.apache.james.probe.DataProbe;
@@ -120,5 +121,10 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
         recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(deliveryDomain));
+    }
+
+    @Override
+    public void addGroupAliasMapping(String fromGroup, String toAddress) throws Exception {
+        recipientRewriteTable.addGroupMapping(MappingSource.fromMailAddress(new MailAddress(fromGroup)), toAddress);
     }
 }
