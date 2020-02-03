@@ -21,6 +21,7 @@ package org.apache.james.mailbox;
 
 import java.util.Arrays;
 import java.util.List;
+
 import javax.mail.Flags;
 
 public class FlagsBuilder {

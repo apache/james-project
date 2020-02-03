@@ -172,10 +172,12 @@
       <property name="severity" value="ignore"/>
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
-    <module name="CustomImportOrder">
-      <property name="customImportOrderRules" value="STATIC###STANDARD_JAVA_PACKAGE###SPECIAL_IMPORTS"/>
-      <property name="specialImportsRegExp" value="org"/>
-      <property name="sortImportsInGroupAlphabetically" value="true"/>
+    <module name="ImportOrder">
+      <property name="groups" value="/^java\./,javax,org,com"/>
+      <property name="ordered" value="true"/>
+      <property name="separated" value="true"/>
+      <property name="option" value="top"/>
+      <property name="sortStaticImportsAlphabetically" value="true"/>
     </module>
     <module name="UnusedImports"/>
     <module name="MethodParamPad"/>

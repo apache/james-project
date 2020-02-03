@@ -38,6 +38,7 @@ import org.apache.james.jmap.cassandra.vacation.tables.CassandraNotificationTabl
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Insert;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraNotificationRegistryDAO {

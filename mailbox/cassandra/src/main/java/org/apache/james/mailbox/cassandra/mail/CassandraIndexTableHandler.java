@@ -29,6 +29,7 @@ import org.apache.james.mailbox.model.UpdatedFlags;
 import org.apache.james.mailbox.store.mail.model.MailboxMessage;
 
 import com.google.common.collect.ImmutableSet;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

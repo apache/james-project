@@ -19,6 +19,7 @@
 package org.apache.james.transport.matchers;
 
 import java.util.Collection;
+
 import javax.mail.MessagingException;
 
 import org.apache.james.core.MailAddress;

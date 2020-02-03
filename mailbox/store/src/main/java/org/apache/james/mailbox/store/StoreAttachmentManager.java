@@ -34,7 +34,6 @@ import org.apache.james.mailbox.model.Attachment;
 import org.apache.james.mailbox.model.AttachmentId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.store.mail.AttachmentMapperFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -28,6 +28,7 @@ import org.apache.james.backends.cassandra.init.configuration.CassandraConfigura
 
 import com.datastax.driver.core.ResultSet;
 import com.datastax.driver.core.Row;
+
 import reactor.core.publisher.Flux;
 
 public class CassandraUtils {

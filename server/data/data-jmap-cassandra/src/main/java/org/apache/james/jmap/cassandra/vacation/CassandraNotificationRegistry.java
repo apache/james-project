@@ -33,6 +33,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.primitives.Ints;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraNotificationRegistry implements NotificationRegistry {

@@ -41,6 +41,7 @@ import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.Update;
 import com.datastax.driver.core.querybuilder.Update.Assignments;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraApplicableFlagDAO {

@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.base.MoreObjects;
+
 import reactor.core.publisher.Flux;
 
 public class RabbitMQMailQueue implements ManageableMailQueue {

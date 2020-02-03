@@ -30,6 +30,7 @@ import javax.inject.Inject;
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
 import com.rabbitmq.client.Connection;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 

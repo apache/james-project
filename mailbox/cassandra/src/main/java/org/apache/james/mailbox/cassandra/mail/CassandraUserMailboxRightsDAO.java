@@ -48,6 +48,7 @@ import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.querybuilder.QueryBuilder;
 import com.github.fge.lambdas.Throwing;
+
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

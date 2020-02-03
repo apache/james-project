@@ -19,6 +19,7 @@
 package org.apache.james.mailbox;
 
 import java.util.List;
+
 import javax.mail.Flags;
 
 import com.google.common.annotations.VisibleForTesting;

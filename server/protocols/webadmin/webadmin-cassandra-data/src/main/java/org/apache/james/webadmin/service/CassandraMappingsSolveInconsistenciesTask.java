@@ -33,6 +33,7 @@ import org.apache.james.task.TaskExecutionDetails;
 import org.apache.james.task.TaskType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraMappingsSolveInconsistenciesTask implements Task {

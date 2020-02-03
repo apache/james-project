@@ -27,6 +27,7 @@ import org.apache.james.jmap.api.vacation.VacationPatch;
 import org.apache.james.jmap.api.vacation.VacationRepository;
 
 import com.google.common.base.Preconditions;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraVacationRepository implements VacationRepository {

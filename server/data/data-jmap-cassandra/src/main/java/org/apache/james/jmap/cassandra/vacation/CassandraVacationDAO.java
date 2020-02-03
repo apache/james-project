@@ -46,6 +46,7 @@ import com.datastax.driver.core.Session;
 import com.datastax.driver.core.UserType;
 import com.datastax.driver.core.querybuilder.Insert;
 import com.google.common.collect.ImmutableList;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraVacationDAO {

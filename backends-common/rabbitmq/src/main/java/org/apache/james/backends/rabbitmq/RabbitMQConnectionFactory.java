@@ -24,6 +24,7 @@ import javax.inject.Inject;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 

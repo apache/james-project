@@ -21,6 +21,7 @@ package org.apache.james.modules.protocols;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+
 import javax.inject.Inject;
 
 import org.apache.commons.io.IOUtils;

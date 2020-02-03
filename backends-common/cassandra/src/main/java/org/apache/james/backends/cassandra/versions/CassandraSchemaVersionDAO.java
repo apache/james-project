@@ -36,6 +36,7 @@ import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersion
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
+
 import reactor.core.publisher.Mono;
 
 public class CassandraSchemaVersionDAO {

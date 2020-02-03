@@ -22,6 +22,7 @@ package org.apache.james.transport.mailets.redirect;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;

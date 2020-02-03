@@ -32,6 +32,7 @@ import org.apache.james.util.date.ZonedDateTimeProvider;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+
 import reactor.core.publisher.Mono;
 
 public class MemoryNotificationRegistry implements NotificationRegistry {

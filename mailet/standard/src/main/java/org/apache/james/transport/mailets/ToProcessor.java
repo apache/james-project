@@ -22,6 +22,7 @@
 package org.apache.james.transport.mailets;
 
 import java.util.Optional;
+
 import javax.mail.MessagingException;
 
 import org.apache.mailet.Mail;

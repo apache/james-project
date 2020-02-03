@@ -20,6 +20,7 @@
 package org.apache.james.backends.cassandra.init;
 
 import java.util.stream.Stream;
+
 import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Provider;
