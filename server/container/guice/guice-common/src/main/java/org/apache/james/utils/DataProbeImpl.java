@@ -112,6 +112,12 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     }
 
     @Override
+    public void addUserAliasMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
+        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
+        recipientRewriteTable.addAliasMapping(source, toAddress);
+    }
+
+    @Override
     public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
         recipientRewriteTable.addAliasDomainMapping(MappingSource.fromDomain(Domain.of(aliasDomain)), Domain.of(deliveryDomain));
     }
