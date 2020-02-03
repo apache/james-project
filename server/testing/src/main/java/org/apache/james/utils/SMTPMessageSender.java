@@ -41,20 +41,27 @@ import com.github.fge.lambdas.Throwing;
 
 public class SMTPMessageSender extends ExternalResource implements Closeable {
 
+    private static final String DEFAULT_PROTOCOL = "TLS";
+    private static final String UTF_8_ENCODING = "UTF-8";
+
     public static SMTPMessageSender noAuthentication(String ip, int port, String senderDomain) throws IOException {
-        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient();
+        AuthenticatingSMTPClient smtpClient = newUtf8AuthenticatingClient();
         smtpClient.connect(ip, port);
         return new SMTPMessageSender(smtpClient, senderDomain);
     }
 
     public static SMTPMessageSender authentication(String ip, int port, String senderDomain, String username, String password)
         throws NoSuchAlgorithmException, IOException, InvalidKeySpecException, InvalidKeyException {
-        AuthenticatingSMTPClient smtpClient = new AuthenticatingSMTPClient();
+        AuthenticatingSMTPClient smtpClient = newUtf8AuthenticatingClient();
         smtpClient.connect(ip, port);
         if (!smtpClient.auth(AuthenticatingSMTPClient.AUTH_METHOD.PLAIN, username, password)) {
             throw new RuntimeException("auth failed");
         }
         return new SMTPMessageSender(smtpClient, senderDomain);
+    }
+
+    private static AuthenticatingSMTPClient newUtf8AuthenticatingClient() {
+        return new AuthenticatingSMTPClient(DEFAULT_PROTOCOL, UTF_8_ENCODING);
     }
 
     private final AuthenticatingSMTPClient smtpClient;
@@ -66,7 +73,7 @@ public class SMTPMessageSender extends ExternalResource implements Closeable {
     }
 
     public SMTPMessageSender(String senderDomain) {
-        this(new AuthenticatingSMTPClient(), senderDomain);
+        this(newUtf8AuthenticatingClient(), senderDomain);
     }
 
     public SMTPMessageSender connect(String ip, Port port) throws IOException {

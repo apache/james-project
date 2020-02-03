@@ -447,6 +447,6 @@ Feature: GetMessages method
     And the first attachment is:
     |key      | value                        |
     |type     |"text/calendar"               |
-    |size     |1056                          |
+    |size     |1096                          |
     |name     |"event.ics"                   |
     |isInline |false                         |
