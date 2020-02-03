@@ -46,12 +46,6 @@
       <property name="allowByTailComment" value="true"/>
       <property name="allowNonPrintableEscapes" value="true"/>
     </module>
-    <module name="LineLength">
-      <property name="severity" value="ignore"/>
-      <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
-      <property name="max" value="100"/>
-      <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
-    </module>
     <module name="AvoidStarImport"/>
     <module name="OneTopLevelClass"/>
     <module name="NoLineWrap"/>
@@ -230,12 +224,9 @@
     </module>
     <module name="JavadocMethod">
       <property name="severity" value="ignore"/>
-      <property name="minLineCount" value="2"/>
       <property name="allowedAnnotations" value="Override, Test"/>
       <property name="scope" value="public"/>
-      <property name="allowThrowsTagsForSubclasses" value="true"/>
       <property name="allowMissingParamTags" value="true"/>
-      <property name="allowMissingThrowsTags" value="true"/>
       <property name="allowMissingReturnTag" value="true"/>
       <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
     </module>
@@ -272,5 +263,11 @@
   </module>
   <module name="FileTabCharacter">
     <property name="eachLine" value="true"/>
+  </module>
+  <module name="LineLength">
+    <property name="severity" value="ignore"/>
+    <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
+    <property name="max" value="100"/>
+    <metadata name="net.sf.eclipsecs.core.lastEnabledSeverity" value="inherit"/>
   </module>
 </module>
