@@ -25,6 +25,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.Flags;
 import javax.persistence.Basic;
@@ -507,15 +508,20 @@ public abstract class AbstractJPAMailboxMessage implements MailboxMessage {
     @Override
     public List<MessageAttachment> getAttachments() {
         try {
+            AtomicInteger counter = new AtomicInteger(0);
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
                 .map(Throwing.<ParsedAttachment, MessageAttachment>function(
-                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
                 .collect(Guavate.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AttachmentId generateFixedAttachmentId(int position) {
+        return AttachmentId.from(getMailboxId().serialize() + "-" + getUid().asLong() + "-" + position);
     }
 
     @Override

@@ -60,6 +60,8 @@ public interface MessageStorer {
      */
     class WithAttachment implements MessageStorer {
         private static final Logger LOGGER = LoggerFactory.getLogger(WithAttachment.class);
+        private static final int START = 0;
+        private static final int UNLIMITED = -1;
 
         private final MailboxSessionMapperFactory mapperFactory;
         private final MessageId.Factory messageIdFactory;
@@ -98,7 +100,7 @@ public interface MessageStorer {
 
         private List<ParsedAttachment> extractAttachments(SharedInputStream contentIn) {
             try {
-                return messageParser.retrieveAttachments(contentIn.newStream(0, -1));
+                return messageParser.retrieveAttachments(contentIn.newStream(START, UNLIMITED));
             } catch (Exception e) {
                 LOGGER.warn("Error while parsing mail's attachments: {}", e.getMessage(), e);
                 return ImmutableList.of();

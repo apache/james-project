@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.mail.util.SharedFileInputStream;
 
@@ -275,15 +276,20 @@ public class MaildirMessage implements Message {
     @Override
     public List<MessageAttachment> getAttachments() {
         try {
+            AtomicInteger counter = new AtomicInteger(0);
             return new MessageParser().retrieveAttachments(getFullContent())
                 .stream()
                 .map(Throwing.<ParsedAttachment, MessageAttachment>function(
-                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(AttachmentId.random()))
+                    attachmentMetadata -> attachmentMetadata.asMessageAttachment(generateFixedAttachmentId(counter.incrementAndGet())))
                     .sneakyThrow())
                 .collect(Guavate.toImmutableList());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private AttachmentId generateFixedAttachmentId(int position) {
+        return AttachmentId.from(messageName.getFullName() + "-" + position);
     }
 
     @Override
