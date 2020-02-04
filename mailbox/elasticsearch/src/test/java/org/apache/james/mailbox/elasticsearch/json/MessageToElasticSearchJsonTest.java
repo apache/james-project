@@ -110,6 +110,28 @@ class MessageToElasticSearchJsonTest {
     }
 
     @Test
+    void invalidCharsetShouldBeWellConvertedToJson() throws IOException {
+        MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
+            new DefaultTextExtractor(),
+            ZoneId.of("Europe/Paris"), IndexAttachments.YES);
+        MailboxMessage spamMail = new SimpleMailboxMessage(MESSAGE_ID,
+                date,
+                SIZE,
+                BODY_START_OCTET,
+                ClassLoaderUtils.getSystemResourceAsSharedStream("eml/invalidCharset.eml"),
+                new Flags(),
+                propertyBuilder,
+                MAILBOX_ID);
+        spamMail.setUid(UID);
+        spamMail.setModSeq(MOD_SEQ);
+
+        String actual = messageToElasticSearchJson.convertToJson(spamMail, ImmutableList.of(USERNAME));
+        assertThatJson(actual)
+            .when(IGNORING_ARRAY_ORDER)
+            .isEqualTo(ClassLoaderUtils.getSystemResourceAsString("eml/invalidCharset.json"));
+    }
+
+    @Test
     void htmlEmailShouldBeWellConvertedToJson() throws IOException {
         MessageToElasticSearchJson messageToElasticSearchJson = new MessageToElasticSearchJson(
             new DefaultTextExtractor(),
