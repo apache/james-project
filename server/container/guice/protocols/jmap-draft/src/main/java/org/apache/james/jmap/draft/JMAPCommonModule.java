@@ -43,6 +43,8 @@ import org.apache.james.jmap.draft.utils.HeadersAuthenticationExtractor;
 import org.apache.james.jmap.event.ComputeMessageFastViewProjectionListener;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.mailbox.events.MailboxListener;
+import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.util.date.DefaultZonedDateTimeProvider;
 import org.apache.james.util.date.ZonedDateTimeProvider;
 import org.apache.james.util.mime.MessageContentExtractor;
@@ -77,6 +79,8 @@ public class JMAPCommonModule extends AbstractModule {
         bind(MessageMetadataViewFactory.class).in(Scopes.SINGLETON);
         bind(MessageHeaderViewFactory.class).in(Scopes.SINGLETON);
         bind(MessageFastViewFactory.class).in(Scopes.SINGLETON);
+
+        bind(CanSendFrom.class).to(CanSendFromImpl.class).in(Scopes.SINGLETON);
 
         bind(MessageContentExtractor.class).in(Scopes.SINGLETON);
         bind(HeadersAuthenticationExtractor.class).in(Scopes.SINGLETON);
