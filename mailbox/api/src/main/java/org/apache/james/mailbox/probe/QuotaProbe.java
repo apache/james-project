@@ -19,36 +19,37 @@
 
 package org.apache.james.mailbox.probe;
 
+import java.util.Optional;
+
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.SerializableQuota;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
+import org.apache.james.mailbox.model.Quota;
 
 public interface QuotaProbe {
 
     String getQuotaRoot(String namespace, String user, String name) throws MailboxException;
 
-    SerializableQuota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException;
+    Quota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException;
 
-    SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException;
+    Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException;
 
-    SerializableQuotaLimitValue<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException;
+    Optional<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException;
 
-    SerializableQuotaLimitValue<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException;
+    Optional<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException;
 
-    SerializableQuotaLimitValue<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException;
+    Optional<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException;
 
-    SerializableQuotaLimitValue<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException;
+    Optional<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException;
 
-    void setMaxMessageCount(String quotaRoot, SerializableQuotaLimitValue<QuotaCountLimit> maxMessageCount) throws MailboxException;
+    void setMaxMessageCount(String quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException;
 
-    void setMaxStorage(String quotaRoot, SerializableQuotaLimitValue<QuotaSizeLimit> maxSize) throws MailboxException;
+    void setMaxStorage(String quotaRoot, QuotaSizeLimit maxSize) throws MailboxException;
 
-    void setGlobalMaxMessageCount(SerializableQuotaLimitValue<QuotaCountLimit> maxGlobalMessageCount) throws MailboxException;
+    void setGlobalMaxMessageCount(QuotaCountLimit maxGlobalMessageCount) throws MailboxException;
 
-    void setGlobalMaxStorage(SerializableQuotaLimitValue<QuotaSizeLimit> maxGlobalSize) throws MailboxException;
+    void setGlobalMaxStorage(QuotaSizeLimit maxGlobalSize) throws MailboxException;
 
 }

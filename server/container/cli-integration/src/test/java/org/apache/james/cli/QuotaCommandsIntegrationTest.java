@@ -27,6 +27,8 @@ import java.util.Optional;
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.MemoryJmapTestRule;
 import org.apache.james.cli.util.OutputCapture;
+import org.apache.james.core.quota.QuotaCountLimit;
+import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.store.search.ListeningMessageSearchIndex;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -64,7 +66,7 @@ public class QuotaCommandsIntegrationTest {
     public void setGlobalMaxStorageShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxstoragequota", "36"});
 
-        assertThat(quotaProbe.getGlobalMaxStorage().encodeAsLong()).isEqualTo(36);
+        assertThat(quotaProbe.getGlobalMaxStorage().map(QuotaSizeLimit::asLong)).contains(36L);
     }
 
     @Test
@@ -82,7 +84,7 @@ public class QuotaCommandsIntegrationTest {
     public void setGlobalMaxMessageCountShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setglobalmaxmessagecountquota", "36"});
 
-        assertThat(quotaProbe.getGlobalMaxMessageCount().encodeAsLong()).isEqualTo(36);
+        assertThat(quotaProbe.getGlobalMaxMessageCount().map(QuotaCountLimit::asLong)).contains(36L);
     }
 
     @Test
@@ -100,7 +102,7 @@ public class QuotaCommandsIntegrationTest {
     public void setMaxStorageShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxstoragequota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
+        assertThat(quotaProbe.getMaxStorage(QUOTA_ROOT.getValue()).map(QuotaSizeLimit::asLong)).contains(36L);
     }
 
     @Test
@@ -118,7 +120,7 @@ public class QuotaCommandsIntegrationTest {
     public void setMaxMessageCountShouldWork() throws Exception {
         ServerCmd.doMain(new String[] {"-h", "127.0.0.1", "-p", "9999", "setmaxmessagecountquota", QUOTA_ROOT.getValue(), "36"});
 
-        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue()).encodeAsLong()).isEqualTo(36);
+        assertThat(quotaProbe.getMaxMessageCount(QUOTA_ROOT.getValue()).map(QuotaCountLimit::asLong)).contains(36L);
     }
 
     @Test

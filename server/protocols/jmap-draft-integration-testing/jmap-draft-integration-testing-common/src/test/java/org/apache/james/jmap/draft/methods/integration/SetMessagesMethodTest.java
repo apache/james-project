@@ -63,7 +63,6 @@ import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -95,7 +94,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageResult;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
@@ -1328,7 +1326,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldNotAllowDraftCreationWhenOverQuota() throws MailboxException {
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME.asString(), DefaultMailboxes.INBOX);
-        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(100))));
+        quotaProbe.setMaxStorage(inboxQuotaRoot, QuotaSizeLimit.size(100));
 
         MessageAppender.fillMailbox(mailboxProbe, USERNAME.asString(), MailboxConstants.INBOX);
 
@@ -1445,7 +1443,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldNotAllowCopyWhenOverQuota() throws MailboxException {
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME.asString(), DefaultMailboxes.INBOX);
-        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(100))));
+        quotaProbe.setMaxStorage(inboxQuotaRoot, QuotaSizeLimit.size(100));
 
         List<ComposedMessageId> composedMessageIds = MessageAppender.fillMailbox(mailboxProbe, USERNAME.asString(), MailboxConstants.INBOX);
 
@@ -2775,7 +2773,7 @@ public abstract class SetMessagesMethodTest {
     public void setMessagesShouldTriggerMaxQuotaReachedWhenTryingToSendMessageAndQuotaReached() throws Exception {
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", USERNAME.asString(), DefaultMailboxes.INBOX);
-        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(100))));
+        quotaProbe.setMaxStorage(inboxQuotaRoot, QuotaSizeLimit.size(100));
 
         MessageAppender.fillMailbox(mailboxProbe, USERNAME.asString(), MailboxConstants.INBOX);
 

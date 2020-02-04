@@ -22,7 +22,6 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.apache.james.core.quota.QuotaSizeLimit;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.modules.QuotaProbesImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
@@ -70,7 +69,7 @@ class JPAJamesServerTest implements JamesServerContract {
             .fluent()
             .addDomain(DOMAIN)
             .addUser(USER, PASSWORD);
-        jamesServer.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(new SerializableQuotaLimitValue<>(QuotaSizeLimit.size(50 * 1024)));
+        jamesServer.getProbe(QuotaProbesImpl.class).setGlobalMaxStorage(QuotaSizeLimit.size(50 * 1024));
 
         // ~ 12 KB email
         int imapPort = jamesServer.getProbe(ImapGuiceProbe.class).getImapPort();

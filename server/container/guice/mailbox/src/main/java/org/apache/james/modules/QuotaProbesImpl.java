@@ -19,6 +19,8 @@
 
 package org.apache.james.modules;
 
+import java.util.Optional;
+
 import javax.inject.Inject;
 
 import org.apache.james.core.Username;
@@ -28,15 +30,12 @@ import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SerializableQuota;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
+import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.utils.GuiceProbe;
-
-import com.github.fge.lambdas.Throwing;
 
 public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
 
@@ -57,62 +56,52 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public SerializableQuota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
-        return SerializableQuota.newInstance(quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot)));
+    public Quota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
+        return quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot));
     }
 
     @Override
-    public SerializableQuota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
-        return SerializableQuota.newInstance(quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot)));
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
+        return quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot));
     }
 
     @Override
-    public SerializableQuotaLimitValue<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot)));
+    public Optional<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
+        return maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot));
     }
 
     @Override
-    public SerializableQuotaLimitValue<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
-        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot)));
+    public Optional<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
+        return maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot));
     }
 
     @Override
-    public SerializableQuotaLimitValue<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException {
-        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxMessage());
+    public Optional<QuotaCountLimit> getGlobalMaxMessageCount() throws MailboxException {
+        return maxQuotaManager.getGlobalMaxMessage();
     }
 
     @Override
-    public SerializableQuotaLimitValue<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException {
-        return SerializableQuotaLimitValue.valueOf(maxQuotaManager.getGlobalMaxStorage());
+    public Optional<QuotaSizeLimit> getGlobalMaxStorage() throws MailboxException {
+        return maxQuotaManager.getGlobalMaxStorage();
     }
 
     @Override
-    public void setMaxMessageCount(String quotaRoot, SerializableQuotaLimitValue<QuotaCountLimit> maxMessageCount) throws MailboxException {
-        maxMessageCount.toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
-            .ifPresent(
-                Throwing.consumer(
-                    (QuotaCountLimit value) -> maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), value))
-                    .sneakyThrow());
+    public void setMaxMessageCount(String quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException {
+        maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), maxMessageCount);
     }
 
     @Override
-    public void setMaxStorage(String quotaRoot, SerializableQuotaLimitValue<QuotaSizeLimit> maxSize) throws MailboxException {
-        maxSize.toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
-            .ifPresent(
-                Throwing.consumer(
-                    (QuotaSizeLimit value) -> maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), value))
-                    .sneakyThrow());
+    public void setMaxStorage(String quotaRoot, QuotaSizeLimit maxSize) throws MailboxException {
+        maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), maxSize);
     }
 
     @Override
-    public void setGlobalMaxMessageCount(SerializableQuotaLimitValue<QuotaCountLimit> maxGlobalMessageCount) throws MailboxException {
-        maxGlobalMessageCount.toValue(QuotaCountLimit::count, QuotaCountLimit.unlimited())
-            .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxMessage).sneakyThrow());
+    public void setGlobalMaxMessageCount(QuotaCountLimit maxGlobalMessageCount) throws MailboxException {
+        maxQuotaManager.setGlobalMaxMessage(maxGlobalMessageCount);
     }
 
     @Override
-    public void setGlobalMaxStorage(SerializableQuotaLimitValue<QuotaSizeLimit> maxGlobalSize) throws MailboxException {
-        maxGlobalSize.toValue(QuotaSizeLimit::size, QuotaSizeLimit.unlimited())
-            .ifPresent(Throwing.consumer(maxQuotaManager::setGlobalMaxStorage).sneakyThrow());
+    public void setGlobalMaxStorage(QuotaSizeLimit maxGlobalSize) throws MailboxException {
+        maxQuotaManager.setGlobalMaxStorage(maxGlobalSize);
     }
 }

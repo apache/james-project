@@ -42,7 +42,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.startsWith;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.Username;
@@ -55,7 +54,6 @@ import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -406,7 +404,7 @@ public abstract class SendMDNMethodTest {
 
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
         String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER.asString(), DefaultMailboxes.INBOX);
-        quotaProbe.setMaxStorage(inboxQuotaRoot, SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(100))));
+        quotaProbe.setMaxStorage(inboxQuotaRoot, QuotaSizeLimit.size(100));
 
         MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), HOMER.asString(), MailboxConstants.INBOX);
 

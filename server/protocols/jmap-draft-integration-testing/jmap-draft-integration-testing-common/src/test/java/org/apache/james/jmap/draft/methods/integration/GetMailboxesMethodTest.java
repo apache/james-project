@@ -52,7 +52,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.apache.james.GuiceJamesServer;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -68,7 +67,6 @@ import org.apache.james.mailbox.model.MailboxACL.Right;
 import org.apache.james.mailbox.model.MailboxConstants;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.ACLProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.mime4j.dom.Message;
@@ -788,7 +786,7 @@ public abstract class GetMailboxesMethodTest {
     @Category(BasicFeature.class)
     @Test
     public void getMailboxesShouldReturnMaxStorageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setGlobalMaxStorage(SerializableQuotaLimitValue.valueOf(Optional.of(QuotaSizeLimit.size(42))));
+        quotaProbe.setGlobalMaxStorage(QuotaSizeLimit.size(42));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
@@ -805,7 +803,7 @@ public abstract class GetMailboxesMethodTest {
 
     @Test
     public void getMailboxesShouldReturnMaxMessageQuotasForInboxWhenSet() throws Exception {
-        quotaProbe.setGlobalMaxMessageCount(SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(43))));
+        quotaProbe.setGlobalMaxMessageCount(QuotaCountLimit.count(43));
         String mailboxId = mailboxProbe.createMailbox(MailboxConstants.USER_NAMESPACE, ALICE.asString(), DefaultMailboxes.INBOX).serialize();
 
         given()
@@ -829,8 +827,8 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobMailboxPath = MailboxPath.forUser(BOB, sharedMailboxName);
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup, Right.Read));
 
-        quotaProbe.setMaxMessageCount("#private&alice@domain.tld", SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(42))));
-        quotaProbe.setMaxMessageCount("#private&bob@domain.tld", SerializableQuotaLimitValue.valueOf(Optional.of(QuotaCountLimit.count(43))));
+        quotaProbe.setMaxMessageCount("#private&alice@domain.tld", QuotaCountLimit.count(42));
+        quotaProbe.setMaxMessageCount("#private&bob@domain.tld", QuotaCountLimit.count(43));
 
         given()
             .header("Authorization", accessToken.asString())
