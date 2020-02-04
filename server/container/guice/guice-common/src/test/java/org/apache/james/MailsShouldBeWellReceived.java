@@ -22,33 +22,33 @@ package org.apache.james;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.mail.Authenticator;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.PasswordAuthentication;
 import javax.mail.Session;
 import javax.mail.Store;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.search.FlagTerm;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Domain;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
 import org.apache.james.modules.protocols.SmtpGuiceProbe;
+import org.apache.james.util.MimeMessageUtil;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.IMAPMessageReader;
 import org.apache.james.utils.SMTPMessageSender;
 import org.apache.james.utils.SpoolerProbe;
+import org.apache.mailet.base.test.FakeMail;
 import org.awaitility.Awaitility;
 import org.awaitility.Duration;
 import org.awaitility.core.ConditionFactory;
@@ -73,49 +73,29 @@ interface MailsShouldBeWellReceived {
 
     ConditionFactory CALMLY_AWAIT_FIVE_MINUTE = CALMLY_AWAIT.timeout(Duration.FIVE_MINUTES);
     String SENDER = "bob@apache.org";
-    String UNICODE_BODY = "unicode character 'Ð'";
+    String UNICODE_BODY = "Unicode €uro symbol.";
 
 
-    static Message readFirstMessageJavax(int imapPort) throws MessagingException {
+    static String readFirstMessageJavax(int imapPort) throws Exception {
         Session imapSession = Session.getDefaultInstance(new Properties());
-        Store store = imapSession.getStore("imap");
-        store.connect("localhost", imapPort, JAMES_USER, PASSWORD);
-        Folder inbox = store.getFolder(IMAPMessageReader.INBOX);
-        inbox.open(Folder.READ_ONLY);
+        try (Store store = imapSession.getStore("imap")) {
+            store.connect("localhost", imapPort, JAMES_USER, PASSWORD);
+            Folder inbox = store.getFolder(IMAPMessageReader.INBOX);
+            inbox.open(Folder.READ_ONLY);
 
-        CALMLY_AWAIT.untilAsserted(() ->
-            assertThat(searchForUnSeen(inbox))
-                .hasSize(1));
+            CALMLY_AWAIT.untilAsserted(() ->
+                assertThat(searchForAll(inbox))
+                    .hasSize(1));
 
-        return searchForUnSeen(inbox)[0];
-    }
-
-    static Message[] searchForUnSeen(Folder inbox) throws MessagingException {
-        return inbox.search(new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-    }
-
-    static void sendMessageJavax(GuiceJamesServer server) throws MessagingException {
-        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
-
-        Properties props = new Properties();
-        props.put("mail.smtp.host", "localhost");
-        props.put("mail.smtp.port", smtpPort.getValue() + "");
-        props.put("mail.smtp.auth", "true");
-        props.put("mail.smtp.allow8bitmime", "true"); //force to use 8bit(UTF-8), otherwise, it automatically converts into 7bit
-
-        Authenticator auth = new Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(SENDER, PASSWORD);
+            try (InputStream inputStream = searchForAll(inbox)[0].getInputStream()) {
+                return MimeMessageUtil.asString(
+                    MimeMessageUtil.mimeMessageFromStream(inputStream));
             }
-        };
+        }
+    }
 
-        Session session = Session.getInstance(props, auth);
-        Message message = new MimeMessage(session);
-        message.setFrom(new InternetAddress(SENDER));
-        message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(JAMES_USER));
-        message.setText(UNICODE_BODY);
-
-        Transport.send(message);
+    static Message[] searchForAll(Folder inbox) throws MessagingException {
+        return inbox.search(new FlagTerm(new Flags(), false));
     }
 
     @Test
@@ -127,7 +107,20 @@ interface MailsShouldBeWellReceived {
         MailboxProbeImpl mailboxProbe = server.getProbe(MailboxProbeImpl.class);
         mailboxProbe.createMailbox("#private", JAMES_USER, DefaultMailboxes.INBOX);
 
-        sendMessageJavax(server);
+        Port smtpPort = server.getProbe(SmtpGuiceProbe.class).getSmtpPort();
+        try (SMTPMessageSender sender = new SMTPMessageSender(Domain.LOCALHOST.asString())) {
+            sender.connect(JAMES_SERVER_HOST, smtpPort);
+            MimeMessage mimeMessage = MimeMessageUtil.mimeMessageFromStream(
+                ClassLoader.getSystemResourceAsStream("eml/mail-containing-unicode-characters.eml"));
+
+            FakeMail.Builder mail = FakeMail.builder()
+                .name("test-unicode-body")
+                .sender(SENDER)
+                .recipient(JAMES_USER)
+                .mimeMessage(mimeMessage);
+
+            sender.sendMessage(mail);
+        }
 
         CALMLY_AWAIT.until(() -> server.getProbe(SpoolerProbe.class).processingFinished());
 
@@ -135,10 +128,11 @@ interface MailsShouldBeWellReceived {
             int imapPort = server.getProbe(ImapGuiceProbe.class).getImapPort();
             reader.connect(JAMES_SERVER_HOST, imapPort)
                 .login(JAMES_USER, PASSWORD)
-                .select(IMAPMessageReader.INBOX);
+                .select(IMAPMessageReader.INBOX)
+                .awaitMessageCount(CALMLY_AWAIT, 1);
 
-            assertThat(readFirstMessageJavax(imapPort).getInputStream())
-                .hasContent(UNICODE_BODY);
+            assertThat(readFirstMessageJavax(imapPort))
+                .contains(UNICODE_BODY);
         }
     }
 
