@@ -35,6 +35,7 @@ import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
 import org.apache.james.cli.probe.impl.JmxDataProbe;
 import org.apache.james.cli.probe.impl.JmxMailboxProbe;
+import org.apache.james.cli.probe.impl.JmxQuotaProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -43,7 +44,6 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.SerializableQuota;
 import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
-import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.probe.SieveProbe;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.Before;
@@ -57,7 +57,7 @@ public class ServerCmdTest {
 
     private JmxDataProbe dataProbe;
     private JmxMailboxProbe mailboxProbe;
-    private QuotaProbe quotaProbe;
+    private JmxQuotaProbe quotaProbe;
     private SieveProbe sieveProbe;
 
     private ServerCmd testee;
@@ -66,7 +66,7 @@ public class ServerCmdTest {
     public void setup() {
         dataProbe = mock(JmxDataProbe.class);
         mailboxProbe = mock(JmxMailboxProbe.class);
-        quotaProbe = mock(QuotaProbe.class);
+        quotaProbe = mock(JmxQuotaProbe.class);
         sieveProbe = mock(SieveProbe.class);
         testee = new ServerCmd(dataProbe, mailboxProbe, quotaProbe, sieveProbe);
     }
