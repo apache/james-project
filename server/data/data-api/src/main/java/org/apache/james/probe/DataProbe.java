@@ -57,8 +57,6 @@ public interface DataProbe {
 
     void removeUser(String username) throws Exception;
 
-    void setPassword(String userName, String password) throws Exception;
-
     String[] listUsers() throws Exception;
 
     void addDomain(String domain) throws Exception;
@@ -73,15 +71,7 @@ public interface DataProbe {
 
     Map<String, Mappings> listMappings() throws Exception;
 
-    Mappings listUserDomainMappings(String user, String domain) throws Exception;
-
     void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
-
-    void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception;
-
-    void addRegexMapping(String user, String domain, String regex) throws Exception;
-
-    void removeRegexMapping(String user, String domain, String regex) throws Exception;
 
     void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception;
 }

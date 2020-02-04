@@ -33,6 +33,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.james.cli.exceptions.InvalidArgumentNumberException;
 import org.apache.james.cli.exceptions.MissingCommandException;
 import org.apache.james.cli.exceptions.UnrecognizedCommandException;
+import org.apache.james.cli.probe.impl.JmxDataProbe;
 import org.apache.james.cli.type.CmdType;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
@@ -43,7 +44,6 @@ import org.apache.james.mailbox.model.SerializableQuota;
 import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.probe.SieveProbe;
 import org.apache.james.rrt.lib.MappingsImpl;
 import org.junit.Before;
@@ -55,7 +55,7 @@ public class ServerCmdTest {
 
     private static final String ADDITIONAL_ARGUMENT = "additionalArgument";
 
-    private DataProbe dataProbe;
+    private JmxDataProbe dataProbe;
     private MailboxProbe mailboxProbe;
     private QuotaProbe quotaProbe;
     private SieveProbe sieveProbe;
@@ -64,7 +64,7 @@ public class ServerCmdTest {
 
     @Before
     public void setup() {
-        dataProbe = mock(DataProbe.class);
+        dataProbe = mock(JmxDataProbe.class);
         mailboxProbe = mock(MailboxProbe.class);
         quotaProbe = mock(QuotaProbe.class);
         sieveProbe = mock(SieveProbe.class);

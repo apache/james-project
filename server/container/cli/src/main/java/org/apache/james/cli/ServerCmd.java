@@ -53,7 +53,6 @@ import org.apache.james.mailbox.model.SerializableQuota;
 import org.apache.james.mailbox.model.SerializableQuotaLimitValue;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.probe.SieveProbe;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.util.Port;
@@ -128,12 +127,12 @@ public class ServerCmd {
         stopWatch.stop();
     }
 
-    private final DataProbe probe;
+    private final JmxDataProbe probe;
     private final MailboxProbe mailboxProbe;
     private final QuotaProbe quotaProbe;
     private final SieveProbe sieveProbe;
 
-    public ServerCmd(DataProbe probe, MailboxProbe mailboxProbe, QuotaProbe quotaProbe, SieveProbe sieveProbe) {
+    public ServerCmd(JmxDataProbe probe, MailboxProbe mailboxProbe, QuotaProbe quotaProbe, SieveProbe sieveProbe) {
         this.probe = probe;
         this.mailboxProbe = mailboxProbe;
         this.quotaProbe = quotaProbe;

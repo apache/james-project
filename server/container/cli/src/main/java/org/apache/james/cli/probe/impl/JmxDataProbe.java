@@ -27,13 +27,12 @@ import java.util.Map;
 import javax.management.MalformedObjectNameException;
 
 import org.apache.james.domainlist.api.DomainListManagementMBean;
-import org.apache.james.probe.DataProbe;
 import org.apache.james.rrt.api.RecipientRewriteTableManagementMBean;
 import org.apache.james.rrt.lib.Mappings;
 import org.apache.james.user.api.UsersRepositoryManagementMBean;
 import org.apache.james.util.MDCBuilder;
 
-public class JmxDataProbe implements DataProbe, JmxProbe {
+public class JmxDataProbe implements JmxProbe {
 
     private static final String DOMAINLIST_OBJECT_NAME = "org.apache.james:type=component,name=domainlist";
     private static final String VIRTUALUSERTABLE_OBJECT_NAME = "org.apache.james:type=component,name=recipientrewritetable";
@@ -56,7 +55,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         return this;
     }
 
-    @Override
     public void addUser(String userName, String password) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -68,7 +66,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void removeUser(String username) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -80,7 +77,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public String[] listUsers() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -91,7 +87,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void setPassword(String userName, String password) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -103,7 +98,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public boolean containsDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -115,18 +109,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
-    public String getDefaultDomain() throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "getDefaultDomain")
-                     .build()) {
-            return domainListProxy.getDefaultDomain();
-        }
-    }
-
-    @Override
     public void addDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -138,7 +120,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void removeDomain(String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -150,7 +131,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public List<String> listDomains() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -161,7 +141,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public Map<String, Mappings> listMappings() throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -172,7 +151,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -183,7 +161,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -194,7 +171,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public Mappings listUserDomainMappings(String user, String domain) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -205,7 +181,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void addRegexMapping(String user, String domain, String regex) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -216,7 +191,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
         }
     }
 
-    @Override
     public void removeRegexMapping(String user, String domain, String regex) throws Exception {
         try (Closeable closeable =
                  MDCBuilder.create()
@@ -224,17 +198,6 @@ public class JmxDataProbe implements DataProbe, JmxProbe {
                      .addContext(MDCBuilder.ACTION, "removeRegexMapping")
                      .build()) {
             virtualUserTableProxy.removeRegexMapping(user, domain, regex);
-        }
-    }
-
-    @Override
-    public void addDomainAliasMapping(String aliasDomain, String deliveryDomain) throws Exception {
-        try (Closeable closeable =
-                 MDCBuilder.create()
-                     .addContext(MDCBuilder.PROTOCOL, JMX)
-                     .addContext(MDCBuilder.ACTION, "addDomainAliasMapping")
-                     .build()) {
-            virtualUserTableProxy.addDomainMapping(aliasDomain, deliveryDomain);
         }
     }
 }

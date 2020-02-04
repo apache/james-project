@@ -24,7 +24,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainList;
@@ -38,7 +37,6 @@ import org.apache.james.util.streams.Iterators;
 import com.github.steveash.guavate.Guavate;
 
 public class DataProbeImpl implements GuiceProbe, DataProbe {
-    
     private final DomainList domainList;
     private final UsersRepository usersRepository;
     private final RecipientRewriteTable recipientRewriteTable;
@@ -61,11 +59,6 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     @Override
     public void removeUser(String username) throws Exception {
         usersRepository.removeUser(Username.of(username));
-    }
-
-    @Override
-    public void setPassword(String userName, String password) {
-        throw new NotImplementedException("not implemented");
     }
 
     @Override
@@ -113,33 +106,9 @@ public class DataProbeImpl implements GuiceProbe, DataProbe {
     }
 
     @Override
-    public Mappings listUserDomainMappings(String user, String domain) {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
     public void addAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
         MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
         recipientRewriteTable.addAddressMapping(source, toAddress);
-    }
-
-    @Override
-    public void removeAddressMapping(String fromUser, String fromDomain, String toAddress) throws Exception {
-        MappingSource source = MappingSource.fromUser(fromUser, fromDomain);
-        recipientRewriteTable.removeAddressMapping(source, toAddress);
-    }
-
-    @Override
-    public void addRegexMapping(String user, String domain, String regex) throws Exception {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        recipientRewriteTable.addRegexMapping(source, regex);
-    }
-
-
-    @Override
-    public void removeRegexMapping(String user, String domain, String regex) throws Exception {
-        MappingSource source = MappingSource.fromUser(user, domain);
-        recipientRewriteTable.removeRegexMapping(source, regex);
     }
 
     @Override
