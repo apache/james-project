@@ -148,11 +148,11 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     private Mono<MessageAttachment> storeAttachmentAsync(ParsedAttachment parsedAttachment, MessageId ownerMessageId) {
         AttachmentId attachmentId = AttachmentId.random();
-        SizeInputStream content = new SizeInputStream(parsedAttachment.getContent());
+        byte[] content = parsedAttachment.getContent();
         return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), content, LOW_COST))
-            .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), content.getSize()))
+            .map(blobId -> new DAOAttachment(attachmentId, blobId, parsedAttachment.getContentType(), content.length))
             .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId))
-            .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, content.getSize()))));
+            .then(Mono.defer(() -> Mono.just(parsedAttachment.asMessageAttachment(attachmentId, content.length))));
     }
 
     private Mono<Void> storeAttachmentWithIndex(DAOAttachment daoAttachment, MessageId ownerMessageId) {

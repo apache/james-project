@@ -158,7 +158,7 @@ public abstract class AttachmentMapperTest {
         MessageId messageId = generateMessageId();
         AttachmentId attachmentId = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
+            .content("".getBytes(StandardCharsets.UTF_8))
             .noName()
             .noCid()
             .inline(false)), messageId)
@@ -172,14 +172,14 @@ public abstract class AttachmentMapperTest {
         MessageId messageId1 = generateMessageId();
         AttachmentId attachmentId1 = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
+            .content("".getBytes(StandardCharsets.UTF_8))
             .noName()
             .noCid()
             .inline(false)), messageId1)
             .get(0).getAttachmentId();
         attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
+            .content("".getBytes(StandardCharsets.UTF_8))
             .noName()
             .noCid()
             .inline(false)), generateMessageId())
@@ -217,7 +217,7 @@ public abstract class AttachmentMapperTest {
     void getOwnersShouldReturnEmptyWhenMessageIdReferenced() throws Exception {
         AttachmentId attachmentId = attachmentMapper.storeAttachmentsForMessage(ImmutableList.of(ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("".getBytes(StandardCharsets.UTF_8)))
+            .content("".getBytes(StandardCharsets.UTF_8))
             .noName()
             .noCid()
             .inline(false)), generateMessageId())

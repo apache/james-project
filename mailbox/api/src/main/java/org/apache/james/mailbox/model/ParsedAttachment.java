@@ -20,11 +20,7 @@
 package org.apache.james.mailbox.model;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Optional;
-
-import org.apache.james.util.io.InputStreamConsummer;
-import org.apache.james.util.io.SizeInputStream;
 
 public class ParsedAttachment {
     interface Builder {
@@ -35,7 +31,7 @@ public class ParsedAttachment {
 
         @FunctionalInterface
         interface RequireContent {
-            RequireName content(InputStream stream);
+            RequireName content(byte[] bytes);
         }
 
         @FunctionalInterface
@@ -79,12 +75,12 @@ public class ParsedAttachment {
     }
 
     private final String contentType;
-    private final InputStream content;
+    private final byte[] content;
     private final Optional<String> name;
     private final Optional<Cid> cid;
     private final boolean isInline;
 
-    private ParsedAttachment(String contentType, InputStream content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
+    private ParsedAttachment(String contentType, byte[] content, Optional<String> name, Optional<Cid> cid, boolean isInline) {
         this.contentType = contentType;
         this.content = content;
         this.name = name;
@@ -96,7 +92,7 @@ public class ParsedAttachment {
         return contentType;
     }
 
-    public InputStream getContent() {
+    public byte[] getContent() {
         return content;
     }
 
@@ -126,13 +122,11 @@ public class ParsedAttachment {
     }
 
     public MessageAttachment asMessageAttachment(AttachmentId attachmentId) throws IOException {
-        SizeInputStream sizeInputStream = new SizeInputStream(content);
-        InputStreamConsummer.consume(sizeInputStream);
         return MessageAttachment.builder()
             .attachment(Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
-                .size(sizeInputStream.getSize())
+                .size(content.length)
                 .build())
             .name(name)
             .cid(cid)

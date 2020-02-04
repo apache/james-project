@@ -22,7 +22,6 @@ package org.apache.james.mailbox.store.mail.model;
 import static org.apache.james.mailbox.store.mail.model.MessageAssert.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
@@ -83,19 +82,19 @@ public abstract class MessageWithAttachmentMapperTest {
         attachmentsMailbox = createMailbox(MailboxPath.forUser(Username.of("benwa"), "Attachments"));
         ParsedAttachment attachment1 = ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("attachment".getBytes(StandardCharsets.UTF_8)))
+            .content("attachment".getBytes(StandardCharsets.UTF_8))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment2 = ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("attachment2".getBytes(StandardCharsets.UTF_8)))
+            .content("attachment2".getBytes(StandardCharsets.UTF_8))
             .noName()
             .cid(Cid.from("cid"))
             .inline();
         ParsedAttachment attachment3 = ParsedAttachment.builder()
             .contentType("content")
-            .content(new ByteArrayInputStream("attachment3".getBytes(StandardCharsets.UTF_8)))
+            .content("attachment3".getBytes(StandardCharsets.UTF_8))
             .noName()
             .cid(Cid.from("cid"))
             .inline(false);

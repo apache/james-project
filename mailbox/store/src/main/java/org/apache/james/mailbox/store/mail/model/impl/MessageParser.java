@@ -19,7 +19,6 @@
 
 package org.apache.james.mailbox.store.mail.model.impl;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +34,6 @@ import org.apache.james.mime4j.dom.Body;
 import org.apache.james.mime4j.dom.Entity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.dom.Multipart;
-import org.apache.james.mime4j.dom.SingleBody;
 import org.apache.james.mime4j.dom.field.ContentDispositionField;
 import org.apache.james.mime4j.dom.field.ContentIdField;
 import org.apache.james.mime4j.dom.field.ContentTypeField;
@@ -218,15 +216,11 @@ public class MessageParser {
         return readHeader(part, CONTENT_ID, ContentIdField.class).isPresent();
     }
 
-    private InputStream getContent(Body body) throws IOException {
-        if (body instanceof SingleBody) {
-            SingleBody singleBody = (SingleBody) body;
-            return singleBody.getInputStream();
-        }
+    private byte[] getContent(Body body) throws IOException {
         DefaultMessageWriter messageWriter = new DefaultMessageWriter();
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         messageWriter.writeBody(body, out);
-        return new ByteArrayInputStream(out.toByteArray());
+        return out.toByteArray();
     }
 
     private enum Context {

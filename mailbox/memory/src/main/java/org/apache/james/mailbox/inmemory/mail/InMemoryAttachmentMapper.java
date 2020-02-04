@@ -130,20 +130,16 @@ public class InMemoryAttachmentMapper implements AttachmentMapper {
 
     private MessageAttachment storeAttachmentForMessage(MessageId ownerMessageId, ParsedAttachment parsedAttachment) throws MailboxException {
         AttachmentId attachmentId = AttachmentId.random();
-        try {
-            byte[] bytes = IOUtils.toByteArray(parsedAttachment.getContent());
+        byte[] bytes = parsedAttachment.getContent();
 
-            attachmentsById.put(attachmentId, Attachment.builder()
-                .attachmentId(attachmentId)
-                .type(parsedAttachment.getContentType())
-                .size(bytes.length)
-                .build());
-            attachmentsRawContentById.put(attachmentId, bytes);
-            messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
-            return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
-        } catch (IOException e) {
-            throw new MailboxException(String.format("Failed to persist attachment %s of message %s", attachmentId, ownerMessageId.serialize()), e);
-        }
+        attachmentsById.put(attachmentId, Attachment.builder()
+            .attachmentId(attachmentId)
+            .type(parsedAttachment.getContentType())
+            .size(bytes.length)
+            .build());
+        attachmentsRawContentById.put(attachmentId, bytes);
+        messageIdsByAttachmentId.put(attachmentId, ownerMessageId);
+        return parsedAttachment.asMessageAttachment(attachmentId, bytes.length);
     }
 
     @Override
