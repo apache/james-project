@@ -1,4 +1,4 @@
-# 15. FileMailQueue deprecation
+# 17. FileMailQueue deprecation
 
 Date: 2019-12-04
 
