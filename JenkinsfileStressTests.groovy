@@ -57,7 +57,7 @@ pipeline {
                             sh "cd /srv && sudo btrfs subvolume snapshot bench-snapshot bench-running-docker"
                             sh 'docker run -d --name=cassandra -p 9042:9042 -v /srv/bench-running-docker/cassandra:/var/lib/cassandra cassandra:3.11.3'
                             sh 'docker run -d --name=elasticsearch -p 9200:9200 -v /srv/bench-running-docker/elasticsearch:/usr/share/elasticsearch/data/elasticsearch  --env "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:6.3.2'
-                            sh 'docker run -d --name=tika linagora/docker-tikaserver:1.22'
+                            sh 'docker run -d --name=tika apache/tika:1.22'
                             sh 'docker run -d --name=swift -p 8080:8080 -v /srv/bench-running-docker/swift:/srv/1/node/sdb1 jeantil/openstack-keystone-swift:pike'
                             sh 'docker run -d --name=rabbitmq -p 15672:15672 -p 5672:5672 rabbitmq:3.8.1-management'
 

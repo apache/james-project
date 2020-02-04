@@ -34,7 +34,7 @@ services:
       - "9042:9042"
 
   tika:
-    image: linagora/docker-tikaserver:1.22
+    image: apache/tika:1.22
 
   rabbitmq:
     image: rabbitmq:3.8.1-management

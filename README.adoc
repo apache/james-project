@@ -236,7 +236,7 @@ You need a running *ElasticSearch* in docker. To achieve this run:
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 
-    $ docker run -d --name=tika linagora/docker-tikaserver:1.22
+    $ docker run -d --name=tika apache/tika:1.22
 
 You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
@@ -287,7 +287,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika linagora/docker-tikaserver:1.22
+    $ docker run --name tika apache/tika:1.22
 
 Add a link for the tika container in the above command line:
 
@@ -318,7 +318,7 @@ You need a running *ElasticSearch* in docker. To achieve this run:
 
 If you want to use all the JMAP search capabilities, you may also need to start Tika:
 
-    $ docker run -d --name=tika linagora/docker-tikaserver:1.22
+    $ docker run -d --name=tika apache/tika:1.22
 
 You can find more explanation on the need of Tika in this page http://james.apache.org/server/config-elasticsearch.html
 
@@ -350,7 +350,7 @@ You can handle attachment text extraction before indexing in ElasticSearch. This
 
 Run tika:
 
-    $ docker run --name tika linagora/docker-tikaserver:1.22
+    $ docker run --name tika apache/tika:1.22
 
 Add a link for the tika container in the above command line:
 
