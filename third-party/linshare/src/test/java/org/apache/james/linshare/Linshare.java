@@ -114,7 +114,7 @@ public class Linshare {
 
     @SuppressWarnings("resource")
     private GenericContainer<?> createDockerLdap() {
-        return new GenericContainer<>("linagora/linshare-ldap-for-tests:1.0")
+        return new GenericContainer<>("linagora/linshare-ldap-for-tests:1.0.0")
             .withLogConsumer(frame -> LOGGER.debug("<linshare-ldap-for-tests> " + frame.getUtf8String()))
             .withNetworkAliases("ldap")
             .withNetwork(network);
