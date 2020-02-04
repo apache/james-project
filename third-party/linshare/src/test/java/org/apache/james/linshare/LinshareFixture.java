@@ -84,4 +84,11 @@ public interface LinshareFixture {
         "\"combinator\": \"and\"," +
         "\"criteria\": []" +
         "}";
+
+    Credential TECHNICAL_ACCOUNT = new Credential("Technical@linshare.org", "Technical");
+    Credential ADMIN_ACCOUNT = new Credential("root@localhost.localdomain", "adminlinshare");
+
+    boolean ACCOUNT_ENABLED = true;
+
+    List<String> TECHNICAL_PERMISSIONS = ImmutableList.of("DOCUMENT_ENTRIES_CREATE");
 }

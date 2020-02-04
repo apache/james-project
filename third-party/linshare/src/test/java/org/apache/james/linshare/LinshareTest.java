@@ -21,10 +21,17 @@ package org.apache.james.linshare;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
+import static org.apache.james.linshare.LinshareFixture.ACCOUNT_ENABLED;
+import static org.apache.james.linshare.LinshareFixture.TECHNICAL_ACCOUNT;
+import static org.apache.james.linshare.LinshareFixture.TECHNICAL_PERMISSIONS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.apache.http.HttpStatus;
+import org.apache.james.linshare.client.TechnicalAccountResponse;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -34,6 +41,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 
 class LinshareTest {
+
     @RegisterExtension
     static LinshareExtension linshareExtension = new LinshareExtension();
 
@@ -57,5 +65,16 @@ class LinshareTest {
             .get("linshare/webservice/rest/user/v2/documents")
         .then()
             .statusCode(HttpStatus.SC_OK);
+    }
+
+    @Test
+    void linshareShouldHaveATechnicalAccountConfigured() {
+        List<TechnicalAccountResponse> technicalAccounts = linshareExtension.getAllTechnicalAccounts(LinshareFixture.ADMIN_ACCOUNT);
+
+        assertThat(technicalAccounts).anySatisfy(account -> SoftAssertions.assertSoftly(softly -> {
+            softly.assertThat(account.getName()).isEqualTo(TECHNICAL_ACCOUNT.getUsername());
+            softly.assertThat(account.getPermissions()).containsOnlyElementsOf(TECHNICAL_PERMISSIONS);
+            softly.assertThat(account.isEnabled()).isEqualTo(ACCOUNT_ENABLED);
+        }));
     }
 }

@@ -18,17 +18,23 @@
  ****************************************************************/
 package org.apache.james.linshare;
 
+import static org.apache.james.linshare.LinshareFixture.ADMIN_ACCOUNT;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.linshare.LinshareFixture.USER_CREDENTIAL_MAP;
 import static org.apache.james.linshare.client.LinshareAPI.Headers.ACCEPT_APPLICATION_JSON;
+import static org.apache.james.linshare.client.LinshareAPI.Headers.CONTENT_TYPE_APPLICATION_JSON;
 
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
+import org.apache.james.linshare.client.TechnicalAccountCreationRequest;
+import org.apache.james.linshare.client.TechnicalAccountGrantPermissionsRequest;
+import org.apache.james.linshare.client.TechnicalAccountResponse;
 import org.apache.james.linshare.client.User;
 import org.apache.james.utils.FakeSmtp;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -45,7 +51,7 @@ import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
 import feign.slf4j.Slf4jLogger;
 
-public class LinshareExtension implements BeforeEachCallback {
+public class LinshareExtension implements BeforeEachCallback, BeforeAllCallback {
 
     private interface LinshareAPIForTesting {
 
@@ -74,9 +80,21 @@ public class LinshareExtension implements BeforeEachCallback {
         @Headers(ACCEPT_APPLICATION_JSON)
         List<User> allUsers();
 
+        @RequestLine("GET /linshare/webservice/rest/admin/technical_accounts")
+        @Headers(ACCEPT_APPLICATION_JSON)
+        List<TechnicalAccountResponse> allTechnicalAccounts();
+
         @RequestLine("GET /linshare/webservice/rest/user/v2/received_shares/{documentId}/download")
         @Headers({ CONTENT_TYPE_APPLICATION_OCTET_STREAM, CONTENT_DISPOSITION_ATTACHMENT })
         byte[] downloadShare(@Param("documentId") String documentId, @Param("filename") String filename);
+
+        @RequestLine("POST /linshare/webservice/rest/admin/technical_accounts")
+        @Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
+        TechnicalAccountResponse createTechnicalAccount(TechnicalAccountCreationRequest accountCreationRequest);
+
+        @RequestLine("PUT /linshare/webservice/rest/admin/technical_accounts")
+        @Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
+        TechnicalAccountResponse grantTechnicalAccountPermissions(TechnicalAccountGrantPermissionsRequest accountGrantPermissionsRequest);
     }
 
     private final Linshare linshare = LinshareSingleton.singleton;
@@ -107,6 +125,22 @@ public class LinshareExtension implements BeforeEachCallback {
     public byte[] downloadSharedFile(LinshareFixture.Credential credential, Document.DocumentId document, String filename) {
         return LinshareAPIForTesting.from(credential, linshare)
             .downloadShare(document.asString(), filename);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext){
+        createTechnicalAccount(TechnicalAccountCreationRequest.defaultAccount());
+    }
+
+    private void createTechnicalAccount(TechnicalAccountCreationRequest technicalAccountDTO) {
+        TechnicalAccountResponse technicalAccountResponse = LinshareAPIForTesting.from(ADMIN_ACCOUNT, linshare).createTechnicalAccount(technicalAccountDTO);
+
+        TechnicalAccountGrantPermissionsRequest technicalAccountGrantPermissionsRequest = new TechnicalAccountGrantPermissionsRequest(technicalAccountResponse);
+        LinshareAPIForTesting.from(ADMIN_ACCOUNT, linshare).grantTechnicalAccountPermissions(technicalAccountGrantPermissionsRequest);
+    }
+
+    public List<TechnicalAccountResponse> getAllTechnicalAccounts(LinshareFixture.Credential credential) {
+        return LinshareAPIForTesting.from(credential, linshare).allTechnicalAccounts();
     }
 
     private void deleteAllUsersDocuments() {
