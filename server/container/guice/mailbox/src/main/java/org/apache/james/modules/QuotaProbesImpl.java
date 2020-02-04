@@ -23,7 +23,6 @@ import java.util.Optional;
 
 import javax.inject.Inject;
 
-import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountLimit;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeLimit;
@@ -31,6 +30,7 @@ import org.apache.james.core.quota.QuotaSizeUsage;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.Quota;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.mailbox.quota.MaxQuotaManager;
 import org.apache.james.mailbox.quota.QuotaManager;
@@ -51,28 +51,28 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public String getQuotaRoot(String namespace, String user, String name) throws MailboxException {
-        return quotaRootResolver.getQuotaRoot(new MailboxPath(namespace, Username.of(user), name)).getValue();
+    public QuotaRoot getQuotaRoot(MailboxPath mailboxPath) throws MailboxException {
+        return quotaRootResolver.getQuotaRoot(mailboxPath);
     }
 
     @Override
-    public Quota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(String quotaRoot) throws MailboxException {
-        return quotaManager.getMessageQuota(quotaRootResolver.fromString(quotaRoot));
+    public Quota<QuotaCountLimit, QuotaCountUsage> getMessageCountQuota(QuotaRoot quotaRoot) throws MailboxException {
+        return quotaManager.getMessageQuota(quotaRoot);
     }
 
     @Override
-    public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(String quotaRoot) throws MailboxException {
-        return quotaManager.getStorageQuota(quotaRootResolver.fromString(quotaRoot));
+    public Quota<QuotaSizeLimit, QuotaSizeUsage> getStorageQuota(QuotaRoot quotaRoot) throws MailboxException {
+        return quotaManager.getStorageQuota(quotaRoot);
     }
 
     @Override
-    public Optional<QuotaCountLimit> getMaxMessageCount(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxMessage(quotaRootResolver.fromString(quotaRoot));
+    public Optional<QuotaCountLimit> getMaxMessageCount(QuotaRoot quotaRoot) throws MailboxException {
+        return maxQuotaManager.getMaxMessage(quotaRoot);
     }
 
     @Override
-    public Optional<QuotaSizeLimit> getMaxStorage(String quotaRoot) throws MailboxException {
-        return maxQuotaManager.getMaxStorage(quotaRootResolver.fromString(quotaRoot));
+    public Optional<QuotaSizeLimit> getMaxStorage(QuotaRoot quotaRoot) throws MailboxException {
+        return maxQuotaManager.getMaxStorage(quotaRoot);
     }
 
     @Override
@@ -86,13 +86,13 @@ public class QuotaProbesImpl implements QuotaProbe, GuiceProbe {
     }
 
     @Override
-    public void setMaxMessageCount(String quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException {
-        maxQuotaManager.setMaxMessage(quotaRootResolver.fromString(quotaRoot), maxMessageCount);
+    public void setMaxMessageCount(QuotaRoot quotaRoot, QuotaCountLimit maxMessageCount) throws MailboxException {
+        maxQuotaManager.setMaxMessage(quotaRoot, maxMessageCount);
     }
 
     @Override
-    public void setMaxStorage(String quotaRoot, QuotaSizeLimit maxSize) throws MailboxException {
-        maxQuotaManager.setMaxStorage(quotaRootResolver.fromString(quotaRoot), maxSize);
+    public void setMaxStorage(QuotaRoot quotaRoot, QuotaSizeLimit maxSize) throws MailboxException {
+        maxQuotaManager.setMaxStorage(quotaRoot, maxSize);
     }
 
     @Override

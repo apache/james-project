@@ -53,7 +53,9 @@ import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
+import org.apache.james.mailbox.model.QuotaRoot;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.mailbox.probe.QuotaProbe;
 import org.apache.james.modules.MailboxProbeImpl;
@@ -403,7 +405,7 @@ public abstract class SendMDNMethodTest {
         List<String> messageIds = listMessageIdsForAccount(homerAccessToken);
 
         QuotaProbe quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
-        String inboxQuotaRoot = quotaProbe.getQuotaRoot("#private", HOMER.asString(), DefaultMailboxes.INBOX);
+        QuotaRoot inboxQuotaRoot = quotaProbe.getQuotaRoot(MailboxPath.inbox(HOMER));
         quotaProbe.setMaxStorage(inboxQuotaRoot, QuotaSizeLimit.size(100));
 
         MessageAppender.fillMailbox(jmapServer.getProbe(MailboxProbeImpl.class), HOMER.asString(), MailboxConstants.INBOX);

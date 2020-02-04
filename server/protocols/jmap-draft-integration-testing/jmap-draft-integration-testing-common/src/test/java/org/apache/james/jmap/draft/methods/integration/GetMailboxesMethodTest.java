@@ -827,8 +827,8 @@ public abstract class GetMailboxesMethodTest {
         MailboxPath bobMailboxPath = MailboxPath.forUser(BOB, sharedMailboxName);
         aclProbe.replaceRights(bobMailboxPath, ALICE.asString(), new Rfc4314Rights(Right.Lookup, Right.Read));
 
-        quotaProbe.setMaxMessageCount("#private&alice@domain.tld", QuotaCountLimit.count(42));
-        quotaProbe.setMaxMessageCount("#private&bob@domain.tld", QuotaCountLimit.count(43));
+        quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(ALICE)), QuotaCountLimit.count(42));
+        quotaProbe.setMaxMessageCount(quotaProbe.getQuotaRoot(MailboxPath.inbox(BOB)), QuotaCountLimit.count(43));
 
         given()
             .header("Authorization", accessToken.asString())

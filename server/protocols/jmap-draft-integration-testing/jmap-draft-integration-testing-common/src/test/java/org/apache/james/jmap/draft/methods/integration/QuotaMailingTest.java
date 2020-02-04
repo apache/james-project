@@ -43,7 +43,7 @@ import org.apache.james.jmap.AccessToken;
 import org.apache.james.jmap.draft.JmapGuiceProbe;
 import org.apache.james.junit.categories.BasicFeature;
 import org.apache.james.mailbox.DefaultMailboxes;
-import org.apache.james.mailbox.model.MailboxConstants;
+import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.probe.MailboxProbe;
 import org.apache.james.modules.MailboxProbeImpl;
 import org.apache.james.modules.QuotaProbesImpl;
@@ -67,6 +67,7 @@ public abstract class QuotaMailingTest {
     private static final String PASSWORD = "password";
     private static final String BOB_PASSWORD = "bobPassword";
     private static final ConditionFactory WAIT_TWO_MINUTES = calmlyAwait.atMost(Duration.TWO_MINUTES);
+    private QuotaProbesImpl quotaProbe;
 
     protected abstract GuiceJamesServer createJmapServer() throws IOException;
 
@@ -80,6 +81,7 @@ public abstract class QuotaMailingTest {
         jmapServer.start();
         MailboxProbe mailboxProbe = jmapServer.getProbe(MailboxProbeImpl.class);
         DataProbe dataProbe = jmapServer.getProbe(DataProbeImpl.class);
+        quotaProbe = jmapServer.getProbe(QuotaProbesImpl.class);
 
         RestAssured.requestSpecification = jmapRequestSpecBuilder
             .setPort(jmapServer.getProbe(JmapGuiceProbe.class).getJmapPort().getValue())
@@ -102,9 +104,7 @@ public abstract class QuotaMailingTest {
     @Category(BasicFeature.class)
     @Test
     public void shouldSendANoticeWhenThresholdExceeded() throws Exception {
-        jmapServer.getProbe(QuotaProbesImpl.class)
-            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
-                QuotaSizeLimit.size(100 * 1000));
+        quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(HOMER)), QuotaSizeLimit.size(100 * 1000));
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a configured threshold
@@ -128,9 +128,7 @@ public abstract class QuotaMailingTest {
 
     @Test
     public void configurationShouldBeWellLoaded() throws Exception {
-        jmapServer.getProbe(QuotaProbesImpl.class)
-            .setMaxStorage(MailboxConstants.USER_NAMESPACE + "&" + HOMER.asString(),
-                QuotaSizeLimit.size(100 * 1000));
+        quotaProbe.setMaxStorage(quotaProbe.getQuotaRoot(MailboxPath.inbox(HOMER)), QuotaSizeLimit.size(100 * 1000));
 
         bartSendMessageToHomer();
         // Homer receives a mail big enough to trigger a 10% configured threshold
