@@ -25,6 +25,19 @@ Change list:
  - [Health checks routes return code changes](#health-checks-routes-return-code-changes)
  - [User mailboxes reIndexing endpoint change](#user-mailboxes-reindexing-endpoint-change)
  - [Hybrid blobStore replaces Union blobStore](#hybrid-blobstore-replaces-union-blobstore)
+ - [New forbidden set of characters in Usernames local part](#new-forbidden-set-of-characters-in-usernames-local-part)
+ 
+### New forbidden set of characters in Usernames local part
+
+Date 04/02/2020
+
+SHA-1 XXX
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-2950
+
+Even if this set of characters should be allowed for the local part of a Username regarding some context, as defined by the [RFC3696#section-3](https://tools.ietf.org/html/rfc3696#section-3), we decided that for reducing code complexity and more safety to not allow them anymore when creating new Usernames.
+
+However, the read of Usernames already existing with some of those characters is still allowed, to not introduce any breaking change.
 
 ### Hybrid blobStore replaces Union blobStore
 
