@@ -197,7 +197,7 @@ public class SetMessagesCreationProcessorTest {
         
         when(outbox.appendMessage(any(MessageManager.AppendCommand.class), any(MailboxSession.class)))
             .thenReturn(new MessageManager.AppendResult(new ComposedMessageId(OUTBOX_ID, TestMessageId.of(23), MessageUid.of(1)),
-                ImmutableList.of()));
+                Optional.of(ImmutableList.of())));
 
         drafts = mock(MessageManager.class);
         when(drafts.getId()).thenReturn(DRAFTS_ID);

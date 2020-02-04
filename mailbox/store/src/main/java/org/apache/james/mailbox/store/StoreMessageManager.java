@@ -34,18 +34,17 @@ import java.util.EnumSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.stream.Stream;
 
 import javax.mail.Flags;
 import javax.mail.Flags.Flag;
-import javax.mail.internet.SharedInputStream;
 import javax.mail.util.SharedFileInputStream;
 
 import org.apache.commons.io.input.TeeInputStream;
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.james.mailbox.AttachmentStorer;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxManager.MessageCapabilities;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -69,7 +68,6 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageAttachment;
 import org.apache.james.mailbox.model.MessageId;
-import org.apache.james.mailbox.model.MessageId.Factory;
 import org.apache.james.mailbox.model.MessageMetaData;
 import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageRange;
@@ -154,17 +152,15 @@ public class StoreMessageManager implements MessageManager {
     private final QuotaManager quotaManager;
     private final QuotaRootResolver quotaRootResolver;
     private final MailboxPathLocker locker;
-    private final Factory messageIdFactory;
     private final BatchSizes batchSizes;
     private final PreDeletionHooks preDeletionHooks;
-    private final MessageFactory messageFactory;
-    private final AttachmentStorer attachmentStorer;
+    private final MessageStorer messageStorer;
 
     public StoreMessageManager(EnumSet<MessageCapabilities> messageCapabilities, MailboxSessionMapperFactory mapperFactory,
                                MessageSearchIndex index, EventBus eventBus,
                                MailboxPathLocker locker, Mailbox mailbox,
-                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, Factory messageIdFactory, BatchSizes batchSizes,
-                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks, MessageFactory messageFactory, AttachmentStorer attachmentStorer) {
+                               QuotaManager quotaManager, QuotaRootResolver quotaRootResolver, BatchSizes batchSizes,
+                               StoreRightManager storeRightManager, PreDeletionHooks preDeletionHooks, MessageStorer messageStorer) {
         this.messageCapabilities = messageCapabilities;
         this.eventBus = eventBus;
         this.mailbox = mailbox;
@@ -173,12 +169,10 @@ public class StoreMessageManager implements MessageManager {
         this.locker = locker;
         this.quotaManager = quotaManager;
         this.quotaRootResolver = quotaRootResolver;
-        this.messageIdFactory = messageIdFactory;
         this.batchSizes = batchSizes;
         this.storeRightManager = storeRightManager;
         this.preDeletionHooks = preDeletionHooks;
-        this.messageFactory = messageFactory;
-        this.attachmentStorer = attachmentStorer;
+        this.messageStorer = messageStorer;
     }
 
     /**
@@ -438,7 +432,7 @@ public class StoreMessageManager implements MessageManager {
             new QuotaChecker(quotaManager, quotaRootResolver, mailbox).tryAddition(1, size);
 
             return locker.executeWithLock(getMailboxPath(), () -> {
-                Pair<MessageMetaData, List<MessageAttachment>> data = appendMessageToStore(internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
+                Pair<MessageMetaData, Optional<List<MessageAttachment>>> data = messageStorer.appendMessageToStore(mailbox, internalDate, size, bodyStartOctet, contentIn, flags, propertyBuilder, mailboxSession);
 
                 Mailbox mailbox = getMailboxEntity();
 
@@ -641,18 +635,6 @@ public class StoreMessageManager implements MessageManager {
             SortedMap<MessageUid, MessageMetaData> movedUids = move(set, toMailbox, session);
             return MessageRange.toRanges(new ArrayList<>(movedUids.keySet()));
         }, MailboxPathLocker.LockType.Write);
-    }
-
-    private Pair<MessageMetaData, List<MessageAttachment>> appendMessageToStore(Date internalDate, int size, int bodyStartOctet, SharedInputStream content, Flags flags, PropertyBuilder propertyBuilder, MailboxSession session) throws MailboxException {
-        MessageMapper messageMapper = mapperFactory.getMessageMapper(session);
-        MessageId messageId = messageIdFactory.generate();
-
-        return mapperFactory.getMessageMapper(session).execute(() -> {
-            List<MessageAttachment> attachments = attachmentStorer.storeAttachments(messageId, content, session);
-            MailboxMessage message = messageFactory.createMessage(messageId, getMailboxEntity(), internalDate, size, bodyStartOctet, content, flags, propertyBuilder, attachments);
-            MessageMetaData metadata = messageMapper.add(getMailboxEntity(), message);
-            return Pair.of(metadata, attachments);
-        });
     }
 
     @Override

@@ -54,6 +54,8 @@ import org.apache.james.mailbox.model.UidValidity;
 import org.apache.james.mime4j.dom.Message;
 import org.apache.james.mime4j.message.DefaultMessageWriter;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Interface which represent a Mailbox
  * 
@@ -142,9 +144,9 @@ public interface MessageManager {
 
     class AppendResult {
         private final ComposedMessageId ids;
-        private final List<MessageAttachment> messageAttachments;
+        private final Optional<List<MessageAttachment>> messageAttachments;
 
-        public AppendResult(ComposedMessageId ids, List<MessageAttachment> messageAttachments) {
+        public AppendResult(ComposedMessageId ids, Optional<List<MessageAttachment>> messageAttachments) {
             this.ids = ids;
             this.messageAttachments = messageAttachments;
         }
@@ -154,7 +156,8 @@ public interface MessageManager {
         }
 
         public List<MessageAttachment> getMessageAttachments() {
-            return messageAttachments;
+            Preconditions.checkState(messageAttachments.isPresent(), "'attachment storage' not supported by the implementation");
+            return messageAttachments.get();
         }
 
         @Override

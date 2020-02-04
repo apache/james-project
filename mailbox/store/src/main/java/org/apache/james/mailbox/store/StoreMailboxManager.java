@@ -33,7 +33,6 @@ import javax.inject.Inject;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaCountUsage;
 import org.apache.james.core.quota.QuotaSizeUsage;
-import org.apache.james.mailbox.AttachmentStorer.NoopAttachmentStorer;
 import org.apache.james.mailbox.MailboxAnnotationManager;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxPathLocker;
@@ -249,9 +248,8 @@ public class StoreMailboxManager implements MailboxManager {
     protected StoreMessageManager createMessageManager(Mailbox mailbox, MailboxSession session) throws MailboxException {
         return new StoreMessageManager(DEFAULT_NO_MESSAGE_CAPABILITIES, getMapperFactory(), getMessageSearchIndex(), getEventBus(),
                 getLocker(), mailbox, quotaManager,
-            getQuotaComponents().getQuotaRootResolver(), getMessageIdFactory(), configuration.getBatchSizes(),
-            getStoreRightManager(), preDeletionHooks, new MessageFactory.StoreMessageFactory(),
-            new NoopAttachmentStorer());
+            getQuotaComponents().getQuotaRootResolver(), configuration.getBatchSizes(),
+            getStoreRightManager(), preDeletionHooks, new MessageStorer.WithoutAttachment(mailboxSessionMapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory()));
     }
 
     @Override

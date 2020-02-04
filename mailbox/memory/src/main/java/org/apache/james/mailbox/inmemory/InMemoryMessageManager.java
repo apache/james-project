@@ -12,8 +12,8 @@ import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.BatchSizes;
 import org.apache.james.mailbox.store.MailboxSessionMapperFactory;
 import org.apache.james.mailbox.store.MessageFactory;
+import org.apache.james.mailbox.store.MessageStorer;
 import org.apache.james.mailbox.store.PreDeletionHooks;
-import org.apache.james.mailbox.store.StoreAttachmentStorer;
 import org.apache.james.mailbox.store.StoreMessageManager;
 import org.apache.james.mailbox.store.StoreRightManager;
 import org.apache.james.mailbox.store.mail.model.impl.MessageParser;
@@ -34,8 +34,8 @@ public class InMemoryMessageManager extends StoreMessageManager {
                                   PreDeletionHooks preDeletionHooks) {
 
         super(InMemoryMailboxManager.MESSAGE_CAPABILITIES, mapperFactory, index, eventBus, locker, mailbox, quotaManager, quotaRootResolver,
-            messageIdFactory, batchSizes, storeRightManager, preDeletionHooks, new MessageFactory.StoreMessageFactory(),
-            new StoreAttachmentStorer((InMemoryMailboxSessionMapperFactory) mapperFactory, messageParser));
+            batchSizes, storeRightManager, preDeletionHooks,
+            new MessageStorer.WithAttachment(mapperFactory, messageIdFactory, new MessageFactory.StoreMessageFactory(), (InMemoryMailboxSessionMapperFactory) mapperFactory, messageParser));
     }
 
     @Override
