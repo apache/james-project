@@ -20,7 +20,6 @@
 package org.apache.james.probe;
 
 public interface SieveProbe {
-
     long getSieveQuota() throws Exception;
 
     void setSieveQuota(long quota) throws Exception;
@@ -34,6 +33,4 @@ public interface SieveProbe {
     void removeSieveQuota(String user) throws Exception;
 
     void addActiveSieveScript(String userName, String name, String script) throws Exception;
-
-    void addActiveSieveScriptFromFile(String userName, String name, String path) throws Exception;
 }

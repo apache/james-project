@@ -18,13 +18,8 @@
  ****************************************************************/
 package org.apache.james.modules.protocols;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-
 import javax.inject.Inject;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.james.core.Username;
 import org.apache.james.core.quota.QuotaSizeLimit;
 import org.apache.james.probe.SieveProbe;
@@ -78,12 +73,5 @@ public class SieveProbeImpl implements GuiceProbe, SieveProbe {
         Username username = Username.of(userName);
         sieveRepository.putScript(username, new ScriptName(name), new ScriptContent(script));
         sieveRepository.setActive(username, new ScriptName(name));
-    }
-
-    @Override
-    public void addActiveSieveScriptFromFile(String userName, String name, String path) throws Exception {
-        try (InputStream scriptFileAsStream = new FileInputStream(path)) {
-            addActiveSieveScript(userName, name, IOUtils.toString(scriptFileAsStream, StandardCharsets.UTF_8));
-        }
     }
 }
