@@ -20,25 +20,16 @@
 package org.apache.james.cli.probe.impl;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.Collection;
-import java.util.Date;
 
-import javax.mail.Flags;
 import javax.management.MalformedObjectNameException;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.adapter.mailbox.MailboxCopierManagementMBean;
 import org.apache.james.adapter.mailbox.MailboxManagerManagementMBean;
 import org.apache.james.adapter.mailbox.ReIndexerManagementMBean;
-import org.apache.james.mailbox.exception.MailboxException;
-import org.apache.james.mailbox.model.ComposedMessageId;
 import org.apache.james.mailbox.model.MailboxId;
-import org.apache.james.mailbox.model.MailboxPath;
-import org.apache.james.mailbox.probe.MailboxProbe;
 
-public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
-
+public class JmxMailboxProbe implements JmxProbe {
     private static final String MAILBOXCOPIER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxcopier";
     private static final String MAILBOXMANAGER_OBJECT_NAME = "org.apache.james:type=component,name=mailboxmanagerbean";
     private static final String REINDEXER_OBJECT_NAME = "org.apache.james:type=component,name=reindexerbean";
@@ -59,61 +50,35 @@ public class JmxMailboxProbe implements MailboxProbe, JmxProbe {
         return this;
     }
 
-
-    @Override
     public void copyMailbox(String srcBean, String dstBean) throws Exception {
         mailboxCopierManagement.copy(srcBean, dstBean);
     }
 
-    @Override
     public void deleteUserMailboxesNames(String user) throws Exception {
         mailboxManagerManagement.deleteMailboxes(user);
     }
 
-    @Override
     public MailboxId createMailbox(String namespace, String user, String name) {
         return mailboxManagerManagement.createMailbox(namespace, user, name);
     }
 
-    @Override
     public Collection<String> listUserMailboxes(String user) {
         return mailboxManagerManagement.listMailboxes(user);
     }
 
-    @Override
     public void deleteMailbox(String namespace, String user, String name) {
         mailboxManagerManagement.deleteMailbox(namespace, user, name);
     }
 
-    @Override
     public void importEmlFileToMailbox(String namespace, String user, String name, String emlpath) {
         mailboxManagerManagement.importEmlFileToMailbox(namespace, user, name, emlpath);
     }
 
-    @Override
     public void reIndexMailbox(String namespace, String user, String name) throws Exception {
         reIndexerManagement.reIndex(namespace, user, name);
     }
 
-    @Override
     public void reIndexAll() throws Exception {
         reIndexerManagement.reIndex();
-    }
-
-    @Override
-    public MailboxId getMailboxId(String namespace, String user, String name) {
-        throw new NotImplementedException("Not implemented");
-    }
-
-    @Override
-    public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message,
-            Date internalDate, boolean isRecent, Flags flags) throws MailboxException {
-        throw new NotImplementedException("Not implemented");
-    }
-
-
-    @Override
-    public Collection<String> listSubscriptions(String user) throws Exception {
-        throw new NotImplementedException("Not implemented");
     }
 }

@@ -19,7 +19,6 @@
 
 package org.apache.james.modules;
 
-import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Collection;
 import java.util.Date;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.mail.Flags;
 
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.MailboxManager;
 import org.apache.james.mailbox.MailboxSession;
@@ -144,22 +142,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
     }
 
     @Override
-    public void importEmlFileToMailbox(String namespace, String user, String name, String emlPath) throws Exception {
-        Username username = Username.of(user);
-        MailboxSession mailboxSession = mailboxManager.createSystemSession(username);
-        mailboxManager.startProcessingRequest(mailboxSession);
-
-        MessageManager messageManager = mailboxManager.getMailbox(new MailboxPath(namespace, username, name), mailboxSession);
-        InputStream emlFileAsStream = new FileInputStream(emlPath);
-        messageManager.appendMessage(MessageManager.AppendCommand.builder()
-            .recent()
-            .build(emlFileAsStream), mailboxSession);
-
-        mailboxManager.endProcessingRequest(mailboxSession);
-        mailboxSession.close();
-    }
-
-    @Override
     public ComposedMessageId appendMessage(String username, MailboxPath mailboxPath, InputStream message, Date internalDate, boolean isRecent, Flags flags)
             throws MailboxException {
 
@@ -174,26 +156,6 @@ public class MailboxProbeImpl implements GuiceProbe, MailboxProbe {
         MailboxSession mailboxSession = mailboxManager.createSystemSession(Username.of(username));
         MessageManager messageManager = mailboxManager.getMailbox(mailboxPath, mailboxSession);
         return messageManager.appendMessage(appendCommand, mailboxSession);
-    }
-
-    @Override
-    public void copyMailbox(String srcBean, String dstBean) throws Exception {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
-    public void deleteUserMailboxesNames(String user) throws Exception {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
-    public void reIndexMailbox(String namespace, String user, String name) throws Exception {
-        throw new NotImplementedException("not implemented");
-    }
-
-    @Override
-    public void reIndexAll() throws Exception {
-        throw new NotImplementedException("not implemented");
     }
 
     @Override
