@@ -24,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.UUID;
 
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,12 @@ import org.junit.jupiter.api.Test;
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 class LinshareConfigurationTest {
+
+    private final static String EMPTY_STRING = "";
+    private final static String SOME_RANDOM_STRING = "laksdhfdksd";
+    private final String DEFAULT_URL = "http://127.0.0.1:8080";
+    private final static String DEFAULT_UUID = UUID.randomUUID().toString();
+
     @Test
     void shouldMatchBeanContract() {
         EqualsVerifier.forClass(LinshareConfiguration.class)
@@ -40,17 +47,59 @@ class LinshareConfigurationTest {
     @Test
     void fromShouldThrowWhenUrlIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.linshare.token", "token");
-        configuration.addProperty("blob.export.linshare.url", null);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, null);
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, DEFAULT_UUID);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, LinshareFixture.TECHNICAL_ACCOUNT.getPassword());
 
         assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(MalformedURLException.class);
     }
 
     @Test
-    void fromShouldThrowWhenTokenIsNull() {
+    void fromShouldThrowWhenBasicAuthIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.linshare.token", null);
-        configuration.addProperty("blob.export.linshare.url", "http://127.0.0.1:8080");
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, null);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, null);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenUUIDIsNull() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, SOME_RANDOM_STRING);
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, null);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenUUIDIsEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, EMPTY_STRING);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, SOME_RANDOM_STRING);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenUUIDIsWrongFormat() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, SOME_RANDOM_STRING);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, SOME_RANDOM_STRING);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenUUIDIsTooLong() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, "way-too-long-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, SOME_RANDOM_STRING);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
 
         assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
     }
@@ -58,33 +107,46 @@ class LinshareConfigurationTest {
     @Test
     void fromShouldThrowWhenURLIsInvalid() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.linshare.token", "token");
-        configuration.addProperty("blob.export.linshare.url", "invalid");
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, DEFAULT_UUID);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, LinshareFixture.TECHNICAL_ACCOUNT.getPassword());
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, "invalid");
 
         assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(MalformedURLException.class);
     }
 
     @Test
-    void fromShouldThrowWhenTokenIsEmpty() {
+    void fromShouldThrowWhenPasswordIsNull() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.linshare.token", "");
-        configuration.addProperty("blob.export.linshare.url", "http://127.0.0.1:8080");
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, DEFAULT_UUID);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, null);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
+
+        assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    void fromShouldThrowWhenPasswordIsEmpty() {
+        PropertiesConfiguration configuration = new PropertiesConfiguration();
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, DEFAULT_UUID);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, EMPTY_STRING);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, DEFAULT_URL);
 
         assertThatThrownBy(() -> LinshareConfiguration.from(configuration)).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void fromShouldReturnProvidedConfiguration() throws Exception {
-        String token = "token";
-        String url = "http://127.0.0.1:8080";
+        String password = LinshareFixture.TECHNICAL_ACCOUNT.getPassword();
+        String url = DEFAULT_URL;
 
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("blob.export.linshare.token", token);
-        configuration.addProperty("blob.export.linshare.url", url);
+        configuration.addProperty(LinshareConfiguration.UUID_PROPERTY, DEFAULT_UUID);
+        configuration.addProperty(LinshareConfiguration.PASSWORD_PROPERTY, password);
+        configuration.addProperty(LinshareConfiguration.URL_PROPERTY, url);
 
         assertThat(LinshareConfiguration.from(configuration)).isEqualTo(LinshareConfiguration.builder()
             .url(new URL(url))
-            .authorizationToken(new AuthorizationToken(token))
+            .basicAuthorization(DEFAULT_UUID, password)
             .build());
     }
 }

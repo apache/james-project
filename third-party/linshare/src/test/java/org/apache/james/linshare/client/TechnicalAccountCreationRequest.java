@@ -72,5 +72,4 @@ public class TechnicalAccountCreationRequest {
     public String getRole() {
         return role;
     }
-
 }

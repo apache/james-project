@@ -78,7 +78,7 @@ class ExportService {
         blobExport.blobId(blobId)
             .with(exportToAddress)
             .explanation(exportMessage(username))
-            .filePrefix(Optional.of("deleted-message-of-" + username.asString() + "_"))
+            .filePrefix(Optional.of(String.format("deleted-message-of-%s_", username.asString())))
             .fileExtension(FileExtension.ZIP)
             .export();
     }

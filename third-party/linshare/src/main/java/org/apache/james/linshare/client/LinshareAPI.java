@@ -24,9 +24,7 @@ import static org.apache.james.linshare.client.LinshareAPI.Headers.CONTENT_TYPE_
 import static org.apache.james.linshare.client.LinshareAPI.Headers.CONTENT_TYPE_MULTIPART;
 
 import java.io.File;
-import java.util.List;
 
-import org.apache.james.linshare.AuthorizationToken;
 import org.apache.james.linshare.LinshareConfiguration;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -35,9 +33,8 @@ import com.google.common.base.Preconditions;
 import feign.Feign;
 import feign.Logger;
 import feign.Param;
-import feign.RequestInterceptor;
 import feign.RequestLine;
-import feign.RequestTemplate;
+import feign.auth.BasicAuthRequestInterceptor;
 import feign.form.FormEncoder;
 import feign.jackson.JacksonDecoder;
 import feign.jackson.JacksonEncoder;
@@ -51,24 +48,13 @@ public interface LinshareAPI {
         String CONTENT_TYPE_APPLICATION_JSON = "Content-Type: application/json";
     }
 
-    class AuthorizationInterceptor implements RequestInterceptor {
-
-        private final AuthorizationToken authorizationToken;
-
-        AuthorizationInterceptor(AuthorizationToken authorizationToken) {
-            this.authorizationToken = authorizationToken;
-        }
-
-        @Override
-        public void apply(RequestTemplate template) {
-            template.header("Authorization", authorizationToken.asBearerHeader());
-        }
-    }
-
     @VisibleForTesting
     static LinshareAPI from(LinshareConfiguration configuration) {
         return Feign.builder()
-            .requestInterceptor(new AuthorizationInterceptor(configuration.getToken()))
+            .requestInterceptor(
+                new BasicAuthRequestInterceptor(
+                    configuration.getUuid().toString(),
+                    configuration.getPassword()))
             .logger(new Slf4jLogger(LinshareAPI.class))
             .logLevel(Logger.Level.FULL)
             .encoder(new FormEncoder(new JacksonEncoder()))
@@ -76,40 +62,18 @@ public interface LinshareAPI {
             .target(LinshareAPI.class, configuration.getUrl().toString());
     }
 
-    @RequestLine("GET /linshare/webservice/rest/user/v2/documents")
-    @feign.Headers(ACCEPT_APPLICATION_JSON)
-    List<Document> listAllDocuments();
+    @RequestLine("GET /linshare/webservice/rest/delegation/v2/users/{targetUserMail}")
+    @feign.Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
+    User getUserByMail(@Param("targetUserMail") String mail);
 
-    @RequestLine("POST /linshare/webservice/rest/user/v2/documents")
+    @RequestLine("POST linshare/webservice/rest/delegation/v2/{userUuid}/documents")
     @feign.Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_MULTIPART })
-    Document uploadDocument(@Param("file") File file, @Param("filesize") long fileSize);
+    Document uploadDocumentByDelegation(@Param("userUuid") String userUuid, @Param("file") File file, @Param("filesize") long fileSize);
 
-    default Document uploadDocument(File file) {
+    default Document uploadDocumentByDelegation(User targetUser, File file) {
         Preconditions.checkNotNull(file);
         Preconditions.checkArgument(file.exists(), "File to upload does not exist: %s", file.getAbsolutePath());
 
-        return uploadDocument(file, file.length());
+        return uploadDocumentByDelegation(targetUser.getUuid(), file, file.length());
     }
-
-    @RequestLine("POST /linshare/webservice/rest/user/v2/shares")
-    @feign.Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
-    List<ShareResult> share(ShareRequest request);
-
-    @RequestLine("DELETE /linshare/webservice/rest/user/v2/documents/{documentId}")
-    @feign.Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
-    Document delete(@Param("documentId") String documentId);
-
-    default Document delete(Document.DocumentId documentId) {
-        return delete(documentId.asString());
-    }
-
-    @VisibleForTesting
-    default void deleteAllDocuments() {
-        listAllDocuments()
-            .forEach(document -> delete(document.getId()));
-    }
-
-    @RequestLine("GET /linshare/webservice/rest/user/v2/received_shares")
-    @feign.Headers({ ACCEPT_APPLICATION_JSON, CONTENT_TYPE_APPLICATION_JSON })
-    List<ReceivedShare> receivedShares();
 }

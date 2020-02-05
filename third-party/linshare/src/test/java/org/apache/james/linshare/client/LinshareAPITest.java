@@ -19,60 +19,47 @@
 
 package org.apache.james.linshare.client;
 
-import static io.restassured.RestAssured.given;
+import static org.apache.james.linshare.LinshareExtension.LinshareAPIForUserTesting;
 import static org.apache.james.linshare.LinshareFixture.USER_1;
 import static org.apache.james.linshare.LinshareFixture.USER_2;
-import static org.apache.james.linshare.LinshareFixture.USER_3;
-import static org.apache.james.linshare.LinshareFixture.USER_4;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
 
 import java.io.File;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
-import org.apache.james.core.MailAddress;
 import org.apache.james.linshare.LinshareExtension;
 import org.assertj.core.api.SoftAssertions;
-import org.awaitility.Awaitility;
-import org.awaitility.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-
-import com.github.steveash.guavate.Guavate;
 
 import feign.FeignException;
-import io.restassured.specification.RequestSpecification;
 
 class LinshareAPITest {
-    private static final String MESSAGE = "message";
+    private static final String USER1_MAIL = "user1@linshare.org";
+    private static final String USER2_MAIL = "user2@linshare.org";
+
 
     @RegisterExtension
     static LinshareExtension linshareExtension = new LinshareExtension();
 
-    private LinshareAPI user1LinshareAPI;
-    private LinshareAPI user2LinshareAPI;
-    private LinshareAPI user3LinshareAPI;
-    private LinshareAPI user4LinshareAPI;
+    private LinshareAPIForUserTesting user1LinshareAPI;
+    private LinshareAPIForUserTesting user2LinshareAPI;
+    private LinshareAPI technicalLinshareAPI;
 
     @BeforeEach
     void setup() throws Exception {
-        user1LinshareAPI = linshareExtension.getAPIFor(USER_1);
-        user2LinshareAPI = linshareExtension.getAPIFor(USER_2);
-        user3LinshareAPI = linshareExtension.getAPIFor(USER_3);
-        user4LinshareAPI = linshareExtension.getAPIFor(USER_4);
+        user1LinshareAPI = LinshareAPIForUserTesting.from(USER_1);
+        user2LinshareAPI = LinshareAPIForUserTesting.from(USER_2);
+        technicalLinshareAPI = linshareExtension.getDelegationAccountAPI();
     }
 
     @Test
     void uploadDocumentShouldReturnUploaded() throws Exception {
         File uploadFile = templateFile();
-        Document uploadedDocument = user1LinshareAPI.uploadDocument(uploadFile);
+        Document uploadedDocument = uploadDocumentToUserSpace(USER1_MAIL, uploadFile);
 
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(uploadedDocument.getName()).isEqualTo(uploadFile.getName());
@@ -82,11 +69,11 @@ class LinshareAPITest {
 
     @Test
     void uploadDocumentShouldMakeListingReturnUploaded() throws Exception {
-        Document uploadedDocument = user1LinshareAPI.uploadDocument(templateFile());
+        Document uploadedDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
         assertThat(user1LinshareAPI.listAllDocuments())
             .hasSize(1)
-            .containsExactly(uploadedDocument);
+            .containsExactlyInAnyOrder(uploadedDocument);
     }
 
     @Test
@@ -97,27 +84,27 @@ class LinshareAPITest {
 
     @Test
     void listAllShouldReturnAllUploadedDocuments() throws Exception {
-        Document firstDocument = user1LinshareAPI.uploadDocument(templateFile());
-        Document secondDocument = user1LinshareAPI.uploadDocument(templateFile());
+        Document firstDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
+        Document secondDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
         assertThat(user1LinshareAPI.listAllDocuments())
-            .containsExactly(firstDocument, secondDocument);
+            .containsExactlyInAnyOrder(firstDocument, secondDocument);
     }
 
     @Test
     void listAllShouldNotReturnDocumentsOfOtherUsers() throws Exception {
-        Document firstDocument = user1LinshareAPI.uploadDocument(templateFile());
-        Document secondDocument = user1LinshareAPI.uploadDocument(templateFile());
+        Document firstDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
+        Document secondDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
-        user2LinshareAPI.uploadDocument(templateFile());
+        uploadDocumentToUserSpace(USER2_MAIL, templateFile());
 
         assertThat(user1LinshareAPI.listAllDocuments())
-            .containsExactly(firstDocument, secondDocument);
+            .containsExactlyInAnyOrder(firstDocument, secondDocument);
     }
 
     @Test
     void deleteShouldDeleteUploadedDocument() throws Exception {
-        Document firstDocument = user1LinshareAPI.uploadDocument(templateFile());
+        Document firstDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
         user1LinshareAPI.delete(firstDocument.getId());
 
         assertThat(user1LinshareAPI.listAllDocuments())
@@ -126,17 +113,17 @@ class LinshareAPITest {
 
     @Test
     void deleteShouldNotDeleteOtherUserDocuments() throws Exception {
-        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
-        Document user2Document = user2LinshareAPI.uploadDocument(templateFile());
+        Document user1Document = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
+        Document user2Document = uploadDocumentToUserSpace(USER2_MAIL, templateFile());
         user1LinshareAPI.delete(user1Document.getId());
 
         assertThat(user2LinshareAPI.listAllDocuments())
-            .containsExactly(user2Document);
+            .containsExactlyInAnyOrder(user2Document);
     }
 
     @Test
     void deleteShouldReturnErrorWhenDeleteOtherUserDocuments() throws Exception {
-        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
+        Document user1Document = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
         assertThatThrownBy(() -> user2LinshareAPI.delete(user1Document.getId()))
             .isInstanceOf(FeignException.Forbidden.class);
@@ -144,8 +131,8 @@ class LinshareAPITest {
 
     @Test
     void deleteAllShouldClearAllDocumentsOfAnUser() throws Exception {
-        user1LinshareAPI.uploadDocument(templateFile());
-        user1LinshareAPI.uploadDocument(templateFile());
+        uploadDocumentToUserSpace(USER1_MAIL, templateFile());
+        uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
         user1LinshareAPI.deleteAllDocuments();
 
@@ -154,112 +141,27 @@ class LinshareAPITest {
     }
 
     @Test
-    void shareShouldTriggerAnEmail() throws Exception {
-        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
+    void uploadDocumentShouldUploadToUserSpace() throws Exception {
+        Document uploadedDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
-        String message = "Very specific message";
-        ShareRequest shareRequest = ShareRequest.builder()
-            .message(message)
-            .addDocumentId(user1Document.getId())
-            .addRecipient(new MailAddress(USER_2.getUsername()))
-            .build();
-
-        user1LinshareAPI.share(shareRequest);
-
-        RequestSpecification request = given(linshareExtension.getLinshare().fakeSmtpRequestSpecification());
-
-        Awaitility.waitAtMost(Duration.TEN_SECONDS)
-            .pollInterval(Duration.ONE_SECOND)
-            .untilAsserted(
-                () -> request
-                    .get("/api/email")
-                .then()
-                    .body("", hasSize(2)));
-
-        request
-            .get("/api/email")
-        .then()
-            .body("[1].subject", containsString("John Doe has shared a file with you"))
-            .body("[1].html", containsString(message));
-    }
-
-
-    @Test
-    void shareShouldShareToTargetedRecipient() throws Exception {
-        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
-
-        ShareRequest shareRequest = ShareRequest.builder()
-            .message(MESSAGE)
-            .addDocumentId(user1Document.getId())
-            .addRecipient(new MailAddress(USER_2.getUsername()))
-            .build();
-
-        user1LinshareAPI.share(shareRequest);
-        assertThat(user2LinshareAPI.receivedShares())
-            .hasSize(1)
-            .allSatisfy(shareReceived -> {
-                Document sharedDoc = shareReceived.getDocument();
-                assertThat(sharedDoc.getName()).isEqualTo(user1Document.getName());
-                assertThat(sharedDoc.getSize()).isEqualTo(user1Document.getSize());
-            });
+        List<Document> user1Documents = user1LinshareAPI.listAllDocuments();
+        assertThat(user1Documents).containsAnyOf(uploadedDocument);
     }
 
     @Test
-    void shareShouldWorkWithMultipleRecipients() throws Exception {
-        Document user1Document = user1LinshareAPI.uploadDocument(templateFile());
+    void uploadDocumentShouldPerformByDelegationAccount() throws Exception {
+        Document uploadedDocument = uploadDocumentToUserSpace(USER1_MAIL, templateFile());
 
-        ShareRequest shareRequest = ShareRequest.builder()
-            .message(MESSAGE)
-            .addDocumentId(user1Document.getId())
-            .addRecipient(new MailAddress(USER_2.getUsername()))
-            .addRecipient(new MailAddress(USER_3.getUsername()))
-            .addRecipient(new MailAddress(USER_4.getUsername()))
-            .build();
-
-        user1LinshareAPI.share(shareRequest);
-        List<ReceivedShare> user2Shares = user2LinshareAPI.receivedShares();
-        List<ReceivedShare> user3Shares = user3LinshareAPI.receivedShares();
-        List<ReceivedShare> user4Shares = user4LinshareAPI.receivedShares();
-
-        assertThat(user2Shares)
-            .hasSameSizeAs(user3Shares)
-            .hasSameSizeAs(user4Shares)
-            .hasSize(1);
-
-        assertThat(sharedDocs(user2Shares, user3Shares, user4Shares))
-            .allSatisfy(sharedDoc -> {
-                assertThat(sharedDoc.getName()).isEqualTo(user1Document.getName());
-                assertThat(sharedDoc.getSize()).isEqualTo(user1Document.getSize());
-            });
+        List<Document> user1Documents = user1LinshareAPI.listAllDocuments();
+        assertThat(user1Documents).containsAnyOf(uploadedDocument);
     }
 
-    @Test
-    void downloadShareShouldGetUploadedSharedFile() throws Exception {
-        File user1File = templateFile();
-        Document user1Document = user1LinshareAPI.uploadDocument(user1File);
-
-        ShareRequest shareRequest = ShareRequest.builder()
-            .message(MESSAGE)
-            .addDocumentId(user1Document.getId())
-            .addRecipient(new MailAddress(USER_2.getUsername()))
-            .build();
-
-        user1LinshareAPI.share(shareRequest);
-        Document sharedDoc = user2LinshareAPI.receivedShares().get(0).getDocument();
-
-        byte[] sharedFile =  linshareExtension.downloadSharedFile(USER_2, sharedDoc.getId(), sharedDoc.getName());
-        assertThat(sharedFile).isEqualTo(FileUtils.readFileToByteArray(user1File));
+    private Document uploadDocumentToUserSpace(String targetUserEmail, File userFile) {
+        User targetUser = technicalLinshareAPI.getUserByMail(targetUserEmail);
+        return technicalLinshareAPI.uploadDocumentByDelegation(targetUser, userFile);
     }
 
     private File templateFile() throws Exception {
         return Files.createTempFile("linshare-api-test", ".temp").toFile();
-    }
-
-    @SafeVarargs
-    private final List<Document> sharedDocs(List<ReceivedShare>... shares) {
-        return ImmutableList.copyOf(shares).stream()
-            .flatMap(Collection::stream)
-            .map(ReceivedShare::getDocument)
-            .collect(Guavate.toImmutableList());
     }
 }

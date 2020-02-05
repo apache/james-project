@@ -24,11 +24,15 @@ import org.apache.james.linshare.LinshareConfiguration;
 import org.apache.james.linshare.LinshareExtension;
 import org.apache.james.linshare.LinshareFixture;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.ParameterContext;
+import org.junit.jupiter.api.extension.ParameterResolutionException;
+import org.junit.jupiter.api.extension.ParameterResolver;
 
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
 
-public class LinshareGuiceExtension implements GuiceModuleTestExtension {
+public class LinshareGuiceExtension implements GuiceModuleTestExtension, ParameterResolver {
+
     private final LinshareExtension linshareExtension;
 
     public LinshareGuiceExtension() {
@@ -36,14 +40,18 @@ public class LinshareGuiceExtension implements GuiceModuleTestExtension {
     }
 
     @Override
-    public void beforeEach(ExtensionContext extensionContext) throws Exception {
+    public void beforeAll(ExtensionContext extensionContext) {
+        linshareExtension.beforeAll(extensionContext);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
         linshareExtension.beforeEach(extensionContext);
     }
 
     @Override
-    public void afterAll(ExtensionContext extensionContext) throws Exception {
-        linshareExtension.getLinshare()
-            .stop();
+    public void afterAll(ExtensionContext extensionContext) {
+        linshareExtension.getLinshare().stop();
     }
 
     @Override
@@ -54,7 +62,11 @@ public class LinshareGuiceExtension implements GuiceModuleTestExtension {
             binder -> {
                 try {
                     binder.bind(LinshareConfiguration.class)
-                        .toInstance(linshareExtension.configurationWithJwtFor(LinshareFixture.USER_1));
+                        .toInstance(linshareExtension.configurationWithBasicAuthFor(
+                            new LinshareFixture.Credential(
+                                linshareExtension.getTechnicalAccountUUID().toString(),
+                                LinshareFixture.TECHNICAL_ACCOUNT.getPassword()))
+                        );
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -62,7 +74,13 @@ public class LinshareGuiceExtension implements GuiceModuleTestExtension {
         );
     }
 
-    public LinshareExtension getLinshareJunitExtension() {
-        return linshareExtension;
+    @Override
+    public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return linshareExtension.supportsParameter(parameterContext, extensionContext);
+    }
+
+    @Override
+    public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
+        return linshareExtension.resolveParameter(parameterContext, extensionContext);
     }
 }

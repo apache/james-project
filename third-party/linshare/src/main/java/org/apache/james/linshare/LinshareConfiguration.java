@@ -22,6 +22,7 @@ package org.apache.james.linshare;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Objects;
+import java.util.UUID;
 
 import org.apache.commons.configuration2.Configuration;
 
@@ -30,67 +31,81 @@ import com.google.common.base.Preconditions;
 
 public class LinshareConfiguration {
 
-    public static final String URL = "blob.export.linshare.url";
-    public static final String TOKEN = "blob.export.linshare.token";
+    public static final String URL_PROPERTY = "blob.export.linshare.url";
+    public static final String UUID_PROPERTY = "blob.export.linshare.technical.account.uuid";
+    public static final String PASSWORD_PROPERTY = "blob.export.linshare.technical.account.password";
 
     public static class Builder {
         @FunctionalInterface
         public interface RequireUrl {
-            RequireAuthorizationToken url(URL url);
+            RequireBasicAuthorization url(URL url);
 
-            default RequireAuthorizationToken urlAsString(String url) throws MalformedURLException {
+            default RequireBasicAuthorization urlAsString(String url) throws MalformedURLException {
                 return url(new URL(url));
             }
         }
 
-        public interface RequireAuthorizationToken {
-            ReadyToBuild authorizationToken(AuthorizationToken token);
+        public interface RequireBasicAuthorization {
+            ReadyToBuild basicAuthorization(String uuid, String password);
         }
 
         public static class ReadyToBuild {
             private final URL url;
-            private final AuthorizationToken token;
+            private final UUID uuid;
+            private final String password;
 
-            ReadyToBuild(URL url, AuthorizationToken token) {
+            ReadyToBuild(URL url, UUID uuid, String password) {
                 this.url = url;
-                this.token = token;
+                this.uuid = uuid;
+                this.password = password;
             }
 
             public LinshareConfiguration build() {
-                return new LinshareConfiguration(url, token);
+                return new LinshareConfiguration(url, uuid, password);
             }
         }
     }
 
     public static Builder.RequireUrl builder() {
-        return url -> credential -> new Builder.ReadyToBuild(url, credential);
+        return url -> (uuid, password) -> new Builder.ReadyToBuild(url, UUID.fromString(uuid), password);
     }
 
     public static LinshareConfiguration from(Configuration configuration) throws MalformedURLException {
         return builder()
-            .urlAsString(configuration.getString(URL, null))
-            .authorizationToken(new AuthorizationToken(configuration.getString(TOKEN, null)))
+            .urlAsString(configuration.getString(URL_PROPERTY, null))
+            .basicAuthorization(
+                configuration.getString(UUID_PROPERTY),
+                configuration.getString(PASSWORD_PROPERTY))
             .build();
     }
 
     private final URL url;
-    private final AuthorizationToken token;
+    private final UUID uuid;
+    private final String password;
 
     @VisibleForTesting
-    LinshareConfiguration(URL url, AuthorizationToken token) {
-        Preconditions.checkNotNull(url, "'" + URL + "' can not be null");
-        Preconditions.checkNotNull(token, "'" + TOKEN + "' can not be null");
+    LinshareConfiguration(URL url, UUID uuid, String password) {
+        Preconditions.checkNotNull(url, "'%s' can not be null", URL_PROPERTY);
+        Preconditions.checkNotNull(uuid, "'%s' can not be null", UUID_PROPERTY);
+
+        Preconditions.checkNotNull(password, "'%s' can not be null", PASSWORD_PROPERTY);
+        Preconditions.checkArgument(!password.isEmpty(), "'%s' can not be empty", PASSWORD_PROPERTY);
 
         this.url = url;
-        this.token = token;
+        this.uuid = uuid;
+        this.password = password;
     }
 
     public URL getUrl() {
         return url;
     }
 
-    public AuthorizationToken getToken() {
-        return token;
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     @Override
@@ -99,13 +114,14 @@ public class LinshareConfiguration {
             LinshareConfiguration that = (LinshareConfiguration) o;
 
             return Objects.equals(this.url, that.url)
-                && Objects.equals(this.token, that.token);
+                && Objects.equals(this.uuid, that.uuid)
+                && Objects.equals(this.password, that.password);
         }
         return false;
     }
 
     @Override
     public final int hashCode() {
-        return Objects.hash(url, token);
+        return Objects.hash(url, uuid, password);
     }
 }

@@ -16,6 +16,7 @@ Changes to apply between 3.4.x and 3.5.x will be reported here.
 
 Change list:
 
+ - [LinShare blob export mechanism should rely on delegation](#LinShare blob export mechanism should rely on delegation)
  - [RabbitMQ minimal version](#rabbitmq-minimal-version)
  - [Enforce usernames to be lower cased](#enforce-usernames-to-be-lower-cased)
  - [Cassandra keyspace creation configuration](#cassandra-keyspace-creation-configuration)
@@ -39,6 +40,26 @@ Even if this set of characters should be allowed for the local part of a Usernam
 
 However, the read of Usernames already existing with some of those characters is still allowed, to not introduce any breaking change.
 
+### LinShare blob export mechanism should rely on delegation
+Date 12/02/2020
+
+SHA-1 XXX
+
+Concerned products: Guice server, experimental LinShare blob export feature.
+
+JIRA: https://issues.apache.org/jira/browse/JAMES-3040
+
+Blob Export Configuration changed:
+
+File configuration need to be adjusted: `blob.properties`
+
+-You need to add new mandatory properties when `blob.export.implementation` property is set to `linshare`:
+```
+blob.export.linshare.technical.account.uuid
+blob.export.linshare.technical.account.password
+```
+
+-The legacy property `blob.export.linshare.token` will not used anymore, you can remove it.
 ### Hybrid blobStore replaces Union blobStore
 
 Date 6/01/2020

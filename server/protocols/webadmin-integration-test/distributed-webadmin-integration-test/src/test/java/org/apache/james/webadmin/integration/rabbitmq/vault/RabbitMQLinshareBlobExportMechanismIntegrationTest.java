@@ -31,6 +31,7 @@ import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.apache.james.mailbox.store.search.PDFTextExtractor;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
+import org.apache.james.modules.LinshareGuiceExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.TestRabbitMQModule;
@@ -40,14 +41,13 @@ import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIn
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
-
     @RegisterExtension
     static JamesServerExtension testExtension = new JamesServerBuilder()
         .extension(new DockerElasticSearchExtension())
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
         .extension(new AwsS3BlobStoreExtension())
-        .extension(LinshareBlobExportMechanismIntegrationTest.linshareGuiceExtension)
+        .extension(new LinshareGuiceExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(CassandraRabbitMQJamesServerMain.MODULES)
             .overrideWith(binder -> binder.bind(TextExtractor.class).to(PDFTextExtractor.class))

@@ -22,9 +22,11 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.config.EncoderConfig.encoderConfig;
 import static io.restassured.config.RestAssuredConfig.newConfig;
 import static org.apache.james.linshare.LinshareFixture.ACCOUNT_ENABLED;
+import static org.apache.james.linshare.LinshareFixture.ADMIN_ACCOUNT;
 import static org.apache.james.linshare.LinshareFixture.TECHNICAL_ACCOUNT;
 import static org.apache.james.linshare.LinshareFixture.TECHNICAL_PERMISSIONS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.apache.james.linshare.LinshareExtension.LinshareAPIForAdminTesting;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -69,7 +71,7 @@ class LinshareTest {
 
     @Test
     void linshareShouldHaveATechnicalAccountConfigured() {
-        List<TechnicalAccountResponse> technicalAccounts = linshareExtension.getAllTechnicalAccounts(LinshareFixture.ADMIN_ACCOUNT);
+        List<TechnicalAccountResponse> technicalAccounts = LinshareAPIForAdminTesting.from(ADMIN_ACCOUNT).allTechnicalAccounts();
 
         assertThat(technicalAccounts).anySatisfy(account -> SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(account.getName()).isEqualTo(TECHNICAL_ACCOUNT.getUsername());

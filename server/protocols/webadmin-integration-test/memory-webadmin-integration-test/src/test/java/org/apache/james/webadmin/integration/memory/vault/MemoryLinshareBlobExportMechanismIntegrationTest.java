@@ -31,12 +31,9 @@ import org.apache.james.webadmin.integration.vault.LinshareBlobExportMechanismIn
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MemoryLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExportMechanismIntegrationTest {
-
-    private static final LinshareGuiceExtension linshareGuiceExtension = new LinshareGuiceExtension();
-
     @RegisterExtension
     static JamesServerExtension jamesServerExtension = new JamesServerBuilder()
-        .extension(linshareGuiceExtension)
+        .extension(new LinshareGuiceExtension())
         .server(configuration -> GuiceJamesServer.forConfiguration(configuration)
             .combineWith(MemoryJamesServerMain.IN_MEMORY_SERVER_AGGREGATE_MODULE)
             .overrideWith(TestJMAPServerModule.limitToTenMessages())

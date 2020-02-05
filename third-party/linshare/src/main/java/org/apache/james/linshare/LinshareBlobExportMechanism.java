@@ -32,9 +32,8 @@ import org.apache.james.blob.export.api.BlobExportMechanism;
 import org.apache.james.blob.export.api.ExportedFileNamesGenerator;
 import org.apache.james.blob.export.api.FileExtension;
 import org.apache.james.core.MailAddress;
-import org.apache.james.linshare.client.Document;
 import org.apache.james.linshare.client.LinshareAPI;
-import org.apache.james.linshare.client.ShareRequest;
+import org.apache.james.linshare.client.User;
 
 import com.google.common.io.Files;
 
@@ -55,31 +54,28 @@ public class LinshareBlobExportMechanism implements BlobExportMechanism {
     public ShareeStage blobId(BlobId blobId) {
         return mailAddress -> explanation -> fileCustomPrefix -> fileExtension -> () ->  {
             try {
-                exportBlob(blobId, mailAddress, fileCustomPrefix, fileExtension, explanation);
+                exportBlob(blobId, mailAddress, fileCustomPrefix, fileExtension);
             } catch (Exception e) {
-                throw new BlobExportException("Error while exporting blob " + blobId.asString() + " to " + mailAddress.asString(), e);
+                throw new BlobExportException(String.format("Error while exporting blob %s to %s", blobId.asString(),
+                    mailAddress.asString()), e);
             }
         };
     }
 
     private void exportBlob(BlobId blobId, MailAddress mailAddress, Optional<String> fileCustomPrefix,
-                            Optional<FileExtension> fileExtension, String explanation) throws IOException {
+                            Optional<FileExtension> fileExtension) throws IOException {
         String fileName = ExportedFileNamesGenerator.generateFileName(fileCustomPrefix, blobId, fileExtension);
         File tempFile = new File(tempDir, fileName);
         try {
             FileUtils.copyInputStreamToFile(blobStore.read(blobStore.getDefaultBucketName(), blobId), tempFile);
-            uploadAndShare(mailAddress, tempFile, explanation);
+            uploadDocumentToTargetMail(mailAddress, tempFile);
         } finally {
             FileUtils.forceDelete(tempFile);
         }
     }
 
-    private void uploadAndShare(MailAddress mailAddress, File tempFile, String explanation) {
-        Document document = linshareAPI.uploadDocument(tempFile);
-        linshareAPI.share(ShareRequest.builder()
-            .message(explanation)
-            .addDocumentId(document.getId())
-            .addRecipient(mailAddress)
-            .build());
+    private void uploadDocumentToTargetMail(MailAddress mailAddress, File tempFile) {
+        User targetUser = linshareAPI.getUserByMail(mailAddress.asString());
+        linshareAPI.uploadDocumentByDelegation(targetUser, tempFile);
     }
 }
