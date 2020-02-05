@@ -29,6 +29,10 @@
 
     <artifactId>apache-james-backends-rabbitmq</artifactId>
     <name>Apache James RabbitMQ backend</name>
+    
+    <properties>
+        <skipTests>true</skipTests>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -119,4 +123,17 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+    <build>
+	    <plugins>
+	      <plugin>
+	        <groupId>org.apache.maven.plugins</groupId>
+	        <artifactId>maven-surefire-plugin</artifactId>
+	        <version>2.12.4</version>
+	        <configuration>
+	          <skipTests>${skipTests}</skipTests>
+	        </configuration>
+	      </plugin>
+	    </plugins>
+  	</build>
 </project>

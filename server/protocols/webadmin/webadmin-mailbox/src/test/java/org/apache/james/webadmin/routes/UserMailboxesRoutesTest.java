@@ -44,6 +44,8 @@ import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxMetaData;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
+import org.apache.james.queue.api.MailQueueFactory;
+import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.webadmin.WebAdminServer;
 import org.apache.james.webadmin.WebAdminUtils;
@@ -67,13 +69,15 @@ class UserMailboxesRoutesTest {
 
     private WebAdminServer webAdminServer;
     private UsersRepository usersRepository;
+    private MailQueueFactory<? extends ManageableMailQueue> mailQueue;
 
     private void createServer(MailboxManager mailboxManager) throws Exception {
         usersRepository = mock(UsersRepository.class);
+        mailQueue = mock(MailQueueFactory.class);
         when(usersRepository.contains(USERNAME)).thenReturn(true);
 
         webAdminServer = WebAdminUtils.createWebAdminServer(
-                new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository), new JsonTransformer()))
+                new UserMailboxesRoutes(new UserMailboxesService(mailboxManager, usersRepository, mailQueue), new JsonTransformer()))
             .start();
 
         RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(webAdminServer)

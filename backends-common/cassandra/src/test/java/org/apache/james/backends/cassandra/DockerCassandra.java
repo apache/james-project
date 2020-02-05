@@ -69,7 +69,11 @@ public class DockerCassandra {
 
     public void start() {
         if (!cassandraContainer.isRunning()) {
-            cassandraContainer.start();
+            try {
+            	cassandraContainer.start();
+            } catch(IllegalStateException ex) {
+            	//No Docker installed
+            }
         }
     }
 
