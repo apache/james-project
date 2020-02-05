@@ -39,7 +39,10 @@ import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import com.datastax.driver.core.ConsistencyLevel;
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Row;
 import com.datastax.driver.core.Session;
@@ -50,6 +53,7 @@ import reactor.core.publisher.Mono;
 
 public class CassandraMessageFastViewProjection implements MessageFastViewProjection {
 
+    public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMessageFastViewProjection.class);
     private final Metric metricRetrieveHitCount;
     private final Metric metricRetrieveMissCount;
 
@@ -90,7 +94,8 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         return cassandraAsyncExecutor.executeVoid(storeStatement.bind()
             .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
             .setString(PREVIEW, precomputedProperties.getPreview().getValue())
-            .setBool(HAS_ATTACHMENT, precomputedProperties.hasAttachment()));
+            .setBool(HAS_ATTACHMENT, precomputedProperties.hasAttachment())
+            .setConsistencyLevel(ConsistencyLevel.ONE));
     }
 
     @Override
@@ -98,10 +103,15 @@ public class CassandraMessageFastViewProjection implements MessageFastViewProjec
         checkMessage(messageId);
 
         return cassandraAsyncExecutor.executeSingleRow(retrieveStatement.bind()
-                .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get()))
+                .setUUID(MESSAGE_ID, ((CassandraMessageId) messageId).get())
+                .setConsistencyLevel(ConsistencyLevel.ONE))
             .map(this::fromRow)
             .doOnNext(preview -> metricRetrieveHitCount.increment())
-            .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment));
+            .switchIfEmpty(Mono.fromRunnable(metricRetrieveMissCount::increment))
+            .onErrorResume(e -> {
+                LOGGER.error("Error while retrieving MessageFastView projection item for {}", messageId, e);
+                return Mono.empty();
+            });
     }
 
     @Override
