@@ -40,7 +40,7 @@ import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.ParsedAttachment;
 import org.apache.james.mailbox.store.mail.AttachmentMapper;
 import org.apache.james.util.ReactorUtils;
-import org.apache.james.util.io.SizeInputStream;
+import org.apache.james.util.io.CurrentPositionInputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,17 +112,16 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
 
     @Override
     public Mono<Attachment> storeAttachmentForOwner(String contentType, InputStream inputStream, Username owner) {
-        SizeInputStream sizeInputStream = new SizeInputStream(inputStream);
+        CurrentPositionInputStream currentPositionInputStream = new CurrentPositionInputStream(inputStream);
         AttachmentId attachmentId = AttachmentId.random();
-
         return ownerDAO.addOwner(attachmentId, owner)
-            .flatMap(any -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), sizeInputStream, LOW_COST)))
-            .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, sizeInputStream.getSize()))
+            .flatMap(any -> Mono.from(blobStore.save(blobStore.getDefaultBucketName(), currentPositionInputStream, LOW_COST)))
+            .map(blobId -> new DAOAttachment(attachmentId, blobId, contentType, currentPositionInputStream.getPosition()))
             .flatMap(attachmentDAOV2::storeAttachment)
             .map(any -> Attachment.builder()
                 .attachmentId(attachmentId)
                 .type(contentType)
-                .size(sizeInputStream.getSize())
+                .size(currentPositionInputStream.getPosition())
                 .build());
     }
 

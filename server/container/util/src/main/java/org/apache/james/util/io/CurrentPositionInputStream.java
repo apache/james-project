@@ -24,13 +24,13 @@ import java.io.InputStream;
 
 import org.apache.commons.lang3.NotImplementedException;
 
-public class SizeInputStream extends InputStream {
+public class CurrentPositionInputStream extends InputStream {
     private final InputStream wrapped;
-    private long size;
+    private long position;
 
-    public SizeInputStream(InputStream wrapped) {
+    public CurrentPositionInputStream(InputStream wrapped) {
         this.wrapped = wrapped;
-        this.size = 0L;
+        this.position = 0L;
     }
 
     @Override
@@ -38,7 +38,7 @@ public class SizeInputStream extends InputStream {
         int read = wrapped.read();
 
         if (read > 0) {
-            size++;
+            position++;
         }
 
         return read;
@@ -87,14 +87,14 @@ public class SizeInputStream extends InputStream {
         return false;
     }
 
-    public long getSize() {
-        return size;
+    public long getPosition() {
+        return position;
     }
 
     private <T extends Number> T increaseSize(T chunkSize) {
         long longValue = chunkSize.longValue();
         if (longValue > 0) {
-            size += longValue;
+            position += longValue;
         }
         return chunkSize;
     }
