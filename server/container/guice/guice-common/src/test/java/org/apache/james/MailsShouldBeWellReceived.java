@@ -75,25 +75,6 @@ interface MailsShouldBeWellReceived {
     String SENDER = "bob@apache.org";
     String UNICODE_BODY = "Unicode €uro symbol.";
 
-
-    static String readFirstMessageJavax(int imapPort) throws Exception {
-        Session imapSession = Session.getDefaultInstance(new Properties());
-        try (Store store = imapSession.getStore("imap")) {
-            store.connect("localhost", imapPort, JAMES_USER, PASSWORD);
-            Folder inbox = store.getFolder(IMAPMessageReader.INBOX);
-            inbox.open(Folder.READ_ONLY);
-
-            CALMLY_AWAIT.untilAsserted(() ->
-                assertThat(searchForAll(inbox))
-                    .hasSize(1));
-
-            try (InputStream inputStream = searchForAll(inbox)[0].getInputStream()) {
-                return MimeMessageUtil.asString(
-                    MimeMessageUtil.mimeMessageFromStream(inputStream));
-            }
-        }
-    }
-
     static Message[] searchForAll(Folder inbox) throws MessagingException {
         return inbox.search(new FlagTerm(new Flags(), false));
     }
@@ -131,7 +112,7 @@ interface MailsShouldBeWellReceived {
                 .select(IMAPMessageReader.INBOX)
                 .awaitMessageCount(CALMLY_AWAIT, 1);
 
-            assertThat(readFirstMessageJavax(imapPort))
+            assertThat(reader.readFirstMessage())
                 .contains(UNICODE_BODY);
         }
     }

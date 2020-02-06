@@ -19,14 +19,18 @@
 
 package org.apache.james.utils;
 
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.net.imap.IMAPClient;
+import org.apache.commons.net.io.CRLFLineReader;
 import org.apache.james.core.Username;
 import org.assertj.core.api.Assertions;
 import org.awaitility.core.ConditionFactory;
@@ -39,19 +43,31 @@ import com.google.common.base.Splitter;
 
 public class IMAPMessageReader extends ExternalResource implements Closeable, AfterEachCallback {
 
+    public static class Utf8IMAPClient extends IMAPClient {
+        private static String UTF8_ENCODING = "UTF-8";
+
+        @Override
+        protected void _connectAction_() throws IOException {
+            super._connectAction_();
+            _reader = new CRLFLineReader(new InputStreamReader(_input_, UTF8_ENCODING));
+            __writer = new BufferedWriter(new OutputStreamWriter(_output_, UTF8_ENCODING));
+        }
+    }
+
     private static final Pattern EXAMINE_EXISTS = Pattern.compile("^\\* (\\d+) EXISTS$");
     private static final int MESSAGE_NUMBER_MATCHING_GROUP = 1;
     public static final String INBOX = "INBOX";
 
-    private final IMAPClient imapClient;
+    private final Utf8IMAPClient imapClient;
+
 
     @VisibleForTesting
-    IMAPMessageReader(IMAPClient imapClient) {
+    IMAPMessageReader(Utf8IMAPClient imapClient) {
         this.imapClient = imapClient;
     }
 
     public IMAPMessageReader() {
-        this(new IMAPClient());
+        this(new Utf8IMAPClient());
     }
 
     public IMAPMessageReader connect(String host, int port) throws IOException {

@@ -21,15 +21,15 @@ package org.apache.james.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.apache.commons.net.imap.IMAPClient;
-import org.junit.Test;
+import org.apache.james.utils.IMAPMessageReader.Utf8IMAPClient;
+import org.junit.jupiter.api.Test;
 
-public class IMAPMessageReaderTest {
-    private static final IMAPClient NULL_IMAP_CLIENT = null;
-    private IMAPMessageReader testee = new IMAPMessageReader(NULL_IMAP_CLIENT);
+class IMAPMessageReaderTest {
+    static final Utf8IMAPClient NULL_IMAP_CLIENT = null;
+    IMAPMessageReader testee = new IMAPMessageReader(NULL_IMAP_CLIENT);
 
     @Test
-    public void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSingleFlag() throws Exception {
+    void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSingleFlag() throws Exception {
         String replyString = "* 1 FETCH (FLAGS (\\Flagged) )\n" +
             "AAAC OK FETCH completed.";
 
@@ -38,7 +38,7 @@ public class IMAPMessageReaderTest {
     }
 
     @Test
-    public void userReceivedMessageWithFlagsInMailboxShouldReturnFalseWhenCompletedButNoFlag() throws Exception {
+    void userReceivedMessageWithFlagsInMailboxShouldReturnFalseWhenCompletedButNoFlag() throws Exception {
         String replyString = "* 1 FETCH (FLAGS (\\Seen) )\n" +
             "AAAC OK FETCH completed.";
 
@@ -47,7 +47,7 @@ public class IMAPMessageReaderTest {
     }
 
     @Test
-    public void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSeveralFlags() throws Exception {
+    void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSeveralFlags() throws Exception {
         String replyString = "* 1 FETCH (FLAGS (\\Flagged \\Seen) )\n" +
             "AAAC OK FETCH completed.";
 
@@ -56,7 +56,7 @@ public class IMAPMessageReaderTest {
     }
 
     @Test
-    public void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSeveralFlagsInAnyOrder() throws Exception {
+    void userReceivedMessageWithFlagsInMailboxShouldReturnTrueWhenSeveralFlagsInAnyOrder() throws Exception {
         String replyString = "* 1 FETCH (FLAGS (\\Flagged \\Seen) )\n" +
             "AAAC OK FETCH completed.";
 
