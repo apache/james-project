@@ -186,9 +186,10 @@ public class CassandraModSeqProvider implements ModSeqProvider {
 
     private Mono<ModSeq> handleRetries(CassandraId mailboxId) {
         Duration forever = Duration.ofMillis(Long.MAX_VALUE);
+        Duration firstBackoff = Duration.ofMillis(10);
         return tryFindThenUpdateOnce(mailboxId)
             .single()
-            .retryBackoff(maxModSeqRetries, Duration.ofMillis(2), forever, Schedulers.elastic());
+            .retryBackoff(maxModSeqRetries, firstBackoff, forever, Schedulers.elastic());
     }
 
     private Mono<ModSeq> tryFindThenUpdateOnce(CassandraId mailboxId) {
