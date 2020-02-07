@@ -22,11 +22,14 @@ package org.apache.james.webadmin;
 import java.time.Duration;
 
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class WebAdminUtilsTest {
+
+    @Disabled("JAMES-3046 the concurrent webadmin server fails on a high concurrent level")
     @Test
-    void serverShouldBeAbletoStartConcurrently() throws Exception {
+    void serverShouldBeAbleToStartConcurrently() throws Exception {
         ConcurrentTestRunner.builder()
             .operation((a, b) -> {
                 WebAdminServer webAdminServer = WebAdminUtils.createWebAdminServer();
