@@ -387,7 +387,7 @@ abstract class AbstractSelectionProcessor<R extends AbstractMailboxSelectionRequ
 
         final SelectedMailbox sessionMailbox;
         final SelectedMailbox currentMailbox = session.getSelected();
-        if (currentMailbox == null || !currentMailbox.getPath().equals(mailboxPath)) {
+        if (currentMailbox == null || !currentMailbox.getMailboxId().equals(mailbox.getId())) {
             
             // QRESYNC EXTENSION
             //

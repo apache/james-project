@@ -126,7 +126,7 @@ public class AppendProcessor extends AbstractMailboxProcessor<AppendRequest> {
             final MailboxSession mailboxSession = session.getMailboxSession();
             final SelectedMailbox selectedMailbox = session.getSelected();
             final MailboxManager mailboxManager = getMailboxManager();
-            final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getPath().equals(mailboxPath);
+            final boolean isSelectedMailbox = selectedMailbox != null && selectedMailbox.getMailboxId().equals(mailbox.getId());
             final ComposedMessageId messageId = mailbox.appendMessage(message, datetime, mailboxSession, !isSelectedMailbox, flagsToBeSet);
             if (isSelectedMailbox) {
                 selectedMailbox.addRecent(messageId.getUid());
