@@ -221,19 +221,22 @@ public class ImapRequestFrameDecoder extends FrameDecoder implements NettyConsta
 
     @Override
     protected synchronized ChannelBuffer newCumulationBuffer(ChannelHandlerContext ctx, int minimumCapacity) {
-        @SuppressWarnings("unchecked")
         Map<String, Object> attachment = (Map<String, Object>) ctx.getAttachment();
-        int size = (Integer) attachment.get(NEEDED_DATA);
-        
-        if (inMemorySizeLimit > 0) {
-            return ChannelBuffers.dynamicBuffer(Math.min(size, inMemorySizeLimit), ctx.getChannel().getConfig().getBufferFactory());
-        } else {
+        Object sizeAsObject = attachment.get(NEEDED_DATA);
+        if (sizeAsObject != null) {
+            @SuppressWarnings("unchecked")
+            int size = (Integer) sizeAsObject;
 
-            if (size > 0) {
-                return ChannelBuffers.dynamicBuffer(size, ctx.getChannel().getConfig().getBufferFactory());
+            if (inMemorySizeLimit > 0) {
+                return ChannelBuffers.dynamicBuffer(Math.min(size, inMemorySizeLimit), ctx.getChannel().getConfig().getBufferFactory());
+            } else {
+
+                if (size > 0) {
+                    return ChannelBuffers.dynamicBuffer(size, ctx.getChannel().getConfig().getBufferFactory());
+                }
             }
-            return super.newCumulationBuffer(ctx, minimumCapacity);
         }
+        return super.newCumulationBuffer(ctx, minimumCapacity);
     }
 
 }
