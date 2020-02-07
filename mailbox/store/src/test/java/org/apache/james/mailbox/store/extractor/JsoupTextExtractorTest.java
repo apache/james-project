@@ -20,7 +20,6 @@
 package org.apache.james.mailbox.store.extractor;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -29,12 +28,15 @@ import java.nio.charset.StandardCharsets;
 import org.apache.james.mailbox.extractor.ParsedContent;
 import org.apache.james.mailbox.extractor.TextExtractor;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class JsoupTextExtractorTest {
 
     private static final String TEXT_HTML_CONTENT_TYPE = "text/html";
+    private static final String HTML_TEXT_CONTENT = "HTML pages can include a lot of null '\0' character. But still expecting the content can be parsed." +
+        "Jsoup 1.12.1 thinks a file containing more than 10 null characters can be a binary file";
+    private static final String NULL_CHARACTERS = "\0\0\0\0\0\0\0\0\0\0";
+    private static final String FULL_CONTENT = HTML_TEXT_CONTENT + NULL_CHARACTERS;
 
     TextExtractor textExtractor;
 
@@ -81,25 +83,17 @@ class JsoupTextExtractorTest {
             .isEqualTo(ParsedContent.empty());
     }
 
-    @Disabled("JAMES-3044 java.io.IOException: Input is binary and unsupported")
     @Test
-    void extractContentShouldNotThrowWhenContainingNullCharacters() {
+    void extractContentShouldNotThrowWhenContainingNullCharacters() throws Exception {
         InputStream inputStream = textContentWithManyNullCharacters();
 
-        assertThatCode(() -> textExtractor.extractContent(inputStream, TEXT_HTML_CONTENT_TYPE))
-            .doesNotThrowAnyException();
+        assertThat(textExtractor.extractContent(inputStream, TEXT_HTML_CONTENT_TYPE)
+                .getTextualContent())
+            .hasValueSatisfying(text -> assertThat(text)
+                .contains(HTML_TEXT_CONTENT));
     }
 
     private InputStream textContentWithManyNullCharacters() {
-        String htmlTextContent = "HTML pages can include a lot of null '\0' character. But still expecting the content can be parsed." +
-            "Jsoup 1.21.1 thinks a file containing more than 10 null characters can be a binary file";
-        byte[] htmlBytesContent = htmlTextContent.getBytes(StandardCharsets.UTF_8);
-        byte[] nullCharacters = {'\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0', '\0'};
-
-        byte[] fullContent = new byte[htmlBytesContent.length + nullCharacters.length];
-        System.arraycopy(htmlBytesContent, 0, fullContent, 0, htmlBytesContent.length);
-        System.arraycopy(nullCharacters, 0, fullContent, htmlBytesContent.length, nullCharacters.length);
-
-        return new ByteArrayInputStream(fullContent);
+        return new ByteArrayInputStream(FULL_CONTENT.getBytes(StandardCharsets.UTF_8));
     }
 }
