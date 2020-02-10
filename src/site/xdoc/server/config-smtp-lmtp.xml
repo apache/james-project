@@ -108,6 +108,7 @@
       if SMTP authentication is required.  If the parameter is set to true then the sender address for the submitted message
       will be verified against the authenticated subject. Verify sender addresses, ensuring that
          the sender address matches the user who has authenticated.
+         It will verify that the sender address matches the address of the user or one of its alias (from user or domain aliases).
          This prevents a user of your mail server from acting as someone else
          If unspecified, default value is true.</dd>
       <dt><strong>handler.maxmessagesize</strong></dt>
