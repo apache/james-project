@@ -33,7 +33,7 @@ class WithScanningSearchImmutableTest implements JmapJamesServerContract, JamesS
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
                 .searchConfiguration(SearchConfiguration.scanning())

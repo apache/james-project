@@ -57,7 +57,7 @@ public class RabbitMQAwsS3Stepdefs {
     private final DockerCassandraRule cassandraServer = CucumberCassandraSingleton.cassandraServer;
     private final DockerElasticSearchRule elasticSearch = CucumberElasticSearchSingleton.elasticSearch;
     private final DockerRabbitMQRule rabbitMQServer = CucumberRabbitMQSingleton.rabbitMQServer;
-    private final DockerAwsS3TestRule swiftServer = CucumberAwsS3Singleton.awsS3Server;
+    private final DockerAwsS3TestRule awsS3Server = CucumberAwsS3Singleton.awsS3Server;
 
     @Inject
     private RabbitMQAwsS3Stepdefs(MainStepdefs mainStepdefs, ImapStepdefs imapStepdefs) {
@@ -69,7 +69,7 @@ public class RabbitMQAwsS3Stepdefs {
     public void init() throws Exception {
         cassandraServer.start();
         rabbitMQServer.start();
-        swiftServer.start();
+        awsS3Server.start();
         elasticSearch.start();
 
         temporaryFolder.create();
@@ -78,7 +78,7 @@ public class RabbitMQAwsS3Stepdefs {
             .workingDirectory(temporaryFolder.newFolder())
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())
@@ -88,7 +88,7 @@ public class RabbitMQAwsS3Stepdefs {
             .overrideWith(new TestJMAPServerModule())
                 .overrideWith(new TestDockerESMetricReporterModule(elasticSearch.getDockerEs().getHttpHost()))
                 .overrideWith(new TestRabbitMQModule(rabbitMQServer.dockerRabbitMQ()))
-                .overrideWith(swiftServer.getModule())
+                .overrideWith(awsS3Server.getModule())
                 .overrideWith(elasticSearch.getModule())
                 .overrideWith(cassandraServer.getModule())
                 .overrideWith(binder -> Multibinder.newSetBinder(binder, CleanupTasksPerformer.CleanupTask.class).addBinding().to(CassandraTruncateTableTask.class))

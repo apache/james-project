@@ -38,7 +38,7 @@ public class S3DumbBlobStoreTest implements DumbBlobStoreContract {
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        testee = new S3DumbBlobStore(configuration, DockerAwsS3Container.REGION);
+        testee = new S3DumbBlobStore(configuration, dockerAwsS3.dockerAwsS3().region());
     }
 
     @AfterEach

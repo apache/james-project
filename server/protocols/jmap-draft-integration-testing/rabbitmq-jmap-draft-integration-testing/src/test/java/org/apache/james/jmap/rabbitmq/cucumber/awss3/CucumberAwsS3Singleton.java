@@ -18,12 +18,10 @@
  ****************************************************************/
 package org.apache.james.jmap.rabbitmq.cucumber.awss3;
 
-import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 
 public class CucumberAwsS3Singleton {
 
     public static DockerAwsS3TestRule awsS3Server = new DockerAwsS3TestRule();
-    public static DockerAwsS3TestRule encryptedAwsS3Server = new DockerAwsS3TestRule(PayloadCodecFactory.AES256);
 }
 

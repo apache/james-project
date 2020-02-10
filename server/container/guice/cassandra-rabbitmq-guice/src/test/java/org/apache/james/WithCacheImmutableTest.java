@@ -39,7 +39,7 @@ class WithCacheImmutableTest implements JmapJamesServerContract, JamesServerCont
                 .workingDirectory(tmpDir)
                 .configurationFromClasspath()
                 .blobStore(BlobStoreConfiguration.builder()
-                        .objectStorage()
+                        .s3()
                         .enableCache()
                         .deduplication())
                 .searchConfiguration(SearchConfiguration.elasticSearch())

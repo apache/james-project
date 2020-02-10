@@ -26,12 +26,12 @@ import org.apache.james.backends.cassandra.DockerCassandra;
 import org.apache.james.backends.cassandra.init.configuration.ClusterConfiguration;
 import org.apache.james.backends.rabbitmq.DockerRabbitMQSingleton;
 import org.apache.james.blob.api.BlobStore;
+import org.apache.james.blob.api.BucketName;
 import org.apache.james.blob.api.MetricableBlobStore;
-import org.apache.james.blob.objectstorage.ObjectStorageBlobStore;
+import org.apache.james.blob.objectstorage.aws.S3BlobStore;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.modules.TestRabbitMQModule;
 import org.apache.james.modules.mailbox.KeyspacesConfiguration;
-import org.apache.james.modules.objectstorage.ObjectStorageDependenciesModule;
 import org.apache.james.modules.objectstorage.aws.s3.DockerAwsS3TestRule;
 import org.apache.james.modules.protocols.SmtpGuiceProbe.SmtpServerConnectedType;
 import org.apache.james.modules.rabbitmq.RabbitMQModule;
@@ -56,10 +56,9 @@ public final class CassandraRabbitMQAwsS3SmtpTestRuleFactory {
     private static Module BLOB_STORE_MODULE = new AbstractModule() {
         @Override
         protected void configure() {
-            install(new ObjectStorageDependenciesModule());
             bind(BlobStore.class)
                 .annotatedWith(Names.named(MetricableBlobStore.BLOB_STORE_IMPLEMENTATION))
-                .to(ObjectStorageBlobStore.class);
+                .to(S3BlobStore.class);
         }
     };
 

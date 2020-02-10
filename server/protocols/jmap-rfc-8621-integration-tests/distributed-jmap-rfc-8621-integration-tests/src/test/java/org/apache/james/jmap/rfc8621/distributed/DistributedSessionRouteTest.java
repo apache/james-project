@@ -39,9 +39,7 @@ public class DistributedSessionRouteTest implements SessionRoutesContract {
         CassandraRabbitMQJamesConfiguration.builder()
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
-            .blobStore(BlobStoreConfiguration
-                .builder()
-                .objectStorage()
+            .blobStore(BlobStoreConfiguration.s3()
                 .disableCache()
                 .passthrough())
             .searchConfiguration(SearchConfiguration.elasticSearch())

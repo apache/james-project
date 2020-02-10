@@ -37,7 +37,7 @@
         <module>blob-api-guice</module>
         <module>blob-export-guice</module>
         <module>blob-memory-guice</module>
-        <module>blob-objectstorage-guice</module>
+        <module>blob-s3-guice</module>
         <module>cassandra-guice</module>
         <module>cassandra-ldap-guice</module>
         <module>cassandra-rabbitmq-guice</module>

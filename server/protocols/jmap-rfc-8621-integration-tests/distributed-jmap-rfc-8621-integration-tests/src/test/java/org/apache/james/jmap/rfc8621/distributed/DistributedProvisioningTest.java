@@ -39,7 +39,7 @@ public class DistributedProvisioningTest implements ProvisioningContract {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                .objectStorage()
+                .s3()
                 .disableCache()
                 .deduplication())
             .build())

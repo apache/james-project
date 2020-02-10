@@ -45,7 +45,7 @@ class RabbitMQAuthorizedEndpointsTest extends AuthorizedEndpointsTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())

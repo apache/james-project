@@ -30,7 +30,6 @@ import org.apache.commons.net.imap.IMAPClient;
 import org.apache.james.jmap.draft.JmapJamesServerContract;
 import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
-import org.apache.james.modules.SwiftBlobStoreExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
 import org.apache.james.modules.protocols.ImapGuiceProbe;
@@ -55,25 +54,11 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    class WithSwift implements ContractSuite {
-        @RegisterExtension
-        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
-                    .objectStorage()
-                    .disableCache()
-                    .deduplication())
-            .extension(new SwiftBlobStoreExtension())
-            .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-            .build();
-    }
-
-    @Nested
-    @TestInstance(TestInstance.Lifecycle.PER_CLASS)
     class WithAwsS3 implements ContractSuite {
         @RegisterExtension
-        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
-                    .objectStorage()
-                    .disableCache()
-                    .deduplication())
+        JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.s3()
+                .disableCache()
+                .passthrough())
             .extension(new AwsS3BlobStoreExtension())
             .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
             .build();
@@ -81,7 +66,7 @@ class CassandraRabbitMQLdapJmapJamesServerTest {
 
     @Nested
     @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-    class WithoutSwiftOrAwsS3 implements ContractSuite {
+    class WithCassandra implements ContractSuite {
         @RegisterExtension
         JamesServerExtension testExtension = baseJamesServerExtensionBuilder(BlobStoreConfiguration.builder()
                 .cassandra()

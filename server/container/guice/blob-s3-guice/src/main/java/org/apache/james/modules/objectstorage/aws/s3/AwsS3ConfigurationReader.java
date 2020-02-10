@@ -17,39 +17,24 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules;
+package org.apache.james.modules.objectstorage.aws.s3;
 
-import org.apache.james.GuiceModuleTestExtension;
-import org.apache.james.modules.objectstorage.PayloadCodecFactory;
-import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
-import org.junit.jupiter.api.extension.ExtensionContext;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 
-import com.google.inject.Module;
+public class AwsS3ConfigurationReader {
 
-public class SwiftBlobStoreExtension implements GuiceModuleTestExtension {
+    static final String OBJECTSTORAGE_ENDPOINT = "objectstorage.s3.endPoint";
+    static final String OBJECTSTORAGE_ACCESKEYID = "objectstorage.s3.accessKeyId";
+    static final String OBJECTSTORAGE_SECRETKEY = "objectstorage.s3.secretKey";
 
-    private final DockerSwiftTestRule swiftRule;
+    public static AwsS3AuthConfiguration from(Configuration configuration) {
 
-    public SwiftBlobStoreExtension() {
-        this.swiftRule = new DockerSwiftTestRule();
-    }
-
-    public SwiftBlobStoreExtension(PayloadCodecFactory payloadCodecFactory) {
-        this.swiftRule = new DockerSwiftTestRule(payloadCodecFactory);
-    }
-
-    @Override
-    public void beforeAll(ExtensionContext extensionContext) {
-        swiftRule.start();
-    }
-
-    @Override
-    public void afterAll(ExtensionContext extensionContext) {
-        swiftRule.stop();
-    }
-
-    @Override
-    public Module getModule() {
-        return swiftRule.getModule();
+        return AwsS3AuthConfiguration.builder()
+                .endpoint(configuration.getString(OBJECTSTORAGE_ENDPOINT))
+                .accessKeyId(configuration.getString(OBJECTSTORAGE_ACCESKEYID))
+                .secretKey(configuration.getString(OBJECTSTORAGE_SECRETKEY))
+                .build();
     }
 }
+

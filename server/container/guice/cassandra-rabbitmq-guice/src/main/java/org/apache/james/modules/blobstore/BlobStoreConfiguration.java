@@ -51,8 +51,8 @@ public class BlobStoreConfiguration {
             return implementation(BlobStoreImplName.CASSANDRA);
         }
 
-        default RequireCache objectStorage() {
-            return implementation(BlobStoreImplName.OBJECTSTORAGE);
+        default RequireCache s3() {
+            return implementation(BlobStoreImplName.S3);
         }
     }
 
@@ -88,7 +88,7 @@ public class BlobStoreConfiguration {
 
     public enum BlobStoreImplName {
         CASSANDRA("cassandra"),
-        OBJECTSTORAGE("objectstorage");
+        S3("s3");
 
         static String supportedImplNames() {
             return Stream.of(BlobStoreImplName.values())
@@ -168,6 +168,10 @@ public class BlobStoreConfiguration {
         return builder()
             .cassandra()
             .disableCache();
+    }
+
+    public static RequireCache s3() {
+        return builder().s3();
     }
 
     private final BlobStoreImplName implementation;

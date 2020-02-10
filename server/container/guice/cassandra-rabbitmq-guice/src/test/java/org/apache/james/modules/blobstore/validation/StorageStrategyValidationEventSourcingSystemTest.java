@@ -25,6 +25,7 @@ import org.apache.james.eventsourcing.eventstore.History;
 import org.apache.james.eventsourcing.eventstore.memory.InMemoryEventStore;
 import org.apache.james.lifecycle.api.StartUpCheck;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
+import org.apache.james.modules.blobstore.BlobStoreConfiguration.BlobStoreImplName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void startingForTheFirstTimeShouldSucceedWhenPassThrough() {
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .passthrough());
 
@@ -51,7 +52,7 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void startingForTheFirstTimeShouldSucceedWhenDeduplication() {
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .deduplication());
 
@@ -60,11 +61,11 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void startingShouldSucceedWhenTurningOnDeduplication() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .passthrough());
 
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .deduplication());
 
@@ -73,11 +74,11 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void startingShouldFailWhenTurningOffDeduplication() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .deduplication());
 
-        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        StartUpCheck.CheckResult checkResult = testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .passthrough());
 
@@ -86,10 +87,10 @@ public class StorageStrategyValidationEventSourcingSystemTest {
 
     @Test
     void validatingSeveralTimeTheSameStrategyShouldNotAddEventsToTheHistory() {
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .deduplication());
-        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE)
+        testee.validate(BlobStoreConfiguration.builder().implementation(BlobStoreImplName.S3)
             .disableCache()
             .deduplication());
 

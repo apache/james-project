@@ -49,7 +49,6 @@ import org.apache.james.modules.AwsS3BlobStoreExtension;
 import org.apache.james.modules.RabbitMQExtension;
 import org.apache.james.modules.TestJMAPServerModule;
 import org.apache.james.modules.blobstore.BlobStoreConfiguration;
-import org.apache.james.modules.objectstorage.PayloadCodecFactory;
 import org.apache.james.util.Port;
 import org.apache.james.utils.DataProbeImpl;
 import org.apache.james.utils.WebAdminGuiceProbe;
@@ -88,7 +87,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())
@@ -96,7 +95,7 @@ class RabbitMQReindexingWithEventDeadLettersTest {
         .extension(dockerElasticSearch)
         .extension(new CassandraExtension())
         .extension(new RabbitMQExtension())
-        .extension(new AwsS3BlobStoreExtension(PayloadCodecFactory.AES256))
+        .extension(new AwsS3BlobStoreExtension())
         .server(configuration -> CassandraRabbitMQJamesServerMain.createServer(configuration)
             .overrideWith(new TestJMAPServerModule())
             .overrideWith(new WebadminIntegrationTestModule())

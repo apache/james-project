@@ -43,7 +43,7 @@ class S3BlobStoreTest implements BlobStoreContract {
             .secretKey(DockerAwsS3Container.SECRET_ACCESS_KEY)
             .build();
 
-        s3DumbBlobStore = new S3DumbBlobStore(configuration, DockerAwsS3Container.REGION);
+        s3DumbBlobStore = new S3DumbBlobStore(configuration, dockerAwsS3.dockerAwsS3().region());
         testee = new S3BlobStore(s3DumbBlobStore, new HashBlobId.Factory(), BucketName.DEFAULT);
     }
 

@@ -45,7 +45,7 @@ class RabbitMQLinshareBlobExportMechanismIntegrationTest extends LinshareBlobExp
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())

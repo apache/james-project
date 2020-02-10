@@ -45,7 +45,7 @@ public class DistributedEmailGetMethodTest implements EmailGetMethodContract {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                .objectStorage()
+                .s3()
                 .disableCache()
                 .deduplication())
             .build())

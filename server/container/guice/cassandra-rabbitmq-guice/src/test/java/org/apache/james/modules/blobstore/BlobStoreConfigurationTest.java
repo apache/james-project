@@ -33,7 +33,7 @@ import nl.jqno.equalsverifier.EqualsVerifier;
 
 class BlobStoreConfigurationTest {
 
-    private static final String OBJECT_STORAGE = "objectstorage";
+    private static final String S3 = "s3";
     private static final String CASSANDRA = "cassandra";
 
     @Test
@@ -92,9 +92,9 @@ class BlobStoreConfigurationTest {
     }
 
     @Test
-    void provideChoosingConfigurationShouldReturnObjectStorageFactoryWhenConfigurationImplIsObjectStorage() throws Exception {
+    void provideChoosingConfigurationShouldReturnObjectStorageFactoryWhenConfigurationImplIsS3() throws Exception {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("deduplication.enable", "true");
         FakePropertiesProvider propertyProvider = FakePropertiesProvider.builder()
             .register(ConfigurationComponent.NAME, configuration)
@@ -102,7 +102,7 @@ class BlobStoreConfigurationTest {
 
         assertThat(parse(propertyProvider))
             .isEqualTo(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication());
     }
@@ -129,7 +129,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, s3");
     }
 
     @Test
@@ -139,7 +139,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, s3");
     }
 
     @Test
@@ -149,7 +149,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessage("implementation property is missing please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("implementation property is missing please use one of supported values in: cassandra, s3");
     }
 
     @Test
@@ -159,7 +159,7 @@ class BlobStoreConfigurationTest {
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration))
             .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, objectstorage");
+            .hasMessage("un_supported is not a valid name of BlobStores, please use one of supported values in: cassandra, s3");
     }
 
     @Test
@@ -176,28 +176,29 @@ class BlobStoreConfigurationTest {
     }
 
     @Test
-    void fromShouldReturnConfigurationWhenBlobStoreImplIsObjectStorage() {
+    void fromShouldReturnConfigurationWhenBlobStoreImplIsS3() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", OBJECT_STORAGE);
+        configuration.addProperty("implementation", S3);
         configuration.addProperty("deduplication.enable", "true");
+
         assertThat(
             BlobStoreConfiguration.from(configuration)
                 .getImplementation()
                 .getName())
-            .isEqualTo(OBJECT_STORAGE);
+            .isEqualTo(S3);
     }
 
     @Test
     void fromShouldReturnConfigurationWhenBlobStoreImplIsSupportedAndCaseInsensitive() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", "OBjecTStorAGE");
+        configuration.addProperty("implementation", "CAssAnDrA");
         configuration.addProperty("deduplication.enable", "true");
 
         assertThat(
             BlobStoreConfiguration.from(configuration)
                 .getImplementation()
                 .getName())
-            .isEqualTo(OBJECT_STORAGE);
+            .isEqualTo(CASSANDRA);
     }
 
     @Test
@@ -216,7 +217,7 @@ class BlobStoreConfigurationTest {
     @Test
     void cacheEnabledShouldBeTrueWhenSpecified() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("cache.enable", true);
         configuration.addProperty("deduplication.enable", "true");
 
@@ -227,7 +228,7 @@ class BlobStoreConfigurationTest {
     @Test
     void cacheEnabledShouldBeFalseWhenSpecified() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("cache.enable", false);
         configuration.addProperty("deduplication.enable", "true");
 
@@ -238,7 +239,7 @@ class BlobStoreConfigurationTest {
     @Test
     void cacheEnabledShouldDefaultToFalse() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("deduplication.enable", "true");
 
         assertThat(BlobStoreConfiguration.from(configuration).cacheEnabled())
@@ -248,7 +249,7 @@ class BlobStoreConfigurationTest {
     @Test
     void storageStrategyShouldBePassthroughWhenDeduplicationDisabled() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("deduplication.enable", "false");
 
         assertThat(BlobStoreConfiguration.from(configuration).storageStrategy())
@@ -258,7 +259,7 @@ class BlobStoreConfigurationTest {
     @Test
     void storageStrategyShouldBeDeduplicationWhenDeduplicationEnabled() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
         configuration.addProperty("deduplication.enable", "true");
 
         assertThat(BlobStoreConfiguration.from(configuration).storageStrategy())
@@ -268,7 +269,7 @@ class BlobStoreConfigurationTest {
     @Test
     void buildingConfigurationShouldThrowWhenDeduplicationPropertieIsOmitted() {
         PropertiesConfiguration configuration = new PropertiesConfiguration();
-        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.OBJECTSTORAGE.getName());
+        configuration.addProperty("implementation", BlobStoreConfiguration.BlobStoreImplName.S3.getName());
 
         assertThatThrownBy(() -> BlobStoreConfiguration.from(configuration)).isInstanceOf(IllegalStateException.class)
                 .hasMessage("deduplication.enable property is missing please use one of the supported values in: true, false\n" +

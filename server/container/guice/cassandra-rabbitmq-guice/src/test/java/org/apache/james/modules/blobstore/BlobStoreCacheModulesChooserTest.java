@@ -28,7 +28,7 @@ class BlobStoreCacheModulesChooserTest {
     @Test
     void chooseModulesShouldReturnCacheDisabledModuleWhenCacheDisabled() {
         assertThat(BlobStoreCacheModulesChooser.chooseModules(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication()))
             .hasSize(1)
@@ -39,7 +39,7 @@ class BlobStoreCacheModulesChooserTest {
     @Test
     void chooseModulesShouldReturnCacheEnabledAndCassandraCacheModulesWhenCacheEnabled() {
         assertThat(BlobStoreCacheModulesChooser.chooseModules(BlobStoreConfiguration.builder()
-                .objectStorage()
+                .s3()
                 .enableCache()
                 .deduplication()))
             .hasSize(2)

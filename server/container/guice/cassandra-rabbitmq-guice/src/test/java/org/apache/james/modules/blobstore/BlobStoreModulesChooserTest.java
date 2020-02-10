@@ -28,7 +28,7 @@ class BlobStoreModulesChooserTest {
     @Test
     void provideBlobStoreShouldReturnObjectStoreBlobStoreWhenObjectStoreConfigured() {
         assertThat(BlobStoreModulesChooser.chooseModules(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication()))
             .first()

@@ -53,29 +53,15 @@
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-objectstorage</artifactId>
+            <artifactId>blob-s3</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <!-- JCloud switch relies on incompatible guice 3.3.0 for multibindings -->
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.inject.extensions</groupId>
-                    <artifactId>guice-multibindings</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>
-            <artifactId>blob-objectstorage-guice</artifactId>
+            <artifactId>blob-s3-guice</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
-            <!-- JCloud switch relies on incompatible guice 3.3.0 for multibindings -->
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.inject.extensions</groupId>
-                    <artifactId>guice-multibindings</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>${james.groupId}</groupId>

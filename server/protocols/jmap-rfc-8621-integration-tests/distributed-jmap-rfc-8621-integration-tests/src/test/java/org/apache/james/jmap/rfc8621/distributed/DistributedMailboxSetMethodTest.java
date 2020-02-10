@@ -43,7 +43,7 @@ public class DistributedMailboxSetMethodTest implements MailboxSetMethodContract
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .build())

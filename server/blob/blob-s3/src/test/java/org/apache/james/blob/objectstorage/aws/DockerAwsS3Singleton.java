@@ -17,31 +17,15 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james;
+package org.apache.james.blob.objectstorage.aws;
 
-import static org.assertj.core.api.Assertions.assertThat;
+public class DockerAwsS3Singleton {
 
-import org.apache.james.blob.objectstorage.DefaultPayloadCodec;
-import org.apache.james.blob.objectstorage.PayloadCodec;
-import org.apache.james.jmap.draft.JmapJamesServerContract;
-import org.apache.james.modules.SwiftBlobStoreExtension;
-import org.apache.james.modules.objectstorage.swift.DockerSwiftTestRule;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
+    public static final DockerAwsS3Container singleton = new DockerAwsS3Container();
 
-public class WithDefaultSwiftImmutableTest implements JmapJamesServerContract, JamesServerContract {
-    @RegisterExtension
-    static JamesServerExtension jamesServerExtension = CassandraRabbitMQJamesServerFixture.baseExtensionBuilder()
-        .extension(new SwiftBlobStoreExtension())
-        .lifeCycle(JamesServerExtension.Lifecycle.PER_CLASS)
-        .build();
-
-    @Test
-    void defaultPayloadShouldBeByDefault(GuiceJamesServer jamesServer) {
-        PayloadCodec payloadCodec = jamesServer.getProbe(DockerSwiftTestRule.TestSwiftBlobStoreProbe.class)
-            .getSwiftPayloadCodec();
-
-        assertThat(payloadCodec)
-            .isInstanceOf(DefaultPayloadCodec.class);
+    static {
+        singleton.start();
     }
+
+    // Cleanup will be performed by test namespace resource reaper
 }

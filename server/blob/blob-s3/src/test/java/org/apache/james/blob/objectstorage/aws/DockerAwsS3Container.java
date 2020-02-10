@@ -27,12 +27,12 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 public class DockerAwsS3Container {
 
-    public static final Region REGION = Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id());
 
     private static final String AWS_S3_DOCKER_IMAGE = "zenko/cloudserver:8.2.3";
     private static final int AWS_S3_PORT = 8000;
     private static final int ONE_TIME = 1;
 
+    public static final Region REGION = Region.of(software.amazon.awssdk.regions.Region.EU_WEST_1.id());
     public static final String ACCESS_KEY_ID = "newAccessKey";
     public static final String SECRET_ACCESS_KEY = "newSecretKey";
 
@@ -53,7 +53,7 @@ public class DockerAwsS3Container {
     public void start() {
         awsS3Container.start();
 
-        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"));
+        dockerAwsS3 = new DockerAwsS3(URI.create("http://" + getHost().asString() + "/"), REGION);
     }
 
     public void stop() {

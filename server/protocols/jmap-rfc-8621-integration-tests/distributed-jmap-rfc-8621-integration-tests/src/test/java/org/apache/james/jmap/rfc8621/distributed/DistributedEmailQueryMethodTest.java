@@ -41,7 +41,7 @@ public class DistributedEmailQueryMethodTest implements EmailQueryMethodContract
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .build())

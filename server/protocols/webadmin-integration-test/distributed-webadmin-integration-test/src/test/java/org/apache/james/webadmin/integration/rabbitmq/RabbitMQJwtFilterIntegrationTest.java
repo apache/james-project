@@ -43,7 +43,7 @@ class RabbitMQJwtFilterIntegrationTest extends JwtFilterIntegrationTest {
             .workingDirectory(tmpDir)
             .configurationFromClasspath()
             .blobStore(BlobStoreConfiguration.builder()
-                    .objectStorage()
+                    .s3()
                     .disableCache()
                     .deduplication())
             .searchConfiguration(SearchConfiguration.elasticSearch())
