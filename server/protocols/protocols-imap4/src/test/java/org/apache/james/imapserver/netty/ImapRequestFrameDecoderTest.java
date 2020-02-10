@@ -20,6 +20,7 @@
 package org.apache.james.imapserver.netty;
 
 
+import static org.apache.james.imapserver.netty.ImapRequestFrameDecoder.NEEDED_DATA;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -56,6 +57,22 @@ class ImapRequestFrameDecoderTest {
         when(channel.getConfig()).thenReturn(channelConfig);
 
         when(channelHandler.getAttachment()).thenReturn(ImmutableMap.<String, Object>of());
+
+        assertThatCode(() -> testee.newCumulationBuffer(channelHandler, 36))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void newCumulationBufferShouldNotThrowOnNegativeSize() {
+        ChannelHandlerContext channelHandler = mock(ChannelHandlerContext.class);
+        Channel channel = mock(Channel.class);
+        ChannelConfig channelConfig = mock(ChannelConfig.class);
+
+        when(channelConfig.getBufferFactory()).thenReturn(mock(ChannelBufferFactory.class));
+        when(channelHandler.getChannel()).thenReturn(channel);
+        when(channel.getConfig()).thenReturn(channelConfig);
+
+        when(channelHandler.getAttachment()).thenReturn(ImmutableMap.<String, Object>of(NEEDED_DATA, -1));
 
         assertThatCode(() -> testee.newCumulationBuffer(channelHandler, 36))
             .doesNotThrowAnyException();
