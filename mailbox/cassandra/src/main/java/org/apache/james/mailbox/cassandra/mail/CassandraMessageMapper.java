@@ -172,16 +172,17 @@ public class CassandraMessageMapper implements MessageMapper {
     public Iterator<MailboxMessage> findInMailbox(Mailbox mailbox, MessageRange messageRange, FetchType ftype, int max) {
         CassandraId mailboxId = (CassandraId) mailbox.getMailboxId();
         return retrieveMessageIds(mailboxId, messageRange)
-            .flatMapMany(ids -> retrieveMessages(ids, ftype, Limit.from(max)))
+            .flatMap(ids -> retrieveMessages(ids, ftype, Limit.from(max)))
             .map(MailboxMessage.class::cast)
             .sort(Comparator.comparing(MailboxMessage::getUid))
             .toIterable()
             .iterator();
     }
 
-    private Mono<List<ComposedMessageIdWithMetaData>> retrieveMessageIds(CassandraId mailboxId, MessageRange messageRange) {
+    private Flux<List<ComposedMessageIdWithMetaData>> retrieveMessageIds(CassandraId mailboxId, MessageRange messageRange) {
         return messageIdDAO.retrieveMessages(mailboxId, messageRange)
-            .collect(Guavate.toImmutableList());
+            .window(cassandraConfiguration.getMessageReadChunkSize())
+            .flatMap(flux -> flux.collect(Guavate.toImmutableList()));
     }
 
     private Flux<MailboxMessage> retrieveMessages(List<ComposedMessageIdWithMetaData> messageIds, FetchType fetchType, Limit limit) {
