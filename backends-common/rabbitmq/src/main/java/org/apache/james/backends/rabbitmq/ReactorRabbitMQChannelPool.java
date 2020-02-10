@@ -19,6 +19,7 @@
 
 package org.apache.james.backends.rabbitmq;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -37,7 +38,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.fge.lambdas.Throwing;
-import com.google.common.base.Preconditions;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 
@@ -52,7 +52,12 @@ import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
 public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
-    private static final int MAX_CHANNELS_NUMBER = 5;
+
+    private static class ChannelClosedException extends IOException {
+        ChannelClosedException(String message) {
+            super(message);
+        }
+    }
 
     static class ChannelFactory extends BasePooledObjectFactory<Channel> {
 
@@ -60,7 +65,6 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
 
         private static final int MAX_RETRIES = 5;
         private static final Duration RETRY_FIRST_BACK_OFF = Duration.ofMillis(100);
-        private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
         private final Mono<Connection> connectionMono;
 
@@ -69,7 +73,7 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         }
 
         @Override
-        public Channel create() throws Exception {
+        public Channel create() {
             return connectionMono
                 .flatMap(this::openChannel)
                 .block();
@@ -97,7 +101,12 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         }
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ReactorRabbitMQChannelPool.class);
     private static final long MAXIMUM_BORROW_TIMEOUT_IN_MS = Duration.ofSeconds(5).toMillis();
+    private static final int MAX_CHANNELS_NUMBER = 5;
+    private static final int MAX_BORROW_RETRIES = 3;
+    private static final Duration MIN_BORROW_DELAY = Duration.ofMillis(50);
+    private static final Duration FOREVER = Duration.ofMillis(Long.MAX_VALUE);
 
     private final Mono<Connection> connectionMono;
     private final GenericObjectPool<Channel> pool;
@@ -140,10 +149,36 @@ public class ReactorRabbitMQChannelPool implements ChannelPool, Startable {
         return Mono.fromCallable(this::borrow);
     }
 
-    private Channel borrow() throws Exception {
-        Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
-        Preconditions.checkArgument(channel.isOpen());
+    private Channel borrow() {
+        Channel channel = tryBorrowFromPool();
         borrowedChannels.add(channel);
+        return channel;
+    }
+
+    private Channel tryBorrowFromPool() {
+        return Mono.fromCallable(this::borrowFromPool)
+            .doOnError(throwable -> LOGGER.warn("Cannot borrow channel", throwable))
+            .retryBackoff(MAX_BORROW_RETRIES, MIN_BORROW_DELAY, FOREVER, Schedulers.elastic())
+            .onErrorMap(this::propagateException)
+            .subscribeOn(Schedulers.elastic())
+            .block();
+    }
+
+    private Throwable propagateException(Throwable throwable) {
+        if (throwable instanceof IllegalStateException
+            && throwable.getMessage().contains("Retries exhausted")) {
+            return throwable.getCause();
+        }
+
+        return throwable;
+    }
+
+    private Channel borrowFromPool() throws Exception {
+        Channel channel = pool.borrowObject(MAXIMUM_BORROW_TIMEOUT_IN_MS);
+        if (!channel.isOpen()) {
+            invalidateObject(channel);
+            throw new ChannelClosedException("borrowed channel is already closed");
+        }
         return channel;
     }
 

@@ -20,7 +20,6 @@
 package org.apache.james.backends.rabbitmq;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
@@ -32,7 +31,6 @@ import java.util.concurrent.ExecutionException;
 import org.apache.james.util.concurrency.ConcurrentTestRunner;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -110,22 +108,18 @@ class ReactorRabbitMQChannelPoolTest implements ChannelPoolContract {
         assertThat(channel.isOpen()).isFalse();
     }
 
-    @Disabled("IllegalArgumentException on channel state checks")
     @Test
     void channelBorrowShouldNotThrowWhenClosedChannel() throws Exception {
         ChannelPool channelPool = generateChannelPool(1);
         Channel channel = channelPool.getChannelMono().block();
-        returnChannel(channel, channelPool);
+        returnToThePool(channelPool, channel);
 
-        // unexpected closing, connection timeout, rabbitmq temporally down...
+        // unexpected closing, connection timeout, rabbitmq temporary down...
         channel.close();
 
-        assertThatCode(() -> channelPool.getChannelMono().block())
-            .doesNotThrowAnyException();
-    }
-
-    private void returnChannel(Channel channel, ChannelPool channelPool) {
-        channelPool.getChannelCloseHandler()
-            .accept(SignalType.ON_COMPLETE, channel);
+        assertThat(channelPool.getChannelMono()
+                .block()
+                .isOpen())
+            .isTrue();
     }
 }
