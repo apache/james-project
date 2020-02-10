@@ -35,7 +35,6 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 
-import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.jmap.draft.exceptions.DraftMessageMailboxUpdateException;
 import org.apache.james.jmap.draft.exceptions.InvalidOutboxMoveException;
@@ -64,6 +63,7 @@ import org.apache.james.mailbox.model.MessageMoves;
 import org.apache.james.mailbox.model.MessageResult;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.server.core.MailImpl;
 import org.apache.james.util.OptionalUtils;
 import org.slf4j.Logger;
@@ -87,6 +87,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
     private final MessageSender messageSender;
 
     private final ReferenceUpdater referenceUpdater;
+    private final CanSendFrom canSendFrom;
 
     @Inject
     @VisibleForTesting SetMessagesUpdateProcessor(
@@ -96,7 +97,8 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             Factory mailboxIdFactory,
             MessageSender messageSender,
             MetricFactory metricFactory,
-            ReferenceUpdater referenceUpdater) {
+            ReferenceUpdater referenceUpdater,
+            CanSendFrom canSendFrom) {
         this.updatePatchConverter = updatePatchConverter;
         this.messageIdManager = messageIdManager;
         this.systemMailboxesProvider = systemMailboxesProvider;
@@ -104,6 +106,7 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         this.metricFactory = metricFactory;
         this.messageSender = messageSender;
         this.referenceUpdater = referenceUpdater;
+        this.canSendFrom = canSendFrom;
     }
 
     @Override
@@ -180,7 +183,10 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
             if (maybeMessageToSend.isPresent()) {
                 MessageResult messageToSend = maybeMessageToSend.get();
                 MailImpl mail = buildMailFromMessage(messageToSend);
-                assertUserIsSender(mailboxSession, mail.getMaybeSender().asOptional());
+                Optional<Username> fromUser = mail.getMaybeSender()
+                    .asOptional()
+                    .map(Username::fromMailAddress);
+                assertUserCanSendFrom(mailboxSession.getUser(), fromUser);
                 messageSender.sendMessage(messageId, mail, mailboxSession);
                 referenceUpdater.updateReferences(messageToSend.getHeaders(), mailboxSession);
             } else {
@@ -189,12 +195,11 @@ public class SetMessagesUpdateProcessor implements SetMessagesProcessor {
         }
     }
 
-    private void assertUserIsSender(MailboxSession session, Optional<MailAddress> sender) throws MailboxSendingNotAllowedException {
-        boolean userIsSender = sender.map(address -> session.getUser().equals(Username.fromMailAddress(address)))
-            .orElse(false);
-
-        if (!userIsSender) {
-            String allowedSender = session.getUser().asString();
+    @VisibleForTesting
+    void assertUserCanSendFrom(Username connectedUser, Optional<Username> fromUser) throws MailboxSendingNotAllowedException {
+        if (!fromUser.filter(from -> canSendFrom.userCanSendFrom(connectedUser, from))
+            .isPresent()) {
+            String allowedSender = connectedUser.asString();
             throw new MailboxSendingNotAllowedException(allowedSender);
         }
     }

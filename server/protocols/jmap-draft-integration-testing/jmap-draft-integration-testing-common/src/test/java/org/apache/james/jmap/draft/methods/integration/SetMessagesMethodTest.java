@@ -2164,6 +2164,60 @@ public abstract class SetMessagesMethodTest {
     }
 
     @Test
+    public void setMessagesShouldSendMessageByMovingDraftToOutboxForAMailSentFromAnAlias() throws Exception {
+        dataProbe.addUserAliasMapping(Username.of(ALIAS_OF_USERNAME_MAIL).getLocalPart(), ALIAS_OF_USERNAME.getDomainPart().get().asString(), USERNAME.asString());
+
+        String draftCreationId = "creationId1337";
+        String fromAddress = USERNAME.asString();
+        String createDraft = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"create\": { \"" + draftCreationId  + "\" : {" +
+            "        \"from\": { \"name\": \"Me\", \"email\": \"" + ALIAS_OF_USERNAME.asString() + "\"}," +
+            "        \"to\": [{ \"name\": \"BOB\", \"email\": \"" + BOB.asString() + "\"}]," +
+            "        \"subject\": \"subject\"," +
+            "        \"keywords\": {\"$Draft\": true}," +
+            "        \"mailboxIds\": [\"" + getDraftId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        String draftId =
+            with()
+                .header("Authorization", accessToken.asString())
+                .body(createDraft)
+                .post("/jmap")
+            .then()
+                .extract()
+                .path(ARGUMENTS + ".created[\"" + draftCreationId + "\"].id");
+
+        String moveDraftToOutBox = "[" +
+            "  [" +
+            "    \"setMessages\"," +
+            "    {" +
+            "      \"update\": { \"" + draftId + "\" : {" +
+            "        \"keywords\": {}," +
+            "        \"mailboxIds\": [\"" + getOutboxId(accessToken) + "\"]" +
+            "      }}" +
+            "    }," +
+            "    \"#0\"" +
+            "  ]" +
+            "]";
+
+        with()
+            .header("Authorization", accessToken.asString())
+            .body(moveDraftToOutBox)
+            .post("/jmap");
+
+        calmlyAwait
+            .pollDelay(Duration.FIVE_HUNDRED_MILLISECONDS)
+            .atMost(30, TimeUnit.SECONDS).until(() -> isAnyMessageFoundInRecipientsMailboxes(bobAccessToken));
+    }
+
+    @Test
     public void setMessagesShouldRejectDraftCopyToOutbox() {
         String draftCreationId = "creationId1337";
         String fromAddress = USERNAME.asString();
