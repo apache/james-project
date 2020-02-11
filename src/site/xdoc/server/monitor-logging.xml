@@ -339,6 +339,90 @@ log4j.logger.james.domainlist=INFO, DOMAINLIST
   
   </section>
 
+    <section name="Guice products and logging">
+        <p>James Guice products uses a different logging library: <a href="http://logback.qos.ch/">logback</a>. Information about logback
+            configuration can be found <a href="http://logback.qos.ch/manual/configuration.html">here</a></p>
+
+        <p>Within James guice applications, we leverage the use of MDC in order to achieve structured logging, and better add context to the
+        logged information. We furthermore ship <a href="https://github.com/linagora/logback-elasticsearch-appender">Logback
+        Elasticsearch Appender</a> on the classpath to easily allow direct log indexation in
+        <a href="https://www.elastic.co/elasticsearch">ElasticSearch</a></p>
+
+        <ul>Here is a sample <b>conf/logback.xml</b> configuration file for logback with the following pre-requisites:
+            <li>Logging both in an unstructured fashion on the console and in a structure fashion in ElasticSearch</li>
+            <li>Logging ElasticSearch Log appender logs in the console</li>
+        </ul>
+
+        <source>
+            &lt;?xml version="1.0" encoding="UTF-8"?&gt;
+            &lt;configuration scan="true" scanPeriod="30 seconds"&gt;
+
+                &lt;contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"&gt;
+                    &lt;resetJUL&gt;true&lt;/resetJUL&gt;
+                &lt;/contextListener&gt;
+
+                &lt;appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender"&gt;
+                    &lt;encoder&gt;
+                        &lt;pattern&gt;%d{yyyy.MM.dd HH:mm:ss.SSS} %highlight([%-5level]) %logger{15} - %msg%n%rEx&lt;/pattern&gt;
+                        &lt;immediateFlush&gt;false&lt;/immediateFlush&gt;
+                    &lt;/encoder&gt;
+                &lt;/appender&gt;
+
+                &lt;appender name="ELASTIC" class="com.linagora.logback.elasticsearch.ElasticsearchAppender"&gt;
+                    &lt;url&gt;http://elasticsearch:9200/_bulk&lt;/url&gt;
+                    &lt;index&gt;logs-james-${NAMESPACE}-%date{yyyy.MM.dd}&lt;/index&gt;
+                    &lt;type&gt;tester&lt;/type&gt;
+                    &lt;includeMdc&gt;true&lt;/includeMdc&gt;
+                    &lt;excludedMdcKeys&gt;host&lt;/excludedMdcKeys&gt;
+                    &lt;errorLoggerName&gt;es-error-logger&lt;/errorLoggerName&gt;
+                    &lt;properties&gt;
+                        &lt;property&gt;
+                            &lt;name&gt;host&lt;/name&gt;
+                            &lt;value&gt;${HOSTNAME}&lt;/value&gt;
+                            &lt;allowEmpty&gt;false&lt;/allowEmpty&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                            &lt;name&gt;severity&lt;/name&gt;
+                            &lt;value&gt;%level&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                            &lt;name&gt;thread&lt;/name&gt;
+                            &lt;value&gt;%thread&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                            &lt;name&gt;stacktrace&lt;/name&gt;
+                            &lt;value&gt;%ex&lt;/value&gt;
+                        &lt;/property&gt;
+                        &lt;property&gt;
+                            &lt;name&gt;logger&lt;/name&gt;
+                            &lt;value&gt;%logger&lt;/value&gt;
+                        &lt;/property&gt;
+                    &lt;/properties&gt;
+                    &lt;headers&gt;
+                        &lt;header&gt;
+                            &lt;name&gt;Content-Type&lt;/name&gt;
+                            &lt;value&gt;application/json&lt;/value&gt;
+                        &lt;/header&gt;
+                    &lt;/headers&gt;
+                &lt;/appender&gt;
+
+                &lt;root level="WARN"&gt;
+                    &lt;appender-ref ref="CONSOLE" /&gt;
+                    &lt;appender-ref ref="ELASTIC" /&gt;
+                &lt;/root&gt;
+
+                &lt;logger name="es-error-logger" level="DEBUG" additivity="false"&gt;
+                    &lt;appender-ref ref="CONSOLE" /&gt;
+                &lt;/logger&gt;
+
+                &lt;logger name="org.apache.james" level="DEBUG" /&gt;
+
+            &lt;/configuration&gt;
+        </source>
+
+        <p>Then a <a href="https://www.elastic.co/kibana">Kibana</a> server can be setted up in order to display, search, filter logs, reusing directly
+            data in elasticSearch in the following indexes: <b>logs-james-${NAMESPACE}-%date{yyyy.MM.dd}</b></p>
+    </section>
 </body>
 
 </document>
