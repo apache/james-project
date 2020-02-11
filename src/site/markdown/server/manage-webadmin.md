@@ -360,14 +360,14 @@ Response codes:
 
 The kind of task scheduled depends on the action parameter. See below for details.
 
-### Recomputing JMAP fast message view projection
+### Recomputing Global JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
 
 Message fast view projection stores message properties expected to be fast to fetch but are actually expensive to compute,
 in order for GetMessages operation to be fast to execute for these properties.
 
-These projection items are asynchronously computed via a dedicated listener.
+These projection items are asynchronously computed on mailbox events.
 
 You can force the full projection recomputation by calling the following endpoint:
 
@@ -561,6 +561,7 @@ Warning: During the re-indexing, the result of search operations might be altere
  - [Listing user mailboxes](#Listing_user_mailboxes)
  - [Deleting_user_mailboxes](#Deleting_user_mailboxes)
  - [ReIndexing a user mails](#ReIndexing_a_user_mails)
+ - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
 
 ### Creating a mailbox
 
@@ -680,6 +681,43 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 
 Warning: While we have been trying to reduce the inconsistency window to a maximum (by keeping track of ongoing events),
 concurrent changes done during the reIndexing might be ignored.
+
+### Recomputing User JMAP fast message view projection
+
+This action is only available for backends supporting JMAP protocol.
+
+Message fast view projection stores message properties expected to be fast to fetch but are actually expensive to compute,
+in order for GetMessages operation to be fast to execute for these properties.
+
+These projection items are asynchronously computed on mailbox events.
+
+You can force the full projection recomputation by calling the following endpoint:
+
+```
+curl -XPOST /users/usernameToBeUsed/mailboxes?task=recomputeFastViewProjectionItems
+```
+
+Will schedule a task for recomputing the fast message view projection for all mailboxes of `usernameToBeUsed`.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+
+The scheduled task will have the following type `RecomputeAllPreviewsTask` and the following `additionalInformation`:
+
+```
+{
+  "type":"RecomputeAllPreviewsTask",
+  "username": "usernameToBeUsed",
+  "processedMessageCount": 3,
+  "failedMessageCount": 1
+}
+```
+
+Response codes:
+
+ - 201: Success. Corresponding task id is returned.
+ - 400: Error in the request. Details can be found in the reported error.
+ - 404: User not found.
 
 ## Administrating quotas by users
 
