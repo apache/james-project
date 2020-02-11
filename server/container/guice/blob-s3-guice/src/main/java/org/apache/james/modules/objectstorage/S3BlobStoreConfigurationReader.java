@@ -19,51 +19,34 @@
 
 package org.apache.james.modules.objectstorage;
 
-import java.io.FileNotFoundException;
-
-import javax.inject.Singleton;
+import java.util.Optional;
 
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.Region;
 import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
-import org.apache.james.modules.mailbox.ConfigurationComponent;
-import org.apache.james.utils.PropertiesProvider;
+import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provides;
+public class S3BlobStoreConfigurationReader {
 
-public class S3BlobStoreModule extends AbstractModule {
+    private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
+    private static final String OBJECTSTORAGE_BUCKET_PREFIX = "objectstorage.bucketPrefix";
+    private static final String OBJECTSTORAGE_S3_REGION = "objectstorage.s3.region";
 
-    @Provides
-    @Singleton
-    private S3BlobStoreConfiguration getObjectStorageConfiguration(PropertiesProvider propertiesProvider) throws ConfigurationException {
-        try {
-            Configuration configuration = propertiesProvider.getConfigurations(ConfigurationComponent.NAMES);
-            return S3BlobStoreConfigurationReader.from(configuration);
-        } catch (FileNotFoundException e) {
-            throw new ConfigurationException(ConfigurationComponent.NAME + " configuration was not found");
-        }
-    }
+    public static S3BlobStoreConfiguration from(Configuration configuration) throws ConfigurationException {
+        Optional<String> namespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE, null));
+        Optional<String> bucketPrefix = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_BUCKET_PREFIX, null));
+        Region region = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_REGION, null))
+            .map(Region::of)
+            .orElseThrow(() -> new ConfigurationException("require a region (" + OBJECTSTORAGE_S3_REGION + " key)"));
 
-    @Provides
-    @Singleton
-    private AwsS3AuthConfiguration awsS3AuthConfiguration(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getSpecificAuthConfiguration();
-    }
-
-    @Provides
-    @Singleton
-    private BucketName defaultBucket(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getNamespace().orElse(BucketName.DEFAULT);
-    }
-
-    @Provides
-    @Singleton
-    private Region region(S3BlobStoreConfiguration s3BlobStoreConfiguration) {
-        return s3BlobStoreConfiguration.getRegion();
+        return S3BlobStoreConfiguration.builder()
+            .authConfiguration(AwsS3ConfigurationReader.from(configuration))
+            .region(region)
+            .defaultBucketName(namespace.map(BucketName::of))
+            .bucketPrefix(bucketPrefix)
+            .build();
     }
 
 }

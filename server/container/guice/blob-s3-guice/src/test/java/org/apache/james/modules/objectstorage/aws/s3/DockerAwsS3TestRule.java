@@ -27,7 +27,7 @@ import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Container;
 import org.apache.james.blob.objectstorage.aws.DockerAwsS3Singleton;
 import org.apache.james.blob.objectstorage.aws.Region;
-import org.apache.james.modules.objectstorage.S3BlobConfiguration;
+import org.apache.james.blob.objectstorage.aws.S3BlobStoreConfiguration;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
@@ -67,7 +67,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             .build();
 
         Region region = DockerAwsS3Container.REGION;
-        S3BlobConfiguration configuration = S3BlobConfiguration.builder()
+        S3BlobStoreConfiguration configuration = S3BlobStoreConfiguration.builder()
             .authConfiguration(authConfiguration)
             .region(region)
             .defaultBucketName(defaultBucketName)
@@ -78,7 +78,7 @@ public class DockerAwsS3TestRule implements GuiceModuleTestRule {
             binder.bind(BucketName.class).toInstance(defaultBucketName);
             binder.bind(Region.class).toInstance(region);
             binder.bind(AwsS3AuthConfiguration.class).toInstance(authConfiguration);
-            binder.bind(S3BlobConfiguration.class).toInstance(configuration);
+            binder.bind(S3BlobStoreConfiguration.class).toInstance(configuration);
         };
     }
 

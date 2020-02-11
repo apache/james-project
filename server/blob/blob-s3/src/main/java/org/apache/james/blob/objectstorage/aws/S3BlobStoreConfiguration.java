@@ -17,47 +17,17 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.objectstorage;
+package org.apache.james.blob.objectstorage.aws;
 
 import java.util.Objects;
 import java.util.Optional;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.james.blob.api.BucketName;
-import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
-import org.apache.james.blob.objectstorage.aws.Region;
-import org.apache.james.modules.objectstorage.aws.s3.AwsS3ConfigurationReader;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.MoreObjects;
 
-public class S3BlobConfiguration {
-
-    private static final String OBJECTSTORAGE_NAMESPACE = "objectstorage.namespace";
-    private static final String OBJECTSTORAGE_BUCKET_PREFIX = "objectstorage.bucketPrefix";
-    private static final String OBJECTSTORAGE_S3_REGION = "objectstorage.s3.region";
-
-    static final String DEFAULT_BUCKET_PREFIX = "";
-
-    public static S3BlobConfiguration from(Configuration configuration) throws ConfigurationException {
-        Optional<String> namespace = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_NAMESPACE, null));
-        Optional<String> bucketPrefix = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_BUCKET_PREFIX, null));
-        Region region = Optional.ofNullable(configuration.getString(OBJECTSTORAGE_S3_REGION, null))
-            .map(Region::of)
-            .orElseThrow(() -> new ConfigurationException("require a region (" + OBJECTSTORAGE_S3_REGION + " key)"));
-
-        return builder()
-            .authConfiguration(authConfiguration(configuration))
-            .region(region)
-            .defaultBucketName(namespace.map(BucketName::of))
-            .bucketPrefix(bucketPrefix)
-            .build();
-    }
-
-    private static AwsS3AuthConfiguration authConfiguration(Configuration configuration) throws ConfigurationException {
-        return AwsS3ConfigurationReader.from(configuration);
-    }
+public class S3BlobStoreConfiguration {
 
     public static Builder.RequireAuthConfiguration builder() {
         return authConfiguration -> region -> new Builder.ReadyToBuild(authConfiguration, region);
@@ -110,8 +80,8 @@ public class S3BlobConfiguration {
                 return this;
             }
 
-            public S3BlobConfiguration build() {
-                return new S3BlobConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration);
+            public S3BlobStoreConfiguration build() {
+                return new S3BlobStoreConfiguration(bucketPrefix, defaultBucketName, region, specificAuthConfiguration);
             }
         }
 
@@ -123,10 +93,10 @@ public class S3BlobConfiguration {
     private final Optional<String> bucketPrefix;
 
     @VisibleForTesting
-    S3BlobConfiguration(Optional<String> bucketPrefix,
-                        Optional<BucketName> namespace,
-                        Region region,
-                        AwsS3AuthConfiguration specificAuthConfiguration) {
+    S3BlobStoreConfiguration(Optional<String> bucketPrefix,
+                             Optional<BucketName> namespace,
+                             Region region,
+                             AwsS3AuthConfiguration specificAuthConfiguration) {
         this.bucketPrefix = bucketPrefix;
         this.namespace = namespace;
         this.region = region;
@@ -151,8 +121,8 @@ public class S3BlobConfiguration {
 
     @Override
     public final boolean equals(Object o) {
-        if (o instanceof S3BlobConfiguration) {
-            S3BlobConfiguration that = (S3BlobConfiguration) o;
+        if (o instanceof S3BlobStoreConfiguration) {
+            S3BlobStoreConfiguration that = (S3BlobStoreConfiguration) o;
 
             return Objects.equals(this.namespace, that.namespace)
                 && Objects.equals(this.bucketPrefix, that.bucketPrefix)
