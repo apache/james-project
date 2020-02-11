@@ -94,9 +94,11 @@ Will return a list of healthChecks execution result, with an aggregated result:
 
 Supported health checks include:
  - **Cassandra backend**: Cassandra storage. Included in Cassandra Guice based products.
- - **JPA Backend**: JPA storage. Included in JPA Guice based products.
- - **RabbitMQ backend**: RabbitMQ messaging. Included in Distributed Guice based products.
+ - **ElasticSearch Backend**: ElasticSearch storage. Included in Cassandra Guice based products.
  - **Guice application lifecycle**: included in all Guice products.
+ - **JPA Backend**: JPA storage. Included in JPA Guice based products.
+ - **MessageFastViewProjection**: included in memory and Cassandra based Guice products.
+ - **RabbitMQ backend**: RabbitMQ messaging. Included in Distributed Guice based products.
 
 Response codes:
 
