@@ -19,34 +19,59 @@
 
 package org.apache.james.blob.cassandra.utils;
 
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import org.apache.commons.lang3.tuple.Pair;
 
 import com.google.common.base.Preconditions;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+
 public class DataChunker {
 
-    public Stream<Pair<Integer, ByteBuffer>> chunk(byte[] data, int chunkSize) {
+    private static final String CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE = "ChunkSize must be strictly positive";
+
+    public Flux<ByteBuffer> chunk(byte[] data, int chunkSize) {
         Preconditions.checkNotNull(data);
-        Preconditions.checkArgument(chunkSize > 0, "ChunkSize can not be negative");
+        Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
 
         int size = data.length;
         int fullChunkCount = size / chunkSize;
 
-        return Stream.concat(
-            IntStream.range(0, fullChunkCount)
-                .mapToObj(i -> Pair.of(i, ByteBuffer.wrap(data, i * chunkSize, chunkSize))),
+        return Flux.concat(
+            Flux.range(0, fullChunkCount)
+                .map(i -> ByteBuffer.wrap(data, i * chunkSize, chunkSize)),
             lastChunk(data, chunkSize * fullChunkCount, fullChunkCount));
     }
 
-    private Stream<Pair<Integer, ByteBuffer>> lastChunk(byte[] data, int offset, int index) {
+    private Mono<ByteBuffer> lastChunk(byte[] data, int offset, int index) {
         if (offset == data.length && index > 0) {
-            return Stream.empty();
+            return Mono.empty();
         }
-        return Stream.of(Pair.of(index, ByteBuffer.wrap(data, offset, data.length - offset)));
+        return Mono.just(ByteBuffer.wrap(data, offset, data.length - offset));
     }
 
+    public Flux<ByteBuffer> chunkStream(InputStream data, int chunkSize) {
+        Preconditions.checkNotNull(data);
+        Preconditions.checkArgument(chunkSize > 0, CHUNK_SIZE_MUST_BE_STRICTLY_POSITIVE);
+        BufferedInputStream bufferedInputStream = new BufferedInputStream(data);
+        return Flux
+            .<ByteBuffer>generate(sink -> {
+                try {
+                    byte[] buffer = new byte[chunkSize];
+
+                    int size = bufferedInputStream.read(buffer);
+                    if (size <= 0) {
+                        sink.complete();
+                    } else {
+                        sink.next(ByteBuffer.wrap(buffer, 0, size));
+                    }
+                } catch (IOException e) {
+                    sink.error(e);
+                }
+            })
+            .defaultIfEmpty(ByteBuffer.wrap(new byte[0]));
+    }
 }
