@@ -20,7 +20,6 @@
 package org.apache.james.blob.api;
 
 import java.util.Collection;
-import java.util.Objects;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.tuple.Pair;
@@ -35,33 +34,6 @@ public interface Store<T, I> {
     Mono<I> save(T t);
 
     Mono<T> read(I blobIds);
-
-    class BlobType {
-        private final String name;
-
-        public BlobType(String name) {
-            this.name = name;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public final boolean equals(Object o) {
-            if (o instanceof BlobType) {
-                BlobType blobType = (BlobType) o;
-
-                return Objects.equals(this.name, blobType.name);
-            }
-            return false;
-        }
-
-        @Override
-        public final int hashCode() {
-            return Objects.hash(name);
-        }
-    }
 
     class Impl<T, I extends BlobPartsId> implements Store<T, I> {
 
@@ -80,7 +52,7 @@ public interface Store<T, I> {
 
             @Override
             public Mono<BlobId> saveIn(BucketName bucketName, BlobStore blobStore) {
-                return blobStore.save(bucketName, bytes, storagePolicy);
+                return Mono.from(blobStore.save(bucketName, bytes, storagePolicy));
             }
         }
 
@@ -122,7 +94,7 @@ public interface Store<T, I> {
             return Flux.fromIterable(blobIds.asMap().entrySet())
                 .publishOn(Schedulers.elastic())
                 .flatMapSequential(
-                    entry -> blobStore.readBytes(blobStore.getDefaultBucketName(), entry.getValue())
+                    entry -> Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), entry.getValue()))
                         .zipWith(Mono.just(entry.getKey())))
                 .map(entry -> Pair.of(entry.getT2(), entry.getT1()))
                 .collectList()

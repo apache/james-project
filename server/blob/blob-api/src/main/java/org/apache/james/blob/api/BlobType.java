@@ -19,12 +19,31 @@
 
 package org.apache.james.blob.api;
 
-import java.util.Map;
+import java.util.Objects;
 
-public interface BlobPartsId {
-    interface Factory<I extends BlobPartsId> {
-        I generate(Map<BlobType, BlobId> map);
+public class BlobType {
+    private final String name;
+
+    public BlobType(String name) {
+        this.name = name;
     }
 
-    Map<BlobType, BlobId> asMap();
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (o instanceof BlobType) {
+            BlobType blobType = (BlobType) o;
+
+            return Objects.equals(this.name, blobType.name);
+        }
+        return false;
+    }
+
+    @Override
+    public final int hashCode() {
+        return Objects.hash(name);
+    }
 }

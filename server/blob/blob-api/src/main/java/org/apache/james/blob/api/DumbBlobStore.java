@@ -22,9 +22,9 @@ package org.apache.james.blob.api;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
-import com.google.common.io.ByteSource;
+import org.reactivestreams.Publisher;
 
-import reactor.core.publisher.Mono;
+import com.google.common.io.ByteSource;
 
 public interface DumbBlobStore {
 
@@ -44,7 +44,7 @@ public interface DumbBlobStore {
      *  an ObjectNotFoundException in its error channel when the blobId or the bucket is not found
      *  or an IOObjectStoreException when an unexpected IO error occurs
      */
-    Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId);
+    Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId);
 
 
     /**
@@ -55,26 +55,26 @@ public interface DumbBlobStore {
      * @return an empty Mono when the save succeed,
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Mono<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
+    Publisher<Void> save(BucketName bucketName, BlobId blobId, byte[] data);
 
     /**
      * @see #save(BucketName, BlobId, byte[])
      *
      * The InputStream should be closed after the call to this method
      */
-    Mono<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
+    Publisher<Void> save(BucketName bucketName, BlobId blobId, InputStream inputStream);
 
     /**
      * @see #save(BucketName, BlobId, byte[])
      */
-    Mono<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
+    Publisher<Void> save(BucketName bucketName, BlobId blobId, ByteSource content);
 
     /**
      * @see #save(BucketName, BlobId, byte[])
      *
      * The String is stored as UTF-8.
      */
-    default Mono<Void> save(BucketName bucketName, BlobId blobId, String data) {
+    default Publisher<Void> save(BucketName bucketName, BlobId blobId, String data) {
         return save(bucketName, blobId, data.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -86,7 +86,7 @@ public interface DumbBlobStore {
      * (either the blob doesn't exist in the bucket or the bucket itself doesn't exist)
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Mono<Void> delete(BucketName bucketName, BlobId blobId);
+    Publisher<Void> delete(BucketName bucketName, BlobId blobId);
 
     /**
      * Remove a bucket based on its BucketName
@@ -95,8 +95,8 @@ public interface DumbBlobStore {
      * Saving or reading blobs concurrently of bucket deletion can lead
      * to an inconsistent state.
      *
-     * @return a successful Mono if the bucket is deleted or did not exist
+     * @return a successful Publisher if the bucket is deleted or did not exist
      *  otherwise an IOObjectStoreException in its error channel
      */
-    Mono<Void> deleteBucket(BucketName bucketName);
+    Publisher<Void> deleteBucket(BucketName bucketName);
 }

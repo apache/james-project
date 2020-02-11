@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,16 +15,18 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
-package org.apache.james.util;
+ ***************************************************************/
 
-import com.ibm.icu.text.UnicodeSet;
+package org.apache.james.blob.api;
 
-public class UnicodeSetUtils {
+import org.junit.jupiter.api.Test;
 
-    private static final String LETTER_OR_DIGIT_PATTERN = "[[a-z][A-Z][0-9]]";
+import nl.jqno.equalsverifier.EqualsVerifier;
 
-    public static UnicodeSet letterOrDigitUnicodeSet() {
-        return new UnicodeSet(LETTER_OR_DIGIT_PATTERN);
+class BlobTypeTest {
+
+    @Test
+    void shouldRespectBeanContract() {
+        EqualsVerifier.forClass(BlobType.class).verify();
     }
 }

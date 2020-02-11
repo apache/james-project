@@ -98,7 +98,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<Void> appendMessage(DeletedMessage deletedMessage, InputStream mimeMessage, BucketName bucketName) {
-        return blobStore.save(bucketName, mimeMessage, LOW_COST)
+        return Mono.from(blobStore.save(bucketName, mimeMessage, LOW_COST))
             .map(blobId -> StorageInformation.builder()
                 .bucketName(bucketName)
                 .blobId(blobId))
@@ -156,7 +156,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
         return Mono.from(messageMetadataVault.retrieveStorageInformation(username, messageId))
             .flatMap(storageInformation -> Mono.from(messageMetadataVault.remove(storageInformation.getBucketName(), username, messageId))
                 .thenReturn(storageInformation))
-            .flatMap(storageInformation -> blobStore.delete(storageInformation.getBucketName(), storageInformation.getBlobId()))
+            .flatMap(storageInformation -> Mono.from(blobStore.delete(storageInformation.getBucketName(), storageInformation.getBlobId())))
             .subscribeOn(Schedulers.elastic());
     }
 
@@ -167,10 +167,11 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
 
 
     Flux<BucketName> deleteExpiredMessages(ZonedDateTime beginningOfRetentionPeriod) {
-        return metricFactory.runPublishingTimerMetric(
-            DELETE_EXPIRED_MESSAGES_METRIC_NAME,
-            retentionQualifiedBuckets(beginningOfRetentionPeriod)
-                .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName))));
+        return Flux.from(
+            metricFactory.runPublishingTimerMetric(
+                DELETE_EXPIRED_MESSAGES_METRIC_NAME,
+                retentionQualifiedBuckets(beginningOfRetentionPeriod)
+                    .flatMap(bucketName -> deleteBucketData(bucketName).then(Mono.just(bucketName)))));
 
     }
 
@@ -196,7 +197,7 @@ public class BlobStoreDeletedMessageVault implements DeletedMessageVault {
     }
 
     private Mono<Void> deleteBucketData(BucketName bucketName) {
-        return blobStore.deleteBucket(bucketName)
+        return Mono.from(blobStore.deleteBucket(bucketName))
             .then(Mono.from(messageMetadataVault.removeMetadataRelatedToBucket(bucketName)));
     }
 }

@@ -22,7 +22,6 @@ package org.apache.james.mailbox.model;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.util.UnicodeSetUtils;
 
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -33,7 +32,7 @@ public class MailboxAnnotationKey {
     public static final String SLASH_CHARACTER = "/";
     public static final String TWO_SLASH_CHARACTER = "//";
 
-    private static final UnicodeSet NAME_ANNOTATION_PATTERN = UnicodeSetUtils.letterOrDigitUnicodeSet()
+    private static final UnicodeSet NAME_ANNOTATION_PATTERN = new UnicodeSet("[[a-z][A-Z][0-9]]")
             .add(SLASH_CHARACTER)
             .freeze();
     public static final int MINIMUM_COMPONENTS = 2;

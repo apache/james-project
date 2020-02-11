@@ -21,8 +21,11 @@ package org.apache.james.metrics.logger;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import reactor.core.publisher.Flux;
 
 public class DefaultMetricFactory implements MetricFactory {
 
@@ -36,6 +39,12 @@ public class DefaultMetricFactory implements MetricFactory {
     @Override
     public TimeMetric timer(String name) {
         return new DefaultTimeMetric(name);
+    }
+
+    @Override
+    public <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher) {
+        TimeMetric timer = timer(name);
+        return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
     }
 
 }

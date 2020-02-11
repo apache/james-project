@@ -37,6 +37,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import com.google.common.base.Strings;
 
+import reactor.core.publisher.Mono;
+
 public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobStoreContract {
 
     static Stream<Arguments> storagePolicies() {
@@ -62,7 +64,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (byte[]) null, storagePolicy).block())
+        assertThatThrownBy(() -> Mono.from(store.save(defaultBucketName, (byte[]) null, storagePolicy)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -72,7 +74,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (String) null, storagePolicy).block())
+        assertThatThrownBy(() -> Mono.from(store.save(defaultBucketName, (String) null, storagePolicy)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -82,7 +84,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.save(defaultBucketName, (InputStream) null, storagePolicy).block())
+        assertThatThrownBy(() -> Mono.from(store.save(defaultBucketName, (InputStream) null, storagePolicy)).block())
             .isInstanceOf(NullPointerException.class);
     }
 
@@ -92,9 +94,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, EMPTY_BYTEARRAY, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, EMPTY_BYTEARRAY, storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -105,9 +107,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new String(), storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, new String(), storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -118,9 +120,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(EMPTY_BYTEARRAY), storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(EMPTY_BYTEARRAY), storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEmpty();
     }
@@ -131,7 +133,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
@@ -142,7 +144,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_STRING, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_STRING, storagePolicy)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
@@ -153,7 +155,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, new ByteArrayInputStream(SHORT_BYTEARRAY), storagePolicy)).block();
 
         assertThat(blobId).isEqualTo(blobIdFactory().from("31f7a65e315586ac198bd798b6629ce4903d0899476d5741a9f32e2e521b6a66"));
     }
@@ -163,7 +165,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        assertThatThrownBy(() -> store.readBytes(defaultBucketName, blobIdFactory().from("unknown")).block())
+        assertThatThrownBy(() -> Mono.from(store.readBytes(defaultBucketName, blobIdFactory().from("unknown"))).block())
             .isExactlyInstanceOf(ObjectNotFoundException.class);
     }
 
@@ -173,9 +175,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(bytes).isEqualTo(SHORT_BYTEARRAY);
     }
@@ -186,9 +188,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(bytes).isEqualTo(ELEVEN_KILOBYTES);
     }
@@ -199,9 +201,9 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy)).block();
 
-        byte[] bytes = store.readBytes(defaultBucketName, blobId).block();
+        byte[] bytes = Mono.from(store.readBytes(defaultBucketName, blobId)).block();
 
         assertThat(bytes).isEqualTo(TWELVE_MEGABYTES);
     }
@@ -221,7 +223,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, SHORT_BYTEARRAY, storagePolicy)).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 
@@ -234,7 +236,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BlobStore store = testee();
         BucketName defaultBucketName = store.getDefaultBucketName();
 
-        BlobId blobId = store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, ELEVEN_KILOBYTES, storagePolicy)).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 
@@ -248,7 +250,7 @@ public interface BlobStoreContract extends DeleteBlobStoreContract, BucketBlobSt
         BucketName defaultBucketName = store.getDefaultBucketName();
 
         // 12 MB of text
-        BlobId blobId = store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy).block();
+        BlobId blobId = Mono.from(store.save(defaultBucketName, TWELVE_MEGABYTES, storagePolicy)).block();
 
         InputStream read = store.read(defaultBucketName, blobId);
 

@@ -24,8 +24,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import org.apache.james.metrics.api.MetricFactory;
-
-import reactor.core.publisher.Mono;
+import org.reactivestreams.Publisher;
 
 public class MetricableBlobStore implements BlobStore {
 
@@ -50,21 +49,18 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
-        return metricFactory
-            .runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    public Publisher<BlobId> save(BucketName bucketName, byte[] data, StoragePolicy storagePolicy) {
+        return metricFactory.runPublishingTimerMetric(SAVE_BYTES_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override
-    public Mono<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
-        return metricFactory
-            .runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
+    public Publisher<BlobId> save(BucketName bucketName, InputStream data, StoragePolicy storagePolicy) {
+        return metricFactory.runPublishingTimerMetric(SAVE_INPUT_STREAM_TIMER_NAME, blobStoreImpl.save(bucketName, data, storagePolicy));
     }
 
     @Override
-    public Mono<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
-        return metricFactory
-            .runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
+    public Publisher<byte[]> readBytes(BucketName bucketName, BlobId blobId) {
+        return metricFactory.runPublishingTimerMetric(READ_BYTES_TIMER_NAME, blobStoreImpl.readBytes(bucketName, blobId));
     }
 
     @Override
@@ -74,9 +70,8 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<Void> deleteBucket(BucketName bucketName) {
-        return metricFactory
-            .runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
+    public Publisher<Void> deleteBucket(BucketName bucketName) {
+        return metricFactory.runPublishingTimerMetric(DELETE_BUCKET_TIMER_NAME, blobStoreImpl.deleteBucket(bucketName));
     }
 
     @Override
@@ -85,8 +80,8 @@ public class MetricableBlobStore implements BlobStore {
     }
 
     @Override
-    public Mono<Void> delete(BucketName bucketName, BlobId blobId) {
-        return metricFactory
-            .runPublishingTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
+    public Publisher<Void> delete(BucketName bucketName, BlobId blobId) {
+        return metricFactory.runPublishingTimerMetric(DELETE_TIMER_NAME, blobStoreImpl.delete(bucketName, blobId));
     }
+
 }

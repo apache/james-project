@@ -81,7 +81,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     private Mono<Attachment> retrievePayload(DAOAttachment daoAttachment) {
-        return blobStore.readBytes(blobStore.getDefaultBucketName(), daoAttachment.getBlobId())
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), daoAttachment.getBlobId()))
             .map(daoAttachment::toAttachment);
     }
 
@@ -112,7 +112,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     @Override
     public void storeAttachmentForOwner(Attachment attachment, Username owner) throws MailboxException {
         ownerDAO.addOwner(attachment.getAttachmentId(), owner)
-            .then(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST))
+            .then(Mono.from(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST)))
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(attachmentDAOV2::storeAttachment)
             .block();
@@ -139,7 +139,7 @@ public class CassandraAttachmentMapper implements AttachmentMapper {
     }
 
     public Mono<Void> storeAttachmentAsync(Attachment attachment, MessageId ownerMessageId) {
-        return blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST)
+        return Mono.from(blobStore.save(blobStore.getDefaultBucketName(), attachment.getBytes(), LOW_COST))
             .map(blobId -> CassandraAttachmentDAOV2.from(attachment, blobId))
             .flatMap(daoAttachment -> storeAttachmentWithIndex(daoAttachment, ownerMessageId));
     }

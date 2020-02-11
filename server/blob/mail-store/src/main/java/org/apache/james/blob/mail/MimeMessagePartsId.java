@@ -24,7 +24,7 @@ import java.util.Objects;
 
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BlobPartsId;
-import org.apache.james.blob.api.Store;
+import org.apache.james.blob.api.BlobType;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
@@ -63,7 +63,7 @@ public class MimeMessagePartsId implements BlobPartsId {
 
     public static class Factory implements BlobPartsId.Factory<MimeMessagePartsId> {
         @Override
-        public MimeMessagePartsId generate(Map<Store.BlobType, BlobId> map) {
+        public MimeMessagePartsId generate(Map<BlobType, BlobId> map) {
             Preconditions.checkArgument(map.keySet().contains(HEADER_BLOB_TYPE), "Expecting 'mailHeader' blobId to be specified");
             Preconditions.checkArgument(map.keySet().contains(BODY_BLOB_TYPE), "Expecting 'mailBody' blobId to be specified");
             Preconditions.checkArgument(map.size() == 2, "blobId other than 'mailHeader' or 'mailBody' are not supported");
@@ -75,8 +75,8 @@ public class MimeMessagePartsId implements BlobPartsId {
         }
     }
 
-    static final Store.BlobType HEADER_BLOB_TYPE = new Store.BlobType("mailHeader");
-    static final Store.BlobType BODY_BLOB_TYPE = new Store.BlobType("mailBody");
+    static final BlobType HEADER_BLOB_TYPE = new BlobType("mailHeader");
+    static final BlobType BODY_BLOB_TYPE = new BlobType("mailBody");
 
     private final BlobId headerBlobId;
     private final BlobId bodyBlobId;
@@ -87,7 +87,7 @@ public class MimeMessagePartsId implements BlobPartsId {
     }
 
     @Override
-    public Map<Store.BlobType, BlobId> asMap() {
+    public Map<BlobType, BlobId> asMap() {
         return ImmutableMap.of(
             HEADER_BLOB_TYPE, headerBlobId,
             BODY_BLOB_TYPE, bodyBlobId);

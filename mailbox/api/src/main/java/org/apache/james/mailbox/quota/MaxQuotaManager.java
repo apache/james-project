@@ -20,7 +20,10 @@
 package org.apache.james.mailbox.quota;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import org.apache.james.core.Domain;
 import org.apache.james.core.quota.QuotaCountLimit;
@@ -29,7 +32,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Quota;
 import org.apache.james.mailbox.model.Quota.Scope;
 import org.apache.james.mailbox.model.QuotaRoot;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 
@@ -121,10 +123,11 @@ public interface MaxQuotaManager {
     }
 
     default Optional<QuotaSizeLimit> getMaxStorage(Map<Quota.Scope, QuotaSizeLimit> maxStorageDetails) {
-        return OptionalUtils.or(
-            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.User)),
-            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.Domain)),
-            Optional.ofNullable(maxStorageDetails.get(Quota.Scope.Global)));
+        return Quota.allScopes()
+            .stream()
+            .map(maxStorageDetails::get)
+            .filter(Objects::nonNull)
+            .findFirst();
     }
 
     /**
@@ -139,10 +142,10 @@ public interface MaxQuotaManager {
     }
 
     default Optional<QuotaCountLimit> getMaxMessage(Map<Quota.Scope, QuotaCountLimit> maxMessagesDetails) {
-        return OptionalUtils.or(
-            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.User)),
-            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.Domain)),
-            Optional.ofNullable(maxMessagesDetails.get(Quota.Scope.Global)));
+        return Stream.of(Quota.Scope.User, Quota.Scope.Domain, Quota.Scope.Global)
+            .map(maxMessagesDetails::get)
+            .filter(Objects::nonNull)
+            .findFirst();
     }
 
     Map<Quota.Scope, QuotaCountLimit> listMaxMessagesDetails(QuotaRoot quotaRoot);
@@ -162,14 +165,22 @@ public interface MaxQuotaManager {
     void removeDomainMaxStorage(Domain domain) throws MailboxException;
 
     default Optional<QuotaCountLimit> getComputedMaxMessage(Domain domain) throws MailboxException {
-        return OptionalUtils.orSuppliers(
-            Throwing.supplier(() -> getDomainMaxMessage(domain)).sneakyThrow(),
-            Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow());
+        return Stream.of(
+                Throwing.supplier(() -> getDomainMaxMessage(domain)).sneakyThrow(),
+                Throwing.supplier(this::getGlobalMaxMessage).sneakyThrow())
+            .map(Supplier::get)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst();
     }
 
     default Optional<QuotaSizeLimit> getComputedMaxStorage(Domain domain) throws MailboxException {
-        return OptionalUtils.orSuppliers(
-            Throwing.supplier(() -> getDomainMaxStorage(domain)).sneakyThrow(),
-            Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow());
+        return Stream.of(
+                Throwing.supplier(() -> getDomainMaxStorage(domain)).sneakyThrow(),
+                Throwing.supplier(this::getGlobalMaxStorage).sneakyThrow())
+            .map(Supplier::get)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst();
     }
 }

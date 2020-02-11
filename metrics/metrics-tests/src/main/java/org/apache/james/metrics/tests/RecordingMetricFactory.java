@@ -28,11 +28,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.reactivestreams.Publisher;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
+
+import reactor.core.publisher.Flux;
 
 public class RecordingMetricFactory implements MetricFactory {
     private final Multimap<String, Duration> executionTimes = Multimaps.synchronizedListMultimap(ArrayListMultimap.create());
@@ -54,6 +57,12 @@ public class RecordingMetricFactory implements MetricFactory {
                 executionTimes.put(name, executionTime);
             }
         });
+    }
+
+    @Override
+    public <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher) {
+        TimeMetric timer = timer(name);
+        return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
     }
 
     public Collection<Duration> executionTimesFor(String name) {

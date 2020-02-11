@@ -27,9 +27,12 @@ import org.apache.james.lifecycle.api.Startable;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.metrics.api.TimeMetric;
+import org.reactivestreams.Publisher;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.jmx.JmxReporter;
+
+import reactor.core.publisher.Flux;
 
 public class DropWizardMetricFactory implements MetricFactory, Startable {
 
@@ -51,6 +54,12 @@ public class DropWizardMetricFactory implements MetricFactory, Startable {
     @Override
     public TimeMetric timer(String name) {
         return new DropWizardTimeMetric(name, metricRegistry.timer(name).time());
+    }
+
+    @Override
+    public <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher) {
+        TimeMetric timer = timer(name);
+        return Flux.from(publisher).doOnComplete(timer::stopAndPublish);
     }
 
     @PostConstruct

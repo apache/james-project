@@ -21,8 +21,7 @@ package org.apache.james.metrics.api;
 
 import java.util.function.Supplier;
 
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.reactivestreams.Publisher;
 
 public interface MetricFactory {
 
@@ -39,15 +38,7 @@ public interface MetricFactory {
         }
     }
 
-    default <T> Mono<T> runPublishingTimerMetric(String name, Mono<T> mono) {
-        TimeMetric timer = timer(name);
-        return mono.doOnSuccess(success -> timer.stopAndPublish());
-    }
-
-    default <T> Flux<T> runPublishingTimerMetric(String name, Flux<T> flux) {
-        TimeMetric timer = timer(name);
-        return flux.doOnComplete(timer::stopAndPublish);
-    }
+    <T> Publisher<T> runPublishingTimerMetric(String name, Publisher<T> publisher);
 
     default void runPublishingTimerMetric(String name, Runnable runnable) {
         runPublishingTimerMetric(name, () -> {

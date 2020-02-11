@@ -184,8 +184,8 @@ public class CassandraMessageDAO {
             byte[] headerContent = IOUtils.toByteArray(message.getHeaderContent());
             byte[] bodyContent = IOUtils.toByteArray(message.getBodyContent());
 
-            Mono<BlobId> bodyFuture = blobStore.save(blobStore.getDefaultBucketName(), bodyContent, LOW_COST);
-            Mono<BlobId> headerFuture = blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED);
+            Mono<BlobId> bodyFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), bodyContent, LOW_COST));
+            Mono<BlobId> headerFuture = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), headerContent, SIZE_BASED));
 
             return headerFuture.zipWith(bodyFuture);
         } catch (IOException e) {
@@ -365,7 +365,7 @@ public class CassandraMessageDAO {
     }
 
     private Mono<byte[]> getFieldContent(String field, Row row) {
-        return blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field)));
+        return Mono.from(blobStore.readBytes(blobStore.getDefaultBucketName(), blobIdFactory.from(row.getString(field))));
     }
 
     public static MessageResult notFound(ComposedMessageIdWithMetaData id) {

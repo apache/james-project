@@ -89,9 +89,9 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     @Test
     void readBytesShouldReturnSplitSavedDataByChunk() {
         String longString = Strings.repeat("0123456789\n", MULTIPLE_CHUNK_SIZE);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
+        BlobId blobId = Mono.from(testee.save(testee.getDefaultBucketName(), longString, LOW_COST)).block();
 
-        byte[] bytes = testee.readBytes(testee.getDefaultBucketName(), blobId).block();
+        byte[] bytes = Mono.from(testee.readBytes(testee.getDefaultBucketName(), blobId)).block();
 
         assertThat(new String(bytes, StandardCharsets.UTF_8)).isEqualTo(longString);
     }
@@ -100,11 +100,11 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void readBytesShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
+        BlobId blobId = Mono.from(testee.save(testee.getDefaultBucketName(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
 
-        assertThatThrownBy(() -> testee.readBytes(testee.getDefaultBucketName(), blobId).block())
+        assertThatThrownBy(() -> Mono.from(testee.readBytes(testee.getDefaultBucketName(), blobId)).block())
             .isInstanceOf(ObjectStoreException.class)
             .hasMessageContaining("Missing blob part for blobId");
     }
@@ -113,7 +113,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void readShouldNotReturnInvalidResultsWhenPartialDataPresent() {
         int repeatCount = MULTIPLE_CHUNK_SIZE * CHUNK_SIZE;
         String longString = Strings.repeat("0123456789\n", repeatCount);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), longString, LOW_COST).block();
+        BlobId blobId = Mono.from(testee.save(testee.getDefaultBucketName(), longString, LOW_COST)).block();
 
         when(defaultBucketDAO.readPart(blobId, 1)).thenReturn(Mono.empty());
 
@@ -133,7 +133,7 @@ public class CassandraBlobStoreTest implements MetricableBlobStoreContract {
     void blobStoreShouldSupport100MBBlob() throws IOException {
         ZeroedInputStream data = new ZeroedInputStream(100_000_000);
         HashingInputStream writeHash = new HashingInputStream(Hashing.sha256(), data);
-        BlobId blobId = testee.save(testee.getDefaultBucketName(), writeHash, LOW_COST).block();
+        BlobId blobId = Mono.from(testee.save(testee.getDefaultBucketName(), writeHash, LOW_COST)).block();
 
         InputStream bytes = testee.read(testee.getDefaultBucketName(), blobId);
         HashingInputStream readHash = new HashingInputStream(Hashing.sha256(), bytes);

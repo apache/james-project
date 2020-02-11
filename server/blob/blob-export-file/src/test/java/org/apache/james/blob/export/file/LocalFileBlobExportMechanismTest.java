@@ -55,6 +55,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
+import reactor.core.publisher.Mono;
 
 @ExtendWith(FileSystemExtension.class)
 class LocalFileBlobExportMechanismTest {
@@ -81,7 +82,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldSendAMail() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         String explanation = "The content of a deleted message vault had been shared with you.";
         testee.blobId(blobId)
@@ -114,7 +115,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithTheCorrespondingContent(FileSystem fileSystem) {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -152,7 +153,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithoutExtensionWhenNotDeclaringExtension() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -176,7 +177,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithExtensionWhenDeclaringExtension() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
 
         testee.blobId(blobId)
             .with(MailAddressFixture.RECIPIENT1)
@@ -201,7 +202,7 @@ class LocalFileBlobExportMechanismTest {
 
     @Test
     void exportingBlobShouldCreateAFileWithPrefixWhenDeclaringPrefix() {
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), BLOB_CONTENT, LOW_COST)).block();
         String filePrefix = "deleted-message-of-bob@james.org";
 
         testee.blobId(blobId)

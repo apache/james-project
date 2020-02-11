@@ -29,6 +29,8 @@ import org.apache.commons.io.IOUtils;
 import org.apache.james.blob.api.BlobId;
 import org.apache.james.blob.api.BucketName;
 
+import reactor.core.publisher.Mono;
+
 
 public interface ObjectStorageBlobStoreContract {
 
@@ -39,7 +41,7 @@ public interface ObjectStorageBlobStoreContract {
     default void assertBlobStoreCanStoreAndRetrieve(ObjectStorageBlobStoreBuilder.ReadyToBuild builder) {
         ObjectStorageBlobStore blobStore = builder.build();
 
-        BlobId blobId = blobStore.save(blobStore.getDefaultBucketName(), CONTENT, LOW_COST).block();
+        BlobId blobId = Mono.from(blobStore.save(blobStore.getDefaultBucketName(), CONTENT, LOW_COST)).block();
 
         InputStream inputStream = blobStore.read(blobStore.getDefaultBucketName(), blobId);
         assertThat(inputStream).hasSameContentAs(IOUtils.toInputStream(CONTENT, StandardCharsets.UTF_8));

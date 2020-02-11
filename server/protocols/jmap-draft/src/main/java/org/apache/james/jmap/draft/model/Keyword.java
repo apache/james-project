@@ -24,7 +24,6 @@ import java.util.Optional;
 import javax.mail.Flags;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.james.util.UnicodeSetUtils;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
@@ -36,11 +35,11 @@ public class Keyword {
     private static final int FLAG_NAME_MIN_LENGTH = 1;
     private static final int FLAG_NAME_MAX_LENGTH = 255;
     private static final UnicodeSet FLAG_NAME_PATTERN =
-            UnicodeSetUtils.letterOrDigitUnicodeSet()
-                .add('$')
-                .add('_')
-                .add('-')
-                .freeze();
+        new UnicodeSet("[[a-z][A-Z][0-9]]")
+            .add('$')
+            .add('_')
+            .add('-')
+            .freeze();
 
     public static final Keyword DRAFT = Keyword.of("$Draft");
     public static final Keyword SEEN = Keyword.of("$Seen");
