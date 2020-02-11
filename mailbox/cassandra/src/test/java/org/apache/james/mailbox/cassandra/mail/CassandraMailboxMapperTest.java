@@ -142,6 +142,25 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
+        void createShouldBeConsistentWhenFailToPersistMailbox() {
+            doReturn(Mono.error(new RuntimeException("mock exception")))
+                .when(mailboxDAO)
+                .save(inbox);
+
+            inbox.setMailboxId(null);
+            doQuietly(() -> testee.create(inbox));
+
+            SoftAssertions.assertSoftly(softly -> {
+                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPath))
+                    .isInstanceOf(MailboxNotFoundException.class);
+                softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
+                    .isEmpty();
+                softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
+                    .isEmpty();
+            });
+        }
+
+        @Test
         void saveOnCreateShouldBeConsistentWhenFailToPersistMailbox() {
             doReturn(Mono.error(new RuntimeException("mock exception")))
                 .when(mailboxDAO)
@@ -328,6 +347,33 @@ class CassandraMailboxMapperTest {
 
             assertThat(testee.findMailboxById(newId).getName())
                 .isNotEqualTo(testee.findMailboxById(inboxId).getName());
+        }
+
+        @Disabled("JAMES-3057 org.apache.james.mailbox.exception.MailboxNotFoundException: INBOX can not be found")
+        @Test
+        void createAfterPreviousFailedCreateShouldCreateAMailbox() {
+            when(mailboxDAO.save(inbox))
+                .thenReturn(Mono.error(new RuntimeException("mock exception")))
+                .thenCallRealMethod();
+
+            inbox.setMailboxId(null);
+            doQuietly(() -> testee.create(inbox));
+            inbox.setMailboxId(null);
+            doQuietly(() -> testee.create(inbox));
+
+            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
+                softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
+                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
+                softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
+                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
+            }));
         }
 
         @Disabled("JAMES-3056 org.apache.james.mailbox.exception.MailboxNotFoundException: 'mailboxId' can not be found")

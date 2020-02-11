@@ -46,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import reactor.core.publisher.Flux;
@@ -163,6 +164,29 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return retrieveMailbox(idAndPath.getCassandraId())
             .switchIfEmpty(ReactorUtils.executeAndEmpty(
                 () -> LOGGER.warn("Could not retrieve mailbox {} with path {} in mailbox table.", idAndPath.getCassandraId(), idAndPath.getMailboxPath())));
+    }
+
+    @Override
+    public MailboxId create(Mailbox mailbox) throws MailboxException {
+        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
+
+        CassandraId cassandraId = CassandraId.timeBased();
+        mailbox.setMailboxId(cassandraId);
+        if (!tryCreate(mailbox, cassandraId).block()) {
+            throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
+        }
+        return cassandraId;
+    }
+
+    private Mono<Boolean> tryCreate(Mailbox cassandraMailbox, CassandraId cassandraId) {
+        return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
+            .flatMap(isCreated -> {
+                if (isCreated) {
+                    return mailboxDAO.save(cassandraMailbox)
+                        .thenReturn(isCreated);
+                }
+                return Mono.just(isCreated);
+            });
     }
 
     @Override

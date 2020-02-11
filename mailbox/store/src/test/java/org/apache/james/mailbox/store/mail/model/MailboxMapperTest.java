@@ -92,8 +92,8 @@ public abstract class MailboxMapperTest {
         benwaInboxMailbox.setMailboxId(null);
         mailboxMapper.create(benwaInboxMailbox);
 
-        MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
-        MailboxAssert.assertThat(mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())).isEqualTo(benwaInboxMailbox);
+        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
+        assertThat(mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())).isEqualTo(benwaInboxMailbox);
     }
 
     @Test
