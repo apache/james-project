@@ -146,6 +146,7 @@
                         <item name="Command line" href="/server/manage-cli.html" />
                         <item name="Metrics" href="/server/metrics.html" />
                         <item name="WebAdmin" href="/server/manage-webadmin.html" />
+                        <item name="Distributed James" href="/server/manage-guice-distributed-james.html" />
                     </item>
                     <item name="6. Monitor" href="/server/monitor.html" collapse="true" >
                         <item name="Folders" href="/server/monitor-folders.html" />
