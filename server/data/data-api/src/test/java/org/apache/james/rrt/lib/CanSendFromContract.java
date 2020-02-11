@@ -23,6 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
+
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public interface CanSendFromContract {
@@ -41,33 +43,32 @@ public interface CanSendFromContract {
 
     void addGroupMapping(String group, Username user) throws Exception;
 
-
     @Test
-    default void assertUserCanSendFromShouldBeFalseWhenSenderIsNotTheUser() {
+    default void userCanSendFromShouldBeFalseWhenSenderIsNotTheUser() {
         assertThat(canSendFrom().userCanSendFrom(USER, OTHER_USER)).isFalse();
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeTrueWhenSenderIsTheUser() {
+    default void userCanSendFromShouldBeTrueWhenSenderIsTheUser() {
         assertThat(canSendFrom().userCanSendFrom(USER, USER)).isTrue();
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeFalseWhenSenderIsAnAliasOfAnotherUser() throws Exception {
+    default void userCanSendFromShouldBeFalseWhenSenderIsAnAliasOfAnotherUser() throws Exception {
         addAliasMapping(USER_ALIAS, OTHER_USER);
 
         assertThat(canSendFrom().userCanSendFrom(USER, USER_ALIAS)).isFalse();
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeTrueWhenSenderIsAnAliasOfTheUser() throws Exception {
+    default void userCanSendFromShouldBeTrueWhenSenderIsAnAliasOfTheUser() throws Exception {
         addAliasMapping(USER_ALIAS, USER);
 
         assertThat(canSendFrom().userCanSendFrom(USER, USER_ALIAS)).isTrue();
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeTrueWhenSenderIsAnAliasOfAnAliasOfTheUser() throws Exception {
+    default void userCanSendFromShouldBeTrueWhenSenderIsAnAliasOfAnAliasOfTheUser() throws Exception {
         Username userAliasBis = Username.of("aliasbis@" + DOMAIN.asString());
         addAliasMapping(userAliasBis, USER_ALIAS);
         addAliasMapping(USER_ALIAS, USER);
@@ -76,7 +77,7 @@ public interface CanSendFromContract {
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeTrueWhenSenderIsAnAliasOfTheDomainUser() throws Exception {
+    default void userCanSendFromShouldBeTrueWhenSenderIsAnAliasOfTheDomainUser() throws Exception {
         Username fromUser = Username.of(USER.getLocalPart() + "@" + OTHER_DOMAIN.asString());
 
         addDomainMapping(OTHER_DOMAIN, DOMAIN);
@@ -85,12 +86,67 @@ public interface CanSendFromContract {
     }
 
     @Test
-    default void assertUserCanSendFromShouldBeFalseWhenWhenSenderIsAnAliasOfTheUserFromAGroupAlias() throws Exception {
+    default void userCanSendFromShouldBeFalseWhenWhenSenderIsAnAliasOfTheUserFromAGroupAlias() throws Exception {
         Username fromGroup = Username.of("group@example.com");
 
         addGroupMapping("group@example.com", USER);
 
         assertThat(canSendFrom().userCanSendFrom(USER, fromGroup)).isFalse();
 
+    }
+
+    @Test
+    default void allValidFromAddressesShouldContainOnlyUserAddressWhenUserHasNoAlias() throws Exception {
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactly(USER.asMailAddress());
+    }
+
+    @Test
+    default void allValidFromAddressesShouldContainOnlyUserAddressWhenUserHasNoAliasAndAnotherUserHasOne() throws Exception {
+        addAliasMapping(USER_ALIAS, OTHER_USER);
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactly(USER.asMailAddress());
+    }
+
+    @Test
+    default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheUser() throws Exception {
+        addAliasMapping(USER_ALIAS, USER);
+
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress());
+    }
+
+    @Test
+    @Disabled("Recursive aliases are not supported yet")
+    default void allValidFromAddressesFromShouldBeTrueWhenSenderIsAnAliasOfAnAliasOfTheUser() throws Exception {
+        Username userAliasBis = Username.of("aliasbis@" + DOMAIN.asString());
+        addAliasMapping(userAliasBis, USER_ALIAS);
+        addAliasMapping(USER_ALIAS, USER);
+
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactlyInAnyOrder(USER.asMailAddress(), USER_ALIAS.asMailAddress(), userAliasBis.asMailAddress());
+    }
+
+    @Test
+    default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheDomainUser() throws Exception {
+        Username fromUser = Username.of(USER.getLocalPart() + "@" + OTHER_DOMAIN.asString());
+
+        addDomainMapping(OTHER_DOMAIN, DOMAIN);
+
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactlyInAnyOrder(USER.asMailAddress(), fromUser.asMailAddress());
+    }
+
+    @Test
+    default void allValidFromAddressesShouldContainUserAddressAndAnAliasOfTheDomainUserFromAnotherDomain() throws Exception {
+        Username userAliasOtherDomain = Username.of(USER_ALIAS.getLocalPart() + "@" + OTHER_DOMAIN.asString());
+
+        addDomainMapping(OTHER_DOMAIN, DOMAIN);
+        addAliasMapping(userAliasOtherDomain, USER);
+
+        Username userAliasMainDomain = Username.of(USER_ALIAS.getLocalPart() + "@" + DOMAIN.asString());
+        Username userOtherDomain = Username.of(USER.getLocalPart() + "@" + OTHER_DOMAIN.asString());
+        assertThat(canSendFrom().allValidFromAddressesForUser(USER))
+            .containsExactlyInAnyOrder(USER.asMailAddress(), userAliasOtherDomain.asMailAddress(), userAliasMainDomain.asMailAddress(), userOtherDomain.asMailAddress());
     }
 }

@@ -22,14 +22,21 @@ import static org.apache.james.rrt.lib.Mapping.Type.Alias;
 import static org.apache.james.rrt.lib.Mapping.Type.Domain;
 
 import java.util.EnumSet;
+import java.util.List;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 
+import org.apache.james.core.Domain;
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.util.OptionalUtils;
+
+import com.github.fge.lambdas.Throwing;
+import com.github.steveash.guavate.Guavate;
 
 public class CanSendFromImpl implements CanSendFrom {
 
@@ -50,6 +57,16 @@ public class CanSendFromImpl implements CanSendFrom {
         }
     }
 
+    @Override
+    public Stream<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
+        List<String> domains = relatedDomains(user).collect(Guavate.toImmutableList());
+
+        return relatedAliases(user)
+            .flatMap(userPart -> domains.stream()
+                .map(domainPart -> userPart + "@" + domainPart)
+            .map(Throwing.<String, MailAddress>function(MailAddress::new).sneakyThrow()));
+    }
+
     private boolean emailIsAnAliasOfTheConnectedUser(Username connectedUser, Username fromUser) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
         return fromUser.getDomainPart().isPresent()
             && recipientRewriteTable.getResolvedMappings(fromUser.getLocalPart(), fromUser.getDomainPart().get(), ALIAS_TYPES_ACCEPTED_IN_FROM)
@@ -60,4 +77,24 @@ public class CanSendFromImpl implements CanSendFrom {
             .anyMatch(alias -> alias.equals(connectedUser));
     }
 
+    private Stream<String> relatedAliases(Username user) throws RecipientRewriteTableException {
+        return Stream.concat(
+            Stream.of(user.getLocalPart()),
+            recipientRewriteTable.listSources(Mapping.alias(user.asString()))
+                .map(MappingSource::getFixedUser)
+        );
+    }
+
+    private Stream<String> relatedDomains(Username user) {
+        return user.getDomainPart()
+            .map(Throwing.function(this::fetchDomains).sneakyThrow())
+            .orElseGet(Stream::empty);
+    }
+
+    private Stream<String> fetchDomains(Domain domain) throws RecipientRewriteTableException {
+        return Stream.concat(
+            Stream.of(domain.asString()),
+            recipientRewriteTable.listSources(Mapping.domain(domain)).map(MappingSource::getFixedDomain)
+        );
+    }
 }
