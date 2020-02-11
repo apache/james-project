@@ -19,6 +19,8 @@
 
 package org.apache.james.blob.objectstorage.aws;
 
+import java.net.URI;
+
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
@@ -33,7 +35,7 @@ public class AwsS3AuthConfiguration {
 
         @FunctionalInterface
         interface RequiredEndpoint {
-            RequiredAccessKeyId endpoint(String endpoint);
+            RequiredAccessKeyId endpoint(URI endpoint);
         }
 
         @FunctionalInterface
@@ -47,11 +49,11 @@ public class AwsS3AuthConfiguration {
         }
 
         class ReadyToBuild {
-            private final String endpoint;
+            private final URI endpoint;
             private final String accessKeyId;
             private final String secretKey;
 
-            public ReadyToBuild(String endpoint, String accessKeyId, String secretKey) {
+            public ReadyToBuild(URI endpoint, String accessKeyId, String secretKey) {
                 this.endpoint = endpoint;
                 this.accessKeyId = accessKeyId;
                 this.secretKey = secretKey;
@@ -59,7 +61,6 @@ public class AwsS3AuthConfiguration {
 
             public AwsS3AuthConfiguration build() {
                 Preconditions.checkNotNull(endpoint, "'endpoint' is mandatory");
-                Preconditions.checkArgument(!endpoint.isEmpty(), "'endpoint' is mandatory");
 
                 Preconditions.checkNotNull(accessKeyId, "'accessKeyId' is mandatory");
                 Preconditions.checkArgument(!accessKeyId.isEmpty(), "'accessKeyId' is mandatory");
@@ -72,11 +73,11 @@ public class AwsS3AuthConfiguration {
         }
     }
 
-    private final String endpoint;
+    private final URI endpoint;
     private final String accessKeyId;
     private final String secretKey;
 
-    private AwsS3AuthConfiguration(String endpoint,
+    private AwsS3AuthConfiguration(URI endpoint,
                                    String accessKeyId,
                                    String secretKey) {
         this.endpoint = endpoint;
@@ -84,7 +85,7 @@ public class AwsS3AuthConfiguration {
         this.secretKey = secretKey;
     }
 
-    public String getEndpoint() {
+    public URI getEndpoint() {
         return endpoint;
     }
 

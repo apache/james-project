@@ -19,7 +19,10 @@
 
 package org.apache.james.modules.objectstorage.aws.s3;
 
+import java.net.URI;
+
 import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
 
 public class AwsS3ConfigurationReader {
@@ -29,9 +32,13 @@ public class AwsS3ConfigurationReader {
     static final String OBJECTSTORAGE_SECRETKEY = "objectstorage.s3.secretKey";
 
     public static AwsS3AuthConfiguration from(Configuration configuration) {
+        String endpoint = configuration.getString(OBJECTSTORAGE_ENDPOINT);
+        if (StringUtils.isEmpty(endpoint)) {
+            throw new NullPointerException("'endpoint' is mandatory");
+        }
 
         return AwsS3AuthConfiguration.builder()
-                .endpoint(configuration.getString(OBJECTSTORAGE_ENDPOINT))
+                .endpoint(URI.create(endpoint))
                 .accessKeyId(configuration.getString(OBJECTSTORAGE_ACCESKEYID))
                 .secretKey(configuration.getString(OBJECTSTORAGE_SECRETKEY))
                 .build();

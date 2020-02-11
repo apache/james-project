@@ -22,6 +22,8 @@ package org.apache.james.modules.objectstorage.aws.s3;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.net.URI;
+
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
@@ -59,7 +61,7 @@ class AwsS3ConfigurationReaderTest {
     @Test
     void fromShouldWork() {
         Configuration configuration = new PropertiesConfiguration();
-        String endpoint = "myEndpoint";
+        URI endpoint = URI.create("http://myEndpoint");
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ENDPOINT, endpoint);
         String accessKeyId = "myAccessKeyId";
         configuration.addProperty(AwsS3ConfigurationReader.OBJECTSTORAGE_ACCESKEYID, accessKeyId);

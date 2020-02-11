@@ -72,8 +72,8 @@ public class DockerAwsS3Container {
         return awsS3Container.getMappedPort(AWS_S3_PORT);
     }
 
-    public String getEndpoint() {
-        return "http://" + getIp() + ":" + getPort() + "/";
+    public URI getEndpoint() {
+        return URI.create("http://" + getIp() + ":" + getPort() + "/");
     }
 
     public DockerAwsS3 dockerAwsS3() {

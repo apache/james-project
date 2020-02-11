@@ -22,7 +22,6 @@ package org.apache.james.blob.objectstorage.aws;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.List;
@@ -92,7 +91,7 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
             .httpClientBuilder(NettyNioAsyncHttpClient.builder()
                 .maxConcurrency(100)
                 .maxPendingConnectionAcquires(10_000))
-            .endpointOverride(URI.create(configuration.getEndpoint()))
+            .endpointOverride(configuration.getEndpoint())
             .region(region.asAws())
             .build();
     }
@@ -113,7 +112,7 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
     }
 
     private static class FluxResponse {
-        final CompletableFuture<FluxResponse> cf = new CompletableFuture<>();
+        final CompletableFuture<FluxResponse> supportingCompletableFuture = new CompletableFuture<>();
         GetObjectResponse sdkResponse;
         Flux<ByteBuffer> flux;
     }
@@ -129,7 +128,7 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
                     @Override
                     public CompletableFuture<FluxResponse> prepare() {
                         response = new FluxResponse();
-                        return response.cf;
+                        return response.supportingCompletableFuture;
                     }
 
                     @Override
@@ -139,13 +138,13 @@ public class S3DumbBlobStore implements DumbBlobStore, Closeable {
 
                     @Override
                     public void exceptionOccurred(Throwable error) {
-                        this.response.cf.completeExceptionally(error);
+                        this.response.supportingCompletableFuture.completeExceptionally(error);
                     }
 
                     @Override
                     public void onStream(SdkPublisher<ByteBuffer> publisher) {
                         response.flux = Flux.from(publisher);
-                        response.cf.complete(response);
+                        response.supportingCompletableFuture.complete(response);
                     }
                 }));
     }

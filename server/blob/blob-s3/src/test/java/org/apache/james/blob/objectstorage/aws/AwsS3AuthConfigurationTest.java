@@ -22,12 +22,17 @@ package org.apache.james.blob.objectstorage.aws;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.SoftAssertions.assertSoftly;
 
-import org.apache.james.blob.objectstorage.aws.AwsS3AuthConfiguration;
+import java.net.URI;
+
 import org.junit.jupiter.api.Test;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
 public class AwsS3AuthConfigurationTest {
+
+    private static final URI ENDPOINT = URI.create("http://myEndpoint");
+    private static final String ACCESS_KEY_ID = "myAccessKeyId";
+    private static final String SECRET_KEY = "mySecretKey";
 
     @Test
     public void credentialsShouldRespectBeanContract() {
@@ -38,30 +43,19 @@ public class AwsS3AuthConfigurationTest {
     public void builderShouldThrowWhenEndpointIsNull() {
         assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
                                     .endpoint(null)
-                                    .accessKeyId("myAccessKeyId")
-                                    .secretKey("mySecretKey")
+                                    .accessKeyId(ACCESS_KEY_ID)
+                                    .secretKey(SECRET_KEY)
                                     .build())
             .isInstanceOf(NullPointerException.class)
             .hasMessage("'endpoint' is mandatory");
     }
 
     @Test
-    public void builderShouldThrowWhenEndpointIsEmpty() {
-        assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
-                                    .endpoint("")
-                                    .accessKeyId("myAccessKeyId")
-                                    .secretKey("mySecretKey")
-                                    .build())
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("'endpoint' is mandatory");
-    }
-
-    @Test
     public void builderShouldThrowWhenAccessKeyIdIsNull() {
         assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
-                                    .endpoint("myEndpoint")
+                                    .endpoint(ENDPOINT)
                                     .accessKeyId(null)
-                                    .secretKey("mySecretKey")
+                                    .secretKey(SECRET_KEY)
                                     .build())
             .isInstanceOf(NullPointerException.class)
             .hasMessage("'accessKeyId' is mandatory");
@@ -70,9 +64,9 @@ public class AwsS3AuthConfigurationTest {
     @Test
     public void builderShouldThrowWhenAccessKeyIdIsEmpty() {
         assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
-                                    .endpoint("myEndpoint")
+                                    .endpoint(ENDPOINT)
                                     .accessKeyId("")
-                                    .secretKey("mySecretKey")
+                                    .secretKey(SECRET_KEY)
                                     .build())
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("'accessKeyId' is mandatory");
@@ -81,8 +75,8 @@ public class AwsS3AuthConfigurationTest {
     @Test
     public void builderShouldThrowWhenSecretKeyIsNull() {
         assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
-                                    .endpoint("myEndpoint")
-                                    .accessKeyId("myAccessKeyId")
+                                    .endpoint(ENDPOINT)
+                                    .accessKeyId(ACCESS_KEY_ID)
                                     .secretKey(null)
                                     .build())
             .isInstanceOf(NullPointerException.class)
@@ -92,8 +86,8 @@ public class AwsS3AuthConfigurationTest {
     @Test
     public void builderShouldThrowWhenSecretKeyIsEmpty() {
         assertThatThrownBy(() -> AwsS3AuthConfiguration.builder()
-                                    .endpoint("myEndpoint")
-                                    .accessKeyId("myAccessKeyId")
+                                    .endpoint(ENDPOINT)
+                                    .accessKeyId(ACCESS_KEY_ID)
                                     .secretKey("")
                                     .build())
             .isInstanceOf(IllegalArgumentException.class)
@@ -102,19 +96,16 @@ public class AwsS3AuthConfigurationTest {
 
     @Test
     public void builderShouldWork() {
-        String endpoint = "myEndpoint";
-        String accessKeyId = "myAccessKeyId";
-        String secretKey = "mySecretKey";
         AwsS3AuthConfiguration configuration = AwsS3AuthConfiguration.builder()
-            .endpoint(endpoint)
-            .accessKeyId(accessKeyId)
-            .secretKey(secretKey)
+            .endpoint(ENDPOINT)
+            .accessKeyId(ACCESS_KEY_ID)
+            .secretKey(SECRET_KEY)
             .build();
 
         assertSoftly(softly -> {
-            softly.assertThat(configuration.getEndpoint()).isEqualTo(endpoint);
-            softly.assertThat(configuration.getAccessKeyId()).isEqualTo(accessKeyId);
-            softly.assertThat(configuration.getSecretKey()).isEqualTo(secretKey);
+            softly.assertThat(configuration.getEndpoint()).isEqualTo(ENDPOINT);
+            softly.assertThat(configuration.getAccessKeyId()).isEqualTo(ACCESS_KEY_ID);
+            softly.assertThat(configuration.getSecretKey()).isEqualTo(SECRET_KEY);
         });
     }
 }
