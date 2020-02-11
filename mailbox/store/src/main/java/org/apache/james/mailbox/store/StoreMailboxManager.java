@@ -353,20 +353,20 @@ public class StoreMailboxManager implements MailboxManager {
 
         return intermediatePaths
             .stream()
-            .flatMap(Throwing.<MailboxPath, Stream<MailboxId>>function(mailbox -> manageMailboxCreation(mailboxSession, isRootPath, mailbox)).sneakyThrow())
+            .flatMap(Throwing.<MailboxPath, Stream<MailboxId>>function(mailboxPath -> manageMailboxCreation(mailboxSession, isRootPath, mailboxPath)).sneakyThrow())
             .collect(Guavate.toImmutableList());
     }
 
-    private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailbox) throws MailboxException {
-        if (mailbox.isInbox()) {
+    private Stream<MailboxId> manageMailboxCreation(MailboxSession mailboxSession, boolean isRootPath, MailboxPath mailboxPath) throws MailboxException {
+        if (mailboxPath.isInbox()) {
             if (hasInbox(mailboxSession)) {
-                return duplicatedINBOXCreation(isRootPath, mailbox);
+                return duplicatedINBOXCreation(isRootPath, mailboxPath);
             }
 
             return performConcurrentMailboxCreation(mailboxSession, MailboxPath.inbox(mailboxSession)).stream();
         }
 
-        return performConcurrentMailboxCreation(mailboxSession, mailbox).stream();
+        return performConcurrentMailboxCreation(mailboxSession, mailboxPath).stream();
     }
 
 
@@ -378,24 +378,24 @@ public class StoreMailboxManager implements MailboxManager {
         return Stream.empty();
     }
 
-    private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailbox) throws MailboxException {
+    private List<MailboxId> performConcurrentMailboxCreation(MailboxSession mailboxSession, MailboxPath mailboxPath) throws MailboxException {
         List<MailboxId> mailboxIds = new ArrayList<>();
-        locker.executeWithLock(mailbox, (LockAwareExecution<Void>) () -> {
-            if (!mailboxExists(mailbox, mailboxSession)) {
-                Mailbox m = doCreateMailbox(mailbox);
+        locker.executeWithLock(mailboxPath, (LockAwareExecution<Void>) () -> {
+            if (!mailboxExists(mailboxPath, mailboxSession)) {
+                Mailbox mailbox = doCreateMailbox(mailboxPath);
                 MailboxMapper mapper = mailboxSessionMapperFactory.getMailboxMapper(mailboxSession);
                 try {
-                    mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(m))));
+                    mapper.execute(Mapper.toTransaction(() -> mailboxIds.add(mapper.save(mailbox))));
                     // notify listeners
                     eventBus.dispatch(EventFactory.mailboxAdded()
                         .randomEventId()
                         .mailboxSession(mailboxSession)
-                        .mailbox(m)
+                        .mailbox(mailbox)
                         .build(),
-                        new MailboxIdRegistrationKey(m.getMailboxId()))
+                        new MailboxIdRegistrationKey(mailbox.getMailboxId()))
                         .block();
                 } catch (MailboxExistsException e) {
-                    LOGGER.info("{} mailbox was created concurrently", m.generateAssociatedPath());
+                    LOGGER.info("{} mailbox was created concurrently", mailbox.generateAssociatedPath());
                 }
             }
             return null;
