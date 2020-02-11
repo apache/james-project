@@ -82,9 +82,44 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    void findMailboxByPathWhenAbsentShouldFail() throws MailboxException {
+    void findMailboxByPathWhenAbsentShouldFail() {
         assertThatThrownBy(() -> mailboxMapper.findMailboxByPath(MailboxPath.forUser(BENWA, "INBOX")))
             .isInstanceOf(MailboxNotFoundException.class);
+    }
+
+    @Test
+    void createShouldPersistTheMailbox() throws MailboxException {
+        benwaInboxMailbox.setMailboxId(null);
+        mailboxMapper.create(benwaInboxMailbox);
+
+        MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
+        MailboxAssert.assertThat(mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId())).isEqualTo(benwaInboxMailbox);
+    }
+
+    @Test
+    void createShouldThrowWhenMailboxAlreadyExists() throws MailboxException {
+        benwaInboxMailbox.setMailboxId(null);
+        mailboxMapper.create(benwaInboxMailbox);
+
+        Mailbox mailbox = new Mailbox(benwaInboxMailbox);
+        mailbox.setMailboxId(null);
+
+        assertThatThrownBy(() -> mailboxMapper.create(mailbox))
+            .isInstanceOf(MailboxExistsException.class);
+    }
+
+    @Test
+    void createShouldSetAMailboxIdForMailbox() throws MailboxException {
+        benwaInboxMailbox.setMailboxId(null);
+        MailboxId mailboxId = mailboxMapper.create(benwaInboxMailbox);
+
+        assertThat(mailboxId).isNotNull();
+    }
+
+    @Test
+    void createShouldThrowWhenMailboxIdNotNull() {
+        assertThatThrownBy(() -> mailboxMapper.create(benwaInboxMailbox))
+            .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
