@@ -53,6 +53,7 @@ public class ElasticSearchSearcher {
     private static final TimeValue TIMEOUT = TimeValue.timeValueMinutes(1);
     private static final ImmutableList<String> STORED_FIELDS = ImmutableList.of(JsonMessageConstants.MAILBOX_ID,
         JsonMessageConstants.UID, JsonMessageConstants.MESSAGE_ID);
+    private static final int MAX_ROUTING_KEY = 5;
 
     private final RestHighLevelClient client;
     private final QueryConverter queryConverter;
@@ -96,18 +97,24 @@ public class ElasticSearchSearcher {
             .map(SortConverter::convertSort)
             .forEach(searchSourceBuilder::sort);
 
-        return new SearchRequest(aliasName.getValue())
+        SearchRequest request = new SearchRequest(aliasName.getValue())
             .types(NodeMappingFactory.DEFAULT_MAPPING_NAME)
             .scroll(TIMEOUT)
-            .source(searchSourceBuilder)
-            .routing(toRoutingKeys(mailboxIds));
+            .source(searchSourceBuilder);
+
+        return toRoutingKey(mailboxIds)
+            .map(request::routing)
+            .orElse(request);
     }
 
-    private String[] toRoutingKeys(Collection<MailboxId> mailboxIds) {
-        return mailboxIds.stream()
-            .map(routingKeyFactory::from)
-            .map(RoutingKey::asString)
-            .toArray(String[]::new);
+    private Optional<String[]> toRoutingKey(Collection<MailboxId> mailboxIds) {
+        if (mailboxIds.size() < MAX_ROUTING_KEY) {
+            return Optional.of(mailboxIds.stream()
+                .map(routingKeyFactory::from)
+                .map(RoutingKey::asString)
+                .toArray(String[]::new));
+        }
+        return Optional.empty();
     }
 
     private int computeRequiredSize(Optional<Integer> limit) {
