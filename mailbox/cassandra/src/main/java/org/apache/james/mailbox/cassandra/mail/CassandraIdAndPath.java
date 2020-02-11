@@ -21,6 +21,7 @@ package org.apache.james.mailbox.cassandra.mail;
 import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.model.MailboxPath;
 
+import com.google.common.base.MoreObjects;
 import com.google.common.base.Objects;
 
 public class CassandraIdAndPath {
@@ -54,5 +55,13 @@ public class CassandraIdAndPath {
     @Override
     public final int hashCode() {
         return Objects.hashCode(cassandraId, mailboxPath);
+    }
+
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("cassandraId", cassandraId)
+            .add("mailboxPath", mailboxPath)
+            .toString();
     }
 }
