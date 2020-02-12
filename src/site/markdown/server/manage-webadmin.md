@@ -2318,8 +2318,9 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=
 ```
 
 Additional query parameters are supported:
- - `queue` allow you to target the mail queue you want to enqueue the mails in.
- - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+ - `queue` allows you to target the mail queue you want to enqueue the mails in. Defaults to `spool`.
+ - `processor` allows you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+ Defaults to the `state` field of each processed email.
 
 
 For instance:
@@ -2366,8 +2367,9 @@ curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?a
 ```
 
 Additional query parameters are supported:
- - `queue` allow you to target the mail queue you want to enqueue the mails in.
- - `processor` allow you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+ - `queue` allows you to target the mail queue you want to enqueue the mails in. Defaults to `spool`.
+ - `processor` allows you to overwrite the state of the reprocessing mails, and thus select the processors they will start their processing in.
+ Defaults to the `state` field of each processed email.
 
 While `processor` being an optional parameter, not specifying it will result reprocessing the mails in their current state ([see documentation about processors and state](https://james.apache.org/server/feature-mailetcontainer.html#Processors)).
 Consequently, only few cases will give a different result, definitively storing them out of the mail repository.
