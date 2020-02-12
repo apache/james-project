@@ -32,8 +32,6 @@ import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.store.transaction.Mapper;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Mapper for {@link Mailbox} actions. A {@link MailboxMapper} has a lifecycle from the start of a request 
  * to the end of the request.
@@ -44,11 +42,7 @@ public interface MailboxMapper extends Mapper {
     /**
      * Create the given {@link Mailbox} to the underlying storage
      */
-    default MailboxId create(Mailbox mailbox) throws MailboxException {
-        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
-
-        return rename(mailbox);
-    }
+    MailboxId create(Mailbox mailbox) throws MailboxException;
 
     /**
      * Rename the given {@link Mailbox} to the underlying storage

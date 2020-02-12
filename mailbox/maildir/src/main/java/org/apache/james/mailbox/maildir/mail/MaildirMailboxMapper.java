@@ -52,6 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 public class MaildirMailboxMapper extends NonTransactionalMapper implements MailboxMapper {
@@ -157,6 +158,40 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
             .build()
             .asUserBound());
         return mailboxes.size() > 0;
+    }
+
+    @Override
+    public MailboxId create(Mailbox mailbox) throws MailboxException {
+        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
+
+        MaildirId maildirId = MaildirId.random();
+        MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
+
+        if (!folder.exists()) {
+            boolean folderExist = folder.getRootFile().exists();
+            if (!folderExist && !folder.getRootFile().mkdirs()) {
+                throw new MailboxException("Failed to save Mailbox " + mailbox);
+            }
+
+            boolean isCreated = folder.getCurFolder().mkdir()
+                && folder.getNewFolder().mkdir()
+                && folder.getTmpFolder().mkdir();
+            if (!isCreated) {
+                throw new MailboxException("Failed to save Mailbox " + mailbox, new IOException("Needed folder structure can not be created"));
+            }
+        }
+
+        try {
+            folder.setUidValidity(mailbox.getUidValidity());
+            folder.setMailboxId(maildirId);
+            mailbox.setMailboxId(maildirId);
+        } catch (IOException ioe) {
+            throw new MailboxException("Failed to save Mailbox " + mailbox, ioe);
+
+        }
+        folder.setACL(mailbox.getACL());
+
+        return maildirId;
     }
 
     @Override

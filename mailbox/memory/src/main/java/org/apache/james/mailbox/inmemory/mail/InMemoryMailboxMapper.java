@@ -41,6 +41,7 @@ import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
+import com.google.common.base.Preconditions;
 
 public class InMemoryMailboxMapper implements MailboxMapper {
     
@@ -89,6 +90,20 @@ public class InMemoryMailboxMapper implements MailboxMapper {
             .filter(query::matches)
             .map(Mailbox::new)
             .collect(Guavate.toImmutableList());
+    }
+
+    @Override
+    public MailboxId create(Mailbox mailbox) throws MailboxException {
+        Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
+
+        InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
+        mailbox.setMailboxId(id);
+
+        Mailbox previousMailbox = mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox);
+        if (previousMailbox != null) {
+            throw new MailboxExistsException(mailbox.getName());
+        }
+        return mailbox.getMailboxId();
     }
 
     @Override
