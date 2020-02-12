@@ -162,68 +162,6 @@ class CassandraMailboxMapperTest {
         }
 
         @Test
-        void saveOnRenameThenFailToGetACLShouldBeConsistentWhenFindByInbox() throws Exception {
-            testee.save(inbox);
-
-            when(aclMapper.getACL(inboxId))
-                .thenReturn(Mono.error(new RuntimeException("mock exception")))
-                .thenCallRealMethod();
-
-            doQuietly(() -> testee.save(inboxRenamed));
-
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
-                    .isEqualTo(inbox);
-                softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPath))
-                    .isEqualTo(inbox);
-                softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
-                        .assertThat(searchMailbox)
-                        .isEqualTo(inbox));
-            }));
-        }
-
-        @Disabled("JAMES-3056 returning two mailboxes with same name and id")
-        @Test
-        void saveOnRenameThenFailToGetACLShouldBeConsistentWhenFindAll() throws Exception {
-            testee.save(inbox);
-
-            when(aclMapper.getACL(inboxId))
-                .thenReturn(Mono.error(new RuntimeException("mock exception")))
-                .thenCallRealMethod();
-
-            doQuietly(() -> testee.save(inboxRenamed));
-
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
-                        .assertThat(searchMailbox)
-                        .isEqualTo(inbox));
-            }));
-        }
-
-        @Disabled("JAMES-3056 find by renamed name returns unexpected results")
-        @Test
-        void saveOnRenameThenFailToGetACLShouldBeConsistentWhenFindByRenamedInbox() throws Exception {
-            testee.save(inbox);
-
-            when(aclMapper.getACL(inboxId))
-                .thenReturn(Mono.error(new RuntimeException("mock exception")))
-                .thenCallRealMethod();
-
-            doQuietly(() -> testee.save(inboxRenamed));
-
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
-                    .isInstanceOf(MailboxNotFoundException.class);
-                softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery))
-                    .isEmpty();
-            }));
-        }
-
-        @Test
         void saveOnRenameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByInbox() throws Exception {
             testee.save(inbox);
 
@@ -478,38 +416,6 @@ class CassandraMailboxMapperTest {
             testee.save(inbox);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
-                .thenReturn(Mono.error(new RuntimeException("mock exception")))
-                .thenCallRealMethod();
-
-            doQuietly(() -> testee.save(inboxRenamed));
-            doQuietly(() -> testee.save(inboxRenamed));
-
-            SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                softly(softly)
-                    .assertThat(testee.findMailboxById(inboxId))
-                    .isEqualTo(inboxRenamed);
-                softly(softly)
-                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
-                    .isEqualTo(inboxRenamed);
-                softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .isEmpty();
-                softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
-                        .assertThat(searchMailbox)
-                        .isEqualTo(inboxRenamed));
-                softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> softly(softly)
-                        .assertThat(searchMailbox)
-                        .isEqualTo(inboxRenamed));
-            }));
-        }
-
-        @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED")
-        @Test
-        void renameAfterRenameFailOnGetACLShouldRenameTheMailbox() throws Exception {
-            testee.save(inbox);
-
-            when(aclMapper.getACL(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 

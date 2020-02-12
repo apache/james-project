@@ -21,7 +21,6 @@ package org.apache.james.mailbox.cassandra.mail;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -177,13 +176,14 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     private boolean trySave(Mailbox cassandraMailbox, CassandraId cassandraId) {
-        boolean isCreated = mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId).block();
-        if (isCreated) {
-            Optional<Mailbox> simpleMailbox = retrieveMailbox(cassandraId).blockOptional();
-            simpleMailbox.ifPresent(mbx -> mailboxPathV2DAO.delete(mbx.generateAssociatedPath()).block());
-            mailboxDAO.save(cassandraMailbox).block();
-        }
-        return isCreated;
+        return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
+            .filter(isCreated -> isCreated)
+            .flatMap(mailboxHasCreated -> mailboxDAO.retrieveMailbox(cassandraId)
+                .flatMap(mailbox -> mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
+                .then(mailboxDAO.save(cassandraMailbox))
+                .thenReturn(true))
+            .switchIfEmpty(Mono.just(false))
+            .block();
     }
 
     private CassandraId retrieveId(Mailbox cassandraMailbox) {
