@@ -294,7 +294,9 @@ Response codes:
 ### Create a user
 
 ```
-curl -XPUT http://ip:port/users/usernameToBeUsed -d '{"password":"passwordToBeUsed"}'
+curl -XPUT http://ip:port/users/usernameToBeUsed \
+  -d '{"password":"passwordToBeUsed"}' \ 
+  -H "Content-Type: application/json"
 ```
 
 Resource name usernameToBeUsed representing valid users, 
@@ -1453,7 +1455,9 @@ This is a temporary workaround for the **Ghost mailbox** bug encountered using t
 You can use the mailbox merging feature in order to merge the old "ghosted" mailbox with the new one.
 
 ```
-curl -XPOST http://ip:port/cassandra/mailbox/merging -d '{"mergeOrigin":"id1", "mergeDestination":"id2"}'
+curl -XPOST http://ip:port/cassandra/mailbox/merging \
+  -d '{"mergeOrigin":"id1", "mergeDestination":"id2"}' \
+  -H "Content-Type: application/json"
 ```
 
 Will scedule a task for :
@@ -2533,7 +2537,8 @@ The scheduled task will have the following type `clear-mail-queue` and the follo
 
 ```
 curl -XPATCH http://ip:port/mailQueues/mailQueueName?delayed=true \
-  -d '{"delayed": false}'
+  -d '{"delayed": false}' \
+  -H "Content-Type: application/json"
 ```
 
 This request should have the query parameter *delayed* set to *true*, in order to indicate only delayed mails are affected.
