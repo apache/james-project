@@ -20,6 +20,8 @@ package org.apache.james.mailbox.model;
 
 import java.io.Serializable;
 
+import com.google.common.base.MoreObjects;
+
 public class TestId implements MailboxId, Serializable {
 
     public static class Factory implements MailboxId.Factory {
@@ -56,4 +58,10 @@ public class TestId implements MailboxId, Serializable {
         return id.hashCode();
     }
 
+    @Override
+    public String toString() {
+        return MoreObjects.toStringHelper(this)
+            .add("id", id)
+            .toString();
+    }
 }
