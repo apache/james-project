@@ -440,7 +440,7 @@ The scheduled task will have the following type `full-reindexing` and the follow
 Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
 
 ```
-curl -XPOST http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5
+curl -XPOST 'http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5'
 ```
 
 The scheduled task will have the following type `error-recovery-indexation` and the following `additionalInformation`:
@@ -927,7 +927,7 @@ Response codes:
 ### Searching user by quota ratio
 
 ```
-curl -XGET http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=oppen-paas.org
+curl -XGET 'http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=oppen-paas.org'
 ```
 
 Will return:
@@ -2152,7 +2152,7 @@ You can pass additional URL parameters to this call in order to limit the output
 Example:
 
 ```
-curl -XGET http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?limit=100&offset=500
+curl -XGET 'http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?limit=100&offset=500'
 ```
 
 Response codes:
@@ -2325,7 +2325,7 @@ Additional query parameters are supported:
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=reprocess&processor=transport&queue=spool
+curl -XPATCH 'http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails?action=reprocess&processor=transport&queue=spool'
 ```
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
@@ -2375,7 +2375,7 @@ Consequently, only few cases will give a different result, definitively storing 
 For instance:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?action=reprocess&processor=transport&queue=spool
+curl -XPATCH 'http://ip:port/mailRepositories/var%2Fmail%2Ferror%2F/mails/name1?action=reprocess&processor=transport&queue=spool'
 ```
 
 Note that the `action` query parameter is compulsary and can only take value `reprocess`.
@@ -3093,7 +3093,7 @@ while:
 Retrieve deleted messages matched with requested query from an user then share the content to a targeted mail address (exportTo)
 
 ```
-curl -XPOST http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext
+curl -XPOST 'http://ip:port/deletedMessages/users/userExportFrom@domain.ext?action=export&exportTo=userReceiving@domain.ext'
 
 BODY: is the json query has the same structure with Restore Deleted Messages section
 ```
