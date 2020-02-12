@@ -42,6 +42,7 @@ import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.exception.TooLongMailboxNameException;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
+import org.apache.james.mailbox.model.MailboxSoftlyAssert;
 import org.apache.james.mailbox.model.search.ExactName;
 import org.apache.james.mailbox.model.search.MailboxQuery;
 import org.apache.james.mailbox.model.search.Wildcard;
@@ -171,10 +172,16 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inbox);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPath), inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -191,7 +198,9 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -225,10 +234,16 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inbox);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPath), inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -245,7 +260,9 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -279,10 +296,16 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inbox);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPath), inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -299,7 +322,9 @@ class CassandraMailboxMapperTest {
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -339,9 +364,13 @@ class CassandraMailboxMapperTest {
                 softly.assertThatCode(() -> testee.findMailboxByPath(inboxPath))
                     .doesNotThrowAnyException();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -374,12 +403,20 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inbox));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inbox);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPath), inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -394,12 +431,20 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inbox));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inbox);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPath), inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inbox);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPath))
+                    .isEqualTo(inbox);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inbox));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inbox));
             }));
         }
 
@@ -426,7 +471,7 @@ class CassandraMailboxMapperTest {
             }));
         }
 
-        @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED, " +
+        @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED).isEqualTo(" +
             "findMailboxWithPathLike() returns a list with two same mailboxes")
         @Test
         void renameAfterRenameFailOnRetrieveMailboxShouldRenameTheMailbox() throws Exception {
@@ -440,14 +485,22 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inboxRenamed);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPathRenamed), inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                    .isEqualTo(inboxRenamed);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
             }));
         }
 
@@ -464,14 +517,22 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inboxRenamed);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPathRenamed), inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                    .isEqualTo(inboxRenamed);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
             }));
         }
 
@@ -488,14 +549,23 @@ class CassandraMailboxMapperTest {
             doQuietly(() -> testee.save(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
-                assertMailboxEqualsTo(softly, testee.findMailboxById(inboxId), inboxRenamed);
-                assertMailboxEqualsTo(softly, testee.findMailboxByPath(inboxPathRenamed), inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxById(inboxId))
+                    .isEqualTo(inboxRenamed);
+                MailboxSoftlyAssert.softly(softly)
+                    .assertThat(testee.findMailboxByPath(inboxPathRenamed))
+                    .isEqualTo(inboxRenamed);
                 softly.assertThat(testee.findMailboxWithPathLike(inboxSearchQuery))
                     .isEmpty();
                 softly.assertThat(testee.findMailboxWithPathLike(inboxRenamedSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox ->
+                        MailboxSoftlyAssert.softly(softly)
+                            .assertThat(searchMailbox)
+                            .isEqualTo(inboxRenamed));
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
-                    .hasOnlyOneElementSatisfying(searchMailbox -> assertMailboxEqualsTo(softly, searchMailbox, inboxRenamed));
+                    .hasOnlyOneElementSatisfying(searchMailbox -> MailboxSoftlyAssert.softly(softly)
+                        .assertThat(searchMailbox)
+                        .isEqualTo(inboxRenamed));
             }));
         }
 
@@ -505,21 +575,6 @@ class CassandraMailboxMapperTest {
             } catch (Throwable th) {
                 // ignore
             }
-        }
-
-        private void assertMailboxEqualsTo(SoftAssertions softly, Mailbox actual, Mailbox expected) {
-            softly.assertThat(actual.getMailboxId())
-                .isEqualTo(expected.getMailboxId());
-            softly.assertThat(actual.getName())
-                .isEqualTo(expected.getName());
-            softly.assertThat(actual.getUidValidity())
-                .isEqualTo(expected.getUidValidity());
-            softly.assertThat(actual.getUser())
-                .isEqualTo(expected.getUser());
-            softly.assertThat(actual.getNamespace())
-                .isEqualTo(expected.getNamespace());
-            softly.assertThat(actual.getACL().getEntries())
-                .isEqualTo(expected.getACL().getEntries());
         }
     }
 
