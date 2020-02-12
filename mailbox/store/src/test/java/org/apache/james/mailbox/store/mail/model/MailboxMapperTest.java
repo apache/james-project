@@ -123,19 +123,19 @@ public abstract class MailboxMapperTest {
     }
 
     @Test
-    void saveShouldPersistTheMailbox() throws MailboxException {
-        mailboxMapper.save(benwaInboxMailbox);
+    void renameShouldPersistTheMailbox() throws MailboxException {
+        mailboxMapper.rename(benwaInboxMailbox);
         assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
     }
 
     @Test
-    void saveShouldThrowWhenMailboxAlreadyExist() throws MailboxException {
-        mailboxMapper.save(benwaInboxMailbox);
+    void renameShouldThrowWhenMailboxAlreadyExist() throws MailboxException {
+        mailboxMapper.rename(benwaInboxMailbox);
 
         Mailbox mailbox = new Mailbox(benwaInboxMailbox);
         mailbox.setMailboxId(null);
 
-        assertThatThrownBy(() -> mailboxMapper.save(mailbox))
+        assertThatThrownBy(() -> mailboxMapper.rename(mailbox))
             .isInstanceOf(MailboxExistsException.class);
     }
 
@@ -267,14 +267,14 @@ public abstract class MailboxMapperTest {
     }
 
     private void saveAll() throws MailboxException {
-        mailboxMapper.save(benwaInboxMailbox);
-        mailboxMapper.save(benwaWorkMailbox);
-        mailboxMapper.save(benwaWorkTodoMailbox);
-        mailboxMapper.save(benwaPersoMailbox);
-        mailboxMapper.save(benwaWorkDoneMailbox);
-        mailboxMapper.save(bobyMailbox);
-        mailboxMapper.save(bobDifferentNamespaceMailbox);
-        mailboxMapper.save(bobInboxMailbox);
+        mailboxMapper.rename(benwaInboxMailbox);
+        mailboxMapper.rename(benwaWorkMailbox);
+        mailboxMapper.rename(benwaWorkTodoMailbox);
+        mailboxMapper.rename(benwaPersoMailbox);
+        mailboxMapper.rename(benwaWorkDoneMailbox);
+        mailboxMapper.rename(bobyMailbox);
+        mailboxMapper.rename(bobDifferentNamespaceMailbox);
+        mailboxMapper.rename(bobInboxMailbox);
     }
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {

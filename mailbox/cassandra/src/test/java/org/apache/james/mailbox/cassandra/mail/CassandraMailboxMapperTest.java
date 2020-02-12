@@ -166,7 +166,7 @@ class CassandraMailboxMapperTest {
                 .when(mailboxDAO)
                 .save(inbox);
 
-            doQuietly(() -> testee.save(inbox));
+            doQuietly(() -> testee.rename(inbox));
 
             SoftAssertions.assertSoftly(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxById(inboxId))
@@ -182,13 +182,13 @@ class CassandraMailboxMapperTest {
 
         @Test
         void saveOnRenameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByInbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -207,13 +207,13 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 returning two mailboxes with same name and id")
         @Test
         void saveOnRenameThenFailToRetrieveMailboxShouldBeConsistentWhenFindAll() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
@@ -226,13 +226,13 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 find by renamed name returns unexpected results")
         @Test
         void saveOnRenameThenFailToRetrieveMailboxShouldBeConsistentWhenFindByRenamedInbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
@@ -244,13 +244,13 @@ class CassandraMailboxMapperTest {
 
         @Test
         void saveOnRenameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByInbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -269,13 +269,13 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 returning two mailboxes with same name and id")
         @Test
         void saveOnRenameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindAll() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThat(testee.findMailboxWithPathLike(allMailboxesSearchQuery))
@@ -288,13 +288,13 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 find by renamed name returns unexpected results")
         @Test
         void saveOnRenameThenFailToDeleteMailboxPathShouldBeConsistentWhenFindByRenamedInbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly.assertThatThrownBy(() -> testee.findMailboxByPath(inboxPathRenamed))
@@ -307,7 +307,7 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 find by mailbox name returns unexpected results")
         @Test
         void deleteShouldBeConsistentWhenFailToDeleteMailbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             doReturn(Mono.error(new RuntimeException("mock exception")))
                 .when(mailboxDAO)
@@ -334,7 +334,7 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 both mailboxes of the same user have 'INBOX' name")
         @Test
         void missedMigrationShouldNotLeadToGhostMailbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
             // simulate mailbox old data has not been migrated to v2
             mailboxPathDAO.save(inboxPath, inboxId).block();
             mailboxPathV2DAO.delete(inboxPath).block();
@@ -343,7 +343,7 @@ class CassandraMailboxMapperTest {
             // => two mailboxes with same name but different ids
             CassandraId newId = CassandraId.timeBased();
             Mailbox mailboxHasSameNameWithInbox = new Mailbox(inboxPath, UID_VALIDITY, newId);
-            testee.save(mailboxHasSameNameWithInbox);
+            testee.rename(mailboxHasSameNameWithInbox);
 
             assertThat(testee.findMailboxById(newId).getName())
                 .isNotEqualTo(testee.findMailboxById(inboxId).getName());
@@ -383,8 +383,8 @@ class CassandraMailboxMapperTest {
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inbox));
-            doQuietly(() -> testee.save(inbox));
+            doQuietly(() -> testee.rename(inbox));
+            doQuietly(() -> testee.rename(inbox));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -410,9 +410,9 @@ class CassandraMailboxMapperTest {
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inbox));
+            doQuietly(() -> testee.rename(inbox));
             doQuietly(() -> testee.delete(inbox));
-            doQuietly(() -> testee.save(inbox));
+            doQuietly(() -> testee.rename(inbox));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -434,7 +434,7 @@ class CassandraMailboxMapperTest {
 
         @Test
         void deleteAfterAFailedDeleteShouldDeleteTheMailbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxDAO.delete(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
@@ -459,14 +459,14 @@ class CassandraMailboxMapperTest {
             "findMailboxWithPathLike() returns a list with two same mailboxes")
         @Test
         void renameAfterRenameFailOnRetrieveMailboxShouldRenameTheMailbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxDAO.retrieveMailbox(inboxId))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -491,14 +491,14 @@ class CassandraMailboxMapperTest {
         @Disabled("JAMES-3056 mailbox name is not updated to INBOX_RENAMED")
         @Test
         void renameAfterRenameFailOnDeletePathShouldRenameTheMailbox() throws Exception {
-            testee.save(inbox);
+            testee.rename(inbox);
 
             when(mailboxPathV2DAO.delete(inboxPath))
                 .thenReturn(Mono.error(new RuntimeException("mock exception")))
                 .thenCallRealMethod();
 
-            doQuietly(() -> testee.save(inboxRenamed));
-            doQuietly(() -> testee.save(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
+            doQuietly(() -> testee.rename(inboxRenamed));
 
             SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
                 softly(softly)
@@ -533,12 +533,12 @@ class CassandraMailboxMapperTest {
     @Disabled("JAMES-2514 Cassandra 3 supports long mailbox names. Hence we can not rely on this for failing")
     @Test
     void saveShouldNotRemoveOldMailboxPathWhenCreatingTheNewMailboxPathFails() throws Exception {
-        testee.save(new Mailbox(MAILBOX_PATH, UID_VALIDITY));
+        testee.rename(new Mailbox(MAILBOX_PATH, UID_VALIDITY));
         Mailbox mailbox = testee.findMailboxByPath(MAILBOX_PATH);
 
         Mailbox newMailbox = new Mailbox(tooLongMailboxPath(mailbox.generateAssociatedPath()), UID_VALIDITY, mailbox.getMailboxId());
         assertThatThrownBy(() ->
-            testee.save(newMailbox))
+            testee.rename(newMailbox))
             .isInstanceOf(TooLongMailboxNameException.class);
 
         assertThat(mailboxPathV2DAO.retrieveId(MAILBOX_PATH).blockOptional())

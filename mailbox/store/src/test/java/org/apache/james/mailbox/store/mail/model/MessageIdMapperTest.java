@@ -960,7 +960,7 @@ public abstract class MessageIdMapperTest {
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         mailbox.setMailboxId(mapperProvider.generateId());
-        mailboxMapper.save(mailbox);
+        mailboxMapper.rename(mailbox);
         return mailbox;
     }
     

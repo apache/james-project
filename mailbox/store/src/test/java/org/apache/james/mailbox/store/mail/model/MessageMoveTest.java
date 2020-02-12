@@ -138,7 +138,7 @@ public abstract class MessageMoveTest {
         Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
         MailboxId id = mapperProvider.generateId();
         mailbox.setMailboxId(id);
-        mailboxMapper.save(mailbox);
+        mailboxMapper.rename(mailbox);
         
         return mailbox;
     }

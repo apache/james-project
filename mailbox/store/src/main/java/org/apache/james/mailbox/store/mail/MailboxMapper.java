@@ -47,13 +47,13 @@ public interface MailboxMapper extends Mapper {
     default MailboxId create(Mailbox mailbox) throws MailboxException {
         Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
 
-        return save(mailbox);
+        return rename(mailbox);
     }
 
     /**
-     * Save the give {@link Mailbox} to the underlying storage
+     * Rename the given {@link Mailbox} to the underlying storage
      */
-    MailboxId save(Mailbox mailbox) throws MailboxException;
+    MailboxId rename(Mailbox mailbox) throws MailboxException;
     
     /**
      * Delete the given {@link Mailbox} from the underlying storage

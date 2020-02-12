@@ -92,7 +92,7 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId save(Mailbox mailbox) throws MailboxException {
+    public MailboxId rename(Mailbox mailbox) throws MailboxException {
         InMemoryId id = (InMemoryId) mailbox.getMailboxId();
         if (id == null) {
             id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());

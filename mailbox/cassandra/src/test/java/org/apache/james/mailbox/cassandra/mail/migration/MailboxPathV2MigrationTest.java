@@ -93,7 +93,7 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void newValuesShouldBeSavedInMostRecentDAO() throws Exception {
-        mailboxMapper.save(MAILBOX_1);
+        mailboxMapper.rename(MAILBOX_1);
 
         assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
             .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
@@ -101,7 +101,7 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void newValuesShouldNotBeSavedInOldDAO() throws Exception {
-        mailboxMapper.save(MAILBOX_1);
+        mailboxMapper.rename(MAILBOX_1);
 
         assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional())
             .isEmpty();

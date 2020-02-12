@@ -58,7 +58,7 @@ public abstract class MailboxMapperACLTest {
         mailboxMapper = createMailboxMapper();
         MailboxPath benwaInboxPath = MailboxPath.forUser(Username.of("benwa"), "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
-        mailboxMapper.save(benwaInboxMailbox);
+        mailboxMapper.rename(benwaInboxMailbox);
     }
 
     @Test

@@ -84,7 +84,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
     
     @Override
-    public MailboxId save(Mailbox mailbox) throws MailboxException {
+    public MailboxId rename(Mailbox mailbox) throws MailboxException {
         try {
             if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
                 throw new MailboxExistsException(mailbox.getName());

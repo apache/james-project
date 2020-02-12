@@ -160,7 +160,7 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
-    public MailboxId save(Mailbox mailbox) throws MailboxException {
+    public MailboxId rename(Mailbox mailbox) throws MailboxException {
         MaildirId maildirId = Optional.ofNullable(mailbox.getMailboxId())
             .map(mailboxId -> (MaildirId) mailboxId)
             .orElseGet(MaildirId::random);

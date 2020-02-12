@@ -190,16 +190,16 @@ public class CassandraMailboxMapper implements MailboxMapper {
     }
 
     @Override
-    public MailboxId save(Mailbox mailbox) throws MailboxException {
+    public MailboxId rename(Mailbox mailbox) throws MailboxException {
         CassandraId cassandraId = retrieveId(mailbox);
         mailbox.setMailboxId(cassandraId);
-        if (!trySave(mailbox, cassandraId)) {
+        if (!tryRename(mailbox, cassandraId)) {
             throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
         }
         return cassandraId;
     }
 
-    private boolean trySave(Mailbox cassandraMailbox, CassandraId cassandraId) {
+    private boolean tryRename(Mailbox cassandraMailbox, CassandraId cassandraId) {
         return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
             .filter(isCreated -> isCreated)
             .flatMap(mailboxHasCreated -> mailboxDAO.retrieveMailbox(cassandraId)

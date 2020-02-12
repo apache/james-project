@@ -530,7 +530,7 @@ public class StoreMailboxManager implements MailboxManager {
         mailbox.setNamespace(newMailboxPath.getNamespace());
         mailbox.setUser(newMailboxPath.getUser());
         mailbox.setName(newMailboxPath.getName());
-        mapper.save(mailbox);
+        mapper.rename(mailbox);
 
         eventBus.dispatch(EventFactory.mailboxRenamed()
             .randomEventId()
@@ -555,7 +555,7 @@ public class StoreMailboxManager implements MailboxManager {
                 String subNewName = newMailboxPath.getName() + subOriginalName.substring(from.getName().length());
                 MailboxPath fromPath = new MailboxPath(from, subOriginalName);
                 sub.setName(subNewName);
-                mapper.save(sub);
+                mapper.rename(sub);
                 eventBus.dispatch(EventFactory.mailboxRenamed()
                     .randomEventId()
                     .mailboxSession(session)
