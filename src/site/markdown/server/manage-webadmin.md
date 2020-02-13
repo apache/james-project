@@ -2830,7 +2830,7 @@ and the like.
 Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). If after those retries the listener is still
 failing, then the event will be stored in the "Event Dead Letter". This API allows diagnosing issues, as well as performing event replay (not implemented yet).
 
- - [Listing groups](#Listing_groups)
+ - [Listing mailbox listener groups](#Listing_mailbox_listener_groups)
  - [Listing failed events](#Listing_failed_events)
  - [Getting event details](#Getting_event_details)
  - [Deleting an event](#Deleting_an_event)
@@ -2839,9 +2839,9 @@ failing, then the event will be stored in the "Event Dead Letter". This API allo
  - [Redeliver a single event](#Redeliver_a_single_event)
  - [Rescheduling group execution](#Rescheduling_group_execution)
 
-### Listing groups
+### Listing mailbox listener groups
 
-This endpoint allows discovering the list of groups.
+This endpoint allows discovering the list of mailbox listener groups.
 
 ```
 curl -XGET http://ip:port/events/deadLetter/groups
