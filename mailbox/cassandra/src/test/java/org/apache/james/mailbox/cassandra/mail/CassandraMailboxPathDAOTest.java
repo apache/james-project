@@ -37,7 +37,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 import nl.jqno.equalsverifier.EqualsVerifier;
 
-public abstract class CassandraMailboxPathDAOTest {
+public abstract class CassandraMailboxPathDAOTest<T extends CassandraMailboxPathDAO> {
     private static final Username USER = Username.of("user");
     private static final Username OTHER_USER = Username.of("other");
 
@@ -53,9 +53,9 @@ public abstract class CassandraMailboxPathDAOTest {
     static CassandraClusterExtension cassandraCluster = new CassandraClusterExtension(CassandraModule.aggregateModules(
         CassandraMailboxModule.MODULE, CassandraSchemaVersionModule.MODULE));
 
-    protected CassandraMailboxPathDAO testee;
+    protected T testee;
 
-    abstract CassandraMailboxPathDAO testee(CassandraCluster cassandra);
+    abstract T testee(CassandraCluster cassandra);
 
     @BeforeEach
     void setUp(CassandraCluster cassandra) {

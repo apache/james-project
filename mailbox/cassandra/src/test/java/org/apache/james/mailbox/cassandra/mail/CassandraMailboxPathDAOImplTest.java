@@ -24,10 +24,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import org.apache.james.backends.cassandra.CassandraCluster;
 import org.junit.jupiter.api.Test;
 
-class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest {
+class CassandraMailboxPathDAOImplTest extends CassandraMailboxPathDAOTest<CassandraMailboxPathDAOImpl> {
 
     @Override
-    CassandraMailboxPathDAO testee(CassandraCluster cassandra) {
+    CassandraMailboxPathDAOImpl testee(CassandraCluster cassandra) {
         return new CassandraMailboxPathDAOImpl(cassandra.getConf(), cassandra.getTypesProvider());
     }
 
