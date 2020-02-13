@@ -34,6 +34,9 @@ import org.apache.james.json.DTOModule;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskAdditionalInformationDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskDTO;
 import org.apache.james.mailbox.cassandra.mail.task.MailboxMergingTaskRunner;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesService;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskAdditionalInformationDTO;
+import org.apache.james.mailbox.cassandra.mail.task.SolveMailboxInconsistenciesTaskDTO;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.queue.api.MailQueueFactory;
@@ -251,6 +254,11 @@ public class TaskSerializationModule extends AbstractModule {
     }
 
     @ProvidesIntoSet
+    public TaskDTOModule<?, ?> solveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
+        return SolveMailboxInconsistenciesTaskDTO.module(service);
+    }
+
+    @ProvidesIntoSet
     public TaskDTOModule<?, ?> messageIdReindexingTask(MessageIdReIndexingTask.Factory factory) {
         return MessageIdReindexingTaskDTO.module(factory);
     }
@@ -353,6 +361,11 @@ public class TaskSerializationModule extends AbstractModule {
     @ProvidesIntoSet
     public AdditionalInformationDTOModule<?, ?> mailboxMergingAdditionalInformation() {
         return MailboxMergingTaskAdditionalInformationDTO.SERIALIZATION_MODULE;
+    }
+
+    @ProvidesIntoSet
+    public AdditionalInformationDTOModule<?, ?> solveMailboxInconsistenciesAdditionalInformation() {
+        return SolveMailboxInconsistenciesTaskAdditionalInformationDTO.MODULE;
     }
 
     @ProvidesIntoSet
