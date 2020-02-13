@@ -156,6 +156,7 @@ public class Mailbox {
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
+            .add("id", getMailboxId().serialize())
             .add("namespace", namespace)
             .add("user", user)
             .add("name", name)
