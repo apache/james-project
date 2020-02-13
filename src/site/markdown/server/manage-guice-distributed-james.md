@@ -17,6 +17,7 @@ advanced users.
 
  - [Overall architecture](#overall-architecture)
  - [Basic Monitoring](#basic-monitoring)
+ - [Mailbox Event Bus](#mailbox-event-bus)
  - [Mail Processing](#mail-processing)
 
 ## Overall architecture
@@ -146,3 +147,61 @@ or [delete a single mail of a mail repository](manage-webadmin.html#removing-a-m
 Performance of mail processing can be monitored via the 
 [mailet grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MAILET-1490071694187-dashboard.json) 
 and [matcher grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MATCHER-1490071813409-dashboard.json).
+
+## Mailbox Event Bus
+
+James relies on an event bus system to enrich mailbox capabilities. Each operation performed on the mailbox will trigger 
+related events, that can be processed asynchronously by potentially any James node on a distributed system.
+
+Many different kind of events can be triggered during a mailbox operation, such as:
+
+ - `MailboxEvent`: event related to an operation regarding a mailbox:
+   - `MailboxDeletion`: a mailbox has been deleted
+   - `MailboxAdded`: a mailbox has been added
+   - `MailboxRenamed`: a mailbox has been renamed
+   - `MailboxACLUpdated`: a mailbox got its rights and permissions updated
+ - `MessageEvent`: event related to an operation regarding a message:
+   - `Added`: messages have been added to a mailbox
+   - `Expunged`: messages have been expunged from a mailbox 
+   - `FlagsUpdated`: messages had their flags updated
+   - `MessageMoveEvent`: messages have been moved from a mailbox to an other
+ - `QuotaUsageUpdatedEvent`: event related to quota update
+
+Mailbox listeners can register themselves on this event bus system to be called when an event is fired,
+allowing to do different kind of extra operations on the system, like:
+
+ - Current quota calculation
+ - Message indexation with ElasticSearch
+ - Mailbox annotations cleanup
+ - Ham/spam reporting to SpamAssassin
+ - ...
+
+It is possible for the administrator of James to define the mailbox listeners he wants to use, by adding them in the
+[listeners.xml](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/listeners.xml) configuration file.
+It's possible also to add your own custom mailbox listeners. This enables to enhance capabilities of James as a Mail Delivery Agent.
+You can get more information about those [here](config-listeners.html).
+
+Currently, an administrator can monitor listeners failures through `ERROR` log review. 
+Metrics regarding mailbox listeners can be monitored via
+[mailbox_listeners grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners-1528958667486-dashboard.json) 
+and [mailbox_listeners_rate grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MailboxListeners%20rate-1552903378376.json).
+
+Upon exceptions, a bounded number of retries are performed (with exponential backoff delays). 
+If after those retries the listener is still failing to perform its operation, then the event will be stored in the 
+[Event Dead Letter](manage-webadmin.html#Event_Dead_Letter). 
+This API allows diagnosing issues, as well as redelivering the events. 
+
+To check that you have undelivered events in your system, you can first
+[list mailbox listener groups](manage-webadmin.html#Listing_mailbox_listener_groups).
+You will get a list of groups back, allowing you to check if those contain registered events in each by
+[listing their failed events](manage-webadmin.html#Listing_failed_events).
+
+If you get failed events IDs back, you can as well [check their details](manage-webadmin.html#Getting_event_details).
+
+An easy way to solve this is just to trigger then the
+[redeliver all events](manage-webadmin.html#Redeliver_all_events) task. It will start 
+reprocessing all the failed events registered in event dead letters.
+
+If for some other reason you don't need to redeliver all events, you have more fine-grained operations allowing you to
+[redeliver group events](manage-webadmin.html#Redeliver_group_events) or even just
+[redeliver a single event](manage-webadmin.html#Redeliver_a_single_event).
