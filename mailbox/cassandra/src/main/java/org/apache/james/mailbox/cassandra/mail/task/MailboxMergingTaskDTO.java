@@ -30,7 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class MailboxMergingTaskDTO implements TaskDTO {
     private static final CassandraId.Factory CASSANDRA_ID_FACTORY = new CassandraId.Factory();
 
-    private static MailboxMergingTaskDTO fromDTO(MailboxMergingTask domainObject, String typeName) {
+    private static MailboxMergingTaskDTO toDTO(MailboxMergingTask domainObject, String typeName) {
         return new MailboxMergingTaskDTO(
             typeName,
             domainObject.getContext().getTotalMessageCount(),
@@ -43,8 +43,8 @@ public class MailboxMergingTaskDTO implements TaskDTO {
         return DTOModule
             .forDomainObject(MailboxMergingTask.class)
             .convertToDTO(MailboxMergingTaskDTO.class)
-            .toDomainObjectConverter(dto -> dto.toDTO(taskRunner))
-            .toDTOConverter(MailboxMergingTaskDTO::fromDTO)
+            .toDomainObjectConverter(dto -> dto.toDomainObject(taskRunner))
+            .toDTOConverter(MailboxMergingTaskDTO::toDTO)
             .typeName(MailboxMergingTask.MAILBOX_MERGING.asString())
             .withFactory(TaskDTOModule::new);
     }
@@ -65,13 +65,12 @@ public class MailboxMergingTaskDTO implements TaskDTO {
         this.newMailboxId = newMailboxId;
     }
 
-    private MailboxMergingTask toDTO(MailboxMergingTaskRunner taskRunner) {
+    private MailboxMergingTask toDomainObject(MailboxMergingTaskRunner taskRunner) {
         return new MailboxMergingTask(
             taskRunner,
             totalMessageCount,
             CASSANDRA_ID_FACTORY.fromString(oldMailboxId),
-            CASSANDRA_ID_FACTORY.fromString(newMailboxId)
-        );
+            CASSANDRA_ID_FACTORY.fromString(newMailboxId));
     }
 
     @Override
