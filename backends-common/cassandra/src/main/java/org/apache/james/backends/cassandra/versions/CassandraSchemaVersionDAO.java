@@ -22,6 +22,7 @@ package org.apache.james.backends.cassandra.versions;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.bindMarker;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.insertInto;
 import static com.datastax.driver.core.querybuilder.QueryBuilder.select;
+import static com.datastax.driver.core.querybuilder.QueryBuilder.truncate;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.KEY;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.TABLE_NAME;
 import static org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersionTable.VALUE;
@@ -36,6 +37,7 @@ import org.apache.james.backends.cassandra.versions.table.CassandraSchemaVersion
 import com.datastax.driver.core.PreparedStatement;
 import com.datastax.driver.core.Session;
 import com.datastax.driver.core.utils.UUIDs;
+import com.google.common.annotations.VisibleForTesting;
 
 import reactor.core.publisher.Mono;
 
@@ -78,6 +80,11 @@ public class CassandraSchemaVersionDAO {
             writeVersionStatement.bind()
                 .setUUID(KEY, UUIDs.timeBased())
                 .setInt(VALUE, newVersion.getValue()));
+    }
+
+    @VisibleForTesting
+    public Mono<Void> truncateVersion() {
+        return cassandraAsyncExecutor.executeVoid(truncate(TABLE_NAME));
     }
 }
 
