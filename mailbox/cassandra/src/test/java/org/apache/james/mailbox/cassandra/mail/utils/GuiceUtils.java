@@ -36,6 +36,7 @@ import org.apache.james.mailbox.model.MessageId;
 import com.datastax.driver.core.Session;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 
@@ -49,18 +50,35 @@ public class GuiceUtils {
         return testInjector(session, typesProvider, messageIdFactory, configuration);
     }
 
-    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider, CassandraMessageId.Factory messageIdFactory, CassandraConfiguration configuration) {
+    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider,
+                                        CassandraMessageId.Factory messageIdFactory,
+                                        CassandraConfiguration configuration, Module... guiceModules) {
         return Guice.createInjector(
             Modules.combine(
-                binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
-                binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
-                binder -> binder.bind(BlobStore.class).to(CassandraBlobStore.class).in(SINGLETON),
-                binder -> binder.bind(CassandraDumbBlobStore.class).in(SINGLETON),
+                Modules.combine(commonModules(session, typesProvider, messageIdFactory, configuration)),
+                Modules.combine(guiceModules)));
+    }
+
+    public static Injector testInjector(Session session, CassandraTypesProvider typesProvider,
+                                        CassandraMessageId.Factory messageIdFactory,
+                                        CassandraConfiguration configuration) {
+        return Guice.createInjector(
+            commonModules(session, typesProvider, messageIdFactory, configuration));
+    }
+
+    private static Module commonModules(Session session, CassandraTypesProvider typesProvider,
+                                        CassandraMessageId.Factory messageIdFactory,
+                                        CassandraConfiguration configuration) {
+        return Modules.combine(
+            binder -> binder.bind(MessageId.Factory.class).toInstance(messageIdFactory),
+            binder -> binder.bind(BlobId.Factory.class).toInstance(new HashBlobId.Factory()),
+            binder -> binder.bind(BlobStore.class).to(CassandraBlobStore.class),
+            binder -> binder.bind(CassandraDumbBlobStore.class).in(SINGLETON),
                 binder -> binder.bind(BucketName.class)
                     .annotatedWith(Names.named(CassandraDumbBlobStore.DEFAULT_BUCKET))
                     .toInstance(BucketName.DEFAULT),
-                binder -> binder.bind(Session.class).toInstance(session),
-                binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
-                binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration)));
+            binder -> binder.bind(Session.class).toInstance(session),
+            binder -> binder.bind(CassandraTypesProvider.class).toInstance(typesProvider),
+            binder -> binder.bind(CassandraConfiguration.class).toInstance(configuration));
     }
 }

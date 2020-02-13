@@ -20,11 +20,13 @@
 package org.apache.james.mailbox.cassandra;
 
 import org.apache.james.backends.cassandra.init.CassandraTypesProvider;
+import org.apache.james.backends.cassandra.init.configuration.CassandraConfiguration;
 import org.apache.james.mailbox.acl.GroupMembershipResolver;
 import org.apache.james.mailbox.acl.MailboxACLResolver;
 import org.apache.james.mailbox.acl.SimpleGroupMembershipResolver;
 import org.apache.james.mailbox.acl.UnionMailboxACLResolver;
 import org.apache.james.mailbox.cassandra.ids.CassandraMessageId;
+import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.quota.CassandraCurrentQuotaManager;
 import org.apache.james.mailbox.cassandra.quota.CassandraGlobalMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerDomainMaxQuotaDao;
@@ -32,6 +34,7 @@ import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaDao;
 import org.apache.james.mailbox.cassandra.quota.CassandraPerUserMaxQuotaManager;
 import org.apache.james.mailbox.events.InVMEventBus;
 import org.apache.james.mailbox.events.delivery.InVmEventDelivery;
+import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.quota.QuotaRootResolver;
 import org.apache.james.mailbox.store.Authenticator;
 import org.apache.james.mailbox.store.Authorizator;
@@ -53,10 +56,25 @@ import org.apache.james.mailbox.store.search.SimpleMessageSearchIndex;
 import org.apache.james.metrics.tests.RecordingMetricFactory;
 
 import com.datastax.driver.core.Session;
+import com.google.inject.Module;
 
 public class CassandraMailboxManagerProvider {
     private static final int LIMIT_ANNOTATIONS = 3;
     private static final int LIMIT_ANNOTATION_SIZE = 30;
+
+    static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider,
+                                                         PreDeletionHooks preDeletionHooks, Module... overriedGuiceModules) {
+        CassandraMessageId.Factory messageIdFactory = new CassandraMessageId.Factory();
+
+        CassandraMailboxSessionMapperFactory mapperFactory = GuiceUtils.testInjector(session,
+                cassandraTypesProvider,
+                messageIdFactory,
+                CassandraConfiguration.DEFAULT_CONFIGURATION,
+                overriedGuiceModules)
+            .getInstance(CassandraMailboxSessionMapperFactory.class);
+
+        return provideMailboxManager(session, preDeletionHooks, mapperFactory, messageIdFactory);
+    }
 
     public static CassandraMailboxManager provideMailboxManager(Session session, CassandraTypesProvider cassandraTypesProvider,
                                                                 PreDeletionHooks preDeletionHooks) {
@@ -67,6 +85,13 @@ public class CassandraMailboxManagerProvider {
             cassandraTypesProvider,
             messageIdFactory);
 
+        return provideMailboxManager(session, preDeletionHooks, mapperFactory, messageIdFactory);
+    }
+
+    private static CassandraMailboxManager provideMailboxManager(Session session,
+                                                                PreDeletionHooks preDeletionHooks,
+                                                                CassandraMailboxSessionMapperFactory mapperFactory,
+                                                                MessageId.Factory messageIdFactory) {
         MailboxACLResolver aclResolver = new UnionMailboxACLResolver();
         GroupMembershipResolver groupMembershipResolver = new SimpleGroupMembershipResolver();
         MessageParser messageParser = new MessageParser();

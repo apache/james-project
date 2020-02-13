@@ -82,7 +82,7 @@ public class CassandraMailboxPathDAOImpl implements CassandraMailboxPathDAO {
     }
 
     @VisibleForTesting
-     CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider) {
+    public CassandraMailboxPathDAOImpl(Session session, CassandraTypesProvider typesProvider) {
         this(session, typesProvider, CassandraUtils.WITH_DEFAULT_CONFIGURATION);
     }
 
