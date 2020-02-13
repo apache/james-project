@@ -24,6 +24,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
+import javax.mail.internet.AddressException;
 
 import org.apache.james.core.Username;
 import org.apache.james.user.api.UsersRepository;
@@ -31,10 +32,14 @@ import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
 import org.apache.james.util.streams.Iterators;
 import org.apache.james.webadmin.dto.UserResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.github.steveash.guavate.Guavate;
 
 public class UserService {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     private final UsersRepository usersRepository;
 
@@ -61,6 +66,14 @@ public class UserService {
         upsert(user, username, password);
     }
 
+    public boolean existUser(Username username) throws UsersRepositoryException {
+        try {
+            return usersRepository.contains(usersRepository.getUser(username.asMailAddress()));
+        } catch (AddressException e) {
+            LOGGER.info("Unable to parse address '%s'", username.asString(), e);
+            return false;
+        }
+    }
 
     private void upsert(User user, Username username, char[] password) throws UsersRepositoryException {
         if (user == null) {

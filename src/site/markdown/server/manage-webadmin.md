@@ -292,6 +292,7 @@ Response codes:
    - [Updating a user password](#Updating_a_user_password)
    - [Deleting a domain](#Deleting_a_user)
    - [Retrieving the user list](#Retrieving_the_user_list)
+   - [Retrieving the list of allowed `From` headers for a given user](Retrieving_the_list_of_allowed_From_headers_for_a_given_user)
 
 ### Create a user
 
@@ -342,6 +343,24 @@ The answer looks like:
 Response codes:
 
  - 200: The user name list was successfully retrieved
+
+### Retrieving the list of allowed `From` headers for a given user
+
+```
+curl -XGET http://ip:port/users/givenUser/allowedFromHeaders
+```
+
+The answer looks like:
+
+```
+["user@domain.tld","alias@domain.tld"]
+```
+
+Response codes:
+
+ - 200: The list was successfully retrieved
+ - 400: The user is invalid
+ - 404: The user is unknown
 
 ## Administrating mailboxes
 

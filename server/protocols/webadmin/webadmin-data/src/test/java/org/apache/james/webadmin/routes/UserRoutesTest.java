@@ -22,6 +22,7 @@ package org.apache.james.webadmin.routes;
 import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
+import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,6 +40,12 @@ import org.apache.james.core.Domain;
 import org.apache.james.core.Username;
 import org.apache.james.domainlist.api.DomainListException;
 import org.apache.james.domainlist.api.mock.SimpleDomainList;
+import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.lib.CanSendFromImpl;
+import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.user.api.model.User;
@@ -90,12 +97,17 @@ class UserRoutesTest {
 
         final MemoryUsersRepository usersRepository;
         final SimpleDomainList domainList;
+        final MemoryRecipientRewriteTable recipientRewriteTable;
+        final CanSendFrom canSendFrom;
 
         WebAdminServer webAdminServer;
 
         UserRoutesExtension(MemoryUsersRepository usersRepository, SimpleDomainList domainList) {
             this.usersRepository = spy(usersRepository);
             this.domainList = domainList;
+            this.recipientRewriteTable = new MemoryRecipientRewriteTable();
+            this.recipientRewriteTable.setDomainList(domainList);
+            this.canSendFrom = new CanSendFromImpl(recipientRewriteTable);
         }
 
         @Override
@@ -112,16 +124,25 @@ class UserRoutesTest {
         public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
             return parameterContext.getParameter()
                 .getType()
-                .isAssignableFrom(UsersRepository.class);
+                .isAssignableFrom(UsersRepository.class)
+                || parameterContext.getParameter()
+                .getType()
+                .isAssignableFrom(RecipientRewriteTable.class);
         }
 
         @Override
         public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-            return usersRepository;
+            if (parameterContext.getParameter().getType().isAssignableFrom(UsersRepository.class)) {
+                return usersRepository;
+            }
+            if (parameterContext.getParameter().getType().isAssignableFrom(RecipientRewriteTable.class)) {
+                return recipientRewriteTable;
+            }
+            throw new RuntimeException("Unknown parameter type: " + parameterContext.getParameter().getType());
         }
 
         private WebAdminServer startServer(UsersRepository usersRepository) {
-            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), new JsonTransformer()))
+            WebAdminServer server = WebAdminUtils.createWebAdminServer(new UserRoutes(new UserService(usersRepository), canSendFrom, new JsonTransformer()))
                 .start();
 
             RestAssured.requestSpecification = WebAdminUtils.buildRequestSpecification(server)
@@ -571,6 +592,75 @@ class UserRoutesTest {
                 .put(USERNAME_WITH_DOMAIN.asString())
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
+        }
+
+        @Test
+        void allowedFromHeadersShouldHaveUsersMailAddress() {
+            // Given
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            // Then
+            List<String> allowedFroms =
+                when()
+                    .get(USERNAME_WITH_DOMAIN.asString() + SEPARATOR + "allowedFromHeaders")
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(allowedFroms).containsExactly(USERNAME_WITH_DOMAIN.asString());
+        }
+
+        @Test
+        void allowedFromHeadersShouldHaveAllMailAddressesWhenAliasAdded(RecipientRewriteTable recipientRewriteTable) throws RecipientRewriteTableException {
+            // Given
+            with()
+                .body("{\"password\":\"password\"}")
+                .put(USERNAME_WITH_DOMAIN.asString());
+
+            String aliasAddress = "alias@" + DOMAIN.asString();
+            recipientRewriteTable.addAliasMapping(MappingSource.fromUser(Username.of(aliasAddress)), USERNAME_WITH_DOMAIN.asString());
+
+            // Then
+            List<String> allowedFroms =
+                when()
+                    .get(USERNAME_WITH_DOMAIN.asString() + SEPARATOR + "allowedFromHeaders")
+                .then()
+                    .statusCode(HttpStatus.OK_200)
+                    .contentType(ContentType.JSON)
+                    .extract()
+                    .body()
+                    .jsonPath()
+                    .getList(".");
+
+            assertThat(allowedFroms).containsExactly(USERNAME_WITH_DOMAIN.asString(), aliasAddress);
+        }
+
+        @Test
+        void allowedFromHeadersShouldReturn404WhenUserDoesNotExist() {
+            when()
+                .get(USERNAME_WITH_DOMAIN.asString() + SEPARATOR + "allowedFromHeaders")
+            .then()
+                .statusCode(HttpStatus.NOT_FOUND_404)
+                .body("statusCode", is(HttpStatus.NOT_FOUND_404))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("user 'username@domain' does not exist"));
+        }
+
+        @Test
+        void allowedFromHeadersShouldReturn404WhenUserIsInvalid() {
+            when()
+                .get("@@" + SEPARATOR + "allowedFromHeaders")
+            .then()
+                .statusCode(HttpStatus.BAD_REQUEST_400)
+                .body("statusCode", is(HttpStatus.BAD_REQUEST_400))
+                .body("type", is(ErrorResponder.ErrorType.INVALID_ARGUMENT.getType()))
+                .body("message", is("Invalid arguments supplied in the user request"));
         }
 
         @Nested

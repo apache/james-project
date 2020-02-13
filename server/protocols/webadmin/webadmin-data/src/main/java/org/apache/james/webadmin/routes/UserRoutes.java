@@ -22,6 +22,8 @@ package org.apache.james.webadmin.routes;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static spark.Spark.halt;
 
+import java.util.List;
+
 import javax.inject.Inject;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,7 +31,11 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
+import org.apache.james.core.MailAddress;
 import org.apache.james.core.Username;
+import org.apache.james.rrt.api.CanSendFrom;
+import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.RecipientRewriteTableException;
 import org.apache.james.user.api.InvalidUsernameException;
 import org.apache.james.user.api.UsersRepositoryException;
 import org.apache.james.webadmin.Routes;
@@ -45,6 +51,8 @@ import org.apache.james.webadmin.utils.Responses;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.github.steveash.guavate.Guavate;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -69,14 +77,16 @@ public class UserRoutes implements Routes {
 
     private final UserService userService;
     private final JsonTransformer jsonTransformer;
+    private final CanSendFrom canSendFrom;
     private final JsonExtractor<AddUserRequest> jsonExtractor;
 
     private Service service;
 
     @Inject
-    public UserRoutes(UserService userService, JsonTransformer jsonTransformer) {
+    public UserRoutes(UserService userService, CanSendFrom canSendFrom, JsonTransformer jsonTransformer) {
         this.userService = userService;
         this.jsonTransformer = jsonTransformer;
+        this.canSendFrom = canSendFrom;
         this.jsonExtractor = new JsonExtractor<>(AddUserRequest.class);
     }
 
@@ -94,6 +104,8 @@ public class UserRoutes implements Routes {
         defineCreateUser();
 
         defineDeleteUser();
+
+        defineAllowedFromHeaders();
     }
 
     @DELETE
@@ -142,6 +154,25 @@ public class UserRoutes implements Routes {
             jsonTransformer);
     }
 
+    @GET
+    @Path("/{username}/allowedFromHeaders")
+    @ApiOperation(value = "List all possible From header value for an existing user")
+    @ApiImplicitParams({
+        @ApiImplicitParam(required = true, dataType = "string", name = "username", paramType = "path")
+    })
+    @ApiResponses(value = {
+        @ApiResponse(code = HttpStatus.NO_CONTENT_204, message = "OK.", response = List.class),
+        @ApiResponse(code = HttpStatus.BAD_REQUEST_400, message = "user is not valid."),
+        @ApiResponse(code = HttpStatus.NOT_FOUND_404, message = "user does not exist."),
+        @ApiResponse(code = HttpStatus.INTERNAL_SERVER_ERROR_500,
+            message = "Internal server error - Something went bad on the server side.")
+    })
+    public void defineAllowedFromHeaders() {
+        service.get(USERS + SEPARATOR + USER_NAME + SEPARATOR + "allowedFromHeaders",
+            this::allowedFromHeaders,
+            jsonTransformer);
+    }
+
     private String removeUser(Request request, Response response) {
         Username username = extractUsername(request);
         try {
@@ -174,6 +205,35 @@ public class UserRoutes implements Routes {
                 .haltError();
         } catch (UsersRepositoryException e) {
             String errorMessage = String.format("Error while upserting user '%s'", username);
+            LOGGER.info(errorMessage, e);
+            throw ErrorResponder.builder()
+                .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
+                .type(ErrorType.SERVER_ERROR)
+                .message(errorMessage)
+                .cause(e)
+                .haltError();
+        }
+    }
+
+    private List<String> allowedFromHeaders(Request request, Response response) {
+        Username username = extractUsername(request);
+
+        try {
+            if (!userService.existUser(username)) {
+                LOGGER.info("allowed From headers on an unknown user: '{}", username.asString());
+                throw ErrorResponder.builder()
+                    .statusCode(HttpStatus.NOT_FOUND_404)
+                    .type(ErrorType.INVALID_ARGUMENT)
+                    .message("user '" + username.asString() + "' does not exist")
+                    .haltError();
+            }
+
+            return canSendFrom
+                .allValidFromAddressesForUser(username)
+                .map(MailAddress::asString)
+                .collect(Guavate.toImmutableList());
+        } catch (RecipientRewriteTable.ErrorMappingException | RecipientRewriteTableException | UsersRepositoryException e) {
+            String errorMessage = String.format("Error while listing allowed From headers for user '%s'", username);
             LOGGER.info(errorMessage, e);
             throw ErrorResponder.builder()
                 .statusCode(HttpStatus.INTERNAL_SERVER_ERROR_500)
