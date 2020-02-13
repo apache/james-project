@@ -23,6 +23,7 @@ import static io.restassured.RestAssured.given;
 import static io.restassured.RestAssured.when;
 import static io.restassured.RestAssured.with;
 import static net.javacrumbs.jsonunit.assertj.JsonAssertions.assertThatJson;
+import static org.apache.james.mailbox.events.EventDeadLetters.InsertionId;
 import static org.assertj.core.api.Java6Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasSize;
@@ -76,11 +77,6 @@ class EventDeadLettersRoutesTest {
     private static final String UUID_1 = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
     private static final String UUID_2 = "6e0dd59d-660e-4d9b-b22f-0354479f47b5";
     private static final String INSERTION_UUID_1 = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
-    private static final String INSERTION_UUID_2 = "6e0dd59d-660e-4d9b-b22f-0354479f47b8";
-    private static final String INSERTION_UUID_3 = "6e0dd59d-660e-4d9b-b22f-0354479f47b9";
-    private static final EventDeadLetters.InsertionId INSERTION_ID_1 = EventDeadLetters.InsertionId.of(INSERTION_UUID_1);
-    private static final EventDeadLetters.InsertionId INSERTION_ID_2 = EventDeadLetters.InsertionId.of(INSERTION_UUID_2);
-    private static final EventDeadLetters.InsertionId INSERTION_ID_3 = EventDeadLetters.InsertionId.of(INSERTION_UUID_3);
     private static final MailboxListener.MailboxAdded EVENT_1 = EventFactory.mailboxAdded()
         .eventId(Event.EventId.of(UUID_1))
         .user(BOB)
@@ -154,7 +150,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void getGroupsShouldReturnGroupsOfContainedEvents() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
             when()
                 .get("/events/deadLetter/groups")
@@ -166,8 +162,8 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void getGroupsShouldReturnGroupsOfContainedEventsWithoutDuplicates() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2, INSERTION_ID_2).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
 
             when()
                 .get("/events/deadLetter/groups")
@@ -179,8 +175,8 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void getGroupsShouldReturnGroupsOfAllContainedEvents() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2, INSERTION_ID_2).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
 
             when()
                 .get("/events/deadLetter/groups")
@@ -217,40 +213,47 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void listEventsShouldReturnContainedEvents() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", containsInAnyOrder(INSERTION_UUID_1));
+                .body(".", containsInAnyOrder(insertionId.asString()));
         }
 
         @Test
         void listEventsShouldNotReturnEventsOfOtherGroups() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2, INSERTION_ID_2).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupB(), EVENT_2).block();
 
+            assertThat(insertionId).isNotNull();
+            
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", containsInAnyOrder(INSERTION_UUID_1));
+                .body(".", containsInAnyOrder(insertionId.asString()));
         }
 
         @Test
         void listEventsShouldReturnAllEvents() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2, INSERTION_ID_2).block();
+            InsertionId insertionId1 = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            InsertionId insertionId2 = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_2).block();
 
+            assertThat(insertionId1).isNotNull();
+            assertThat(insertionId2).isNotNull();
+            
             when()
                 .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
-                .body(".", containsInAnyOrder(INSERTION_UUID_1, INSERTION_UUID_2));
+                .body(".", containsInAnyOrder(insertionId1.asString(), insertionId2.asString()));
         }
     }
 
@@ -258,10 +261,12 @@ class EventDeadLettersRoutesTest {
     class GetEvent {
         @Test
         void getEventShouldReturnEvent() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             String response = when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.OK_200)
                 .contentType(ContentType.JSON)
@@ -308,10 +313,12 @@ class EventDeadLettersRoutesTest {
     class Delete {
         @Test
         void deleteShouldReturnOk() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             when()
-                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.NO_CONTENT_204);
         }
@@ -350,13 +357,15 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void deleteShouldRemoveEvent() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             with()
-                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1);
+                .delete("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString());
 
             when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
@@ -393,7 +402,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldHaveSuccessfulCompletedTask() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -420,8 +429,10 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldRemoveEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(groupA, EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
                 .post("/events/deadLetter")
@@ -438,14 +449,14 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.failedRedeliveriesCount", is(0));
 
             when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
         void postRedeliverAllEventsShouldRedeliverEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -467,9 +478,9 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldRemoveAllEventsFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(groupA, EVENT_2, INSERTION_ID_2).block();
-            deadLetters.store(groupB, EVENT_2, INSERTION_ID_3).block();
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
+            deadLetters.store(groupB, EVENT_2).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -496,9 +507,9 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldRedeliverAllEventsFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(groupA, EVENT_2, INSERTION_ID_2).block();
-            deadLetters.store(groupB, EVENT_2, INSERTION_ID_3).block();
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
+            deadLetters.store(groupB, EVENT_2).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -521,7 +532,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldFailWhenInvalidAction() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             given()
                 .queryParam("action", "invalid-action")
@@ -538,7 +549,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverAllEventsShouldFailWhenMissingAction() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
             when()
                 .post("/events/deadLetter")
@@ -566,7 +577,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldCreateATask() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             given()
                 .queryParam("action", EVENTS_ACTION)
@@ -580,7 +591,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldHaveSuccessfulCompletedTask() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -607,7 +618,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldRemoveEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -633,7 +644,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldRedeliverEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -656,8 +667,8 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldRemoveAllGroupEventsFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(groupA, EVENT_2, INSERTION_ID_2).block();
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -685,8 +696,8 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldRedeliverAllGroupEventsFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
-            deadLetters.store(groupA, EVENT_2, INSERTION_ID_2).block();
+            deadLetters.store(groupA, EVENT_1).block();
+            deadLetters.store(groupA, EVENT_2).block();
 
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
@@ -709,7 +720,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldFailWhenInvalidAction() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             given()
                 .queryParam("action", "invalid-action")
@@ -726,7 +737,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldFailWhenMissingAction() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
 
             when()
                 .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A)
@@ -755,7 +766,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverGroupEventsShouldNotRedeliverAllNotMatchedGroupEventsFromDeadLetter() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             with()
                 .queryParam("action", EVENTS_ACTION)
@@ -786,7 +797,7 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverSingleEventShouldCreateATask() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            deadLetters.store(groupA, EVENT_1).block();
 
             given()
                 .queryParam("action", EVENTS_ACTION)
@@ -800,11 +811,13 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverSingleEventShouldHaveSuccessfulCompletedTask() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(groupA, EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
-                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
                 .jsonPath()
                 .get("taskId");
 
@@ -818,7 +831,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
-                .body("additionalInformation.insertionId", is(INSERTION_UUID_1))
+                .body("additionalInformation.insertionId", is(insertionId.asString()))
                 .body("type", is(EventDeadLettersRedeliverOneTask.TYPE.asString()))
                 .body("startedDate", is(notNullValue()))
                 .body("submitDate", is(notNullValue()))
@@ -827,11 +840,13 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverSingleEventShouldRemoveEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(groupA, EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
-                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
                 .jsonPath()
                 .get("taskId");
 
@@ -844,21 +859,23 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
-                .body("additionalInformation.insertionId", is(INSERTION_UUID_1));
+                .body("additionalInformation.insertionId", is(insertionId.asString()));
 
             when()
-                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .get("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.NOT_FOUND_404);
         }
 
         @Test
         void postRedeliverSingleEventShouldRedeliverEventFromDeadLetters() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
+            InsertionId insertionId = deadLetters.store(groupA, EVENT_1).block();
 
+            assertThat(insertionId).isNotNull();
+            
             String taskId = with()
                 .queryParam("action", EVENTS_ACTION)
-                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
                 .jsonPath()
                 .get("taskId");
 
@@ -871,7 +888,7 @@ class EventDeadLettersRoutesTest {
                 .body("additionalInformation.successfulRedeliveriesCount", is(1))
                 .body("additionalInformation.failedRedeliveriesCount", is(0))
                 .body("additionalInformation.group", is(SERIALIZED_GROUP_A))
-                .body("additionalInformation.insertionId", is(INSERTION_UUID_1));
+                .body("additionalInformation.insertionId", is(insertionId.asString()));
 
             assertThat(eventCollector.getEvents()).hasSize(1);
         }
@@ -888,12 +905,13 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverSingleEventShouldFailWhenInvalidAction() {
-            deadLetters.store(groupA, EVENT_1, INSERTION_ID_1).block();
-
+            InsertionId insertionId = deadLetters.store(groupA, EVENT_1).block();
+            assertThat(insertionId).isNotNull();
+            
             given()
                 .queryParam("action", "invalid-action")
             .when()
-                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)
@@ -905,10 +923,11 @@ class EventDeadLettersRoutesTest {
 
         @Test
         void postRedeliverSingleEventShouldFailWhenMissingAction() {
-            deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1, INSERTION_ID_1).block();
-
+            InsertionId insertionId = deadLetters.store(new EventBusTestFixture.GroupA(), EVENT_1).block();
+            assertThat(insertionId).isNotNull();
+            
             when()
-                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + INSERTION_UUID_1)
+                .post("/events/deadLetter/groups/" + SERIALIZED_GROUP_A + "/" + insertionId.asString())
             .then()
                 .statusCode(HttpStatus.BAD_REQUEST_400)
                 .contentType(ContentType.JSON)

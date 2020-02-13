@@ -82,6 +82,7 @@ import org.apache.james.webadmin.routes.MailRepositoriesRoutes;
 import org.apache.james.webadmin.routes.TasksRoutes;
 import org.apache.james.webadmin.vault.routes.DeletedMessagesVaultRoutes;
 import org.apache.mailet.base.test.FakeMail;
+import org.assertj.core.api.Assertions;
 import org.eclipse.jetty.http.HttpStatus;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -461,22 +462,14 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
     @Test
     void eventDeadLettersRedeliverShouldCreateATask(GuiceJamesServer guiceJamesServer) {
-        String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
-        String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
         Group group = new GenericGroup("a");
-        EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
-        MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
-            .eventId(Event.EventId.of(uuid))
-            .user(Username.of(USERNAME))
-            .sessionId(MailboxSession.SessionId.of(452))
-            .mailboxId(InMemoryId.of(453))
-            .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
-            .build();
+
+        MailboxListener.MailboxAdded event = createMailboxAdded();
 
         guiceJamesServer
             .getProbe(EventDeadLettersProbe.class)
             .getEventDeadLetters()
-            .store(group, event, insertionId)
+            .store(group, event)
             .block();
 
         String taskId = with()
@@ -503,27 +496,19 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
 
     @Test
     void postRedeliverSingleEventShouldCreateATask(GuiceJamesServer guiceJamesServer) {
-        String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
-        String insertionUuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b7";
         Group group = new GenericGroup("a");
-        EventDeadLetters.InsertionId insertionId = EventDeadLetters.InsertionId.of(insertionUuid);
-        MailboxListener.MailboxAdded event = EventFactory.mailboxAdded()
-            .eventId(Event.EventId.of(uuid))
-            .user(Username.of(USERNAME))
-            .sessionId(MailboxSession.SessionId.of(452))
-            .mailboxId(InMemoryId.of(453))
-            .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
-            .build();
 
-        guiceJamesServer
+        MailboxListener.MailboxAdded event = createMailboxAdded();
+
+        EventDeadLetters.InsertionId insertionId = guiceJamesServer
             .getProbe(EventDeadLettersProbe.class)
             .getEventDeadLetters()
-            .store(group, event, insertionId)
+            .store(group, event)
             .block();
 
         String taskId = with()
             .queryParam("action", "reDeliver")
-        .post("/events/deadLetter/groups/" + group.asString() + "/" + insertionUuid)
+        .post("/events/deadLetter/groups/" + group.asString() + "/" + insertionId.asString())
         .then()
             .statusCode(HttpStatus.CREATED_201)
             .extract()
@@ -541,7 +526,7 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("additionalInformation.successfulRedeliveriesCount", is(0))
             .body("additionalInformation.failedRedeliveriesCount", is(0))
             .body("additionalInformation.group", is(group.asString()))
-            .body("additionalInformation.insertionId", is(insertionId.getId().toString()));
+            .body("additionalInformation.insertionId", is(insertionId.asString()));
     }
 
     @Test
@@ -752,5 +737,16 @@ class RabbitMQWebAdminServerTaskSerializationIntegrationTest {
             .body("type", is("cassandra-mappings-solve-inconsistencies"))
             .body("additionalInformation.successfulMappingsCount", is(0))
             .body("additionalInformation.errorMappingsCount", is(0));
+    }
+
+    private MailboxListener.MailboxAdded createMailboxAdded() {
+        String uuid = "6e0dd59d-660e-4d9b-b22f-0354479f47b4";
+        return EventFactory.mailboxAdded()
+            .eventId(Event.EventId.of(uuid))
+            .user(Username.of(USERNAME))
+            .sessionId(MailboxSession.SessionId.of(452))
+            .mailboxId(InMemoryId.of(453))
+            .mailboxPath(MailboxPath.forUser(Username.of(USERNAME), "Important-mailbox"))
+            .build();
     }
 }

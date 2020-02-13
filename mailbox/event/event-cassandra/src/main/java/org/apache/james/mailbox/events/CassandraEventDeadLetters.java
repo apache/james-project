@@ -39,13 +39,14 @@ public class CassandraEventDeadLetters implements EventDeadLetters {
     }
 
     @Override
-    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId) {
+    public Mono<InsertionId> store(Group registeredGroup, Event failDeliveredEvent) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
-        Preconditions.checkArgument(insertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
+        InsertionId insertionId = InsertionId.random();
         return cassandraEventDeadLettersDAO.store(registeredGroup, failDeliveredEvent, insertionId)
-            .then(cassandraEventDeadLettersGroupDAO.storeGroup(registeredGroup));
+            .then(cassandraEventDeadLettersGroupDAO.storeGroup(registeredGroup))
+            .thenReturn(insertionId);
     }
 
     @Override

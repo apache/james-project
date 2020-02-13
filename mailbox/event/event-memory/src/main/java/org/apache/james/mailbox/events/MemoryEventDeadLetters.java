@@ -36,14 +36,14 @@ public class MemoryEventDeadLetters implements EventDeadLetters {
     }
 
     @Override
-    public Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId) {
+    public Mono<InsertionId> store(Group registeredGroup, Event failDeliveredEvent) {
         Preconditions.checkArgument(registeredGroup != null, REGISTERED_GROUP_CANNOT_BE_NULL);
         Preconditions.checkArgument(failDeliveredEvent != null, FAIL_DELIVERED_EVENT_CANNOT_BE_NULL);
-        Preconditions.checkArgument(insertionId != null, FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL);
 
+        InsertionId insertionId = InsertionId.random();
         synchronized (deadLetters) {
             deadLetters.put(registeredGroup, insertionId, failDeliveredEvent);
-            return Mono.empty();
+            return Mono.just(insertionId);
         }
     }
 

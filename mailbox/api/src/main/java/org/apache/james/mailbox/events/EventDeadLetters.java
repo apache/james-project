@@ -75,6 +75,10 @@ public interface EventDeadLetters {
                 .add("id", id)
                 .toString();
         }
+
+        public String asString() {
+            return id.toString();
+        }
     }
 
 
@@ -82,7 +86,7 @@ public interface EventDeadLetters {
     String FAIL_DELIVERED_EVENT_CANNOT_BE_NULL = "failDeliveredEvent cannot be null";
     String FAIL_DELIVERED_ID_INSERTION_CANNOT_BE_NULL = "failDeliveredInsertionId cannot be null";
 
-    Mono<Void> store(Group registeredGroup, Event failDeliveredEvent, InsertionId insertionId);
+    Mono<InsertionId> store(Group registeredGroup, Event failDeliveredEvent);
 
     Mono<Void> remove(Group registeredGroup, InsertionId failDeliveredInsertionId);
 

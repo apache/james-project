@@ -121,7 +121,7 @@ public interface EventDelivery {
 
             @Override
             public Mono<Void> handle(Event event) {
-                return eventDeadLetters.store(group, event, EventDeadLetters.InsertionId.random());
+                return eventDeadLetters.store(group, event).then();
             }
         }
 
