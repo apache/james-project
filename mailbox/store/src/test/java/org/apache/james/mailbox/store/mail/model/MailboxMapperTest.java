@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.store.mail.model;
 
+import static org.apache.james.mailbox.model.MailboxAssertingTool.assertThat;
 import static org.apache.james.mailbox.store.mail.model.ListMailboxAssert.assertMailboxes;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -30,7 +31,6 @@ import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.exception.MailboxExistsException;
 import org.apache.james.mailbox.exception.MailboxNotFoundException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxAssert;
 import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.search.ExactName;
@@ -90,7 +90,7 @@ public abstract class MailboxMapperTest {
     @Test
     void saveShouldPersistTheMailbox() throws MailboxException {
         mailboxMapper.save(benwaInboxMailbox);
-        MailboxAssert.assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
+        assertThat(mailboxMapper.findMailboxByPath(benwaInboxPath)).isEqualTo(benwaInboxMailbox);
     }
 
     @Test
@@ -199,7 +199,7 @@ public abstract class MailboxMapperTest {
     void findMailboxByIdShouldReturnExistingMailbox() throws MailboxException {
         saveAll();
         Mailbox actual = mailboxMapper.findMailboxById(benwaInboxMailbox.getMailboxId());
-        MailboxAssert.assertThat(actual).isEqualTo(benwaInboxMailbox);
+        assertThat(actual).isEqualTo(benwaInboxMailbox);
     }
     
     @Test
