@@ -45,6 +45,12 @@ class MailboxPathTest {
     }
 
     @Test
+    void asStringShouldFormatUser() {
+        assertThat(MailboxPath.forUser(USER, "inbox.folder.subfolder").asString())
+            .isEqualTo("#private:user:inbox.folder.subfolder");
+    }
+
+    @Test
     void getHierarchyLevelsShouldBeOrdered() {
         assertThat(MailboxPath.forUser(USER, "inbox.folder.subfolder")
             .getHierarchyLevels('.'))

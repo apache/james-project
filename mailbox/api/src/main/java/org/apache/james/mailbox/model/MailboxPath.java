@@ -179,7 +179,7 @@ public class MailboxPath {
     }
 
     public String asString() {
-        return namespace + ":" + user + ":" + name;
+        return namespace + ":" + user.asString() + ":" + name;
     }
 
     public boolean isInbox() {
