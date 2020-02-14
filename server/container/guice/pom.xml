@@ -66,8 +66,6 @@
         <module>protocols/pop</module>
         <module>protocols/smtp</module>
         <module>protocols/webadmin</module>
-        <module>protocols/webadmin-cassandra</module>
-        <module>protocols/webadmin-cassandra-data</module>
         <module>protocols/webadmin-data</module>
         <module>protocols/webadmin-jmap</module>
         <module>protocols/webadmin-mailbox</module>
@@ -178,16 +176,6 @@
             <dependency>
                 <groupId>${james.groupId}</groupId>
                 <artifactId>james-server-guice-webadmin</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-webadmin-cassandra</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>${james.groupId}</groupId>
-                <artifactId>james-server-guice-webadmin-cassandra-data</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

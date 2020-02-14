@@ -17,7 +17,7 @@
  * under the License.                                           *
  ****************************************************************/
 
-package org.apache.james.modules.server;
+package org.apache.james.modules.webadmin;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
@@ -27,14 +27,20 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
 
-public class CassandraDataRoutesModules extends AbstractModule {
+public class InconsistencySolvingRoutesModule extends AbstractModule {
+    public static class SolveRRTInconsistenciesModules extends AbstractModule {
+        @Override
+        protected void configure() {
+            bind(CassandraMappingsRoutes.class).in(Scopes.SINGLETON);
+            bind(CassandraMappingsService.class).in(Scopes.SINGLETON);
+
+            Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
+            routesMultibinder.addBinding().to(CassandraMappingsRoutes.class);
+        }
+    }
 
     @Override
     protected void configure() {
-        bind(CassandraMappingsRoutes.class).in(Scopes.SINGLETON);
-        bind(CassandraMappingsService.class).in(Scopes.SINGLETON);
-
-        Multibinder<Routes> routesMultibinder = Multibinder.newSetBinder(binder(), Routes.class);
-        routesMultibinder.addBinding().to(CassandraMappingsRoutes.class);
+        install(new SolveRRTInconsistenciesModules());
     }
 }

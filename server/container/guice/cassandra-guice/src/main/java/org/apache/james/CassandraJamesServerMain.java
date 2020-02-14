@@ -51,8 +51,6 @@ import org.apache.james.modules.protocols.ManageSieveServerModule;
 import org.apache.james.modules.protocols.POP3ServerModule;
 import org.apache.james.modules.protocols.ProtocolHandlerModule;
 import org.apache.james.modules.protocols.SMTPServerModule;
-import org.apache.james.modules.server.CassandraDataRoutesModules;
-import org.apache.james.modules.server.CassandraRoutesModule;
 import org.apache.james.modules.server.DKIMMailetModule;
 import org.apache.james.modules.server.DLPRoutesModule;
 import org.apache.james.modules.server.DataRoutesModules;
@@ -70,6 +68,8 @@ import org.apache.james.modules.server.TaskManagerModule;
 import org.apache.james.modules.server.WebAdminServerModule;
 import org.apache.james.modules.spamassassin.SpamAssassinListenerModule;
 import org.apache.james.modules.vault.DeletedMessageVaultRoutesModule;
+import org.apache.james.modules.webadmin.CassandraRoutesModule;
+import org.apache.james.modules.webadmin.InconsistencySolvingRoutesModule;
 import org.apache.james.server.core.configuration.Configuration;
 
 import com.google.common.collect.ImmutableSet;
@@ -82,10 +82,10 @@ public class CassandraJamesServerMain {
 
     public static final Module WEBADMIN = Modules.combine(
         new CassandraRoutesModule(),
-        new CassandraDataRoutesModules(),
         new DataRoutesModules(),
         new DeletedMessageVaultRoutesModule(),
         new DLPRoutesModule(),
+        new InconsistencySolvingRoutesModule(),
         new JmapTasksModule(),
         new MailboxRoutesModule(),
         new MailQueueRoutesModule(),
