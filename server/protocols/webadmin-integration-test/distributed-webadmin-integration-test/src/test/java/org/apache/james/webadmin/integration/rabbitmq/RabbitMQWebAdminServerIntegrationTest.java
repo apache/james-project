@@ -145,7 +145,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
 
         String taskId = with()
             .queryParam("action", "SolveInconsistencies")
-            .post(CassandraMappingsRoutes.ROOT_PATH)
+        .post(CassandraMappingsRoutes.ROOT_PATH)
             .jsonPath()
             .get("taskId");
 
@@ -169,7 +169,7 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
     void getSwaggerShouldContainDistributedEndpoints() {
         when()
             .get(SwaggerRoutes.SWAGGER_ENDPOINT)
-            .then()
+        .then()
             .statusCode(HttpStatus.OK_200)
             .body(containsString("\"tags\":[\"Cassandra Mappings Operations\"]"))
             .body(containsString("{\"name\":\"MessageIdReIndexing\"}"));
