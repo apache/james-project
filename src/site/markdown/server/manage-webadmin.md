@@ -186,7 +186,7 @@ Response codes:
 ### Delete a domain
 
 ```
-curl -XDELETE http://ip:port/domains/domainToBeDeleted
+curl -XDELETE http://ip:port/domains/{domainToBeDeleted}
 ```
 
 Note: Deletion of an auto-detected domain, default domain or of an auto-detected ip is not supported. We encourage you instead to review 
@@ -199,7 +199,7 @@ Response codes:
 ### Test if a domain exists
 
 ```
-curl -XGET http://ip:port/domains/domainName
+curl -XGET http://ip:port/domains/{domainName}
 ```
 
 Response codes:
@@ -238,8 +238,8 @@ Possible response:
 ]
 ```
 
-When sending an email to an email address having source1.domain.tld or source2.domain.tld as a domain part (exemple: benwa@source1.domain.tld), then
-the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+When sending an email to an email address having `source1.domain.tld` or `source2.domain.tld` as a domain part (example: `user@source1.domain.tld`), then
+the domain part will be rewritten into destination.domain.tld (so into `user@destination.domain.tld`).
 
 Response codes:
 
@@ -255,16 +255,16 @@ To create a domain alias execute the following query:
 curl -XPUT http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
 ```
 
-When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
-the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+When sending an email to an email address having `source.domain.tld` as a domain part (example: `user@source.domain.tld`), then
+the domain part will be rewritten into `destination.domain.tld` (so into `user@destination.domain.tld`).
 
 
 Response codes:
 
  - 204: The redirection now exists
- - 400: source.domain.tld or destination.domain.tld have an invalid syntax
- - 400: source domain and destination domain are the same
- - 404: source.domain.tld are not part of handled domains.
+ - 400: `source.domain.tld` or `destination.domain.tld` have an invalid syntax
+ - 400: source, domain and destination domain are the same
+ - 404: `source.domain.tld` are not part of handled domains.
 
 ### Delete an alias for a domain
 
@@ -275,16 +275,16 @@ To delete a domain alias execute the following query:
 curl -XDELETE http://ip:port/domains/destination.domain.tld/aliases/source.domain.tld
 ```
 
-When sending an email to an email address having source.domain.tld as a domain part (exemple: benwa@source.domain.tld), then
-the domain part will be rewritten into destination.domain.tld (so into benwa@destination.domain.tld).
+When sending an email to an email address having `source.domain.tld` as a domain part (example: `user@source.domain.tld`), then
+the domain part will be rewritten into `destination.domain.tld` (so into `user@destination.domain.tld`).
 
 
 Response codes:
 
  - 204: The redirection now no longer exists
- - 400: source.domain.tld or destination.domain.tld have an invalid syntax
- - 400: source domain and destination domain are the same
- - 404: source.domain.tld are not part of handled domains.
+ - 400: `source.domain.tld` or destination.domain.tld have an invalid syntax
+ - 400: source, domain and destination domain are the same
+ - 404: `source.domain.tld` are not part of handled domains.
 
 ## Administrating users
 
@@ -320,7 +320,7 @@ If the user do not exist, then it will be created.
 ### Deleting a user
 
 ```
-curl -XDELETE http://ip:port/users/userToBeDeleted
+curl -XDELETE http://ip:port/users/{userToBeDeleted}
 ```
 
 Response codes:
@@ -352,7 +352,7 @@ Several actions can be performed on the server mailboxes.
 Request pattern is:
 
 ```
-curl -XPOST /mailboxes?action=XXX,...
+curl -XPOST /mailboxes?action={action1},...
 ```
 
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
@@ -440,7 +440,7 @@ The scheduled task will have the following type `full-reindexing` and the follow
 
 ##### Fixing previously failed ReIndexing
 
-Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a taskId generated for a reIndexing tasks
+Given `bbdb69c9-082a-44b0-a85a-6e33e74287a5` being a `taskId` generated for a reIndexing tasks
 
 ```
 curl -XPOST 'http://ip:port/mailboxes?task=reIndex&reIndexFailedMessagesOf=bbdb69c9-082a-44b0-a85a-6e33e74287a5'
@@ -502,7 +502,7 @@ concurrent changes done during the reIndexing might be ignored.
 #### ReIndexing a single mail
 
 ```
-curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/36?task=reIndex
+curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/{uid}?task=reIndex
 ```
 
 Will schedule a task for reIndexing a single email.
@@ -571,11 +571,11 @@ Warning: During the re-indexing, the result of search operations might be altere
 ### Creating a mailbox
 
 ```
-curl -XPUT http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+curl -XPUT http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeCreated}
 ```
 
-Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeCreated should not be empty, nor contain # & % * characters.
+Resource name `usernameToBeUsed` should be an existing user
+Resource name `mailboxNameToBeCreated` should not be empty, nor contain # & % * characters.
 
 Response codes:
 
@@ -586,17 +586,17 @@ Response codes:
  To create nested mailboxes, for instance a work mailbox inside the INBOX mailbox, people should use the . separator. The sample query is:
 
 ```
-curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/INBOX.work
+curl -XDELETE http://ip:port/users/{usernameToBeUsed}/mailboxes/INBOX.work
 ```
 
 ### Deleting a mailbox and its children
 
 ```
-curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeDeleted
+curl -XDELETE http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeDeleted}
 ```
 
-Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeDeleted should not be empty
+Resource name `usernameToBeUsed` should be an existing user
+Resource name `mailboxNameToBeDeleted` should not be empty
 
 Response codes:
 
@@ -607,11 +607,11 @@ Response codes:
 ### Testing existence of a mailbox
 
 ```
-curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes/mailboxNameToBeCreated
+curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes/{mailboxNameToBeCreated}
 ```
 
-Resource name usernameToBeUsed should be an existing user
-Resource name mailboxNameToBeCreated should not be empty
+Resource name `usernameToBeUsed` should be an existing user
+Resource name `mailboxNameToBeCreated` should not be empty
 
 Response codes:
 
@@ -622,7 +622,7 @@ Response codes:
 ### Listing user mailboxes
 
 ```
-curl -XGET http://ip:port/users/usernameToBeUsed/mailboxes
+curl -XGET http://ip:port/users/{usernameToBeUsed}/mailboxes
 ```
 
 The answer looks like:
@@ -631,7 +631,7 @@ The answer looks like:
 [{"mailboxName":"INBOX"},{"mailboxName":"outbox"}]
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 Response codes:
 
@@ -641,10 +641,10 @@ Response codes:
 ### Deleting user mailboxes
 
 ```
-curl -XDELETE http://ip:port/users/usernameToBeUsed/mailboxes
+curl -XDELETE http://ip:port/users/{usernameToBeUsed}/mailboxes
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 Response codes:
 
@@ -654,10 +654,10 @@ Response codes:
 ### ReIndexing a user mails
  
 ```
-curl -XPOST http://ip:port/users/usernameToBeUsed/mailboxes?task=reIndex
+curl -XPOST http://ip:port/users/{usernameToBeUsed}/mailboxes?task=reIndex
 ```
 
-Will schedule a task for reIndexing all the mails in "bob@domain.com" mailboxes (encoded above).
+Will schedule a task for reIndexing all the mails in "user@domain.com" mailboxes (encoded above).
  
 [More details about endpoints returning a task](#Endpoints_returning_a_task).
  
@@ -670,7 +670,7 @@ The scheduled task will have the following type `user-reindexing` and the follow
 
 ```
 {
-  "user":"bob@domain.com",
+  "user":"user@domain.com",
   "successfullyReprocessedMailCount":18,
   "failedReprocessedMailCount": 3,
   "failures": {
@@ -699,7 +699,7 @@ These projection items are asynchronously computed on mailbox events.
 You can force the full projection recomputation by calling the following endpoint:
 
 ```
-curl -XPOST /users/usernameToBeUsed/mailboxes?task=recomputeFastViewProjectionItems
+curl -XPOST /users/{usernameToBeUsed}/mailboxes?task=recomputeFastViewProjectionItems
 ```
 
 Will schedule a task for recomputing the fast message view projection for all mailboxes of `usernameToBeUsed`.
@@ -712,7 +712,7 @@ The scheduled task will have the following type `RecomputeAllPreviewsTask` and t
 ```
 {
   "type":"RecomputeAllPreviewsTask",
-  "username": "usernameToBeUsed",
+  "username": "{usernameToBeUsed}",
   "processedMessageCount": 3,
   "failedMessageCount": 1
 }
@@ -739,10 +739,10 @@ Response codes:
 ### Getting the quota for a user
 
 ```
-curl -XGET http://ip:port/quota/users/usernameToBeUsed
+curl -XGET http://ip:port/quota/users/{usernameToBeUsed}
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The answer is the details of the quota of that user.
 
@@ -800,10 +800,10 @@ Response codes:
 ### Updating the quota for a user
 
 ```
-curl -XPUT http://ip:port/quota/users/usernameToBeUsed
+curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The body can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
@@ -824,10 +824,10 @@ Response codes:
 ### Getting the quota count for a user
 
 ```
-curl -XGET http://ip:port/quota/users/usernameToBeUsed/count
+curl -XGET http://ip:port/quota/users/{usernameToBeUsed}/count
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The answer looks like:
 
@@ -844,10 +844,10 @@ Response codes:
 ### Updating the quota count for a user
 
 ```
-curl -XPUT http://ip:port/quota/users/usernameToBeUsed/count
+curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}/count
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The body can contain a fixed value or an unlimited value (-1):
 
@@ -864,10 +864,10 @@ Response codes:
 ### Deleting the quota count for a user
 
 ```
-curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/count
+curl -XDELETE http://ip:port/quota/users/{usernameToBeUsed}/count
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 Response codes:
 
@@ -877,10 +877,10 @@ Response codes:
 ### Getting the quota size for a user
 
 ```
-curl -XGET http://ip:port/quota/users/usernameToBeUsed/size
+curl -XGET http://ip:port/quota/users/{usernameToBeUsed}/size
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The answer looks like:
 
@@ -897,10 +897,10 @@ Response codes:
 ### Updating the quota size for a user
 
 ```
-curl -XPUT http://ip:port/quota/users/usernameToBeUsed/size
+curl -XPUT http://ip:port/quota/users/{usernameToBeUsed}/size
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 The body can contain a fixed value or an unlimited value (-1):
 
@@ -917,10 +917,10 @@ Response codes:
 ### Deleting the quota size for a user
 
 ```
-curl -XDELETE http://ip:port/quota/users/usernameToBeUsed/size
+curl -XDELETE http://ip:port/quota/users/{usernameToBeUsed}/size
 ```
 
-Resource name usernameToBeUsed should be an existing user
+Resource name `usernameToBeUsed` should be an existing user
 
 Response codes:
 
@@ -930,7 +930,7 @@ Response codes:
 ### Searching user by quota ratio
 
 ```
-curl -XGET 'http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=oppen-paas.org'
+curl -XGET 'http://ip:port/quota/users?minOccupationRatio=0.8&maxOccupationRatio=0.99&limit=100&offset=200&domain=domain.com'
 ```
 
 Will return:
@@ -938,7 +938,7 @@ Will return:
 ```
 [
   {
-    "username":"user@open-paas.org",
+    "username":"user@domain.com",
     "detail": {
       "global": {
         "count":252,
@@ -1002,10 +1002,10 @@ Response codes:
 ### Getting the quota for a domain
 
 ```
-curl -XGET http://ip:port/quota/domains/domainToBeUsed
+curl -XGET http://ip:port/quota/domains/{domainToBeUsed}
 ```
 
-Resource name domainToBeUsed should be an existing domain. For example:
+Resource name `domainToBeUsed` should be an existing domain. For example:
 
 ```
 curl -XGET http://ip:port/quota/domains/james.org
@@ -1053,10 +1053,10 @@ Response codes:
 ### Updating the quota for a domain
 
 ```
-curl -XPUT http://ip:port/quota/domains/domainToBeUsed
+curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 The body can contain a fixed value, an empty value (null) or an unlimited value (-1):
 
@@ -1078,10 +1078,10 @@ Response codes:
 ### Getting the quota count for a domain
 
 ```
-curl -XGET http://ip:port/quota/domains/domainToBeUsed/count
+curl -XGET http://ip:port/quota/domains/{domainToBeUsed}/count
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 The answer looks like:
 
@@ -1099,10 +1099,10 @@ Response codes:
 ### Updating the quota count for a domain
 
 ```
-curl -XPUT http://ip:port/quota/domains/domainToBeUsed/count
+curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}/count
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 The body can contain a fixed value or an unlimited value (-1):
 
@@ -1120,10 +1120,10 @@ Response codes:
 ### Deleting the quota count for a domain
 
 ```
-curl -XDELETE http://ip:port/quota/domains/domainToBeUsed/count
+curl -XDELETE http://ip:port/quota/domains/{domainToBeUsed}/count
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 Response codes:
 
@@ -1134,10 +1134,10 @@ Response codes:
 ### Getting the quota size for a domain
 
 ```
-curl -XGET http://ip:port/quota/domains/domainToBeUsed/size
+curl -XGET http://ip:port/quota/domains/{domainToBeUsed}/size
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 The answer looks like:
 
@@ -1155,10 +1155,10 @@ Response codes:
 ### Updating the quota size for a domain
 
 ```
-curl -XPUT http://ip:port/quota/domains/domainToBeUsed/size
+curl -XPUT http://ip:port/quota/domains/{domainToBeUsed}/size
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 The body can contain a fixed value or an unlimited value (-1):
 
@@ -1176,10 +1176,10 @@ Response codes:
 ### Deleting the quota size for a domain
 
 ```
-curl -XDELETE http://ip:port/quota/domains/domainToBeUsed/size
+curl -XDELETE http://ip:port/quota/domains/{domainToBeUsed}/size
 ```
 
-Resource name domainToBeUsed should be an existing domain.
+Resource name `domainToBeUsed` should be an existing domain.
 
 Response codes:
 
@@ -1200,12 +1200,10 @@ Response codes:
 ### Getting the global quota
 
 ```
-curl -XGET http://ip:port/quota/
+curl -XGET http://ip:port/quota
 ```
 
-Resource name usernameToBeUsed should be an existing user
-
-The answer is the details of the quota of that user.
+The answer is the details of the global quota.
 
 ```
 {
@@ -1411,7 +1409,7 @@ Will schedule the run of the migrations you need to reach schema version 3.
 
 Response codes:
 
- - 200: Success. The scheduled task taskId is returned.
+ - 200: Success. The scheduled task `taskId` is returned.
  - 400: The version is invalid. The version should be a strictly positive number.
  - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
 
@@ -1438,7 +1436,7 @@ Will schedule the run of the migrations you need to reach the latest schema vers
 
 Response codes:
 
- - 200: Success. The scheduled task taskId is returned.
+ - 200: Success. The scheduled task `taskId` is returned.
  - 410: Error while planning this migration. This resource is gone away. Reason is mentionned in the body.
 
 Note that several calls to this endpoint will be run in a sequential pattern.
@@ -1459,7 +1457,7 @@ You can use the mailbox merging feature in order to merge the old "ghosted" mail
 
 ```
 curl -XPOST http://ip:port/cassandra/mailbox/merging \
-  -d '{"mergeOrigin":"id1", "mergeDestination":"id2"}' \
+  -d '{"mergeOrigin":"{id1}", "mergeDestination":"{id2}"}' \
   -H "Content-Type: application/json"
 ```
 
@@ -1761,11 +1759,13 @@ Note that email addresses are restricted to ASCII character set. Mail addresses 
  - [Removing a domain mapping](#Removing_a_domain_mapping)
 
 ### Listing all domain mappings
+
 ```
 curl -XGET http://ip:port/domainMappings
 ```
 
 Will return all configured domain mappings
+
 ```
 {
   "firstSource.org" : ["firstDestination.com", "secondDestination.net"],
@@ -1778,6 +1778,7 @@ Response codes:
  - 200: OK
 
 ### Listing all destination domains for a source domain
+
 ```
 curl -XGET http://ip:port/domainMappings/sourceDomain.tld
 ```
@@ -1795,11 +1796,13 @@ Response codes:
  - 404: The `fromDomain` resource name is not found
 
 ### Adding a domain mapping
+
 ```
 curl -XPUT http://ip:port/domainMappings/sourceDomain.tld
 ```
 
 Body:
+
 ```
 destination.tld
 ```
@@ -1813,11 +1816,13 @@ Response codes:
  - 400: The destination domain specified in the body is invalid
 
 ### Removing a domain mapping
+
 ```
 curl -XDELETE http://ip:port/domainMappings/sourceDomain.tld
 ```
 
 Body:
+
 ```
 destination.tld
 ```
@@ -1831,6 +1836,7 @@ Response codes:
  - 400: The destination domain specified in the body is invalid
 
 ## Creating regex mapping
+
 You can use **webadmin** to create regex mappings.
 
 A regex mapping contains a mapping source and a Java Regular Expression (regex) in String as the mapping value.
@@ -1852,6 +1858,7 @@ POST /mappings/regex/mappingSource/targets/regex
 ```
 
 Where:
+
  - the `mappingSource` is the path parameter represents for the Regex Mapping mapping source
  - the `regex` is the path parameter represents for the Regex Mapping regex
 
@@ -1872,10 +1879,11 @@ Response codes:
 ### Removing a regex mapping
 
 ```
-DELETE /mappings/regex/mappingSource/targets/regex
+DELETE /mappings/regex/{mappingSource}/targets/{regex}
 ```
 
 Where:
+
  - the `mappingSource` is the path parameter representing the Regex Mapping mapping source
  - the `regex` is the path parameter representing the Regex Mapping regex
 
@@ -1969,6 +1977,7 @@ Response code:
 ```
 curl -XPOST http://ip:port/mappings/address/{mappingSource}/targets/{destinationAddress}
 ```
+
 Add an address mapping to the [Recipients rewrite table](/server/config-recipientrewritetable.html)
 Mapping source is the value of {mappingSource}
 Mapping destination is the value of {destinationAddress}
@@ -1985,10 +1994,10 @@ Response codes:
 curl -XDELETE http://ip:port/mappings/address/{mappingSource}/targets/{destinationAddress}
 ```
 
-Remove an address mapping from the [Recipients rewrite table](/server/config-recipientrewritetable.html)
-Mapping source is the value of {mappingSource}
-Mapping destination is the value of {destinationAddress}
-Type of mapping destination is Address
+ - Remove an address mapping from the [Recipients rewrite table](/server/config-recipientrewritetable.html)
+ - Mapping source is the value of `mappingSource`
+ - Mapping destination is the value of `destinationAddress`
+ - Type of mapping destination is Address
 
 Response codes:
 
@@ -2005,12 +2014,12 @@ Response codes:
 This endpoint allows receiving all mappings of a corresponding user.
 
 ```
-curl -XGET http://ip:port/mappings/user/userAddress
+curl -XGET http://ip:port/mappings/user/{userAddress}
 ```
 
 Return all mappings of a user where:
 
- - userAddress: is the selected user
+ - `userAddress`: is the selected user
 
 Response body:
 
@@ -2051,7 +2060,7 @@ Response codes:
 ### Create a mail repository
 
 ```
-curl -XPUT http://ip:port/mailRepositories/encodedPathOfTheRepository?protocol=someProtocol
+curl -XPUT http://ip:port/mailRepositories/{encodedPathOfTheRepository}?protocol={someProtocol}
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of the created mail repository. Example:
@@ -2102,7 +2111,7 @@ Response codes:
 ### Getting additional information for a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository
+curl -XGET http://ip:port/mailRepositories/{encodedPathOfTheRepository}
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
@@ -2129,7 +2138,7 @@ Response codes:
 ### Listing mails contained in a mail repository
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/mails
+curl -XGET http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
@@ -2169,7 +2178,7 @@ Response codes:
 ### Reading/downloading a mail details
 
 ```
-curl -XGET http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey
+curl -XGET http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails/mailKey
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
@@ -2260,7 +2269,7 @@ Response codes:
 ### Removing a mail from a mail repository
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey
+curl -XDELETE http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails/mailKey
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
@@ -2278,7 +2287,7 @@ Response codes:
 
 
 ```
-curl -XDELETE http://ip:port/mailRepositories/encodedPathOfTheRepository/mails
+curl -XDELETE http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
@@ -2311,7 +2320,7 @@ Sometime, you want to re-process emails stored in a mail repository. For instanc
 To reprocess mails from a repository:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/encodedPathOfTheRepository/mails?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails?action=reprocess
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource path of an existing mail repository. Example:
@@ -2360,7 +2369,7 @@ The scheduled task will have the following type `reprocessing-all` and the follo
 To reprocess a specific mail from a mail repository:
 
 ```
-curl -XPATCH http://ip:port/mailRepositories/encodedPathOfTheRepository/mails/mailKey?action=reprocess
+curl -XPATCH http://ip:port/mailRepositories/{encodedPathOfTheRepository}/mails/mailKey?action=reprocess
 ```
 
 Resource name `encodedPathOfTheRepository` should be the resource id of an existing mail repository. Resource name `mailKey` should be the key of a mail stored in that repository. Example:
@@ -2433,10 +2442,10 @@ Response codes:
 ### Getting a mail queue details
 
 ```
-curl -XGET http://ip:port/mailQueues/mailQueueName
+curl -XGET http://ip:port/mailQueues/{mailQueueName}
 ```
 
-Resource name mailQueueName is the name of a mail queue, this command will return the details of the given mail queue. For instance:
+Resource name `mailQueueName` is the name of a mail queue, this command will return the details of the given mail queue. For instance:
 
 ```
 {"name":"outgoing","size":0}
@@ -2451,7 +2460,7 @@ Response codes:
 ### Listing the mails of a mail queue
 
 ```
-curl -XGET http://ip:port/mailQueues/mailQueueName/mails
+curl -XGET http://ip:port/mailQueues/{mailQueueName}/mails
 ```
 
 Additional URL query parameters:
@@ -2459,7 +2468,7 @@ Additional URL query parameters:
  - `limit`: Maximum number of mails returned in a single call. Only strictly positive integer values are accepted. Example:
  
 ```
-curl -XGET http://ip:port/mailQueues/mailQueueName/mails?limit=100
+curl -XGET http://ip:port/mailQueues/{mailQueueName}/mails?limit=100
 ```
 
 The answer looks like:
@@ -2482,7 +2491,7 @@ Response codes:
 ### Deleting mails from a mail queue
 
 ```
-curl -XDELETE http://ip:port/mailQueues/mailQueueName/mails?sender=senderMailAddress
+curl -XDELETE http://ip:port/mailQueues/{mailQueueName}/mails?sender=senderMailAddress
 ```
 
 This request should have exactly one query parameter from the following list:
@@ -2517,7 +2526,7 @@ The scheduled task will have the following type `delete-mails-from-mail-queue` a
 ### Clearing a mail queue
 
 ```
-curl -XDELETE http://ip:port/mailQueues/mailQueueName/mails
+curl -XDELETE http://ip:port/mailQueues/{mailQueueName}/mails
 ```
 
 All mails from the given mail queue will be deleted.
@@ -2543,7 +2552,7 @@ The scheduled task will have the following type `clear-mail-queue` and the follo
 ### Flushing mails from a mail queue
 
 ```
-curl -XPATCH http://ip:port/mailQueues/mailQueueName?delayed=true \
+curl -XPATCH http://ip:port/mailQueues/{mailQueueName}?delayed=true \
   -d '{"delayed": false}' \
   -H "Content-Type: application/json"
 ```
@@ -2581,13 +2590,13 @@ Each `senderDomain` correspond to a distinct DLP configuration.
 Retrieve a DLP configuration for corresponding `senderDomain`, a configuration contains list of configuration items
 
 ```
-curl -XGET http://ip:port/dlp/rules/senderDomain
+curl -XGET http://ip:port/dlp/rules/{senderDomain}
 ```
 
 Response codes:
 
  - 200: A list of dlp configuration items is returned
- - 400: Invalid senderDomain or payload in request
+ - 400: Invalid `senderDomain` or payload in request
  - 404: The domain does not exist.
 
 This is an example of returned body. The rules field is a list of rules as described below.
@@ -2619,7 +2628,7 @@ Store a DLP configuration for corresponding `senderDomain`, if any item of DLP c
 it will not be stored anymore
 
 ```
-curl -XPUT http://ip:port/dlp/rules/senderDomain
+curl -XPUT http://ip:port/dlp/rules/{senderDomain}
 ```
 
 The body can contain a list of DLP configuration items formed by those fields: 
@@ -2656,7 +2665,7 @@ This is an example of returned body. The rules field is a list of rules as descr
 Response codes:
 
  - 204: List of dlp configuration items is stored
- - 400: Invalid senderDomain or payload in request
+ - 400: Invalid `senderDomain` or payload in request
  - 404: The domain does not exist.
 
 ### Remove DLP configuration by sender domain
@@ -2664,13 +2673,13 @@ Response codes:
 Remove a DLP configuration for corresponding `senderDomain`
 
 ```
-curl -XDELETE http://ip:port/dlp/rules/senderDomain
+curl -XDELETE http://ip:port/dlp/rules/{senderDomain}
 ```
 
 Response codes:
 
  - 204: DLP configuration is removed
- - 400: Invalid senderDomain or payload in request
+ - 400: Invalid `senderDomain` or payload in request
  - 404: The domain does not exist.
 
 
@@ -2679,13 +2688,13 @@ Response codes:
 Retrieve a DLP configuration rule for corresponding `senderDomain` and a `ruleId`
 
 ```
-curl -XGET http://ip:port/dlp/rules/senderDomain/rules/ruleId
+curl -XGET http://ip:port/dlp/rules/{senderDomain}/rules/{ruleId}
 ```
 
 Response codes:
 
  - 200: A dlp configuration item is returned
- - 400: Invalid senderDomain or payload in request
+ - 400: Invalid `senderDomain` or payload in request
  - 404: The domain and/or the rule does not exist.
 
 This is an example of returned body.
@@ -2878,7 +2887,7 @@ Will return the full JSON associated with this event.
 Response codes:
 
  - 200: Success. A JSON representing this event is returned.
- - 400: Invalid group name or insertionId
+ - 400: Invalid group name or `insertionId`
 
 ### Deleting an event
 
@@ -2891,7 +2900,7 @@ Will delete this event.
 Response codes:
 
  - 204: Success
- - 400: Invalid group name or insertionId
+ - 400: Invalid group name or `insertionId`
 
 ### Redeliver all events
 
@@ -3167,7 +3176,7 @@ You may want to call this endpoint on a regular basis.
 
 ### Permanently Remove Deleted Message
 
-Delete a Deleted Message with MessageId
+Delete a Deleted Message with `MessageId`
 
 ```
 curl -XDELETE http://ip:port/deletedMessages/users/user@domain.ext/messages/3294a976-ce63-491e-bd52-1b6f465ed7a2
@@ -3323,7 +3332,7 @@ Many endpoints do generate a task.
 Example:
 
 ```
-curl -XPOST /endpoint?action=XXX
+curl -XPOST /endpoint?action={action}
 ```
 
 The response to these requests will be the scheduled `taskId` :
@@ -3360,7 +3369,7 @@ regarding the `rrt` table.
 You can do a series of action on `mappings_sources` projection table :
 
 ```
-curl -XPOST /cassandra/mappings?action=[ACTION]
+curl -XPOST /cassandra/mappings?action={action}
 ```
 
 Will return the taskId corresponding to the related task. Actions supported so far are :
