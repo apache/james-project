@@ -43,10 +43,11 @@ public class DockerAwsS3Container {
         this.awsS3Container = new GenericContainer<>(AWS_S3_DOCKER_IMAGE);
         this.awsS3Container
             .withExposedPorts(AWS_S3_PORT)
-            .withEnv("S3BACKEND", "mem")
+            .withEnv("S3BACKEND", "file")
             .withEnv("SCALITY_ACCESS_KEY_ID", ACCESS_KEY_ID)
             .withEnv("SCALITY_SECRET_ACCESS_KEY", SECRET_ACCESS_KEY)
             .withEnv("LOG_LEVEL", "trace")
+            .withEnv("REMOTE_MANAGEMENT_DISABLE", "1")
             .waitingFor(Wait.forLogMessage(".*\"message\":\"server started\".*\\n", ONE_TIME));
     }
 
