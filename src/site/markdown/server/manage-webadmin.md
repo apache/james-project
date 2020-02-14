@@ -391,7 +391,53 @@ Response codes:
 
 The kind of task scheduled depends on the action parameter. See below for details.
 
-### Recomputing Global JMAP fast message view projection
+#### Fixing mailboxes inconsistencies
+
+This task is only available on top of Guice Cassandra products.
+
+```
+curl -XPOST /mailboxes?task=SolveInconsistencies
+```
+
+Will schedule a task for fixing inconsistencies for the mailbox deduplicated object stored in Cassandra.
+
+[More details about endpoints returning a task](#Endpoints_returning_a_task).
+
+The scheduled task will have the following type `solve-mailbox-inconsistencies` and the following `additionalInformation`:
+
+```
+{
+  "type":"solve-mailbox-inconsistencies",
+  "processedMailboxEntries": 3,
+  "processedMailboxPathEntries": 3,
+  "fixedInconsistencies": 2,
+  "errors": 1,
+  "conflictingEntries":[{
+    "mailboxDaoEntry":{
+      "mailboxPath":"#private:user:mailboxName",
+      "mailboxId":"464765a0-e4e7-11e4-aba4-710c1de3782b"
+    }," +
+    "mailboxPathDaoEntry":{
+      "mailboxPath":"#private:user:mailboxName2",
+      "mailboxId":"464765a0-e4e7-11e4-aba4-710c1de3782b"
+    }
+  }]
+}
+```
+
+Note that conflicting entry inconsistencies will not be fixed and will require to explicitly use 
+[ghost mailbox](#correcting-ghost-mailbox) endpoint in order to merge the conflicting mailboxes and prevent any message
+loss.
+
+**WARNING**: this task can cancel concurrently running legitimate user operations upon dirty read. As such this task 
+should be run offline. 
+
+A dirty read is when data is read between the two writes of the denormalization operations (no isolation).
+
+In order to ensure being offline, stop the traffic on SMTP, JMAP and IMAP ports, for example via re-configuration or 
+firewall rules.
+
+#### Recomputing Global JMAP fast message view projection
 
 This action is only available for backends supporting JMAP protocol.
 
