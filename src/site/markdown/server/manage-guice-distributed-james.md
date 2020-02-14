@@ -19,6 +19,7 @@ advanced users.
  - [Basic Monitoring](#basic-monitoring)
  - [Mailbox Event Bus](#mailbox-event-bus)
  - [Mail Processing](#mail-processing)
+ - [ElasticSearch Indexing](#elasticsearch-indexing)
 
 ## Overall architecture
 
@@ -205,3 +206,57 @@ reprocessing all the failed events registered in event dead letters.
 If for some other reason you don't need to redeliver all events, you have more fine-grained operations allowing you to
 [redeliver group events](manage-webadmin.html#Redeliver_group_events) or even just
 [redeliver a single event](manage-webadmin.html#Redeliver_a_single_event).
+
+## ElasticSearch Indexing
+
+A projection of messages is maintained in ElasticSearch via a listener plugged into the mailbox event bus in order to enable search features.
+
+You can find more information about ElasticSearch configuration [here](config-elasticsearch.html).
+
+### Usual troubleshooting procedures
+
+As explained in the [Mailbox Event Bus](#mailbox-event-bus) section, processing those events can fail sometimes.
+
+Currently, an administrator can monitor indexation failures through `ERROR` log review. You can as well
+[list failed events](manage-webadmin.html#Listing_failed_events) by looking with the group called 
+`org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
+A first on-the-fly solution could be to just 
+[redeliver those group events with event dead letter](#mailbox-event-bus).
+
+If the event storage in dead-letters fails (for instance in the face of Cassandra storage exceptions), 
+then you might need to use our WebAdmin reIndexing tasks.
+
+From there, you have multiple choices. You can
+[reIndex all mails](manage-webadmin.html#ReIndexing_all_mails),
+[reIndex mails from a mailbox](manage-webadmin.html#ReIndexing_a_mailbox_mails)
+or even just [reIndex a single mail](manage-webadmin.html#ReIndexing_a_single_mail).
+
+When checking the result of a reIndexing task, you might have failed reprocessed mails. You can still use the task ID to
+[reprocess previously failed reIndexing mails](manage-webadmin.html#Fixing_previously_failed_ReIndexing).
+
+### On the fly ElasticSearch Index setting update
+
+Sometimes you might need to update index settings. Cases when an administrator might want to update index settings include:
+
+ - Scaling out: increasing the shard count might be needed.
+ - Changing string analysers, for instance to target another language
+ - etc.
+
+In order to achieve such a procedure, you need to:
+
+ - [Create the new index](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-create-index.html) with the right
+settings and mapping
+ - James uses two aliases on the mailbox index: one for reading (`mailboxReadAlias`) and one for writing (`mailboxWriteAlias`).
+First [add an alias](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-aliases.html) `mailboxWriteAlias` to that new index,
+so that now James writes on the old and new indexes, while only keeping reading on the first one
+ - Now trigger a [reindex](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/docs-reindex.html)
+from the old index to the new one (this actively relies on `_source` field being present)
+ - When this is done, add the `mailboxReadAlias` alias to the new index
+ - Now that the migration to the new index is done, you can 
+[drop the old index](https://www.elastic.co/guide/en/elasticsearch/reference/6.3/indices-delete-index.html)
+ - You might want as well modify the James configuration file 
+[elasticsearch.properties](https://github.com/apache/james-project/blob/master/dockerfiles/run/guice/cassandra-rabbitmq/destination/conf/elasticsearch.properties)
+by setting the parameter `elasticsearch.index.mailbox.name` to the name of your new index. This is to avoid that James 
+re-creates index upon restart
+
+_Note_: keep in mind that reindexing can be a very long operation depending on the volume of mails you have stored.
