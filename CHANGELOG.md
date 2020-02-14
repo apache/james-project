@@ -13,6 +13,7 @@ of tasks being currently executed.
 - JAMES-2904 Authentication and SSL support for ElasticSearch backend
 - JAMES-3066 Add "allowed From headers" webadmin endpoint
 - JAMES-3062 EventDeadLettersHealthCheck
+- JAMES-3058 WebAdmin offline task to correct mailbox inconsistencies on top of Cassandra products
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
