@@ -21,11 +21,15 @@ package org.apache.james.modules.webadmin;
 
 import org.apache.james.webadmin.Routes;
 import org.apache.james.webadmin.routes.CassandraMappingsRoutes;
+import org.apache.james.webadmin.routes.MailboxesRoutes;
+import org.apache.james.webadmin.routes.SolveMailboxInconsistenciesRequestToTask;
 import org.apache.james.webadmin.service.CassandraMappingsService;
+import org.apache.james.webadmin.tasks.TaskFromRequestRegistry;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Scopes;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.name.Names;
 
 public class InconsistencySolvingRoutesModule extends AbstractModule {
     public static class SolveRRTInconsistenciesModules extends AbstractModule {
@@ -39,8 +43,18 @@ public class InconsistencySolvingRoutesModule extends AbstractModule {
         }
     }
 
+    public static class SolveMailboxInconsistenciesModules extends AbstractModule {
+        @Override
+        protected void configure() {
+            Multibinder.newSetBinder(binder(), TaskFromRequestRegistry.TaskRegistration.class,
+                Names.named(MailboxesRoutes.ALL_MAILBOXES_TASKS))
+                .addBinding().to(SolveMailboxInconsistenciesRequestToTask.class);
+        }
+    }
+
     @Override
     protected void configure() {
         install(new SolveRRTInconsistenciesModules());
+        install(new SolveMailboxInconsistenciesModules());
     }
 }

@@ -26,6 +26,7 @@ import static org.apache.james.webadmin.Constants.JSON_CONTENT_TYPE;
 import static org.apache.james.webadmin.Constants.SEPARATOR;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
 import org.apache.james.CassandraExtension;
@@ -164,6 +165,37 @@ class RabbitMQWebAdminServerIntegrationTest extends WebAdminServerIntegrationTes
             .body("source", hasItems(ALIAS_1, ALIAS_2));
     }
 
+    @Test
+    void solveMailboxInconsistenciesTaskShouldBeExposed() {
+        // schema version 6 or higher required to run solve mailbox inconsistencies task
+        String taskId = with().post(UPGRADE_TO_LATEST_VERSION)
+            .jsonPath()
+            .get("taskId");
+
+        with()
+            .get("/tasks/" + taskId + "/await")
+        .then()
+            .body("status", is("completed"));
+
+        taskId = with()
+            .queryParam("task", "SolveInconsistencies")
+        .post("/mailboxes")
+            .jsonPath()
+            .get("taskId");
+
+        given()
+            .basePath(TasksRoutes.BASE)
+        .when()
+            .get(taskId + "/await")
+        .then()
+            .body("status", is("completed"))
+            .body("type", is("solve-mailbox-inconsistencies"))
+            .body("additionalInformation.processedMailboxEntries", is(0))
+            .body("additionalInformation.processedMailboxPathEntries", is(0))
+            .body("additionalInformation.errors", is(0))
+            .body("additionalInformation.fixedInconsistencies", hasSize(0))
+            .body("additionalInformation.conflictingEntries", hasSize(0));
+    }
 
     @Test
     void getSwaggerShouldContainDistributedEndpoints() {

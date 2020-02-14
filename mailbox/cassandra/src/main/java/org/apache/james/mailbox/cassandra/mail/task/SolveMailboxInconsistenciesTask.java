@@ -29,6 +29,7 @@ import org.apache.james.task.TaskType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 
 public class SolveMailboxInconsistenciesTask implements Task {
@@ -59,22 +60,27 @@ public class SolveMailboxInconsistenciesTask implements Task {
             return instant;
         }
 
+        @JsonProperty("processedMailboxEntries")
         long getProcessedMailboxEntries() {
             return processedMailboxEntries;
         }
 
+        @JsonProperty("processedMailboxPathEntries")
         long getProcessedMailboxPathEntries() {
             return processedMailboxPathEntries;
         }
 
+        @JsonProperty("fixedInconsistencies")
         long getFixedInconsistencies() {
             return fixedInconsistencies;
         }
 
+        @JsonProperty("conflictingEntries")
         ImmutableList<ConflictingEntry> getConflictingEntries() {
             return conflictingEntries;
         }
 
+        @JsonProperty("errors")
         long getErrors() {
             return errors;
         }
@@ -82,7 +88,7 @@ public class SolveMailboxInconsistenciesTask implements Task {
 
     private final SolveMailboxInconsistenciesService service;
 
-    SolveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
+    public SolveMailboxInconsistenciesTask(SolveMailboxInconsistenciesService service) {
         this.service = service;
         this.context = new SolveMailboxInconsistenciesService.Context();
     }
