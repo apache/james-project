@@ -44,8 +44,8 @@ Finally, please note that in case of a malformed URL the 400 bad request respons
  - [Creating address forwards](#Creating_address_forwards)
  - [Creating address group](#Creating_address_group)
  - [Creating regex mapping](#Creating_regex_mapping)
- - [Address Mappings](#Address_mappings)
- - [User mappings](#User_mappings)
+ - [Address Mappings](#Address_Mappings)
+ - [User Mappings](#User_Mappings)
  - [Administrating mail repositories](#Administrating_mail_repositories)
  - [Administrating mail queues](#Administrating_mail_queues)
  - [Administrating DLP Configuration](#Administrating_DLP_Configuration)
@@ -88,11 +88,13 @@ Will return a list of healthChecks execution result, with an aggregated result:
 ```
 
 **status** field can be:
- - **healthy** : Component works normally
- - **degraded** : Component works in degraded mode. Some non-critical services may not be working, or latencies are high, for example. Cause contains explanations.
- - **unhealthy** : The component is currently not working. Cause contains explanations.
+
+ - **healthy**: Component works normally
+ - **degraded**: Component works in degraded mode. Some non-critical services may not be working, or latencies are high, for example. Cause contains explanations.
+ - **unhealthy**: The component is currently not working. Cause contains explanations.
 
 Supported health checks include:
+
  - **Cassandra backend**: Cassandra storage. Included in Cassandra Guice based products.
  - **ElasticSearch Backend**: ElasticSearch storage. Included in Cassandra Guice based products.
  - **Guice application lifecycle**: included in all Guice products.
@@ -411,6 +413,7 @@ Warning: While we have been trying to reduce the inconsistency window to a maxim
 concurrent changes done during the reIndexing might be ignored.
 
 The following actions can be performed:
+
  - [ReIndexing all mails](#ReIndexing_all_mails)
  - [Fixing previously failed ReIndexing](#Fixing_previously_failed_ReIndexing)
 
@@ -561,7 +564,7 @@ Warning: During the re-indexing, the result of search operations might be altere
  - [Deleting a mailbox and its children](#Deleting_a_mailbox_and_its_children)
  - [Testing existence of a mailbox](#Testing_existence_of_a_mailbox)
  - [Listing user mailboxes](#Listing_user_mailboxes)
- - [Deleting_user_mailboxes](#Deleting_user_mailboxes)
+ - [Deleting user mailboxes](#Deleting_user_mailboxes)
  - [ReIndexing a user mails](#ReIndexing_a_user_mails)
  - [Recomputing User JMAP fast message view projection](#Recomputing_User_JMAP_fast_message_view_projection)
 
@@ -1354,8 +1357,8 @@ These schema updates can be triggered by webadmin using the Cassandra backend.
 
 Note that currently the progress can be tracked by logs.
 
- - [Retrieving current Cassandra schema version](#Retrieving_current_cassandra_schema_version)
- - [Retrieving latest available Cassandra schema version](#Retrieving_latest_available_cassandra_schema_version)
+ - [Retrieving current Cassandra schema version](#Retrieving_current_Cassandra_schema_version)
+ - [Retrieving latest available Cassandra schema version](#Retrieving_latest_available_Cassandra_schema_version)
  - [Upgrading to a specific version](#Upgrading_to_a_specific_version)
  - [Upgrading to the latest version](#Upgrading_to_the_latest_version)
 
@@ -1583,7 +1586,7 @@ to be configured.
 
 Note that email addresses are restricted to ASCII character set. Mail addresses not matching this criteria will be rejected.
 
- - [Listing Forwards](#Listing_forwards)
+ - [Listing Forwards](#Listing_Forwards)
  - [Listing destinations in a forward](#Listing_destinations_in_a_forward)
  - [Adding a new destination to a forward](#Adding_a_new_destination_to_a_forward)
  - [Removing a destination of a forward](#Removing_a_destination_of_a_forward)
@@ -1838,6 +1841,7 @@ which is re written by the regex.
 This feature uses [Recipients rewrite table](/server/config-recipientrewritetable.html) and
 requires the [RecipientRewriteTable API](https://github.com/apache/james-project/blob/master/server/mailet/mailets/src/main/java/org/apache/james/transport/mailets/RecipientRewriteTable.java)
 to be configured.
+
  - [Adding a regex mapping](#Adding_a_regex_mapping)
  - [Removing a regex mapping](#Removing_a_regex_mapping)
 
@@ -1906,7 +1910,7 @@ Please use address mappings with caution, as it's not a typed address. If you kn
 
 Here are the following actions available on address mappings:
 
- - [List all address mappings](#List_all_address_mappinig)
+ - [List all address mappings](#List_all_address_mappings)
  - [Add an address mapping](#Add_an_address_mapping)
  - [Remove an address mapping](#Remove_an_address_mapping)
 
@@ -1920,7 +1924,7 @@ Get all mappings from the [Recipients rewrite table](/server/config-recipientrew
 Supported mapping types are the following:
 
  - [Alias](#Creating_address_aliases)
- - [Address](#Address_mappings)
+ - [Address](#Address_Mappings)
  - [Domain](#Creating_address_domain)
  - Error
  - [Forward](#Creating_address_forwards)
@@ -1994,7 +1998,7 @@ Response codes:
 
 ## User Mappings
 
- - [Listing User Mappings](#Listing_user_mapping)
+ - [Listing User Mappings](#Listing_User_Mappings)
 
 ### Listing User Mappings
 
@@ -2005,6 +2009,7 @@ curl -XGET http://ip:port/mappings/user/userAddress
 ```
 
 Return all mappings of a user where:
+
  - userAddress: is the selected user
 
 Response body:
@@ -2037,7 +2042,7 @@ Response codes:
  - [Listing mail repositories](#Listing_mail_repositories)
  - [Getting additional information for a mail repository](#Getting_additional_information_for_a_mail_repository)
  - [Listing mails contained in a mail repository](#Listing_mails_contained_in_a_mail_repository)
- - [Reading a mail details](#Reading_a_mail_details)
+ - [Reading/downloading a mail details](#Reading.2Fdownloading_a_mail_details)
  - [Removing a mail from a mail repository](#Removing_a_mail_from_a_mail_repository)
  - [Removing all mails from a mail repository](#Removing_all_mails_from_a_mail_repository)
  - [Reprocessing mails from a mail repository](#Reprocessing_mails_from_a_mail_repository)
@@ -2566,10 +2571,10 @@ an administrator. WebAdmin can be used to manage these DLP rules on a per `sende
 `senderDomain` is domain of the sender of incoming emails, for example: `apache.org`, `james.org`,...
 Each `senderDomain` correspond to a distinct DLP configuration.
 
-- [List DLP configuration by sender domain](List_dlp_configuration_by_sender_domain)
-- [Store DLP configuration by sender domain](Store_dlp_configuration_by_sender_domain)
-- [Remove DLP configuration by sender domain](Remove_dlp_configuration_by_sender_domain)
-- [Fetch a DLP configuration item by sender domain and rule id](Fetch_a_dlp_configuration_item_by_sender_domain_and_rule_id)
+- [List DLP configuration by sender domain](#List_DLP_configuration_by_sender_domain)
+- [Store DLP configuration by sender domain](#Store_DLP_configuration_by_sender_domain)
+- [Remove DLP configuration by sender domain](#Remove_DLP_configuration_by_sender_domain)
+- [Fetch a DLP configuration item by sender domain and rule id](#Fetch_a_DLP_configuration_item_by_sender_domain_and_rule_id)
 
 ### List DLP configuration by sender domain
 
@@ -2700,10 +2705,10 @@ This is an example of returned body.
 
 Some limitations on space Users Sieve script can occupy can be configured by default, and overridden by user.
 
- - [Retrieving global sieve quota](#Retieving_global_sieve_quota)
+ - [Retrieving global sieve quota](#Retrieving_global_sieve_quota)
  - [Updating global sieve quota](#Updating_global_sieve_quota)
  - [Removing global sieve quota](#Removing_global_sieve_quota)
- - [Retieving user sieve quota](#Retieving_user_sieve_quota)
+ - [Retrieving user sieve quota](#Retrieving_user_sieve_quota)
  - [Updating user sieve quota](#Updating_user_sieve_quota)
  - [Removing user sieve quota](#Removing_user_sieve_quota)
 
@@ -2722,6 +2727,7 @@ Will return the bytes count allowed by user per default on this server.
 ```
 
 Response codes:
+
  - 200: Request is a success and the value is returned
  - 204: No default quota is being configured
 
@@ -2740,6 +2746,7 @@ With the body being the bytes count allowed by user per default on this server.
 ```
 
 Response codes:
+
  - 204: Operation succeeded
  - 400: Invalid payload
 
@@ -2752,6 +2759,7 @@ curl -XDELETE http://ip:port/sieve/quota/default
 ```
 
 Response codes:
+
  - 204: Operation succeeded
 
 ### Retrieving user sieve quota
@@ -2769,6 +2777,7 @@ Will return the bytes count allowed for this user.
 ```
 
 Response codes:
+
  - 200: Request is a success and the value is returned
  - 204: No quota is being configured for this user
 
@@ -2787,18 +2796,20 @@ With the body being the bytes count allowed for this user on this server.
 ```
 
 Response codes:
+
  - 204: Operation succeeded
  - 400: Invalid payload
 
 ### Removing user sieve quota
 
-This endpoints allows to remove the Sieve quota of a user. There will no more quota for this userrrrrrr:
+This endpoints allows to remove the Sieve quota of a user. There will no more quota for this user:
 
 ```
 curl -XDELETE http://ip:port/sieve/quota/users/user@domain.com
 ```
 
 Response codes:
+
  - 204: Operation succeeded
 
 ## Event Dead Letter
@@ -3086,6 +3097,7 @@ The scheduled task will have the following type `deleted-messages-restore` and t
 ```
 
 while:
+
  - successfulRestoreCount: number of restored messages
  - errorRestoreCount: number of messages that failed to restore
  - user: owner of deleted messages need to restore
@@ -3255,6 +3267,7 @@ The expected value is expressed in the following format: `Nunit`.
 `unit` could be either in the short form (`s`, `m`, `h`, etc.), or in the long form (`day`, `week`, `month`, etc.).
 
 Examples:
+
  - `30s`
  - `5m`
  - `7d`
@@ -3276,6 +3289,7 @@ curl -XDELETE http://ip:port/tasks/3294a976-ce63-491e-bd52-1b6f465ed7a2
 ```
 
 Response codes:
+
  - 204: Task had been cancelled
  - 400: Invalid task ID
 
