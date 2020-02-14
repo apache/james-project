@@ -21,7 +21,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <properties>
-        <s3-sdk.version>2.10.41</s3-sdk.version>
+        <s3-sdk.version>2.10.64</s3-sdk.version>
     </properties>
 
     <parent>
@@ -67,6 +67,16 @@
         <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>javax.annotation-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-codec</artifactId>
+            <version>4.1.42.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-handler</artifactId>
+            <version>4.1.42.Final</version>
         </dependency>
         <dependency>
             <groupId>io.projectreactor.addons</groupId>
