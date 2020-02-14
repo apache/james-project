@@ -368,7 +368,293 @@ class CassandraMailboxManagerConsistencyTest {
 
     @Nested
     class FailsOnDelete {
-        // TODO
+
+        @Nested
+        class DeleteOnce {
+            @Disabled("JAMES-3056 allMailboxesSearchQuery returns empty list")
+            @Test
+            void deleteMailboxByPathShouldBeConsistentWhenMailboxDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Disabled("JAMES-3056 allMailboxesSearchQuery returns empty list")
+            @Test
+            void deleteMailboxByIdShouldBeConsistentWhenMailboxDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void deleteMailboxByPathShouldBeConsistentWhenMailboxPathDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void deleteMailboxByIdShouldBeConsistentWhenMailboxPathDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+        }
+
+        @Nested
+        class DeleteTwice {
+
+            @Disabled("JAMES-3056 list() returns one element with inboxPath")
+            @Test
+            void deleteMailboxByPathShouldDeleteWhenMailboxDaoFails() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .isEmpty();
+                    softly.assertThat(testee.list(mailboxSession))
+                        .isEmpty();
+                }));
+            }
+
+            @Test
+            void deleteMailboxByIdShouldDeleteWhenMailboxDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .isEmpty();
+                    softly.assertThat(testee.list(mailboxSession))
+                        .isEmpty();
+                }));
+            }
+
+            @Test
+            void deleteMailboxByPathShouldDeleteWhenMailboxPathDaoFails() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .isEmpty();
+                    softly.assertThat(testee.list(mailboxSession))
+                        .isEmpty();
+                }));
+            }
+
+            @Test
+            void deleteMailboxByIdShouldDeleteWhenMailboxPathDaoFails() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .isEmpty();
+                    softly.assertThat(testee.list(mailboxSession))
+                        .isEmpty();
+                }));
+            }
+        }
+
+        @Nested
+        class DeleteTwiceThenCreate {
+
+            @Disabled("JAMES-3056 list() returns two element with inboxPath being duplicated")
+            @Test
+            void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteByPath() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteById() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteByPath() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteById() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+        }
     }
 
     private void doQuietly(ThrowingRunnable runnable) {
