@@ -742,6 +742,7 @@ public class StoreMailboxManager implements MailboxManager {
             .list()
             .stream()
             .map(Mailbox::generateAssociatedPath)
+            .distinct()
             .collect(Guavate.toImmutableList());
     }
 

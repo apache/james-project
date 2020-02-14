@@ -103,7 +103,7 @@ class CassandraMailboxManagerConsistencyTest {
     }
 
     @Nested
-    class FailsOnCreate {
+    class FailuresDuringCreation {
 
         @Test
         void createMailboxShouldBeConsistentWhenMailboxDaoFails() {
@@ -137,7 +137,7 @@ class CassandraMailboxManagerConsistencyTest {
             }));
         }
 
-        @Disabled("JAMES-3056 createMailbox() return an empty Optional")
+        @Disabled("JAMES-3056 createMailbox() doesn't return mailboxId while it's supposed to")
         @Test
         void createMailboxAfterAFailedCreationShouldCreateTheMailboxWhenMailboxDaoFails() throws Exception {
             doReturn(Mono.error(new RuntimeException("mock exception")))
@@ -174,7 +174,7 @@ class CassandraMailboxManagerConsistencyTest {
             }));
         }
 
-        @Disabled("JAMES-3056 createMailbox() return an empty Optional")
+        @Disabled("JAMES-3056 createMailbox() doesn't return mailboxId while it's supposed to")
         @Test
         void createMailboxAfterDeletingShouldCreateTheMailboxWhenMailboxDaoFails() throws Exception {
             doReturn(Mono.error(new RuntimeException("mock exception")))
@@ -215,7 +215,7 @@ class CassandraMailboxManagerConsistencyTest {
     }
 
     @Nested
-    class FailsOnRename {
+    class FailuresDuringRenaming {
 
         @Test
         void renameShouldBeConsistentWhenMailboxDaoFails() throws Exception {
@@ -367,7 +367,7 @@ class CassandraMailboxManagerConsistencyTest {
     }
 
     @Nested
-    class FailsOnDelete {
+    class FailuresOnDeletion {
 
         @Nested
         class DeleteOnce {
@@ -454,6 +454,110 @@ class CassandraMailboxManagerConsistencyTest {
                     softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
                         .hasOnlyOneElementSatisfying(mailboxMetaData -> {
                             softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+        }
+
+        @Nested
+        class DeleteOnceThenCreate {
+
+            @Test
+            void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteByPath() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Test
+            void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteById() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxDAO)
+                    .delete(any(CassandraId.class));
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Disabled("JAMES-3056 cannot create because mailbox already exists")
+            @Test
+            void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteByPath() throws Exception {
+                testee.createMailbox(inboxPath, mailboxSession);
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxPath, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
+                            softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
+                        });
+                    softly.assertThat(testee.list(mailboxSession))
+                        .containsExactly(inboxPath);
+                }));
+            }
+
+            @Disabled("JAMES-3056 cannot create because mailbox already exists")
+            @Test
+            void createMailboxShouldCreateWhenMailboxPathDaoFailsOnDeleteById() throws Exception {
+                MailboxId inboxId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                doReturn(Mono.error(new RuntimeException("mock exception")))
+                    .doCallRealMethod()
+                    .when(mailboxPathV2DAO)
+                    .delete(inboxPath);
+
+                doQuietly(() -> testee.deleteMailbox(inboxId, mailboxSession));
+                MailboxId inboxNewId = testee.createMailbox(inboxPath, mailboxSession)
+                    .get();
+
+                SoftAssertions.assertSoftly(Throwing.consumer(softly -> {
+                    softly.assertThat(testee.search(allMailboxesSearchQuery, mailboxSession))
+                        .hasOnlyOneElementSatisfying(mailboxMetaData -> {
+                            softly.assertThat(mailboxMetaData.getId()).isEqualTo(inboxNewId);
                             softly.assertThat(mailboxMetaData.getPath()).isEqualTo(inboxPath);
                         });
                     softly.assertThat(testee.list(mailboxSession))
@@ -552,7 +656,6 @@ class CassandraMailboxManagerConsistencyTest {
         @Nested
         class DeleteTwiceThenCreate {
 
-            @Disabled("JAMES-3056 list() returns two element with inboxPath being duplicated")
             @Test
             void createMailboxShouldCreateWhenMailboxDaoFailsOnDeleteByPath() throws Exception {
                 testee.createMailbox(inboxPath, mailboxSession);
