@@ -476,6 +476,9 @@ Response codes:
 
 #### ReIndexing action
 
+These tasks are only available on top of Guice Cassandra products or Guice JPA products. They are not part of Memory
+Guice product. 
+
 Be also aware of the limits of this API:
 
 Warning: During the re-indexing, the result of search operations might be altered.
@@ -536,6 +539,9 @@ The scheduled task will have the following type `error-recovery-indexation` and 
 
 #### ReIndexing a mailbox mails
 
+This task is only available on top of Guice Cassandra products or Guice JPA products. It is not part of Memory
+Guice product. 
+
 ```
 curl -XPOST http://ip:port/mailboxes/{mailboxId}?task=reIndex
 ```
@@ -574,6 +580,9 @@ concurrent changes done during the reIndexing might be ignored.
 
 #### ReIndexing a single mail
 
+This task is only available on top of Guice Cassandra products or Guice JPA products. It is not part of Memory
+Guice product.
+
 ```
 curl -XPOST http://ip:port/mailboxes/{mailboxId}/uid/{uid}?task=reIndex
 ```
@@ -605,6 +614,9 @@ Warning: Canceling this task should be considered unsafe as it will leave the cu
 ## Administrating Messages
 
 ### ReIndexing a single mail by messageId
+
+This task is only available on top of Guice Cassandra products or Guice JPA products. It is not part of Memory
+Guice product.
 
 ```
 curl -XPOST http://ip:port/messages/{messageId}?task=reIndex
