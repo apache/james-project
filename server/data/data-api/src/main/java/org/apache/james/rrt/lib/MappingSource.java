@@ -94,6 +94,10 @@ public class MappingSource implements Serializable {
         this.wildcard = wildcard;
     }
 
+    public Optional<Username> asUsername() {
+        return user;
+    }
+
     public Optional<Domain> asDomain() {
         return domain;
     }
