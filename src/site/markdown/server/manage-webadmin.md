@@ -99,7 +99,14 @@ Supported health checks include:
  - **ElasticSearch Backend**: ElasticSearch storage. Included in Cassandra Guice based products.
  - **Guice application lifecycle**: included in all Guice products.
  - **JPA Backend**: JPA storage. Included in JPA Guice based products.
- - **MessageFastViewProjection**: included in memory and Cassandra based Guice products.
+ - **MessageFastViewProjection**: included in memory and Cassandra based Guice products. 
+ Health check of the component storing JMAP properties which are fast to retrieve. 
+ Those properties are computed in advance from messages and persisted in order to archive a better performance. 
+ There are some latencies between a source update and its projections updates. 
+ Incoherency problems arise when reads are performed in this time-window. 
+ We piggyback the projection update on missed JMAP read in order to decrease the outdated time window for a given entry. 
+ The health is determined by the ratio of missed projection reads. (lower than 10% causes `degraded`)
+
  - **RabbitMQ backend**: RabbitMQ messaging. Included in Distributed Guice based products.
 
 Response codes:

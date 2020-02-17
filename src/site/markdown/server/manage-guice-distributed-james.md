@@ -20,7 +20,8 @@ advanced users.
  - [Mailbox Event Bus](#mailbox-event-bus)
  - [Mail Processing](#mail-processing)
  - [ElasticSearch Indexing](#elasticsearch-indexing)
-
+ - [Solving cassandra inconsistencies](#solving-cassandra-inconsistencies) 
+ 
 ## Overall architecture
 
 Guice distributed James server intends to provide a horizontally scalable email server.
@@ -260,3 +261,70 @@ by setting the parameter `elasticsearch.index.mailbox.name` to the name of your 
 re-creates index upon restart
 
 _Note_: keep in mind that reindexing can be a very long operation depending on the volume of mails you have stored.
+
+## Solving cassandra inconsistencies
+
+Cassandra backend uses data duplication to workaround Cassandra query limitations. 
+However, Cassandra is not doing transaction when writing in several tables, 
+this can lead to consistency issues for a given piece of data. 
+The consequence could be data that is in transient state (that should never appear outside of the system).
+
+Because of the lack of transactions, it's hard to prevent these kind of issues. We had developed some features to 
+fix some existing cassandra inconsistency issues that had been reported to James. 
+
+Here is the list of known inconsistencies:
+ - [RRT (RecipientRewriteTable) mapping sources](#rrt-recipientrewritetable-mapping-sources)
+ - [Jmap message fast view projections](#jmap-message-fast-view-projections)
+ - [Mailboxes](#mailboxes)
+
+### RRT (RecipientRewriteTable) mapping sources
+
+`rrt` and `mappings_sources` tables store information about address mappings. 
+The source of truth is `rrt` and `mappings_sources` is the projection table containing all 
+mapping sources.
+
+#### How to detect the inconsistencies
+
+Right now there's no tool for detecting that, we're proposing a [development plan](https://issues.apache.org/jira/browse/JAMES-3069). 
+By the mean time, the recommendation is to execute the `SolveInconsistencies` task below 
+in a regular basis. 
+
+#### How to solve
+
+Execute the Cassandra mapping `SolveInconsistencies` task described in [webadmin documentation](https://james.apache.org/server/manage-webadmin.html#Operations_on_mappings_sources) 
+
+### Jmap message fast view projections
+
+When you read a Jmap message, some calculated properties are expected to be fast to retrieve, like `preview`, `hasAttachment`. 
+James achieves it by pre-calculating and storing them into a message projection table(`message_fast_view_projection`). 
+Consequently the following fetches are optimized by reading directly from the projection table instead of calculating it again. 
+The underlying data is immutable so there's no inconsistency risk if the projections is outdated. 
+But still you can face a performance issue, how bad it is depends on how much the projection is lagging behind.
+
+#### How to detect the outdated projections
+
+You can watch the `MessageFastViewProjection` health check at [webadmin documentation](manage-webadmin.html#Check_all_components). 
+It provides a check based on the ratio of missed projection reads.  
+
+#### How to solve
+ 
+Since the MessageFastViewProjection is self healing, you should be concerned only if 
+the health check still returns `degraded` for a while, there's a possible thing you 
+can do is looking at James logs for more clues. 
+
+### Mailboxes
+
+`mailboxPath` and `mailbox` tables share common fields like `mailboxId` and mailbox `name`. 
+A successful operation of creating/renaming/delete mailboxes has to succeed at updating `mailboxPath` and `mailbox` table. 
+Any failure on creating/updating/delete records in `mailboxPath` or `mailbox` can produce inconsistencies.
+
+#### How to detect the inconsistencies
+
+If you found the suspicious `MailboxNotFoundException` in your logs. 
+Currently, there's no dedicated tool for that, we recommend scheduling 
+the SolveInconsistencies task below for the mailbox object on a regular basis, 
+avoiding peak traffic in order to address both inconsistencies diagnostic and fixes.
+
+#### How to solve
+
+Under development: Task for solving mailbox inconsistencies
