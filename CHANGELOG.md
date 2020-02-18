@@ -11,6 +11,7 @@ of tasks being currently executed.
 - JAMES-2563 Health check for ElasticSearch
 - JAMES-2904 Authentication and SSL support for Cassandra backend
 - JAMES-2904 Authentication and SSL support for ElasticSearch backend
+- JAMES-3066 Add "allowed From headers" webadmin endpoint
 
 ### Changed
 - Multiple changes have been made to enhance ElasticSearch performance:
