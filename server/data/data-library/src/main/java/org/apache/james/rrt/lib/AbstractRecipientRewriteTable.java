@@ -60,6 +60,15 @@ public abstract class AbstractRecipientRewriteTable implements RecipientRewriteT
 
     private DomainList domainList;
 
+    @Override
+    public int getMappingLimit() {
+        if (recursive) {
+            return mappingLimit;
+        } else {
+            return 0;
+        }
+    }
+
     @Inject
     public void setDomainList(DomainList domainList) {
         this.domainList = domainList;

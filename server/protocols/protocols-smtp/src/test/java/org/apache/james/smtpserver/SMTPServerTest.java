@@ -72,8 +72,10 @@ import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.apache.james.queue.memory.MemoryMailQueueFactory;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
+import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.ReverseRecipientRewriteTableImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.server.core.configuration.Configuration;
 import org.apache.james.server.core.filesystem.FileSystemImpl;
@@ -198,6 +200,7 @@ public class SMTPServerTest {
     protected MemoryMailQueueFactory queueFactory;
     protected MemoryMailQueueFactory.MemoryMailQueue queue;
     protected MemoryRecipientRewriteTable rewriteTable;
+    private ReverseRecipientRewriteTable reverseRewriteTable;
     protected CanSendFrom canSendFrom;
 
     private SMTPServer smtpServer;
@@ -276,7 +279,8 @@ public class SMTPServerTest {
         dnsServer = new AlterableDNSServer();
 
         rewriteTable = new MemoryRecipientRewriteTable();
-        canSendFrom = new CanSendFromImpl(rewriteTable);
+        reverseRewriteTable = new ReverseRecipientRewriteTableImpl(rewriteTable);
+        canSendFrom = new CanSendFromImpl(rewriteTable, reverseRewriteTable);
         queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         queue = queueFactory.createQueue(MailQueueFactory.SPOOL);
 

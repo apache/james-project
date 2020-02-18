@@ -7,7 +7,7 @@
  * "License"); you may not use this file except in compliance   *
  * with the License.  You may obtain a copy of the License at   *
  *                                                              *
- *   http://www.apache.org/licenses/LICENSE-2.0                 *
+ * http://www.apache.org/licenses/LICENSE-2.0                   *
  *                                                              *
  * Unless required by applicable law or agreed to in writing,   *
  * software distributed under the License is distributed on an  *
@@ -15,7 +15,8 @@
  * KIND, either express or implied.  See the License for the    *
  * specific language governing permissions and limitations      *
  * under the License.                                           *
- ****************************************************************/
+ ***************************************************************/
+
 package org.apache.james.rrt.lib;
 
 import static org.mockito.Mockito.mock;
@@ -25,15 +26,14 @@ import org.apache.james.core.Username;
 import org.apache.james.dnsservice.api.DNSService;
 import org.apache.james.domainlist.lib.DomainListConfiguration;
 import org.apache.james.domainlist.memory.MemoryDomainList;
-import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.junit.jupiter.api.BeforeEach;
 
-public class CanSendFromImplTest implements CanSendFromContract {
+public class ReverseRecipientRewriteTableImplTest implements ReverseRecipientRewriteTableContract {
 
     AbstractRecipientRewriteTable recipientRewriteTable;
-    CanSendFrom canSendFrom;
+    ReverseRecipientRewriteTableImpl reverseRecipientRewriteTable;
 
     @BeforeEach
     void setup() throws Exception {
@@ -48,13 +48,12 @@ public class CanSendFromImplTest implements CanSendFromContract {
         domainList.addDomain(OTHER_DOMAIN);
         recipientRewriteTable.setDomainList(domainList);
 
-        ReverseRecipientRewriteTable reverseRecipientRewriteTable = new ReverseRecipientRewriteTableImpl(recipientRewriteTable);
-        canSendFrom = new CanSendFromImpl(recipientRewriteTable, reverseRecipientRewriteTable);
+        this.reverseRecipientRewriteTable = new ReverseRecipientRewriteTableImpl(recipientRewriteTable);
     }
 
     @Override
-    public CanSendFrom canSendFrom() {
-        return canSendFrom;
+    public ReverseRecipientRewriteTable reverseRecipientRewriteTable() {
+        return reverseRecipientRewriteTable;
     }
 
     @Override

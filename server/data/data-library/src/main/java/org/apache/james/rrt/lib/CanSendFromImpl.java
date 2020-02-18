@@ -23,7 +23,6 @@ import static org.apache.james.rrt.lib.Mapping.Type.Domain;
 
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import javax.inject.Inject;
@@ -34,19 +33,24 @@ import org.apache.james.core.Username;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.util.OptionalUtils;
-
-import com.github.fge.lambdas.Throwing;
-import com.github.steveash.guavate.Guavate;
 
 public class CanSendFromImpl implements CanSendFrom {
 
+    @FunctionalInterface
+    interface DomainFetcher {
+        List<Domain> fetch(Username user);
+    }
+
     public static final EnumSet<Mapping.Type> ALIAS_TYPES_ACCEPTED_IN_FROM = EnumSet.of(Alias, Domain);
     private final RecipientRewriteTable recipientRewriteTable;
+    private final ReverseRecipientRewriteTable reverseRecipientRewriteTable;
 
     @Inject
-    public CanSendFromImpl(RecipientRewriteTable recipientRewriteTable) {
+    public CanSendFromImpl(RecipientRewriteTable recipientRewriteTable, ReverseRecipientRewriteTable reverseRecipientRewriteTable) {
         this.recipientRewriteTable = recipientRewriteTable;
+        this.reverseRecipientRewriteTable = reverseRecipientRewriteTable;
     }
 
     @Override
@@ -60,13 +64,7 @@ public class CanSendFromImpl implements CanSendFrom {
 
     @Override
     public Stream<MailAddress> allValidFromAddressesForUser(Username user) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
-        List<Domain> domains = relatedDomains(user).collect(Guavate.toImmutableList());
-
-        return relatedAliases(user)
-            .flatMap(allowedUser -> domains.stream()
-                .map(Optional::of)
-                .map(allowedUser::withOtherDomain)
-                .map(Throwing.function(Username::asMailAddress).sneakyThrow()));
+        return reverseRecipientRewriteTable.listAddresses(user);
     }
 
     private boolean emailIsAnAliasOfTheConnectedUser(Username connectedUser, Username fromUser) throws RecipientRewriteTable.ErrorMappingException, RecipientRewriteTableException {
@@ -77,31 +75,5 @@ public class CanSendFromImpl implements CanSendFrom {
             .flatMap(OptionalUtils::toStream)
             .map(Username::fromMailAddress)
             .anyMatch(alias -> alias.equals(connectedUser));
-    }
-
-    private Stream<Username> relatedAliases(Username user) throws RecipientRewriteTableException {
-        return Stream.concat(
-            Stream.of(user),
-            recipientRewriteTable
-                .listSources(Mapping.alias(user.asString()))
-                .map(MappingSource::asUsername)
-                .flatMap(OptionalUtils::toStream)
-        );
-    }
-
-    private Stream<Domain> relatedDomains(Username user) {
-        return user.getDomainPart()
-            .map(Throwing.function(this::fetchDomains).sneakyThrow())
-            .orElseGet(Stream::empty);
-    }
-
-    private Stream<Domain> fetchDomains(Domain domain) throws RecipientRewriteTableException {
-        return Stream.concat(
-          Stream.of(domain),
-          recipientRewriteTable
-              .listSources(Mapping.domain(domain))
-              .map(MappingSource::asDomain)
-              .flatMap(OptionalUtils::toStream)
-        );
     }
 }

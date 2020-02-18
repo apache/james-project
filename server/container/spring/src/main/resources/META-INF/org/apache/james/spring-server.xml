@@ -326,5 +326,6 @@
 
     <bean id="jspfLogger" class="org.apache.james.smtpserver.fastfail.SPFHandler.SPFLogger"/>
 
+    <bean id="reverserecipientrewritetable" class="org.apache.james.rrt.lib.ReverseRecipientRewriteTableImpl" />
     <bean id="cansendfrom" class="org.apache.james.rrt.lib.CanSendFromImpl" />
 </beans>

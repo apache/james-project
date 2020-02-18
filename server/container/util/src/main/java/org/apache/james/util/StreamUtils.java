@@ -21,11 +21,20 @@ package org.apache.james.util;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import com.github.steveash.guavate.Guavate;
+import com.google.common.base.Preconditions;
 
 public class StreamUtils {
+
+    private static final boolean PARALLEL = true;
 
     @SafeVarargs
     public static <T> Stream<T> ofNullables(T... array) {
@@ -53,5 +62,64 @@ public class StreamUtils {
     @SafeVarargs
     public static <T> Stream<T> flatten(Stream<T>... streams) {
         return flatten(Arrays.stream(streams));
+    }
+
+    public static <T> Stream<T> unfold(T seed, Function<T, Optional<T>> generator) {
+        return StreamSupport.stream(new UnfoldSpliterator(seed, generator), !PARALLEL);
+    }
+
+    public static <T> Stream<T> iterate(T seed, Long limit, Function<T, Stream<T>> generator) {
+        Preconditions.checkArgument(limit >= 0, "StreamUtils.iterate have a given limit ok '{}', while it should not be negative", limit);
+        return StreamUtils.unfold(Arrays.asList(seed), conservativeGenerator(generator))
+            .limit(limit + 1)
+            .flatMap(List::stream);
+    }
+
+    private static <T> Function<List<T>, Optional<List<T>>> conservativeGenerator(Function<T, Stream<T>> generator) {
+        return previous -> {
+            List<T> generated = previous.stream()
+                .flatMap(generator)
+                .collect(Guavate.toImmutableList());
+
+            if (generated.isEmpty()) {
+                return Optional.empty();
+            } else {
+                return Optional.of(generated);
+            }
+        };
+    }
+
+    private static class UnfoldSpliterator<T> implements Spliterator<T> {
+
+        private static final Spliterator<?> NOT_ABLE_TO_SPLIT_SPLITERATOR = null;
+        private Optional<T> current;
+        private final Function<T, Optional<T>> generator;
+
+        private UnfoldSpliterator(T seed, Function<T, Optional<T>> generator) {
+            this.current = Optional.of(seed);
+            this.generator = generator;
+        }
+
+        @Override
+        public boolean tryAdvance(Consumer<? super T> action) {
+            current.ifPresent(action);
+            current = current.flatMap(generator);
+            return current.isPresent();
+        }
+
+        @Override
+        public Spliterator<T> trySplit() {
+            return (Spliterator<T>) NOT_ABLE_TO_SPLIT_SPLITERATOR;
+        }
+
+        @Override
+        public long estimateSize() {
+            return Long.MAX_VALUE;
+        }
+
+        @Override
+        public int characteristics() {
+            return Spliterator.IMMUTABLE & Spliterator.NONNULL & Spliterator.ORDERED;
+        }
     }
 }

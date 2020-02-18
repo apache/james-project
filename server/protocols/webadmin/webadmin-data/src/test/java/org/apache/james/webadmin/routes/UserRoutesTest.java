@@ -43,8 +43,10 @@ import org.apache.james.domainlist.api.mock.SimpleDomainList;
 import org.apache.james.rrt.api.CanSendFrom;
 import org.apache.james.rrt.api.RecipientRewriteTable;
 import org.apache.james.rrt.api.RecipientRewriteTableException;
+import org.apache.james.rrt.api.ReverseRecipientRewriteTable;
 import org.apache.james.rrt.lib.CanSendFromImpl;
 import org.apache.james.rrt.lib.MappingSource;
+import org.apache.james.rrt.lib.ReverseRecipientRewriteTableImpl;
 import org.apache.james.rrt.memory.MemoryRecipientRewriteTable;
 import org.apache.james.user.api.UsersRepository;
 import org.apache.james.user.api.UsersRepositoryException;
@@ -98,6 +100,7 @@ class UserRoutesTest {
         final MemoryUsersRepository usersRepository;
         final SimpleDomainList domainList;
         final MemoryRecipientRewriteTable recipientRewriteTable;
+        final ReverseRecipientRewriteTable reverseRecipientRewriteTable;
         final CanSendFrom canSendFrom;
 
         WebAdminServer webAdminServer;
@@ -107,7 +110,8 @@ class UserRoutesTest {
             this.domainList = domainList;
             this.recipientRewriteTable = new MemoryRecipientRewriteTable();
             this.recipientRewriteTable.setDomainList(domainList);
-            this.canSendFrom = new CanSendFromImpl(recipientRewriteTable);
+            this.reverseRecipientRewriteTable = new ReverseRecipientRewriteTableImpl(recipientRewriteTable);
+            this.canSendFrom = new CanSendFromImpl(recipientRewriteTable, reverseRecipientRewriteTable);
         }
 
         @Override
