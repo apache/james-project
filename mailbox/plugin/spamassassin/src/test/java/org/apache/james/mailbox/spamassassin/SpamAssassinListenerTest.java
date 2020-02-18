@@ -88,12 +88,12 @@ class SpamAssassinListenerTest {
         inbox = new Mailbox(MailboxPath.forUser(USER, DefaultMailboxes.INBOX), UID_VALIDITY);
         mailbox1 = new Mailbox(MailboxPath.forUser(USER, "mailbox1"), UID_VALIDITY);
         mailbox2 = new Mailbox(MailboxPath.forUser(USER, "mailbox2"), UID_VALIDITY);
-        mailboxMapper.rename(inbox);
-        mailboxId1 = mailboxMapper.rename(mailbox1);
-        mailboxId2 = mailboxMapper.rename(mailbox2);
-        spamMailboxId = mailboxMapper.rename(new Mailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
-        spamCapitalMailboxId = mailboxMapper.rename(new Mailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
-        trashMailboxId = mailboxMapper.rename(new Mailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
+        mailboxMapper.create(inbox);
+        mailboxId1 = mailboxMapper.create(mailbox1);
+        mailboxId2 = mailboxMapper.create(mailbox2);
+        spamMailboxId = mailboxMapper.create(new Mailbox(MailboxPath.forUser(USER, "Spam"), UID_VALIDITY));
+        spamCapitalMailboxId = mailboxMapper.create(new Mailbox(MailboxPath.forUser(USER, "SPAM"), UID_VALIDITY));
+        trashMailboxId = mailboxMapper.create(new Mailbox(MailboxPath.forUser(USER, "Trash"), UID_VALIDITY));
 
         listener = new SpamAssassinListener(spamAssassin, systemMailboxesProvider, mailboxManager, mapperFactory, MailboxListener.ExecutionMode.SYNCHRONOUS);
     }

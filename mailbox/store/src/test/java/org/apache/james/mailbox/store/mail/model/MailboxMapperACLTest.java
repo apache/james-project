@@ -29,7 +29,6 @@ import org.apache.james.mailbox.model.MailboxACL;
 import org.apache.james.mailbox.model.MailboxACL.EntryKey;
 import org.apache.james.mailbox.model.MailboxACL.Rfc4314Rights;
 import org.apache.james.mailbox.model.MailboxACL.Right;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,14 +50,12 @@ public abstract class MailboxMapperACLTest {
 
     protected abstract MailboxMapper createMailboxMapper();
 
-    protected abstract MailboxId generateId();
-
     @BeforeEach
     void setUp() throws Exception {
         mailboxMapper = createMailboxMapper();
         MailboxPath benwaInboxPath = MailboxPath.forUser(Username.of("benwa"), "INBOX");
         benwaInboxMailbox = createMailbox(benwaInboxPath);
-        mailboxMapper.rename(benwaInboxMailbox);
+        mailboxMapper.create(benwaInboxMailbox);
     }
 
     @Test
@@ -236,7 +233,6 @@ public abstract class MailboxMapperACLTest {
 
     private Mailbox createMailbox(MailboxPath mailboxPath) {
         Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        mailbox.setMailboxId(generateId());
         return mailbox;
     }
 

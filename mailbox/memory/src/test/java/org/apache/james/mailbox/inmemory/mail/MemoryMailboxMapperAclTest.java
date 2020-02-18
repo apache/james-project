@@ -21,8 +21,6 @@ package org.apache.james.mailbox.inmemory.mail;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.james.mailbox.inmemory.InMemoryId;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
 
@@ -32,10 +30,5 @@ class MemoryMailboxMapperAclTest extends MailboxMapperACLTest {
     @Override
     protected MailboxMapper createMailboxMapper() {
         return new InMemoryMailboxMapper();
-    }
-
-    @Override
-    protected MailboxId generateId() {
-        return InMemoryId.of(counter.incrementAndGet());
     }
 }

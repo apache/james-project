@@ -1188,9 +1188,8 @@ public abstract class MessageMapperTest {
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        mailbox.setMailboxId(mapperProvider.generateId());
         
-        mailboxMapper.rename(mailbox);
+        mailboxMapper.create(mailbox);
 
         return mailbox;
     }

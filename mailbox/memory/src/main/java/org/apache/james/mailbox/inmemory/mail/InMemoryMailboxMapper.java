@@ -99,32 +99,29 @@ public class InMemoryMailboxMapper implements MailboxMapper {
         InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
         mailbox.setMailboxId(id);
 
-        Mailbox previousMailbox = mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox);
-        if (previousMailbox != null) {
-            throw new MailboxExistsException(mailbox.getName());
-        }
+        saveMailbox(mailbox);
+
         return mailbox.getMailboxId();
     }
 
     @Override
     public MailboxId rename(Mailbox mailbox) throws MailboxException {
+        Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
+
         InMemoryId id = (InMemoryId) mailbox.getMailboxId();
-        if (id == null) {
-            id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
-            mailbox.setMailboxId(id);
-        } else {
-            try {
-                Mailbox mailboxWithPreviousName = findMailboxById(id);
-                mailboxesByPath.remove(mailboxWithPreviousName.generateAssociatedPath());
-            } catch (MailboxNotFoundException e) {
-                // No need to remove the previous mailbox
-            }
-        }
+        Mailbox mailboxWithPreviousName = findMailboxById(id);
+
+        saveMailbox(mailbox);
+        mailboxesByPath.remove(mailboxWithPreviousName.generateAssociatedPath());
+
+        return mailbox.getMailboxId();
+    }
+
+    private void saveMailbox(Mailbox mailbox) throws MailboxException {
         Mailbox previousMailbox = mailboxesByPath.putIfAbsent(mailbox.generateAssociatedPath(), mailbox);
         if (previousMailbox != null) {
             throw new MailboxExistsException(mailbox.getName());
         }
-        return mailbox.getMailboxId();
     }
 
     @Override

@@ -41,7 +41,6 @@ import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
 import org.apache.james.mailbox.model.Mailbox;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.assertj.core.api.SoftAssertions;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -66,11 +65,6 @@ class MailboxPathV2MigrationTest {
     private CassandraMailboxMapper mailboxMapper;
     private CassandraMailboxDAO mailboxDAO;
 
-    @BeforeAll
-    static void setUpClass() {
-        MAILBOX_1.setMailboxId(MAILBOX_ID_1);
-    }
-
     @BeforeEach
     void setUp(CassandraCluster cassandra) {
         daoV1 = new CassandraMailboxPathDAOImpl(
@@ -89,19 +83,21 @@ class MailboxPathV2MigrationTest {
             daoV2,
             userMailboxRightsDAO,
             new CassandraACLMapper(cassandra.getConf(), userMailboxRightsDAO, CassandraConfiguration.DEFAULT_CONFIGURATION));
+
+        MAILBOX_1.setMailboxId(null);
     }
 
     @Test
     void newValuesShouldBeSavedInMostRecentDAO() throws Exception {
-        mailboxMapper.rename(MAILBOX_1);
+        CassandraId mailboxId = (CassandraId) mailboxMapper.create(MAILBOX_1);
 
         assertThat(daoV2.retrieveId(MAILBOX_PATH_1).blockOptional())
-            .contains(new CassandraIdAndPath(MAILBOX_ID_1, MAILBOX_PATH_1));
+            .contains(new CassandraIdAndPath(mailboxId, MAILBOX_PATH_1));
     }
 
     @Test
     void newValuesShouldNotBeSavedInOldDAO() throws Exception {
-        mailboxMapper.rename(MAILBOX_1);
+        mailboxMapper.create(MAILBOX_1);
 
         assertThat(daoV1.retrieveId(MAILBOX_PATH_1).blockOptional())
             .isEmpty();
@@ -109,6 +105,8 @@ class MailboxPathV2MigrationTest {
 
     @Test
     void readingOldValuesShouldMigrateThem() throws Exception {
+        MAILBOX_1.setMailboxId(MAILBOX_ID_1);
+
         daoV1.save(MAILBOX_PATH_1, MAILBOX_ID_1).block();
         mailboxDAO.save(MAILBOX_1).block();
 

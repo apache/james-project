@@ -46,7 +46,6 @@ import org.apache.james.mailbox.store.MailboxExpressionBackwardCompatibility;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 
 import com.github.steveash.guavate.Guavate;
-import com.google.common.base.Objects;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
@@ -106,8 +105,12 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     
     @Override
     public MailboxId rename(Mailbox mailbox) throws MailboxException {
+        Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
+
         try {
+            begin();
             if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
+                rollback();
                 throw new MailboxExistsException(mailbox.getName());
             }
 
@@ -116,31 +119,26 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 
             getEntityManager().persist(persistedMailbox);
             mailbox.setMailboxId(persistedMailbox.getMailboxId());
+            commit();
             return persistedMailbox.getMailboxId();
         } catch (PersistenceException e) {
+            rollback();
             throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);
         } 
     }
 
-    private JPAMailbox jpaMailbox(Mailbox mailbox) {
-        if (mailbox.getMailboxId() == null) {
-            return JPAMailbox.from(mailbox);
-        }
-        try {
-            JPAMailbox result = loadJpaMailbox(mailbox.getMailboxId());
-            result.setNamespace(mailbox.getNamespace());
-            result.setUser(mailbox.getUser().asString());
-            result.setName(mailbox.getName());
-            return result;
-        } catch (MailboxNotFoundException e) {
-            return JPAMailbox.from(mailbox);
-        }
+    private JPAMailbox jpaMailbox(Mailbox mailbox) throws MailboxException {
+        JPAMailbox result = loadJpaMailbox(mailbox.getMailboxId());
+        result.setNamespace(mailbox.getNamespace());
+        result.setUser(mailbox.getUser().asString());
+        result.setName(mailbox.getName());
+        return result;
     }
 
     private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
         try {
-            Mailbox storedMailbox = findMailboxByPath(mailbox.generateAssociatedPath());
-            return !Objects.equal(storedMailbox.getMailboxId(), mailbox.getMailboxId());
+            findMailboxByPath(mailbox.generateAssociatedPath());
+            return true;
         } catch (MailboxNotFoundException e) {
             return false;
         }

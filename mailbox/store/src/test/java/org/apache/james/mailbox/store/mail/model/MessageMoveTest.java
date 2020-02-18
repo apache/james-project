@@ -29,7 +29,6 @@ import javax.mail.util.SharedByteArrayInputStream;
 import org.apache.james.core.Username;
 import org.apache.james.mailbox.exception.MailboxException;
 import org.apache.james.mailbox.model.Mailbox;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.model.MailboxPath;
 import org.apache.james.mailbox.model.MessageId;
 import org.apache.james.mailbox.model.MessageMetaData;
@@ -136,9 +135,7 @@ public abstract class MessageMoveTest {
 
     private Mailbox createMailbox(MailboxPath mailboxPath) throws MailboxException {
         Mailbox mailbox = new Mailbox(mailboxPath, UID_VALIDITY);
-        MailboxId id = mapperProvider.generateId();
-        mailbox.setMailboxId(id);
-        mailboxMapper.rename(mailbox);
+        mailboxMapper.create(mailbox);
         
         return mailbox;
     }

@@ -22,11 +22,9 @@ package org.apache.james.mailbox.cassandra.mail;
 import org.apache.james.backends.cassandra.CassandraClusterExtension;
 import org.apache.james.backends.cassandra.components.CassandraModule;
 import org.apache.james.backends.cassandra.versions.CassandraSchemaVersionModule;
-import org.apache.james.mailbox.cassandra.ids.CassandraId;
 import org.apache.james.mailbox.cassandra.mail.utils.GuiceUtils;
 import org.apache.james.mailbox.cassandra.modules.CassandraAclModule;
 import org.apache.james.mailbox.cassandra.modules.CassandraMailboxModule;
-import org.apache.james.mailbox.model.MailboxId;
 import org.apache.james.mailbox.store.mail.MailboxMapper;
 import org.apache.james.mailbox.store.mail.model.MailboxMapperACLTest;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -45,10 +43,5 @@ class CassandraMailboxMapperAclTest extends MailboxMapperACLTest {
     protected MailboxMapper createMailboxMapper() {
         return GuiceUtils.testInjector(cassandraCluster.getCassandraCluster())
             .getInstance(CassandraMailboxMapper.class);
-    }
-
-    @Override
-    protected MailboxId generateId() {
-        return CassandraId.timeBased();
     }
 }

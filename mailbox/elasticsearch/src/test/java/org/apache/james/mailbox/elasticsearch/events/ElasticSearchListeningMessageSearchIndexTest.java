@@ -178,7 +178,7 @@ class ElasticSearchListeningMessageSearchIndexTest {
         session = sessionProvider.createSystemSession(USERNAME);
 
         mailbox = new Mailbox(MailboxPath.forUser(USERNAME, DefaultMailboxes.INBOX), MAILBOX_ID.id);
-        mapperFactory.getMailboxMapper(session).rename(mailbox);
+        mapperFactory.getMailboxMapper(session).create(mailbox);
     }
 
     @Test
