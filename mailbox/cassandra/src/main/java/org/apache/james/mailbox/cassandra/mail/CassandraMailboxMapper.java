@@ -213,9 +213,13 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return Flux.merge(
                 mailboxPathDAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()),
                 mailboxPathV2DAO.listUserMailboxes(mailbox.getNamespace(), mailbox.getUser()))
-            .filter(idAndPath -> idAndPath.getMailboxPath().getName().startsWith(mailbox.getName() + String.valueOf(delimiter)))
+            .filter(idAndPath -> isPathChildOfMailbox(idAndPath, mailbox, delimiter))
             .hasElements()
             .block();
+    }
+
+    private boolean isPathChildOfMailbox(CassandraIdAndPath idAndPath, Mailbox mailbox, char delimiter) {
+        return idAndPath.getMailboxPath().getName().startsWith(mailbox.getName() + String.valueOf(delimiter));
     }
 
     @Override
