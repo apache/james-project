@@ -88,7 +88,7 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         Preconditions.checkArgument(mailbox.getMailboxId() == null, "A mailbox we want to create should not have a mailboxId set already");
 
         try {
-            if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
+            if (isPathAlreadyUsedByAnotherMailbox(mailbox.generateAssociatedPath())) {
                 throw new MailboxExistsException(mailbox.getName());
             }
 
@@ -104,13 +104,28 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
     }
     
     @Override
+    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+        try {
+            if (isPathAlreadyUsedByAnotherMailbox(mailboxPath)) {
+                throw new MailboxExistsException(mailboxPath.getName());
+            }
+
+            this.lastMailboxName = mailboxPath.getName();
+            JPAMailbox persistedMailbox = new JPAMailbox(mailboxPath, uidValidity);
+            getEntityManager().persist(persistedMailbox);
+
+            return new Mailbox(mailboxPath, uidValidity, persistedMailbox.getMailboxId());
+        } catch (PersistenceException e) {
+            throw new MailboxException("Save of mailbox " + mailboxPath.getName() + " failed", e);
+        }
+    }
+
+    @Override
     public MailboxId rename(Mailbox mailbox) throws MailboxException {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 
         try {
-            begin();
-            if (isPathAlreadyUsedByAnotherMailbox(mailbox)) {
-                rollback();
+            if (isPathAlreadyUsedByAnotherMailbox(mailbox.generateAssociatedPath())) {
                 throw new MailboxExistsException(mailbox.getName());
             }
 
@@ -119,10 +134,8 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
 
             getEntityManager().persist(persistedMailbox);
             mailbox.setMailboxId(persistedMailbox.getMailboxId());
-            commit();
             return persistedMailbox.getMailboxId();
         } catch (PersistenceException e) {
-            rollback();
             throw new MailboxException("Save of mailbox " + mailbox.getName() + " failed", e);
         } 
     }
@@ -135,9 +148,9 @@ public class JPAMailboxMapper extends JPATransactionalMapper implements MailboxM
         return result;
     }
 
-    private boolean isPathAlreadyUsedByAnotherMailbox(Mailbox mailbox) throws MailboxException {
+    private boolean isPathAlreadyUsedByAnotherMailbox(MailboxPath mailboxPath) throws MailboxException {
         try {
-            findMailboxByPath(mailbox.generateAssociatedPath());
+            findMailboxByPath(mailboxPath);
             return true;
         } catch (MailboxNotFoundException e) {
             return false;

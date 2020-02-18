@@ -178,6 +178,17 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return cassandraId;
     }
 
+    @Override
+    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+        CassandraId cassandraId = CassandraId.timeBased();
+        Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, cassandraId);
+
+        if (!tryCreate(mailbox, cassandraId).block()) {
+            throw new MailboxExistsException(mailbox.generateAssociatedPath().asString());
+        }
+        return mailbox;
+    }
+
     private Mono<Boolean> tryCreate(Mailbox cassandraMailbox, CassandraId cassandraId) {
         return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
             .filter(isCreated -> isCreated)

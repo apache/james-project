@@ -193,6 +193,39 @@ public class MaildirMailboxMapper extends NonTransactionalMapper implements Mail
     }
 
     @Override
+    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+        MaildirId maildirId = MaildirId.random();
+        Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, maildirId);
+        MaildirFolder folder = maildirStore.createMaildirFolder(mailbox);
+
+        if (!folder.exists()) {
+            boolean folderExist = folder.getRootFile().exists();
+            if (!folderExist && !folder.getRootFile().mkdirs()) {
+                throw new MailboxException("Failed to save Mailbox " + mailbox);
+            }
+
+            boolean isCreated = folder.getCurFolder().mkdir()
+                && folder.getNewFolder().mkdir()
+                && folder.getTmpFolder().mkdir();
+            if (!isCreated) {
+                throw new MailboxException("Failed to save Mailbox " + mailbox, new IOException("Needed folder structure can not be created"));
+            }
+        }
+
+        try {
+            folder.setUidValidity(mailbox.getUidValidity());
+            folder.setMailboxId(maildirId);
+            mailbox.setMailboxId(maildirId);
+        } catch (IOException ioe) {
+            throw new MailboxException("Failed to save Mailbox " + mailbox, ioe);
+
+        }
+        folder.setACL(mailbox.getACL());
+
+        return mailbox;
+    }
+
+    @Override
     public MailboxId rename(Mailbox mailbox) throws MailboxException {
         MaildirId maildirId = (MaildirId) mailbox.getMailboxId();
 

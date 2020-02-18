@@ -105,6 +105,16 @@ public class InMemoryMailboxMapper implements MailboxMapper {
     }
 
     @Override
+    public Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException {
+        InMemoryId id = InMemoryId.of(mailboxIdGenerator.incrementAndGet());
+        Mailbox mailbox = new Mailbox(mailboxPath, uidValidity, id);
+
+        saveMailbox(mailbox);
+
+        return mailbox;
+    }
+
+    @Override
     public MailboxId rename(Mailbox mailbox) throws MailboxException {
         Preconditions.checkNotNull(mailbox.getMailboxId(), "A mailbox we want to rename should have a defined mailboxId");
 

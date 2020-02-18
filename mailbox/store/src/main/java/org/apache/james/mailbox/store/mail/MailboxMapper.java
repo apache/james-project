@@ -45,6 +45,11 @@ public interface MailboxMapper extends Mapper {
     MailboxId create(Mailbox mailbox) throws MailboxException;
 
     /**
+     * Create a {@link Mailbox} with the given {@link MailboxPath} and uid to the underlying storage
+     */
+    Mailbox create(MailboxPath mailboxPath, long uidValidity) throws MailboxException;
+
+    /**
      * Rename the given {@link Mailbox} to the underlying storage
      */
     MailboxId rename(Mailbox mailbox) throws MailboxException;
