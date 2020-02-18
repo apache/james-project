@@ -15,12 +15,12 @@ advanced users.
 
 ## Table of content
 
- - [Overall architecture](#overall-architecture)
- - [Basic Monitoring](#basic-monitoring)
- - [Mailbox Event Bus](#mailbox-event-bus)
- - [Mail Processing](#mail-processing)
- - [ElasticSearch Indexing](#elasticsearch-indexing)
- - [Solving cassandra inconsistencies](#solving-cassandra-inconsistencies) 
+ - [Overall architecture](#Overall_architecture)
+ - [Basic Monitoring](#Basic_Monitoring)
+ - [Mailbox Event Bus](#Mailbox_Event_Bus)
+ - [Mail Processing](#Mail_Processing)
+ - [ElasticSearch Indexing](#Elasticsearch_Indexing)
+ - [Solving cassandra inconsistencies](#Solving_cassandra_inconsistencies) 
  
 ## Overall architecture
 
@@ -39,9 +39,9 @@ available to allow you to quickly deploy locally this product.
 ## Basic Monitoring
 
 A toolbox is available to help an administrator diagnose issues:
- - [Structured logging into Kibana](#structured-logging-into-kibana)
- - [Metrics graphs into Grafana](#metrics-graphs-into-grafana)
- - [WebAdmin HealthChecks](#webadmin-healthchecks)
+ - [Structured logging into Kibana](#Structured_logging_into_Kibana)
+ - [Metrics graphs into Grafana](#Metrics_graphs_into_Grafana)
+ - [WebAdmin HealthChecks](#Webadmin_Healthchecks)
 
 ### Structured logging into Kibana
 
@@ -92,8 +92,8 @@ Here are the available checks alongside the insight they offer:
  explanations if James did not start well.
  - **MessageFastViewProjection**: Follows MessageFastViewProjection cache miss rates and warns if it is below 10%. If 
  this projection is missing, this results in performance issues for JMAP GetMessages list requests. WebAdmin offers a
- [global](manage-webadmin.html#recomputing-global-jmap-fast-message-view-projection) and 
- [per user](manage-webadmin.html#recomputing-user-jmap-fast-message-view-projection) projection re-computation. Note that
+ [global](manage-webadmin.html#Recomputing_Global_JMAP_fast_message_view_projection) and 
+ [per user](manage-webadmin.html#Recomputing_Global_JMAP_fast_message_view_projection) projection re-computation. Note that
  as computation is asynchronous, this projection can be slightly out of sync on a normally behaving server.
 
 ## Mail Processing
@@ -121,14 +121,14 @@ Here are its components:
      be a cause. In addition to prevent disasters upon miss configuration, an email review of this mail repository can 
      help refine a host spammer blacklist.
      - `cassandra://var/mail/rrt-error/` : runtime error upon Recipient Rewritting occurred. This is typically due to a 
-     loop. We recommend verifying user mappings via [User Mappings webadmin API](manage-webadmin.html#user-mappings) 
+     loop. We recommend verifying user mappings via [User Mappings webadmin API](manage-webadmin.html#User_Mappings) 
      then once identified break the loop by removing some Recipient Rewrite Table entry via the 
-     [Delete Alias](manage-webadmin.html#removing-an-alias-of-an-user), 
-     [Delete Group member](manage-webadmin.html#removing-a-group-member), 
-     [Delete forward](manage-webadmin.html#removing-a-destination-of-a-forward), 
-     [Delete Address mapping](manage-webadmin.html#remove-an-address-mapping), 
-     [Delete Domain mapping](manage-webadmin.html#removing-a-domain-mapping) or 
-     [Delete Regex mapping](manage-webadmin.html#removing-a-regex-mapping) APIs (as needed). The `Mail.error` field can 
+     [Delete Alias](manage-webadmin.html#Removing_an_alias_of_an_user), 
+     [Delete Group member](manage-webadmin.html#Removing_a_group_member), 
+     [Delete forward](manage-webadmin.html#Removing_a_destination_of_a_forward), 
+     [Delete Address mapping](manage-webadmin.html#Remove_an_address_mapping), 
+     [Delete Domain mapping](manage-webadmin.html#Removing_a_domain_mapping) or 
+     [Delete Regex mapping](manage-webadmin.html#Removing_a_regex_mapping) APIs (as needed). The `Mail.error` field can 
      help diagnose the issue as well. Then once the root cause has been addressed, the mail can be reprocessed.
 
 Read [this](config-mailetcontainer.html) to discover mail processing configuration, including error management.
@@ -138,13 +138,13 @@ in Kibana INFO logs using the `org.apache.james.transport.mailets.ToProcessor` v
 mail repository size, and the corresponding Grafana boards are yet to be contributed.
 
 WebAdmin exposes all utilities for 
-[reprocessing all mails in a mail repository](manage-webadmin.html#reprocessing-mails-from-a-mail-repository)
+[reprocessing all mails in a mail repository](manage-webadmin.html#Reprocessing_mails_from_a_mail_repository)
 or 
-[reprocessing a single mail in a mail repository](manage-webadmin.html#reprocessing-a-specific-mail-from-a-mail-repository).
+[reprocessing a single mail in a mail repository](manage-webadmin.html#Reprocessing_a_specific_mail_from_a_mail_repository).
 
 Also, one can decide to 
-[delete all the mails of a mail repository](manage-webadmin.html#removing-all-mails-from-a-mail-repository) 
-or [delete a single mail of a mail repository](manage-webadmin.html#removing-a-mail-from-a-mail-repository).
+[delete all the mails of a mail repository](manage-webadmin.html#Removing_all_mails_from_a_mail_repository) 
+or [delete a single mail of a mail repository](manage-webadmin.html#Removing_a_mail_from_a_mail_repository).
 
 Performance of mail processing can be monitored via the 
 [mailet grafana board](https://github.com/apache/james-project/blob/master/grafana-reporting/MAILET-1490071694187-dashboard.json) 
@@ -216,13 +216,13 @@ You can find more information about ElasticSearch configuration [here](config-el
 
 ### Usual troubleshooting procedures
 
-As explained in the [Mailbox Event Bus](#mailbox-event-bus) section, processing those events can fail sometimes.
+As explained in the [Mailbox Event Bus](#Mailbox_Event_Bus) section, processing those events can fail sometimes.
 
 Currently, an administrator can monitor indexation failures through `ERROR` log review. You can as well
 [list failed events](manage-webadmin.html#Listing_failed_events) by looking with the group called 
 `org.apache.james.mailbox.elasticsearch.events.ElasticSearchListeningMessageSearchIndex$ElasticSearchListeningMessageSearchIndexGroup`.
 A first on-the-fly solution could be to just 
-[redeliver those group events with event dead letter](#mailbox-event-bus).
+[redeliver those group events with event dead letter](#Mailbox_Event_Bus).
 
 If the event storage in dead-letters fails (for instance in the face of Cassandra storage exceptions), 
 then you might need to use our WebAdmin reIndexing tasks.
@@ -273,9 +273,9 @@ Because of the lack of transactions, it's hard to prevent these kind of issues. 
 fix some existing cassandra inconsistency issues that had been reported to James. 
 
 Here is the list of known inconsistencies:
- - [RRT (RecipientRewriteTable) mapping sources](#rrt-recipientrewritetable-mapping-sources)
- - [Jmap message fast view projections](#jmap-message-fast-view-projections)
- - [Mailboxes](#mailboxes)
+ - [RRT (RecipientRewriteTable) mapping sources](#Rrt_RecipientRewriteTable_mapping_sources)
+ - [Jmap message fast view projections](#Jmap_message_fast_view_projections)
+ - [Mailboxes](#Mailboxes)
 
 ### RRT (RecipientRewriteTable) mapping sources
 
@@ -291,7 +291,7 @@ in a regular basis.
 
 #### How to solve
 
-Execute the Cassandra mapping `SolveInconsistencies` task described in [webadmin documentation](https://james.apache.org/server/manage-webadmin.html#Operations_on_mappings_sources) 
+Execute the Cassandra mapping `SolveInconsistencies` task described in [webadmin documentation](manage-webadmin.html#Operations_on_mappings_sources) 
 
 ### Jmap message fast view projections
 
