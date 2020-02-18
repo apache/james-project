@@ -260,15 +260,10 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public List<Mailbox> findNonPersonalMailboxes(Username userName, Right right) {
         return userMailboxRightsDAO.listRightsForUser(userName)
-            .filter(mailboxId -> authorizedMailbox(mailboxId.getRight(), right))
+            .filter(mailboxId -> mailboxId.getRight().contains(right))
             .map(Pair::getLeft)
             .flatMap(this::retrieveMailbox)
             .collectList()
             .block();
     }
-
-    private boolean authorizedMailbox(MailboxACL.Rfc4314Rights rights, Right right) {
-        return rights.contains(right);
-    }
-
 }
