@@ -122,23 +122,21 @@ class UserRoutesTest {
 
         @Override
         public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-            return parameterContext.getParameter()
-                .getType()
-                .isAssignableFrom(UsersRepository.class)
-                || parameterContext.getParameter()
-                .getType()
-                .isAssignableFrom(RecipientRewriteTable.class);
+            Class<?> parameterType = parameterContext.getParameter().getType();
+            return parameterType.isAssignableFrom(UsersRepository.class)
+                || parameterType.isAssignableFrom(RecipientRewriteTable.class);
         }
 
         @Override
         public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext) throws ParameterResolutionException {
-            if (parameterContext.getParameter().getType().isAssignableFrom(UsersRepository.class)) {
+            Class<?> parameterType = parameterContext.getParameter().getType();
+            if (parameterType.isAssignableFrom(UsersRepository.class)) {
                 return usersRepository;
             }
-            if (parameterContext.getParameter().getType().isAssignableFrom(RecipientRewriteTable.class)) {
+            if (parameterType.isAssignableFrom(RecipientRewriteTable.class)) {
                 return recipientRewriteTable;
             }
-            throw new RuntimeException("Unknown parameter type: " + parameterContext.getParameter().getType());
+            throw new RuntimeException("Unknown parameter type: " + parameterType);
         }
 
         private WebAdminServer startServer(UsersRepository usersRepository) {

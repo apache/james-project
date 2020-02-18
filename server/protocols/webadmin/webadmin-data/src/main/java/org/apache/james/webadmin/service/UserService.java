@@ -66,7 +66,7 @@ public class UserService {
         upsert(user, username, password);
     }
 
-    public boolean existUser(Username username) throws UsersRepositoryException {
+    public boolean userExists(Username username) throws UsersRepositoryException {
         try {
             return usersRepository.contains(usersRepository.getUser(username.asMailAddress()));
         } catch (AddressException e) {

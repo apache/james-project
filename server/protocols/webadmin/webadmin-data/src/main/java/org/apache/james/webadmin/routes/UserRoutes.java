@@ -219,12 +219,12 @@ public class UserRoutes implements Routes {
         Username username = extractUsername(request);
 
         try {
-            if (!userService.existUser(username)) {
-                LOGGER.info("allowed From headers on an unknown user: '{}", username.asString());
+            if (!userService.userExists(username)) {
+                LOGGER.info("Allowed FROM headers requested for an unknown user: '{}", username.asString());
                 throw ErrorResponder.builder()
                     .statusCode(HttpStatus.NOT_FOUND_404)
                     .type(ErrorType.INVALID_ARGUMENT)
-                    .message("user '" + username.asString() + "' does not exist")
+                    .message(String.format("user '%s' does not exist", username.asString()))
                     .haltError();
             }
 
