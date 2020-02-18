@@ -19,11 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.StringTokenizer;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -53,8 +49,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxMapper implements MailboxMapper {
-
-    private static final String WILDCARD = "%";
     public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
 
     private final CassandraMailboxDAO mailboxDAO;
@@ -252,22 +246,6 @@ public class CassandraMailboxMapper implements MailboxMapper {
     @Override
     public void endRequest() {
         // Do nothing
-    }
-
-    private String constructEscapedRegexForMailboxNameMatching(MailboxPath path) {
-        return Collections
-            .list(new StringTokenizer(path.getName(), WILDCARD, true))
-            .stream()
-            .map(this::tokenToPatternPart)
-            .collect(Collectors.joining());
-    }
-
-    private String tokenToPatternPart(Object token) {
-        if (token.equals(WILDCARD)) {
-            return ".*";
-        } else {
-            return Pattern.quote((String) token);
-        }
     }
 
     private Mono<Mailbox> toMailboxWithAcl(Mailbox mailbox) {
