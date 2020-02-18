@@ -19,6 +19,7 @@
 
 package org.apache.james.mailbox.cassandra.mail;
 
+import java.time.Duration;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -49,7 +50,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class CassandraMailboxMapper implements MailboxMapper {
-    public static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CassandraMailboxMapper.class);
+
+    private static final int MAX_RETRY = 5;
+    private static final Duration MIN_RETRY_BACKOFF = Duration.ofMillis(10);
+    private static final Duration MAX_RETRY_BACKOFF = Duration.ofMillis(1000);
 
     private final CassandraMailboxDAO mailboxDAO;
     private final CassandraMailboxPathDAOImpl mailboxPathDAO;
@@ -72,7 +77,8 @@ public class CassandraMailboxMapper implements MailboxMapper {
         Flux.merge(
                 mailboxPathDAO.delete(mailbox.generateAssociatedPath()),
                 mailboxPathV2DAO.delete(mailbox.generateAssociatedPath()))
-            .thenEmpty(mailboxDAO.delete(mailboxId))
+            .thenEmpty(mailboxDAO.delete(mailboxId)
+                .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF))
             .block();
     }
 
@@ -174,7 +180,7 @@ public class CassandraMailboxMapper implements MailboxMapper {
     private Mono<Boolean> tryCreate(Mailbox cassandraMailbox, CassandraId cassandraId) {
         return mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
             .filter(isCreated -> isCreated)
-            .flatMap(mailboxHasCreated -> mailboxDAO.save(cassandraMailbox)
+            .flatMap(mailboxHasCreated -> persistMailboxEntity(cassandraMailbox)
                 .thenReturn(true))
             .switchIfEmpty(Mono.just(false));
     }
@@ -197,15 +203,25 @@ public class CassandraMailboxMapper implements MailboxMapper {
         return cassandraId;
     }
 
-    private Mono<Boolean> tryRename(Mailbox cassandraMailbox, CassandraId cassandraId) throws MailboxException {
+    private Mono<Boolean> tryRename(Mailbox cassandraMailbox, CassandraId cassandraId) {
         return mailboxDAO.retrieveMailbox(cassandraId)
             .flatMap(mailbox -> mailboxPathV2DAO.save(cassandraMailbox.generateAssociatedPath(), cassandraId)
                 .filter(isCreated -> isCreated)
-                .flatMap(mailboxHasCreated -> mailboxPathV2DAO.delete(mailbox.generateAssociatedPath())
-                    .then(mailboxDAO.save(cassandraMailbox))
+                .flatMap(mailboxHasCreated -> deletePreviousMailboxPathReference(mailbox.generateAssociatedPath())
+                    .then(persistMailboxEntity(cassandraMailbox))
                     .thenReturn(true))
                 .switchIfEmpty(Mono.just(false)))
             .switchIfEmpty(Mono.error(() -> new MailboxNotFoundException(cassandraId)));
+    }
+
+    private Mono<Void> persistMailboxEntity(Mailbox cassandraMailbox) {
+        return mailboxDAO.save(cassandraMailbox)
+            .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF);
+    }
+
+    private Mono<Void> deletePreviousMailboxPathReference(MailboxPath mailboxPath) {
+        return mailboxPathV2DAO.delete(mailboxPath)
+            .retryBackoff(MAX_RETRY, MIN_RETRY_BACKOFF, MAX_RETRY_BACKOFF);
     }
 
     @Override
