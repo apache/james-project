@@ -30,6 +30,7 @@ import org.apache.james.backends.rabbitmq.ReceiverProvider;
 import org.apache.james.metrics.api.Metric;
 import org.apache.james.metrics.api.MetricFactory;
 import org.apache.james.queue.api.MailQueue;
+import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.rabbitmq.view.api.DeleteCondition;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
 import org.apache.mailet.Mail;
@@ -39,13 +40,13 @@ import com.rabbitmq.client.Delivery;
 
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.rabbitmq.AcknowledgableDelivery;
 import reactor.rabbitmq.ConsumeOptions;
 import reactor.rabbitmq.Receiver;
 
 class Dequeuer implements Closeable {
     private static final boolean REQUEUE = true;
-    private static final int EXECUTION_RATE = 5;
 
     private static class RabbitMQMailQueueItem implements MailQueue.MailQueueItem {
 
@@ -84,14 +85,14 @@ class Dequeuer implements Closeable {
 
     Dequeuer(MailQueueName name, ReceiverProvider receiverProvider, Function<MailReferenceDTO, MailWithEnqueueId> mailLoader,
              MailReferenceSerializer serializer, MetricFactory metricFactory,
-             MailQueueView mailQueueView) {
+             MailQueueView mailQueueView, MailQueueFactory.PrefetchCount prefetchCount) {
         this.mailLoader = mailLoader;
         this.mailReferenceSerializer = serializer;
         this.mailQueueView = mailQueueView;
         this.dequeueMetric = metricFactory.generate(DEQUEUED_METRIC_NAME_PREFIX + name.asString());
         this.receiver = receiverProvider.createReceiver();
         this.flux = this.receiver
-            .consumeManualAck(name.toWorkQueueName().asString(), new ConsumeOptions().qos(EXECUTION_RATE))
+            .consumeManualAck(name.toWorkQueueName().asString(), new ConsumeOptions().qos(prefetchCount.asInt()))
             .filter(getResponse -> getResponse.getBody() != null);
     }
 
@@ -101,8 +102,8 @@ class Dequeuer implements Closeable {
     }
 
     Flux<? extends MailQueue.MailQueueItem> deQueue() {
-        return flux.concatMap(this::loadItem)
-            .concatMap(this::filterIfDeleted);
+        return flux.flatMapSequential(response -> loadItem(response).subscribeOn(Schedulers.elastic()))
+            .concatMap(item -> filterIfDeleted(item).subscribeOn(Schedulers.elastic()));
     }
 
     private Mono<RabbitMQMailQueueItem> filterIfDeleted(RabbitMQMailQueueItem item) {

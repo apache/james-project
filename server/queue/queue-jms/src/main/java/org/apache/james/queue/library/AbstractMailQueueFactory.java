@@ -96,13 +96,13 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     @Override
-    public final synchronized Optional<T> getQueue(MailQueueName name) {
+    public final synchronized Optional<T> getQueue(MailQueueName name, PrefetchCount prefetchCount) {
         return Optional.ofNullable(queues.get(name));
     }
 
     @Override
-    public synchronized T createQueue(MailQueueName name) {
-        return getQueue(name).orElseGet(() -> createAndRegisterQueue(name));
+    public synchronized T createQueue(MailQueueName name, PrefetchCount prefetchCount) {
+        return getQueue(name, prefetchCount).orElseGet(() -> createAndRegisterQueue(name));
     }
 
     private T createAndRegisterQueue(MailQueueName name) {

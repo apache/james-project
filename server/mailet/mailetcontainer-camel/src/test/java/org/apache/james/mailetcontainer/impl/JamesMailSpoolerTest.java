@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Duration.ONE_HUNDRED_MILLISECONDS;
 import static org.awaitility.Duration.TEN_SECONDS;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -73,7 +74,7 @@ class JamesMailSpoolerTest {
         MailQueue queue = mock(MailQueue.class);
         workQueue.onNext(item);
         when(queue.deQueue()).thenAnswer(any -> workQueue.limitRate(1).filter(MockedMailQueueItem::isNotDone));
-        when(queueFactory.createQueue(MailQueueFactory.SPOOL)).thenAnswer(any -> queue);
+        when(queueFactory.createQueue(eq(MailQueueFactory.SPOOL), any())).thenAnswer(any -> queue);
 
         doThrow(new RuntimeException("Arbitrary failure"))
             .doNothing()
@@ -107,7 +108,7 @@ class JamesMailSpoolerTest {
         MailQueue queue = mock(MailQueue.class);
         workQueue.onNext(item);
         when(queue.deQueue()).thenAnswer(any -> workQueue.limitRate(1).filter(MockedMailQueueItem::isNotDone));
-        when(queueFactory.createQueue(MailQueueFactory.SPOOL)).thenAnswer(any -> queue);
+        when(queueFactory.createQueue(eq(MailQueueFactory.SPOOL), any())).thenAnswer(any -> queue);
 
         doAnswer(ignored -> {
             Thread.currentThread().interrupt();

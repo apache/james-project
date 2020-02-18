@@ -114,7 +114,7 @@ public class MailRepositoriesRoutesTest {
 
         MemoryTaskManager taskManager = new MemoryTaskManager(new Hostname("foo"));
         JsonTransformer jsonTransformer = new JsonTransformer();
-        MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+        MailQueueFactory<? extends ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         spoolQueue = queueFactory.createQueue(MailQueueFactory.SPOOL);
         customQueue = queueFactory.createQueue(CUSTOM_QUEUE);
 

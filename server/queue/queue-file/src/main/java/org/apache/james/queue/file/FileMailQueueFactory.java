@@ -76,12 +76,12 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     @Override
-    public Optional<ManageableMailQueue> getQueue(MailQueueName name) {
+    public Optional<ManageableMailQueue> getQueue(MailQueueName name, PrefetchCount prefetchCount) {
         return Optional.ofNullable(queues.get(name));
     }
 
     @Override
-    public ManageableMailQueue createQueue(MailQueueName name) {
+    public ManageableMailQueue createQueue(MailQueueName name, PrefetchCount prefetchCount) {
         return queues.computeIfAbsent(name, mailQueueName -> {
             try {
                 return new FileCacheableMailQueue(mailQueueActionItemDecoratorFactory, fs.getFile("file://var/store/queue"), mailQueueName, sync);

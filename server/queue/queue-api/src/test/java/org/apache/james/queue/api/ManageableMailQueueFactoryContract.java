@@ -25,15 +25,15 @@ import javax.mail.MessagingException;
 
 import org.junit.jupiter.api.Test;
 
-public interface ManageableMailQueueFactoryContract {
+public interface ManageableMailQueueFactoryContract<T extends ManageableMailQueue> {
 
     MailQueueName NAME_1 = MailQueueName.of("name1");
 
-    MailQueueFactory<ManageableMailQueue> getMailQueueFactory();
+    MailQueueFactory<T> getMailQueueFactory();
 
     @Test
     default void createMailQueueShouldNotConflictIfAlreadyExists() throws MessagingException {
-        MailQueueFactory<ManageableMailQueue> mailQueueFactory = getMailQueueFactory();
+        MailQueueFactory<T> mailQueueFactory = getMailQueueFactory();
         MailQueue firstCreation = mailQueueFactory.createQueue(NAME_1);
 
         firstCreation.enQueue(Mails.defaultMail().name("name").build());

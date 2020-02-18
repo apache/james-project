@@ -93,7 +93,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             this.configuration = configuration;
         }
 
-        RabbitMQMailQueue create(MailQueueName mailQueueName) {
+        RabbitMQMailQueue create(MailQueueName mailQueueName, PrefetchCount prefetchCount) {
             MailQueueView mailQueueView = mailQueueViewFactory.create(mailQueueName);
             mailQueueView.initialize(mailQueueName);
 
@@ -103,7 +103,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 new Enqueuer(mailQueueName, sender, mimeMessageStore, mailReferenceSerializer,
                     metricFactory, mailQueueView, clock),
                 new Dequeuer(mailQueueName, receiverProvider, mailLoader, mailReferenceSerializer,
-                    metricFactory, mailQueueView),
+                    metricFactory, mailQueueView, prefetchCount),
                 mailQueueView,
                 decoratorFactory);
 
@@ -133,15 +133,15 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     @Override
-    public Optional<RabbitMQMailQueue> getQueue(org.apache.james.queue.api.MailQueueName name) {
-        return getQueueFromRabbitServer(MailQueueName.fromString(name.asString()));
+    public Optional<RabbitMQMailQueue> getQueue(org.apache.james.queue.api.MailQueueName name, PrefetchCount count) {
+        return getQueueFromRabbitServer(MailQueueName.fromString(name.asString()), count);
     }
 
     @Override
-    public RabbitMQMailQueue createQueue(org.apache.james.queue.api.MailQueueName name) {
+    public RabbitMQMailQueue createQueue(org.apache.james.queue.api.MailQueueName name, PrefetchCount count) {
         MailQueueName mailQueueName = MailQueueName.fromString(name.asString());
-        return getQueueFromRabbitServer(mailQueueName)
-            .orElseGet(() -> createQueueIntoRabbitServer(mailQueueName));
+        return getQueueFromRabbitServer(mailQueueName, count)
+            .orElseGet(() -> createQueueIntoRabbitServer(mailQueueName, count));
     }
 
     @Override
@@ -152,7 +152,7 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
             .collect(ImmutableSet.toImmutableSet());
     }
 
-    private RabbitMQMailQueue createQueueIntoRabbitServer(MailQueueName mailQueueName) {
+    private RabbitMQMailQueue createQueueIntoRabbitServer(MailQueueName mailQueueName, PrefetchCount prefetchCount) {
         String exchangeName = mailQueueName.toRabbitExchangeName().asString();
         Flux.concat(
             sender.declareExchange(ExchangeSpecification.exchange(exchangeName)
@@ -169,13 +169,13 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
                 .routingKey(EMPTY_ROUTING_KEY)))
             .then()
             .block();
-        return privateFactory.create(mailQueueName);
+        return privateFactory.create(mailQueueName, prefetchCount);
     }
 
-    private Optional<RabbitMQMailQueue> getQueueFromRabbitServer(MailQueueName name) {
+    private Optional<RabbitMQMailQueue> getQueueFromRabbitServer(MailQueueName name, PrefetchCount prefetchCount) {
         return mqManagementApi.listCreatedMailQueueNames()
             .filter(name::equals)
-            .map(privateFactory::create)
+            .map(queueName -> privateFactory.create(queueName, prefetchCount))
             .findFirst();
     }
 }

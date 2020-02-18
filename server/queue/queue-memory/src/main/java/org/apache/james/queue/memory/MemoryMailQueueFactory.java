@@ -58,7 +58,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQueue> {
+public class MemoryMailQueueFactory implements MailQueueFactory<MemoryMailQueueFactory.MemoryCacheableMailQueue> {
 
     private final ConcurrentHashMap<MailQueueName, MemoryCacheableMailQueue> mailQueues;
     private final MailQueueItemDecoratorFactory mailQueueItemDecoratorFactory;
@@ -78,12 +78,12 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public Optional<ManageableMailQueue> getQueue(MailQueueName name) {
+    public Optional<MemoryCacheableMailQueue> getQueue(MailQueueName name, PrefetchCount count) {
         return Optional.ofNullable(mailQueues.get(name));
     }
 
     @Override
-    public MemoryCacheableMailQueue createQueue(MailQueueName name) {
+    public MemoryCacheableMailQueue createQueue(MailQueueName name, PrefetchCount prefetchCount) {
         return mailQueues.computeIfAbsent(name, mailQueueName -> new MemoryCacheableMailQueue(mailQueueName, mailQueueItemDecoratorFactory));
     }
 

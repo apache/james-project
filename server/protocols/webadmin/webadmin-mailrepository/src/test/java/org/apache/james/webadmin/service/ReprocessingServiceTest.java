@@ -64,7 +64,7 @@ public class ReprocessingServiceTest {
 
     private ReprocessingService reprocessingService;
     private MemoryMailRepositoryStore mailRepositoryStore;
-    private MailQueueFactory<ManageableMailQueue> queueFactory;
+    private MailQueueFactory<? extends ManageableMailQueue> queueFactory;
     private FakeMail mail1;
     private FakeMail mail2;
     private FakeMail mail3;

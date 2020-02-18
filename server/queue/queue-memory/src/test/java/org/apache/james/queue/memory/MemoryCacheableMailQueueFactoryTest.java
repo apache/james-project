@@ -21,12 +21,12 @@ package org.apache.james.queue.memory;
 
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueFactoryContract;
-import org.apache.james.queue.api.ManageableMailQueue;
 import org.apache.james.queue.api.ManageableMailQueueFactoryContract;
 import org.apache.james.queue.api.RawMailQueueItemDecoratorFactory;
 import org.junit.jupiter.api.BeforeEach;
 
-class MemoryCacheableMailQueueFactoryTest implements MailQueueFactoryContract<ManageableMailQueue>, ManageableMailQueueFactoryContract {
+class MemoryCacheableMailQueueFactoryTest implements MailQueueFactoryContract<MemoryMailQueueFactory.MemoryCacheableMailQueue>,
+    ManageableMailQueueFactoryContract<MemoryMailQueueFactory.MemoryCacheableMailQueue> {
 
     MemoryMailQueueFactory memoryMailQueueFactory;
 
@@ -36,7 +36,7 @@ class MemoryCacheableMailQueueFactoryTest implements MailQueueFactoryContract<Ma
     }
 
     @Override
-    public MailQueueFactory<ManageableMailQueue> getMailQueueFactory() {
+    public MailQueueFactory<MemoryMailQueueFactory.MemoryCacheableMailQueue> getMailQueueFactory() {
         return memoryMailQueueFactory;
     }
 }

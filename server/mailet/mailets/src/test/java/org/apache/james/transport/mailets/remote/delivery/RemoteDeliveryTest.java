@@ -99,7 +99,7 @@ public class RemoteDeliveryTest {
 
     @Before
     public void setUp() throws ConfigurationException {
-        MailQueueFactory<ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
+        MailQueueFactory<? extends ManageableMailQueue> queueFactory = new MemoryMailQueueFactory(new RawMailQueueItemDecoratorFactory());
         mailQueue = queueFactory.createQueue(RemoteDeliveryConfiguration.DEFAULT_OUTGOING_QUEUE_NAME);
         DNSService dnsService = mock(DNSService.class);
         MemoryDomainList domainList = new MemoryDomainList(dnsService);

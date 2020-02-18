@@ -73,12 +73,12 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
 
     protected MailQueueFactory<MailQueue> noopMailQueueFactory = new MailQueueFactory<MailQueue>() {
         @Override
-        public Optional<MailQueue> getQueue(MailQueueName name) {
+        public Optional<MailQueue> getQueue(MailQueueName name, PrefetchCount prefetchCount) {
             return Optional.of(createQueue(name));
         }
 
         @Override
-        public MailQueue createQueue(MailQueueName name) {
+        public MailQueue createQueue(MailQueueName name, PrefetchCount prefetchCount) {
             return new MailQueue() {
                 @Override
                 public void close() throws IOException {
