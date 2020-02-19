@@ -135,12 +135,7 @@ public class MailQueueRoutes implements Routes {
     })
     public void defineListQueues(Service service) {
         service.get(BASE_URL,
-            (request, response) ->
-                mailQueueFactory
-                    .listCreatedMailQueues()
-                    .stream()
-                    .map(ManageableMailQueue::getName)
-                    .collect(Guavate.toImmutableList()),
+            (request, response) -> mailQueueFactory.listCreatedMailQueues(),
             jsonTransformer);
     }
 

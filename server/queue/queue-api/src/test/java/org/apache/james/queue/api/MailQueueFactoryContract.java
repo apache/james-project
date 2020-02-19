@@ -43,9 +43,7 @@ public interface MailQueueFactoryContract<T extends MailQueue> {
         mailQueueFactory.createQueue(NAME_1);
         mailQueueFactory.createQueue(NAME_2);
 
-        assertThat(mailQueueFactory.listCreatedMailQueues())
-            .extracting(MailQueue::getName)
-            .containsOnly(NAME_1, NAME_2);
+        assertThat(mailQueueFactory.listCreatedMailQueues()).containsOnly(NAME_1, NAME_2);
     }
 
     @Test
@@ -56,7 +54,6 @@ public interface MailQueueFactoryContract<T extends MailQueue> {
         mailQueueFactory.createQueue(NAME_1);
 
         assertThat(mailQueueFactory.listCreatedMailQueues())
-            .extracting(MailQueue::getName)
             .containsOnly(NAME_1);
     }
 

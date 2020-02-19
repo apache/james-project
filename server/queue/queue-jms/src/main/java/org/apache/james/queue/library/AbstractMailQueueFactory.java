@@ -39,8 +39,8 @@ import org.apache.james.queue.api.ManageableMailQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.github.steveash.guavate.Guavate;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.collect.ImmutableSet;
 
 /**
  * {@link MailQueueFactory} abstract base class which take care of register the
@@ -71,8 +71,11 @@ public abstract class AbstractMailQueueFactory<T extends MailQueue> implements M
     }
 
     @Override
-    public Set<T> listCreatedMailQueues() {
-        return ImmutableSet.copyOf(queues.values());
+    public Set<String> listCreatedMailQueues() {
+        return queues.values()
+            .stream()
+            .map(MailQueue::getName)
+            .collect(Guavate.toImmutableSet());
     }
 
     @PreDestroy

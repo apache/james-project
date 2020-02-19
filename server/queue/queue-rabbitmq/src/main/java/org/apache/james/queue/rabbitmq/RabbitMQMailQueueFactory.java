@@ -45,7 +45,6 @@ import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.rabbitmq.view.RabbitMQMailQueueConfiguration;
 import org.apache.james.queue.rabbitmq.view.api.MailQueueView;
-import org.apache.james.util.OptionalUtils;
 
 import com.github.fge.lambdas.Throwing;
 import com.google.common.annotations.VisibleForTesting;
@@ -146,10 +145,9 @@ public class RabbitMQMailQueueFactory implements MailQueueFactory<RabbitMQMailQu
     }
 
     @Override
-    public Set<RabbitMQMailQueue> listCreatedMailQueues() {
-        //TODO: it creates connections and leak them
+    public Set<String> listCreatedMailQueues() {
         return mqManagementApi.listCreatedMailQueueNames()
-            .flatMap(name -> OptionalUtils.toStream(getQueue(name.asString())))
+            .map(MailQueueName::asString)
             .collect(ImmutableSet.toImmutableSet());
     }
 

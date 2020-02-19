@@ -19,7 +19,6 @@
 
 package org.apache.james.queue.memory;
 
-import java.io.IOException;
 import java.time.DateTimeException;
 import java.time.Duration;
 import java.time.Instant;
@@ -52,7 +51,6 @@ import com.github.fge.lambdas.Throwing;
 import com.github.steveash.guavate.Guavate;
 import com.google.common.base.Objects;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import reactor.core.publisher.Flux;
@@ -71,8 +69,11 @@ public class MemoryMailQueueFactory implements MailQueueFactory<ManageableMailQu
     }
 
     @Override
-    public Set<ManageableMailQueue> listCreatedMailQueues() {
-        return ImmutableSet.copyOf(mailQueues.values());
+    public Set<String> listCreatedMailQueues() {
+        return mailQueues.values()
+            .stream()
+            .map(MemoryCacheableMailQueue::getName)
+            .collect(Guavate.toImmutableSet());
     }
 
     @Override

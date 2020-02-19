@@ -19,7 +19,6 @@
 package org.apache.james.queue.file;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -28,11 +27,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.inject.Inject;
 
 import org.apache.james.filesystem.api.FileSystem;
+import org.apache.james.queue.api.MailQueue;
 import org.apache.james.queue.api.MailQueueFactory;
 import org.apache.james.queue.api.MailQueueItemDecoratorFactory;
 import org.apache.james.queue.api.ManageableMailQueue;
 
-import com.google.common.collect.ImmutableSet;
+import com.github.steveash.guavate.Guavate;
 
 /**
  * {@link MailQueueFactory} implementation which returns {@link FileCacheableMailQueue} instances
@@ -55,8 +55,11 @@ public class FileMailQueueFactory implements MailQueueFactory<ManageableMailQueu
     }
 
     @Override
-    public Set<ManageableMailQueue> listCreatedMailQueues() {
-        return ImmutableSet.copyOf(queues.values());
+    public Set<String> listCreatedMailQueues() {
+        return queues.values()
+            .stream()
+            .map(MailQueue::getName)
+            .collect(Guavate.toImmutableSet());
     }
 
     /**

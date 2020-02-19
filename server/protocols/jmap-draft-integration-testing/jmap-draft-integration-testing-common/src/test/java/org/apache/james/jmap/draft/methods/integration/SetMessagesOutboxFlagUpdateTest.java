@@ -105,7 +105,7 @@ public abstract class SetMessagesOutboxFlagUpdateTest {
         }
 
         @Override
-        public Set<MailQueue> listCreatedMailQueues() {
+        public Set<String> listCreatedMailQueues() {
             throw new NotImplementedException("Minimalistic implementation. Please do not list queues");
         }
     };

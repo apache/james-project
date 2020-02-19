@@ -42,5 +42,5 @@ public interface MailQueueFactory<T extends MailQueue> {
 
     T createQueue(String name);
 
-    Set<T> listCreatedMailQueues();
+    Set<String> listCreatedMailQueues();
 }
